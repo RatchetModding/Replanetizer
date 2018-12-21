@@ -126,7 +126,7 @@ namespace RatchetEdit
         //Get vertices with UV's baked in
         public static float[] GetVertices(FileStream fs, uint vertexPointer, int vertexCount, int elemSize)
         {
-            float[] vertexBuffer = new float[vertexCount * elemSize];
+            float[] vertexBuffer = new float[vertexCount * 8];
 
             //List<float> vertexBuffer = new List<float>();
             byte[] vertBlock = ReadBlock(fs, vertexPointer, vertexCount * elemSize);

@@ -83,6 +83,7 @@
             this.saveObjBtn.TabIndex = 4;
             this.saveObjBtn.Text = "Save to .obj";
             this.saveObjBtn.UseVisualStyleBackColor = true;
+            this.saveObjBtn.Click += new System.EventHandler(this.saveObjBtn_Click);
             // 
             // faceCountLabel
             // 

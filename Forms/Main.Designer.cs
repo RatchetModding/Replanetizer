@@ -634,9 +634,9 @@ namespace RatchetEdit
             this.label14.AutoSize = true;
             this.label14.Location = new System.Drawing.Point(1159, 481);
             this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(27, 13);
+            this.label14.Size = new System.Drawing.Size(34, 13);
             this.label14.TabIndex = 0;
-            this.label14.Text = "Size";
+            this.label14.Text = "Scale";
             // 
             // label3
             // 

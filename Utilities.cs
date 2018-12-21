@@ -12,7 +12,7 @@ namespace RatchetEdit {
         public static float toRadians(float angle) {
             return (float)Math.PI / 180 * angle;
         }
-        public static float roundToDecimals(float value, float numberOfDecimals) {
+        public static float round(float value, float numberOfDecimals) {
             float multiplier = (float)Math.Pow(10, numberOfDecimals);
             return (float)Math.Ceiling(value * multiplier) / multiplier;
         }

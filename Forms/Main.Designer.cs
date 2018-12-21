@@ -29,9 +29,9 @@ namespace RatchetEdit
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode10 = new System.Windows.Forms.TreeNode("Mobys");
-            System.Windows.Forms.TreeNode treeNode11 = new System.Windows.Forms.TreeNode("Ties");
-            System.Windows.Forms.TreeNode treeNode12 = new System.Windows.Forms.TreeNode("Shrubs");
+            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Mobys");
+            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Ties");
+            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Shrubs");
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
@@ -90,9 +90,8 @@ namespace RatchetEdit
             this.glControl1 = new OpenTK.GLControl();
             this.tickTimer = new System.Windows.Forms.Timer(this.components);
             this.label18 = new System.Windows.Forms.Label();
-            this.targetxLabel = new System.Windows.Forms.Label();
-            this.targetyLabel = new System.Windows.Forms.Label();
-            this.targetzLabel = new System.Windows.Forms.Label();
+            this.yawLabel = new System.Windows.Forms.Label();
+            this.pitchLabel = new System.Windows.Forms.Label();
             this.objectTree = new System.Windows.Forms.TreeView();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.menuStrip1.SuspendLayout();
@@ -742,39 +741,29 @@ namespace RatchetEdit
             this.label18.AutoSize = true;
             this.label18.Location = new System.Drawing.Point(137, 587);
             this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(38, 13);
+            this.label18.Size = new System.Drawing.Size(47, 13);
             this.label18.TabIndex = 15;
-            this.label18.Text = "Target";
+            this.label18.Text = "Rotation";
             // 
-            // targetxLabel
+            // yawLabel
             // 
-            this.targetxLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.targetxLabel.AutoSize = true;
-            this.targetxLabel.Location = new System.Drawing.Point(137, 600);
-            this.targetxLabel.Name = "targetxLabel";
-            this.targetxLabel.Size = new System.Drawing.Size(13, 13);
-            this.targetxLabel.TabIndex = 11;
-            this.targetxLabel.Text = "0";
+            this.yawLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.yawLabel.AutoSize = true;
+            this.yawLabel.Location = new System.Drawing.Point(137, 600);
+            this.yawLabel.Name = "yawLabel";
+            this.yawLabel.Size = new System.Drawing.Size(13, 13);
+            this.yawLabel.TabIndex = 11;
+            this.yawLabel.Text = "0";
             // 
-            // targetyLabel
+            // pitchLabel
             // 
-            this.targetyLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.targetyLabel.AutoSize = true;
-            this.targetyLabel.Location = new System.Drawing.Point(137, 613);
-            this.targetyLabel.Name = "targetyLabel";
-            this.targetyLabel.Size = new System.Drawing.Size(13, 13);
-            this.targetyLabel.TabIndex = 12;
-            this.targetyLabel.Text = "0";
-            // 
-            // targetzLabel
-            // 
-            this.targetzLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.targetzLabel.AutoSize = true;
-            this.targetzLabel.Location = new System.Drawing.Point(137, 626);
-            this.targetzLabel.Name = "targetzLabel";
-            this.targetzLabel.Size = new System.Drawing.Size(13, 13);
-            this.targetzLabel.TabIndex = 13;
-            this.targetzLabel.Text = "0";
+            this.pitchLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.pitchLabel.AutoSize = true;
+            this.pitchLabel.Location = new System.Drawing.Point(137, 613);
+            this.pitchLabel.Name = "pitchLabel";
+            this.pitchLabel.Size = new System.Drawing.Size(13, 13);
+            this.pitchLabel.TabIndex = 12;
+            this.pitchLabel.Text = "0";
             // 
             // objectTree
             // 
@@ -782,16 +771,16 @@ namespace RatchetEdit
             this.objectTree.HideSelection = false;
             this.objectTree.Location = new System.Drawing.Point(3, 11);
             this.objectTree.Name = "objectTree";
-            treeNode10.Name = "mobyNode";
-            treeNode10.Text = "Mobys";
-            treeNode11.Name = "tieNode";
-            treeNode11.Text = "Ties";
-            treeNode12.Name = "shrubNode";
-            treeNode12.Text = "Shrubs";
+            treeNode1.Name = "mobyNode";
+            treeNode1.Text = "Mobys";
+            treeNode2.Name = "tieNode";
+            treeNode2.Text = "Ties";
+            treeNode3.Name = "shrubNode";
+            treeNode3.Text = "Shrubs";
             this.objectTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode10,
-            treeNode11,
-            treeNode12});
+            treeNode1,
+            treeNode2,
+            treeNode3});
             this.objectTree.Size = new System.Drawing.Size(254, 310);
             this.objectTree.TabIndex = 16;
             this.objectTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.objectTree_AfterSelect);
@@ -819,9 +808,8 @@ namespace RatchetEdit
             this.splitContainer1.Panel2.Controls.Add(this.label15);
             this.splitContainer1.Panel2.Controls.Add(this.colorPanel);
             this.splitContainer1.Panel2.Controls.Add(this.label9);
-            this.splitContainer1.Panel2.Controls.Add(this.targetzLabel);
             this.splitContainer1.Panel2.Controls.Add(this.label5);
-            this.splitContainer1.Panel2.Controls.Add(this.targetyLabel);
+            this.splitContainer1.Panel2.Controls.Add(this.pitchLabel);
             this.splitContainer1.Panel2.Controls.Add(this.label2);
             this.splitContainer1.Panel2.Controls.Add(this.renderBox);
             this.splitContainer1.Panel2.Controls.Add(this.label16);
@@ -841,7 +829,7 @@ namespace RatchetEdit
             this.splitContainer1.Panel2.Controls.Add(this.camXLabel);
             this.splitContainer1.Panel2.Controls.Add(this.scaleBox);
             this.splitContainer1.Panel2.Controls.Add(this.dropBox);
-            this.splitContainer1.Panel2.Controls.Add(this.targetxLabel);
+            this.splitContainer1.Panel2.Controls.Add(this.yawLabel);
             this.splitContainer1.Panel2.Controls.Add(this.camYLabel);
             this.splitContainer1.Panel2.Controls.Add(this.yBox);
             this.splitContainer1.Size = new System.Drawing.Size(1264, 657);
@@ -933,9 +921,8 @@ namespace RatchetEdit
         private OpenTK.GLControl glControl1;
         private System.Windows.Forms.Timer tickTimer;
         private System.Windows.Forms.Label label18;
-        private System.Windows.Forms.Label targetxLabel;
-        private System.Windows.Forms.Label targetyLabel;
-        private System.Windows.Forms.Label targetzLabel;
+        private System.Windows.Forms.Label yawLabel;
+        private System.Windows.Forms.Label pitchLabel;
         private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem mobyCheck;
         private System.Windows.Forms.ToolStripMenuItem tieCheck;

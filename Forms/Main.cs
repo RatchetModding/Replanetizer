@@ -29,17 +29,12 @@ namespace RatchetEdit
         int lastMouseX = 0;
         int lastMouseY = 0;
 
-        //Camera variables
-        float cameraSpeed = 0.2f;
-        float cameraPitch = 0f;
-        float cameraYaw = -0.75f;
-        Vector3 cameraPosition = new Vector3(0, 0, 0);
-        Vector3 cameraTarget = new Vector3(0, 0, 0);
-
         LevelObject prevObject;
         public LevelObject selectedObject;
 
         List<string> modelNames;
+
+        Camera camera;
 
         bool invalidate = false;
 
@@ -51,7 +46,7 @@ namespace RatchetEdit
         private void Main_Load(object sender, EventArgs e)
         {
             glControl1.MakeCurrent();
-
+            camera = new Camera();
             //Generate vertex array
             int VAO;
             GL.GenVertexArrays(1, out VAO);
@@ -61,7 +56,11 @@ namespace RatchetEdit
             GL.ClearColor(Color.SkyBlue);
             GL.Enable(EnableCap.DepthTest);
             GL.LineWidth(5.0f);
-            view = Matrix4.LookAt(cameraPosition, cameraTarget, Vector3.UnitZ);
+
+            Matrix3 rot = Matrix3.CreateRotationX(camera.pitch) * Matrix3.CreateRotationZ(camera.yaw);
+            Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);
+            Vector3 target = camera.position + forward;
+            view = Matrix4.LookAt(camera.position, target, Vector3.UnitZ);
 
             //Experimental transparency blend
             //GL.Enable(EnableCap.Blend);
@@ -129,31 +128,9 @@ namespace RatchetEdit
                 }
 
                 Moby ratchet = level.mobs[0];
-                moveCameraBehind(ratchet);
+                camera.moveBehind(ratchet);
                 
             }
-        }
-
-        private void moveCameraBehind(LevelObject levelObject, float distanceToObject = 5) {
-            float zRotation = 0;
-
-            if(levelObject as Moby != null) {
-                zRotation = ((Moby)levelObject).rotz;
-            }
-
-            float xpos = (float)-Math.Cos(zRotation);
-            float ypos = (float)-Math.Sin(zRotation);
-
-            //Set rotation
-            cameraYaw = zRotation - (float)Math.PI / 2;
-            cameraPitch = 0;
-            
-            //Set Position
-            cameraPosition = new Vector3(
-                levelObject.x + xpos * distanceToObject, 
-                levelObject.y + ypos * distanceToObject, 
-                levelObject.z + distanceToObject / 2
-            );
         }
 
         public void getModelNames()
@@ -235,12 +212,12 @@ namespace RatchetEdit
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
 
-            camXLabel.Text = String.Format("X: {0}", Utilities.round(cameraPosition.X,2).ToString());
-            camYLabel.Text = String.Format("Y: {0}", Utilities.round(cameraPosition.Y, 2).ToString());
-            camZLabel.Text = String.Format("Z: {0}", Utilities.round(cameraPosition.Z, 2).ToString());
+            camXLabel.Text = String.Format("X: {0}", Utilities.round(camera.position.X,2).ToString());
+            camYLabel.Text = String.Format("Y: {0}", Utilities.round(camera.position.Y, 2).ToString());
+            camZLabel.Text = String.Format("Z: {0}", Utilities.round(camera.position.Z, 2).ToString());
 
-            yawLabel.Text = String.Format("Yaw: {0}", Utilities.round(Utilities.toDegrees(cameraYaw), 2).ToString());
-            pitchLabel.Text = String.Format("Pitch: {0}", Utilities.round(Utilities.toDegrees(cameraPitch), 2).ToString());
+            yawLabel.Text = String.Format("Yaw: {0}", Utilities.round(Utilities.toDegrees(camera.yaw), 2).ToString());
+            pitchLabel.Text = String.Format("Pitch: {0}", Utilities.round(Utilities.toDegrees(camera.pitch), 2).ToString());
             
             glControl1.MakeCurrent();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -348,23 +325,25 @@ namespace RatchetEdit
 
             if (rMouse)
             {
-                cameraYaw -= (Cursor.Position.X - lastMouseX) * cameraSpeed * 0.016f;
-                cameraPitch -= (Cursor.Position.Y - lastMouseY) * cameraSpeed * 0.016f;
-                cameraPitch = MathHelper.Clamp(cameraPitch, MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
-
+                float yaw = camera.yaw;
+                float pitch = camera.pitch;
+                yaw -= (Cursor.Position.X - lastMouseX) * camera.speed * 0.016f;
+                pitch -= (Cursor.Position.Y - lastMouseY) * camera.speed * 0.016f;
+                pitch = MathHelper.Clamp(pitch, MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
+                camera.setRotation(pitch, yaw);
                 invalidate = true;
             }
 
-            Matrix3 rot = Matrix3.CreateRotationX(cameraPitch) * Matrix3.CreateRotationZ(cameraYaw);
-            Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);
+            Matrix3 rot = Matrix3.CreateRotationX(camera.pitch) * Matrix3.CreateRotationZ(camera.yaw);
+            camera.setPosition(camera.position + Vector3.Transform(moveDir, rot));
 
-            cameraPosition += Vector3.Transform(moveDir, rot);
-            cameraTarget = cameraPosition + forward;
+            Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);
+            Vector3 target = camera.position + forward;
 
             lastMouseX = Cursor.Position.X;
             lastMouseY = Cursor.Position.Y;
 
-            view = Matrix4.LookAt(cameraPosition, cameraTarget, Vector3.UnitZ);
+            view = Matrix4.LookAt(camera.position, target, Vector3.UnitZ);
 
             if (invalidate)
             {
@@ -655,7 +634,7 @@ namespace RatchetEdit
         private void gotoPositionBtn_Click(object sender, EventArgs e)
         {
             if (selectedObject == null) return;
-            moveCameraBehind(selectedObject);
+            camera.moveBehind(selectedObject);
             invalidate = true;
         }
 

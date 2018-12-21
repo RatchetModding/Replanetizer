@@ -370,11 +370,6 @@ namespace RatchetEdit
             // 
             this.rotzBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.rotzBox.DecimalPlaces = 2;
-            this.rotzBox.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            65536});
             this.rotzBox.Location = new System.Drawing.Point(1166, 458);
             this.rotzBox.Maximum = new decimal(new int[] {
             5000,
@@ -395,11 +390,6 @@ namespace RatchetEdit
             // 
             this.rotyBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.rotyBox.DecimalPlaces = 2;
-            this.rotyBox.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            65536});
             this.rotyBox.Location = new System.Drawing.Point(1166, 419);
             this.rotyBox.Maximum = new decimal(new int[] {
             5000,
@@ -420,11 +410,6 @@ namespace RatchetEdit
             // 
             this.rotxBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.rotxBox.DecimalPlaces = 2;
-            this.rotxBox.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            65536});
             this.rotxBox.Location = new System.Drawing.Point(1166, 380);
             this.rotxBox.Maximum = new decimal(new int[] {
             5000,

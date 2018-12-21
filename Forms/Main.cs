@@ -131,9 +131,9 @@ namespace RatchetEdit
 
 
                 Moby ratchet = level.mobs[0];
-                
 
-                yaw = ratchet.rotz - (float)Math.PI/2;
+
+                yaw = ratchet.rotz - (float)Math.PI / 2;
 
                 float xpos = (float)-Math.Cos(ratchet.rotz);
                 float ypos = (float)-Math.Sin(ratchet.rotz);
@@ -204,9 +204,9 @@ namespace RatchetEdit
             if (selectedObject as Moby != null)
             {
                 Moby mob = (Moby)selectedObject;
-                rotxBox.Value = (decimal)mob.rotx;
-                rotyBox.Value = (decimal)mob.roty;
-                rotzBox.Value = (decimal)mob.rotz;
+                rotxBox.Value = (decimal)toDegrees(mob.rotx);
+                rotyBox.Value = (decimal)toDegrees(mob.roty);
+                rotzBox.Value = (decimal)toDegrees(mob.rotz);
                 scaleBox.Value = (decimal)mob.scale;
             }
 
@@ -215,6 +215,13 @@ namespace RatchetEdit
             yBox.Value = (decimal)selectedObject.y;
             zBox.Value = (decimal)selectedObject.z;
 
+        }
+
+        private float toDegrees(float radians) {
+            return radians * 180 / (float)Math.PI;
+        }
+        public float toRadians(float angle) {
+            return (float)Math.PI / 180 * angle;
         }
 
 
@@ -573,6 +580,7 @@ namespace RatchetEdit
 
         private void xBox_ValueChanged(object sender, EventArgs e)
         {
+            if (selectedObject == null) return;
             selectedObject.x = (float)xBox.Value;
             selectedObject.updateTransform();
             invalidate = true;
@@ -580,6 +588,7 @@ namespace RatchetEdit
 
         private void yBox_ValueChanged(object sender, EventArgs e)
         {
+            if (selectedObject == null) return;
             selectedObject.y = (float)yBox.Value;
             selectedObject.updateTransform();
             invalidate = true;
@@ -587,6 +596,7 @@ namespace RatchetEdit
 
         private void zBox_ValueChanged(object sender, EventArgs e)
         {
+            if (selectedObject == null) return;
             selectedObject.z = (float)zBox.Value;
             selectedObject.updateTransform();
             invalidate = true;
@@ -597,7 +607,7 @@ namespace RatchetEdit
             if (selectedObject as Moby != null)
             {
                 Moby selectedObj = (Moby)selectedObject;
-                selectedObj.rotx = (float)rotxBox.Value;
+                selectedObj.rotx = toRadians((float)rotxBox.Value);
                 selectedObj.updateTransform();
                 invalidate = true;
             }
@@ -608,7 +618,7 @@ namespace RatchetEdit
             if (selectedObject as Moby != null)
             {
                 Moby selectedObj = (Moby)selectedObject;
-                selectedObj.roty = (float)rotyBox.Value;
+                selectedObj.roty = toRadians((float)rotyBox.Value);
                 selectedObj.updateTransform();
                 invalidate = true;
             }
@@ -619,7 +629,7 @@ namespace RatchetEdit
             if (selectedObject as Moby != null)
             {
                 Moby selectedObj = (Moby)selectedObject;
-                selectedObj.rotz = (float)rotzBox.Value;
+                selectedObj.rotz = toRadians((float)rotzBox.Value);
                 selectedObj.updateTransform();
                 invalidate = true;
             }

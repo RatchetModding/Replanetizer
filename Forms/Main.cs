@@ -30,9 +30,10 @@ namespace RatchetEdit
         int lastMouseY = 0;
 
         //Camera variables
-        float cSpeed = 0.2f;
-        float pitch = 0f;
-        float yaw = -0.75f;
+        private const float distanceToRatchet = 5;
+        float cameraSpeed = 0.2f;
+        float cameraPitch = 0f;
+        float cameraYaw = -0.75f;
         Vector3 cameraPosition = new Vector3(0, 0, 0);
         Vector3 cameraTarget = new Vector3(0, 0, 0);
 
@@ -128,17 +129,15 @@ namespace RatchetEdit
                     objectTree.Nodes[2].Nodes.Add(shrub.modelID.ToString("X"));
                 }
 
-
-
                 Moby ratchet = level.mobs[0];
 
+                //Set camera rotation
+                cameraYaw = ratchet.rotz - (float)Math.PI / 2;
+                cameraPitch = 0;
 
-                yaw = ratchet.rotz - (float)Math.PI / 2;
-
+                //Get new camera position behind ratchet based on rotation
                 float xpos = (float)-Math.Cos(ratchet.rotz);
                 float ypos = (float)-Math.Sin(ratchet.rotz);
-                float distanceToRatchet = 5;
-
                 cameraPosition = new Vector3(ratchet.x + xpos * distanceToRatchet, ratchet.y + ypos * distanceToRatchet, ratchet.z + 2);
             }
         }
@@ -186,11 +185,13 @@ namespace RatchetEdit
 
         private void modelViewerToolBtn_Click(object sender, EventArgs e)
         {
+            if (selectedObject == null) return;
             openModelViewer();
         }
 
         private void openModelViewerBtn_Click(object sender, EventArgs e)
         {
+            if (selectedObject == null) return;
             openModelViewer();
         }
 
@@ -199,14 +200,14 @@ namespace RatchetEdit
             Close();
         }
 
-        private void updateMoby()
+        private void updateLevelObject()
         {
             if (selectedObject as Moby != null)
             {
                 Moby mob = (Moby)selectedObject;
-                rotxBox.Value = (decimal)toDegrees(mob.rotx);
-                rotyBox.Value = (decimal)toDegrees(mob.roty);
-                rotzBox.Value = (decimal)toDegrees(mob.rotz);
+                rotxBox.Value = (decimal)Utilities.toDegrees(mob.rotx);
+                rotyBox.Value = (decimal)Utilities.toDegrees(mob.roty);
+                rotzBox.Value = (decimal)Utilities.toDegrees(mob.rotz);
                 scaleBox.Value = (decimal)mob.scale;
             }
 
@@ -217,23 +218,16 @@ namespace RatchetEdit
 
         }
 
-        private float toDegrees(float radians) {
-            return radians * 180 / (float)Math.PI;
-        }
-        public float toRadians(float angle) {
-            return (float)Math.PI / 180 * angle;
-        }
-
-
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
-            camXLabel.Text = cameraPosition.X.ToString();
-            camYLabel.Text = cameraPosition.Y.ToString();
-            camZLabel.Text = cameraPosition.Z.ToString();
 
-            targetxLabel.Text = cameraTarget.X.ToString();
-            targetyLabel.Text = cameraTarget.Y.ToString();
-            targetzLabel.Text = cameraTarget.Z.ToString();
+            camXLabel.Text = String.Format("X: {0}", Utilities.roundToDecimals(cameraPosition.X,2).ToString());
+            camYLabel.Text = String.Format("Y: {0}", Utilities.roundToDecimals(cameraPosition.Y, 2).ToString());
+            camZLabel.Text = String.Format("Z: {0}", Utilities.roundToDecimals(cameraPosition.Z, 2).ToString());
+
+            targetxLabel.Text = String.Format("X: {0}", Utilities.roundToDecimals(cameraTarget.X, 2).ToString());
+            targetyLabel.Text = String.Format("Y: {0}", Utilities.roundToDecimals(cameraTarget.Y, 2).ToString());
+            targetzLabel.Text = String.Format("Z: {0}", Utilities.roundToDecimals(cameraTarget.Z, 2).ToString());
 
             glControl1.MakeCurrent();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -341,14 +335,14 @@ namespace RatchetEdit
 
             if (rMouse)
             {
-                yaw -= (Cursor.Position.X - lastMouseX) * cSpeed * 0.016f;
-                pitch -= (Cursor.Position.Y - lastMouseY) * cSpeed * 0.016f;
-                pitch = MathHelper.Clamp(pitch, MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
+                cameraYaw -= (Cursor.Position.X - lastMouseX) * cameraSpeed * 0.016f;
+                cameraPitch -= (Cursor.Position.Y - lastMouseY) * cameraSpeed * 0.016f;
+                cameraPitch = MathHelper.Clamp(cameraPitch, MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
 
                 invalidate = true;
             }
 
-            Matrix3 rot = Matrix3.CreateRotationX(pitch) * Matrix3.CreateRotationZ(yaw);
+            Matrix3 rot = Matrix3.CreateRotationX(cameraPitch) * Matrix3.CreateRotationZ(cameraYaw);
             Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);
 
             cameraPosition += Vector3.Transform(moveDir, rot);
@@ -437,6 +431,8 @@ namespace RatchetEdit
                 GL.UseProgram(colorShaderID);
                 GL.EnableVertexAttribArray(0);
                 worldView = view * projection;
+
+                //TODO: Consolidate following stuff into function.
 
                 if (mobyCheck.Checked)
                 {
@@ -528,7 +524,7 @@ namespace RatchetEdit
                         openModelViewer();
                     }
                     prevObject = selectedObject;
-                    updateMoby();
+                    updateLevelObject();
                 }
 
                 invalidate = true;
@@ -607,7 +603,7 @@ namespace RatchetEdit
             if (selectedObject as Moby != null)
             {
                 Moby selectedObj = (Moby)selectedObject;
-                selectedObj.rotx = toRadians((float)rotxBox.Value);
+                selectedObj.rotx = Utilities.toRadians((float)rotxBox.Value);
                 selectedObj.updateTransform();
                 invalidate = true;
             }
@@ -618,7 +614,7 @@ namespace RatchetEdit
             if (selectedObject as Moby != null)
             {
                 Moby selectedObj = (Moby)selectedObject;
-                selectedObj.roty = toRadians((float)rotyBox.Value);
+                selectedObj.roty = Utilities.toRadians((float)rotyBox.Value);
                 selectedObj.updateTransform();
                 invalidate = true;
             }
@@ -629,7 +625,7 @@ namespace RatchetEdit
             if (selectedObject as Moby != null)
             {
                 Moby selectedObj = (Moby)selectedObject;
-                selectedObj.rotz = toRadians((float)rotzBox.Value);
+                selectedObj.rotz = Utilities.toRadians((float)rotzBox.Value);
                 selectedObj.updateTransform();
                 invalidate = true;
             }
@@ -639,7 +635,7 @@ namespace RatchetEdit
             if (e.Node.Parent == objectTree.Nodes[0])
             {
                 selectedObject = level.mobs[e.Node.Index];
-                updateMoby();
+                updateLevelObject();
             }
         }
 
@@ -650,6 +646,7 @@ namespace RatchetEdit
 
         private void gotoPositionBtn_Click(object sender, EventArgs e)
         {
+            if (selectedObject == null) return;
             setCamPos(selectedObject.x, selectedObject.y, selectedObject.z + 10);
             invalidate = true;
         }

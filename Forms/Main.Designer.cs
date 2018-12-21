@@ -29,9 +29,9 @@ namespace RatchetEdit
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode7 = new System.Windows.Forms.TreeNode("Mobys");
-            System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("Ties");
-            System.Windows.Forms.TreeNode treeNode9 = new System.Windows.Forms.TreeNode("Shrubs");
+            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Mobys");
+            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Ties");
+            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Shrubs");
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
@@ -466,7 +466,7 @@ namespace RatchetEdit
             this.zBox.TabIndex = 1;
             this.zBox.ValueChanged += new System.EventHandler(this.zBox_ValueChanged);
             // 
-            // sizeBox
+            // scaleBox
             // 
             this.scaleBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.scaleBox.DecimalPlaces = 2;
@@ -486,9 +486,10 @@ namespace RatchetEdit
             0,
             0,
             -2147483648});
-            this.scaleBox.Name = "sizeBox";
+            this.scaleBox.Name = "scaleBox";
             this.scaleBox.Size = new System.Drawing.Size(86, 20);
             this.scaleBox.TabIndex = 1;
+            this.scaleBox.ValueChanged += new System.EventHandler(this.scaleBox_ValueChanged);
             // 
             // yBox
             // 
@@ -734,8 +735,6 @@ namespace RatchetEdit
             this.glControl1.TabIndex = 14;
             this.glControl1.VSync = false;
             this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
-            this.glControl1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.glControl1_KeyDown);
-            this.glControl1.KeyUp += new System.Windows.Forms.KeyEventHandler(this.glControl1_KeyUp);
             this.glControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseClick);
             this.glControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseDown);
             this.glControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseUp);
@@ -794,16 +793,16 @@ namespace RatchetEdit
             this.objectTree.HideSelection = false;
             this.objectTree.Location = new System.Drawing.Point(1067, 27);
             this.objectTree.Name = "objectTree";
-            treeNode7.Name = "mobyNode";
-            treeNode7.Text = "Mobys";
-            treeNode8.Name = "tieNode";
-            treeNode8.Text = "Ties";
-            treeNode9.Name = "shrubNode";
-            treeNode9.Text = "Shrubs";
+            treeNode1.Name = "mobyNode";
+            treeNode1.Text = "Mobys";
+            treeNode2.Name = "tieNode";
+            treeNode2.Text = "Ties";
+            treeNode3.Name = "shrubNode";
+            treeNode3.Text = "Shrubs";
             this.objectTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode7,
-            treeNode8,
-            treeNode9});
+            treeNode1,
+            treeNode2,
+            treeNode3});
             this.objectTree.Size = new System.Drawing.Size(185, 295);
             this.objectTree.TabIndex = 16;
             this.objectTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.objectTree_AfterSelect);

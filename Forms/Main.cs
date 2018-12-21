@@ -5,6 +5,7 @@ using System.IO;
 using System.Windows.Forms;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Input;
 
 namespace RatchetEdit
 {
@@ -23,12 +24,6 @@ namespace RatchetEdit
         int colorID;
 
         //Input variables
-        bool wKey = false;
-        bool sKey = false;
-        bool dKey = false;
-        bool aKey = false;
-        bool qKey = false;
-        bool eKey = false;
         bool rMouse = false;
         bool lMouse = false;
         int lastMouseX = 0;
@@ -38,8 +33,8 @@ namespace RatchetEdit
         float cSpeed = 0.2f;
         float pitch = 0f;
         float yaw = -0.75f;
-        Vector3 cPosition = new Vector3(0, 0, 0);
-        Vector3 cTarget = new Vector3(0, 0, 0);
+        Vector3 cameraPosition = new Vector3(0, 0, 0);
+        Vector3 cameraTarget = new Vector3(0, 0, 0);
 
         LevelObject prevObject;
         public LevelObject selectedObject;
@@ -66,7 +61,7 @@ namespace RatchetEdit
             GL.ClearColor(Color.SkyBlue);
             GL.Enable(EnableCap.DepthTest);
             GL.LineWidth(5.0f);
-            view = Matrix4.LookAt(cPosition, cTarget, Vector3.UnitZ);
+            view = Matrix4.LookAt(cameraPosition, cameraTarget, Vector3.UnitZ);
 
             //Experimental transparency blend
             //GL.Enable(EnableCap.Blend);
@@ -133,6 +128,18 @@ namespace RatchetEdit
                     objectTree.Nodes[2].Nodes.Add(shrub.modelID.ToString("X"));
                 }
 
+
+
+                Moby ratchet = level.mobs[0];
+                
+
+                yaw = ratchet.rotz - (float)Math.PI/2;
+
+                float xpos = (float)-Math.Cos(ratchet.rotz);
+                float ypos = (float)-Math.Sin(ratchet.rotz);
+                float distanceToRatchet = 5;
+
+                cameraPosition = new Vector3(ratchet.x + xpos * distanceToRatchet, ratchet.y + ypos * distanceToRatchet, ratchet.z + 2);
             }
         }
 
@@ -213,13 +220,13 @@ namespace RatchetEdit
 
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
-            camXLabel.Text = cPosition.X.ToString();
-            camYLabel.Text = cPosition.Y.ToString();
-            camZLabel.Text = cPosition.Z.ToString();
+            camXLabel.Text = cameraPosition.X.ToString();
+            camYLabel.Text = cameraPosition.Y.ToString();
+            camZLabel.Text = cameraPosition.Z.ToString();
 
-            targetxLabel.Text = cTarget.X.ToString();
-            targetyLabel.Text = cTarget.Y.ToString();
-            targetzLabel.Text = cTarget.Z.ToString();
+            targetxLabel.Text = cameraTarget.X.ToString();
+            targetyLabel.Text = cameraTarget.Y.ToString();
+            targetzLabel.Text = cameraTarget.Z.ToString();
 
             glControl1.MakeCurrent();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -311,43 +318,20 @@ namespace RatchetEdit
         #region input
         private void tickTimer_Tick(object sender, EventArgs e)
         {
-            Vector3 moveDir = Vector3.Zero;
             float deltaTime = 0.016f;
 
             float moveSpeed = 25;
             float shiftMultiplier = 3;
             float nonShiftMultiplier = 0.5f;
 
-            if (wKey)
+            Vector3 moveDir = getInputAxes();
+            if (moveDir.Length != 0)
             {
-                moveDir.Y += (ModifierKeys == Keys.Shift ? shiftMultiplier : nonShiftMultiplier) * deltaTime * moveSpeed;
+                moveDir *= (ModifierKeys == Keys.Shift ? shiftMultiplier : nonShiftMultiplier) * deltaTime * moveSpeed;
                 invalidate = true;
             }
-            if (sKey)
-            {
-                moveDir.Y -= (ModifierKeys == Keys.Shift ? shiftMultiplier : nonShiftMultiplier) * deltaTime * moveSpeed;
-                invalidate = true;
-            }
-            if (aKey)
-            {
-                moveDir.X -= (ModifierKeys == Keys.Shift ? shiftMultiplier : nonShiftMultiplier) * deltaTime * moveSpeed;
-                invalidate = true;
-            }
-            if (dKey)
-            {
-                moveDir.X += (ModifierKeys == Keys.Shift ? shiftMultiplier : nonShiftMultiplier) * deltaTime * moveSpeed;
-                invalidate = true;
-            }
-            if (eKey)
-            {
-                moveDir.Z += (ModifierKeys == Keys.Shift ? shiftMultiplier : nonShiftMultiplier) * deltaTime * moveSpeed;
-                invalidate = true;
-            }
-            if (qKey)
-            {
-                moveDir.Z -= (ModifierKeys == Keys.Shift ? shiftMultiplier : nonShiftMultiplier) * deltaTime * moveSpeed;
-                invalidate = true;
-            }
+
+
             if (rMouse)
             {
                 yaw -= (Cursor.Position.X - lastMouseX) * cSpeed * 0.016f;
@@ -360,13 +344,13 @@ namespace RatchetEdit
             Matrix3 rot = Matrix3.CreateRotationX(pitch) * Matrix3.CreateRotationZ(yaw);
             Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);
 
-            cPosition += Vector3.Transform(moveDir, rot);
-            cTarget = cPosition + forward;
+            cameraPosition += Vector3.Transform(moveDir, rot);
+            cameraTarget = cameraPosition + forward;
 
             lastMouseX = Cursor.Position.X;
             lastMouseY = Cursor.Position.Y;
 
-            view = Matrix4.LookAt(cPosition, cTarget, Vector3.UnitZ);
+            view = Matrix4.LookAt(cameraPosition, cameraTarget, Vector3.UnitZ);
 
             if (invalidate)
             {
@@ -375,66 +359,53 @@ namespace RatchetEdit
 
         }
 
-        private void glControl1_MouseDown(object sender, MouseEventArgs e)
+        private Vector3 getInputAxes()
+        {
+            KeyboardState keyState = Keyboard.GetState();
+
+            float xAxis = 0, yAxis = 0, zAxis = 0;
+
+            if (keyState.IsKeyDown(Key.W))
+            {
+                yAxis += 1;
+            }
+            if (keyState.IsKeyDown(Key.S))
+            {
+                yAxis -= 1;
+            }
+
+            if (keyState.IsKeyDown(Key.A))
+            {
+                xAxis -= 1;
+            }
+            if (keyState.IsKeyDown(Key.D))
+            {
+                xAxis += 1;
+            }
+
+            if (keyState.IsKeyDown(Key.Q))
+            {
+                zAxis -= 1;
+            }
+            if (keyState.IsKeyDown(Key.E))
+            {
+                zAxis += 1;
+            }
+
+            return new Vector3(xAxis, yAxis, zAxis);
+
+        }
+
+        private void glControl1_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             rMouse = e.Button == MouseButtons.Right;
             lMouse = e.Button == MouseButtons.Left;
         }
 
-        private void glControl1_MouseUp(object sender, MouseEventArgs e)
+        private void glControl1_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             rMouse = false;
             lMouse = false;
-        }
-
-        private void glControl1_KeyUp(object sender, KeyEventArgs e)
-        {
-            switch (e.KeyCode)
-            {
-                case Keys.W:
-                    wKey = false;
-                    break;
-                case Keys.S:
-                    sKey = false;
-                    break;
-                case Keys.A:
-                    aKey = false;
-                    break;
-                case Keys.D:
-                    dKey = false;
-                    break;
-                case Keys.Q:
-                    qKey = false;
-                    break;
-                case Keys.E:
-                    eKey = false;
-                    break;
-            }
-        }
-
-        private void glControl1_KeyDown(object sender, KeyEventArgs e)
-        {
-            switch (e.KeyCode)
-            {
-                case Keys.W:
-                    wKey = true;
-                    break;
-                case Keys.S:
-                    sKey = true;
-                    break;
-                case Keys.A:
-                    aKey = true;
-                    break;
-                case Keys.D:
-                    dKey = true;
-                    break;
-                case Keys.Q:
-                    qKey = true;
-                    break;
-                case Keys.E:
-                    eKey = true;
-                    break;
-            }
         }
         #endregion
 
@@ -449,7 +420,7 @@ namespace RatchetEdit
             invalidate = true;
         }
 
-        private void glControl1_MouseClick(object sender, MouseEventArgs e)
+        private void glControl1_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left && level != null)
             {
@@ -664,7 +635,7 @@ namespace RatchetEdit
 
         public void setCamPos(float x, float y, float z)
         {
-            cPosition = new Vector3(x, y, z);
+            cameraPosition = new Vector3(x, y, z);
         }
 
         private void gotoPositionBtn_Click(object sender, EventArgs e)
@@ -673,5 +644,15 @@ namespace RatchetEdit
             invalidate = true;
         }
 
+        private void scaleBox_ValueChanged(object sender, EventArgs e)
+        {
+            if (selectedObject as Moby != null)
+            {
+                Moby selectedObj = (Moby)selectedObject;
+                selectedObj.scale = (float)scaleBox.Value;
+                selectedObj.updateTransform();
+                invalidate = true;
+            }
+        }
     }
 }

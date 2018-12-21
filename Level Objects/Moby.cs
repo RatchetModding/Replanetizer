@@ -30,10 +30,10 @@ namespace RatchetEdit
 
 
             model = mobyModels.Find(mobyModel => mobyModel.ID == modelID);
-            updateTranslation();
+            updateTransform();
         }
 
-        public override void updateTranslation()
+        public override void updateTransform()
         {
             Matrix4 rotMatrix = Matrix4.CreateRotationX(rotx) * Matrix4.CreateRotationY(roty) * Matrix4.CreateRotationZ(rotz);
             Matrix4 scaleMatrix = Matrix4.CreateScale(scale * model.size);

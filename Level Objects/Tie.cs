@@ -79,10 +79,10 @@ namespace RatchetEdit
             off_6C = ReadUint(levelBlock, (TIEELEMSIZE * num) + 0x6C);
 
             model = tieModels.Find(tieModel => tieModel.ID == modelID);
-            updateTranslation();
+            updateTransform();
         }
 
-        public override void updateTranslation()
+        public override void updateTransform()
         {
             modelMatrix = new Matrix4(v1x, v1y, v1z, v1w, v2x, v2y, v2z, v2w, v3x, v3y, v3z, v3w, x, y, z, w);
         }

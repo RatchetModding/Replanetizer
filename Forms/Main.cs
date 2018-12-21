@@ -194,24 +194,22 @@ namespace RatchetEdit
 
         private void updateMoby()
         {
-            if (selectedObject != null)
+            if (selectedObject as Moby != null)
             {
-                if (selectedObject is Moby)
-                {
-                    Moby mob = (Moby)selectedObject;
-                    rotxBox.Value = (decimal)mob.rotx;
-                    rotyBox.Value = (decimal)mob.roty;
-                    rotzBox.Value = (decimal)mob.rotz;
-                    sizeBox.Value = (decimal)mob.scale;
-                }
-
-                modelIDBox.Text = selectedObject.modelID.ToString("X");
-                xBox.Value = (decimal)selectedObject.x;
-                yBox.Value = (decimal)selectedObject.y;
-                zBox.Value = (decimal)selectedObject.z;
-
+                Moby mob = (Moby)selectedObject;
+                rotxBox.Value = (decimal)mob.rotx;
+                rotyBox.Value = (decimal)mob.roty;
+                rotzBox.Value = (decimal)mob.rotz;
+                scaleBox.Value = (decimal)mob.scale;
             }
+
+            modelIDBox.Text = selectedObject.modelID.ToString("X");
+            xBox.Value = (decimal)selectedObject.x;
+            yBox.Value = (decimal)selectedObject.y;
+            zBox.Value = (decimal)selectedObject.z;
+
         }
+
 
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
@@ -229,7 +227,7 @@ namespace RatchetEdit
 
             GL.UseProgram(colorShaderID);
             GL.EnableVertexAttribArray(0);
-            
+
             if (splineCheck.Checked && splineCheck.Enabled)
             {
                 GL.UniformMatrix4(matrixID, false, ref worldView);
@@ -291,12 +289,12 @@ namespace RatchetEdit
                         hd.getVBO();
                         hd.getIBO();
 
-                            //Bind textures one by one, applying it to the relevant vertices based on the index array
-                            foreach (TextureConfig conf in hd.textureConfig)
-                            {
-                                GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? level.textures[conf.ID].getTexture() : 0);
-                                GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
-                            }
+                        //Bind textures one by one, applying it to the relevant vertices based on the index array
+                        foreach (TextureConfig conf in hd.textureConfig)
+                        {
+                            GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? level.textures[conf.ID].getTexture() : 0);
+                            GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+                        }
 
                     }
                 }
@@ -482,7 +480,7 @@ namespace RatchetEdit
                         }
                     }
                 }
-                
+
                 if (tieCheck.Checked)
                 {
                     offset += level.mobs.Count;
@@ -503,7 +501,7 @@ namespace RatchetEdit
                         }
                     }
                 }
-                
+
                 if (shrubCheck.Checked)
                 {
                     offset += level.ties.Count;
@@ -541,20 +539,20 @@ namespace RatchetEdit
                         selectedObject = level.ties[id - level.mobs.Count];
                         objectTree.SelectedNode = objectTree.Nodes[1].Nodes[id - level.mobs.Count];
                     }
-                    
+
                     else if (id - offset < level.shrubs?.Count)
                     {
                         selectedObject = level.shrubs[id - offset];
                         objectTree.SelectedNode = objectTree.Nodes[2].Nodes[id - offset];
                     }
-                    if(selectedObject == prevObject)
+                    if (selectedObject == prevObject)
                     {
                         openModelViewer();
                     }
                     prevObject = selectedObject;
                     updateMoby();
                 }
-                
+
                 invalidate = true;
             }
         }
@@ -605,27 +603,59 @@ namespace RatchetEdit
         private void xBox_ValueChanged(object sender, EventArgs e)
         {
             selectedObject.x = (float)xBox.Value;
-            selectedObject.updateTranslation();
+            selectedObject.updateTransform();
             invalidate = true;
         }
 
         private void yBox_ValueChanged(object sender, EventArgs e)
         {
             selectedObject.y = (float)yBox.Value;
-            selectedObject.updateTranslation();
+            selectedObject.updateTransform();
             invalidate = true;
         }
 
         private void zBox_ValueChanged(object sender, EventArgs e)
         {
             selectedObject.z = (float)zBox.Value;
-            selectedObject.updateTranslation();
+            selectedObject.updateTransform();
             invalidate = true;
         }
 
+        private void rotxBox_ValueChanged(object sender, EventArgs e)
+        {
+            if (selectedObject as Moby != null)
+            {
+                Moby selectedObj = (Moby)selectedObject;
+                selectedObj.rotx = (float)rotxBox.Value;
+                selectedObj.updateTransform();
+                invalidate = true;
+            }
+        }
+
+        private void rotyBox_ValueChanged(object sender, EventArgs e)
+        {
+            if (selectedObject as Moby != null)
+            {
+                Moby selectedObj = (Moby)selectedObject;
+                selectedObj.roty = (float)rotyBox.Value;
+                selectedObj.updateTransform();
+                invalidate = true;
+            }
+        }
+
+        private void rotzBox_ValueChanged(object sender, EventArgs e)
+        {
+            if (selectedObject as Moby != null)
+            {
+                Moby selectedObj = (Moby)selectedObject;
+                selectedObj.rotz = (float)rotzBox.Value;
+                selectedObj.updateTransform();
+                invalidate = true;
+            }
+        }
         private void objectTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            if(e.Node.Parent == objectTree.Nodes[0])
+            if (e.Node.Parent == objectTree.Nodes[0])
             {
                 selectedObject = level.mobs[e.Node.Index];
                 updateMoby();
@@ -642,5 +672,6 @@ namespace RatchetEdit
             setCamPos(selectedObject.x, selectedObject.y, selectedObject.z + 10);
             invalidate = true;
         }
+
     }
 }

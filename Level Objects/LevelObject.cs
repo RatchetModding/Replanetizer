@@ -16,6 +16,6 @@ namespace RatchetEdit
         public float y;
         public float z;
 
-        public virtual void updateTranslation(){ }  //Override me
+        public virtual void updateTransform(){ }  //Override me
     }
 }

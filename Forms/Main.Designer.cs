@@ -29,9 +29,9 @@ namespace RatchetEdit
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Mobys");
-            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Ties");
-            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Shrubs");
+            System.Windows.Forms.TreeNode treeNode7 = new System.Windows.Forms.TreeNode("Mobys");
+            System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("Ties");
+            System.Windows.Forms.TreeNode treeNode9 = new System.Windows.Forms.TreeNode("Shrubs");
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
@@ -66,7 +66,7 @@ namespace RatchetEdit
             this.rotyBox = new System.Windows.Forms.NumericUpDown();
             this.rotxBox = new System.Windows.Forms.NumericUpDown();
             this.zBox = new System.Windows.Forms.NumericUpDown();
-            this.sizeBox = new System.Windows.Forms.NumericUpDown();
+            this.scaleBox = new System.Windows.Forms.NumericUpDown();
             this.yBox = new System.Windows.Forms.NumericUpDown();
             this.dropBox = new System.Windows.Forms.NumericUpDown();
             this.xBox = new System.Windows.Forms.NumericUpDown();
@@ -100,7 +100,7 @@ namespace RatchetEdit
             ((System.ComponentModel.ISupportInitialize)(this.rotyBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.rotxBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.zBox)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.sizeBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.scaleBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.yBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dropBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.xBox)).BeginInit();
@@ -389,6 +389,7 @@ namespace RatchetEdit
             this.rotzBox.Name = "rotzBox";
             this.rotzBox.Size = new System.Drawing.Size(86, 20);
             this.rotzBox.TabIndex = 1;
+            this.rotzBox.ValueChanged += new System.EventHandler(this.rotzBox_ValueChanged);
             // 
             // rotyBox
             // 
@@ -413,6 +414,7 @@ namespace RatchetEdit
             this.rotyBox.Name = "rotyBox";
             this.rotyBox.Size = new System.Drawing.Size(86, 20);
             this.rotyBox.TabIndex = 1;
+            this.rotyBox.ValueChanged += new System.EventHandler(this.rotyBox_ValueChanged);
             // 
             // rotxBox
             // 
@@ -437,6 +439,7 @@ namespace RatchetEdit
             this.rotxBox.Name = "rotxBox";
             this.rotxBox.Size = new System.Drawing.Size(86, 20);
             this.rotxBox.TabIndex = 1;
+            this.rotxBox.ValueChanged += new System.EventHandler(this.rotxBox_ValueChanged);
             // 
             // zBox
             // 
@@ -465,27 +468,27 @@ namespace RatchetEdit
             // 
             // sizeBox
             // 
-            this.sizeBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.sizeBox.DecimalPlaces = 2;
-            this.sizeBox.Increment = new decimal(new int[] {
+            this.scaleBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.scaleBox.DecimalPlaces = 2;
+            this.scaleBox.Increment = new decimal(new int[] {
             1,
             0,
             0,
             131072});
-            this.sizeBox.Location = new System.Drawing.Point(1166, 497);
-            this.sizeBox.Maximum = new decimal(new int[] {
+            this.scaleBox.Location = new System.Drawing.Point(1166, 497);
+            this.scaleBox.Maximum = new decimal(new int[] {
             5000,
             0,
             0,
             0});
-            this.sizeBox.Minimum = new decimal(new int[] {
+            this.scaleBox.Minimum = new decimal(new int[] {
             5000,
             0,
             0,
             -2147483648});
-            this.sizeBox.Name = "sizeBox";
-            this.sizeBox.Size = new System.Drawing.Size(86, 20);
-            this.sizeBox.TabIndex = 1;
+            this.scaleBox.Name = "sizeBox";
+            this.scaleBox.Size = new System.Drawing.Size(86, 20);
+            this.scaleBox.TabIndex = 1;
             // 
             // yBox
             // 
@@ -791,16 +794,16 @@ namespace RatchetEdit
             this.objectTree.HideSelection = false;
             this.objectTree.Location = new System.Drawing.Point(1067, 27);
             this.objectTree.Name = "objectTree";
-            treeNode1.Name = "mobyNode";
-            treeNode1.Text = "Mobys";
-            treeNode2.Name = "tieNode";
-            treeNode2.Text = "Ties";
-            treeNode3.Name = "shrubNode";
-            treeNode3.Text = "Shrubs";
+            treeNode7.Name = "mobyNode";
+            treeNode7.Text = "Mobys";
+            treeNode8.Name = "tieNode";
+            treeNode8.Text = "Ties";
+            treeNode9.Name = "shrubNode";
+            treeNode9.Text = "Shrubs";
             this.objectTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode1,
-            treeNode2,
-            treeNode3});
+            treeNode7,
+            treeNode8,
+            treeNode9});
             this.objectTree.Size = new System.Drawing.Size(185, 295);
             this.objectTree.TabIndex = 16;
             this.objectTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.objectTree_AfterSelect);
@@ -826,7 +829,7 @@ namespace RatchetEdit
             this.Controls.Add(this.camZLabel);
             this.Controls.Add(this.zBox);
             this.Controls.Add(this.gotoPositionBtn);
-            this.Controls.Add(this.sizeBox);
+            this.Controls.Add(this.scaleBox);
             this.Controls.Add(this.targetxLabel);
             this.Controls.Add(this.yBox);
             this.Controls.Add(this.camYLabel);
@@ -859,7 +862,7 @@ namespace RatchetEdit
             ((System.ComponentModel.ISupportInitialize)(this.rotyBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.rotxBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.zBox)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.sizeBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.scaleBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.yBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dropBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.xBox)).EndInit();
@@ -892,7 +895,7 @@ namespace RatchetEdit
         private System.Windows.Forms.NumericUpDown rotyBox;
         private System.Windows.Forms.NumericUpDown rotxBox;
         private System.Windows.Forms.NumericUpDown zBox;
-        private System.Windows.Forms.NumericUpDown sizeBox;
+        private System.Windows.Forms.NumericUpDown scaleBox;
         private System.Windows.Forms.NumericUpDown yBox;
         private System.Windows.Forms.NumericUpDown dropBox;
         private System.Windows.Forms.NumericUpDown xBox;

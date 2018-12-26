@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
@@ -211,14 +212,15 @@ namespace RatchetEdit
 
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
-
+            //Update label texts
             camXLabel.Text = String.Format("X: {0}", Utilities.round(camera.position.X,2).ToString());
             camYLabel.Text = String.Format("Y: {0}", Utilities.round(camera.position.Y, 2).ToString());
             camZLabel.Text = String.Format("Z: {0}", Utilities.round(camera.position.Z, 2).ToString());
-
             yawLabel.Text = String.Format("Yaw: {0}", Utilities.round(Utilities.toDegrees(camera.yaw), 2).ToString());
             pitchLabel.Text = String.Format("Pitch: {0}", Utilities.round(Utilities.toDegrees(camera.pitch), 2).ToString());
             
+
+            //Render gl surface
             glControl1.MakeCurrent();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             worldView = view * projection;
@@ -252,30 +254,15 @@ namespace RatchetEdit
             GL.EnableVertexAttribArray(1);
             GL.UseProgram(shaderID);
 
-            if (mobyCheck.Checked && mobyCheck.Enabled)
-            {
-                foreach (Moby mob in level.mobs)
-                {
-                    drawObject(mob);
-                }
-            }
+            if (mobyCheck.Checked && mobyCheck.Enabled) 
+                foreach (Moby mob in level.mobs) drawObject(mob);
 
             if (tieCheck.Checked && tieCheck.Enabled)
-            {
-                foreach (Tie tie in level.ties)
-                {
-                    drawObject(tie);
-                }
-            }
+                foreach (Tie tie in level.ties) drawObject(tie);
 
             if (shrubCheck.Checked && splineCheck.Enabled)
-            {
-                foreach (Tie shrub in level.shrubs)
-                {
-                    drawObject(shrub);
-                }
-            }
-
+                foreach (Tie shrub in level.shrubs)  drawObject(shrub);
+            
             if (terrainCheck.Checked && terrainCheck.Enabled)
             {
                 GL.UniformMatrix4(matrixID, false, ref worldView);
@@ -305,10 +292,8 @@ namespace RatchetEdit
             invalidate = false;
         }
 
-
-        #region input
-        private void tickTimer_Tick(object sender, EventArgs e)
-        {
+        //Called every frame
+        private void tickTimer_Tick(object sender, EventArgs e) {
             float deltaTime = 0.016f;
 
             float moveSpeed = 25;
@@ -316,15 +301,13 @@ namespace RatchetEdit
             float nonShiftMultiplier = 0.5f;
 
             Vector3 moveDir = getInputAxes();
-            if (moveDir.Length != 0)
-            {
+            if (moveDir.Length > 0) {
                 moveDir *= (ModifierKeys == Keys.Shift ? shiftMultiplier : nonShiftMultiplier) * deltaTime * moveSpeed;
                 invalidate = true;
             }
 
 
-            if (rMouse)
-            {
+            if (rMouse) {
                 float yaw = camera.yaw;
                 float pitch = camera.pitch;
                 yaw -= (Cursor.Position.X - lastMouseX) * camera.speed * 0.016f;
@@ -345,46 +328,24 @@ namespace RatchetEdit
 
             view = Matrix4.LookAt(camera.position, target, Vector3.UnitZ);
 
-            if (invalidate)
-            {
+            if (invalidate) {
                 glControl1.Invalidate();
             }
 
         }
 
-        private Vector3 getInputAxes()
-        {
+        private Vector3 getInputAxes() {
             KeyboardState keyState = Keyboard.GetState();
 
             float xAxis = 0, yAxis = 0, zAxis = 0;
 
-            if (keyState.IsKeyDown(Key.W))
-            {
-                yAxis += 1;
-            }
-            if (keyState.IsKeyDown(Key.S))
-            {
-                yAxis -= 1;
-            }
-
-            if (keyState.IsKeyDown(Key.A))
-            {
-                xAxis -= 1;
-            }
-            if (keyState.IsKeyDown(Key.D))
-            {
-                xAxis += 1;
-            }
-
-            if (keyState.IsKeyDown(Key.Q))
-            {
-                zAxis -= 1;
-            }
-            if (keyState.IsKeyDown(Key.E))
-            {
-                zAxis += 1;
-            }
-
+            if (keyState.IsKeyDown(Key.W)) yAxis++;
+            if (keyState.IsKeyDown(Key.S)) yAxis--;
+            if (keyState.IsKeyDown(Key.A)) xAxis--;
+            if (keyState.IsKeyDown(Key.D)) xAxis++;
+            if (keyState.IsKeyDown(Key.Q)) zAxis--;
+            if (keyState.IsKeyDown(Key.E)) zAxis++;
+            
             return new Vector3(xAxis, yAxis, zAxis);
 
         }
@@ -400,7 +361,6 @@ namespace RatchetEdit
             rMouse = false;
             lMouse = false;
         }
-        #endregion
 
         private void glControl1_Resize(object sender, EventArgs e)
         {
@@ -412,6 +372,9 @@ namespace RatchetEdit
         {
             invalidate = true;
         }
+
+        delegate LevelObject del(LevelObject levelObject);
+
 
         private void glControl1_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
         {
@@ -426,93 +389,39 @@ namespace RatchetEdit
 
                 //TODO: Consolidate following stuff into function.
 
-                if (mobyCheck.Checked)
-                {
+                if (mobyCheck.Checked) {
                     GL.ClearColor(0, 0, 0, 0);
-                    foreach (Moby mob in level.mobs)
-                    {
-                        if (mob.model.vertexBuffer != null)
-                        {
-                            Matrix4 mvp = mob.modelMatrix * worldView;  //Has to be done in this order to work correctly
-                            GL.UniformMatrix4(matrixID, false, ref mvp);
-
-                            mob.model.getVBO();
-                            mob.model.getIBO();
-
-                            int mobyNum = level.mobs.IndexOf(mob);
-                            byte[] cols = BitConverter.GetBytes(mobyNum);
-                            GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
-                            GL.DrawElements(PrimitiveType.Triangles, mob.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
-                        }
-                    }
+                    offset = 0;
+                    drawObjects(level.mobs.Cast<LevelObject>().ToList(), offset);
                 }
-
-                if (tieCheck.Checked)
-                {
+                if (tieCheck.Checked){
                     offset += level.mobs.Count;
-                    foreach (Tie tie in level.ties)
-                    {
-                        if (tie.model.vertexBuffer != null)
-                        {
-                            Matrix4 mvp = tie.modelMatrix * worldView;  //Has to be done in this order to work correctly
-                            GL.UniformMatrix4(matrixID, false, ref mvp);
-
-                            tie.model.getVBO();
-                            tie.model.getIBO();
-
-                            int tieNum = level.ties.IndexOf(tie);
-                            byte[] cols = BitConverter.GetBytes(tieNum + offset);
-                            GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
-                            GL.DrawElements(PrimitiveType.Triangles, tie.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
-                        }
-                    }
+                    drawObjects(level.ties.Cast<LevelObject>().ToList(), offset);
                 }
-
-                if (shrubCheck.Checked)
-                {
+                if (shrubCheck.Checked){
                     offset += level.ties.Count;
-                    foreach (Tie shrub in level.shrubs)
-                    {
-                        if (shrub.model.vertexBuffer != null)
-                        {
-                            Matrix4 mvp = shrub.modelMatrix * worldView;  //Has to be done in this order to work correctly
-                            GL.UniformMatrix4(matrixID, false, ref mvp);
-
-                            shrub.model.getVBO();
-                            shrub.model.getIBO();
-
-                            int shrubNum = level.shrubs.IndexOf(shrub);
-                            byte[] cols = BitConverter.GetBytes(shrubNum + offset);
-                            GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
-                            GL.DrawElements(PrimitiveType.Triangles, shrub.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
-                        }
-                    }
+                    drawObjects(level.shrubs.Cast<LevelObject>().ToList(), offset);
                 }
 
-                Byte4 pixel = new Byte4();
+                Pixel pixel = new Pixel();
                 GL.ReadPixels(e.Location.X, glControl1.Height - e.Location.Y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixel);
                 GL.ClearColor(Color.SkyBlue);
-                if (pixel.A == 0)
-                {
+                if (pixel.A == 0) {
                     int id = (int)pixel.ToUInt32();
-                    if (id < level.mobs?.Count)
-                    {
+                    if (id < level.mobs?.Count) {
                         selectedObject = level.mobs[id];
                         objectTree.SelectedNode = objectTree.Nodes[0].Nodes[id];
                     }
-                    else if (id - level.mobs?.Count < level.ties?.Count)
-                    {
+                    else if (id - level.mobs?.Count < level.ties?.Count) {
                         selectedObject = level.ties[id - level.mobs.Count];
                         objectTree.SelectedNode = objectTree.Nodes[1].Nodes[id - level.mobs.Count];
                     }
 
-                    else if (id - offset < level.shrubs?.Count)
-                    {
+                    else if (id - offset < level.shrubs?.Count) {
                         selectedObject = level.shrubs[id - offset];
                         objectTree.SelectedNode = objectTree.Nodes[2].Nodes[id - offset];
                     }
-                    if (selectedObject == prevObject)
-                    {
+                    if (selectedObject == prevObject) {
                         openModelViewer();
                     }
                     prevObject = selectedObject;
@@ -523,34 +432,27 @@ namespace RatchetEdit
             }
         }
 
-        struct Byte4
-        {
-            public byte R, G, B, A;
 
-            public Byte4(byte[] input)
-            {
-                R = input[0];
-                G = input[1];
-                B = input[2];
-                A = input[3];
-            }
+        public void drawObjects(List<LevelObject> levelObjects, int offset) {
+            foreach (LevelObject levelObject in levelObjects) {
+                if (levelObject.model.vertexBuffer != null) {
+                    Matrix4 mvp = levelObject.modelMatrix * worldView;  //Has to be done in this order to work correctly
+                    GL.UniformMatrix4(matrixID, false, ref mvp);
 
-            public uint ToUInt32()
-            {
-                byte[] temp = new byte[] { R, G, B, A };
-                return BitConverter.ToUInt32(temp, 0);
-            }
+                    levelObject.model.getVBO();
+                    levelObject.model.getIBO();
 
-            public override string ToString()
-            {
-                return R + ", " + G + ", " + B + ", " + A;
+                    int tieNum = levelObjects.IndexOf(levelObject);
+                    byte[] cols = BitConverter.GetBytes(tieNum + offset);
+                    GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
+                    GL.DrawElements(PrimitiveType.Triangles, levelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
+                }
             }
         }
 
         private void drawObject(LevelObject obj)
         {
-            if (obj.model.vertexBuffer != null)
-            {
+            if (obj.model.vertexBuffer != null) {
                 Matrix4 mvp = obj.modelMatrix * worldView;  //Has to be done in this order to work correctly
                 GL.UniformMatrix4(matrixID, false, ref mvp);
 
@@ -558,14 +460,14 @@ namespace RatchetEdit
                 obj.model.getIBO();
 
                 //Bind textures one by one, applying it to the relevant vertices based on the index array
-                foreach (TextureConfig conf in obj.model.textureConfig)
-                {
+                foreach (TextureConfig conf in obj.model.textureConfig) {
                     GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? level.textures[conf.ID].getTexture() : 0);
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
             }
         }
 
+        #region Position Input Events
         private void xBox_ValueChanged(object sender, EventArgs e)
         {
             if (selectedObject == null) return;
@@ -589,7 +491,8 @@ namespace RatchetEdit
             selectedObject.updateTransform();
             invalidate = true;
         }
-
+        #endregion
+        #region Rotation Input Events
         private void rotxBox_ValueChanged(object sender, EventArgs e)
         {
             if (selectedObject as Moby != null)
@@ -622,6 +525,8 @@ namespace RatchetEdit
                 invalidate = true;
             }
         }
+        #endregion
+        #region Misc Input Events
         private void objectTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (e.Node.Parent == objectTree.Nodes[0])
@@ -646,6 +551,27 @@ namespace RatchetEdit
                 selectedObj.scale = (float)scaleBox.Value;
                 selectedObj.updateTransform();
                 invalidate = true;
+            }
+        }
+        #endregion
+
+        struct Pixel {
+            public byte R, G, B, A;
+
+            public Pixel(byte[] input) {
+                R = input[0];
+                G = input[1];
+                B = input[2];
+                A = input[3];
+            }
+
+            public uint ToUInt32() {
+                byte[] temp = new byte[] { R, G, B, A };
+                return BitConverter.ToUInt32(temp, 0);
+            }
+
+            public override string ToString() {
+                return R + ", " + G + ", " + B + ", " + A;
             }
         }
     }

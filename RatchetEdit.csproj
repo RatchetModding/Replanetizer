@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Camera.cs" />
     <Compile Include="DataFunctions.cs" />
     <Compile Include="EngineHeader.cs" />
     <Compile Include="Headers.cs" />

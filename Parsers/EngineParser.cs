@@ -8,7 +8,7 @@ namespace RatchetEdit
 
         public EngineParser(string engineFile) : base(engineFile)
         {
-            engineHead = new EngineHeader(fs);
+            engineHead = new EngineHeader(fileStream);
         }
 
         public List<Model> GetMobyModels()

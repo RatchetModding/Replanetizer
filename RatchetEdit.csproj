@@ -62,7 +62,8 @@
     <Compile Include="Models\ShrubModel.cs" />
     <Compile Include="Models\TerrainModel.cs" />
     <Compile Include="Models\TieModel.cs" />
-    <Compile Include="Parsers\LevelParser.cs" />
+    <Compile Include="Parsers\GameplayParser.cs" />
+    <Compile Include="Parsers\EngineParser.cs" />
     <Compile Include="Forms\Main.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -77,6 +78,7 @@
     <Compile Include="Forms\ModelViewer.Designer.cs">
       <DependentUpon>ModelViewer.cs</DependentUpon>
     </Compile>
+    <Compile Include="Parsers\VramParser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Parsers\RatchetFileParser.cs" />

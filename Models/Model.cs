@@ -74,8 +74,7 @@ namespace RatchetEdit
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
         }
 
-        public void getIBO()
-        {
+        public void getIBO() {
             //Get the index buffer object, or create one if one doesn't exist
             if(IBO == 0)
             {

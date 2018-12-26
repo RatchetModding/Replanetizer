@@ -1,32 +1,39 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Windows.Forms;
 using static RatchetEdit.DataFunctions;
 
 namespace RatchetEdit
 {
-    public class RatchetFileParser
-    {
-        protected FileStream fs;
+    public class RatchetFileParser {
+        protected FileStream fileStream;
 
-        protected RatchetFileParser(string filePath)
-        {
-            fs = File.OpenRead(filePath);
+        protected RatchetFileParser(string filePath) {
+            try {
+                fileStream = File.OpenRead(filePath);
+            }
+            catch(Exception e) {
+                Console.WriteLine(e);
+                Console.WriteLine("Couldn't load engine file.");
+                Application.Exit();
+                return;
+            }
         }
 
-        protected List<Model> GetMobyModels(uint mobyModelPointer)
-        {
+        protected List<Model> GetMobyModels(uint mobyModelPointer) {
             List<Model> mobyModels = new List<Model>();
 
             //Get the moby count from the start of the section
-            int mobyModelCount = ReadInt(ReadBlock(fs, mobyModelPointer, 4), 0);
+            int mobyModelCount = ReadInt(ReadBlock(fileStream, mobyModelPointer, 4), 0);
 
             //Each moby is stored as a [MobyID, offset] pair
-            byte[] mobyIDBlock = ReadBlock(fs, mobyModelPointer + 4, mobyModelCount * 8);
+            byte[] mobyIDBlock = ReadBlock(fileStream, mobyModelPointer + 4, mobyModelCount * 8);
             for (int i = 0; i < mobyModelCount; i++)
             {
                 short modelID = ReadShort(mobyIDBlock,  (i * 8) + 2);
                 uint offset =   ReadUint(mobyIDBlock,   (i * 8) + 4);
-                mobyModels.Add(new MobyModel(fs, modelID, offset));
+                mobyModels.Add(new MobyModel(fileStream, modelID, offset));
             }
             return mobyModels;
         }
@@ -36,11 +43,11 @@ namespace RatchetEdit
             List<Model> tieModelList = new List<Model>();
 
             //Read the whole header block, and add models based on the count
-            byte[] levelBlock = ReadBlock(fs, tieModelPointer, tieModelCount * TieModelHeader.TIEELEMSIZE);
+            byte[] levelBlock = ReadBlock(fileStream, tieModelPointer, tieModelCount * TieModelHeader.TIEELEMSIZE);
             for (int i = 0; i < tieModelCount; i++)
             {
                 TieModelHeader head = new TieModelHeader(levelBlock, i);
-                tieModelList.Add(new TieModel(fs, head));
+                tieModelList.Add(new TieModel(fileStream, head));
             }
 
             return tieModelList;
@@ -51,11 +58,11 @@ namespace RatchetEdit
             List<Model> shrubModelList = new List<Model>();
 
             //Read the whole header block, and add models based on the count
-            byte[] shrubBlock = ReadBlock(fs, shrubModelPointer, shrubModelCount * TieModelHeader.TIEELEMSIZE);
+            byte[] shrubBlock = ReadBlock(fileStream, shrubModelPointer, shrubModelCount * TieModelHeader.TIEELEMSIZE);
             for (int i = 0; i < shrubModelCount; i++)
             {
                 TieModelHeader head = new TieModelHeader(shrubBlock, i);
-                shrubModelList.Add(new ShrubModel(fs, head));
+                shrubModelList.Add(new ShrubModel(fileStream, head));
             }
             return shrubModelList;
         }
@@ -65,7 +72,7 @@ namespace RatchetEdit
             List<Texture> textureList = new List<Texture>();
 
             //Read the whole texture header block, and add textures based on the count
-            byte[] textureBlock = ReadBlock(fs, texturePointer, textureCount * Texture.TEXTUREELEMSIZE);
+            byte[] textureBlock = ReadBlock(fileStream, texturePointer, textureCount * Texture.TEXTUREELEMSIZE);
             for (int i = 0; i < textureCount; i++)
             {
                 textureList.Add(new Texture(textureBlock, i));
@@ -78,7 +85,7 @@ namespace RatchetEdit
             List<Tie> ties = new List<Tie>();
 
             //Read the whole texture header block, and add textures based on the count
-            byte[] tieBlock = ReadBlock(fs, tiePointer, tieCount * 0x70);
+            byte[] tieBlock = ReadBlock(fileStream, tiePointer, tieCount * 0x70);
             for (int i = 0; i < tieCount; i++)
             {
                 Tie tie = new Tie(tieBlock, i, tieModels);
@@ -92,15 +99,15 @@ namespace RatchetEdit
         {
             List<TerrainHeader> pointerList = new List<TerrainHeader>();
             //Read the whole terrain header
-            byte[] terrainBlock = ReadBlock(fs, terrainModelPointer, 0x60);
+            byte[] terrainBlock = ReadBlock(fileStream, terrainModelPointer, 0x60);
             uint terrainHeadPointer = ReadUint(terrainBlock, 0);
             ushort terrainHeadCount = ReadUshort(terrainBlock, 0x06);
 
 
-            byte[] terrainHeadBlock = ReadBlock(fs, terrainHeadPointer, terrainHeadCount * 0x30);
+            byte[] terrainHeadBlock = ReadBlock(fileStream, terrainHeadPointer, terrainHeadCount * 0x30);
             for (int i = 0; i < terrainHeadCount; i++)
             {
-                TerrainFragHeader head = new TerrainFragHeader(fs, terrainHeadBlock, i);
+                TerrainFragHeader head = new TerrainFragHeader(fileStream, terrainHeadBlock, i);
                 if(pointerList.Count < head.slotNum + 1)
                 {
                     pointerList.Add(new TerrainHeader(terrainBlock, (head.slotNum * 4)));
@@ -112,7 +119,7 @@ namespace RatchetEdit
             List<TerrainModel> terrainModels = new List<TerrainModel>();
             foreach(TerrainHeader hd in pointerList)
             {
-                terrainModels.Add(new TerrainModel(fs, hd));
+                terrainModels.Add(new TerrainModel(fileStream, hd));
             }
 
             return terrainModels;
@@ -122,7 +129,7 @@ namespace RatchetEdit
 
         public void Close()
         {
-            fs.Close();
+            fileStream.Close();
         }
     }
 }

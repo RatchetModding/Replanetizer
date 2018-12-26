@@ -60,8 +60,7 @@ namespace RatchetEdit
 
             Matrix3 rot = Matrix3.CreateRotationX(camera.pitch) * Matrix3.CreateRotationZ(camera.yaw);
             Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);
-            Vector3 target = camera.position + forward;
-            view = Matrix4.LookAt(camera.position, target, Vector3.UnitZ);
+            view = Matrix4.LookAt(camera.position, camera.position + forward, Vector3.UnitZ);
 
             //Experimental transparency blend
             //GL.Enable(EnableCap.Blend);
@@ -98,40 +97,41 @@ namespace RatchetEdit
             Console.WriteLine(GL.GetShaderInfoLog(address));
         }
 
-        private void mapOpenBtn_Click(object sender, EventArgs e)
-        {
-            if (mapOpenDialog.ShowDialog() == DialogResult.OK)
-            {
-                level = new Level(mapOpenDialog.FileName);
-                invalidate = true;
-                mobyCheck.Enabled = true;
-                tieCheck.Enabled = true;
-                shrubCheck.Enabled = true;
-                collCheck.Enabled = true;
-                terrainCheck.Enabled = true;
-                splineCheck.Enabled = true;
-                objectTree.CollapseAll();
-                objectTree.Nodes[0].Nodes.Clear();
-                objectTree.Nodes[1].Nodes.Clear();
-                objectTree.Nodes[2].Nodes.Clear();
-                foreach (Moby mob in level.mobs)
-                {
-                    string modelName = modelNames != null ? modelNames.Find(x => x.Substring(0, 4).ToUpper() == mob.modelID.ToString("X4")) : null;
-                    objectTree.Nodes[0].Nodes.Add(modelName != null ? modelName.Split('=')[1].Substring(1) : mob.modelID.ToString("X"));
-                }
-                foreach (Tie tie in level.ties)
-                {
-                    objectTree.Nodes[1].Nodes.Add(tie.modelID.ToString("X"));
-                }
-                foreach (Tie shrub in level.shrubs)
-                {
-                    objectTree.Nodes[2].Nodes.Add(shrub.modelID.ToString("X"));
-                }
-
-                Moby ratchet = level.mobs[0];
-                camera.moveBehind(ratchet);
-                
+        private void mapOpenBtn_Click(object sender, EventArgs e) {
+            if (mapOpenDialog.ShowDialog() == DialogResult.OK) {
+                loadLevel(mapOpenDialog.FileName);
             }
+        }
+
+        void loadLevel(string fileName) {
+            level = new Level(fileName);
+            invalidate = true;
+            mobyCheck.Enabled = true;
+            tieCheck.Enabled = true;
+            shrubCheck.Enabled = true;
+            collCheck.Enabled = true;
+            terrainCheck.Enabled = true;
+            splineCheck.Enabled = true;
+            objectTree.CollapseAll();
+            objectTree.Nodes[0].Nodes.Clear();
+            objectTree.Nodes[1].Nodes.Clear();
+            objectTree.Nodes[2].Nodes.Clear();
+
+            foreach (Moby moby in level.mobs) {
+                string modelName = modelNames != null ? modelNames.Find(x => x.Substring(0, 4).ToUpper() == moby.modelID.ToString("X4")) : null;
+                objectTree.Nodes[0].Nodes.Add(modelName != null ? modelName.Split('=')[1].Substring(1) : moby.modelID.ToString("X"));
+            }
+            foreach (Tie tie in level.ties) {
+                string tieName = tie.modelID.ToString("X");
+                objectTree.Nodes[1].Nodes.Add(tieName);
+            }
+            foreach (Tie shrub in level.shrubs) {
+                string shrubName = shrub.modelID.ToString("X");
+                objectTree.Nodes[2].Nodes.Add(shrubName);
+            }
+
+            Moby ratchet = level.mobs[0];
+            camera.moveBehind(ratchet);
         }
 
         public void getModelNames()
@@ -321,13 +321,12 @@ namespace RatchetEdit
             camera.setPosition(camera.position + Vector3.Transform(moveDir, rot));
 
             Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);
-            Vector3 target = camera.position + forward;
 
             lastMouseX = Cursor.Position.X;
             lastMouseY = Cursor.Position.Y;
 
-            view = Matrix4.LookAt(camera.position, target, Vector3.UnitZ);
-
+            view = Matrix4.LookAt(camera.position, camera.position + forward, Vector3.UnitZ);
+           
             if (invalidate) {
                 glControl1.Invalidate();
             }
@@ -527,26 +526,21 @@ namespace RatchetEdit
         }
         #endregion
         #region Misc Input Events
-        private void objectTree_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            if (e.Node.Parent == objectTree.Nodes[0])
-            {
+        private void objectTree_AfterSelect(object sender, TreeViewEventArgs e) {
+            if (e.Node.Parent == objectTree.Nodes[0]) {
                 selectedObject = level.mobs[e.Node.Index];
                 updateLevelObject();
             }
         }
 
-        private void gotoPositionBtn_Click(object sender, EventArgs e)
-        {
+        private void gotoPositionBtn_Click(object sender, EventArgs e) {
             if (selectedObject == null) return;
             camera.moveBehind(selectedObject);
             invalidate = true;
         }
 
-        private void scaleBox_ValueChanged(object sender, EventArgs e)
-        {
-            if (selectedObject as Moby != null)
-            {
+        private void scaleBox_ValueChanged(object sender, EventArgs e) {
+            if (selectedObject as Moby != null) {
                 Moby selectedObj = (Moby)selectedObject;
                 selectedObj.scale = (float)scaleBox.Value;
                 selectedObj.updateTransform();

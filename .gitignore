@@ -1,5 +1,5 @@
-/.vs/RatchetLevelEditor2018
+/.vs/RatchetEdit
 /packages
 /.vs
-[Oo]bj/
-[Bb]in/
+/[Oo]bj
+/[Bb]in

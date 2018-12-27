@@ -59,7 +59,7 @@
     <Compile Include="Level Objects\ModelObject.cs" />
     <Compile Include="Level Objects\Tie.cs" />
     <Compile Include="Level Objects\Moby.cs" />
-    <Compile Include="Level Objects\Transformable.cs" />
+    <Compile Include="Level Objects\ITransformable.cs" />
     <Compile Include="Models\MobyModel.cs" />
     <Compile Include="Models\ShrubModel.cs" />
     <Compile Include="Models\TerrainModel.cs" />

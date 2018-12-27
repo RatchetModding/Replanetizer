@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace RatchetEdit {
-    public interface Transformable {
+    public interface ITransformable {
         void Translate(float x, float y, float z);
         void Translate(Vector3 vector);
 

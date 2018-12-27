@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace RatchetEdit {
-    class Camera : Transformable {
+    class Camera : ITransformable {
         //Camera variables
         public float speed = 0.2f;
         public Vector3 position = new Vector3();

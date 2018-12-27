@@ -58,7 +58,7 @@ namespace RatchetEdit
             GL.Enable(EnableCap.DepthTest);
             GL.LineWidth(5.0f);
 
-            Matrix3 rot = Matrix3.CreateRotationX(camera.pitch) * Matrix3.CreateRotationZ(camera.yaw);
+            Matrix3 rot = Matrix3.CreateRotationX(camera.rotation.X) * Matrix3.CreateRotationZ(camera.rotation.Z);
             Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);
             view = Matrix4.LookAt(camera.position, camera.position + forward, Vector3.UnitZ);
 
@@ -216,8 +216,8 @@ namespace RatchetEdit
             camXLabel.Text = String.Format("X: {0}", Utilities.round(camera.position.X,2).ToString());
             camYLabel.Text = String.Format("Y: {0}", Utilities.round(camera.position.Y, 2).ToString());
             camZLabel.Text = String.Format("Z: {0}", Utilities.round(camera.position.Z, 2).ToString());
-            yawLabel.Text = String.Format("Yaw: {0}", Utilities.round(Utilities.toDegrees(camera.yaw), 2).ToString());
-            pitchLabel.Text = String.Format("Pitch: {0}", Utilities.round(Utilities.toDegrees(camera.pitch), 2).ToString());
+            pitchLabel.Text = String.Format("Pitch: {0}", Utilities.round(Utilities.toDegrees(camera.rotation.X), 2).ToString());
+            yawLabel.Text = String.Format("Yaw: {0}", Utilities.round(Utilities.toDegrees(camera.rotation.Z), 2).ToString());
             
 
             //Render gl surface
@@ -308,8 +308,8 @@ namespace RatchetEdit
 
 
             if (rMouse) {
-                float yaw = camera.yaw;
-                float pitch = camera.pitch;
+                float pitch = camera.rotation.X;
+                float yaw = camera.rotation.Z;
                 yaw -= (Cursor.Position.X - lastMouseX) * camera.speed * 0.016f;
                 pitch -= (Cursor.Position.Y - lastMouseY) * camera.speed * 0.016f;
                 pitch = MathHelper.Clamp(pitch, MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
@@ -317,7 +317,7 @@ namespace RatchetEdit
                 invalidate = true;
             }
 
-            Matrix3 rot = Matrix3.CreateRotationX(camera.pitch) * Matrix3.CreateRotationZ(camera.yaw);
+            Matrix3 rot = Matrix3.CreateRotationX(camera.rotation.X) * Matrix3.CreateRotationZ(camera.rotation.Z);
             camera.setPosition(camera.position + Vector3.Transform(moveDir, rot));
 
             Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);

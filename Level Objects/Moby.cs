@@ -37,8 +37,7 @@ namespace RatchetEdit
 
         public override void updateTransform()
         {
-            Matrix4 rotMatrix = Matrix4.CreateRotationX(rotx) * Matrix4.CreateRotationY(roty) * Matrix4.CreateRotationZ(rotz);
-            //Matrix4 rotMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
+            Matrix4 rotMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
             Matrix4 scaleMatrix = Matrix4.CreateScale(scale * model.size);
             Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
             modelMatrix = scaleMatrix * rotMatrix * translationMatrix;

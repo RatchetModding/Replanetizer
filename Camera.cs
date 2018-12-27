@@ -9,21 +9,22 @@ namespace RatchetEdit {
     class Camera {
         //Camera variables
         public float speed = 0.2f;
-        public float pitch = 0f;
-        public float yaw = -0.75f;
-        public Vector3 position = new Vector3(0, 0, 0);
+        public Vector3 position = new Vector3();
+        public Vector3 rotation = new Vector3(0,0,-0.75f);
 
         public void setPosition(Vector3 position) {
             this.position = position;
         }
 
         public void setPosition(float x, float y, float z) {
-            this.position = new Vector3(x,y,z);
+            setPosition(new Vector3(x,y,z));
         }
 
         public void setRotation(float pitch, float yaw) {
-            this.pitch = pitch;
-            this.yaw = yaw;
+            setRotation(new Vector3(pitch, 0, yaw));
+        }
+        public void setRotation(Vector3 rotation) {
+            this.rotation = rotation;
         }
 
         public void moveBehind(LevelObject levelObject, float distanceToObject = 5) {
@@ -36,8 +37,8 @@ namespace RatchetEdit {
             yaw = yaw - (float)Math.PI / 2;
             setRotation(0, yaw);
 
-            float xpos = (float)-Math.Cos(yaw);
-            float ypos = (float)-Math.Sin(yaw);
+            float ypos = (float)-Math.Cos(yaw);
+            float xpos = (float)Math.Sin(yaw);
             Vector3 cameraPosition = new Vector3(
                 levelObject.position.X + xpos * distanceToObject,
                 levelObject.position.Y + ypos * distanceToObject,

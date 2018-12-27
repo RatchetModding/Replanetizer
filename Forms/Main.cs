@@ -581,12 +581,16 @@ namespace RatchetEdit
         private void cloneButton_Click(object sender, EventArgs e) {
             if (selectedObject as Moby != null) {
                 Moby moby = (Moby)selectedObject;
-                Moby newMoby = moby.CloneMoby();
-                level.mobs.Add(newMoby);
-                GenerateObjectTree();
-                SelectObject(newMoby);
-                invalidate = true;
+                CloneMoby(moby);
             }
+        }
+
+        public void CloneMoby(Moby moby) {
+            Moby newMoby = moby.CloneMoby();
+            level.mobs.Add(newMoby);
+            GenerateObjectTree();
+            SelectObject(newMoby);
+            invalidate = true;
         }
         #endregion
 

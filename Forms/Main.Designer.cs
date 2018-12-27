@@ -29,9 +29,9 @@ namespace RatchetEdit
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Mobys");
-            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Ties");
-            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Shrubs");
+            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("Mobys");
+            System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("Ties");
+            System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("Shrubs");
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
@@ -95,6 +95,7 @@ namespace RatchetEdit
             this.objectTree = new System.Windows.Forms.TreeView();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.cloneButton = new System.Windows.Forms.Button();
+            this.deleteButton = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.renderBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.rotzBox)).BeginInit();
@@ -319,7 +320,7 @@ namespace RatchetEdit
             // modelIDBox
             // 
             this.modelIDBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.modelIDBox.Location = new System.Drawing.Point(6, 340);
+            this.modelIDBox.Location = new System.Drawing.Point(6, 279);
             this.modelIDBox.Name = "modelIDBox";
             this.modelIDBox.Size = new System.Drawing.Size(121, 20);
             this.modelIDBox.TabIndex = 7;
@@ -327,7 +328,7 @@ namespace RatchetEdit
             // missionBox
             // 
             this.missionBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.missionBox.Location = new System.Drawing.Point(136, 535);
+            this.missionBox.Location = new System.Drawing.Point(136, 474);
             this.missionBox.Name = "missionBox";
             this.missionBox.Size = new System.Drawing.Size(118, 20);
             this.missionBox.TabIndex = 7;
@@ -336,7 +337,7 @@ namespace RatchetEdit
             // 
             this.colorPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.colorPanel.BackColor = System.Drawing.Color.Gray;
-            this.colorPanel.Location = new System.Drawing.Point(132, 340);
+            this.colorPanel.Location = new System.Drawing.Point(132, 279);
             this.colorPanel.Name = "colorPanel";
             this.colorPanel.Size = new System.Drawing.Size(122, 20);
             this.colorPanel.TabIndex = 6;
@@ -344,7 +345,8 @@ namespace RatchetEdit
             // openModelViewerBtn
             // 
             this.openModelViewerBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.openModelViewerBtn.Location = new System.Drawing.Point(136, 561);
+            this.openModelViewerBtn.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.openModelViewerBtn.Location = new System.Drawing.Point(136, 500);
             this.openModelViewerBtn.Name = "openModelViewerBtn";
             this.openModelViewerBtn.Size = new System.Drawing.Size(118, 23);
             this.openModelViewerBtn.TabIndex = 4;
@@ -355,7 +357,8 @@ namespace RatchetEdit
             // gotoPositionBtn
             // 
             this.gotoPositionBtn.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.gotoPositionBtn.Location = new System.Drawing.Point(6, 561);
+            this.gotoPositionBtn.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.gotoPositionBtn.Location = new System.Drawing.Point(6, 500);
             this.gotoPositionBtn.Name = "gotoPositionBtn";
             this.gotoPositionBtn.Size = new System.Drawing.Size(121, 23);
             this.gotoPositionBtn.TabIndex = 2;
@@ -366,7 +369,7 @@ namespace RatchetEdit
             // renderBox
             // 
             this.renderBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.renderBox.Location = new System.Drawing.Point(6, 535);
+            this.renderBox.Location = new System.Drawing.Point(6, 474);
             this.renderBox.Name = "renderBox";
             this.renderBox.Size = new System.Drawing.Size(121, 20);
             this.renderBox.TabIndex = 1;
@@ -375,7 +378,7 @@ namespace RatchetEdit
             // 
             this.rotzBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.rotzBox.DecimalPlaces = 2;
-            this.rotzBox.Location = new System.Drawing.Point(136, 457);
+            this.rotzBox.Location = new System.Drawing.Point(136, 396);
             this.rotzBox.Maximum = new decimal(new int[] {
             5000,
             0,
@@ -395,7 +398,7 @@ namespace RatchetEdit
             // 
             this.rotyBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.rotyBox.DecimalPlaces = 2;
-            this.rotyBox.Location = new System.Drawing.Point(136, 418);
+            this.rotyBox.Location = new System.Drawing.Point(136, 357);
             this.rotyBox.Maximum = new decimal(new int[] {
             5000,
             0,
@@ -415,7 +418,7 @@ namespace RatchetEdit
             // 
             this.rotxBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.rotxBox.DecimalPlaces = 2;
-            this.rotxBox.Location = new System.Drawing.Point(136, 379);
+            this.rotxBox.Location = new System.Drawing.Point(136, 318);
             this.rotxBox.Maximum = new decimal(new int[] {
             5000,
             0,
@@ -440,7 +443,7 @@ namespace RatchetEdit
             0,
             0,
             65536});
-            this.zBox.Location = new System.Drawing.Point(6, 457);
+            this.zBox.Location = new System.Drawing.Point(6, 396);
             this.zBox.Maximum = new decimal(new int[] {
             5000,
             0,
@@ -465,7 +468,7 @@ namespace RatchetEdit
             0,
             0,
             131072});
-            this.scaleBox.Location = new System.Drawing.Point(136, 496);
+            this.scaleBox.Location = new System.Drawing.Point(136, 435);
             this.scaleBox.Maximum = new decimal(new int[] {
             5000,
             0,
@@ -490,7 +493,7 @@ namespace RatchetEdit
             0,
             0,
             65536});
-            this.yBox.Location = new System.Drawing.Point(6, 418);
+            this.yBox.Location = new System.Drawing.Point(6, 357);
             this.yBox.Maximum = new decimal(new int[] {
             5000,
             0,
@@ -509,7 +512,7 @@ namespace RatchetEdit
             // dropBox
             // 
             this.dropBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.dropBox.Location = new System.Drawing.Point(6, 496);
+            this.dropBox.Location = new System.Drawing.Point(6, 435);
             this.dropBox.Maximum = new decimal(new int[] {
             32000,
             0,
@@ -533,7 +536,7 @@ namespace RatchetEdit
             0,
             0,
             65536});
-            this.xBox.Location = new System.Drawing.Point(6, 379);
+            this.xBox.Location = new System.Drawing.Point(6, 318);
             this.xBox.Maximum = new decimal(new int[] {
             5000,
             0,
@@ -553,7 +556,7 @@ namespace RatchetEdit
             // 
             this.label7.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(133, 441);
+            this.label7.Location = new System.Drawing.Point(133, 380);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(57, 13);
             this.label7.TabIndex = 0;
@@ -563,7 +566,7 @@ namespace RatchetEdit
             // 
             this.label17.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(3, 519);
+            this.label17.Location = new System.Drawing.Point(3, 458);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(85, 13);
             this.label17.TabIndex = 0;
@@ -573,7 +576,7 @@ namespace RatchetEdit
             // 
             this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(133, 402);
+            this.label6.Location = new System.Drawing.Point(133, 341);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(57, 13);
             this.label6.TabIndex = 0;
@@ -583,7 +586,7 @@ namespace RatchetEdit
             // 
             this.label16.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(133, 324);
+            this.label16.Location = new System.Drawing.Point(133, 263);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(31, 13);
             this.label16.TabIndex = 0;
@@ -593,7 +596,7 @@ namespace RatchetEdit
             // 
             this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(133, 363);
+            this.label5.Location = new System.Drawing.Point(133, 302);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(57, 13);
             this.label5.TabIndex = 0;
@@ -603,7 +606,7 @@ namespace RatchetEdit
             // 
             this.label15.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(133, 519);
+            this.label15.Location = new System.Drawing.Point(133, 458);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(42, 13);
             this.label15.TabIndex = 0;
@@ -613,7 +616,7 @@ namespace RatchetEdit
             // 
             this.label4.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(3, 441);
+            this.label4.Location = new System.Drawing.Point(3, 380);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(14, 13);
             this.label4.TabIndex = 0;
@@ -623,7 +626,7 @@ namespace RatchetEdit
             // 
             this.label14.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(133, 480);
+            this.label14.Location = new System.Drawing.Point(133, 419);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(34, 13);
             this.label14.TabIndex = 0;
@@ -633,7 +636,7 @@ namespace RatchetEdit
             // 
             this.label3.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(3, 402);
+            this.label3.Location = new System.Drawing.Point(3, 341);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(14, 13);
             this.label3.TabIndex = 0;
@@ -643,7 +646,7 @@ namespace RatchetEdit
             // 
             this.label9.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(3, 480);
+            this.label9.Location = new System.Drawing.Point(3, 419);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(30, 13);
             this.label9.TabIndex = 0;
@@ -653,7 +656,7 @@ namespace RatchetEdit
             // 
             this.label2.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(3, 363);
+            this.label2.Location = new System.Drawing.Point(3, 302);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(14, 13);
             this.label2.TabIndex = 0;
@@ -663,7 +666,7 @@ namespace RatchetEdit
             // 
             this.label1.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(3, 324);
+            this.label1.Location = new System.Drawing.Point(3, 263);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(50, 13);
             this.label1.TabIndex = 0;
@@ -673,7 +676,7 @@ namespace RatchetEdit
             // 
             this.label10.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(10, 599);
+            this.label10.Location = new System.Drawing.Point(3, 554);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(43, 13);
             this.label10.TabIndex = 10;
@@ -683,7 +686,7 @@ namespace RatchetEdit
             // 
             this.camXLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.camXLabel.AutoSize = true;
-            this.camXLabel.Location = new System.Drawing.Point(10, 612);
+            this.camXLabel.Location = new System.Drawing.Point(3, 567);
             this.camXLabel.Name = "camXLabel";
             this.camXLabel.Size = new System.Drawing.Size(13, 13);
             this.camXLabel.TabIndex = 11;
@@ -693,7 +696,7 @@ namespace RatchetEdit
             // 
             this.camYLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.camYLabel.AutoSize = true;
-            this.camYLabel.Location = new System.Drawing.Point(10, 625);
+            this.camYLabel.Location = new System.Drawing.Point(3, 580);
             this.camYLabel.Name = "camYLabel";
             this.camYLabel.Size = new System.Drawing.Size(13, 13);
             this.camYLabel.TabIndex = 12;
@@ -703,7 +706,7 @@ namespace RatchetEdit
             // 
             this.camZLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.camZLabel.AutoSize = true;
-            this.camZLabel.Location = new System.Drawing.Point(10, 638);
+            this.camZLabel.Location = new System.Drawing.Point(3, 593);
             this.camZLabel.Name = "camZLabel";
             this.camZLabel.Size = new System.Drawing.Size(13, 13);
             this.camZLabel.TabIndex = 13;
@@ -740,7 +743,7 @@ namespace RatchetEdit
             // 
             this.label18.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(133, 615);
+            this.label18.Location = new System.Drawing.Point(133, 554);
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(47, 13);
             this.label18.TabIndex = 15;
@@ -750,7 +753,7 @@ namespace RatchetEdit
             // 
             this.yawLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.yawLabel.AutoSize = true;
-            this.yawLabel.Location = new System.Drawing.Point(133, 628);
+            this.yawLabel.Location = new System.Drawing.Point(133, 567);
             this.yawLabel.Name = "yawLabel";
             this.yawLabel.Size = new System.Drawing.Size(13, 13);
             this.yawLabel.TabIndex = 11;
@@ -760,7 +763,7 @@ namespace RatchetEdit
             // 
             this.pitchLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.pitchLabel.AutoSize = true;
-            this.pitchLabel.Location = new System.Drawing.Point(133, 641);
+            this.pitchLabel.Location = new System.Drawing.Point(133, 580);
             this.pitchLabel.Name = "pitchLabel";
             this.pitchLabel.Size = new System.Drawing.Size(13, 13);
             this.pitchLabel.TabIndex = 12;
@@ -772,17 +775,17 @@ namespace RatchetEdit
             this.objectTree.HideSelection = false;
             this.objectTree.Location = new System.Drawing.Point(3, 11);
             this.objectTree.Name = "objectTree";
-            treeNode1.Name = "mobyNode";
-            treeNode1.Text = "Mobys";
-            treeNode2.Name = "tieNode";
-            treeNode2.Text = "Ties";
-            treeNode3.Name = "shrubNode";
-            treeNode3.Text = "Shrubs";
+            treeNode4.Name = "mobyNode";
+            treeNode4.Text = "Mobys";
+            treeNode5.Name = "tieNode";
+            treeNode5.Text = "Ties";
+            treeNode6.Name = "shrubNode";
+            treeNode6.Text = "Shrubs";
             this.objectTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode1,
-            treeNode2,
-            treeNode3});
-            this.objectTree.Size = new System.Drawing.Size(254, 310);
+            treeNode4,
+            treeNode5,
+            treeNode6});
+            this.objectTree.Size = new System.Drawing.Size(254, 249);
             this.objectTree.TabIndex = 16;
             this.objectTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.objectTree_AfterSelect);
             // 
@@ -799,6 +802,7 @@ namespace RatchetEdit
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.AutoScroll = true;
+            this.splitContainer1.Panel2.Controls.Add(this.deleteButton);
             this.splitContainer1.Panel2.Controls.Add(this.cloneButton);
             this.splitContainer1.Panel2.Controls.Add(this.objectTree);
             this.splitContainer1.Panel2.Controls.Add(this.label14);
@@ -841,13 +845,27 @@ namespace RatchetEdit
             // cloneButton
             // 
             this.cloneButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.cloneButton.Location = new System.Drawing.Point(136, 589);
+            this.cloneButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.cloneButton.Location = new System.Drawing.Point(136, 528);
             this.cloneButton.Name = "cloneButton";
             this.cloneButton.Size = new System.Drawing.Size(118, 23);
             this.cloneButton.TabIndex = 17;
             this.cloneButton.Text = "Clone Object";
             this.cloneButton.UseVisualStyleBackColor = true;
             this.cloneButton.Click += new System.EventHandler(this.cloneButton_Click);
+            // 
+            // deleteButton
+            // 
+            this.deleteButton.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.deleteButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.deleteButton.ForeColor = System.Drawing.Color.Red;
+            this.deleteButton.Location = new System.Drawing.Point(6, 528);
+            this.deleteButton.Name = "deleteButton";
+            this.deleteButton.Size = new System.Drawing.Size(121, 23);
+            this.deleteButton.TabIndex = 18;
+            this.deleteButton.Text = "Delete Object";
+            this.deleteButton.UseVisualStyleBackColor = true;
+            this.deleteButton.Click += new System.EventHandler(this.deleteButton_Click);
             // 
             // Main
             // 
@@ -946,6 +964,7 @@ namespace RatchetEdit
         private System.Windows.Forms.TreeView objectTree;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.Button cloneButton;
+        private System.Windows.Forms.Button deleteButton;
     }
 }
 

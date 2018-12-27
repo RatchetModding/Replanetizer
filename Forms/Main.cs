@@ -438,7 +438,7 @@ namespace RatchetEdit
             return returnObject;
         }
 
-        void SelectObject(LevelObject levelObject) {
+        void SelectObject(LevelObject levelObject = null) {
             if (levelObject == null) {
                 selectedObject = null;
                 updateEditorValues();
@@ -446,7 +446,7 @@ namespace RatchetEdit
                 return;
             }
             
-            if (ReferenceEquals(levelObject,selectedObject)) {
+            if (levelObject == selectedObject) {
                 openModelViewer();
                 return;
             }
@@ -508,6 +508,7 @@ namespace RatchetEdit
         public void DeleteMoby(Moby moby) {
             level.mobs.Remove(moby);
             GenerateObjectTree();
+            SelectObject(null);
             invalidate = true;
         }
 
@@ -599,6 +600,13 @@ namespace RatchetEdit
                 CloneMoby(moby);
             }
         }
+
+        private void deleteButton_Click(object sender, EventArgs e) {
+            if (selectedObject as Moby != null) {
+                Moby moby = (Moby)selectedObject;
+                DeleteMoby(moby);
+            }
+        }
         private void tickTimer_Tick(object sender, EventArgs e) {
             tick();
         }
@@ -623,6 +631,5 @@ namespace RatchetEdit
                 return R + ", " + G + ", " + B + ", " + A;
             }
         }
-
     }
 }

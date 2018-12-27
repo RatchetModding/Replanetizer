@@ -8,6 +8,8 @@ namespace RatchetEdit {
     public class Level {
         public string path;
         public EngineHeader engineHeader;
+
+        //Models
         public List<Model> mobyModels;
         public List<Model> tieModels;
         public List<Model> shrubModels;
@@ -15,6 +17,8 @@ namespace RatchetEdit {
         public Model collisionModel;
         public List<Model> chunks;
         public List<Texture> textures;
+
+        //Level objects
         public List<Moby> mobs;
         public List<Tie> ties;
         public List<Tie> shrubs;
@@ -29,46 +33,49 @@ namespace RatchetEdit {
         public Level(string enginePath) {
             path = Path.GetDirectoryName(enginePath);
 
-            EngineParser levelParser = new EngineParser(enginePath);
+            EngineParser engineParser = new EngineParser(enginePath);
+            VramParser vramParser = new VramParser(path + @"/vram.ps3");
+            GameplayParser gameplayParser = new GameplayParser(path + @"/gameplay_ntsc");
 
             Console.WriteLine("Parsing moby models...");
-            mobyModels = levelParser.GetMobyModels();
+            mobyModels = engineParser.GetMobyModels();
             Console.WriteLine("Added " + mobyModels.Count + " moby models");
 
             Console.WriteLine("Parsing tie models...");
-            tieModels = levelParser.GetTieModels();
+            tieModels = engineParser.GetTieModels();
             Console.WriteLine("Added " + tieModels.Count + " tie models");
 
             Console.WriteLine("Parsing shrub models...");
-            shrubModels = levelParser.GetShrubModels();
+            shrubModels = engineParser.GetShrubModels();
             Console.WriteLine("Added " + shrubModels.Count + " shrub models");
 
             Console.WriteLine("Parsing textures...");
-            textures = levelParser.GetTextures();
+            textures = engineParser.GetTextures();
+            vramParser.GetTextures(textures);
             Console.WriteLine("Added " + textures.Count + " textures");
 
             Console.WriteLine("Parsing ties...");
-            ties = levelParser.GetTies(tieModels);
+            ties = engineParser.GetTies(tieModels);
             Console.WriteLine("Added " + ties.Count + " ties");
 
             Console.WriteLine("Parsing Shrubs...");
-            shrubs = levelParser.GetShrubs(shrubModels);
+            shrubs = engineParser.GetShrubs(shrubModels);
             Console.WriteLine("Added " + shrubs.Count + " Shrubs");
 
             Console.WriteLine("Parsing terrain elements...");
-            terrains = levelParser.GetTerrainModels();
+            terrains = engineParser.GetTerrainModels();
             Console.WriteLine("Added " + terrains.Count + " terrain elements");
 
-            levelParser.Close();
-
-
-            VramParser vramParser = new VramParser(path + @"/vram.ps3");
-            vramParser.GetTextures(textures);
-            vramParser.Close();
-
-            GameplayParser gameplayParser = new GameplayParser(path + @"/gameplay_ntsc");
+            Console.WriteLine("Parsing mobs...");
             mobs = gameplayParser.GetMobies(mobyModels);
+            Console.WriteLine("Added " + mobs.Count + " mobs");
+
+            Console.WriteLine("Parsing splines...");
             splines = gameplayParser.GetSplines();
+            Console.WriteLine("Added " + splines.Count + " splines");
+
+            engineParser.Close();
+            vramParser.Close();
             gameplayParser.Close();
         }
     }

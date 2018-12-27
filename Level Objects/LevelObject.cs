@@ -7,7 +7,7 @@ using OpenTK;
 
 namespace RatchetEdit
 {
-    public class LevelObject
+    public abstract class LevelObject : Transformable
     {
         private Vector3 _position = new Vector3();
         public Vector3 position {
@@ -17,8 +17,15 @@ namespace RatchetEdit
                 updateTransform();
             }
         }
-        
-        public virtual void updateTransform(){ }  //Override me
+
+        public abstract LevelObject Clone();
+
+        public abstract void Rotate(float x, float y, float z);
+        public abstract void Rotate(Vector3 vector);
+        public abstract void Scale(float scale);
+        public abstract void Translate(float x, float y, float z);
+        public abstract void Translate(Vector3 vector);
+        public abstract void updateTransform();
 
     }
 }

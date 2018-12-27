@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace RatchetEdit {
-    public class ModelObject : LevelObject {
+    public abstract class ModelObject : LevelObject {
         public int modelID;
         public Matrix4 modelMatrix;
         public Model model;

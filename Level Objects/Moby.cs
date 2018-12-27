@@ -50,6 +50,10 @@ namespace RatchetEdit
             updateTransform();
         }
 
+        public override LevelObject Clone() {
+            return new Moby(model, new Vector3(position), new Vector3(rotation), scale);
+        }
+
         public override void updateTransform() {
             if (model == null) return;
             Matrix4 rotMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
@@ -58,8 +62,27 @@ namespace RatchetEdit
             modelMatrix = scaleMatrix * rotMatrix * translationMatrix;
         }
 
-        public Moby CloneMoby() {
-            return new Moby(model, new Vector3(position), new Vector3(rotation), scale);
+
+
+        //Transformable methods
+        public override void Rotate(float x, float y, float z) {
+            Rotate(new Vector3(x, y, z));
+        }
+
+        public override void Rotate(Vector3 vector) {
+            rotation += vector;
+        }
+
+        public override void Scale(float scale) {
+            scale += scale;
+        }
+
+        public override void Translate(float x, float y, float z) {
+            Translate(new Vector3(x, y, z));
+        }
+
+        public override void Translate(Vector3 vector) {
+            position += vector;
         }
     }
 }

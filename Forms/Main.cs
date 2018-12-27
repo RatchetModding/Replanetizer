@@ -59,10 +59,6 @@ namespace RatchetEdit
             GL.Enable(EnableCap.DepthTest);
             GL.LineWidth(5.0f);
 
-            Matrix3 rot = Matrix3.CreateRotationX(camera.rotation.X) * Matrix3.CreateRotationZ(camera.rotation.Z);
-            Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);
-            view = Matrix4.LookAt(camera.position, camera.position + forward, Vector3.UnitZ);
-
             //Experimental transparency blend
             //GL.Enable(EnableCap.Blend);
             //GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
@@ -82,7 +78,7 @@ namespace RatchetEdit
 
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
             colorID = GL.GetUniformLocation(colorShaderID, "incolor");
-            getModelNames();
+            GetModelNames();
 
         }
 
@@ -117,7 +113,7 @@ namespace RatchetEdit
             GenerateObjectTree();
 
             Moby ratchet = level.mobs[0];
-            camera.moveBehind(ratchet);
+            camera.MoveBehind(ratchet);
         }
 
         public void GenerateObjectTree() {
@@ -145,7 +141,7 @@ namespace RatchetEdit
             }
         }
 
-        public void getModelNames()
+        public void GetModelNames()
         {
             modelNames = new List<string>();
             string stringCounter;
@@ -172,7 +168,7 @@ namespace RatchetEdit
         }
 
         #region Open Viewers
-        private void openModelViewer()
+        private void OpenModelViewer()
         {
             if (modelViewer == null || modelViewer.IsDisposed)
             {
@@ -188,19 +184,19 @@ namespace RatchetEdit
 
         private void modelViewerToolBtn_Click(object sender, EventArgs e) {
             if (selectedObject == null) return;
-            openModelViewer();
+            OpenModelViewer();
         }
 
         private void openModelViewerBtn_Click(object sender, EventArgs e) {
             if (selectedObject == null) return;
-            openModelViewer();
+            OpenModelViewer();
         }
 
         private void exitToolBtn_Click(object sender, EventArgs e) {
             Close();
         }
 
-        private void updateEditorValues() {
+        private void UpdateEditorValues() {
             if(selectedObject != null) {
                 if (selectedObject as ModelObject != null) {
                     modelIDBox.Text = ((ModelObject)selectedObject).modelID.ToString("X");
@@ -245,9 +241,9 @@ namespace RatchetEdit
                 scaleBox.Value = 1;
             }
         }
-        private void glControl1_Paint(object sender, PaintEventArgs e) { render(); }
+        private void glControl1_Paint(object sender, PaintEventArgs e) { Render(); }
 
-        private void render() {
+        private void Render() {
             //Update ui label texts
             camXLabel.Text = String.Format("X: {0}", Utilities.round(camera.position.X,2).ToString());
             camYLabel.Text = String.Format("Y: {0}", Utilities.round(camera.position.Y, 2).ToString());
@@ -316,16 +312,16 @@ namespace RatchetEdit
         }
 
         //Called every frame
-        public void tick() {
+        public void Tick() {
             float deltaTime = 0.016f;
 
-            float moveSpeed = 25;
-            float shiftMultiplier = 3;
-            float nonShiftMultiplier = 0.5f;
+            float moveSpeed = 10;
+            float boostMultiplier = 4;
+            float multiplier = ModifierKeys == Keys.Shift ? boostMultiplier : 1;
 
-            Vector3 moveDir = getInputAxes();
+            Vector3 moveDir = GetInputAxes();
             if (moveDir.Length > 0) {
-                moveDir *= (ModifierKeys == Keys.Shift ? shiftMultiplier : nonShiftMultiplier) * deltaTime * moveSpeed;
+                moveDir *= moveSpeed * multiplier * deltaTime;
                 invalidate = true;
             }
 
@@ -336,17 +332,16 @@ namespace RatchetEdit
                 yaw -= (Cursor.Position.X - lastMouseX) * camera.speed * 0.016f;
                 pitch -= (Cursor.Position.Y - lastMouseY) * camera.speed * 0.016f;
                 pitch = MathHelper.Clamp(pitch, MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
-                camera.setRotation(pitch, yaw);
+                camera.SetRotation(pitch, yaw);
                 invalidate = true;
             }
 
-            Matrix3 rot = Matrix3.CreateRotationX(camera.rotation.X) * Matrix3.CreateRotationZ(camera.rotation.Z);
-            camera.setPosition(camera.position + Vector3.Transform(moveDir, rot));
-
-            Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);
-
             lastMouseX = Cursor.Position.X;
             lastMouseY = Cursor.Position.Y;
+
+            Matrix3 rot = Matrix3.CreateRotationX(camera.rotation.X) * Matrix3.CreateRotationY(camera.rotation.Y) * Matrix3.CreateRotationZ(camera.rotation.Z);
+            camera.Translate(Vector3.Transform(moveDir, rot));
+            Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);
 
             view = Matrix4.LookAt(camera.position, camera.position + forward, Vector3.UnitZ);
 
@@ -355,7 +350,7 @@ namespace RatchetEdit
             }
         }
 
-        private Vector3 getInputAxes() {
+        private Vector3 GetInputAxes() {
             KeyboardState keyState = Keyboard.GetState();
 
             float xAxis = 0, yAxis = 0, zAxis = 0;
@@ -457,14 +452,14 @@ namespace RatchetEdit
         void SelectObject(LevelObject levelObject = null) {
             if (levelObject == null) {
                 selectedObject = null;
-                updateEditorValues();
+                UpdateEditorValues();
                 invalidate = true;
                 currentSplineVertex = 0;
                 return;
             }
             
             if (ReferenceEquals(levelObject,selectedObject) && levelObject as ModelObject != null) {
-                openModelViewer();
+                OpenModelViewer();
                 return;
             }
 
@@ -475,12 +470,14 @@ namespace RatchetEdit
                 primedTreeNode = null;
             }
             currentSplineVertex = 0;
-            updateEditorValues();
+            UpdateEditorValues();
             invalidate = true;
         }
 
         public void CloneMoby(Moby moby) {
-            Moby newMoby = moby.CloneMoby();
+            Moby newMoby = moby.Clone() as Moby;
+            if (newMoby == null) return;
+
             level.mobs.Add(newMoby);
             GenerateObjectTree();
             SelectObject(newMoby);
@@ -659,7 +656,7 @@ namespace RatchetEdit
 
         private void gotoPositionBtn_Click(object sender, EventArgs e) {
             if (selectedObject == null) return;
-            camera.moveBehind(selectedObject);
+            camera.MoveBehind(selectedObject);
             invalidate = true;
         }
 
@@ -687,10 +684,10 @@ namespace RatchetEdit
         }
         private void splineVertex_ValueChanged(object sender, EventArgs e) {
             currentSplineVertex = (int)splineVertex.Value;
-            updateEditorValues();
+            UpdateEditorValues();
         }
         private void tickTimer_Tick(object sender, EventArgs e) {
-            tick();
+            Tick();
         }
         #endregion
 

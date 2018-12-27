@@ -36,6 +36,10 @@ namespace RatchetEdit
         public uint off_68;
         public uint off_6C;
 
+        public Tie(Matrix4 matrix4) {
+            modelMatrix = Matrix4.Add(matrix4, new Matrix4());
+        }
+
         public Tie(byte[] levelBlock, int num, List<Model> tieModels)
         {
             v1x = ReadFloat(levelBlock, (TIEELEMSIZE * num) + 0x00);
@@ -82,9 +86,33 @@ namespace RatchetEdit
             updateTransform();
         }
 
-        public override void updateTransform()
-        {
+        public override void updateTransform() {
             modelMatrix = new Matrix4(v1x, v1y, v1z, v1w, v2x, v2y, v2z, v2w, v3x, v3y, v3z, v3w, x, y, z, w);
+        }
+
+        public override LevelObject Clone() {
+            return new Tie(modelMatrix);
+        }
+
+        //Transformable methods
+        public override void Rotate(float x, float y, float z) {
+            throw new System.NotImplementedException();
+        }
+
+        public override void Rotate(Vector3 vector) {
+            throw new System.NotImplementedException();
+        }
+
+        public override void Scale(float scale) {
+            throw new System.NotImplementedException();
+        }
+
+        public override void Translate(float x, float y, float z) {
+            throw new System.NotImplementedException();
+        }
+
+        public override void Translate(Vector3 vector) {
+            throw new System.NotImplementedException();
         }
     }
 }

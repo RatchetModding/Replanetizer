@@ -31,7 +31,8 @@ namespace RatchetEdit
         public override float scale {
             get { return _scale; }
             set {
-                Scale(value);
+                float requiredScaling = value / _scale;
+                Scale(requiredScaling);
             }
         }
 
@@ -99,24 +100,48 @@ namespace RatchetEdit
         }
 
         public override void Rotate(float x, float y, float z) {
-            /*float base_x = vertexBuffer[0];
+            //Record base position
+            float base_x = vertexBuffer[0];
             float base_y = vertexBuffer[1];
             float base_z = vertexBuffer[2];
-
+            
             for (int i = 0; i < vertexBuffer.Length / 3; i++) {
+                //Record vertex position
                 float vertex_x = vertexBuffer[(i * 3) + 0];
                 float vertex_y = vertexBuffer[(i * 3) + 1];
                 float vertex_z = vertexBuffer[(i * 3) + 2];
 
+                //Get local position relative to base
                 float distance_x = vertex_x - base_x;
                 float distance_y = vertex_y - base_y;
                 float distance_z = vertex_z - base_z;
 
+                //Rotate local position around Z axis
+                float rotated_x1 = distance_x * fCos(z) - distance_y * fSin(z);
+                float rotated_y1 = distance_x * fSin(z) + distance_y * fCos(z);
+                float rotated_z1 = distance_z;
 
-                vertexBuffer[(i * 3) + 0] = base_x + distance_x;
-                vertexBuffer[(i * 3) + 1] = base_x + distance_y;
-                vertexBuffer[(i * 3) + 2] = base_z + distance_z;
-            }*/
+                //Rotate local position around Y axis
+                float rotated_x2 = rotated_x1 * fCos(y) + rotated_z1 * fSin(y);
+                float rotated_y2 = rotated_y1;
+                float rotated_z2 = -rotated_x1 * fSin(y) + rotated_z1 * fCos(y);
+
+                //Rotate local position around X axis
+                float rotated_x3 = rotated_x2;
+                float rotated_y3 = rotated_y2 * fCos(x) - rotated_z2 * fSin(x);
+                float rotated_z3 = rotated_y2 * fSin(x) + rotated_z2 * fCos(x);
+
+                //Add new local position to base position
+                float new_x = base_x + rotated_x3;
+                float new_y = base_y + rotated_y3;
+                float new_z = base_z + rotated_z3;
+
+                //Write new position
+                vertexBuffer[(i * 3) + 0] = new_x;
+                vertexBuffer[(i * 3) + 1] = new_y;
+                vertexBuffer[(i * 3) + 2] = new_z;
+            }
+            _rotation += new Vector3(x, y, z);
         }
 
         public override void Rotate(Vector3 vector) {
@@ -124,8 +149,44 @@ namespace RatchetEdit
         }
 
         public override void Scale(float scale) {
-            throw new NotImplementedException();
+            //Record base position
+            float base_x = vertexBuffer[0];
+            float base_y = vertexBuffer[1];
+            float base_z = vertexBuffer[2];
+
+            for (int i = 0; i < vertexBuffer.Length / 3; i++) {
+                //Record vertex position
+                float vertex_x = vertexBuffer[(i * 3) + 0];
+                float vertex_y = vertexBuffer[(i * 3) + 1];
+                float vertex_z = vertexBuffer[(i * 3) + 2];
+
+                //Get local position relative to base
+                float distance_x = vertex_x - base_x;
+                float distance_y = vertex_y - base_y;
+                float distance_z = vertex_z - base_z;
+
+                float scaled_x = distance_x * scale;
+                float scaled_y = distance_y * scale;
+                float scaled_z = distance_z * scale;
+
+                //Add new local position to base position
+                float new_x = base_x + scaled_x;
+                float new_y = base_y + scaled_y;
+                float new_z = base_z + scaled_z;
+
+                //Write new position
+                vertexBuffer[(i * 3) + 0] = new_x;
+                vertexBuffer[(i * 3) + 1] = new_y;
+                vertexBuffer[(i * 3) + 2] = new_z;
+            }
+            _scale *= scale;
         }
 
+        public float fSin(float input) {
+            return (float)Math.Sin(input);
+        }
+        public float fCos(float input) {
+            return (float)Math.Cos(input);
+        }
     }
 }

@@ -29,9 +29,9 @@ namespace RatchetEdit
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("Mobys");
-            System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("Ties");
-            System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("Shrubs");
+            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Mobys");
+            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Ties");
+            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Shrubs");
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
@@ -323,7 +323,7 @@ namespace RatchetEdit
             this.modelIDBox.Location = new System.Drawing.Point(6, 279);
             this.modelIDBox.Name = "modelIDBox";
             this.modelIDBox.Size = new System.Drawing.Size(121, 20);
-            this.modelIDBox.TabIndex = 7;
+            this.modelIDBox.TabIndex = 1;
             // 
             // missionBox
             // 
@@ -331,7 +331,7 @@ namespace RatchetEdit
             this.missionBox.Location = new System.Drawing.Point(136, 474);
             this.missionBox.Name = "missionBox";
             this.missionBox.Size = new System.Drawing.Size(118, 20);
-            this.missionBox.TabIndex = 7;
+            this.missionBox.TabIndex = 11;
             // 
             // colorPanel
             // 
@@ -349,7 +349,7 @@ namespace RatchetEdit
             this.openModelViewerBtn.Location = new System.Drawing.Point(136, 500);
             this.openModelViewerBtn.Name = "openModelViewerBtn";
             this.openModelViewerBtn.Size = new System.Drawing.Size(118, 23);
-            this.openModelViewerBtn.TabIndex = 4;
+            this.openModelViewerBtn.TabIndex = 13;
             this.openModelViewerBtn.Text = "Open in Model Viewer";
             this.openModelViewerBtn.UseVisualStyleBackColor = true;
             this.openModelViewerBtn.Click += new System.EventHandler(this.openModelViewerBtn_Click);
@@ -361,7 +361,7 @@ namespace RatchetEdit
             this.gotoPositionBtn.Location = new System.Drawing.Point(6, 500);
             this.gotoPositionBtn.Name = "gotoPositionBtn";
             this.gotoPositionBtn.Size = new System.Drawing.Size(121, 23);
-            this.gotoPositionBtn.TabIndex = 2;
+            this.gotoPositionBtn.TabIndex = 12;
             this.gotoPositionBtn.Text = "Go to Position";
             this.gotoPositionBtn.UseVisualStyleBackColor = true;
             this.gotoPositionBtn.Click += new System.EventHandler(this.gotoPositionBtn_Click);
@@ -372,7 +372,7 @@ namespace RatchetEdit
             this.renderBox.Location = new System.Drawing.Point(6, 474);
             this.renderBox.Name = "renderBox";
             this.renderBox.Size = new System.Drawing.Size(121, 20);
-            this.renderBox.TabIndex = 1;
+            this.renderBox.TabIndex = 6;
             // 
             // rotzBox
             // 
@@ -391,7 +391,7 @@ namespace RatchetEdit
             -2147483648});
             this.rotzBox.Name = "rotzBox";
             this.rotzBox.Size = new System.Drawing.Size(118, 20);
-            this.rotzBox.TabIndex = 1;
+            this.rotzBox.TabIndex = 9;
             this.rotzBox.ValueChanged += new System.EventHandler(this.rotzBox_ValueChanged);
             // 
             // rotyBox
@@ -411,7 +411,7 @@ namespace RatchetEdit
             -2147483648});
             this.rotyBox.Name = "rotyBox";
             this.rotyBox.Size = new System.Drawing.Size(118, 20);
-            this.rotyBox.TabIndex = 1;
+            this.rotyBox.TabIndex = 8;
             this.rotyBox.ValueChanged += new System.EventHandler(this.rotyBox_ValueChanged);
             // 
             // rotxBox
@@ -431,7 +431,7 @@ namespace RatchetEdit
             -2147483648});
             this.rotxBox.Name = "rotxBox";
             this.rotxBox.Size = new System.Drawing.Size(118, 20);
-            this.rotxBox.TabIndex = 1;
+            this.rotxBox.TabIndex = 7;
             this.rotxBox.ValueChanged += new System.EventHandler(this.rotxBox_ValueChanged);
             // 
             // zBox
@@ -456,7 +456,7 @@ namespace RatchetEdit
             -2147483648});
             this.zBox.Name = "zBox";
             this.zBox.Size = new System.Drawing.Size(121, 20);
-            this.zBox.TabIndex = 1;
+            this.zBox.TabIndex = 4;
             this.zBox.ValueChanged += new System.EventHandler(this.zBox_ValueChanged);
             // 
             // scaleBox
@@ -481,7 +481,7 @@ namespace RatchetEdit
             -2147483648});
             this.scaleBox.Name = "scaleBox";
             this.scaleBox.Size = new System.Drawing.Size(118, 20);
-            this.scaleBox.TabIndex = 1;
+            this.scaleBox.TabIndex = 10;
             this.scaleBox.ValueChanged += new System.EventHandler(this.scaleBox_ValueChanged);
             // 
             // yBox
@@ -506,7 +506,7 @@ namespace RatchetEdit
             -2147483648});
             this.yBox.Name = "yBox";
             this.yBox.Size = new System.Drawing.Size(121, 20);
-            this.yBox.TabIndex = 1;
+            this.yBox.TabIndex = 3;
             this.yBox.ValueChanged += new System.EventHandler(this.yBox_ValueChanged);
             // 
             // dropBox
@@ -520,7 +520,7 @@ namespace RatchetEdit
             0});
             this.dropBox.Name = "dropBox";
             this.dropBox.Size = new System.Drawing.Size(121, 20);
-            this.dropBox.TabIndex = 1;
+            this.dropBox.TabIndex = 5;
             this.dropBox.Value = new decimal(new int[] {
             32000,
             0,
@@ -549,7 +549,7 @@ namespace RatchetEdit
             -2147483648});
             this.xBox.Name = "xBox";
             this.xBox.Size = new System.Drawing.Size(121, 20);
-            this.xBox.TabIndex = 1;
+            this.xBox.TabIndex = 2;
             this.xBox.ValueChanged += new System.EventHandler(this.xBox_ValueChanged);
             // 
             // label7
@@ -722,9 +722,9 @@ namespace RatchetEdit
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.glControl1.BackColor = System.Drawing.Color.Black;
-            this.glControl1.Location = new System.Drawing.Point(12, 10);
+            this.glControl1.Location = new System.Drawing.Point(0, 0);
             this.glControl1.Name = "glControl1";
-            this.glControl1.Size = new System.Drawing.Size(985, 644);
+            this.glControl1.Size = new System.Drawing.Size(997, 657);
             this.glControl1.TabIndex = 14;
             this.glControl1.VSync = false;
             this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
@@ -775,16 +775,16 @@ namespace RatchetEdit
             this.objectTree.HideSelection = false;
             this.objectTree.Location = new System.Drawing.Point(3, 11);
             this.objectTree.Name = "objectTree";
-            treeNode4.Name = "mobyNode";
-            treeNode4.Text = "Mobys";
-            treeNode5.Name = "tieNode";
-            treeNode5.Text = "Ties";
-            treeNode6.Name = "shrubNode";
-            treeNode6.Text = "Shrubs";
+            treeNode1.Name = "mobyNode";
+            treeNode1.Text = "Mobys";
+            treeNode2.Name = "tieNode";
+            treeNode2.Text = "Ties";
+            treeNode3.Name = "shrubNode";
+            treeNode3.Text = "Shrubs";
             this.objectTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode4,
-            treeNode5,
-            treeNode6});
+            treeNode1,
+            treeNode2,
+            treeNode3});
             this.objectTree.Size = new System.Drawing.Size(254, 249);
             this.objectTree.TabIndex = 16;
             this.objectTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.objectTree_AfterSelect);
@@ -849,7 +849,7 @@ namespace RatchetEdit
             this.cloneButton.Location = new System.Drawing.Point(136, 528);
             this.cloneButton.Name = "cloneButton";
             this.cloneButton.Size = new System.Drawing.Size(118, 23);
-            this.cloneButton.TabIndex = 17;
+            this.cloneButton.TabIndex = 15;
             this.cloneButton.Text = "Clone Object";
             this.cloneButton.UseVisualStyleBackColor = true;
             this.cloneButton.Click += new System.EventHandler(this.cloneButton_Click);
@@ -862,7 +862,7 @@ namespace RatchetEdit
             this.deleteButton.Location = new System.Drawing.Point(6, 528);
             this.deleteButton.Name = "deleteButton";
             this.deleteButton.Size = new System.Drawing.Size(121, 23);
-            this.deleteButton.TabIndex = 18;
+            this.deleteButton.TabIndex = 14;
             this.deleteButton.Text = "Delete Object";
             this.deleteButton.UseVisualStyleBackColor = true;
             this.deleteButton.Click += new System.EventHandler(this.deleteButton_Click);

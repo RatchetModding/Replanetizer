@@ -74,7 +74,7 @@ namespace RatchetEdit
         }
 
         public override void Translate(Vector3 vector) {
-            _position += vector;
+            position += vector;
         }
     }
 }

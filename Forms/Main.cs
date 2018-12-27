@@ -12,9 +12,17 @@ namespace RatchetEdit
 {
     public partial class Main : Form
     {
+        public enum Tool {
+            None,
+            Translate,
+            Rotate,
+            Scale
+        }
+        Tool currentTool = Tool.Translate;
+
         public Level level;
         public ModelViewer modelViewer;
-
+        
         //OpenGL variables
         Matrix4 worldView;
         Matrix4 projection;
@@ -39,7 +47,7 @@ namespace RatchetEdit
 
         bool invalidate = false;
         bool suppressTreeViewSelectEvent = false;
-
+        bool cancelSelection = false;
         public Main()
         {
             InitializeComponent();
@@ -59,30 +67,28 @@ namespace RatchetEdit
             GL.Enable(EnableCap.DepthTest);
             GL.LineWidth(5.0f);
 
-            //Experimental transparency blend
-            //GL.Enable(EnableCap.Blend);
-            //GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-
-
             //Setup general shader
             shaderID = GL.CreateProgram();
-            loadShader("shaders/vs.glsl", ShaderType.VertexShader, shaderID);
-            loadShader("shaders/fs.glsl", ShaderType.FragmentShader, shaderID);
+            LoadShader("shaders/vs.glsl", ShaderType.VertexShader, shaderID);
+            LoadShader("shaders/fs.glsl", ShaderType.FragmentShader, shaderID);
             GL.LinkProgram(shaderID);
 
             //Setup color shader
             colorShaderID = GL.CreateProgram();
-            loadShader("shaders/colorshadervs.glsl", ShaderType.VertexShader, colorShaderID);
-            loadShader("shaders/colorshaderfs.glsl", ShaderType.FragmentShader, colorShaderID);
+            LoadShader("shaders/colorshadervs.glsl", ShaderType.VertexShader, colorShaderID);
+            LoadShader("shaders/colorshaderfs.glsl", ShaderType.FragmentShader, colorShaderID);
             GL.LinkProgram(colorShaderID);
 
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
             colorID = GL.GetUniformLocation(colorShaderID, "incolor");
             GetModelNames();
 
+            toolLabel.Text = currentTool.ToString();
+
+
         }
 
-        void loadShader(String filename, ShaderType type, int program)
+        void LoadShader(String filename, ShaderType type, int program)
         {
             int address = GL.CreateShader(type);
             using (StreamReader sr = new StreamReader(filename))
@@ -98,11 +104,11 @@ namespace RatchetEdit
         {
             if (mapOpenDialog.ShowDialog() == DialogResult.OK)
             {
-                loadLevel(mapOpenDialog.FileName);
+                LoadLevel(mapOpenDialog.FileName);
             }
         }
 
-        void loadLevel(string fileName)
+        void LoadLevel(string fileName)
         {
             level = new Level(fileName);
             InvalidateView();
@@ -209,42 +215,7 @@ namespace RatchetEdit
 
         private void UpdateEditorValues()
         {
-
-            if (selectedObject as Spline != null)
-            {
-                Spline spline = (Spline)selectedObject;
-                spline.position = new Vector3(spline.vertexBuffer[(currentSplineVertex * 3) + 0],
-                    spline.vertexBuffer[(currentSplineVertex * 3) + 1],
-                    spline.vertexBuffer[(currentSplineVertex * 3) + 2]);
-            }
             properies.Update();
-
-            /*if(selectedObject != null) {
-                if (selectedObject as ModelObject != null) {
-                    modelIDBox.Text = ((ModelObject)selectedObject).modelID.ToString("X");
-                }
-
-                rotxBox.Value = (decimal)Utilities.toDegrees(selectedObject.rotation.X);
-                rotyBox.Value = (decimal)Utilities.toDegrees(selectedObject.rotation.Y);
-                rotzBox.Value = (decimal)Utilities.toDegrees(selectedObject.rotation.Z);
-                scaleBox.Value = (decimal)selectedObject.scale;
-
-                xBox.Value = (decimal)selectedObject.position.X;
-                yBox.Value = (decimal)selectedObject.position.Y;
-                zBox.Value = (decimal)selectedObject.position.Z;
-               
-            }
-            else {
-                modelIDBox.Text = "0";
-                splineVertex.Value = 0;
-                xBox.Value = 0;
-                yBox.Value = 0;
-                zBox.Value = 0;
-                rotxBox.Value = 0;
-                rotyBox.Value = 0;
-                rotzBox.Value = 0;
-                scaleBox.Value = 1;
-            }*/
         }
         private void glControl1_Paint(object sender, PaintEventArgs e) { Render(); }
 
@@ -257,7 +228,6 @@ namespace RatchetEdit
             pitchLabel.Text = String.Format("Pitch: {0}", fRound(fToDegrees(camera.rotation.X), 2).ToString());
             yawLabel.Text = String.Format("Yaw: {0}", fRound(fToDegrees(camera.rotation.Z), 2).ToString());
 
-
             //Render gl surface
             glControl1.MakeCurrent();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -266,17 +236,15 @@ namespace RatchetEdit
             GL.UseProgram(colorShaderID);
             GL.EnableVertexAttribArray(0);
 
-            if (splineCheck.Checked && splineCheck.Enabled)
-            {
-                foreach (Spline spline in level.splines)
-                {
+            if (splineCheck.Checked && splineCheck.Enabled) {
+                foreach (Spline spline in level.splines) {
                     drawSpline(spline);
                 }
             }
 
-            if (selectedObject as ModelObject != null)
-            {
+            if (selectedObject as ModelObject != null) {
                 drawModelMesh((ModelObject)selectedObject);
+                drawTool(selectedObject.position);
             }
 
             GL.EnableVertexAttribArray(1);
@@ -329,6 +297,25 @@ namespace RatchetEdit
             float boostMultiplier = 4;
             float multiplier = ModifierKeys == Keys.Shift ? boostMultiplier : 1;
 
+            KeyboardState keyState = Keyboard.GetState();
+
+            if (keyState.IsKeyDown(Key.F1)) {
+                currentTool = Tool.Translate;
+                toolLabel.Text = currentTool.ToString();
+            }
+            else if (keyState.IsKeyDown(Key.F2)) {
+                currentTool = Tool.Rotate;
+                toolLabel.Text = currentTool.ToString();
+            }
+            else if (keyState.IsKeyDown(Key.F3)) {
+                currentTool = Tool.Scale;
+                toolLabel.Text = currentTool.ToString();
+            }
+            else if (keyState.IsKeyDown(Key.F4)) {
+                currentTool = Tool.None;
+                toolLabel.Text = currentTool.ToString();
+            }
+
             Vector3 moveDir = GetInputAxes();
             if (moveDir.Length > 0)
             {
@@ -376,6 +363,7 @@ namespace RatchetEdit
             if (keyState.IsKeyDown(Key.Q)) zAxis--;
             if (keyState.IsKeyDown(Key.E)) zAxis++;
 
+
             return new Vector3(xAxis, yAxis, zAxis);
         }
 
@@ -383,6 +371,14 @@ namespace RatchetEdit
         {
             rMouse = e.Button == MouseButtons.Right;
             lMouse = e.Button == MouseButtons.Left;
+
+            if (e.Button == MouseButtons.Left && level != null) {
+                LevelObject obj = GetObjectAtScreenPosition(e.Location.X, e.Location.Y);
+                if(!cancelSelection)
+                    SelectObject(obj);
+                cancelSelection = false;
+
+            }
         }
 
         private void glControl1_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -400,16 +396,6 @@ namespace RatchetEdit
         private void enableCheck(object sender, EventArgs e)
         {
             InvalidateView();
-        }
-
-        private void glControl1_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left && level != null)
-            {
-                LevelObject obj = GetObjectAtScreenPosition(e.Location.X, e.Location.Y);
-                SelectObject(obj);
-
-            }
         }
 
         public LevelObject GetObjectAtScreenPosition(int x, int y)
@@ -444,12 +430,38 @@ namespace RatchetEdit
                 offset += level.shrubs.Count;
                 fakeDrawSplines(level.splines, offset);
             }
+            if (currentTool == Tool.Translate) {
+                Console.WriteLine("Current tool is translate");
+                if(selectedObject != null) drawTool(selectedObject.position);
+            }
 
             Pixel pixel = new Pixel();
             GL.ReadPixels(x, glControl1.Height - y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixel);
             GL.ClearColor(Color.SkyBlue);
             if (pixel.A == 0)
             {
+                if (pixel.R == 255 && pixel.G == 0 && pixel.B == 0) {
+                    Console.WriteLine("HIT RED!");
+                    if (selectedObject != null) selectedObject.Translate(1, 0, 0);
+                    cancelSelection = true;
+                    InvalidateView();
+
+                    return null;
+                }else if (pixel.R == 0 && pixel.G == 255 && pixel.B == 0) {
+                    Console.WriteLine("HIT GREEN!");
+                    if (selectedObject != null) selectedObject.Translate(0, 1, 0);
+                    cancelSelection = true;
+                    InvalidateView();
+                    return null;
+                }
+                else if (pixel.R == 0 && pixel.G == 0 && pixel.B == 255) {
+                    Console.WriteLine("HIT BLUE!");
+                    if (selectedObject != null) selectedObject.Translate(0, 0, 1);
+                    cancelSelection = true;
+                    InvalidateView();
+                    return null;
+                }
+
                 int id = (int)pixel.ToUInt32();
                 if (id < level.mobs?.Count)
                 {
@@ -527,8 +539,7 @@ namespace RatchetEdit
             InvalidateView();
         }
         #region RenderFunctions
-        public void drawSpline(Spline spline)
-        {
+        public void drawSpline(Spline spline) {
             Vector4 color;
             if (spline == selectedObject) color = new Vector4(1, 0, 1, 1);
             else color = new Vector4(1, 1, 1, 1);
@@ -539,6 +550,52 @@ namespace RatchetEdit
             GL.Uniform4(colorID, color);
             spline.getVBO();
             GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
+        }
+
+        public void drawTool(Vector3 position) {
+            float[] test = new float[18];
+            float length = 2;
+            test[0] = position.X - length;
+            test[1] = position.Y;
+            test[2] = position.Z;
+
+            test[3] = position.X + length;
+            test[4] = position.Y;
+            test[5] = position.Z;
+
+            test[6] = position.X;
+            test[7] = position.Y - length;
+            test[8] = position.Z;
+
+            test[9] = position.X;
+            test[10] = position.Y + length;
+            test[11] = position.Z;
+
+            test[12] = position.X;
+            test[13] = position.Y;
+            test[14] = position.Z - length;
+
+            test[15] = position.X;
+            test[16] = position.Y;
+            test[17] = position.Z + length;
+
+            GL.UseProgram(colorShaderID);
+            GL.EnableVertexAttribArray(0);
+            GL.UniformMatrix4(matrixID, false, ref worldView);
+            int VBO;
+            GL.GenBuffers(1, out VBO);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
+            GL.BufferData(BufferTarget.ArrayBuffer, test.Length * sizeof(float), test, BufferUsageHint.DynamicDraw);
+
+            GL.Uniform4(colorID, new Vector4(1, 0, 0, 1));
+            GL.DrawArrays(PrimitiveType.LineStrip, 0, 2);
+
+            GL.Uniform4(colorID, new Vector4(0, 1, 0, 1));
+            GL.DrawArrays(PrimitiveType.LineStrip, 2, 2);
+
+            GL.Uniform4(colorID, new Vector4(0, 0, 1, 1));
+            GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
         }
 
         private void drawModelObject(ModelObject obj)
@@ -694,14 +751,6 @@ namespace RatchetEdit
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
             InvalidateView();
-            /*if (selectedObject as Spline != null)
-            {
-                Spline spline = (Spline)selectedObject;
-                spline.vertexBuffer[(currentSplineVertex * 3) + 0] = spline.position.X;
-                spline.vertexBuffer[(currentSplineVertex * 3) + 1] = spline.position.Y;
-                spline.vertexBuffer[(currentSplineVertex * 3) + 2] = spline.position.Z;
-                invalidate = true;
-            }*/
         }
     }
 }

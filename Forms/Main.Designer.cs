@@ -29,10 +29,10 @@ namespace RatchetEdit
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("Mobys");
-            System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("Ties");
-            System.Windows.Forms.TreeNode treeNode7 = new System.Windows.Forms.TreeNode("Shrubs");
-            System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("Splines");
+            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Mobys");
+            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Ties");
+            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Shrubs");
+            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("Splines");
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
@@ -76,6 +76,7 @@ namespace RatchetEdit
             this.splineVertex = new System.Windows.Forms.NumericUpDown();
             this.deleteButton = new System.Windows.Forms.Button();
             this.cloneButton = new System.Windows.Forms.Button();
+            this.toolLabel = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -369,7 +370,6 @@ namespace RatchetEdit
             this.glControl1.TabIndex = 14;
             this.glControl1.VSync = false;
             this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
-            this.glControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseClick);
             this.glControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseDown);
             this.glControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseUp);
             this.glControl1.Resize += new System.EventHandler(this.glControl1_Resize);
@@ -416,19 +416,19 @@ namespace RatchetEdit
             this.objectTree.HideSelection = false;
             this.objectTree.Location = new System.Drawing.Point(3, 11);
             this.objectTree.Name = "objectTree";
-            treeNode5.Name = "mobyNode";
-            treeNode5.Text = "Mobys";
-            treeNode6.Name = "tieNode";
-            treeNode6.Text = "Ties";
-            treeNode7.Name = "shrubNode";
-            treeNode7.Text = "Shrubs";
-            treeNode8.Name = "splineNode";
-            treeNode8.Text = "Splines";
+            treeNode1.Name = "mobyNode";
+            treeNode1.Text = "Mobys";
+            treeNode2.Name = "tieNode";
+            treeNode2.Text = "Ties";
+            treeNode3.Name = "shrubNode";
+            treeNode3.Text = "Shrubs";
+            treeNode4.Name = "splineNode";
+            treeNode4.Text = "Splines";
             this.objectTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode5,
-            treeNode6,
-            treeNode7,
-            treeNode8});
+            treeNode1,
+            treeNode2,
+            treeNode3,
+            treeNode4});
             this.objectTree.Size = new System.Drawing.Size(306, 242);
             this.objectTree.TabIndex = 16;
             this.objectTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.objectTree_AfterSelect);
@@ -446,6 +446,7 @@ namespace RatchetEdit
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.AutoScroll = true;
+            this.splitContainer1.Panel2.Controls.Add(this.toolLabel);
             this.splitContainer1.Panel2.Controls.Add(this.properies);
             this.splitContainer1.Panel2.Controls.Add(this.label8);
             this.splitContainer1.Panel2.Controls.Add(this.splineVertex);
@@ -526,6 +527,15 @@ namespace RatchetEdit
             this.cloneButton.UseVisualStyleBackColor = true;
             this.cloneButton.Click += new System.EventHandler(this.cloneButton_Click);
             // 
+            // toolLabel
+            // 
+            this.toolLabel.AutoSize = true;
+            this.toolLabel.Location = new System.Drawing.Point(225, 624);
+            this.toolLabel.Name = "toolLabel";
+            this.toolLabel.Size = new System.Drawing.Size(31, 13);
+            this.toolLabel.TabIndex = 20;
+            this.toolLabel.Text = "none";
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -595,6 +605,7 @@ namespace RatchetEdit
         private System.Windows.Forms.NumericUpDown splineVertex;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.PropertyGrid properies;
+        private System.Windows.Forms.Label toolLabel;
     }
 }
 

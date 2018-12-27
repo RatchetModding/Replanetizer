@@ -27,23 +27,23 @@ namespace RatchetEdit {
         }
 
         public void moveBehind(LevelObject levelObject, float distanceToObject = 5) {
-            float zRotation = 0;
+            float yaw = 0;
 
             if (levelObject as Moby != null) { //If object is moby, load its rotation.
-                zRotation = ((Moby)levelObject).rotz;
+                yaw = ((Moby)levelObject).rotation.Z;
             }
 
-            float pitch = 0;
-            float yaw = zRotation - (float)Math.PI / 2;
-            setRotation(pitch, yaw);
+            yaw = yaw - (float)Math.PI / 2;
+            setRotation(0, yaw);
 
-            float xpos = (float)-Math.Cos(zRotation);
-            float ypos = (float)-Math.Sin(zRotation);
-            setPosition(new Vector3(
-                levelObject.x + xpos * distanceToObject,
-                levelObject.y + ypos * distanceToObject,
-                levelObject.z + distanceToObject / 2
-            ));
+            float xpos = (float)-Math.Cos(yaw);
+            float ypos = (float)-Math.Sin(yaw);
+            Vector3 cameraPosition = new Vector3(
+                levelObject.position.X + xpos * distanceToObject,
+                levelObject.position.Y + ypos * distanceToObject,
+                levelObject.position.Z + distanceToObject / 2
+            );
+            setPosition(cameraPosition);
         }
     }
 }

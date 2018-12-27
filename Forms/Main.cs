@@ -197,16 +197,16 @@ namespace RatchetEdit
             if (selectedObject as Moby != null)
             {
                 Moby mob = (Moby)selectedObject;
-                rotxBox.Value = (decimal)Utilities.toDegrees(mob.rotx);
-                rotyBox.Value = (decimal)Utilities.toDegrees(mob.roty);
-                rotzBox.Value = (decimal)Utilities.toDegrees(mob.rotz);
+                rotxBox.Value = (decimal)Utilities.toDegrees(mob.rotation.X);
+                rotyBox.Value = (decimal)Utilities.toDegrees(mob.rotation.Y);
+                rotzBox.Value = (decimal)Utilities.toDegrees(mob.rotation.Z);
                 scaleBox.Value = (decimal)mob.scale;
             }
 
             modelIDBox.Text = selectedObject.modelID.ToString("X");
-            xBox.Value = (decimal)selectedObject.x;
-            yBox.Value = (decimal)selectedObject.y;
-            zBox.Value = (decimal)selectedObject.z;
+            xBox.Value = (decimal)selectedObject.position.X;
+            yBox.Value = (decimal)selectedObject.position.Y;
+            zBox.Value = (decimal)selectedObject.position.Z;
 
         }
 
@@ -467,18 +467,18 @@ namespace RatchetEdit
         }
 
         #region Position Input Events
-        private void xBox_ValueChanged(object sender, EventArgs e)
-        {
+        private void xBox_ValueChanged(object sender, EventArgs e) {
             if (selectedObject == null) return;
-            selectedObject.x = (float)xBox.Value;
+            Vector3 position = selectedObject.position;
+            selectedObject.position = new Vector3((float)xBox.Value, position.Y, position.Z);
             selectedObject.updateTransform();
             invalidate = true;
         }
 
-        private void yBox_ValueChanged(object sender, EventArgs e)
-        {
+        private void yBox_ValueChanged(object sender, EventArgs e) {
             if (selectedObject == null) return;
-            selectedObject.y = (float)yBox.Value;
+            Vector3 position = selectedObject.position;
+            selectedObject.position = new Vector3(position.X, (float)yBox.Value, position.Z);
             selectedObject.updateTransform();
             invalidate = true;
         }
@@ -486,7 +486,8 @@ namespace RatchetEdit
         private void zBox_ValueChanged(object sender, EventArgs e)
         {
             if (selectedObject == null) return;
-            selectedObject.z = (float)zBox.Value;
+            Vector3 position = selectedObject.position;
+            selectedObject.position = new Vector3(position.X, position.Y, (float)zBox.Value);
             selectedObject.updateTransform();
             invalidate = true;
         }
@@ -497,7 +498,9 @@ namespace RatchetEdit
             if (selectedObject as Moby != null)
             {
                 Moby selectedObj = (Moby)selectedObject;
-                selectedObj.rotx = Utilities.toRadians((float)rotxBox.Value);
+                Vector3 rotation = selectedObj.rotation;
+                float value = Utilities.toRadians((float)rotxBox.Value);
+                selectedObj.rotation = new Vector3(value, rotation.Y, rotation.Z);
                 selectedObj.updateTransform();
                 invalidate = true;
             }
@@ -508,7 +511,9 @@ namespace RatchetEdit
             if (selectedObject as Moby != null)
             {
                 Moby selectedObj = (Moby)selectedObject;
-                selectedObj.roty = Utilities.toRadians((float)rotyBox.Value);
+                Vector3 rotation = selectedObj.rotation;
+                float value = Utilities.toRadians((float)rotyBox.Value);
+                selectedObj.rotation = new Vector3(rotation.X, value, rotation.Z);
                 selectedObj.updateTransform();
                 invalidate = true;
             }
@@ -519,7 +524,9 @@ namespace RatchetEdit
             if (selectedObject as Moby != null)
             {
                 Moby selectedObj = (Moby)selectedObject;
-                selectedObj.rotz = Utilities.toRadians((float)rotzBox.Value);
+                Vector3 rotation = selectedObj.rotation;
+                float value = Utilities.toRadians((float)rotzBox.Value);
+                selectedObj.rotation = new Vector3(rotation.X, rotation.Y, value);
                 selectedObj.updateTransform();
                 invalidate = true;
             }

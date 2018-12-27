@@ -24,7 +24,7 @@ namespace RatchetEdit
         float v3z;
         float v3w;
 
-        float w;
+        float x,y,z,w;
 
         public ushort off_50;
         public uint off_54;

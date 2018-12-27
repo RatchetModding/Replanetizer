@@ -29,8 +29,7 @@ namespace RatchetEdit
         bool lMouse = false;
         int lastMouseX = 0;
         int lastMouseY = 0;
-        public LevelObject _selectedObject;
-        public LevelObject selectedObject { get { return _selectedObject; } set { _selectedObject = value; Console.WriteLine("asdasdasdads"); } }
+        public LevelObject selectedObject;
 
         List<string> modelNames;
 
@@ -197,19 +196,32 @@ namespace RatchetEdit
         }
 
         private void updateEditorValues() {
-            if (selectedObject as Moby != null)
-            {
-                Moby mob = (Moby)selectedObject;
-                rotxBox.Value = (decimal)Utilities.toDegrees(mob.rotation.X);
-                rotyBox.Value = (decimal)Utilities.toDegrees(mob.rotation.Y);
-                rotzBox.Value = (decimal)Utilities.toDegrees(mob.rotation.Z);
-                scaleBox.Value = (decimal)mob.scale;
-            }
+            if (selectedObject != null) {
+                if (selectedObject as Moby != null) {
+                    Moby mob = (Moby)selectedObject;
+                    rotxBox.Value = (decimal)Utilities.toDegrees(mob.rotation.X);
+                    rotyBox.Value = (decimal)Utilities.toDegrees(mob.rotation.Y);
+                    rotzBox.Value = (decimal)Utilities.toDegrees(mob.rotation.Z);
+                    scaleBox.Value = (decimal)mob.scale;
+                }
+                else {
+                    rotxBox.Value = 0;
+                    rotyBox.Value = 0;
+                    rotzBox.Value = 0;
+                    scaleBox.Value = 0;
+                }
 
-            modelIDBox.Text = selectedObject.modelID.ToString("X");
-            xBox.Value = (decimal)selectedObject.position.X;
-            yBox.Value = (decimal)selectedObject.position.Y;
-            zBox.Value = (decimal)selectedObject.position.Z;
+                modelIDBox.Text = selectedObject.modelID.ToString("X");
+                xBox.Value = (decimal)selectedObject.position.X;
+                yBox.Value = (decimal)selectedObject.position.Y;
+                zBox.Value = (decimal)selectedObject.position.Z;
+            }
+            else {
+                modelIDBox.Text = "0";
+                xBox.Value = 0;
+                yBox.Value = 0;
+                zBox.Value = 0;
+            }
 
         }
 
@@ -296,7 +308,7 @@ namespace RatchetEdit
         }
 
         //Called every frame
-        private void tickTimer_Tick(object sender, EventArgs e) {
+        public void tick() {
             float deltaTime = 0.016f;
 
             float moveSpeed = 25;
@@ -329,11 +341,10 @@ namespace RatchetEdit
             lastMouseY = Cursor.Position.Y;
 
             view = Matrix4.LookAt(camera.position, camera.position + forward, Vector3.UnitZ);
-           
+
             if (invalidate) {
                 glControl1.Invalidate();
             }
-
         }
 
         private Vector3 getInputAxes() {
@@ -349,37 +360,28 @@ namespace RatchetEdit
             if (keyState.IsKeyDown(Key.E)) zAxis++;
             
             return new Vector3(xAxis, yAxis, zAxis);
-
         }
 
-        private void glControl1_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
-        {
+        private void glControl1_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e) {
             rMouse = e.Button == MouseButtons.Right;
             lMouse = e.Button == MouseButtons.Left;
         }
 
-        private void glControl1_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
-        {
+        private void glControl1_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e) {
             rMouse = false;
             lMouse = false;
         }
 
-        private void glControl1_Resize(object sender, EventArgs e)
-        {
+        private void glControl1_Resize(object sender, EventArgs e) {
             GL.Viewport(0, 0, glControl1.Width, glControl1.Height);
             projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)glControl1.Width / glControl1.Height, 0.1f, 800.0f);
         }
 
-        private void enableCheck(object sender, EventArgs e)
-        {
+        private void enableCheck(object sender, EventArgs e) {
             invalidate = true;
         }
 
-        delegate LevelObject del(LevelObject levelObject);
-
-
-        private void glControl1_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
-        {
+        private void glControl1_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e) {
             if (e.Button == MouseButtons.Left && level != null)
             {
                 LevelObject obj = GetObjectAtPosition(e.Location.X, e.Location.Y);
@@ -397,8 +399,6 @@ namespace RatchetEdit
             GL.UseProgram(colorShaderID);
             GL.EnableVertexAttribArray(0);
             worldView = view * projection;
-
-            //TODO: Consolidate following stuff into function.
 
             if (mobyCheck.Checked) {
                 GL.ClearColor(0, 0, 0, 0);
@@ -427,12 +427,10 @@ namespace RatchetEdit
                     returnObject = level.ties[id - level.mobs.Count];
                     returnNode = objectTree.Nodes[1].Nodes[id - level.mobs.Count];
                 }
-
                 else if (id - offset < level.shrubs?.Count) {
                     returnObject = level.shrubs[id - offset];
                     returnNode = objectTree.Nodes[2].Nodes[id - offset];
                 }
-
             }
 
            primedTreeNode = returnNode;
@@ -441,7 +439,12 @@ namespace RatchetEdit
         }
 
         void SelectObject(LevelObject levelObject) {
-            if (levelObject == null) return;
+            if (levelObject == null) {
+                selectedObject = null;
+                updateEditorValues();
+                invalidate = true;
+                return;
+            }
             
             if (ReferenceEquals(levelObject,selectedObject)) {
                 openModelViewer();
@@ -449,6 +452,7 @@ namespace RatchetEdit
             }
 
             selectedObject = levelObject;
+            invalidate = true;
             if (primedTreeNode != null) {
                 suppressTreeViewSelectEvent = true;
                 objectTree.SelectedNode = primedTreeNode;
@@ -493,6 +497,20 @@ namespace RatchetEdit
             }
         }
 
+        public void CloneMoby(Moby moby) {
+            Moby newMoby = moby.CloneMoby();
+            level.mobs.Add(newMoby);
+            GenerateObjectTree();
+            SelectObject(newMoby);
+            invalidate = true;
+        }
+
+        public void DeleteMoby(Moby moby) {
+            level.mobs.Remove(moby);
+            GenerateObjectTree();
+            invalidate = true;
+        }
+
         #region Position Input Events
         private void xBox_ValueChanged(object sender, EventArgs e) {
             if (selectedObject == null) return;
@@ -517,8 +535,7 @@ namespace RatchetEdit
         }
         #endregion
         #region Rotation Input Events
-        private void rotxBox_ValueChanged(object sender, EventArgs e)
-        {
+        private void rotxBox_ValueChanged(object sender, EventArgs e) {
             if (selectedObject as Moby != null)
             {
                 Moby moby = (Moby)selectedObject;
@@ -529,8 +546,7 @@ namespace RatchetEdit
             }
         }
 
-        private void rotyBox_ValueChanged(object sender, EventArgs e)
-        {
+        private void rotyBox_ValueChanged(object sender, EventArgs e) {
             if (selectedObject as Moby != null)
             {
                 Moby moby = (Moby)selectedObject;
@@ -541,8 +557,7 @@ namespace RatchetEdit
             }
         }
 
-        private void rotzBox_ValueChanged(object sender, EventArgs e)
-        {
+        private void rotzBox_ValueChanged(object sender, EventArgs e) {
             if (selectedObject as Moby != null)
             {
                 Moby moby = (Moby)selectedObject;
@@ -584,13 +599,8 @@ namespace RatchetEdit
                 CloneMoby(moby);
             }
         }
-
-        public void CloneMoby(Moby moby) {
-            Moby newMoby = moby.CloneMoby();
-            level.mobs.Add(newMoby);
-            GenerateObjectTree();
-            SelectObject(newMoby);
-            invalidate = true;
+        private void tickTimer_Tick(object sender, EventArgs e) {
+            tick();
         }
         #endregion
 

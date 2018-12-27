@@ -5,7 +5,7 @@ using static RatchetEdit.DataFunctions;
 
 namespace RatchetEdit
 {
-    public class Tie : LevelObject
+    public class Tie : ModelObject
     {
         const int TIEELEMSIZE = 0x70;
 

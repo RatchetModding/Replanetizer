@@ -56,6 +56,7 @@
     <Compile Include="EngineHeader.cs" />
     <Compile Include="Headers.cs" />
     <Compile Include="Level Objects\LevelObject.cs" />
+    <Compile Include="Level Objects\ModelObject.cs" />
     <Compile Include="Level Objects\Tie.cs" />
     <Compile Include="Level Objects\Moby.cs" />
     <Compile Include="Models\MobyModel.cs" />

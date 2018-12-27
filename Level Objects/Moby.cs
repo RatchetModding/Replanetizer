@@ -9,7 +9,7 @@ using static RatchetEdit.DataFunctions;
 
 namespace RatchetEdit
 {
-    public class Moby : LevelObject
+    public class Moby : ModelObject
     {
         public float scale;
         private Vector3 _rotation = new Vector3();

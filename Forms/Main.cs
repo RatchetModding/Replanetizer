@@ -23,7 +23,7 @@ namespace RatchetEdit
         int colorShaderID;
         int matrixID;
         int colorID;
-
+        int currentSplineVertex = 0;
         //Input variables
         bool rMouse = false;
         bool lMouse = false;
@@ -125,6 +125,7 @@ namespace RatchetEdit
             objectTree.Nodes[0].Nodes.Clear();
             objectTree.Nodes[1].Nodes.Clear();
             objectTree.Nodes[2].Nodes.Clear();
+            objectTree.Nodes[3].Nodes.Clear();
 
             foreach (Moby moby in level.mobs) {
                 string modelName = modelNames != null ? modelNames.Find(x => x.Substring(0, 4).ToUpper() == moby.modelID.ToString("X4")) : null;
@@ -137,6 +138,10 @@ namespace RatchetEdit
             foreach (Tie shrub in level.shrubs) {
                 string shrubName = shrub.modelID.ToString("X");
                 objectTree.Nodes[2].Nodes.Add(shrubName);
+            }
+            foreach (Spline spline in level.splines) {
+                string splineName = spline.name.ToString("X");
+                objectTree.Nodes[3].Nodes.Add(splineName);
             }
         }
 
@@ -196,7 +201,11 @@ namespace RatchetEdit
         }
 
         private void updateEditorValues() {
-            if (selectedObject != null) {
+            if(selectedObject != null) {
+                if (selectedObject as ModelObject != null) {
+                    modelIDBox.Text = ((ModelObject)selectedObject).modelID.ToString("X");
+                }
+
                 if (selectedObject as Moby != null) {
                     Moby mob = (Moby)selectedObject;
                     rotxBox.Value = (decimal)Utilities.toDegrees(mob.rotation.X);
@@ -208,26 +217,38 @@ namespace RatchetEdit
                     rotxBox.Value = 0;
                     rotyBox.Value = 0;
                     rotzBox.Value = 0;
-                    scaleBox.Value = 0;
+                    scaleBox.Value = 1;
                 }
 
-                modelIDBox.Text = selectedObject.modelID.ToString("X");
-                xBox.Value = (decimal)selectedObject.position.X;
-                yBox.Value = (decimal)selectedObject.position.Y;
-                zBox.Value = (decimal)selectedObject.position.Z;
+                if (selectedObject as Spline != null) {
+                    Spline spline = (Spline)selectedObject;
+                    Console.WriteLine(currentSplineVertex.ToString());
+                    xBox.Value = (decimal)spline.vertexBuffer[(currentSplineVertex * 3) + 0];
+                    yBox.Value = (decimal)spline.vertexBuffer[(currentSplineVertex * 3) + 1];
+                    zBox.Value = (decimal)spline.vertexBuffer[(currentSplineVertex * 3) + 2];
+                }
+                else {
+                    xBox.Value = (decimal)selectedObject.position.X;
+                    yBox.Value = (decimal)selectedObject.position.Y;
+                    zBox.Value = (decimal)selectedObject.position.Z;
+                }
             }
             else {
                 modelIDBox.Text = "0";
+                splineVertex.Value = 0;
                 xBox.Value = 0;
                 yBox.Value = 0;
                 zBox.Value = 0;
+                rotxBox.Value = 0;
+                rotyBox.Value = 0;
+                rotzBox.Value = 0;
+                scaleBox.Value = 1;
             }
-
         }
+        private void glControl1_Paint(object sender, PaintEventArgs e) { render(); }
 
-        private void glControl1_Paint(object sender, PaintEventArgs e)
-        {
-            //Update label texts
+        private void render() {
+            //Update ui label texts
             camXLabel.Text = String.Format("X: {0}", Utilities.round(camera.position.X,2).ToString());
             camYLabel.Text = String.Format("Y: {0}", Utilities.round(camera.position.Y, 2).ToString());
             camZLabel.Text = String.Format("Z: {0}", Utilities.round(camera.position.Z, 2).ToString());
@@ -243,40 +264,27 @@ namespace RatchetEdit
             GL.UseProgram(colorShaderID);
             GL.EnableVertexAttribArray(0);
 
-            if (splineCheck.Checked && splineCheck.Enabled)
-            {
-                GL.UniformMatrix4(matrixID, false, ref worldView);
-                GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
-                foreach (Spline spline in level.splines)
-                {
-                    spline.getVBO();
-                    GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
+            if (splineCheck.Checked && splineCheck.Enabled) {
+                foreach (Spline spline in level.splines) {
+                    drawSpline(spline);
                 }
             }
 
-            if (selectedObject != null && selectedObject.model.vertexBuffer != null && selectedObject.modelMatrix != null)
-            {
-                Matrix4 mvp = selectedObject.modelMatrix * worldView;
-                GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
-                GL.UniformMatrix4(matrixID, false, ref mvp);
-                selectedObject.model.getVBO();
-                selectedObject.model.getIBO();
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                GL.DrawElements(PrimitiveType.Triangles, selectedObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            if (selectedObject as ModelObject != null) {
+                drawModelMesh((ModelObject)selectedObject);
             }
 
             GL.EnableVertexAttribArray(1);
             GL.UseProgram(shaderID);
 
             if (mobyCheck.Checked && mobyCheck.Enabled) 
-                foreach (Moby mob in level.mobs) drawObject(mob);
+                foreach (Moby mob in level.mobs) drawModelObject(mob);
 
             if (tieCheck.Checked && tieCheck.Enabled)
-                foreach (Tie tie in level.ties) drawObject(tie);
+                foreach (Tie tie in level.ties) drawModelObject(tie);
 
             if (shrubCheck.Checked && splineCheck.Enabled)
-                foreach (Tie shrub in level.shrubs)  drawObject(shrub);
+                foreach (Tie shrub in level.shrubs)  drawModelObject(shrub);
             
             if (terrainCheck.Checked && terrainCheck.Enabled)
             {
@@ -384,13 +392,13 @@ namespace RatchetEdit
         private void glControl1_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e) {
             if (e.Button == MouseButtons.Left && level != null)
             {
-                LevelObject obj = GetObjectAtPosition(e.Location.X, e.Location.Y);
+                LevelObject obj = GetObjectAtScreenPosition(e.Location.X, e.Location.Y);
                 SelectObject(obj);
 
             }
         }
 
-        public LevelObject GetObjectAtPosition(int x, int y) {
+        public LevelObject GetObjectAtScreenPosition(int x, int y) {
             LevelObject returnObject = null;
             TreeNode returnNode = null;
             int offset = 0;
@@ -403,15 +411,19 @@ namespace RatchetEdit
             if (mobyCheck.Checked) {
                 GL.ClearColor(0, 0, 0, 0);
                 offset = 0;
-                drawObjects(level.mobs.Cast<LevelObject>().ToList(), offset);
+                fakeDrawObjects(level.mobs.Cast<ModelObject>().ToList(), offset);
             }
             if (tieCheck.Checked) {
                 offset += level.mobs.Count;
-                drawObjects(level.ties.Cast<LevelObject>().ToList(), offset);
+                fakeDrawObjects(level.ties.Cast<ModelObject>().ToList(), offset);
             }
             if (shrubCheck.Checked) {
                 offset += level.ties.Count;
-                drawObjects(level.shrubs.Cast<LevelObject>().ToList(), offset);
+                fakeDrawObjects(level.shrubs.Cast<ModelObject>().ToList(), offset);
+            }
+            if (splineCheck.Checked) {
+                offset += level.shrubs.Count;
+                fakeDrawSplines(level.splines, offset);
             }
 
             Pixel pixel = new Pixel();
@@ -427,9 +439,13 @@ namespace RatchetEdit
                     returnObject = level.ties[id - level.mobs.Count];
                     returnNode = objectTree.Nodes[1].Nodes[id - level.mobs.Count];
                 }
-                else if (id - offset < level.shrubs?.Count) {
+                else if (id - (level.mobs?.Count + level.ties?.Count) < level.shrubs?.Count) {
                     returnObject = level.shrubs[id - offset];
                     returnNode = objectTree.Nodes[2].Nodes[id - offset];
+                }
+                else if (id - offset < level.splines?.Count) {
+                    returnObject = level.splines[id - offset];
+                    returnNode = objectTree.Nodes[3].Nodes[id - offset];
                 }
             }
 
@@ -437,64 +453,31 @@ namespace RatchetEdit
 
             return returnObject;
         }
-
+        
         void SelectObject(LevelObject levelObject = null) {
+            Console.WriteLine(levelObject);
             if (levelObject == null) {
                 selectedObject = null;
                 updateEditorValues();
                 invalidate = true;
+                currentSplineVertex = 0;
                 return;
             }
             
-            if (levelObject == selectedObject) {
+            if (ReferenceEquals(levelObject,selectedObject) && levelObject as ModelObject != null) {
                 openModelViewer();
                 return;
             }
 
             selectedObject = levelObject;
-            invalidate = true;
             if (primedTreeNode != null) {
                 suppressTreeViewSelectEvent = true;
                 objectTree.SelectedNode = primedTreeNode;
                 primedTreeNode = null;
             }
-
+            currentSplineVertex = 0;
             updateEditorValues();
-        }
-
-
-        public void drawObjects(List<LevelObject> levelObjects, int offset) {
-            foreach (LevelObject levelObject in levelObjects) {
-                if (levelObject.model.vertexBuffer != null) {
-                    Matrix4 mvp = levelObject.modelMatrix * worldView;  //Has to be done in this order to work correctly
-                    GL.UniformMatrix4(matrixID, false, ref mvp);
-
-                    levelObject.model.getVBO();
-                    levelObject.model.getIBO();
-
-                    int tieNum = levelObjects.IndexOf(levelObject);
-                    byte[] cols = BitConverter.GetBytes(tieNum + offset);
-                    GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
-                    GL.DrawElements(PrimitiveType.Triangles, levelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
-                }
-            }
-        }
-
-        private void drawObject(LevelObject obj)
-        {
-            if (obj.model.vertexBuffer != null) {
-                Matrix4 mvp = obj.modelMatrix * worldView;  //Has to be done in this order to work correctly
-                GL.UniformMatrix4(matrixID, false, ref mvp);
-
-                obj.model.getVBO();
-                obj.model.getIBO();
-
-                //Bind textures one by one, applying it to the relevant vertices based on the index array
-                foreach (TextureConfig conf in obj.model.textureConfig) {
-                    GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? level.textures[conf.ID].getTexture() : 0);
-                    GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
-                }
-            }
+            invalidate = true;
         }
 
         public void CloneMoby(Moby moby) {
@@ -511,27 +494,123 @@ namespace RatchetEdit
             SelectObject(null);
             invalidate = true;
         }
+        #region RenderFunctions
+        public void drawSpline(Spline spline) {
+            Vector4 color;
+            if (spline == selectedObject) color = new Vector4(1, 0, 1, 1);
+            else color = new Vector4(1, 1, 1, 1);
+
+            GL.UseProgram(colorShaderID);
+            GL.EnableVertexAttribArray(0);
+            GL.UniformMatrix4(matrixID, false, ref worldView);
+            GL.Uniform4(colorID, color);
+            spline.getVBO();
+            GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
+        }
+
+        private void drawModelObject(ModelObject obj) {
+            if (obj.model.vertexBuffer != null) {
+                Matrix4 mvp = obj.modelMatrix * worldView;  //Has to be done in this order to work correctly
+                GL.UniformMatrix4(matrixID, false, ref mvp);
+
+                obj.model.getVBO();
+                obj.model.getIBO();
+
+                //Bind textures one by one, applying it to the relevant vertices based on the index array
+                foreach (TextureConfig conf in obj.model.textureConfig) {
+                    GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? level.textures[conf.ID].getTexture() : 0);
+                    GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+                }
+            }
+        }
+
+        public void drawModelMesh(ModelObject levelObject) {
+            if (levelObject != null) {
+                if (levelObject.model != null && levelObject.model.vertexBuffer != null && levelObject.modelMatrix != null) {
+                    GL.UseProgram(colorShaderID);
+                    GL.EnableVertexAttribArray(0);
+                    Matrix4 mvp = levelObject.modelMatrix * worldView;
+                    GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
+                    GL.UniformMatrix4(matrixID, false, ref mvp);
+                    levelObject.model.getVBO();
+                    levelObject.model.getIBO();
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                    GL.DrawElements(PrimitiveType.Triangles, levelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                }
+            }
+        }
+
+        public void fakeDrawSplines(List<Spline> splines, int offset) {
+            foreach (Spline spline in splines) {
+                GL.UseProgram(colorShaderID);
+                GL.EnableVertexAttribArray(0);
+                GL.UniformMatrix4(matrixID, false, ref worldView);
+                int objectIndex = splines.IndexOf(spline);
+                byte[] cols = BitConverter.GetBytes(objectIndex + offset);
+                GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
+                spline.getVBO();
+                GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
+            }
+        }
+        public void fakeDrawObjects(List<ModelObject> levelObjects, int offset) {
+            foreach (ModelObject levelObject in levelObjects) {
+                if (levelObject.model.vertexBuffer != null) {
+                    Matrix4 mvp = levelObject.modelMatrix * worldView;  //Has to be done in this order to work correctly
+                    GL.UniformMatrix4(matrixID, false, ref mvp);
+
+                    levelObject.model.getVBO();
+                    levelObject.model.getIBO();
+
+                    int objectIndex = levelObjects.IndexOf(levelObject);
+                    byte[] cols = BitConverter.GetBytes(objectIndex + offset);
+                    GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
+                    GL.DrawElements(PrimitiveType.Triangles, levelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
+                }
+            }
+        }
+        #endregion
 
         #region Position Input Events
         private void xBox_ValueChanged(object sender, EventArgs e) {
             if (selectedObject == null) return;
-            Vector3 position = selectedObject.position;
-            selectedObject.position = new Vector3((float)xBox.Value, position.Y, position.Z);
+
+            if(selectedObject as Spline != null) {
+                Spline spline = (Spline)selectedObject;
+                spline.vertexBuffer[(currentSplineVertex * 3) + 0] = (float)xBox.Value;
+            }
+            else {
+                Vector3 position = selectedObject.position;
+                selectedObject.position = new Vector3((float)xBox.Value, position.Y, position.Z);
+            }
             invalidate = true;
         }
 
         private void yBox_ValueChanged(object sender, EventArgs e) {
             if (selectedObject == null) return;
-            Vector3 position = selectedObject.position;
-            selectedObject.position = new Vector3(position.X, (float)yBox.Value, position.Z);
+            if (selectedObject as Spline != null) {
+                Spline spline = (Spline)selectedObject;
+                spline.vertexBuffer[(currentSplineVertex * 3) + 1] = (float)yBox.Value;
+            }
+            else {
+                Vector3 position = selectedObject.position;
+                selectedObject.position = new Vector3(position.X, (float)yBox.Value, position.Z);
+            }
+
             invalidate = true;
         }
 
         private void zBox_ValueChanged(object sender, EventArgs e)
         {
             if (selectedObject == null) return;
-            Vector3 position = selectedObject.position;
-            selectedObject.position = new Vector3(position.X, position.Y, (float)zBox.Value);
+            if (selectedObject as Spline != null) {
+                Spline spline = (Spline)selectedObject;
+                spline.vertexBuffer[(currentSplineVertex * 3) + 2] = (float)zBox.Value;
+            }
+            else {
+                Vector3 position = selectedObject.position;
+                selectedObject.position = new Vector3(position.X, position.Y, (float)zBox.Value);
+            }
             invalidate = true;
         }
         #endregion
@@ -630,6 +709,12 @@ namespace RatchetEdit
             public override string ToString() {
                 return R + ", " + G + ", " + B + ", " + A;
             }
+        }
+
+        private void splineVertex_ValueChanged(object sender, EventArgs e) {
+            currentSplineVertex = (int)splineVertex.Value;
+            Console.WriteLine(splineVertex.Value.ToString());
+            updateEditorValues();
         }
     }
 }

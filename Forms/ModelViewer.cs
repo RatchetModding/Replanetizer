@@ -125,7 +125,7 @@ namespace RatchetEdit
             GL.Enable(EnableCap.DepthTest);
             GL.EnableClientState(ArrayCap.VertexArray);
 
-            selectedModel = mainForm.selectedObject?.model;
+            selectedModel = (mainForm.selectedObject as ModelObject)?.model;
 
             projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, (float)glControl1.Width / glControl1.Height, 0.1f, 100.0f);
             trans = Matrix4.CreateTranslation(0.0f, 0.0f, -5.0f);

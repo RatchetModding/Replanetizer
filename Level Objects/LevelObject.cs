@@ -9,9 +9,6 @@ namespace RatchetEdit
 {
     public class LevelObject
     {
-        public int modelID;
-        public Matrix4 modelMatrix;
-        public Model model;
         private Vector3 _position = new Vector3();
         public Vector3 position {
             get { return _position; }

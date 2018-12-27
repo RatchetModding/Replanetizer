@@ -29,9 +29,10 @@ namespace RatchetEdit
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Mobys");
-            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Ties");
-            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Shrubs");
+            System.Windows.Forms.TreeNode treeNode13 = new System.Windows.Forms.TreeNode("Mobys");
+            System.Windows.Forms.TreeNode treeNode14 = new System.Windows.Forms.TreeNode("Ties");
+            System.Windows.Forms.TreeNode treeNode15 = new System.Windows.Forms.TreeNode("Shrubs");
+            System.Windows.Forms.TreeNode treeNode16 = new System.Windows.Forms.TreeNode("Splines");
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
@@ -94,8 +95,9 @@ namespace RatchetEdit
             this.pitchLabel = new System.Windows.Forms.Label();
             this.objectTree = new System.Windows.Forms.TreeView();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.cloneButton = new System.Windows.Forms.Button();
             this.deleteButton = new System.Windows.Forms.Button();
+            this.cloneButton = new System.Windows.Forms.Button();
+            this.splineVertex = new System.Windows.Forms.NumericUpDown();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.renderBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.rotzBox)).BeginInit();
@@ -110,6 +112,7 @@ namespace RatchetEdit
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splineVertex)).BeginInit();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -775,16 +778,19 @@ namespace RatchetEdit
             this.objectTree.HideSelection = false;
             this.objectTree.Location = new System.Drawing.Point(3, 11);
             this.objectTree.Name = "objectTree";
-            treeNode1.Name = "mobyNode";
-            treeNode1.Text = "Mobys";
-            treeNode2.Name = "tieNode";
-            treeNode2.Text = "Ties";
-            treeNode3.Name = "shrubNode";
-            treeNode3.Text = "Shrubs";
+            treeNode13.Name = "mobyNode";
+            treeNode13.Text = "Mobys";
+            treeNode14.Name = "tieNode";
+            treeNode14.Text = "Ties";
+            treeNode15.Name = "shrubNode";
+            treeNode15.Text = "Shrubs";
+            treeNode16.Name = "splineNode";
+            treeNode16.Text = "Splines";
             this.objectTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode1,
-            treeNode2,
-            treeNode3});
+            treeNode13,
+            treeNode14,
+            treeNode15,
+            treeNode16});
             this.objectTree.Size = new System.Drawing.Size(254, 249);
             this.objectTree.TabIndex = 16;
             this.objectTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.objectTree_AfterSelect);
@@ -802,6 +808,7 @@ namespace RatchetEdit
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.AutoScroll = true;
+            this.splitContainer1.Panel2.Controls.Add(this.splineVertex);
             this.splitContainer1.Panel2.Controls.Add(this.deleteButton);
             this.splitContainer1.Panel2.Controls.Add(this.cloneButton);
             this.splitContainer1.Panel2.Controls.Add(this.objectTree);
@@ -842,18 +849,6 @@ namespace RatchetEdit
             this.splitContainer1.SplitterDistance = 1000;
             this.splitContainer1.TabIndex = 17;
             // 
-            // cloneButton
-            // 
-            this.cloneButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.cloneButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.cloneButton.Location = new System.Drawing.Point(136, 528);
-            this.cloneButton.Name = "cloneButton";
-            this.cloneButton.Size = new System.Drawing.Size(118, 23);
-            this.cloneButton.TabIndex = 15;
-            this.cloneButton.Text = "Clone Object";
-            this.cloneButton.UseVisualStyleBackColor = true;
-            this.cloneButton.Click += new System.EventHandler(this.cloneButton_Click);
-            // 
             // deleteButton
             // 
             this.deleteButton.Anchor = System.Windows.Forms.AnchorStyles.Left;
@@ -866,6 +861,32 @@ namespace RatchetEdit
             this.deleteButton.Text = "Delete Object";
             this.deleteButton.UseVisualStyleBackColor = true;
             this.deleteButton.Click += new System.EventHandler(this.deleteButton_Click);
+            // 
+            // cloneButton
+            // 
+            this.cloneButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.cloneButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.cloneButton.Location = new System.Drawing.Point(136, 528);
+            this.cloneButton.Name = "cloneButton";
+            this.cloneButton.Size = new System.Drawing.Size(118, 23);
+            this.cloneButton.TabIndex = 15;
+            this.cloneButton.Text = "Clone Object";
+            this.cloneButton.UseVisualStyleBackColor = true;
+            this.cloneButton.Click += new System.EventHandler(this.cloneButton_Click);
+            // 
+            // splineVertex
+            // 
+            this.splineVertex.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.splineVertex.Location = new System.Drawing.Point(3, 625);
+            this.splineVertex.Maximum = new decimal(new int[] {
+            5000,
+            0,
+            0,
+            0});
+            this.splineVertex.Name = "splineVertex";
+            this.splineVertex.Size = new System.Drawing.Size(118, 20);
+            this.splineVertex.TabIndex = 17;
+            this.splineVertex.ValueChanged += new System.EventHandler(this.splineVertex_ValueChanged);
             // 
             // Main
             // 
@@ -895,6 +916,7 @@ namespace RatchetEdit
             this.splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splineVertex)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -965,6 +987,7 @@ namespace RatchetEdit
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.Button cloneButton;
         private System.Windows.Forms.Button deleteButton;
+        private System.Windows.Forms.NumericUpDown splineVertex;
     }
 }
 

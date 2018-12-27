@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using OpenTK;
 using static RatchetEdit.DataFunctions;
 
@@ -83,10 +84,13 @@ namespace RatchetEdit
             off_6C = ReadUint(levelBlock, (TIEELEMSIZE * num) + 0x6C);
 
             model = tieModels.Find(tieModel => tieModel.ID == modelID);
-            updateTransform();
+            UpdateTransform();
+            rotation = modelMatrix.ExtractRotation().Xyz * 2;
+            position = modelMatrix.ExtractTranslation();
+
         }
 
-        public override void updateTransform() {
+        public override void UpdateTransform() {
             modelMatrix = new Matrix4(v1x, v1y, v1z, v1w, v2x, v2y, v2z, v2w, v3x, v3y, v3z, v3w, x, y, z, w);
         }
 
@@ -94,9 +98,42 @@ namespace RatchetEdit
             return new Tie(modelMatrix);
         }
 
+        void UpdateMatrixVariables(Matrix4 matrix) {
+            this.v1x = matrix.M11;
+            this.v1y = matrix.M12;
+            this.v1z = matrix.M13;
+            this.v1w = matrix.M14;
+
+            this.v2x = matrix.M21;
+            this.v2y = matrix.M22;
+            this.v2z = matrix.M23;
+            this.v2w = matrix.M24;
+
+            this.v3x = matrix.M31;
+            this.v3y = matrix.M32;
+            this.v3z = matrix.M33;
+            this.v3w = matrix.M34;
+
+            this.x = matrix.M41;
+            this.y = matrix.M42;
+            this.z = matrix.M43;
+            this.w = matrix.M44;
+
+            UpdateTransform();
+        }
+
         //Transformable methods
         public override void Rotate(float x, float y, float z) {
-            throw new System.NotImplementedException();
+            Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(x,y,z));
+            Matrix4 result = rotationMatrix * modelMatrix;
+
+            UpdateMatrixVariables(result);
+
+            rotation += new Vector3(x, y, z);
+            UpdateTransform();
+            Console.WriteLine("Inp: " + x + " : " + y + " : " + z);
+            Console.WriteLine("Rot: " + rotation.X + " : " + rotation.Y + " : " + rotation.Z);
+
         }
 
         public override void Rotate(Vector3 vector) {
@@ -108,7 +145,10 @@ namespace RatchetEdit
         }
 
         public override void Translate(float x, float y, float z) {
-            throw new System.NotImplementedException();
+            Matrix4 translationMatrix = Matrix4.CreateTranslation(x, y, z);
+            Matrix4 result = translationMatrix * modelMatrix;
+            UpdateMatrixVariables(result);
+            position = modelMatrix.ExtractTranslation();
         }
 
         public override void Translate(Vector3 vector) {

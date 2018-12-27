@@ -102,7 +102,7 @@ namespace RatchetEdit
 
         void loadLevel(string fileName) {
             level = new Level(fileName);
-            invalidate = true;
+            InvalidateView();
             mobyCheck.Enabled = true;
             tieCheck.Enabled = true;
             shrubCheck.Enabled = true;
@@ -202,32 +202,15 @@ namespace RatchetEdit
                     modelIDBox.Text = ((ModelObject)selectedObject).modelID.ToString("X");
                 }
 
-                if (selectedObject as Moby != null) {
-                    Moby mob = (Moby)selectedObject;
-                    rotxBox.Value = (decimal)Utilities.toDegrees(mob.rotation.X);
-                    rotyBox.Value = (decimal)Utilities.toDegrees(mob.rotation.Y);
-                    rotzBox.Value = (decimal)Utilities.toDegrees(mob.rotation.Z);
-                    scaleBox.Value = (decimal)mob.scale;
-                }
-                else {
-                    rotxBox.Value = 0;
-                    rotyBox.Value = 0;
-                    rotzBox.Value = 0;
-                    scaleBox.Value = 1;
-                }
+                rotxBox.Value = (decimal)Utilities.toDegrees(selectedObject.rotation.X);
+                rotyBox.Value = (decimal)Utilities.toDegrees(selectedObject.rotation.Y);
+                rotzBox.Value = (decimal)Utilities.toDegrees(selectedObject.rotation.Z);
+                scaleBox.Value = (decimal)selectedObject.scale;
 
-                if (selectedObject as Spline == null) { //Is not spline
-                    xBox.Value = (decimal)selectedObject.position.X;
-                    yBox.Value = (decimal)selectedObject.position.Y;
-                    zBox.Value = (decimal)selectedObject.position.Z;
-                }
-                else { //Is spline
-                    Spline spline = (Spline)selectedObject;
-                    Console.WriteLine(currentSplineVertex.ToString());
-                    xBox.Value = (decimal)spline.vertexBuffer[(currentSplineVertex * 3) + 0];
-                    yBox.Value = (decimal)spline.vertexBuffer[(currentSplineVertex * 3) + 1];
-                    zBox.Value = (decimal)spline.vertexBuffer[(currentSplineVertex * 3) + 2];
-                }
+                xBox.Value = (decimal)selectedObject.position.X;
+                yBox.Value = (decimal)selectedObject.position.Y;
+                zBox.Value = (decimal)selectedObject.position.Z;
+               
             }
             else {
                 modelIDBox.Text = "0";
@@ -322,7 +305,7 @@ namespace RatchetEdit
             Vector3 moveDir = GetInputAxes();
             if (moveDir.Length > 0) {
                 moveDir *= moveSpeed * multiplier * deltaTime;
-                invalidate = true;
+                InvalidateView();
             }
 
 
@@ -333,7 +316,7 @@ namespace RatchetEdit
                 pitch -= (Cursor.Position.Y - lastMouseY) * camera.speed * 0.016f;
                 pitch = MathHelper.Clamp(pitch, MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
                 camera.SetRotation(pitch, yaw);
-                invalidate = true;
+                InvalidateView();
             }
 
             lastMouseX = Cursor.Position.X;
@@ -381,7 +364,7 @@ namespace RatchetEdit
         }
 
         private void enableCheck(object sender, EventArgs e) {
-            invalidate = true;
+            InvalidateView();
         }
 
         private void glControl1_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e) {
@@ -453,7 +436,7 @@ namespace RatchetEdit
             if (levelObject == null) {
                 selectedObject = null;
                 UpdateEditorValues();
-                invalidate = true;
+                InvalidateView();
                 currentSplineVertex = 0;
                 return;
             }
@@ -471,7 +454,7 @@ namespace RatchetEdit
             }
             currentSplineVertex = 0;
             UpdateEditorValues();
-            invalidate = true;
+            InvalidateView();
         }
 
         public void CloneMoby(Moby moby) {
@@ -481,14 +464,14 @@ namespace RatchetEdit
             level.mobs.Add(newMoby);
             GenerateObjectTree();
             SelectObject(newMoby);
-            invalidate = true;
+            InvalidateView();
         }
 
         public void DeleteMoby(Moby moby) {
             level.mobs.Remove(moby);
             GenerateObjectTree();
             SelectObject(null);
-            invalidate = true;
+            InvalidateView();
         }
         #region RenderFunctions
         public void drawSpline(Spline spline) {
@@ -570,77 +553,51 @@ namespace RatchetEdit
         #region Position Input Events
         private void xBox_ValueChanged(object sender, EventArgs e) {
             if (selectedObject == null) return;
-
-            if(selectedObject as Spline == null) {
-                Vector3 position = selectedObject.position;
-                selectedObject.position = new Vector3((float)xBox.Value, position.Y, position.Z);
-            }
-            else {
-                Spline spline = (Spline)selectedObject;
-                spline.vertexBuffer[(currentSplineVertex * 3) + 0] = (float)xBox.Value;
-            }
-            invalidate = true;
+            Vector3 position = selectedObject.position;
+            selectedObject.Translate((float)xBox.Value - position.X, 0, 0);
+            //Spline spline = (Spline)selectedObject;
+            //spline.vertexBuffer[(currentSplineVertex * 3) + 0] = (float)xBox.Value;
+            
+            InvalidateView();
         }
 
         private void yBox_ValueChanged(object sender, EventArgs e) {
             if (selectedObject == null) return;
-            if (selectedObject as Spline == null) {
-                Vector3 position = selectedObject.position;
-                selectedObject.position = new Vector3(position.X, (float)yBox.Value, position.Z);
-            }
-            else {
-                Spline spline = (Spline)selectedObject;
-                spline.vertexBuffer[(currentSplineVertex * 3) + 1] = (float)yBox.Value;
-            }
+            Vector3 position = selectedObject.position;
+            selectedObject.Translate(0, (float)yBox.Value - position.Y, 0);
 
-            invalidate = true;
+            InvalidateView();
         }
 
         private void zBox_ValueChanged(object sender, EventArgs e)
         {
             if (selectedObject == null) return;
-            if (selectedObject as Spline == null) {
-                Vector3 position = selectedObject.position;
-                selectedObject.position = new Vector3(position.X, position.Y, (float)zBox.Value);
-            }
-            else {
-                Spline spline = (Spline)selectedObject;
-                spline.vertexBuffer[(currentSplineVertex * 3) + 2] = (float)zBox.Value;
-            }
-            invalidate = true;
+            selectedObject.Translate(0, 0, (float)zBox.Value - selectedObject.position.Z);
+            InvalidateView();
         }
         #endregion
         #region Rotation Input Events
         private void rotxBox_ValueChanged(object sender, EventArgs e) {
-            if (selectedObject as Moby != null)
-            {
-                Moby moby = (Moby)selectedObject;
-                Vector3 rotation = moby.rotation;
+            if (selectedObject != null) {
                 float value = Utilities.toRadians((float)rotxBox.Value);
-                moby.rotation = new Vector3(value, rotation.Y, rotation.Z);
-                invalidate = true;
+                selectedObject.Rotate(value - selectedObject.rotation.X, 0, 0);
+                InvalidateView();
             }
         }
 
         private void rotyBox_ValueChanged(object sender, EventArgs e) {
-            if (selectedObject as Moby != null)
-            {
-                Moby moby = (Moby)selectedObject;
-                Vector3 rotation = moby.rotation;
+            if (selectedObject != null) {
                 float value = Utilities.toRadians((float)rotyBox.Value);
-                moby.rotation = new Vector3(rotation.X, value, rotation.Z);
-                invalidate = true;
+                selectedObject.Rotate(0, value - selectedObject.rotation.Y, 0);
+                InvalidateView();
             }
         }
 
         private void rotzBox_ValueChanged(object sender, EventArgs e) {
-            if (selectedObject as Moby != null)
-            {
-                Moby moby = (Moby)selectedObject;
-                Vector3 rotation = moby.rotation;
+            if (selectedObject != null) {
                 float value = Utilities.toRadians((float)rotzBox.Value);
-                moby.rotation = new Vector3(rotation.X, rotation.Y, value);
-                invalidate = true;
+                selectedObject.Rotate(0, 0, value - selectedObject.rotation.Z);
+                InvalidateView();
             }
         }
         #endregion
@@ -657,15 +614,15 @@ namespace RatchetEdit
         private void gotoPositionBtn_Click(object sender, EventArgs e) {
             if (selectedObject == null) return;
             camera.MoveBehind(selectedObject);
-            invalidate = true;
+            InvalidateView();
         }
 
         private void scaleBox_ValueChanged(object sender, EventArgs e) {
             if (selectedObject as Moby != null) {
                 Moby moby = (Moby)selectedObject;
                 moby.scale = (float)scaleBox.Value;
-                moby.updateTransform();
-                invalidate = true;
+                moby.UpdateTransform();
+                InvalidateView();
             }
         }
 
@@ -690,6 +647,10 @@ namespace RatchetEdit
             Tick();
         }
         #endregion
+
+        void InvalidateView() {
+            invalidate = true;
+        }
 
         struct Pixel {
             public byte R, G, B, A;

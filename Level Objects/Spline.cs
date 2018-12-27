@@ -9,7 +9,7 @@ using OpenTK;
 
 namespace RatchetEdit
 {
-    public class Spline : LevelObject, Transformable {
+    public class Spline : LevelObject, ITransformable {
         public int name;
         public float[] vertexBuffer;
 
@@ -36,7 +36,7 @@ namespace RatchetEdit
             }
 
             if(count > 0) {
-                position = new OpenTK.Vector3(vertexBuffer[0], vertexBuffer[1], vertexBuffer[2]);
+                position = new Vector3(vertexBuffer[0], vertexBuffer[1], vertexBuffer[2]);
             }
         }
 
@@ -47,13 +47,13 @@ namespace RatchetEdit
             {
                 GL.GenBuffers(1, out VBO);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
-                GL.BufferData(BufferTarget.ArrayBuffer, vertexBuffer.Length * sizeof(float), vertexBuffer, BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ArrayBuffer, vertexBuffer.Length * sizeof(float), vertexBuffer, BufferUsageHint.DynamicDraw);
                 //Console.WriteLine("Generated VBO with ID: " + VBO.ToString());
             }
             else
             {
                 GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
-                GL.BufferData(BufferTarget.ArrayBuffer, vertexBuffer.Length * sizeof(float), vertexBuffer, BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ArrayBuffer, vertexBuffer.Length * sizeof(float), vertexBuffer, BufferUsageHint.DynamicDraw);
             }
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
         }
@@ -62,20 +62,20 @@ namespace RatchetEdit
             return new Spline(name, vertexBuffer);
         }
 
-        public override void updateTransform() {
-
-        }
+        public override void UpdateTransform() {}
 
         //Transformable methods
         public override void Translate(float x, float y, float z) {
-            for(int i = 0; i < vertexBuffer.Length / 3; i++) {
-                vertexBuffer[(i * 3) + 0] += x;
-                vertexBuffer[(i * 3) + 1] += y;
-                vertexBuffer[(i * 3) + 2] += z;
-            }
+            Translate(new Vector3(x,y,z));
         }
         public override void Translate(Vector3 vector) {
-            Translate(vector.X, vector.Y, vector.Z);
+            for (int i = 0; i < vertexBuffer.Length / 3; i++) {
+                vertexBuffer[(i * 3) + 0] += vector.X;
+                vertexBuffer[(i * 3) + 1] += vector.Y;
+                vertexBuffer[(i * 3) + 2] += vector.Z;
+            }
+
+            position += vector;
         }
 
         public override void Rotate(float x, float y, float z) {

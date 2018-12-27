@@ -10,17 +10,7 @@ using static RatchetEdit.DataFunctions;
 namespace RatchetEdit
 {
     public class Moby : ModelObject
-    {
-        public float scale;
-        private Vector3 _rotation = new Vector3();
-        public Vector3 rotation {
-            get { return _rotation; }
-            set {
-                _rotation = value;
-                updateTransform();
-            }
-        }
-        
+    {        
         public Moby(Model model, Vector3 position, Vector3 rotation, float scale) {
             this.model = model;
             this.position = position;
@@ -47,14 +37,14 @@ namespace RatchetEdit
 
 
             model = mobyModels.Find(mobyModel => mobyModel.ID == modelID);
-            updateTransform();
+            UpdateTransform();
         }
 
         public override LevelObject Clone() {
             return new Moby(model, new Vector3(position), new Vector3(rotation), scale);
         }
 
-        public override void updateTransform() {
+        public override void UpdateTransform() {
             if (model == null) return;
             Matrix4 rotMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
             Matrix4 scaleMatrix = Matrix4.CreateScale(scale * model.size);

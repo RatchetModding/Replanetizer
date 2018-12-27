@@ -12,7 +12,14 @@ namespace RatchetEdit
         public int modelID;
         public Matrix4 modelMatrix;
         public Model model;
-        public Vector3 position = new Vector3();
+        private Vector3 _position = new Vector3();
+        public Vector3 position {
+            get { return _position; }
+            set {
+                _position = value;
+                updateTransform();
+            }
+        }
         
         public virtual void updateTransform(){ }  //Override me
 

@@ -29,16 +29,18 @@ namespace RatchetEdit
         bool lMouse = false;
         int lastMouseX = 0;
         int lastMouseY = 0;
-
-        LevelObject prevObject;
-        public LevelObject selectedObject;
+        public LevelObject _selectedObject;
+        public LevelObject selectedObject { get { return _selectedObject; } set { _selectedObject = value; Console.WriteLine("asdasdasdads"); } }
 
         List<string> modelNames;
 
         Camera camera;
 
-        bool invalidate = false;
+        TreeNode primedTreeNode = null;
 
+        bool invalidate = false;
+        bool suppressTreeViewSelectEvent = false;
+        
         public Main()
         {
             InitializeComponent();
@@ -175,25 +177,21 @@ namespace RatchetEdit
         }
         #endregion
 
-        private void modelViewerToolBtn_Click(object sender, EventArgs e)
-        {
+        private void modelViewerToolBtn_Click(object sender, EventArgs e) {
             if (selectedObject == null) return;
             openModelViewer();
         }
 
-        private void openModelViewerBtn_Click(object sender, EventArgs e)
-        {
+        private void openModelViewerBtn_Click(object sender, EventArgs e) {
             if (selectedObject == null) return;
             openModelViewer();
         }
 
-        private void exitToolBtn_Click(object sender, EventArgs e)
-        {
+        private void exitToolBtn_Click(object sender, EventArgs e) {
             Close();
         }
 
-        private void updateLevelObject()
-        {
+        private void updateEditorValues() {
             if (selectedObject as Moby != null)
             {
                 Moby mob = (Moby)selectedObject;
@@ -379,56 +377,80 @@ namespace RatchetEdit
         {
             if (e.Button == MouseButtons.Left && level != null)
             {
-                int offset = 0;
-                glControl1.MakeCurrent();
-                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-                GL.UseProgram(colorShaderID);
-                GL.EnableVertexAttribArray(0);
-                worldView = view * projection;
+                LevelObject obj = GetObjectAtPosition(e.Location.X, e.Location.Y);
+                SelectObject(obj);
 
-                //TODO: Consolidate following stuff into function.
-
-                if (mobyCheck.Checked) {
-                    GL.ClearColor(0, 0, 0, 0);
-                    offset = 0;
-                    drawObjects(level.mobs.Cast<LevelObject>().ToList(), offset);
-                }
-                if (tieCheck.Checked){
-                    offset += level.mobs.Count;
-                    drawObjects(level.ties.Cast<LevelObject>().ToList(), offset);
-                }
-                if (shrubCheck.Checked){
-                    offset += level.ties.Count;
-                    drawObjects(level.shrubs.Cast<LevelObject>().ToList(), offset);
-                }
-
-                Pixel pixel = new Pixel();
-                GL.ReadPixels(e.Location.X, glControl1.Height - e.Location.Y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixel);
-                GL.ClearColor(Color.SkyBlue);
-                if (pixel.A == 0) {
-                    int id = (int)pixel.ToUInt32();
-                    if (id < level.mobs?.Count) {
-                        selectedObject = level.mobs[id];
-                        objectTree.SelectedNode = objectTree.Nodes[0].Nodes[id];
-                    }
-                    else if (id - level.mobs?.Count < level.ties?.Count) {
-                        selectedObject = level.ties[id - level.mobs.Count];
-                        objectTree.SelectedNode = objectTree.Nodes[1].Nodes[id - level.mobs.Count];
-                    }
-
-                    else if (id - offset < level.shrubs?.Count) {
-                        selectedObject = level.shrubs[id - offset];
-                        objectTree.SelectedNode = objectTree.Nodes[2].Nodes[id - offset];
-                    }
-                    if (selectedObject == prevObject) {
-                        openModelViewer();
-                    }
-                    prevObject = selectedObject;
-                    updateLevelObject();
-                }
-
-                invalidate = true;
             }
+        }
+
+        public LevelObject GetObjectAtPosition(int x, int y) {
+            LevelObject returnObject = null;
+            TreeNode returnNode = null;
+            int offset = 0;
+            glControl1.MakeCurrent();
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            GL.UseProgram(colorShaderID);
+            GL.EnableVertexAttribArray(0);
+            worldView = view * projection;
+
+            //TODO: Consolidate following stuff into function.
+
+            if (mobyCheck.Checked) {
+                GL.ClearColor(0, 0, 0, 0);
+                offset = 0;
+                drawObjects(level.mobs.Cast<LevelObject>().ToList(), offset);
+            }
+            if (tieCheck.Checked) {
+                offset += level.mobs.Count;
+                drawObjects(level.ties.Cast<LevelObject>().ToList(), offset);
+            }
+            if (shrubCheck.Checked) {
+                offset += level.ties.Count;
+                drawObjects(level.shrubs.Cast<LevelObject>().ToList(), offset);
+            }
+
+            Pixel pixel = new Pixel();
+            GL.ReadPixels(x, glControl1.Height - y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixel);
+            GL.ClearColor(Color.SkyBlue);
+            if (pixel.A == 0) {
+                int id = (int)pixel.ToUInt32();
+                if (id < level.mobs?.Count) {
+                    returnObject = level.mobs[id];
+                    returnNode = objectTree.Nodes[0].Nodes[id];
+                }
+                else if (id - level.mobs?.Count < level.ties?.Count) {
+                    returnObject = level.ties[id - level.mobs.Count];
+                    returnNode = objectTree.Nodes[1].Nodes[id - level.mobs.Count];
+                }
+
+                else if (id - offset < level.shrubs?.Count) {
+                    returnObject = level.shrubs[id - offset];
+                    returnNode = objectTree.Nodes[2].Nodes[id - offset];
+                }
+
+            }
+
+           primedTreeNode = returnNode;
+
+            return returnObject;
+        }
+
+        void SelectObject(LevelObject levelObject) {
+            if (levelObject == null) return;
+            
+            if (ReferenceEquals(levelObject,selectedObject)) {
+                openModelViewer();
+                return;
+            }
+
+            selectedObject = levelObject;
+            if (primedTreeNode != null) {
+                suppressTreeViewSelectEvent = true;
+                objectTree.SelectedNode = primedTreeNode;
+                primedTreeNode = null;
+            }
+
+            updateEditorValues();
         }
 
 
@@ -471,7 +493,6 @@ namespace RatchetEdit
             if (selectedObject == null) return;
             Vector3 position = selectedObject.position;
             selectedObject.position = new Vector3((float)xBox.Value, position.Y, position.Z);
-            selectedObject.updateTransform();
             invalidate = true;
         }
 
@@ -479,7 +500,6 @@ namespace RatchetEdit
             if (selectedObject == null) return;
             Vector3 position = selectedObject.position;
             selectedObject.position = new Vector3(position.X, (float)yBox.Value, position.Z);
-            selectedObject.updateTransform();
             invalidate = true;
         }
 
@@ -488,7 +508,6 @@ namespace RatchetEdit
             if (selectedObject == null) return;
             Vector3 position = selectedObject.position;
             selectedObject.position = new Vector3(position.X, position.Y, (float)zBox.Value);
-            selectedObject.updateTransform();
             invalidate = true;
         }
         #endregion
@@ -501,7 +520,6 @@ namespace RatchetEdit
                 Vector3 rotation = selectedObj.rotation;
                 float value = Utilities.toRadians((float)rotxBox.Value);
                 selectedObj.rotation = new Vector3(value, rotation.Y, rotation.Z);
-                selectedObj.updateTransform();
                 invalidate = true;
             }
         }
@@ -514,7 +532,6 @@ namespace RatchetEdit
                 Vector3 rotation = selectedObj.rotation;
                 float value = Utilities.toRadians((float)rotyBox.Value);
                 selectedObj.rotation = new Vector3(rotation.X, value, rotation.Z);
-                selectedObj.updateTransform();
                 invalidate = true;
             }
         }
@@ -527,7 +544,6 @@ namespace RatchetEdit
                 Vector3 rotation = selectedObj.rotation;
                 float value = Utilities.toRadians((float)rotzBox.Value);
                 selectedObj.rotation = new Vector3(rotation.X, rotation.Y, value);
-                selectedObj.updateTransform();
                 invalidate = true;
             }
         }
@@ -535,8 +551,10 @@ namespace RatchetEdit
         #region Misc Input Events
         private void objectTree_AfterSelect(object sender, TreeViewEventArgs e) {
             if (e.Node.Parent == objectTree.Nodes[0]) {
-                selectedObject = level.mobs[e.Node.Index];
-                updateLevelObject();
+                if (!suppressTreeViewSelectEvent) {
+                    SelectObject(level.mobs[e.Node.Index]);
+                }
+                suppressTreeViewSelectEvent = false;
             }
         }
 

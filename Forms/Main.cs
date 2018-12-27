@@ -201,7 +201,17 @@ namespace RatchetEdit
         }
 
         private void updateEditorValues() {
-            if(selectedObject != null) {
+            
+            if(selectedObject as Spline != null)
+            {
+                Spline spline = (Spline)selectedObject;
+                spline.position = new Vector3(spline.vertexBuffer[(currentSplineVertex * 3) + 0],
+                    spline.vertexBuffer[(currentSplineVertex * 3) + 1],
+                    spline.vertexBuffer[(currentSplineVertex * 3) + 2]);
+            }
+            properies.Update();
+
+            /*if(selectedObject != null) {
                 if (selectedObject as ModelObject != null) {
                     modelIDBox.Text = ((ModelObject)selectedObject).modelID.ToString("X");
                 }
@@ -243,7 +253,7 @@ namespace RatchetEdit
                 rotyBox.Value = 0;
                 rotzBox.Value = 0;
                 scaleBox.Value = 1;
-            }
+            }*/
         }
         private void glControl1_Paint(object sender, PaintEventArgs e) { render(); }
 
@@ -469,6 +479,7 @@ namespace RatchetEdit
             }
 
             selectedObject = levelObject;
+            properies.SelectedObject = selectedObject;
             if (primedTreeNode != null) {
                 suppressTreeViewSelectEvent = true;
                 objectTree.SelectedNode = primedTreeNode;
@@ -569,84 +580,6 @@ namespace RatchetEdit
             }
         }
         #endregion
-
-        #region Position Input Events
-        private void xBox_ValueChanged(object sender, EventArgs e) {
-            if (selectedObject == null) return;
-
-            if(selectedObject as Spline == null) {
-                Vector3 position = selectedObject.position;
-                selectedObject.position = new Vector3((float)xBox.Value, position.Y, position.Z);
-            }
-            else {
-                Spline spline = (Spline)selectedObject;
-                spline.vertexBuffer[(currentSplineVertex * 3) + 0] = (float)xBox.Value;
-            }
-            invalidate = true;
-        }
-
-        private void yBox_ValueChanged(object sender, EventArgs e) {
-            if (selectedObject == null) return;
-            if (selectedObject as Spline == null) {
-                Vector3 position = selectedObject.position;
-                selectedObject.position = new Vector3(position.X, (float)yBox.Value, position.Z);
-            }
-            else {
-                Spline spline = (Spline)selectedObject;
-                spline.vertexBuffer[(currentSplineVertex * 3) + 1] = (float)yBox.Value;
-            }
-
-            invalidate = true;
-        }
-
-        private void zBox_ValueChanged(object sender, EventArgs e)
-        {
-            if (selectedObject == null) return;
-            if (selectedObject as Spline == null) {
-                Vector3 position = selectedObject.position;
-                selectedObject.position = new Vector3(position.X, position.Y, (float)zBox.Value);
-            }
-            else {
-                Spline spline = (Spline)selectedObject;
-                spline.vertexBuffer[(currentSplineVertex * 3) + 2] = (float)zBox.Value;
-            }
-            invalidate = true;
-        }
-        #endregion
-        #region Rotation Input Events
-        private void rotxBox_ValueChanged(object sender, EventArgs e) {
-            if (selectedObject as Moby != null)
-            {
-                Moby moby = (Moby)selectedObject;
-                Vector3 rotation = moby.rotation;
-                float value = Utilities.toRadians((float)rotxBox.Value);
-                moby.rotation = new Vector3(value, rotation.Y, rotation.Z);
-                invalidate = true;
-            }
-        }
-
-        private void rotyBox_ValueChanged(object sender, EventArgs e) {
-            if (selectedObject as Moby != null)
-            {
-                Moby moby = (Moby)selectedObject;
-                Vector3 rotation = moby.rotation;
-                float value = Utilities.toRadians((float)rotyBox.Value);
-                moby.rotation = new Vector3(rotation.X, value, rotation.Z);
-                invalidate = true;
-            }
-        }
-
-        private void rotzBox_ValueChanged(object sender, EventArgs e) {
-            if (selectedObject as Moby != null)
-            {
-                Moby moby = (Moby)selectedObject;
-                Vector3 rotation = moby.rotation;
-                float value = Utilities.toRadians((float)rotzBox.Value);
-                moby.rotation = new Vector3(rotation.X, rotation.Y, value);
-                invalidate = true;
-            }
-        }
-        #endregion
         #region Misc Input Events
         private void objectTree_AfterSelect(object sender, TreeViewEventArgs e) {
             if (e.Node.Parent == objectTree.Nodes[0]) {
@@ -661,15 +594,6 @@ namespace RatchetEdit
             if (selectedObject == null) return;
             camera.moveBehind(selectedObject);
             invalidate = true;
-        }
-
-        private void scaleBox_ValueChanged(object sender, EventArgs e) {
-            if (selectedObject as Moby != null) {
-                Moby moby = (Moby)selectedObject;
-                moby.scale = (float)scaleBox.Value;
-                moby.updateTransform();
-                invalidate = true;
-            }
         }
 
         private void cloneButton_Click(object sender, EventArgs e) {
@@ -711,6 +635,18 @@ namespace RatchetEdit
 
             public override string ToString() {
                 return R + ", " + G + ", " + B + ", " + A;
+            }
+        }
+
+        private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        {
+            if (selectedObject as Spline != null)
+            {
+                Spline spline = (Spline)selectedObject;
+                spline.vertexBuffer[(currentSplineVertex * 3) + 0] = spline.position.X;
+                spline.vertexBuffer[(currentSplineVertex * 3) + 1] = spline.position.Y;
+                spline.vertexBuffer[(currentSplineVertex * 3) + 2] = spline.position.Z;
+                invalidate = true;
             }
         }
     }

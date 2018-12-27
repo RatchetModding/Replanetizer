@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,8 +13,20 @@ namespace RatchetEdit
 {
     public class Moby : ModelObject
     {
-        public float scale;
         private Vector3 _rotation = new Vector3();
+        private float _scale;
+
+        [CategoryAttribute("Position"), DisplayName("Scale")]
+        public float scale {
+            get { return _scale; }
+            set
+            {
+                _scale = value;
+                updateTransform();
+            }
+        }
+
+        [CategoryAttribute("Position"), TypeConverter(typeof(Vector3Converter)), DisplayName("Rotation")]
         public Vector3 rotation {
             get { return _rotation; }
             set {

@@ -7,7 +7,7 @@ using System.Windows.Forms;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
-
+using static RatchetEdit.Utilities;
 namespace RatchetEdit
 {
     public partial class Main : Form
@@ -251,11 +251,11 @@ namespace RatchetEdit
         private void Render()
         {
             //Update ui label texts
-            camXLabel.Text = String.Format("X: {0}", Utilities.round(camera.position.X, 2).ToString());
-            camYLabel.Text = String.Format("Y: {0}", Utilities.round(camera.position.Y, 2).ToString());
-            camZLabel.Text = String.Format("Z: {0}", Utilities.round(camera.position.Z, 2).ToString());
-            pitchLabel.Text = String.Format("Pitch: {0}", Utilities.round(Utilities.toDegrees(camera.rotation.X), 2).ToString());
-            yawLabel.Text = String.Format("Yaw: {0}", Utilities.round(Utilities.toDegrees(camera.rotation.Z), 2).ToString());
+            camXLabel.Text = String.Format("X: {0}", fRound(camera.position.X, 2).ToString());
+            camYLabel.Text = String.Format("Y: {0}", fRound(camera.position.Y, 2).ToString());
+            camZLabel.Text = String.Format("Z: {0}", fRound(camera.position.Z, 2).ToString());
+            pitchLabel.Text = String.Format("Pitch: {0}", fRound(fToDegrees(camera.rotation.X), 2).ToString());
+            yawLabel.Text = String.Format("Yaw: {0}", fRound(fToDegrees(camera.rotation.Z), 2).ToString());
 
 
             //Render gl surface
@@ -614,59 +614,6 @@ namespace RatchetEdit
             }
         }
         #endregion
-        /* 
-                #region Position Input Events
-                private void xBox_ValueChanged(object sender, EventArgs e) {
-                    if (selectedObject == null) return;
-                    Vector3 position = selectedObject.position;
-                    selectedObject.Translate((float)xBox.Value - position.X, 0, 0);
-                    //Spline spline = (Spline)selectedObject;
-                    //spline.vertexBuffer[(currentSplineVertex * 3) + 0] = (float)xBox.Value;
-
-                    InvalidateView();
-                }
-
-                private void yBox_ValueChanged(object sender, EventArgs e) {
-                    if (selectedObject == null) return;
-                    Vector3 position = selectedObject.position;
-                    selectedObject.Translate(0, (float)yBox.Value - position.Y, 0);
-
-                    InvalidateView();
-                }
-
-                private void zBox_ValueChanged(object sender, EventArgs e)
-                {
-                    if (selectedObject == null) return;
-                    selectedObject.Translate(0, 0, (float)zBox.Value - selectedObject.position.Z);
-                    InvalidateView();
-                }
-                #endregion
-                #region Rotation Input Events
-                private void rotxBox_ValueChanged(object sender, EventArgs e) {
-                    if (selectedObject != null) {
-                        float value = Utilities.toRadians((float)rotxBox.Value);
-                        selectedObject.Rotate(value - selectedObject.rotation.X, 0, 0);
-                        InvalidateView();
-                    }
-                }
-
-                private void rotyBox_ValueChanged(object sender, EventArgs e) {
-                    if (selectedObject != null) {
-                        float value = Utilities.toRadians((float)rotyBox.Value);
-                        selectedObject.Rotate(0, value - selectedObject.rotation.Y, 0);
-                        InvalidateView();
-                    }
-                }
-
-                private void rotzBox_ValueChanged(object sender, EventArgs e) {
-                    if (selectedObject != null) {
-                        float value = Utilities.toRadians((float)rotzBox.Value);
-                        selectedObject.Rotate(0, 0, value - selectedObject.rotation.Z);
-                        InvalidateView();
-                    }
-                }
-                #endregion
-                */
         #region Misc Input Events
         private void objectTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
@@ -686,17 +633,6 @@ namespace RatchetEdit
             camera.MoveBehind(selectedObject);
             InvalidateView();
         }
-
-        // private void scaleBox_ValueChanged(object sender, EventArgs e)
-        // {
-        //     if (selectedObject as Moby != null)
-        //     {
-        //         Moby moby = (Moby)selectedObject;
-        //         moby.scale = (float)scaleBox.Value;
-        //         moby.UpdateTransform();
-        //         InvalidateView();
-        //     }
-        // }
 
         private void cloneButton_Click(object sender, EventArgs e)
         {

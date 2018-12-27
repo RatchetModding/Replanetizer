@@ -9,15 +9,21 @@ using OpenTK;
 
 namespace RatchetEdit {
     public static class Utilities {
-        public static float toDegrees(float radians) {
+        public static float fToDegrees(float radians) {
             return radians * 180 / (float)Math.PI;
         }
-        public static float toRadians(float angle) {
+        public static float fToRadians(float angle) {
             return (float)Math.PI / 180 * angle;
         }
-        public static float round(float value, float numberOfDecimals) {
+        public static float fRound(float value, float numberOfDecimals) {
             float multiplier = (float)Math.Pow(10, numberOfDecimals);
             return (float)Math.Ceiling(value * multiplier) / multiplier;
+        }
+        public static float fSin(float input) {
+            return (float)Math.Sin(input);
+        }
+        public static float fCos(float input) {
+            return (float)Math.Cos(input);
         }
     }
 

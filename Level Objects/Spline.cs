@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using static RatchetEdit.DataFunctions;
 using OpenTK.Graphics.OpenGL;
 using OpenTK;
-
+using static RatchetEdit.Utilities;
 namespace RatchetEdit
 {
     public class Spline : LevelObject, ITransformable {
@@ -165,11 +165,12 @@ namespace RatchetEdit
                 float distance_y = vertex_y - base_y;
                 float distance_z = vertex_z - base_z;
 
+                //Scale local position
                 float scaled_x = distance_x * scale;
                 float scaled_y = distance_y * scale;
                 float scaled_z = distance_z * scale;
 
-                //Add new local position to base position
+                //Add new local position and base position
                 float new_x = base_x + scaled_x;
                 float new_y = base_y + scaled_y;
                 float new_z = base_z + scaled_z;
@@ -180,13 +181,6 @@ namespace RatchetEdit
                 vertexBuffer[(i * 3) + 2] = new_z;
             }
             _scale *= scale;
-        }
-
-        public float fSin(float input) {
-            return (float)Math.Sin(input);
-        }
-        public float fCos(float input) {
-            return (float)Math.Cos(input);
         }
     }
 }

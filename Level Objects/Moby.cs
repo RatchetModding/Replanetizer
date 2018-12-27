@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,7 +12,7 @@ using static RatchetEdit.DataFunctions;
 namespace RatchetEdit
 {
     public class Moby : ModelObject
-    {        
+    {
         public Moby(Model model, Vector3 position, Vector3 rotation, float scale) {
             this.model = model;
             this.position = position;
@@ -37,14 +39,14 @@ namespace RatchetEdit
 
 
             model = mobyModels.Find(mobyModel => mobyModel.ID == modelID);
-            UpdateTransform();
+            UpdateTransformMatrix();
         }
 
         public override LevelObject Clone() {
             return new Moby(model, new Vector3(position), new Vector3(rotation), scale);
         }
 
-        public override void UpdateTransform() {
+        public override void UpdateTransformMatrix() {
             if (model == null) return;
             Matrix4 rotMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
             Matrix4 scaleMatrix = Matrix4.CreateScale(scale * model.size);
@@ -72,7 +74,7 @@ namespace RatchetEdit
         }
 
         public override void Translate(Vector3 vector) {
-            position += vector;
+            _position += vector;
         }
     }
 }

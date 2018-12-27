@@ -15,6 +15,26 @@ namespace RatchetEdit
 
         int VBO;
 
+        public override Vector3 position {
+            get { return _position; }
+            set {
+                Translate(value - _position);
+            }
+        }
+        public override Vector3 rotation {
+            get { return _rotation; }
+            set {
+                Rotate(value - _rotation);
+            }
+        }
+
+        public override float scale {
+            get { return _scale; }
+            set {
+                Scale(value);
+            }
+        }
+
         public Spline(int name, float[] vertexBuffer) {
             this.name = name;
             this.vertexBuffer = new float[vertexBuffer.Length];
@@ -36,7 +56,7 @@ namespace RatchetEdit
             }
 
             if(count > 0) {
-                position = new Vector3(vertexBuffer[0], vertexBuffer[1], vertexBuffer[2]);
+                _position = new Vector3(vertexBuffer[0], vertexBuffer[1], vertexBuffer[2]);
             }
         }
 
@@ -62,7 +82,7 @@ namespace RatchetEdit
             return new Spline(name, vertexBuffer);
         }
 
-        public override void UpdateTransform() {}
+        public override void UpdateTransformMatrix() {}
 
         //Transformable methods
         public override void Translate(float x, float y, float z) {
@@ -75,11 +95,11 @@ namespace RatchetEdit
                 vertexBuffer[(i * 3) + 2] += vector.Z;
             }
 
-            position += vector;
+            _position += vector;
         }
 
         public override void Rotate(float x, float y, float z) {
-            float base_x = vertexBuffer[0];
+            /*float base_x = vertexBuffer[0];
             float base_y = vertexBuffer[1];
             float base_z = vertexBuffer[2];
 
@@ -96,7 +116,7 @@ namespace RatchetEdit
                 vertexBuffer[(i * 3) + 0] = base_x + distance_x;
                 vertexBuffer[(i * 3) + 1] = base_x + distance_y;
                 vertexBuffer[(i * 3) + 2] = base_z + distance_z;
-            }
+            }*/
         }
 
         public override void Rotate(Vector3 vector) {

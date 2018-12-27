@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using OpenTK;
 using static RatchetEdit.DataFunctions;
 
@@ -36,6 +37,26 @@ namespace RatchetEdit
         public uint off_64;
         public uint off_68;
         public uint off_6C;
+
+        public override Vector3 position {
+            get { return _position; }
+            set {
+                Translate(value - _position);
+            }
+        }
+        public override Vector3 rotation {
+            get { return _rotation; }
+            set {
+                Rotate(value - _rotation);
+            }
+        }
+
+        public override float scale {
+            get { return _scale; }
+            set {
+                Scale(value);
+            }
+        }
 
         public Tie(Matrix4 matrix4) {
             modelMatrix = Matrix4.Add(matrix4, new Matrix4());
@@ -84,13 +105,13 @@ namespace RatchetEdit
             off_6C = ReadUint(levelBlock, (TIEELEMSIZE * num) + 0x6C);
 
             model = tieModels.Find(tieModel => tieModel.ID == modelID);
-            UpdateTransform();
-            rotation = modelMatrix.ExtractRotation().Xyz * 2;
-            position = modelMatrix.ExtractTranslation();
+            UpdateTransformMatrix();
+            _rotation = modelMatrix.ExtractRotation().Xyz * 2;
+            _position = modelMatrix.ExtractTranslation();
 
         }
 
-        public override void UpdateTransform() {
+        public override void UpdateTransformMatrix() {
             modelMatrix = new Matrix4(v1x, v1y, v1z, v1w, v2x, v2y, v2z, v2w, v3x, v3y, v3z, v3w, x, y, z, w);
         }
 
@@ -118,41 +139,44 @@ namespace RatchetEdit
             this.y = matrix.M42;
             this.z = matrix.M43;
             this.w = matrix.M44;
-
-            UpdateTransform();
         }
 
         //Transformable methods
-        public override void Rotate(float x, float y, float z) {
-            Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(x,y,z));
-            Matrix4 result = rotationMatrix * modelMatrix;
-
-            UpdateMatrixVariables(result);
-
-            rotation += new Vector3(x, y, z);
-            UpdateTransform();
-            Console.WriteLine("Inp: " + x + " : " + y + " : " + z);
-            Console.WriteLine("Rot: " + rotation.X + " : " + rotation.Y + " : " + rotation.Z);
-
-        }
-
-        public override void Rotate(Vector3 vector) {
-            throw new System.NotImplementedException();
-        }
-
-        public override void Scale(float scale) {
-            throw new System.NotImplementedException();
-        }
-
         public override void Translate(float x, float y, float z) {
             Matrix4 translationMatrix = Matrix4.CreateTranslation(x, y, z);
             Matrix4 result = translationMatrix * modelMatrix;
+
             UpdateMatrixVariables(result);
-            position = modelMatrix.ExtractTranslation();
+            UpdateTransformMatrix();
+
+            _position = modelMatrix.ExtractTranslation();
+
         }
 
         public override void Translate(Vector3 vector) {
-            throw new System.NotImplementedException();
+            Translate(vector.X, vector.Y, vector.Z);
+        }
+
+        public override void Rotate(float x, float y, float z) {
+            Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(x,y,z));
+            Matrix4 result = rotationMatrix * modelMatrix;
+            _rotation += new Vector3(x, y, z);
+
+            UpdateMatrixVariables(result);
+            UpdateTransformMatrix();
+        }
+
+        public override void Rotate(Vector3 vector) {
+            Rotate(vector.X, vector.Y, vector.Z);
+        }
+
+        public override void Scale(float scale) {
+            Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
+            Matrix4 result = scaleMatrix * modelMatrix.ClearScale();
+            _scale = scale;
+
+            UpdateMatrixVariables(result);
+            UpdateTransformMatrix();
         }
     }
 }

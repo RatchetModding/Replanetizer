@@ -39,7 +39,7 @@ namespace RatchetEdit
 
         bool invalidate = false;
         bool suppressTreeViewSelectEvent = false;
-        
+
         public Main()
         {
             InitializeComponent();
@@ -94,13 +94,16 @@ namespace RatchetEdit
             Console.WriteLine(GL.GetShaderInfoLog(address));
         }
 
-        private void mapOpenBtn_Click(object sender, EventArgs e) {
-            if (mapOpenDialog.ShowDialog() == DialogResult.OK) {
+        private void mapOpenBtn_Click(object sender, EventArgs e)
+        {
+            if (mapOpenDialog.ShowDialog() == DialogResult.OK)
+            {
                 loadLevel(mapOpenDialog.FileName);
             }
         }
 
-        void loadLevel(string fileName) {
+        void loadLevel(string fileName)
+        {
             level = new Level(fileName);
             InvalidateView();
             mobyCheck.Enabled = true;
@@ -116,26 +119,31 @@ namespace RatchetEdit
             camera.MoveBehind(ratchet);
         }
 
-        public void GenerateObjectTree() {
+        public void GenerateObjectTree()
+        {
             objectTree.CollapseAll();
             objectTree.Nodes[0].Nodes.Clear();
             objectTree.Nodes[1].Nodes.Clear();
             objectTree.Nodes[2].Nodes.Clear();
             objectTree.Nodes[3].Nodes.Clear();
 
-            foreach (Moby moby in level.mobs) {
+            foreach (Moby moby in level.mobs)
+            {
                 string modelName = modelNames != null ? modelNames.Find(x => x.Substring(0, 4).ToUpper() == moby.modelID.ToString("X4")) : null;
                 objectTree.Nodes[0].Nodes.Add(modelName != null ? modelName.Split('=')[1].Substring(1) : moby.modelID.ToString("X"));
             }
-            foreach (Tie tie in level.ties) {
+            foreach (Tie tie in level.ties)
+            {
                 string tieName = tie.modelID.ToString("X");
                 objectTree.Nodes[1].Nodes.Add(tieName);
             }
-            foreach (Tie shrub in level.shrubs) {
+            foreach (Tie shrub in level.shrubs)
+            {
                 string shrubName = shrub.modelID.ToString("X");
                 objectTree.Nodes[2].Nodes.Add(shrubName);
             }
-            foreach (Spline spline in level.splines) {
+            foreach (Spline spline in level.splines)
+            {
                 string splineName = spline.name.ToString("X");
                 objectTree.Nodes[3].Nodes.Add(splineName);
             }
@@ -182,22 +190,36 @@ namespace RatchetEdit
         }
         #endregion
 
-        private void modelViewerToolBtn_Click(object sender, EventArgs e) {
+        private void modelViewerToolBtn_Click(object sender, EventArgs e)
+        {
             if (selectedObject == null) return;
             OpenModelViewer();
         }
 
-        private void openModelViewerBtn_Click(object sender, EventArgs e) {
+        private void openModelViewerBtn_Click(object sender, EventArgs e)
+        {
             if (selectedObject == null) return;
             OpenModelViewer();
         }
 
-        private void exitToolBtn_Click(object sender, EventArgs e) {
+        private void exitToolBtn_Click(object sender, EventArgs e)
+        {
             Close();
         }
 
-        private void UpdateEditorValues() {
-            if(selectedObject != null) {
+        private void UpdateEditorValues()
+        {
+
+            if (selectedObject as Spline != null)
+            {
+                Spline spline = (Spline)selectedObject;
+                spline.position = new Vector3(spline.vertexBuffer[(currentSplineVertex * 3) + 0],
+                    spline.vertexBuffer[(currentSplineVertex * 3) + 1],
+                    spline.vertexBuffer[(currentSplineVertex * 3) + 2]);
+            }
+            properies.Update();
+
+            /*if(selectedObject != null) {
                 if (selectedObject as ModelObject != null) {
                     modelIDBox.Text = ((ModelObject)selectedObject).modelID.ToString("X");
                 }
@@ -222,18 +244,19 @@ namespace RatchetEdit
                 rotyBox.Value = 0;
                 rotzBox.Value = 0;
                 scaleBox.Value = 1;
-            }
+            }*/
         }
         private void glControl1_Paint(object sender, PaintEventArgs e) { Render(); }
 
-        private void Render() {
+        private void Render()
+        {
             //Update ui label texts
-            camXLabel.Text = String.Format("X: {0}", Utilities.round(camera.position.X,2).ToString());
+            camXLabel.Text = String.Format("X: {0}", Utilities.round(camera.position.X, 2).ToString());
             camYLabel.Text = String.Format("Y: {0}", Utilities.round(camera.position.Y, 2).ToString());
             camZLabel.Text = String.Format("Z: {0}", Utilities.round(camera.position.Z, 2).ToString());
             pitchLabel.Text = String.Format("Pitch: {0}", Utilities.round(Utilities.toDegrees(camera.rotation.X), 2).ToString());
             yawLabel.Text = String.Format("Yaw: {0}", Utilities.round(Utilities.toDegrees(camera.rotation.Z), 2).ToString());
-            
+
 
             //Render gl surface
             glControl1.MakeCurrent();
@@ -243,28 +266,31 @@ namespace RatchetEdit
             GL.UseProgram(colorShaderID);
             GL.EnableVertexAttribArray(0);
 
-            if (splineCheck.Checked && splineCheck.Enabled) {
-                foreach (Spline spline in level.splines) {
+            if (splineCheck.Checked && splineCheck.Enabled)
+            {
+                foreach (Spline spline in level.splines)
+                {
                     drawSpline(spline);
                 }
             }
 
-            if (selectedObject as ModelObject != null) {
+            if (selectedObject as ModelObject != null)
+            {
                 drawModelMesh((ModelObject)selectedObject);
             }
 
             GL.EnableVertexAttribArray(1);
             GL.UseProgram(shaderID);
 
-            if (mobyCheck.Checked && mobyCheck.Enabled) 
+            if (mobyCheck.Checked && mobyCheck.Enabled)
                 foreach (Moby mob in level.mobs) drawModelObject(mob);
 
             if (tieCheck.Checked && tieCheck.Enabled)
                 foreach (Tie tie in level.ties) drawModelObject(tie);
 
             if (shrubCheck.Checked && splineCheck.Enabled)
-                foreach (Tie shrub in level.shrubs)  drawModelObject(shrub);
-            
+                foreach (Tie shrub in level.shrubs) drawModelObject(shrub);
+
             if (terrainCheck.Checked && terrainCheck.Enabled)
             {
                 GL.UniformMatrix4(matrixID, false, ref worldView);
@@ -295,7 +321,8 @@ namespace RatchetEdit
         }
 
         //Called every frame
-        public void Tick() {
+        public void Tick()
+        {
             float deltaTime = 0.016f;
 
             float moveSpeed = 10;
@@ -303,13 +330,15 @@ namespace RatchetEdit
             float multiplier = ModifierKeys == Keys.Shift ? boostMultiplier : 1;
 
             Vector3 moveDir = GetInputAxes();
-            if (moveDir.Length > 0) {
+            if (moveDir.Length > 0)
+            {
                 moveDir *= moveSpeed * multiplier * deltaTime;
                 InvalidateView();
             }
 
 
-            if (rMouse) {
+            if (rMouse)
+            {
                 float pitch = camera.rotation.X;
                 float yaw = camera.rotation.Z;
                 yaw -= (Cursor.Position.X - lastMouseX) * camera.speed * 0.016f;
@@ -328,12 +357,14 @@ namespace RatchetEdit
 
             view = Matrix4.LookAt(camera.position, camera.position + forward, Vector3.UnitZ);
 
-            if (invalidate) {
+            if (invalidate)
+            {
                 glControl1.Invalidate();
             }
         }
 
-        private Vector3 GetInputAxes() {
+        private Vector3 GetInputAxes()
+        {
             KeyboardState keyState = Keyboard.GetState();
 
             float xAxis = 0, yAxis = 0, zAxis = 0;
@@ -344,30 +375,35 @@ namespace RatchetEdit
             if (keyState.IsKeyDown(Key.D)) xAxis++;
             if (keyState.IsKeyDown(Key.Q)) zAxis--;
             if (keyState.IsKeyDown(Key.E)) zAxis++;
-            
+
             return new Vector3(xAxis, yAxis, zAxis);
         }
 
-        private void glControl1_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e) {
+        private void glControl1_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
             rMouse = e.Button == MouseButtons.Right;
             lMouse = e.Button == MouseButtons.Left;
         }
 
-        private void glControl1_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e) {
+        private void glControl1_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
             rMouse = false;
             lMouse = false;
         }
 
-        private void glControl1_Resize(object sender, EventArgs e) {
+        private void glControl1_Resize(object sender, EventArgs e)
+        {
             GL.Viewport(0, 0, glControl1.Width, glControl1.Height);
             projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)glControl1.Width / glControl1.Height, 0.1f, 800.0f);
         }
 
-        private void enableCheck(object sender, EventArgs e) {
+        private void enableCheck(object sender, EventArgs e)
+        {
             InvalidateView();
         }
 
-        private void glControl1_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e) {
+        private void glControl1_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
             if (e.Button == MouseButtons.Left && level != null)
             {
                 LevelObject obj = GetObjectAtScreenPosition(e.Location.X, e.Location.Y);
@@ -376,7 +412,8 @@ namespace RatchetEdit
             }
         }
 
-        public LevelObject GetObjectAtScreenPosition(int x, int y) {
+        public LevelObject GetObjectAtScreenPosition(int x, int y)
+        {
             LevelObject returnObject = null;
             TreeNode returnNode = null;
             int offset = 0;
@@ -386,20 +423,24 @@ namespace RatchetEdit
             GL.EnableVertexAttribArray(0);
             worldView = view * projection;
 
-            if (mobyCheck.Checked) {
+            if (mobyCheck.Checked)
+            {
                 GL.ClearColor(0, 0, 0, 0);
                 offset = 0;
                 fakeDrawObjects(level.mobs.Cast<ModelObject>().ToList(), offset);
             }
-            if (tieCheck.Checked) {
+            if (tieCheck.Checked)
+            {
                 offset += level.mobs.Count;
                 fakeDrawObjects(level.ties.Cast<ModelObject>().ToList(), offset);
             }
-            if (shrubCheck.Checked) {
+            if (shrubCheck.Checked)
+            {
                 offset += level.ties.Count;
                 fakeDrawObjects(level.shrubs.Cast<ModelObject>().ToList(), offset);
             }
-            if (splineCheck.Checked) {
+            if (splineCheck.Checked)
+            {
                 offset += level.shrubs.Count;
                 fakeDrawSplines(level.splines, offset);
             }
@@ -407,47 +448,57 @@ namespace RatchetEdit
             Pixel pixel = new Pixel();
             GL.ReadPixels(x, glControl1.Height - y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixel);
             GL.ClearColor(Color.SkyBlue);
-            if (pixel.A == 0) {
+            if (pixel.A == 0)
+            {
                 int id = (int)pixel.ToUInt32();
-                if (id < level.mobs?.Count) {
+                if (id < level.mobs?.Count)
+                {
                     returnObject = level.mobs[id];
                     returnNode = objectTree.Nodes[0].Nodes[id];
                 }
-                else if (id - level.mobs?.Count < level.ties?.Count) {
+                else if (id - level.mobs?.Count < level.ties?.Count)
+                {
                     returnObject = level.ties[id - level.mobs.Count];
                     returnNode = objectTree.Nodes[1].Nodes[id - level.mobs.Count];
                 }
-                else if (id - (level.mobs?.Count + level.ties?.Count) < level.shrubs?.Count) {
+                else if (id - (level.mobs?.Count + level.ties?.Count) < level.shrubs?.Count)
+                {
                     returnObject = level.shrubs[id - (level.mobs.Count + level.ties.Count)];
                     returnNode = objectTree.Nodes[2].Nodes[id - offset];
                 }
-                else if (id - offset < level.splines?.Count) {
+                else if (id - offset < level.splines?.Count)
+                {
                     returnObject = level.splines[id - offset];
                     returnNode = objectTree.Nodes[3].Nodes[id - offset];
                 }
             }
 
-           primedTreeNode = returnNode;
+            primedTreeNode = returnNode;
 
             return returnObject;
         }
-        
-        void SelectObject(LevelObject levelObject = null) {
-            if (levelObject == null) {
+
+        void SelectObject(LevelObject levelObject = null)
+        {
+            if (levelObject == null)
+            {
                 selectedObject = null;
                 UpdateEditorValues();
                 InvalidateView();
                 currentSplineVertex = 0;
                 return;
             }
-            
-            if (ReferenceEquals(levelObject,selectedObject) && levelObject as ModelObject != null) {
+
+            if (ReferenceEquals(levelObject, selectedObject) && levelObject as ModelObject != null)
+            {
                 OpenModelViewer();
                 return;
             }
 
             selectedObject = levelObject;
-            if (primedTreeNode != null) {
+            properies.SelectedObject = selectedObject;
+            if (primedTreeNode != null)
+            {
                 suppressTreeViewSelectEvent = true;
                 objectTree.SelectedNode = primedTreeNode;
                 primedTreeNode = null;
@@ -457,7 +508,8 @@ namespace RatchetEdit
             InvalidateView();
         }
 
-        public void CloneMoby(Moby moby) {
+        public void CloneMoby(Moby moby)
+        {
             Moby newMoby = moby.Clone() as Moby;
             if (newMoby == null) return;
 
@@ -467,14 +519,16 @@ namespace RatchetEdit
             InvalidateView();
         }
 
-        public void DeleteMoby(Moby moby) {
+        public void DeleteMoby(Moby moby)
+        {
             level.mobs.Remove(moby);
             GenerateObjectTree();
             SelectObject(null);
             InvalidateView();
         }
         #region RenderFunctions
-        public void drawSpline(Spline spline) {
+        public void drawSpline(Spline spline)
+        {
             Vector4 color;
             if (spline == selectedObject) color = new Vector4(1, 0, 1, 1);
             else color = new Vector4(1, 1, 1, 1);
@@ -487,8 +541,10 @@ namespace RatchetEdit
             GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
         }
 
-        private void drawModelObject(ModelObject obj) {
-            if (obj.model.vertexBuffer != null) {
+        private void drawModelObject(ModelObject obj)
+        {
+            if (obj.model.vertexBuffer != null)
+            {
                 Matrix4 mvp = obj.modelMatrix * worldView;  //Has to be done in this order to work correctly
                 GL.UniformMatrix4(matrixID, false, ref mvp);
 
@@ -496,16 +552,20 @@ namespace RatchetEdit
                 obj.model.getIBO();
 
                 //Bind textures one by one, applying it to the relevant vertices based on the index array
-                foreach (TextureConfig conf in obj.model.textureConfig) {
+                foreach (TextureConfig conf in obj.model.textureConfig)
+                {
                     GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? level.textures[conf.ID].getTexture() : 0);
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
             }
         }
 
-        public void drawModelMesh(ModelObject levelObject) {
-            if (levelObject != null) {
-                if (levelObject.model != null && levelObject.model.vertexBuffer != null && levelObject.modelMatrix != null) {
+        public void drawModelMesh(ModelObject levelObject)
+        {
+            if (levelObject != null)
+            {
+                if (levelObject.model != null && levelObject.model.vertexBuffer != null && levelObject.modelMatrix != null)
+                {
                     GL.UseProgram(colorShaderID);
                     GL.EnableVertexAttribArray(0);
                     Matrix4 mvp = levelObject.modelMatrix * worldView;
@@ -520,8 +580,10 @@ namespace RatchetEdit
             }
         }
 
-        public void fakeDrawSplines(List<Spline> splines, int offset) {
-            foreach (Spline spline in splines) {
+        public void fakeDrawSplines(List<Spline> splines, int offset)
+        {
+            foreach (Spline spline in splines)
+            {
                 GL.UseProgram(colorShaderID);
                 GL.EnableVertexAttribArray(0);
                 GL.UniformMatrix4(matrixID, false, ref worldView);
@@ -532,9 +594,12 @@ namespace RatchetEdit
                 GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
             }
         }
-        public void fakeDrawObjects(List<ModelObject> levelObjects, int offset) {
-            foreach (ModelObject levelObject in levelObjects) {
-                if (levelObject.model.vertexBuffer != null) {
+        public void fakeDrawObjects(List<ModelObject> levelObjects, int offset)
+        {
+            foreach (ModelObject levelObject in levelObjects)
+            {
+                if (levelObject.model.vertexBuffer != null)
+                {
                     Matrix4 mvp = levelObject.modelMatrix * worldView;  //Has to be done in this order to work correctly
                     GL.UniformMatrix4(matrixID, false, ref mvp);
 
@@ -549,127 +614,158 @@ namespace RatchetEdit
             }
         }
         #endregion
+        /* 
+                #region Position Input Events
+                private void xBox_ValueChanged(object sender, EventArgs e) {
+                    if (selectedObject == null) return;
+                    Vector3 position = selectedObject.position;
+                    selectedObject.Translate((float)xBox.Value - position.X, 0, 0);
+                    //Spline spline = (Spline)selectedObject;
+                    //spline.vertexBuffer[(currentSplineVertex * 3) + 0] = (float)xBox.Value;
 
-        #region Position Input Events
-        private void xBox_ValueChanged(object sender, EventArgs e) {
-            if (selectedObject == null) return;
-            Vector3 position = selectedObject.position;
-            selectedObject.Translate((float)xBox.Value - position.X, 0, 0);
-            //Spline spline = (Spline)selectedObject;
-            //spline.vertexBuffer[(currentSplineVertex * 3) + 0] = (float)xBox.Value;
-            
-            InvalidateView();
-        }
+                    InvalidateView();
+                }
 
-        private void yBox_ValueChanged(object sender, EventArgs e) {
-            if (selectedObject == null) return;
-            Vector3 position = selectedObject.position;
-            selectedObject.Translate(0, (float)yBox.Value - position.Y, 0);
+                private void yBox_ValueChanged(object sender, EventArgs e) {
+                    if (selectedObject == null) return;
+                    Vector3 position = selectedObject.position;
+                    selectedObject.Translate(0, (float)yBox.Value - position.Y, 0);
 
-            InvalidateView();
-        }
+                    InvalidateView();
+                }
 
-        private void zBox_ValueChanged(object sender, EventArgs e)
-        {
-            if (selectedObject == null) return;
-            selectedObject.Translate(0, 0, (float)zBox.Value - selectedObject.position.Z);
-            InvalidateView();
-        }
-        #endregion
-        #region Rotation Input Events
-        private void rotxBox_ValueChanged(object sender, EventArgs e) {
-            if (selectedObject != null) {
-                float value = Utilities.toRadians((float)rotxBox.Value);
-                selectedObject.Rotate(value - selectedObject.rotation.X, 0, 0);
-                InvalidateView();
-            }
-        }
+                private void zBox_ValueChanged(object sender, EventArgs e)
+                {
+                    if (selectedObject == null) return;
+                    selectedObject.Translate(0, 0, (float)zBox.Value - selectedObject.position.Z);
+                    InvalidateView();
+                }
+                #endregion
+                #region Rotation Input Events
+                private void rotxBox_ValueChanged(object sender, EventArgs e) {
+                    if (selectedObject != null) {
+                        float value = Utilities.toRadians((float)rotxBox.Value);
+                        selectedObject.Rotate(value - selectedObject.rotation.X, 0, 0);
+                        InvalidateView();
+                    }
+                }
 
-        private void rotyBox_ValueChanged(object sender, EventArgs e) {
-            if (selectedObject != null) {
-                float value = Utilities.toRadians((float)rotyBox.Value);
-                selectedObject.Rotate(0, value - selectedObject.rotation.Y, 0);
-                InvalidateView();
-            }
-        }
+                private void rotyBox_ValueChanged(object sender, EventArgs e) {
+                    if (selectedObject != null) {
+                        float value = Utilities.toRadians((float)rotyBox.Value);
+                        selectedObject.Rotate(0, value - selectedObject.rotation.Y, 0);
+                        InvalidateView();
+                    }
+                }
 
-        private void rotzBox_ValueChanged(object sender, EventArgs e) {
-            if (selectedObject != null) {
-                float value = Utilities.toRadians((float)rotzBox.Value);
-                selectedObject.Rotate(0, 0, value - selectedObject.rotation.Z);
-                InvalidateView();
-            }
-        }
-        #endregion
+                private void rotzBox_ValueChanged(object sender, EventArgs e) {
+                    if (selectedObject != null) {
+                        float value = Utilities.toRadians((float)rotzBox.Value);
+                        selectedObject.Rotate(0, 0, value - selectedObject.rotation.Z);
+                        InvalidateView();
+                    }
+                }
+                #endregion
+                */
         #region Misc Input Events
-        private void objectTree_AfterSelect(object sender, TreeViewEventArgs e) {
-            if (e.Node.Parent == objectTree.Nodes[0]) {
-                if (!suppressTreeViewSelectEvent) {
+        private void objectTree_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            if (e.Node.Parent == objectTree.Nodes[0])
+            {
+                if (!suppressTreeViewSelectEvent)
+                {
                     SelectObject(level.mobs[e.Node.Index]);
                 }
                 suppressTreeViewSelectEvent = false;
             }
         }
 
-        private void gotoPositionBtn_Click(object sender, EventArgs e) {
+        private void gotoPositionBtn_Click(object sender, EventArgs e)
+        {
             if (selectedObject == null) return;
             camera.MoveBehind(selectedObject);
             InvalidateView();
         }
 
-        private void scaleBox_ValueChanged(object sender, EventArgs e) {
-            if (selectedObject as Moby != null) {
-                Moby moby = (Moby)selectedObject;
-                moby.scale = (float)scaleBox.Value;
-                moby.UpdateTransform();
-                InvalidateView();
-            }
-        }
+        // private void scaleBox_ValueChanged(object sender, EventArgs e)
+        // {
+        //     if (selectedObject as Moby != null)
+        //     {
+        //         Moby moby = (Moby)selectedObject;
+        //         moby.scale = (float)scaleBox.Value;
+        //         moby.UpdateTransform();
+        //         InvalidateView();
+        //     }
+        // }
 
-        private void cloneButton_Click(object sender, EventArgs e) {
-            if (selectedObject as Moby != null) {
+        private void cloneButton_Click(object sender, EventArgs e)
+        {
+            if (selectedObject as Moby != null)
+            {
                 Moby moby = (Moby)selectedObject;
                 CloneMoby(moby);
             }
         }
 
-        private void deleteButton_Click(object sender, EventArgs e) {
-            if (selectedObject as Moby != null) {
+        private void deleteButton_Click(object sender, EventArgs e)
+        {
+            if (selectedObject as Moby != null)
+            {
                 Moby moby = (Moby)selectedObject;
                 DeleteMoby(moby);
             }
         }
-        private void splineVertex_ValueChanged(object sender, EventArgs e) {
+        private void splineVertex_ValueChanged(object sender, EventArgs e)
+        {
             currentSplineVertex = (int)splineVertex.Value;
             UpdateEditorValues();
         }
-        private void tickTimer_Tick(object sender, EventArgs e) {
+        private void tickTimer_Tick(object sender, EventArgs e)
+        {
             Tick();
         }
         #endregion
 
-        void InvalidateView() {
+        void InvalidateView()
+        {
             invalidate = true;
         }
 
-        struct Pixel {
+        struct Pixel
+        {
             public byte R, G, B, A;
 
-            public Pixel(byte[] input) {
+            public Pixel(byte[] input)
+            {
                 R = input[0];
                 G = input[1];
                 B = input[2];
                 A = input[3];
             }
 
-            public uint ToUInt32() {
+            public uint ToUInt32()
+            {
                 byte[] temp = new byte[] { R, G, B, A };
                 return BitConverter.ToUInt32(temp, 0);
             }
 
-            public override string ToString() {
+            public override string ToString()
+            {
                 return R + ", " + G + ", " + B + ", " + A;
             }
+        }
+
+        private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        {
+            InvalidateView();
+            /*if (selectedObject as Spline != null)
+            {
+                Spline spline = (Spline)selectedObject;
+                spline.vertexBuffer[(currentSplineVertex * 3) + 0] = spline.position.X;
+                spline.vertexBuffer[(currentSplineVertex * 3) + 1] = spline.position.Y;
+                spline.vertexBuffer[(currentSplineVertex * 3) + 2] = spline.position.Z;
+                invalidate = true;
+            }*/
         }
     }
 }

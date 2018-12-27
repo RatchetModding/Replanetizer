@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,31 +10,35 @@ namespace RatchetEdit
 {
     public abstract class LevelObject : ITransformable
     {
-        private Vector3 _position = new Vector3();
-        public Vector3 position {
+        protected Vector3 _position = new Vector3();
+        [CategoryAttribute("Position"), TypeConverter(typeof(Vector3Converter)), DisplayName("Position")]
+        public virtual Vector3 position {
             get { return _position; }
             set {
                 _position = value;
-                UpdateTransform();
+                UpdateTransformMatrix();
             }
         }
-        private Vector3 _rotation = new Vector3();
-        public Vector3 rotation {
+        protected Vector3 _rotation = new Vector3();
+        [CategoryAttribute("Position"), TypeConverter(typeof(Vector3Converter)), DisplayName("Rotation")]
+        public virtual Vector3 rotation {
             get { return _rotation; }
             set {
                 _rotation = value;
-                UpdateTransform();
+                UpdateTransformMatrix();
             }
         }
 
-        public float _scale;
-        public float scale {
+        protected float _scale = 1;
+        [CategoryAttribute("Position"), DisplayName("Scale")]
+        public virtual float scale {
             get { return _scale; }
             set {
                 _scale = value;
-                UpdateTransform();
+                UpdateTransformMatrix();
             }
         }
+
 
         public abstract LevelObject Clone();
 
@@ -42,7 +47,7 @@ namespace RatchetEdit
         public abstract void Scale(float scale);
         public abstract void Translate(float x, float y, float z);
         public abstract void Translate(Vector3 vector);
-        public abstract void UpdateTransform();
+        public abstract void UpdateTransformMatrix();
 
     }
 }

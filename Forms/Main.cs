@@ -114,6 +114,14 @@ namespace RatchetEdit
             collCheck.Enabled = true;
             terrainCheck.Enabled = true;
             splineCheck.Enabled = true;
+
+            GenerateObjectTree();
+
+            Moby ratchet = level.mobs[0];
+            camera.moveBehind(ratchet);
+        }
+
+        public void GenerateObjectTree() {
             objectTree.CollapseAll();
             objectTree.Nodes[0].Nodes.Clear();
             objectTree.Nodes[1].Nodes.Clear();
@@ -131,9 +139,6 @@ namespace RatchetEdit
                 string shrubName = shrub.modelID.ToString("X");
                 objectTree.Nodes[2].Nodes.Add(shrubName);
             }
-
-            Moby ratchet = level.mobs[0];
-            camera.moveBehind(ratchet);
         }
 
         public void getModelNames()
@@ -516,10 +521,10 @@ namespace RatchetEdit
         {
             if (selectedObject as Moby != null)
             {
-                Moby selectedObj = (Moby)selectedObject;
-                Vector3 rotation = selectedObj.rotation;
+                Moby moby = (Moby)selectedObject;
+                Vector3 rotation = moby.rotation;
                 float value = Utilities.toRadians((float)rotxBox.Value);
-                selectedObj.rotation = new Vector3(value, rotation.Y, rotation.Z);
+                moby.rotation = new Vector3(value, rotation.Y, rotation.Z);
                 invalidate = true;
             }
         }
@@ -528,10 +533,10 @@ namespace RatchetEdit
         {
             if (selectedObject as Moby != null)
             {
-                Moby selectedObj = (Moby)selectedObject;
-                Vector3 rotation = selectedObj.rotation;
+                Moby moby = (Moby)selectedObject;
+                Vector3 rotation = moby.rotation;
                 float value = Utilities.toRadians((float)rotyBox.Value);
-                selectedObj.rotation = new Vector3(rotation.X, value, rotation.Z);
+                moby.rotation = new Vector3(rotation.X, value, rotation.Z);
                 invalidate = true;
             }
         }
@@ -540,10 +545,10 @@ namespace RatchetEdit
         {
             if (selectedObject as Moby != null)
             {
-                Moby selectedObj = (Moby)selectedObject;
-                Vector3 rotation = selectedObj.rotation;
+                Moby moby = (Moby)selectedObject;
+                Vector3 rotation = moby.rotation;
                 float value = Utilities.toRadians((float)rotzBox.Value);
-                selectedObj.rotation = new Vector3(rotation.X, rotation.Y, value);
+                moby.rotation = new Vector3(rotation.X, rotation.Y, value);
                 invalidate = true;
             }
         }
@@ -566,9 +571,20 @@ namespace RatchetEdit
 
         private void scaleBox_ValueChanged(object sender, EventArgs e) {
             if (selectedObject as Moby != null) {
-                Moby selectedObj = (Moby)selectedObject;
-                selectedObj.scale = (float)scaleBox.Value;
-                selectedObj.updateTransform();
+                Moby moby = (Moby)selectedObject;
+                moby.scale = (float)scaleBox.Value;
+                moby.updateTransform();
+                invalidate = true;
+            }
+        }
+
+        private void cloneButton_Click(object sender, EventArgs e) {
+            if (selectedObject as Moby != null) {
+                Moby moby = (Moby)selectedObject;
+                Moby newMoby = moby.CloneMoby();
+                level.mobs.Add(newMoby);
+                GenerateObjectTree();
+                SelectObject(newMoby);
                 invalidate = true;
             }
         }
@@ -593,5 +609,6 @@ namespace RatchetEdit
                 return R + ", " + G + ", " + B + ", " + A;
             }
         }
+
     }
 }

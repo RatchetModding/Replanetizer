@@ -94,6 +94,7 @@ namespace RatchetEdit
             this.pitchLabel = new System.Windows.Forms.Label();
             this.objectTree = new System.Windows.Forms.TreeView();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.cloneButton = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.renderBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.rotzBox)).BeginInit();
@@ -358,7 +359,7 @@ namespace RatchetEdit
             this.gotoPositionBtn.Name = "gotoPositionBtn";
             this.gotoPositionBtn.Size = new System.Drawing.Size(121, 23);
             this.gotoPositionBtn.TabIndex = 2;
-            this.gotoPositionBtn.Text = "Goto Position";
+            this.gotoPositionBtn.Text = "Go to Position";
             this.gotoPositionBtn.UseVisualStyleBackColor = true;
             this.gotoPositionBtn.Click += new System.EventHandler(this.gotoPositionBtn_Click);
             // 
@@ -672,7 +673,7 @@ namespace RatchetEdit
             // 
             this.label10.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(10, 587);
+            this.label10.Location = new System.Drawing.Point(10, 599);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(43, 13);
             this.label10.TabIndex = 10;
@@ -682,7 +683,7 @@ namespace RatchetEdit
             // 
             this.camXLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.camXLabel.AutoSize = true;
-            this.camXLabel.Location = new System.Drawing.Point(10, 600);
+            this.camXLabel.Location = new System.Drawing.Point(10, 612);
             this.camXLabel.Name = "camXLabel";
             this.camXLabel.Size = new System.Drawing.Size(13, 13);
             this.camXLabel.TabIndex = 11;
@@ -692,7 +693,7 @@ namespace RatchetEdit
             // 
             this.camYLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.camYLabel.AutoSize = true;
-            this.camYLabel.Location = new System.Drawing.Point(10, 613);
+            this.camYLabel.Location = new System.Drawing.Point(10, 625);
             this.camYLabel.Name = "camYLabel";
             this.camYLabel.Size = new System.Drawing.Size(13, 13);
             this.camYLabel.TabIndex = 12;
@@ -702,7 +703,7 @@ namespace RatchetEdit
             // 
             this.camZLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.camZLabel.AutoSize = true;
-            this.camZLabel.Location = new System.Drawing.Point(10, 626);
+            this.camZLabel.Location = new System.Drawing.Point(10, 638);
             this.camZLabel.Name = "camZLabel";
             this.camZLabel.Size = new System.Drawing.Size(13, 13);
             this.camZLabel.TabIndex = 13;
@@ -739,7 +740,7 @@ namespace RatchetEdit
             // 
             this.label18.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(137, 587);
+            this.label18.Location = new System.Drawing.Point(133, 615);
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(47, 13);
             this.label18.TabIndex = 15;
@@ -749,7 +750,7 @@ namespace RatchetEdit
             // 
             this.yawLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.yawLabel.AutoSize = true;
-            this.yawLabel.Location = new System.Drawing.Point(137, 600);
+            this.yawLabel.Location = new System.Drawing.Point(133, 628);
             this.yawLabel.Name = "yawLabel";
             this.yawLabel.Size = new System.Drawing.Size(13, 13);
             this.yawLabel.TabIndex = 11;
@@ -759,7 +760,7 @@ namespace RatchetEdit
             // 
             this.pitchLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.pitchLabel.AutoSize = true;
-            this.pitchLabel.Location = new System.Drawing.Point(137, 613);
+            this.pitchLabel.Location = new System.Drawing.Point(133, 641);
             this.pitchLabel.Name = "pitchLabel";
             this.pitchLabel.Size = new System.Drawing.Size(13, 13);
             this.pitchLabel.TabIndex = 12;
@@ -798,6 +799,7 @@ namespace RatchetEdit
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.AutoScroll = true;
+            this.splitContainer1.Panel2.Controls.Add(this.cloneButton);
             this.splitContainer1.Panel2.Controls.Add(this.objectTree);
             this.splitContainer1.Panel2.Controls.Add(this.label14);
             this.splitContainer1.Panel2.Controls.Add(this.modelIDBox);
@@ -835,6 +837,17 @@ namespace RatchetEdit
             this.splitContainer1.Size = new System.Drawing.Size(1264, 657);
             this.splitContainer1.SplitterDistance = 1000;
             this.splitContainer1.TabIndex = 17;
+            // 
+            // cloneButton
+            // 
+            this.cloneButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.cloneButton.Location = new System.Drawing.Point(136, 589);
+            this.cloneButton.Name = "cloneButton";
+            this.cloneButton.Size = new System.Drawing.Size(118, 23);
+            this.cloneButton.TabIndex = 17;
+            this.cloneButton.Text = "Clone Object";
+            this.cloneButton.UseVisualStyleBackColor = true;
+            this.cloneButton.Click += new System.EventHandler(this.cloneButton_Click);
             // 
             // Main
             // 
@@ -932,6 +945,7 @@ namespace RatchetEdit
         private System.Windows.Forms.ToolStripMenuItem splineCheck;
         private System.Windows.Forms.TreeView objectTree;
         private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.Button cloneButton;
     }
 }
 

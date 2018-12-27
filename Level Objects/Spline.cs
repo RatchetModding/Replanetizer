@@ -22,11 +22,9 @@ namespace RatchetEdit
             vertexBuffer = new float[count * 3];
             for(int i = 0; i < count; i++)
             {
-                float x = vertexBuffer[(i * 3) + 0] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x00);
-                float y = vertexBuffer[(i * 3) + 1] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x04);
-                float z = vertexBuffer[(i * 3) + 2] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x08);
-                //vertexBuffer[i] = ReadFloat(splineBlock, offset + (i * 0x10));
-                //Console.WriteLine(String.Format("X: {0} Y: {1} Z:{2}", vertexBuffer[(i * 3) + 0], vertexBuffer[(i * 3) + 1], vertexBuffer[(i * 3) + 2]));
+                vertexBuffer[(i * 3) + 0] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x00);
+                vertexBuffer[(i * 3) + 1] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x04);
+                vertexBuffer[(i * 3) + 2] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x08);
             }
 
             if(count > 0) {

@@ -220,17 +220,17 @@ namespace RatchetEdit
                     scaleBox.Value = 1;
                 }
 
-                if (selectedObject as Spline != null) {
+                if (selectedObject as Spline == null) { //Is not spline
+                    xBox.Value = (decimal)selectedObject.position.X;
+                    yBox.Value = (decimal)selectedObject.position.Y;
+                    zBox.Value = (decimal)selectedObject.position.Z;
+                }
+                else { //Is spline
                     Spline spline = (Spline)selectedObject;
                     Console.WriteLine(currentSplineVertex.ToString());
                     xBox.Value = (decimal)spline.vertexBuffer[(currentSplineVertex * 3) + 0];
                     yBox.Value = (decimal)spline.vertexBuffer[(currentSplineVertex * 3) + 1];
                     zBox.Value = (decimal)spline.vertexBuffer[(currentSplineVertex * 3) + 2];
-                }
-                else {
-                    xBox.Value = (decimal)selectedObject.position.X;
-                    yBox.Value = (decimal)selectedObject.position.Y;
-                    zBox.Value = (decimal)selectedObject.position.Z;
                 }
             }
             else {
@@ -440,7 +440,7 @@ namespace RatchetEdit
                     returnNode = objectTree.Nodes[1].Nodes[id - level.mobs.Count];
                 }
                 else if (id - (level.mobs?.Count + level.ties?.Count) < level.shrubs?.Count) {
-                    returnObject = level.shrubs[id - offset];
+                    returnObject = level.shrubs[id - (level.mobs.Count + level.ties.Count)];
                     returnNode = objectTree.Nodes[2].Nodes[id - offset];
                 }
                 else if (id - offset < level.splines?.Count) {
@@ -455,7 +455,6 @@ namespace RatchetEdit
         }
         
         void SelectObject(LevelObject levelObject = null) {
-            Console.WriteLine(levelObject);
             if (levelObject == null) {
                 selectedObject = null;
                 updateEditorValues();
@@ -575,26 +574,26 @@ namespace RatchetEdit
         private void xBox_ValueChanged(object sender, EventArgs e) {
             if (selectedObject == null) return;
 
-            if(selectedObject as Spline != null) {
-                Spline spline = (Spline)selectedObject;
-                spline.vertexBuffer[(currentSplineVertex * 3) + 0] = (float)xBox.Value;
-            }
-            else {
+            if(selectedObject as Spline == null) {
                 Vector3 position = selectedObject.position;
                 selectedObject.position = new Vector3((float)xBox.Value, position.Y, position.Z);
+            }
+            else {
+                Spline spline = (Spline)selectedObject;
+                spline.vertexBuffer[(currentSplineVertex * 3) + 0] = (float)xBox.Value;
             }
             invalidate = true;
         }
 
         private void yBox_ValueChanged(object sender, EventArgs e) {
             if (selectedObject == null) return;
-            if (selectedObject as Spline != null) {
-                Spline spline = (Spline)selectedObject;
-                spline.vertexBuffer[(currentSplineVertex * 3) + 1] = (float)yBox.Value;
-            }
-            else {
+            if (selectedObject as Spline == null) {
                 Vector3 position = selectedObject.position;
                 selectedObject.position = new Vector3(position.X, (float)yBox.Value, position.Z);
+            }
+            else {
+                Spline spline = (Spline)selectedObject;
+                spline.vertexBuffer[(currentSplineVertex * 3) + 1] = (float)yBox.Value;
             }
 
             invalidate = true;
@@ -603,13 +602,13 @@ namespace RatchetEdit
         private void zBox_ValueChanged(object sender, EventArgs e)
         {
             if (selectedObject == null) return;
-            if (selectedObject as Spline != null) {
-                Spline spline = (Spline)selectedObject;
-                spline.vertexBuffer[(currentSplineVertex * 3) + 2] = (float)zBox.Value;
-            }
-            else {
+            if (selectedObject as Spline == null) {
                 Vector3 position = selectedObject.position;
                 selectedObject.position = new Vector3(position.X, position.Y, (float)zBox.Value);
+            }
+            else {
+                Spline spline = (Spline)selectedObject;
+                spline.vertexBuffer[(currentSplineVertex * 3) + 2] = (float)zBox.Value;
             }
             invalidate = true;
         }
@@ -686,6 +685,10 @@ namespace RatchetEdit
                 DeleteMoby(moby);
             }
         }
+        private void splineVertex_ValueChanged(object sender, EventArgs e) {
+            currentSplineVertex = (int)splineVertex.Value;
+            updateEditorValues();
+        }
         private void tickTimer_Tick(object sender, EventArgs e) {
             tick();
         }
@@ -709,12 +712,6 @@ namespace RatchetEdit
             public override string ToString() {
                 return R + ", " + G + ", " + B + ", " + A;
             }
-        }
-
-        private void splineVertex_ValueChanged(object sender, EventArgs e) {
-            currentSplineVertex = (int)splineVertex.Value;
-            Console.WriteLine(splineVertex.Value.ToString());
-            updateEditorValues();
         }
     }
 }

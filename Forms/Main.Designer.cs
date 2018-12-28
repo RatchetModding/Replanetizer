@@ -72,7 +72,7 @@ namespace RatchetEdit
             this.pitchLabel = new System.Windows.Forms.Label();
             this.objectTree = new System.Windows.Forms.TreeView();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.properies = new System.Windows.Forms.PropertyGrid();
+            this.properties = new System.Windows.Forms.PropertyGrid();
             this.label8 = new System.Windows.Forms.Label();
             this.splineVertex = new System.Windows.Forms.NumericUpDown();
             this.deleteButton = new System.Windows.Forms.Button();
@@ -468,7 +468,7 @@ namespace RatchetEdit
             // 
             this.splitContainer1.Panel2.AutoScroll = true;
             this.splitContainer1.Panel2.Controls.Add(this.toolLabel);
-            this.splitContainer1.Panel2.Controls.Add(this.properies);
+            this.splitContainer1.Panel2.Controls.Add(this.properties);
             this.splitContainer1.Panel2.Controls.Add(this.label8);
             this.splitContainer1.Panel2.Controls.Add(this.splineVertex);
             this.splitContainer1.Panel2.Controls.Add(this.deleteButton);
@@ -489,15 +489,15 @@ namespace RatchetEdit
             // 
             // properies
             // 
-            this.properies.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+            this.properties.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.properies.HelpVisible = false;
-            this.properies.Location = new System.Drawing.Point(3, 259);
-            this.properies.Name = "properies";
-            this.properies.Size = new System.Drawing.Size(306, 267);
-            this.properies.TabIndex = 19;
-            this.properies.ToolbarVisible = false;
-            this.properies.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.propertyGrid1_PropertyValueChanged);
+            this.properties.HelpVisible = false;
+            this.properties.Location = new System.Drawing.Point(3, 259);
+            this.properties.Name = "properies";
+            this.properties.Size = new System.Drawing.Size(306, 267);
+            this.properties.TabIndex = 19;
+            this.properties.ToolbarVisible = false;
+            this.properties.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.propertyGrid1_PropertyValueChanged);
             // 
             // label8
             // 
@@ -632,7 +632,7 @@ namespace RatchetEdit
         private System.Windows.Forms.Button deleteButton;
         private System.Windows.Forms.NumericUpDown splineVertex;
         private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.PropertyGrid properies;
+        private System.Windows.Forms.PropertyGrid properties;
         private System.Windows.Forms.ToolStripMenuItem levelVariablesToolStripMenuItem;
         private System.Windows.Forms.SaveFileDialog mapSaveDialog;
         private System.Windows.Forms.Label toolLabel;

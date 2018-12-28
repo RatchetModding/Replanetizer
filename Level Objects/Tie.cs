@@ -143,13 +143,17 @@ namespace RatchetEdit
 
         //Transformable methods
         public override void Translate(float x, float y, float z) {
+            Vector3 rot = new Vector3(rotation);
+            Rotate(-rot); //Rotate to 0,0,0 to do translation in world space.
+
             Matrix4 translationMatrix = Matrix4.CreateTranslation(x, y, z);
             Matrix4 result = translationMatrix * modelMatrix;
-
+            _position = result.ExtractTranslation();
             UpdateMatrixVariables(result);
             UpdateTransformMatrix();
 
-            _position = modelMatrix.ExtractTranslation();
+            Rotate(rot); //Rotate back to keep orientation
+
         }
 
         public override void Translate(Vector3 vector) {

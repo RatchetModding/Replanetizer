@@ -218,7 +218,7 @@ namespace RatchetEdit
 
         private void UpdateEditorValues()
         {
-            properies.Update();
+            properties.Refresh();
         }
         private void glControl1_Paint(object sender, PaintEventArgs e) { Render(); }
 
@@ -455,7 +455,10 @@ namespace RatchetEdit
                 if (pixel.R == 255 && pixel.G == 0 && pixel.B == 0)
                 {
                     Console.WriteLine("HIT RED!");
-                    if (selectedObject != null) selectedObject.Translate(1, 0, 0);
+                    if (selectedObject != null) {
+                        selectedObject.Translate(1, 0, 0);
+                        UpdateEditorValues();
+                    }
                     cancelSelection = true;
                     InvalidateView();
 
@@ -464,7 +467,10 @@ namespace RatchetEdit
                 else if (pixel.R == 0 && pixel.G == 255 && pixel.B == 0)
                 {
                     Console.WriteLine("HIT GREEN!");
-                    if (selectedObject != null) selectedObject.Translate(0, 1, 0);
+                    if (selectedObject != null) {
+                        selectedObject.Translate(0, 1, 0);
+                        UpdateEditorValues();
+                    }
                     cancelSelection = true;
                     InvalidateView();
                     return null;
@@ -472,7 +478,10 @@ namespace RatchetEdit
                 else if (pixel.R == 0 && pixel.G == 0 && pixel.B == 255)
                 {
                     Console.WriteLine("HIT BLUE!");
-                    if (selectedObject != null) selectedObject.Translate(0, 0, 1);
+                    if (selectedObject != null) {
+                        selectedObject.Translate(0, 0, 1);
+                        UpdateEditorValues();
+                    }
                     cancelSelection = true;
                     InvalidateView();
                     return null;
@@ -524,7 +533,7 @@ namespace RatchetEdit
             }
 
             selectedObject = levelObject;
-            properies.SelectedObject = selectedObject;
+            properties.SelectedObject = selectedObject;
             if (primedTreeNode != null)
             {
                 suppressTreeViewSelectEvent = true;

@@ -74,31 +74,33 @@ namespace RatchetEdit
         public int cutscene { get; set; }
 
 
-        [CategoryAttribute("Position"), DisplayName("Scale")]
-        public float scale {
+        public override float scale
+        {
             get { return _scale; }
             set
             {
                 _scale = value;
-                updateTransform();
+                UpdateTransformMatrix();
             }
         }
 
-        [CategoryAttribute("Position"), TypeConverter(typeof(Vector3Converter)), DisplayName("Rotation")]
-        public Vector3 rotation {
+        public override Vector3 rotation
+        {
             get { return _rotation; }
-            set {
+            set
+            {
                 _rotation = value;
-                updateTransform();
+                UpdateTransformMatrix();
             }
         }
-        
-        public Moby(Model model, Vector3 position, Vector3 rotation, float scale) {
+
+        public Moby(Model model, Vector3 position, Vector3 rotation, float scale)
+        {
             this.model = model;
             this.position = position;
             this.rotation = rotation;
             this.scale = scale;
-            
+
         }
 
         public Moby(byte[] mobyBlock, int offset, List<Model> mobyModels)
@@ -145,7 +147,7 @@ namespace RatchetEdit
             rotation = new Vector3(rotx, roty, rotz);
 
             model = mobyModels.Find(mobyModel => mobyModel.ID == modelID);
-            updateTransform();
+            UpdateTransformMatrix();
         }
 
         public byte[] serialize()
@@ -192,8 +194,13 @@ namespace RatchetEdit
 
             return buffer;
         }
+        public override LevelObject Clone()
+        {
+            return new Moby(model, new Vector3(position), new Vector3(rotation), scale);
+        }
 
-        public override void updateTransform() {
+        public override void UpdateTransformMatrix()
+        {
             if (model == null) return;
             Matrix4 rotMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
             Matrix4 scaleMatrix = Matrix4.CreateScale(scale * model.size);
@@ -201,8 +208,32 @@ namespace RatchetEdit
             modelMatrix = scaleMatrix * rotMatrix * translationMatrix;
         }
 
-        public Moby CloneMoby() {
-            return new Moby(model, new Vector3(position), new Vector3(rotation), scale);
+
+
+        //Transformable methods
+        public override void Rotate(float x, float y, float z)
+        {
+            Rotate(new Vector3(x, y, z));
+        }
+
+        public override void Rotate(Vector3 vector)
+        {
+            rotation += vector;
+        }
+
+        public override void Scale(float scale)
+        {
+            scale += scale;
+        }
+
+        public override void Translate(float x, float y, float z)
+        {
+            Translate(new Vector3(x, y, z));
+        }
+
+        public override void Translate(Vector3 vector)
+        {
+            position += vector;
         }
     }
 }

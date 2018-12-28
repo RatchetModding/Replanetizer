@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace RatchetEdit {
-    public class ModelObject : LevelObject {
+    public abstract class ModelObject : LevelObject {
 
         [CategoryAttribute("Attributes"), DisplayName("Model ID")]
         public int modelID { get; set; }

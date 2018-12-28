@@ -61,6 +61,7 @@
     <Compile Include="Level Objects\Tie.cs" />
     <Compile Include="Level Objects\Moby.cs" />
     <Compile Include="LevelVariables.cs" />
+    <Compile Include="Level Objects\ITransformable.cs" />
     <Compile Include="Models\MobyModel.cs" />
     <Compile Include="Models\ShrubModel.cs" />
     <Compile Include="Models\TerrainModel.cs" />

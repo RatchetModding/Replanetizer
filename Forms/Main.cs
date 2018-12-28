@@ -8,11 +8,21 @@ using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using RatchetEdit.Serializers;
+using static RatchetEdit.Utilities;
 
 namespace RatchetEdit
 {
     public partial class Main : Form
     {
+        public enum Tool
+        {
+            None,
+            Translate,
+            Rotate,
+            Scale
+        }
+        Tool currentTool = Tool.Translate;
+
         public Level level;
         public ModelViewer modelViewer;
 
@@ -40,7 +50,7 @@ namespace RatchetEdit
 
         bool invalidate = false;
         bool suppressTreeViewSelectEvent = false;
-        
+        bool cancelSelection = false;
         public Main()
         {
             InitializeComponent();
@@ -60,34 +70,28 @@ namespace RatchetEdit
             GL.Enable(EnableCap.DepthTest);
             GL.LineWidth(5.0f);
 
-            Matrix3 rot = Matrix3.CreateRotationX(camera.rotation.X) * Matrix3.CreateRotationZ(camera.rotation.Z);
-            Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);
-            view = Matrix4.LookAt(camera.position, camera.position + forward, Vector3.UnitZ);
-
-            //Experimental transparency blend
-            //GL.Enable(EnableCap.Blend);
-            //GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-
-
             //Setup general shader
             shaderID = GL.CreateProgram();
-            loadShader("shaders/vs.glsl", ShaderType.VertexShader, shaderID);
-            loadShader("shaders/fs.glsl", ShaderType.FragmentShader, shaderID);
+            LoadShader("shaders/vs.glsl", ShaderType.VertexShader, shaderID);
+            LoadShader("shaders/fs.glsl", ShaderType.FragmentShader, shaderID);
             GL.LinkProgram(shaderID);
 
             //Setup color shader
             colorShaderID = GL.CreateProgram();
-            loadShader("shaders/colorshadervs.glsl", ShaderType.VertexShader, colorShaderID);
-            loadShader("shaders/colorshaderfs.glsl", ShaderType.FragmentShader, colorShaderID);
+            LoadShader("shaders/colorshadervs.glsl", ShaderType.VertexShader, colorShaderID);
+            LoadShader("shaders/colorshaderfs.glsl", ShaderType.FragmentShader, colorShaderID);
             GL.LinkProgram(colorShaderID);
 
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
             colorID = GL.GetUniformLocation(colorShaderID, "incolor");
-            getModelNames();
+            GetModelNames();
+
+            toolLabel.Text = currentTool.ToString();
+
 
         }
 
-        void loadShader(String filename, ShaderType type, int program)
+        void LoadShader(String filename, ShaderType type, int program)
         {
             int address = GL.CreateShader(type);
             using (StreamReader sr = new StreamReader(filename))
@@ -99,15 +103,18 @@ namespace RatchetEdit
             Console.WriteLine(GL.GetShaderInfoLog(address));
         }
 
-        private void mapOpenBtn_Click(object sender, EventArgs e) {
-            if (mapOpenDialog.ShowDialog() == DialogResult.OK) {
-                loadLevel(mapOpenDialog.FileName);
+        private void mapOpenBtn_Click(object sender, EventArgs e)
+        {
+            if (mapOpenDialog.ShowDialog() == DialogResult.OK)
+            {
+                LoadLevel(mapOpenDialog.FileName);
             }
         }
 
-        void loadLevel(string fileName) {
+        void LoadLevel(string fileName)
+        {
             level = new Level(fileName);
-            invalidate = true;
+            InvalidateView();
             mobyCheck.Enabled = true;
             tieCheck.Enabled = true;
             shrubCheck.Enabled = true;
@@ -118,35 +125,40 @@ namespace RatchetEdit
             GenerateObjectTree();
 
             Moby ratchet = level.mobs[0];
-            camera.moveBehind(ratchet);
+            camera.MoveBehind(ratchet);
         }
 
-        public void GenerateObjectTree() {
+        public void GenerateObjectTree()
+        {
             objectTree.CollapseAll();
             objectTree.Nodes[0].Nodes.Clear();
             objectTree.Nodes[1].Nodes.Clear();
             objectTree.Nodes[2].Nodes.Clear();
             objectTree.Nodes[3].Nodes.Clear();
 
-            foreach (Moby moby in level.mobs) {
+            foreach (Moby moby in level.mobs)
+            {
                 string modelName = modelNames != null ? modelNames.Find(x => x.Substring(0, 4).ToUpper() == moby.modelID.ToString("X4")) : null;
                 objectTree.Nodes[0].Nodes.Add(modelName != null ? modelName.Split('=')[1].Substring(1) : moby.modelID.ToString("X"));
             }
-            foreach (Tie tie in level.ties) {
+            foreach (Tie tie in level.ties)
+            {
                 string tieName = tie.modelID.ToString("X");
                 objectTree.Nodes[1].Nodes.Add(tieName);
             }
-            foreach (Tie shrub in level.shrubs) {
+            foreach (Tie shrub in level.shrubs)
+            {
                 string shrubName = shrub.modelID.ToString("X");
                 objectTree.Nodes[2].Nodes.Add(shrubName);
             }
-            foreach (Spline spline in level.splines) {
+            foreach (Spline spline in level.splines)
+            {
                 string splineName = spline.name.ToString("X");
                 objectTree.Nodes[3].Nodes.Add(splineName);
             }
         }
 
-        public void getModelNames()
+        public void GetModelNames()
         {
             modelNames = new List<string>();
             string stringCounter;
@@ -173,7 +185,7 @@ namespace RatchetEdit
         }
 
         #region Open Viewers
-        private void openModelViewer()
+        private void OpenModelViewer()
         {
             if (modelViewer == null || modelViewer.IsDisposed)
             {
@@ -187,85 +199,37 @@ namespace RatchetEdit
         }
         #endregion
 
-        private void modelViewerToolBtn_Click(object sender, EventArgs e) {
+        private void modelViewerToolBtn_Click(object sender, EventArgs e)
+        {
             if (selectedObject == null) return;
-            openModelViewer();
+            OpenModelViewer();
         }
 
-        private void openModelViewerBtn_Click(object sender, EventArgs e) {
+        private void openModelViewerBtn_Click(object sender, EventArgs e)
+        {
             if (selectedObject == null) return;
-            openModelViewer();
+            OpenModelViewer();
         }
 
-        private void exitToolBtn_Click(object sender, EventArgs e) {
+        private void exitToolBtn_Click(object sender, EventArgs e)
+        {
             Close();
         }
 
-        private void updateEditorValues() {
-            
-            if(selectedObject as Spline != null)
-            {
-                Spline spline = (Spline)selectedObject;
-                spline.position = new Vector3(spline.vertexBuffer[(currentSplineVertex * 3) + 0],
-                    spline.vertexBuffer[(currentSplineVertex * 3) + 1],
-                    spline.vertexBuffer[(currentSplineVertex * 3) + 2]);
-            }
+        private void UpdateEditorValues()
+        {
             properies.Update();
-
-            /*if(selectedObject != null) {
-                if (selectedObject as ModelObject != null) {
-                    modelIDBox.Text = ((ModelObject)selectedObject).modelID.ToString("X");
-                }
-
-                if (selectedObject as Moby != null) {
-                    Moby mob = (Moby)selectedObject;
-                    rotxBox.Value = (decimal)Utilities.toDegrees(mob.rotation.X);
-                    rotyBox.Value = (decimal)Utilities.toDegrees(mob.rotation.Y);
-                    rotzBox.Value = (decimal)Utilities.toDegrees(mob.rotation.Z);
-                    scaleBox.Value = (decimal)mob.scale;
-                }
-                else {
-                    rotxBox.Value = 0;
-                    rotyBox.Value = 0;
-                    rotzBox.Value = 0;
-                    scaleBox.Value = 1;
-                }
-
-                if (selectedObject as Spline == null) { //Is not spline
-                    xBox.Value = (decimal)selectedObject.position.X;
-                    yBox.Value = (decimal)selectedObject.position.Y;
-                    zBox.Value = (decimal)selectedObject.position.Z;
-                }
-                else { //Is spline
-                    Spline spline = (Spline)selectedObject;
-                    Console.WriteLine(currentSplineVertex.ToString());
-                    xBox.Value = (decimal)spline.vertexBuffer[(currentSplineVertex * 3) + 0];
-                    yBox.Value = (decimal)spline.vertexBuffer[(currentSplineVertex * 3) + 1];
-                    zBox.Value = (decimal)spline.vertexBuffer[(currentSplineVertex * 3) + 2];
-                }
-            }
-            else {
-                modelIDBox.Text = "0";
-                splineVertex.Value = 0;
-                xBox.Value = 0;
-                yBox.Value = 0;
-                zBox.Value = 0;
-                rotxBox.Value = 0;
-                rotyBox.Value = 0;
-                rotzBox.Value = 0;
-                scaleBox.Value = 1;
-            }*/
         }
-        private void glControl1_Paint(object sender, PaintEventArgs e) { render(); }
+        private void glControl1_Paint(object sender, PaintEventArgs e) { Render(); }
 
-        private void render() {
+        private void Render()
+        {
             //Update ui label texts
-            camXLabel.Text = String.Format("X: {0}", Utilities.round(camera.position.X,2).ToString());
-            camYLabel.Text = String.Format("Y: {0}", Utilities.round(camera.position.Y, 2).ToString());
-            camZLabel.Text = String.Format("Z: {0}", Utilities.round(camera.position.Z, 2).ToString());
-            pitchLabel.Text = String.Format("Pitch: {0}", Utilities.round(Utilities.toDegrees(camera.rotation.X), 2).ToString());
-            yawLabel.Text = String.Format("Yaw: {0}", Utilities.round(Utilities.toDegrees(camera.rotation.Z), 2).ToString());
-            
+            camXLabel.Text = String.Format("X: {0}", fRound(camera.position.X, 2).ToString());
+            camYLabel.Text = String.Format("Y: {0}", fRound(camera.position.Y, 2).ToString());
+            camZLabel.Text = String.Format("Z: {0}", fRound(camera.position.Z, 2).ToString());
+            pitchLabel.Text = String.Format("Pitch: {0}", fRound(fToDegrees(camera.rotation.X), 2).ToString());
+            yawLabel.Text = String.Format("Yaw: {0}", fRound(fToDegrees(camera.rotation.Z), 2).ToString());
 
             //Render gl surface
             glControl1.MakeCurrent();
@@ -275,28 +239,32 @@ namespace RatchetEdit
             GL.UseProgram(colorShaderID);
             GL.EnableVertexAttribArray(0);
 
-            if (splineCheck.Checked && splineCheck.Enabled) {
-                foreach (Spline spline in level.splines) {
+            if (splineCheck.Checked && splineCheck.Enabled)
+            {
+                foreach (Spline spline in level.splines)
+                {
                     drawSpline(spline);
                 }
             }
 
-            if (selectedObject as ModelObject != null) {
+            if (selectedObject as ModelObject != null)
+            {
                 drawModelMesh((ModelObject)selectedObject);
+                drawTool(selectedObject.position);
             }
 
             GL.EnableVertexAttribArray(1);
             GL.UseProgram(shaderID);
 
-            if (mobyCheck.Checked && mobyCheck.Enabled) 
+            if (mobyCheck.Checked && mobyCheck.Enabled)
                 foreach (Moby mob in level.mobs) drawModelObject(mob);
 
             if (tieCheck.Checked && tieCheck.Enabled)
                 foreach (Tie tie in level.ties) drawModelObject(tie);
 
             if (shrubCheck.Checked && splineCheck.Enabled)
-                foreach (Tie shrub in level.shrubs)  drawModelObject(shrub);
-            
+                foreach (Tie shrub in level.shrubs) drawModelObject(shrub);
+
             if (terrainCheck.Checked && terrainCheck.Enabled)
             {
                 GL.UniformMatrix4(matrixID, false, ref worldView);
@@ -327,46 +295,73 @@ namespace RatchetEdit
         }
 
         //Called every frame
-        public void tick() {
+        public void Tick()
+        {
             float deltaTime = 0.016f;
 
-            float moveSpeed = 25;
-            float shiftMultiplier = 3;
-            float nonShiftMultiplier = 0.5f;
+            float moveSpeed = 10;
+            float boostMultiplier = 4;
+            float multiplier = ModifierKeys == Keys.Shift ? boostMultiplier : 1;
 
-            Vector3 moveDir = getInputAxes();
-            if (moveDir.Length > 0) {
-                moveDir *= (ModifierKeys == Keys.Shift ? shiftMultiplier : nonShiftMultiplier) * deltaTime * moveSpeed;
-                invalidate = true;
+            KeyboardState keyState = Keyboard.GetState();
+
+            if (keyState.IsKeyDown(Key.F1))
+            {
+                currentTool = Tool.Translate;
+                toolLabel.Text = currentTool.ToString();
+            }
+            else if (keyState.IsKeyDown(Key.F2))
+            {
+                currentTool = Tool.Rotate;
+                toolLabel.Text = currentTool.ToString();
+            }
+            else if (keyState.IsKeyDown(Key.F3))
+            {
+                currentTool = Tool.Scale;
+                toolLabel.Text = currentTool.ToString();
+            }
+            else if (keyState.IsKeyDown(Key.F4))
+            {
+                currentTool = Tool.None;
+                toolLabel.Text = currentTool.ToString();
+            }
+
+            Vector3 moveDir = GetInputAxes();
+            if (moveDir.Length > 0)
+            {
+                moveDir *= moveSpeed * multiplier * deltaTime;
+                InvalidateView();
             }
 
 
-            if (rMouse) {
+            if (rMouse)
+            {
                 float pitch = camera.rotation.X;
                 float yaw = camera.rotation.Z;
                 yaw -= (Cursor.Position.X - lastMouseX) * camera.speed * 0.016f;
                 pitch -= (Cursor.Position.Y - lastMouseY) * camera.speed * 0.016f;
                 pitch = MathHelper.Clamp(pitch, MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
-                camera.setRotation(pitch, yaw);
-                invalidate = true;
+                camera.SetRotation(pitch, yaw);
+                InvalidateView();
             }
-
-            Matrix3 rot = Matrix3.CreateRotationX(camera.rotation.X) * Matrix3.CreateRotationZ(camera.rotation.Z);
-            camera.setPosition(camera.position + Vector3.Transform(moveDir, rot));
-
-            Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);
 
             lastMouseX = Cursor.Position.X;
             lastMouseY = Cursor.Position.Y;
 
+            Matrix3 rot = Matrix3.CreateRotationX(camera.rotation.X) * Matrix3.CreateRotationY(camera.rotation.Y) * Matrix3.CreateRotationZ(camera.rotation.Z);
+            camera.Translate(Vector3.Transform(moveDir, rot));
+            Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);
+
             view = Matrix4.LookAt(camera.position, camera.position + forward, Vector3.UnitZ);
 
-            if (invalidate) {
+            if (invalidate)
+            {
                 glControl1.Invalidate();
             }
         }
 
-        private Vector3 getInputAxes() {
+        private Vector3 GetInputAxes()
+        {
             KeyboardState keyState = Keyboard.GetState();
 
             float xAxis = 0, yAxis = 0, zAxis = 0;
@@ -377,39 +372,45 @@ namespace RatchetEdit
             if (keyState.IsKeyDown(Key.D)) xAxis++;
             if (keyState.IsKeyDown(Key.Q)) zAxis--;
             if (keyState.IsKeyDown(Key.E)) zAxis++;
-            
+
+
             return new Vector3(xAxis, yAxis, zAxis);
         }
 
-        private void glControl1_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e) {
+        private void glControl1_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
             rMouse = e.Button == MouseButtons.Right;
             lMouse = e.Button == MouseButtons.Left;
-        }
 
-        private void glControl1_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e) {
-            rMouse = false;
-            lMouse = false;
-        }
-
-        private void glControl1_Resize(object sender, EventArgs e) {
-            GL.Viewport(0, 0, glControl1.Width, glControl1.Height);
-            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)glControl1.Width / glControl1.Height, 0.1f, 800.0f);
-        }
-
-        private void enableCheck(object sender, EventArgs e) {
-            invalidate = true;
-        }
-
-        private void glControl1_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e) {
             if (e.Button == MouseButtons.Left && level != null)
             {
                 LevelObject obj = GetObjectAtScreenPosition(e.Location.X, e.Location.Y);
-                SelectObject(obj);
+                if (!cancelSelection)
+                    SelectObject(obj);
+                cancelSelection = false;
 
             }
         }
 
-        public LevelObject GetObjectAtScreenPosition(int x, int y) {
+        private void glControl1_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            rMouse = false;
+            lMouse = false;
+        }
+
+        private void glControl1_Resize(object sender, EventArgs e)
+        {
+            GL.Viewport(0, 0, glControl1.Width, glControl1.Height);
+            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)glControl1.Width / glControl1.Height, 0.1f, 800.0f);
+        }
+
+        private void enableCheck(object sender, EventArgs e)
+        {
+            InvalidateView();
+        }
+
+        public LevelObject GetObjectAtScreenPosition(int x, int y)
+        {
             LevelObject returnObject = null;
             TreeNode returnNode = null;
             int offset = 0;
@@ -419,94 +420,143 @@ namespace RatchetEdit
             GL.EnableVertexAttribArray(0);
             worldView = view * projection;
 
-            if (mobyCheck.Checked) {
+            if (mobyCheck.Checked)
+            {
                 GL.ClearColor(0, 0, 0, 0);
                 offset = 0;
                 fakeDrawObjects(level.mobs.Cast<ModelObject>().ToList(), offset);
             }
-            if (tieCheck.Checked) {
+            if (tieCheck.Checked)
+            {
                 offset += level.mobs.Count;
                 fakeDrawObjects(level.ties.Cast<ModelObject>().ToList(), offset);
             }
-            if (shrubCheck.Checked) {
+            if (shrubCheck.Checked)
+            {
                 offset += level.ties.Count;
                 fakeDrawObjects(level.shrubs.Cast<ModelObject>().ToList(), offset);
             }
-            if (splineCheck.Checked) {
+            if (splineCheck.Checked)
+            {
                 offset += level.shrubs.Count;
                 fakeDrawSplines(level.splines, offset);
+            }
+            if (currentTool == Tool.Translate)
+            {
+                Console.WriteLine("Current tool is translate");
+                if (selectedObject != null) drawTool(selectedObject.position);
             }
 
             Pixel pixel = new Pixel();
             GL.ReadPixels(x, glControl1.Height - y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixel);
             GL.ClearColor(Color.SkyBlue);
-            if (pixel.A == 0) {
+            if (pixel.A == 0)
+            {
+                if (pixel.R == 255 && pixel.G == 0 && pixel.B == 0)
+                {
+                    Console.WriteLine("HIT RED!");
+                    if (selectedObject != null) selectedObject.Translate(1, 0, 0);
+                    cancelSelection = true;
+                    InvalidateView();
+
+                    return null;
+                }
+                else if (pixel.R == 0 && pixel.G == 255 && pixel.B == 0)
+                {
+                    Console.WriteLine("HIT GREEN!");
+                    if (selectedObject != null) selectedObject.Translate(0, 1, 0);
+                    cancelSelection = true;
+                    InvalidateView();
+                    return null;
+                }
+                else if (pixel.R == 0 && pixel.G == 0 && pixel.B == 255)
+                {
+                    Console.WriteLine("HIT BLUE!");
+                    if (selectedObject != null) selectedObject.Translate(0, 0, 1);
+                    cancelSelection = true;
+                    InvalidateView();
+                    return null;
+                }
+
                 int id = (int)pixel.ToUInt32();
-                if (id < level.mobs?.Count) {
+                if (id < level.mobs?.Count)
+                {
                     returnObject = level.mobs[id];
                     returnNode = objectTree.Nodes[0].Nodes[id];
                 }
-                else if (id - level.mobs?.Count < level.ties?.Count) {
+                else if (id - level.mobs?.Count < level.ties?.Count)
+                {
                     returnObject = level.ties[id - level.mobs.Count];
                     returnNode = objectTree.Nodes[1].Nodes[id - level.mobs.Count];
                 }
-                else if (id - (level.mobs?.Count + level.ties?.Count) < level.shrubs?.Count) {
+                else if (id - (level.mobs?.Count + level.ties?.Count) < level.shrubs?.Count)
+                {
                     returnObject = level.shrubs[id - (level.mobs.Count + level.ties.Count)];
                     returnNode = objectTree.Nodes[2].Nodes[id - offset];
                 }
-                else if (id - offset < level.splines?.Count) {
+                else if (id - offset < level.splines?.Count)
+                {
                     returnObject = level.splines[id - offset];
                     returnNode = objectTree.Nodes[3].Nodes[id - offset];
                 }
             }
 
-           primedTreeNode = returnNode;
+            primedTreeNode = returnNode;
 
             return returnObject;
         }
-        
-        void SelectObject(LevelObject levelObject = null) {
-            if (levelObject == null) {
+
+        void SelectObject(LevelObject levelObject = null)
+        {
+            if (levelObject == null)
+            {
                 selectedObject = null;
-                updateEditorValues();
-                invalidate = true;
+                UpdateEditorValues();
+                InvalidateView();
                 currentSplineVertex = 0;
                 return;
             }
-            
-            if (ReferenceEquals(levelObject,selectedObject) && levelObject as ModelObject != null) {
-                openModelViewer();
+
+            if (ReferenceEquals(levelObject, selectedObject) && levelObject as ModelObject != null)
+            {
+                OpenModelViewer();
                 return;
             }
 
             selectedObject = levelObject;
             properies.SelectedObject = selectedObject;
-            if (primedTreeNode != null) {
+            if (primedTreeNode != null)
+            {
                 suppressTreeViewSelectEvent = true;
                 objectTree.SelectedNode = primedTreeNode;
                 primedTreeNode = null;
             }
             currentSplineVertex = 0;
-            updateEditorValues();
-            invalidate = true;
+            UpdateEditorValues();
+            InvalidateView();
         }
 
-        public void CloneMoby(Moby moby) {
-            Moby newMoby = moby.CloneMoby();
+        public void CloneMoby(Moby moby)
+        {
+            Moby newMoby = moby.Clone() as Moby;
+            if (newMoby == null) return;
+
             level.mobs.Add(newMoby);
             GenerateObjectTree();
             SelectObject(newMoby);
-            invalidate = true;
+            InvalidateView();
         }
 
-        public void DeleteMoby(Moby moby) {
+        public void DeleteMoby(Moby moby)
+        {
             level.mobs.Remove(moby);
             GenerateObjectTree();
             SelectObject(null);
-            invalidate = true;
+            InvalidateView();
         }
         #region RenderFunctions
-        public void drawSpline(Spline spline) {
+        public void drawSpline(Spline spline)
+        {
             Vector4 color;
             if (spline == selectedObject) color = new Vector4(1, 0, 1, 1);
             else color = new Vector4(1, 1, 1, 1);
@@ -519,8 +569,57 @@ namespace RatchetEdit
             GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
         }
 
-        private void drawModelObject(ModelObject obj) {
-            if (obj.model.vertexBuffer != null) {
+        public void drawTool(Vector3 position)
+        {
+            float[] test = new float[18];
+            float length = 2;
+            test[0] = position.X - length;
+            test[1] = position.Y;
+            test[2] = position.Z;
+
+            test[3] = position.X + length;
+            test[4] = position.Y;
+            test[5] = position.Z;
+
+            test[6] = position.X;
+            test[7] = position.Y - length;
+            test[8] = position.Z;
+
+            test[9] = position.X;
+            test[10] = position.Y + length;
+            test[11] = position.Z;
+
+            test[12] = position.X;
+            test[13] = position.Y;
+            test[14] = position.Z - length;
+
+            test[15] = position.X;
+            test[16] = position.Y;
+            test[17] = position.Z + length;
+
+            GL.UseProgram(colorShaderID);
+            GL.EnableVertexAttribArray(0);
+            GL.UniformMatrix4(matrixID, false, ref worldView);
+            int VBO;
+            GL.GenBuffers(1, out VBO);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
+            GL.BufferData(BufferTarget.ArrayBuffer, test.Length * sizeof(float), test, BufferUsageHint.DynamicDraw);
+
+            GL.Uniform4(colorID, new Vector4(1, 0, 0, 1));
+            GL.DrawArrays(PrimitiveType.LineStrip, 0, 2);
+
+            GL.Uniform4(colorID, new Vector4(0, 1, 0, 1));
+            GL.DrawArrays(PrimitiveType.LineStrip, 2, 2);
+
+            GL.Uniform4(colorID, new Vector4(0, 0, 1, 1));
+            GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
+        }
+
+        private void drawModelObject(ModelObject obj)
+        {
+            if (obj.model.vertexBuffer != null)
+            {
                 Matrix4 mvp = obj.modelMatrix * worldView;  //Has to be done in this order to work correctly
                 GL.UniformMatrix4(matrixID, false, ref mvp);
 
@@ -528,16 +627,20 @@ namespace RatchetEdit
                 obj.model.getIBO();
 
                 //Bind textures one by one, applying it to the relevant vertices based on the index array
-                foreach (TextureConfig conf in obj.model.textureConfig) {
+                foreach (TextureConfig conf in obj.model.textureConfig)
+                {
                     GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? level.textures[conf.ID].getTexture() : 0);
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
             }
         }
 
-        public void drawModelMesh(ModelObject levelObject) {
-            if (levelObject != null) {
-                if (levelObject.model != null && levelObject.model.vertexBuffer != null && levelObject.modelMatrix != null) {
+        public void drawModelMesh(ModelObject levelObject)
+        {
+            if (levelObject != null)
+            {
+                if (levelObject.model != null && levelObject.model.vertexBuffer != null && levelObject.modelMatrix != null)
+                {
                     GL.UseProgram(colorShaderID);
                     GL.EnableVertexAttribArray(0);
                     Matrix4 mvp = levelObject.modelMatrix * worldView;
@@ -552,8 +655,10 @@ namespace RatchetEdit
             }
         }
 
-        public void fakeDrawSplines(List<Spline> splines, int offset) {
-            foreach (Spline spline in splines) {
+        public void fakeDrawSplines(List<Spline> splines, int offset)
+        {
+            foreach (Spline spline in splines)
+            {
                 GL.UseProgram(colorShaderID);
                 GL.EnableVertexAttribArray(0);
                 GL.UniformMatrix4(matrixID, false, ref worldView);
@@ -564,9 +669,12 @@ namespace RatchetEdit
                 GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
             }
         }
-        public void fakeDrawObjects(List<ModelObject> levelObjects, int offset) {
-            foreach (ModelObject levelObject in levelObjects) {
-                if (levelObject.model.vertexBuffer != null) {
+        public void fakeDrawObjects(List<ModelObject> levelObjects, int offset)
+        {
+            foreach (ModelObject levelObject in levelObjects)
+            {
+                if (levelObject.model.vertexBuffer != null)
+                {
                     Matrix4 mvp = levelObject.modelMatrix * worldView;  //Has to be done in this order to work correctly
                     GL.UniformMatrix4(matrixID, false, ref mvp);
 
@@ -582,73 +690,85 @@ namespace RatchetEdit
         }
         #endregion
         #region Misc Input Events
-        private void objectTree_AfterSelect(object sender, TreeViewEventArgs e) {
-            if (e.Node.Parent == objectTree.Nodes[0]) {
-                if (!suppressTreeViewSelectEvent) {
+        private void objectTree_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            if (e.Node.Parent == objectTree.Nodes[0])
+            {
+                if (!suppressTreeViewSelectEvent)
+                {
                     SelectObject(level.mobs[e.Node.Index]);
                 }
                 suppressTreeViewSelectEvent = false;
             }
         }
 
-        private void gotoPositionBtn_Click(object sender, EventArgs e) {
+        private void gotoPositionBtn_Click(object sender, EventArgs e)
+        {
             if (selectedObject == null) return;
-            camera.moveBehind(selectedObject);
-            invalidate = true;
+            camera.MoveBehind(selectedObject);
+            InvalidateView();
         }
 
-        private void cloneButton_Click(object sender, EventArgs e) {
-            if (selectedObject as Moby != null) {
+        private void cloneButton_Click(object sender, EventArgs e)
+        {
+            if (selectedObject as Moby != null)
+            {
                 Moby moby = (Moby)selectedObject;
                 CloneMoby(moby);
             }
         }
 
-        private void deleteButton_Click(object sender, EventArgs e) {
-            if (selectedObject as Moby != null) {
+        private void deleteButton_Click(object sender, EventArgs e)
+        {
+            if (selectedObject as Moby != null)
+            {
                 Moby moby = (Moby)selectedObject;
                 DeleteMoby(moby);
             }
         }
-        private void splineVertex_ValueChanged(object sender, EventArgs e) {
+        private void splineVertex_ValueChanged(object sender, EventArgs e)
+        {
             currentSplineVertex = (int)splineVertex.Value;
-            updateEditorValues();
+            UpdateEditorValues();
         }
-        private void tickTimer_Tick(object sender, EventArgs e) {
-            tick();
+        private void tickTimer_Tick(object sender, EventArgs e)
+        {
+            Tick();
         }
         #endregion
 
-        struct Pixel {
+        void InvalidateView()
+        {
+            invalidate = true;
+        }
+
+        struct Pixel
+        {
             public byte R, G, B, A;
 
-            public Pixel(byte[] input) {
+            public Pixel(byte[] input)
+            {
                 R = input[0];
                 G = input[1];
                 B = input[2];
                 A = input[3];
             }
 
-            public uint ToUInt32() {
+            public uint ToUInt32()
+            {
                 byte[] temp = new byte[] { R, G, B, A };
                 return BitConverter.ToUInt32(temp, 0);
             }
 
-            public override string ToString() {
+            public override string ToString()
+            {
                 return R + ", " + G + ", " + B + ", " + A;
             }
         }
 
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
-            if (selectedObject as Spline != null)
-            {
-                Spline spline = (Spline)selectedObject;
-                spline.vertexBuffer[(currentSplineVertex * 3) + 0] = spline.position.X;
-                spline.vertexBuffer[(currentSplineVertex * 3) + 1] = spline.position.Y;
-                spline.vertexBuffer[(currentSplineVertex * 3) + 2] = spline.position.Z;
-            }
-            invalidate = true;
+            InvalidateView();
         }
 
         private void mapSaveAsBtn_Click(object sender, EventArgs e)
@@ -658,6 +778,7 @@ namespace RatchetEdit
                 GameplaySerializer gameplaySerializer = new GameplaySerializer();
                 gameplaySerializer.Save(level, mapSaveDialog.FileName);
             }
+            InvalidateView();
         }
     }
 }

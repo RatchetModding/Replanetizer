@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using OpenTK;
 using static RatchetEdit.DataFunctions;
 
@@ -35,6 +37,30 @@ namespace RatchetEdit
         public uint off_64;
         public uint off_68;
         public uint off_6C;
+
+        public override Vector3 position {
+            get { return _position; }
+            set {
+                Translate(value - _position);
+            }
+        }
+        public override Vector3 rotation {
+            get { return _rotation; }
+            set {
+                Rotate(value - _rotation);
+            }
+        }
+
+        public override float scale {
+            get { return _scale; }
+            set {
+                Scale(value);
+            }
+        }
+
+        public Tie(Matrix4 matrix4) {
+            modelMatrix = Matrix4.Add(matrix4, new Matrix4());
+        }
 
         public Tie(byte[] levelBlock, int num, List<Model> tieModels)
         {
@@ -79,12 +105,78 @@ namespace RatchetEdit
             off_6C = ReadUint(levelBlock, (TIEELEMSIZE * num) + 0x6C);
 
             model = tieModels.Find(tieModel => tieModel.ID == modelID);
-            updateTransform();
+            UpdateTransformMatrix();
+            _rotation = modelMatrix.ExtractRotation().Xyz * 2;
+            _position = modelMatrix.ExtractTranslation();
+
         }
 
-        public override void updateTransform()
-        {
+        public override void UpdateTransformMatrix() {
             modelMatrix = new Matrix4(v1x, v1y, v1z, v1w, v2x, v2y, v2z, v2w, v3x, v3y, v3z, v3w, x, y, z, w);
+        }
+
+        public override LevelObject Clone() {
+            return new Tie(modelMatrix);
+        }
+
+        void UpdateMatrixVariables(Matrix4 matrix) {
+            this.v1x = matrix.M11;
+            this.v1y = matrix.M12;
+            this.v1z = matrix.M13;
+            this.v1w = matrix.M14;
+
+            this.v2x = matrix.M21;
+            this.v2y = matrix.M22;
+            this.v2z = matrix.M23;
+            this.v2w = matrix.M24;
+
+            this.v3x = matrix.M31;
+            this.v3y = matrix.M32;
+            this.v3z = matrix.M33;
+            this.v3w = matrix.M34;
+
+            this.x = matrix.M41;
+            this.y = matrix.M42;
+            this.z = matrix.M43;
+            this.w = matrix.M44;
+        }
+
+        //Transformable methods
+        public override void Translate(float x, float y, float z) {
+            Matrix4 translationMatrix = Matrix4.CreateTranslation(x, y, z);
+            Matrix4 result = translationMatrix * modelMatrix;
+
+            UpdateMatrixVariables(result);
+            UpdateTransformMatrix();
+
+            _position = modelMatrix.ExtractTranslation();
+
+        }
+
+        public override void Translate(Vector3 vector) {
+            Translate(vector.X, vector.Y, vector.Z);
+        }
+
+        public override void Rotate(float x, float y, float z) {
+            Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(x,y,z));
+            Matrix4 result = rotationMatrix * modelMatrix;
+            _rotation += new Vector3(x, y, z);
+
+            UpdateMatrixVariables(result);
+            UpdateTransformMatrix();
+        }
+
+        public override void Rotate(Vector3 vector) {
+            Rotate(vector.X, vector.Y, vector.Z);
+        }
+
+        public override void Scale(float scale) {
+            Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
+            Matrix4 result = scaleMatrix * modelMatrix.ClearScale();
+            _scale = scale;
+
+            UpdateMatrixVariables(result);
+            UpdateTransformMatrix();
         }
     }
 }

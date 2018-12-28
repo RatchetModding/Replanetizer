@@ -167,7 +167,8 @@ namespace RatchetEdit
         //Get vertices with UV's located somewhere else
         public static float[] GetVertices(FileStream fs, uint vertexPointer, uint UVPointer, int vertexCount, int vertexElemSize, int UVElemSize)
         {
-            float[] vertexBuffer = new float[vertexCount * vertexElemSize + vertexCount * UVElemSize];
+            float[] vertexBuffer = new float[vertexCount * 8];
+
             byte[] vertBlock = ReadBlock(fs, vertexPointer, vertexCount * vertexElemSize);
             byte[] UVBlock = ReadBlock(fs, UVPointer, vertexCount * UVElemSize);
             for (int i = 0; i < vertexCount; i++)

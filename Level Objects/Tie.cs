@@ -150,7 +150,6 @@ namespace RatchetEdit
             UpdateTransformMatrix();
 
             _position = modelMatrix.ExtractTranslation();
-
         }
 
         public override void Translate(Vector3 vector) {

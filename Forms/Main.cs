@@ -692,11 +692,27 @@ namespace RatchetEdit
         #region Misc Input Events
         private void objectTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            if (e.Node.Parent == objectTree.Nodes[0])
-            {
-                if (!suppressTreeViewSelectEvent)
-                {
+            if (e.Node.Parent == objectTree.Nodes[0]) {
+                if (!suppressTreeViewSelectEvent) {
                     SelectObject(level.mobs[e.Node.Index]);
+                }
+                suppressTreeViewSelectEvent = false;
+            }
+            if (e.Node.Parent == objectTree.Nodes[1]) {
+                if (!suppressTreeViewSelectEvent) {
+                    SelectObject(level.ties[e.Node.Index]);
+                }
+                suppressTreeViewSelectEvent = false;
+            }
+            if (e.Node.Parent == objectTree.Nodes[2]) {
+                if (!suppressTreeViewSelectEvent) {
+                    SelectObject(level.shrubs[e.Node.Index]);
+                }
+                suppressTreeViewSelectEvent = false;
+            }
+            if (e.Node.Parent == objectTree.Nodes[3]) {
+                if (!suppressTreeViewSelectEvent) {
+                    SelectObject(level.splines[e.Node.Index]);
                 }
                 suppressTreeViewSelectEvent = false;
             }

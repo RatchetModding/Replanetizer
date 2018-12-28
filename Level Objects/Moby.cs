@@ -19,7 +19,7 @@ namespace RatchetEdit
         [CategoryAttribute("Attributes"), DisplayName("Mission ID")]
         public int missionID { get; set; }
 
-        [CategoryAttribute("Unknowns"), DisplayName("Unknown 1")]
+        [CategoryAttribute("Unknowns"), DisplayName("aUnknown 1")]
         public uint unk1 { get; set; }
 
         [CategoryAttribute("Attributes"), DisplayName("Data value")]
@@ -28,7 +28,7 @@ namespace RatchetEdit
         [CategoryAttribute("Attributes"), DisplayName("Bolt Drop")]
         public uint drop { get; set; }
 
-        [CategoryAttribute("Unknowns"), DisplayName("Unknown 2")]
+        [CategoryAttribute("Unknowns"), DisplayName("aUnknown 2")]
         public uint unk2 { get; set; }
 
         [CategoryAttribute("Attributes"), DisplayName("Render distance 1")]
@@ -37,31 +37,31 @@ namespace RatchetEdit
         [CategoryAttribute("Attributes"), DisplayName("Render distance 2")]
         public uint rend2 { get; set; }
 
-        [CategoryAttribute("Unknowns"), DisplayName("Unknown 3")]
+        [CategoryAttribute("Unknowns"), DisplayName("aUnknown 3")]
         public uint unk3 { get; set; }
 
-        [CategoryAttribute("Unknowns"), DisplayName("Unknown 4")]
+        [CategoryAttribute("Unknowns"), DisplayName("aUnknown 4")]
         public uint unk4 { get; set; }
 
-        [CategoryAttribute("Unknowns"), DisplayName("Unknown 5")]
-        public uint unk5 { get; set; }
+        [CategoryAttribute("Unknowns"), DisplayName("aUnknown 5")]
+        public int unk5 { get; set; }
 
-        [CategoryAttribute("Unknowns"), DisplayName("Unknown 6")]
+        [CategoryAttribute("Unknowns"), DisplayName("aUnknown 6")]
         public uint unk6 { get; set; }
 
         [CategoryAttribute("Attributes"), DisplayName("Secondary Z")]
         public float z2 { get; set; }
 
-        [CategoryAttribute("Unknowns"), DisplayName("Unknown 7")]
+        [CategoryAttribute("Unknowns"), DisplayName("aUnknown 7")]
         public uint unk7 { get; set; }
 
         [CategoryAttribute("Attributes"), DisplayName("Pvar Index")]
-        public uint pvarIndex { get; set; }
+        public int pvarIndex { get; set; }
 
-        [CategoryAttribute("Unknowns"), DisplayName("Unknown 8")]
+        [CategoryAttribute("Unknowns"), DisplayName("aUnknown 8")]
         public uint unk8 { get; set; }
 
-        [CategoryAttribute("Unknowns"), DisplayName("Unknown 9")]
+        [CategoryAttribute("Unknowns"), DisplayName("aUnknown 9")]
         public uint unk9 { get; set; }
 
         [CategoryAttribute("Attributes"), DisplayName("Color")]
@@ -126,12 +126,12 @@ namespace RatchetEdit
 
             float roty = ReadFloat(mobyBlock, offset + 0x40);
             float rotz = ReadFloat(mobyBlock, offset + 0x44);
-            unk5 = ReadUint(mobyBlock, offset + 0x48);
+            unk5 = ReadInt(mobyBlock, offset + 0x48);
             unk6 = ReadUint(mobyBlock, offset + 0x4C);
 
             z2 = ReadFloat(mobyBlock, offset + 0x50);
             unk7 = ReadUint(mobyBlock, offset + 0x54);
-            pvarIndex = ReadUint(mobyBlock, offset + 0x58);
+            pvarIndex = ReadInt(mobyBlock, offset + 0x58);
             unk8 = ReadUint(mobyBlock, offset + 0x5C);
 
             unk9 = ReadUint(mobyBlock, offset + 0x60);
@@ -176,12 +176,12 @@ namespace RatchetEdit
 
             WriteFloat(ref buffer, 0x40, rotation.Y);
             WriteFloat(ref buffer, 0x44, rotation.Z);
-            WriteUint(ref buffer, 0x48, unk5);
+            WriteUint(ref buffer, 0x48, (uint)unk5);
             WriteUint(ref buffer, 0x4C, unk6);
 
             WriteFloat(ref buffer, 0x50, z2);
             WriteUint(ref buffer, 0x54, unk7);
-            WriteUint(ref buffer, 0x58, pvarIndex);
+            WriteUint(ref buffer, 0x58, (uint)pvarIndex);
             WriteUint(ref buffer, 0x5C, unk8);
 
             WriteUint(ref buffer, 0x60, unk9);

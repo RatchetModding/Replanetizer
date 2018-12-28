@@ -87,8 +87,6 @@ namespace RatchetEdit
             GetModelNames();
 
             toolLabel.Text = currentTool.ToString();
-
-
         }
 
         void LoadShader(String filename, ShaderType type, int program)
@@ -121,6 +119,7 @@ namespace RatchetEdit
             collCheck.Enabled = true;
             terrainCheck.Enabled = true;
             splineCheck.Enabled = true;
+            skyboxCheck.Enabled = true;
 
             GenerateObjectTree();
 
@@ -264,6 +263,8 @@ namespace RatchetEdit
 
             if (shrubCheck.Checked && splineCheck.Enabled)
                 foreach (Tie shrub in level.shrubs) drawModelObject(shrub);
+            if (skyboxCheck.Checked && skyboxCheck.Enabled)
+                drawModelModel(level.skybox);
 
             if (terrainCheck.Checked && terrainCheck.Enabled)
             {
@@ -631,16 +632,27 @@ namespace RatchetEdit
             {
                 Matrix4 mvp = obj.modelMatrix * worldView;  //Has to be done in this order to work correctly
                 GL.UniformMatrix4(matrixID, false, ref mvp);
+                drawMesh(obj.model);
+            }
+        }
 
-                obj.model.getVBO();
-                obj.model.getIBO();
+        private void drawModelModel(Model model)
+        {
+            Matrix4 mvp = worldView;
+            GL.UniformMatrix4(matrixID, false, ref mvp);
+            drawMesh(model);
+        }
 
-                //Bind textures one by one, applying it to the relevant vertices based on the index array
-                foreach (TextureConfig conf in obj.model.textureConfig)
-                {
-                    GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? level.textures[conf.ID].getTexture() : 0);
-                    GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
-                }
+        private void drawMesh(Model model)
+        {
+            model.getVBO();
+            model.getIBO();
+
+            //Bind textures one by one, applying it to the relevant vertices based on the index array
+            foreach (TextureConfig conf in model.textureConfig)
+            {
+                GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? level.textures[conf.ID].getTexture() : 0);
+                GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
             }
         }
 

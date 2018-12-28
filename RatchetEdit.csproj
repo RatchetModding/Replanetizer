@@ -64,6 +64,7 @@
     <Compile Include="Level Objects\ITransformable.cs" />
     <Compile Include="Models\MobyModel.cs" />
     <Compile Include="Models\ShrubModel.cs" />
+    <Compile Include="Models\SkyboxModel.cs" />
     <Compile Include="Models\TerrainModel.cs" />
     <Compile Include="Models\TieModel.cs" />
     <Compile Include="Parsers\GameplayParser.cs" />

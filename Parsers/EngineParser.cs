@@ -46,5 +46,10 @@ namespace RatchetEdit
         {
             return GetTerrainModels(engineHead.terrainPointer);
         }
+
+        public SkyboxModel GetSkyboxModel()
+        {
+            return GetSkyboxModel(engineHead.skyboxPointer);
+        }
     }
 }

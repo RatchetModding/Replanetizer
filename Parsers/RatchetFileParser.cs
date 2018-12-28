@@ -125,6 +125,10 @@ namespace RatchetEdit
             return terrainModels;
         }
 
+        protected SkyboxModel GetSkyboxModel(uint skyboxPointer)
+        {
+            return new SkyboxModel(fileStream, skyboxPointer);
+        }
 
 
         public void Close()

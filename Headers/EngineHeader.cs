@@ -14,6 +14,7 @@ namespace RatchetEdit
         const int RAC1ENGINESIZE = 0x78;
 
         public uint mobyModelPointer;
+        public uint skyboxPointer;
         public uint collisionPointer;
         public uint tieModelPointer;
         public int tieModelCount;
@@ -39,7 +40,7 @@ namespace RatchetEdit
             //(0x04)Map render definitions
             //(0x08)null
             //(0x0C)null
-            //(0x10)Skybox
+            skyboxPointer = ReadUint(engineHeadBlock, 0x10);
             collisionPointer =      ReadUint(engineHeadBlock, 0x14);
             //(0x18)Player animations
             tieModelPointer =     ReadUint(engineHeadBlock, 0x1C);

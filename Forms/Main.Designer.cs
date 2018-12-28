@@ -79,6 +79,7 @@ namespace RatchetEdit
             this.deleteButton = new System.Windows.Forms.Button();
             this.cloneButton = new System.Windows.Forms.Button();
             this.mapSaveDialog = new System.Windows.Forms.SaveFileDialog();
+            this.skyboxCheck = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -160,7 +161,8 @@ namespace RatchetEdit
             this.shrubCheck,
             this.collCheck,
             this.terrainCheck,
-            this.splineCheck});
+            this.splineCheck,
+            this.skyboxCheck});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
@@ -172,7 +174,7 @@ namespace RatchetEdit
             this.mobyCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.mobyCheck.Enabled = false;
             this.mobyCheck.Name = "mobyCheck";
-            this.mobyCheck.Size = new System.Drawing.Size(120, 22);
+            this.mobyCheck.Size = new System.Drawing.Size(180, 22);
             this.mobyCheck.Text = "Mobys";
             this.mobyCheck.Click += new System.EventHandler(this.enableCheck);
             // 
@@ -183,7 +185,7 @@ namespace RatchetEdit
             this.tieCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.tieCheck.Enabled = false;
             this.tieCheck.Name = "tieCheck";
-            this.tieCheck.Size = new System.Drawing.Size(120, 22);
+            this.tieCheck.Size = new System.Drawing.Size(180, 22);
             this.tieCheck.Text = "Ties";
             this.tieCheck.Click += new System.EventHandler(this.enableCheck);
             // 
@@ -194,7 +196,7 @@ namespace RatchetEdit
             this.shrubCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.shrubCheck.Enabled = false;
             this.shrubCheck.Name = "shrubCheck";
-            this.shrubCheck.Size = new System.Drawing.Size(120, 22);
+            this.shrubCheck.Size = new System.Drawing.Size(180, 22);
             this.shrubCheck.Text = "Shrubs";
             this.shrubCheck.Click += new System.EventHandler(this.enableCheck);
             // 
@@ -205,7 +207,7 @@ namespace RatchetEdit
             this.collCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.collCheck.Enabled = false;
             this.collCheck.Name = "collCheck";
-            this.collCheck.Size = new System.Drawing.Size(120, 22);
+            this.collCheck.Size = new System.Drawing.Size(180, 22);
             this.collCheck.Text = "Collision";
             this.collCheck.Click += new System.EventHandler(this.enableCheck);
             // 
@@ -216,7 +218,7 @@ namespace RatchetEdit
             this.terrainCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.terrainCheck.Enabled = false;
             this.terrainCheck.Name = "terrainCheck";
-            this.terrainCheck.Size = new System.Drawing.Size(120, 22);
+            this.terrainCheck.Size = new System.Drawing.Size(180, 22);
             this.terrainCheck.Text = "Terrain";
             this.terrainCheck.Click += new System.EventHandler(this.enableCheck);
             // 
@@ -225,7 +227,7 @@ namespace RatchetEdit
             this.splineCheck.CheckOnClick = true;
             this.splineCheck.Enabled = false;
             this.splineCheck.Name = "splineCheck";
-            this.splineCheck.Size = new System.Drawing.Size(120, 22);
+            this.splineCheck.Size = new System.Drawing.Size(180, 22);
             this.splineCheck.Text = "Splines";
             this.splineCheck.Click += new System.EventHandler(this.enableCheck);
             // 
@@ -564,6 +566,14 @@ namespace RatchetEdit
             // 
             this.mapSaveDialog.FileName = "gameplay_ntsc";
             // 
+            // skyboxCheck
+            // 
+            this.skyboxCheck.CheckOnClick = true;
+            this.skyboxCheck.Enabled = false;
+            this.skyboxCheck.Name = "skyboxCheck";
+            this.skyboxCheck.Size = new System.Drawing.Size(180, 22);
+            this.skyboxCheck.Text = "Skybox";
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -636,6 +646,7 @@ namespace RatchetEdit
         private System.Windows.Forms.ToolStripMenuItem levelVariablesToolStripMenuItem;
         private System.Windows.Forms.SaveFileDialog mapSaveDialog;
         private System.Windows.Forms.Label toolLabel;
+        private System.Windows.Forms.ToolStripMenuItem skyboxCheck;
     }
 }
 

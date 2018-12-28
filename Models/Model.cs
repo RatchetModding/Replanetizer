@@ -143,6 +143,27 @@ namespace RatchetEdit
             return vertexBuffer;
         }
 
+        //Get vertices with UV's baked in, but no normals
+        public static float[] GetVerticesUV(FileStream fs, uint vertexPointer, int vertexCount, int elemSize)
+        {
+            float[] vertexBuffer = new float[vertexCount * 8];
+
+            //List<float> vertexBuffer = new List<float>();
+            byte[] vertBlock = ReadBlock(fs, vertexPointer, vertexCount * elemSize);
+            for (int i = 0; i < vertexCount; i++)
+            {
+                vertexBuffer[(i * 8) + 0] = (ReadFloat(vertBlock, (i * elemSize) + 0x00));    //VertexX
+                vertexBuffer[(i * 8) + 1] = (ReadFloat(vertBlock, (i * elemSize) + 0x04));    //VertexY
+                vertexBuffer[(i * 8) + 2] = (ReadFloat(vertBlock, (i * elemSize) + 0x08));    //VertexZ
+                vertexBuffer[(i * 8) + 3] = 0;    //NormX
+                vertexBuffer[(i * 8) + 4] = 0;    //NormY
+                vertexBuffer[(i * 8) + 5] = 0;    //NormZ
+                vertexBuffer[(i * 8) + 6] = (ReadFloat(vertBlock, (i * elemSize) + 0x0C));    //UVu
+                vertexBuffer[(i * 8) + 7] = (ReadFloat(vertBlock, (i * elemSize) + 0x10));    //UVv
+            }
+            return vertexBuffer;
+        }
+
         //Get vertices with UV's located somewhere else
         public static float[] GetVertices(FileStream fs, uint vertexPointer, uint UVPointer, int vertexCount, int vertexElemSize, int UVElemSize)
         {

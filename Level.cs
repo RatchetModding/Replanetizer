@@ -17,6 +17,7 @@ namespace RatchetEdit {
         public Model collisionModel;
         public List<Model> chunks;
         public List<Texture> textures;
+        public SkyboxModel skybox;
 
         //Level objects
         public List<Moby> mobs;
@@ -51,6 +52,10 @@ namespace RatchetEdit {
             EngineParser engineParser = new EngineParser(enginePath);
             VramParser vramParser = new VramParser(path + @"/vram.ps3");
             GameplayParser gameplayParser = new GameplayParser(path + @"/gameplay_ntsc");
+
+            Console.WriteLine("Parsing skybox...");
+            skybox = engineParser.GetSkyboxModel();
+            Console.WriteLine("Success");
 
             Console.WriteLine("Parsing moby models...");
             mobyModels = engineParser.GetMobyModels();

@@ -43,7 +43,7 @@ namespace RatchetEdit
         [CategoryAttribute("Unknowns"), DisplayName("aUnknown 4")]
         public uint unk4 { get; set; }
 
-        [CategoryAttribute("Unknowns"), DisplayName("aUnknown 5")]
+        [CategoryAttribute("Attributes"), DisplayName("Group index")]
         public int unk5 { get; set; }
 
         [CategoryAttribute("Unknowns"), DisplayName("aUnknown 6")]
@@ -126,15 +126,15 @@ namespace RatchetEdit
 
             float roty = ReadFloat(mobyBlock, offset + 0x40);
             float rotz = ReadFloat(mobyBlock, offset + 0x44);
-            unk5 = ReadInt(mobyBlock, offset + 0x48);
-            unk6 = ReadUint(mobyBlock, offset + 0x4C);
+            unk5 = ReadInt(mobyBlock, offset + 0x48); //Group index?
+            unk6 = ReadUint(mobyBlock, offset + 0x4C); //Enables Z2
 
             z2 = ReadFloat(mobyBlock, offset + 0x50);
             unk7 = ReadUint(mobyBlock, offset + 0x54);
             pvarIndex = ReadInt(mobyBlock, offset + 0x58);
             unk8 = ReadUint(mobyBlock, offset + 0x5C);
 
-            unk9 = ReadUint(mobyBlock, offset + 0x60);
+            unk9 = ReadUint(mobyBlock, offset + 0x60);  //Breakability?
             int r = ReadInt(mobyBlock, offset + 0x64);
             int g = ReadInt(mobyBlock, offset + 0x68);
             int b = ReadInt(mobyBlock, offset + 0x6C);

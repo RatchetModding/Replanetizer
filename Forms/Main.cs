@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
+using RatchetEdit.Serializers;
 
 namespace RatchetEdit
 {
@@ -646,7 +647,16 @@ namespace RatchetEdit
                 spline.vertexBuffer[(currentSplineVertex * 3) + 0] = spline.position.X;
                 spline.vertexBuffer[(currentSplineVertex * 3) + 1] = spline.position.Y;
                 spline.vertexBuffer[(currentSplineVertex * 3) + 2] = spline.position.Z;
-                invalidate = true;
+            }
+            invalidate = true;
+        }
+
+        private void mapSaveAsBtn_Click(object sender, EventArgs e)
+        {
+            if (mapSaveDialog.ShowDialog() == DialogResult.OK)
+            {
+                GameplaySerializer gameplaySerializer = new GameplaySerializer();
+                gameplaySerializer.Save(level, mapSaveDialog.FileName);
             }
         }
     }

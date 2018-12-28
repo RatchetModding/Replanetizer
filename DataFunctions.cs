@@ -30,6 +30,7 @@ namespace RatchetEdit
             return (ushort)((buf[offset + 0] << 8) | (buf[offset + 1]));
         }
 
+
         public static float ReadFloat(byte[] buf, int offset)
         {
             byte[] temp = new byte[4];
@@ -44,6 +45,41 @@ namespace RatchetEdit
             byte[] returnBytes = new byte[length];
             fs.Read(returnBytes, 0, length);
             return returnBytes;
+        }
+
+        public static void WriteUint(ref byte[] byteArr, int offset, uint input)
+        {
+            byte[] byt = BitConverter.GetBytes(input);
+            byteArr[offset + 0] = byt[3];
+            byteArr[offset + 1] = byt[2];
+            byteArr[offset + 2] = byt[1];
+            byteArr[offset + 3] = byt[0];
+        }
+
+        public static void WriteFloat(ref byte[] byteArr, int offset, float input)
+        {
+            byte[] byt = BitConverter.GetBytes(input);
+            byteArr[offset + 0] = byt[3];
+            byteArr[offset + 1] = byt[2];
+            byteArr[offset + 2] = byt[1];
+            byteArr[offset + 3] = byt[0];
+        }
+
+        public static void WriteShort(ref byte[] byteArr, int offset, short input)
+        {
+            byte[] byt = BitConverter.GetBytes(input);
+            byteArr[offset + 0] = byt[1];
+            byteArr[offset + 1] = byt[0];
+        }
+
+        public static byte[] getBytes(byte[] array, int ind, int length)
+        {
+            byte[] data = new byte[length];
+            for (int i = 0; i < length; i++)
+            {
+                data[i] = array[ind + i];
+            }
+            return data;
         }
     }
 }

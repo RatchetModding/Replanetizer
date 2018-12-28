@@ -53,12 +53,14 @@
   <ItemGroup>
     <Compile Include="Camera.cs" />
     <Compile Include="DataFunctions.cs" />
-    <Compile Include="EngineHeader.cs" />
-    <Compile Include="Headers.cs" />
+    <Compile Include="Headers\EngineHeader.cs" />
+    <Compile Include="Headers\GameplayHeader.cs" />
+    <Compile Include="Headers\Headers.cs" />
     <Compile Include="Level Objects\LevelObject.cs" />
     <Compile Include="Level Objects\ModelObject.cs" />
     <Compile Include="Level Objects\Tie.cs" />
     <Compile Include="Level Objects\Moby.cs" />
+    <Compile Include="LevelVariables.cs" />
     <Compile Include="Models\MobyModel.cs" />
     <Compile Include="Models\ShrubModel.cs" />
     <Compile Include="Models\TerrainModel.cs" />
@@ -83,6 +85,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Parsers\RatchetFileParser.cs" />
+    <Compile Include="Serializers\GameplaySerializer.cs" />
     <Compile Include="SpawnPoint.cs" />
     <Compile Include="Level Objects\Spline.cs" />
     <Compile Include="Texture.cs" />

@@ -37,8 +37,8 @@ namespace RatchetEdit
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
             this.mapOpenBtn = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripMenuItem();
+            this.mapSaveBtn = new System.Windows.Forms.ToolStripMenuItem();
+            this.mapSaveAsBtn = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolBtn = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -55,6 +55,7 @@ namespace RatchetEdit
             this.toolStripMenuItem12 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem13 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem14 = new System.Windows.Forms.ToolStripMenuItem();
+            this.levelVariablesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openModelViewerBtn = new System.Windows.Forms.Button();
@@ -76,6 +77,7 @@ namespace RatchetEdit
             this.splineVertex = new System.Windows.Forms.NumericUpDown();
             this.deleteButton = new System.Windows.Forms.Button();
             this.cloneButton = new System.Windows.Forms.Button();
+            this.mapSaveDialog = new System.Windows.Forms.SaveFileDialog();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -102,8 +104,8 @@ namespace RatchetEdit
             this.toolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem4,
             this.mapOpenBtn,
-            this.toolStripMenuItem6,
-            this.toolStripMenuItem7,
+            this.mapSaveBtn,
+            this.mapSaveAsBtn,
             this.toolStripSeparator1,
             this.exitToolBtn});
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
@@ -114,37 +116,38 @@ namespace RatchetEdit
             // 
             this.toolStripMenuItem4.Enabled = false;
             this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-            this.toolStripMenuItem4.Size = new System.Drawing.Size(121, 22);
+            this.toolStripMenuItem4.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItem4.Text = "New";
             // 
             // mapOpenBtn
             // 
             this.mapOpenBtn.Name = "mapOpenBtn";
-            this.mapOpenBtn.Size = new System.Drawing.Size(121, 22);
+            this.mapOpenBtn.Size = new System.Drawing.Size(180, 22);
             this.mapOpenBtn.Text = "Open";
             this.mapOpenBtn.Click += new System.EventHandler(this.mapOpenBtn_Click);
             // 
-            // toolStripMenuItem6
+            // mapSaveBtn
             // 
-            this.toolStripMenuItem6.Name = "toolStripMenuItem6";
-            this.toolStripMenuItem6.Size = new System.Drawing.Size(121, 22);
-            this.toolStripMenuItem6.Text = "Save";
+            this.mapSaveBtn.Name = "mapSaveBtn";
+            this.mapSaveBtn.Size = new System.Drawing.Size(180, 22);
+            this.mapSaveBtn.Text = "Save";
             // 
-            // toolStripMenuItem7
+            // mapSaveAsBtn
             // 
-            this.toolStripMenuItem7.Name = "toolStripMenuItem7";
-            this.toolStripMenuItem7.Size = new System.Drawing.Size(121, 22);
-            this.toolStripMenuItem7.Text = "Save as...";
+            this.mapSaveAsBtn.Name = "mapSaveAsBtn";
+            this.mapSaveAsBtn.Size = new System.Drawing.Size(180, 22);
+            this.mapSaveAsBtn.Text = "Save as...";
+            this.mapSaveAsBtn.Click += new System.EventHandler(this.mapSaveAsBtn_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(118, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
             // 
             // exitToolBtn
             // 
             this.exitToolBtn.Name = "exitToolBtn";
-            this.exitToolBtn.Size = new System.Drawing.Size(121, 22);
+            this.exitToolBtn.Size = new System.Drawing.Size(180, 22);
             this.exitToolBtn.Text = "Exit";
             this.exitToolBtn.Click += new System.EventHandler(this.exitToolBtn_Click);
             // 
@@ -233,7 +236,8 @@ namespace RatchetEdit
             this.toolStripMenuItem11,
             this.toolStripMenuItem12,
             this.toolStripMenuItem13,
-            this.toolStripMenuItem14});
+            this.toolStripMenuItem14,
+            this.levelVariablesToolStripMenuItem});
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
             this.toolStripMenuItem2.Size = new System.Drawing.Size(63, 20);
             this.toolStripMenuItem2.Text = "Window";
@@ -275,6 +279,12 @@ namespace RatchetEdit
             this.toolStripMenuItem14.Size = new System.Drawing.Size(174, 22);
             this.toolStripMenuItem14.Text = "Console";
             // 
+            // levelVariablesToolStripMenuItem
+            // 
+            this.levelVariablesToolStripMenuItem.Name = "levelVariablesToolStripMenuItem";
+            this.levelVariablesToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+            this.levelVariablesToolStripMenuItem.Text = "Level Variables";
+            // 
             // toolStripMenuItem3
             // 
             this.toolStripMenuItem3.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -291,7 +301,8 @@ namespace RatchetEdit
             // 
             // openModelViewerBtn
             // 
-            this.openModelViewerBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.openModelViewerBtn.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.openModelViewerBtn.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.openModelViewerBtn.Location = new System.Drawing.Point(136, 532);
             this.openModelViewerBtn.Name = "openModelViewerBtn";
@@ -303,7 +314,8 @@ namespace RatchetEdit
             // 
             // gotoPositionBtn
             // 
-            this.gotoPositionBtn.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.gotoPositionBtn.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.gotoPositionBtn.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.gotoPositionBtn.Location = new System.Drawing.Point(6, 532);
             this.gotoPositionBtn.Name = "gotoPositionBtn";
@@ -315,7 +327,8 @@ namespace RatchetEdit
             // 
             // label10
             // 
-            this.label10.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.label10.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.label10.AutoSize = true;
             this.label10.Location = new System.Drawing.Point(3, 586);
             this.label10.Name = "label10";
@@ -325,7 +338,8 @@ namespace RatchetEdit
             // 
             // camXLabel
             // 
-            this.camXLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.camXLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.camXLabel.AutoSize = true;
             this.camXLabel.Location = new System.Drawing.Point(3, 599);
             this.camXLabel.Name = "camXLabel";
@@ -335,7 +349,8 @@ namespace RatchetEdit
             // 
             // camYLabel
             // 
-            this.camYLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.camYLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.camYLabel.AutoSize = true;
             this.camYLabel.Location = new System.Drawing.Point(3, 612);
             this.camYLabel.Name = "camYLabel";
@@ -345,7 +360,8 @@ namespace RatchetEdit
             // 
             // camZLabel
             // 
-            this.camZLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.camZLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.camZLabel.AutoSize = true;
             this.camZLabel.Location = new System.Drawing.Point(3, 625);
             this.camZLabel.Name = "camZLabel";
@@ -382,7 +398,8 @@ namespace RatchetEdit
             // 
             // label18
             // 
-            this.label18.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.label18.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.label18.AutoSize = true;
             this.label18.Location = new System.Drawing.Point(133, 586);
             this.label18.Name = "label18";
@@ -392,7 +409,8 @@ namespace RatchetEdit
             // 
             // yawLabel
             // 
-            this.yawLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.yawLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.yawLabel.AutoSize = true;
             this.yawLabel.Location = new System.Drawing.Point(133, 599);
             this.yawLabel.Name = "yawLabel";
@@ -402,7 +420,8 @@ namespace RatchetEdit
             // 
             // pitchLabel
             // 
-            this.pitchLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.pitchLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.pitchLabel.AutoSize = true;
             this.pitchLabel.Location = new System.Drawing.Point(133, 612);
             this.pitchLabel.Name = "pitchLabel";
@@ -412,7 +431,9 @@ namespace RatchetEdit
             // 
             // objectTree
             // 
-            this.objectTree.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.objectTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.objectTree.HideSelection = false;
             this.objectTree.Location = new System.Drawing.Point(3, 11);
             this.objectTree.Name = "objectTree";
@@ -467,7 +488,7 @@ namespace RatchetEdit
             // 
             // properies
             // 
-            this.properies.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.properies.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.properies.HelpVisible = false;
             this.properies.Location = new System.Drawing.Point(3, 259);
@@ -479,7 +500,8 @@ namespace RatchetEdit
             // 
             // label8
             // 
-            this.label8.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.label8.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.label8.AutoSize = true;
             this.label8.Location = new System.Drawing.Point(220, 586);
             this.label8.Name = "label8";
@@ -489,7 +511,8 @@ namespace RatchetEdit
             // 
             // splineVertex
             // 
-            this.splineVertex.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.splineVertex.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.splineVertex.Location = new System.Drawing.Point(225, 599);
             this.splineVertex.Maximum = new decimal(new int[] {
             5000,
@@ -503,7 +526,8 @@ namespace RatchetEdit
             // 
             // deleteButton
             // 
-            this.deleteButton.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.deleteButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.deleteButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.deleteButton.ForeColor = System.Drawing.Color.Red;
             this.deleteButton.Location = new System.Drawing.Point(6, 560);
@@ -516,7 +540,8 @@ namespace RatchetEdit
             // 
             // cloneButton
             // 
-            this.cloneButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.cloneButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.cloneButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.cloneButton.Location = new System.Drawing.Point(136, 560);
             this.cloneButton.Name = "cloneButton";
@@ -525,6 +550,10 @@ namespace RatchetEdit
             this.cloneButton.Text = "Clone Object";
             this.cloneButton.UseVisualStyleBackColor = true;
             this.cloneButton.Click += new System.EventHandler(this.cloneButton_Click);
+            // 
+            // mapSaveDialog
+            // 
+            this.mapSaveDialog.FileName = "gameplay_ntsc";
             // 
             // Main
             // 
@@ -558,8 +587,8 @@ namespace RatchetEdit
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
         private System.Windows.Forms.ToolStripMenuItem mapOpenBtn;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem6;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem7;
+        private System.Windows.Forms.ToolStripMenuItem mapSaveBtn;
+        private System.Windows.Forms.ToolStripMenuItem mapSaveAsBtn;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem exitToolBtn;
         private System.Windows.Forms.ToolStripMenuItem modelViewerToolBtn;
@@ -595,6 +624,8 @@ namespace RatchetEdit
         private System.Windows.Forms.NumericUpDown splineVertex;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.PropertyGrid properies;
+        private System.Windows.Forms.ToolStripMenuItem levelVariablesToolStripMenuItem;
+        private System.Windows.Forms.SaveFileDialog mapSaveDialog;
     }
 }
 

@@ -25,6 +25,21 @@ namespace RatchetEdit {
         public List<Spline> splines;
         public List<TerrainModel> terrains;
 
+        public LevelVariables levelVariables;
+        public byte[] english;
+        public byte[] lang2;
+        public byte[] french;
+        public byte[] german;
+        public byte[] spanish;
+        public byte[] italian;
+
+        public byte[] unk6;
+        public byte[] unk7;
+        public byte[] unk9;
+        public byte[] unk17;
+
+        public List<byte[]> pVars;
+        public List<SpawnPoint> spawnPoints;
 
         //New file constructor
         public Level() { }
@@ -66,6 +81,10 @@ namespace RatchetEdit {
             terrains = engineParser.GetTerrainModels();
             Console.WriteLine("Added " + terrains.Count + " terrain elements");
 
+
+            Console.WriteLine("Parsing Level variables...");
+            levelVariables = gameplayParser.GetLevelVariables();
+
             Console.WriteLine("Parsing mobs...");
             mobs = gameplayParser.GetMobies(mobyModels);
             Console.WriteLine("Added " + mobs.Count + " mobs");
@@ -74,7 +93,24 @@ namespace RatchetEdit {
             splines = gameplayParser.GetSplines();
             Console.WriteLine("Added " + splines.Count + " splines");
 
-            engineParser.Close();
+            Console.WriteLine("Parsing languages...");
+            english = gameplayParser.getEnglish();
+            lang2 = gameplayParser.getLang2();
+            french = gameplayParser.getFrench();
+            german = gameplayParser.getGerman();
+            spanish = gameplayParser.getSpanish();
+            italian = gameplayParser.getItalian();
+
+            Console.WriteLine("Parsing other gameplay assets...");
+            unk6 = gameplayParser.getUnk6();
+            unk7 = gameplayParser.getUnk7();
+            unk9 = gameplayParser.getUnk9();
+            unk17 = gameplayParser.getUnk17();
+
+            pVars = gameplayParser.getPvars();
+            spawnPoints = gameplayParser.GetSpawnPoints();
+
+        engineParser.Close();
             vramParser.Close();
             gameplayParser.Close();
         }

@@ -32,6 +32,21 @@ namespace RatchetEdit
             }
         }
 
+        public byte[] serialize()
+        {
+            int count = vertexBuffer.Length / 3;
+            byte[] bytes = new byte[count * 0x10 + 0x10];
+            WriteUint(ref bytes, 0, (uint)count);
+            for(int i = 0; i < count; i++)
+            {
+                WriteFloat(ref bytes, (i * 0x10) + 0x10, vertexBuffer[(i * 3) + 0]);
+                WriteFloat(ref bytes, (i * 0x10) + 0x14, vertexBuffer[(i * 3) + 1]);
+                WriteFloat(ref bytes, (i * 0x10) + 0x18, vertexBuffer[(i * 3) + 2]);
+                WriteFloat(ref bytes, (i * 0x10) + 0x1C, -1);
+            }
+            return bytes;
+        }
+
         public void getVBO()
         {
             //Get the vertex buffer object, or create one if one doesn't exist

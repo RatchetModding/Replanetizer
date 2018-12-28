@@ -35,7 +35,7 @@ namespace RatchetEdit {
             }
 
             yaw = yaw - (float)Math.PI / 2;
-            SetRotation(0, yaw);
+            SetRotation(-(float)Math.PI / 10, yaw);
 
             float ypos = (float)-Math.Cos(yaw);
             float xpos = (float)Math.Sin(yaw);

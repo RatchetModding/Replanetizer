@@ -695,24 +695,28 @@ namespace RatchetEdit
             if (e.Node.Parent == objectTree.Nodes[0]) {
                 if (!suppressTreeViewSelectEvent) {
                     SelectObject(level.mobs[e.Node.Index]);
+                    camera.MoveBehind(selectedObject);
                 }
                 suppressTreeViewSelectEvent = false;
             }
             if (e.Node.Parent == objectTree.Nodes[1]) {
                 if (!suppressTreeViewSelectEvent) {
                     SelectObject(level.ties[e.Node.Index]);
+                    camera.MoveBehind(selectedObject);
                 }
                 suppressTreeViewSelectEvent = false;
             }
             if (e.Node.Parent == objectTree.Nodes[2]) {
                 if (!suppressTreeViewSelectEvent) {
                     SelectObject(level.shrubs[e.Node.Index]);
+                    camera.MoveBehind(selectedObject);
                 }
                 suppressTreeViewSelectEvent = false;
             }
             if (e.Node.Parent == objectTree.Nodes[3]) {
                 if (!suppressTreeViewSelectEvent) {
                     SelectObject(level.splines[e.Node.Index]);
+                    camera.MoveBehind(selectedObject);
                 }
                 suppressTreeViewSelectEvent = false;
             }

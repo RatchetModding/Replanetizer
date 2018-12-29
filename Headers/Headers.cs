@@ -15,34 +15,50 @@ namespace RatchetEdit
 
     public class TieModelHeader
     {
-        public const int TIEELEMSIZE = 0x40; 
+        public const int TIEELEMSIZE = 0x40;
 
-        public int vertexPointer;
-        public int UVPointer;
-        public int indexPointer;
-        public int texturePointer;
-        public int vertexCount;
-        public short textureCount;
-        public short modelID;
+        public uint off_00 { get; set; }
+        public uint off_04 { get; set; }
+        public uint off_08 { get; set; }
+        public uint off_0C { get; set; }
+
+        public int vertexPointer { get; set; }
+        public int UVPointer { get; set; }
+        public int indexPointer { get; set; }
+        public int texturePointer { get; set; }
+
+        public uint off_20 { get; set; }
+        public int vertexCount { get; set; }
+        public short textureCount { get; set; }
+        public uint off_2C { get; set; }
+
+        public short modelID { get; set; }
+        public uint off_34 { get; set; }
+        public uint off_38 { get; set; }
+        public uint off_3C { get; set; }
+
 
         public TieModelHeader(byte[] levelBlock, int offset)
         {
-            //0x00 Unknown
-            //0x04 Unknown
-            //0x08 Unknown
-            //0x0C Unknown
+            off_00 = ReadUint(levelBlock, (offset * TIEELEMSIZE) + 0x00);
+            off_04 = ReadUint(levelBlock, (offset * TIEELEMSIZE) + 0x04);
+            off_08 = ReadUint(levelBlock, (offset * TIEELEMSIZE) + 0x08);
+            off_0C = ReadUint(levelBlock, (offset * TIEELEMSIZE) + 0x0C);
+
             vertexPointer =     ReadInt(levelBlock,    (offset * TIEELEMSIZE) + 0x10);
             UVPointer =         ReadInt(levelBlock,    (offset * TIEELEMSIZE) + 0x14);
             indexPointer =      ReadInt(levelBlock,    (offset * TIEELEMSIZE) + 0x18);
             texturePointer =    ReadInt(levelBlock,    (offset * TIEELEMSIZE) + 0x1C);
-            //0x20 Unknown
+
+            off_20 = ReadUint(levelBlock, (offset * TIEELEMSIZE) + 0x20);
             vertexCount =       ReadInt(levelBlock,     (offset * TIEELEMSIZE) + 0x24);
             textureCount =      ReadShort(levelBlock,   (offset * TIEELEMSIZE) + 0x28);
-            //0x2C Unknown
+            off_2C = ReadUint(levelBlock, (offset * TIEELEMSIZE) + 0x2C);
+
             modelID =           ReadShort(levelBlock,   (offset * TIEELEMSIZE) + 0x30);
-            //0x34 Unknown
-            //0x38 Unknown
-            //0x3C Unknown
+            off_34 = ReadUint(levelBlock, (offset * TIEELEMSIZE) + 0x34);
+            off_38 = ReadUint(levelBlock, (offset * TIEELEMSIZE) + 0x38);
+            off_3C = ReadUint(levelBlock, (offset * TIEELEMSIZE) + 0x3C);
         }
     }
 

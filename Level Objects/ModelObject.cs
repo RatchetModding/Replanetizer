@@ -15,7 +15,7 @@ namespace RatchetEdit {
         [Browsable(false)]
         public Matrix4 modelMatrix { get; set; }
 
-        [Browsable(false)]
+        [CategoryAttribute("Attributes"), TypeConverter(typeof(ExpandableObjectConverter)), DisplayName("Model")]
         public Model model { get; set; }
     }
 }

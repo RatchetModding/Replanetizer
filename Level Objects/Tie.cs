@@ -162,8 +162,8 @@ namespace RatchetEdit
 
         public override void Rotate(float x, float y, float z) {
             Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(x,y,z));
-            Matrix4 result = rotationMatrix * modelMatrix;
-            _rotation += new Vector3(x, y, z);
+            Matrix4 result = rotationMatrix * modelMatrix.ClearRotation();
+            _rotation = result.ExtractRotation().Xyz;
 
             UpdateMatrixVariables(result);
             UpdateTransformMatrix();

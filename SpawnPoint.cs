@@ -11,27 +11,12 @@ namespace RatchetEdit
     public class SpawnPoint
     {
         public int id;
-        /*
-        public float x;
-        public float y;
-        public float z;
-        public float LR;
-        public byte[] hitBox;
-        public byte[] shape;*/
         public Matrix4 mat1;
         public Matrix4 mat2;
 
         public SpawnPoint(byte[] spawnPointBlock, int index)
         {
             id = index;
-            /*
-            x = ReadFloat(spawnPointBlock, (index * 0x80) + 0x30);
-            y = ReadFloat(spawnPointBlock, (index * 0x80) + 0x34);
-            z = ReadFloat(spawnPointBlock, (index * 0x80) + 0x38);
-            LR = ReadFloat(spawnPointBlock, (index * 0x80) + 0x78);
-            hitBox = new byte[0x30];
-            shape = new byte[0x30];*/
-
             float v11, v12, v13, v14, v21, v22, v23, v24, v31, v32, v33, v34, v41, v42, v43, v44;
 
             v11 = ReadFloat(spawnPointBlock, (index * 0x80) + 0x00);

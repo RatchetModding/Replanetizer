@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,8 +14,12 @@ namespace RatchetEdit
         const int SHRUBVERTELEMSIZE = 0x18;
         const int SHRUBUVELEMSIZE = 0x08;
 
+        [CategoryAttribute("Attributes"), TypeConverter(typeof(ExpandableObjectConverter)), DisplayName("Header")]
+        public TieModelHeader head { get; set; }
+
         public ShrubModel(FileStream fs, TieModelHeader head)
         {
+            this.head = head;
             size = 1.0f;
             ID = head.modelID;
 

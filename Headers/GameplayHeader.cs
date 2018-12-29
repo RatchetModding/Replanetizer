@@ -12,50 +12,50 @@ namespace RatchetEdit
     {
         public const int RAC1GAMEPLAYSIZE = 0x90;
 
-        public uint levelVarPointer;
-        public uint unkPointer1;
-        public uint cameraPointer;
-        public uint unkPointer2;
+        public int levelVarPointer;
+        public int unkPointer1;
+        public int cameraPointer;
+        public int unkPointer2;
 
-        public uint englishPointer;
-        public uint lang2Pointer;
-        public uint frenchPointer;
-        public uint germanPointer;
+        public int englishPointer;
+        public int lang2Pointer;
+        public int frenchPointer;
+        public int germanPointer;
 
-        public uint spanishPointer;
-        public uint italianPointer;
-        public uint unkPointer4;
-        public uint unkPointer5;
+        public int spanishPointer;
+        public int italianPointer;
+        public int unkPointer4;
+        public int unkPointer5;
 
-        public uint tieIdPointer;
-        public uint tiePointer;
-        public uint shrubIdPointer;
-        public uint shrubPointer;
+        public int tieIdPointer;
+        public int tiePointer;
+        public int shrubIdPointer;
+        public int shrubPointer;
 
-        public uint mobyIdPointer;
-        public uint mobyPointer;
-        public uint unkPointer6;
-        public uint unkPointer7;
+        public int mobyIdPointer;
+        public int mobyPointer;
+        public int unkPointer6;
+        public int unkPointer7;
 
-        public uint unkPointer8;
-        public uint pvarSizePointer;
-        public uint pvarPointer;
-        public uint unkPointer9;
+        public int unkPointer8;
+        public int pvarSizePointer;
+        public int pvarPointer;
+        public int unkPointer9;
 
-        public uint spawnPointPointer;
-        public uint unkPointer10;
-        public uint unkPointer11;
-        public uint unkPointer12;
+        public int spawnPointPointer;
+        public int unkPointer10;
+        public int unkPointer11;
+        public int unkPointer12;
 
-        public uint splinePointer;
-        public uint unkPointer13;
-        public uint unkPointer14;
-        public uint unkPointer15;
+        public int splinePointer;
+        public int unkPointer13;
+        public int unkPointer14;
+        public int unkPointer15;
 
-        public uint unkPointer16;
-        public uint unkPointer17;
-        public uint unkPointer18;
-        public uint occlusionPointer;
+        public int unkPointer16;
+        public int unkPointer17;
+        public int unkPointer18;
+        public int occlusionPointer;
 
         public GameplayHeader()
         {
@@ -102,100 +102,100 @@ namespace RatchetEdit
             byte[] gameplayHeadBlock = new byte[RAC1GAMEPLAYSIZE];
             gameplayFile.Read(gameplayHeadBlock, 0, RAC1GAMEPLAYSIZE);
 
-            levelVarPointer = ReadUint(gameplayHeadBlock, 0x00);
-            unkPointer1 = ReadUint(gameplayHeadBlock, 0x04);
-            cameraPointer = ReadUint(gameplayHeadBlock, 0x08);
-            unkPointer2 = ReadUint(gameplayHeadBlock, 0x0C);
+            levelVarPointer = ReadInt(gameplayHeadBlock, 0x00);
+            unkPointer1 = ReadInt(gameplayHeadBlock, 0x04);
+            cameraPointer = ReadInt(gameplayHeadBlock, 0x08);
+            unkPointer2 = ReadInt(gameplayHeadBlock, 0x0C);
 
-            englishPointer = ReadUint(gameplayHeadBlock, 0x10);//Nullable
-            lang2Pointer = ReadUint(gameplayHeadBlock, 0x14);//Nullable
-            frenchPointer = ReadUint(gameplayHeadBlock, 0x18);//Nullable
-            germanPointer = ReadUint(gameplayHeadBlock, 0x1C);//Nullable
+            englishPointer = ReadInt(gameplayHeadBlock, 0x10);//Nullable
+            lang2Pointer = ReadInt(gameplayHeadBlock, 0x14);//Nullable
+            frenchPointer = ReadInt(gameplayHeadBlock, 0x18);//Nullable
+            germanPointer = ReadInt(gameplayHeadBlock, 0x1C);//Nullable
 
-            spanishPointer = ReadUint(gameplayHeadBlock, 0x20);//Nullable
-            italianPointer = ReadUint(gameplayHeadBlock, 0x24);//Nullable
-            unkPointer4 = ReadUint(gameplayHeadBlock, 0x28);//Nullable
-            unkPointer5 = ReadUint(gameplayHeadBlock, 0x2C);//Nullable
+            spanishPointer = ReadInt(gameplayHeadBlock, 0x20);//Nullable
+            italianPointer = ReadInt(gameplayHeadBlock, 0x24);//Nullable
+            unkPointer4 = ReadInt(gameplayHeadBlock, 0x28);//Nullable
+            unkPointer5 = ReadInt(gameplayHeadBlock, 0x2C);//Nullable
 
-            tieIdPointer = ReadUint(gameplayHeadBlock, 0x30);//Nullable
-            tiePointer = ReadUint(gameplayHeadBlock, 0x34);//Nullable
-            shrubIdPointer = ReadUint(gameplayHeadBlock, 0x38);//Nullable
-            shrubPointer = ReadUint(gameplayHeadBlock, 0x3C);//Nullable
+            tieIdPointer = ReadInt(gameplayHeadBlock, 0x30);//Nullable
+            tiePointer = ReadInt(gameplayHeadBlock, 0x34);//Nullable
+            shrubIdPointer = ReadInt(gameplayHeadBlock, 0x38);//Nullable
+            shrubPointer = ReadInt(gameplayHeadBlock, 0x3C);//Nullable
 
-            mobyIdPointer = ReadUint(gameplayHeadBlock, 0x40);//Nullable
-            mobyPointer = ReadUint(gameplayHeadBlock, 0x44);
-            unkPointer6 = ReadUint(gameplayHeadBlock, 0x48);
-            unkPointer7 = ReadUint(gameplayHeadBlock, 0x4C);
+            mobyIdPointer = ReadInt(gameplayHeadBlock, 0x40);//Nullable
+            mobyPointer = ReadInt(gameplayHeadBlock, 0x44);
+            unkPointer6 = ReadInt(gameplayHeadBlock, 0x48);
+            unkPointer7 = ReadInt(gameplayHeadBlock, 0x4C);
 
-            unkPointer8 = ReadUint(gameplayHeadBlock, 0x50);//Nullable
-            pvarSizePointer = ReadUint(gameplayHeadBlock, 0x54);
-            pvarPointer = ReadUint(gameplayHeadBlock, 0x58);
-            unkPointer9 = ReadUint(gameplayHeadBlock, 0x5C);
+            unkPointer8 = ReadInt(gameplayHeadBlock, 0x50);//Nullable
+            pvarSizePointer = ReadInt(gameplayHeadBlock, 0x54);
+            pvarPointer = ReadInt(gameplayHeadBlock, 0x58);
+            unkPointer9 = ReadInt(gameplayHeadBlock, 0x5C);
 
-            spawnPointPointer = ReadUint(gameplayHeadBlock, 0x60);
-            unkPointer10 = ReadUint(gameplayHeadBlock, 0x64);//Nullable
-            unkPointer11 = ReadUint(gameplayHeadBlock, 0x68);//Nullable
-            unkPointer12 = ReadUint(gameplayHeadBlock, 0x6C);//Nullable
+            spawnPointPointer = ReadInt(gameplayHeadBlock, 0x60);
+            unkPointer10 = ReadInt(gameplayHeadBlock, 0x64);//Nullable
+            unkPointer11 = ReadInt(gameplayHeadBlock, 0x68);//Nullable
+            unkPointer12 = ReadInt(gameplayHeadBlock, 0x6C);//Nullable
 
-            splinePointer = ReadUint(gameplayHeadBlock, 0x70);
-            unkPointer13= ReadUint(gameplayHeadBlock, 0x74);//Nullable
-            unkPointer14 = ReadUint(gameplayHeadBlock, 0x78);//Nullable
-            unkPointer15 = ReadUint(gameplayHeadBlock, 0x7C);//Nullable
+            splinePointer = ReadInt(gameplayHeadBlock, 0x70);
+            unkPointer13= ReadInt(gameplayHeadBlock, 0x74);//Nullable
+            unkPointer14 = ReadInt(gameplayHeadBlock, 0x78);//Nullable
+            unkPointer15 = ReadInt(gameplayHeadBlock, 0x7C);//Nullable
 
-            unkPointer16 = ReadUint(gameplayHeadBlock, 0x80);//Nullable
-            unkPointer17 = ReadUint(gameplayHeadBlock, 0x84);
-            unkPointer18 = ReadUint(gameplayHeadBlock, 0x88);//Nullable
-            occlusionPointer = ReadUint(gameplayHeadBlock, 0x8C);//Nullable
+            unkPointer16 = ReadInt(gameplayHeadBlock, 0x80);//Nullable
+            unkPointer17 = ReadInt(gameplayHeadBlock, 0x84);
+            unkPointer18 = ReadInt(gameplayHeadBlock, 0x88);//Nullable
+            occlusionPointer = ReadInt(gameplayHeadBlock, 0x8C);//Nullable
         }
 
         public byte[] serialize()
         {
             byte[] bytes = new byte[0xB0];
 
-            WriteUint(ref bytes, 0x00, levelVarPointer);
-            WriteUint(ref bytes, 0x04, unkPointer1);
-            WriteUint(ref bytes, 0x08, cameraPointer);
-            WriteUint(ref bytes, 0x0C, unkPointer2);
+            WriteInt(ref bytes, 0x00, levelVarPointer);
+            WriteInt(ref bytes, 0x04, unkPointer1);
+            WriteInt(ref bytes, 0x08, cameraPointer);
+            WriteInt(ref bytes, 0x0C, unkPointer2);
 
-            WriteUint(ref bytes, 0x10, englishPointer);
-            WriteUint(ref bytes, 0x14, lang2Pointer);
-            WriteUint(ref bytes, 0x18, frenchPointer);
-            WriteUint(ref bytes, 0x1C, germanPointer);
+            WriteInt(ref bytes, 0x10, englishPointer);
+            WriteInt(ref bytes, 0x14, lang2Pointer);
+            WriteInt(ref bytes, 0x18, frenchPointer);
+            WriteInt(ref bytes, 0x1C, germanPointer);
 
-            WriteUint(ref bytes, 0x20, spanishPointer);
-            WriteUint(ref bytes, 0x24, italianPointer);
-            WriteUint(ref bytes, 0x28, unkPointer4);
-            WriteUint(ref bytes, 0x2C, unkPointer5);
+            WriteInt(ref bytes, 0x20, spanishPointer);
+            WriteInt(ref bytes, 0x24, italianPointer);
+            WriteInt(ref bytes, 0x28, unkPointer4);
+            WriteInt(ref bytes, 0x2C, unkPointer5);
 
-            WriteUint(ref bytes, 0x30, tieIdPointer);
-            WriteUint(ref bytes, 0x34, tiePointer);
-            WriteUint(ref bytes, 0x38, shrubIdPointer);
-            WriteUint(ref bytes, 0x3C, shrubPointer);
+            WriteInt(ref bytes, 0x30, tieIdPointer);
+            WriteInt(ref bytes, 0x34, tiePointer);
+            WriteInt(ref bytes, 0x38, shrubIdPointer);
+            WriteInt(ref bytes, 0x3C, shrubPointer);
 
-            WriteUint(ref bytes, 0x40, mobyIdPointer);
-            WriteUint(ref bytes, 0x44, mobyPointer);
-            WriteUint(ref bytes, 0x48, unkPointer6);
-            WriteUint(ref bytes, 0x4C, unkPointer7);
+            WriteInt(ref bytes, 0x40, mobyIdPointer);
+            WriteInt(ref bytes, 0x44, mobyPointer);
+            WriteInt(ref bytes, 0x48, unkPointer6);
+            WriteInt(ref bytes, 0x4C, unkPointer7);
 
-            WriteUint(ref bytes, 0x50, unkPointer8);
-            WriteUint(ref bytes, 0x54, pvarSizePointer);
-            WriteUint(ref bytes, 0x58, pvarPointer);
-            WriteUint(ref bytes, 0x5C, unkPointer9);
+            WriteInt(ref bytes, 0x50, unkPointer8);
+            WriteInt(ref bytes, 0x54, pvarSizePointer);
+            WriteInt(ref bytes, 0x58, pvarPointer);
+            WriteInt(ref bytes, 0x5C, unkPointer9);
 
-            WriteUint(ref bytes, 0x60, spawnPointPointer);
-            WriteUint(ref bytes, 0x64, unkPointer10);
-            WriteUint(ref bytes, 0x68, unkPointer11);
-            WriteUint(ref bytes, 0x6C, unkPointer12);
+            WriteInt(ref bytes, 0x60, spawnPointPointer);
+            WriteInt(ref bytes, 0x64, unkPointer10);
+            WriteInt(ref bytes, 0x68, unkPointer11);
+            WriteInt(ref bytes, 0x6C, unkPointer12);
 
-            WriteUint(ref bytes, 0x70, splinePointer);
-            WriteUint(ref bytes, 0x74, unkPointer13);
-            WriteUint(ref bytes, 0x78, unkPointer13);
-            WriteUint(ref bytes, 0x7C, unkPointer14);
+            WriteInt(ref bytes, 0x70, splinePointer);
+            WriteInt(ref bytes, 0x74, unkPointer13);
+            WriteInt(ref bytes, 0x78, unkPointer13);
+            WriteInt(ref bytes, 0x7C, unkPointer14);
 
-            WriteUint(ref bytes, 0x80, unkPointer16);
-            WriteUint(ref bytes, 0x84, unkPointer17);
-            WriteUint(ref bytes, 0x88, unkPointer18);
-            WriteUint(ref bytes, 0x8C, occlusionPointer);
+            WriteInt(ref bytes, 0x80, unkPointer16);
+            WriteInt(ref bytes, 0x84, unkPointer17);
+            WriteInt(ref bytes, 0x88, unkPointer18);
+            WriteInt(ref bytes, 0x8C, occlusionPointer);
 
             return bytes;
         }

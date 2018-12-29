@@ -18,7 +18,7 @@ namespace RatchetEdit
         public int height;
         public int imageSize;
         public int mipMapCount;
-        public uint vramPointer;
+        public int vramPointer;
         public byte[] data;
         public byte[] texHeader;
         public bool reverseRGB;
@@ -27,7 +27,7 @@ namespace RatchetEdit
         public Texture(byte[] textureBlock, int offset)
         {
             ID = offset;
-            vramPointer = ReadUint(textureBlock, (offset * TEXTUREELEMSIZE));
+            vramPointer = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE));
             width = ReadShort(textureBlock, (offset * TEXTUREELEMSIZE) + 0x18);
             height = ReadShort(textureBlock, (offset * TEXTUREELEMSIZE) + 0x1A);
             mipMapCount = ReadShort(textureBlock, (offset * TEXTUREELEMSIZE) + 0x1C);

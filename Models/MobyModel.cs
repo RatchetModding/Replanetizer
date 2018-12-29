@@ -13,7 +13,7 @@ namespace RatchetEdit
         const int MOBYTEXELEMSIZE = 0x10;
 
 
-        public MobyModel(FileStream fs, short modelID, uint offset)
+        public MobyModel(FileStream fs, short modelID, int offset)
         {
             ID = modelID;
 

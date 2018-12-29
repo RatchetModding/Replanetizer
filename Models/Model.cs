@@ -90,7 +90,7 @@ namespace RatchetEdit
         }
 
         //Get texture configs of different types using elemsize
-        public static List<TextureConfig> GetTextureConfigs(FileStream fs, uint texturePointer, int textureCount, int elemSize)
+        public static List<TextureConfig> GetTextureConfigs(FileStream fs, int texturePointer, int textureCount, int elemSize)
         {
             int IDoffset = 0, startOffset = 0, sizeOffset = 0;
 
@@ -123,7 +123,7 @@ namespace RatchetEdit
         }
 
         //Get vertices with UV's baked in
-        public static float[] GetVertices(FileStream fs, uint vertexPointer, int vertexCount, int elemSize)
+        public static float[] GetVertices(FileStream fs, int vertexPointer, int vertexCount, int elemSize)
         {
             float[] vertexBuffer = new float[vertexCount * 8];
 
@@ -144,7 +144,7 @@ namespace RatchetEdit
         }
 
         //Get vertices with UV's baked in, but no normals
-        public static float[] GetVerticesUV(FileStream fs, uint vertexPointer, int vertexCount, int elemSize)
+        public static float[] GetVerticesUV(FileStream fs, int vertexPointer, int vertexCount, int elemSize)
         {
             float[] vertexBuffer = new float[vertexCount * 8];
 
@@ -165,7 +165,7 @@ namespace RatchetEdit
         }
 
         //Get vertices with UV's located somewhere else
-        public static float[] GetVertices(FileStream fs, uint vertexPointer, uint UVPointer, int vertexCount, int vertexElemSize, int UVElemSize)
+        public static float[] GetVertices(FileStream fs, int vertexPointer, int UVPointer, int vertexCount, int vertexElemSize, int UVElemSize)
         {
             float[] vertexBuffer = new float[vertexCount * 8];
 
@@ -187,7 +187,7 @@ namespace RatchetEdit
         }
 
         //Get indices
-        public static ushort[] GetIndices(FileStream fs, uint indexPointer, int faceCount)
+        public static ushort[] GetIndices(FileStream fs, int indexPointer, int faceCount)
         {
             ushort[] indexBuffer = new ushort[faceCount];
             byte[] indexBlock = ReadBlock(fs, indexPointer, faceCount * sizeof(ushort));

@@ -12,15 +12,15 @@ namespace RatchetEdit
     {
         public const int VERTELEMSIZE = 0x18;
 
-        public SkyboxModel(FileStream fs, uint offset)
+        public SkyboxModel(FileStream fs, int offset)
         {
             ID = 0;
             size = 1.0f;
             byte[] skyBlockHead = ReadBlock(fs, offset, 0x1C);
 
             short faceGroupCount = ReadShort(skyBlockHead, 0x06);
-            uint vertOffset = ReadUint(skyBlockHead, 0x14);
-            uint faceOffset = ReadUint(skyBlockHead, VERTELEMSIZE);
+            int vertOffset = ReadInt(skyBlockHead, 0x14);
+            int faceOffset = ReadInt(skyBlockHead, VERTELEMSIZE);
 
             int vertexCount = (int)(faceOffset - vertOffset / VERTELEMSIZE);
 
@@ -28,7 +28,7 @@ namespace RatchetEdit
             byte[] faceGroupBlock = ReadBlock(fs, offset + 0x1C, faceGroupCount * 4);
             for(int i = 0; i < faceGroupCount; i++)
             {
-                uint faceGroupOffset = ReadUint(faceGroupBlock, (i * 4));
+                int faceGroupOffset = ReadInt(faceGroupBlock, (i * 4));
                 short texCount = ReadShort(ReadBlock(fs, faceGroupOffset + 0x02, 0x02), 0);
                 textureConfig.AddRange(GetTextureConfigs(fs, faceGroupOffset + 0x10, texCount, 0x10));
             }

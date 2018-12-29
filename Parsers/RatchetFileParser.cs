@@ -21,7 +21,7 @@ namespace RatchetEdit
             }
         }
 
-        protected List<Model> GetMobyModels(uint mobyModelPointer) {
+        protected List<Model> GetMobyModels(int mobyModelPointer) {
             List<Model> mobyModels = new List<Model>();
 
             //Get the moby count from the start of the section
@@ -32,13 +32,13 @@ namespace RatchetEdit
             for (int i = 0; i < mobyModelCount; i++)
             {
                 short modelID = ReadShort(mobyIDBlock,  (i * 8) + 2);
-                uint offset =   ReadUint(mobyIDBlock,   (i * 8) + 4);
+                int offset =   ReadInt(mobyIDBlock,   (i * 8) + 4);
                 mobyModels.Add(new MobyModel(fileStream, modelID, offset));
             }
             return mobyModels;
         }
 
-        protected List<Model> GetTieModels(uint tieModelPointer, int tieModelCount)
+        protected List<Model> GetTieModels(int tieModelPointer, int tieModelCount)
         {
             List<Model> tieModelList = new List<Model>();
 
@@ -53,7 +53,7 @@ namespace RatchetEdit
             return tieModelList;
         }
 
-        protected List<Model> GetShrubModels(uint shrubModelPointer, int shrubModelCount)
+        protected List<Model> GetShrubModels(int shrubModelPointer, int shrubModelCount)
         {
             List<Model> shrubModelList = new List<Model>();
 
@@ -67,7 +67,7 @@ namespace RatchetEdit
             return shrubModelList;
         }
 
-        protected List<Texture> GetTextures(uint texturePointer, int textureCount)
+        protected List<Texture> GetTextures(int texturePointer, int textureCount)
         {
             List<Texture> textureList = new List<Texture>();
 
@@ -80,7 +80,7 @@ namespace RatchetEdit
             return textureList;
         }
 
-        protected List<Tie> GetTies(List<Model> tieModels, uint tiePointer, int tieCount)
+        protected List<Tie> GetTies(List<Model> tieModels, int tiePointer, int tieCount)
         {
             List<Tie> ties = new List<Tie>();
 
@@ -95,12 +95,12 @@ namespace RatchetEdit
         }
 
 
-        protected List<TerrainModel> GetTerrainModels(uint terrainModelPointer)
+        protected List<TerrainModel> GetTerrainModels(int terrainModelPointer)
         {
             List<TerrainHeader> pointerList = new List<TerrainHeader>();
             //Read the whole terrain header
             byte[] terrainBlock = ReadBlock(fileStream, terrainModelPointer, 0x60);
-            uint terrainHeadPointer = ReadUint(terrainBlock, 0);
+            int terrainHeadPointer = ReadInt(terrainBlock, 0);
             ushort terrainHeadCount = ReadUshort(terrainBlock, 0x06);
 
 
@@ -125,7 +125,7 @@ namespace RatchetEdit
             return terrainModels;
         }
 
-        protected SkyboxModel GetSkyboxModel(uint skyboxPointer)
+        protected SkyboxModel GetSkyboxModel(int skyboxPointer)
         {
             return new SkyboxModel(fileStream, skyboxPointer);
         }

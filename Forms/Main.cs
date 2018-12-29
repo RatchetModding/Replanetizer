@@ -42,6 +42,8 @@ namespace RatchetEdit
         int lastMouseY = 0;
         public LevelObject selectedObject;
 
+        bool xLock = false, yLock = false, zLock = false;
+
         List<string> modelNames;
 
         Camera camera;
@@ -346,6 +348,27 @@ namespace RatchetEdit
                 InvalidateView();
             }
 
+            if (xLock)
+            {
+                float change = Cursor.Position.X - lastMouseX;
+                selectedObject.Translate(change / 100, 0, 0);
+                InvalidateView();
+            }
+
+            if (yLock)
+            {
+                float change = Cursor.Position.X - lastMouseX;
+                selectedObject.Translate(0, -change / 100, 0);
+                InvalidateView();
+            }
+
+            if (zLock)
+            {
+                float change = Cursor.Position.Y - lastMouseY;
+                selectedObject.Translate(0, 0, -change / 100);
+                InvalidateView();
+            }
+
             lastMouseX = Cursor.Position.X;
             lastMouseY = Cursor.Position.Y;
 
@@ -397,6 +420,10 @@ namespace RatchetEdit
         {
             rMouse = false;
             lMouse = false;
+            xLock = false;
+            yLock = false;
+            zLock = false;
+            UpdateEditorValues();
         }
 
         private void glControl1_Resize(object sender, EventArgs e)
@@ -456,10 +483,7 @@ namespace RatchetEdit
                 if (pixel.R == 255 && pixel.G == 0 && pixel.B == 0)
                 {
                     Console.WriteLine("HIT RED!");
-                    if (selectedObject != null) {
-                        selectedObject.Translate(1, 0, 0);
-                        UpdateEditorValues();
-                    }
+                    xLock = true;
                     cancelSelection = true;
                     InvalidateView();
 
@@ -468,10 +492,7 @@ namespace RatchetEdit
                 else if (pixel.R == 0 && pixel.G == 255 && pixel.B == 0)
                 {
                     Console.WriteLine("HIT GREEN!");
-                    if (selectedObject != null) {
-                        selectedObject.Translate(0, 1, 0);
-                        UpdateEditorValues();
-                    }
+                    yLock = true;
                     cancelSelection = true;
                     InvalidateView();
                     return null;
@@ -479,10 +500,7 @@ namespace RatchetEdit
                 else if (pixel.R == 0 && pixel.G == 0 && pixel.B == 255)
                 {
                     Console.WriteLine("HIT BLUE!");
-                    if (selectedObject != null) {
-                        selectedObject.Translate(0, 0, 1);
-                        UpdateEditorValues();
-                    }
+                    zLock = true;
                     cancelSelection = true;
                     InvalidateView();
                     return null;

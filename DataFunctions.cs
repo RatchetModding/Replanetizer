@@ -39,7 +39,7 @@ namespace RatchetEdit
             return BitConverter.ToSingle(temp, 0);
         }
 
-        public static byte[] ReadBlock(FileStream fs, uint offset, int length)
+        public static byte[] ReadBlock(FileStream fs, int offset, int length)
         {
             fs.Seek(offset, SeekOrigin.Begin);
             byte[] returnBytes = new byte[length];
@@ -48,6 +48,15 @@ namespace RatchetEdit
         }
 
         public static void WriteUint(ref byte[] byteArr, int offset, uint input)
+        {
+            byte[] byt = BitConverter.GetBytes(input);
+            byteArr[offset + 0] = byt[3];
+            byteArr[offset + 1] = byt[2];
+            byteArr[offset + 2] = byt[1];
+            byteArr[offset + 3] = byt[0];
+        }
+
+        public static void WriteInt(ref byte[] byteArr, int offset, int input)
         {
             byte[] byt = BitConverter.GetBytes(input);
             byteArr[offset + 0] = byt[3];

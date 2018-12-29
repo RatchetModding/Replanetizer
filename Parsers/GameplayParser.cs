@@ -39,7 +39,7 @@ namespace RatchetEdit {
         public List<Spline> GetSplines() {
             List<Spline> splines = new List<Spline>();
             int splineCount = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.splinePointer, 4), 0);
-            uint splineOffset = ReadUint(ReadBlock(gameplayFileStream, gameplayHeader.splinePointer + 4, 4), 0);
+            int splineOffset = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.splinePointer + 4, 4), 0);
             int splineSectionSize = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.splinePointer + 8, 4), 0);
 
             byte[] splineHeadBlock = ReadBlock(gameplayFileStream, gameplayHeader.splinePointer + 0x10, splineCount * 4);
@@ -87,7 +87,7 @@ namespace RatchetEdit {
             return cameraList;
         }
 
-        public byte[] getLang(uint offset)
+        public byte[] getLang(int offset)
         {
             int langLength = ReadInt(ReadBlock(gameplayFileStream, offset + 4, 4), 0);
             return ReadBlock(gameplayFileStream, offset, langLength);

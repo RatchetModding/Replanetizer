@@ -28,15 +28,15 @@ namespace RatchetEdit
 
         float x,y,z,w;
 
-        public ushort off_50;
-        public uint off_54;
-        public uint off_58;
-        public uint off_5C;
+        public ushort off_50 { get; set; }
+        public uint off_54 { get; set; }
+        public uint off_58 { get; set; }
+        public uint off_5C { get; set; }
 
-        public uint off_60;
-        public uint off_64;
-        public uint off_68;
-        public uint off_6C;
+        public int colorOffset;
+        public uint off_64 { get; set; }
+        public uint off_68 { get; set; }
+        public uint off_6C{ get; set; }
 
         public override Vector3 position {
             get { return _position; }
@@ -99,7 +99,7 @@ namespace RatchetEdit
             off_58 = ReadUint(levelBlock, (TIEELEMSIZE * num) + 0x58);
             off_5C = ReadUint(levelBlock, (TIEELEMSIZE * num) + 0x5C);
 
-            off_60 = ReadUint(levelBlock, (TIEELEMSIZE * num) + 0x60);
+            colorOffset = ReadInt(levelBlock, (TIEELEMSIZE * num) + 0x60);
             off_64 = ReadUint(levelBlock, (TIEELEMSIZE * num) + 0x64);
             off_68 = ReadUint(levelBlock, (TIEELEMSIZE * num) + 0x68);
             off_6C = ReadUint(levelBlock, (TIEELEMSIZE * num) + 0x6C);

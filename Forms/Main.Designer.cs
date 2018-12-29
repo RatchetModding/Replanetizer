@@ -29,10 +29,10 @@ namespace RatchetEdit
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Mobys");
-            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Ties");
-            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Shrubs");
-            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("Splines");
+            System.Windows.Forms.TreeNode treeNode9 = new System.Windows.Forms.TreeNode("Mobys");
+            System.Windows.Forms.TreeNode treeNode10 = new System.Windows.Forms.TreeNode("Ties");
+            System.Windows.Forms.TreeNode treeNode11 = new System.Windows.Forms.TreeNode("Shrubs");
+            System.Windows.Forms.TreeNode treeNode12 = new System.Windows.Forms.TreeNode("Splines");
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
@@ -443,19 +443,19 @@ namespace RatchetEdit
             this.objectTree.HideSelection = false;
             this.objectTree.Location = new System.Drawing.Point(0, 3);
             this.objectTree.Name = "objectTree";
-            treeNode1.Name = "mobyNode";
-            treeNode1.Text = "Mobys";
-            treeNode2.Name = "tieNode";
-            treeNode2.Text = "Ties";
-            treeNode3.Name = "shrubNode";
-            treeNode3.Text = "Shrubs";
-            treeNode4.Name = "splineNode";
-            treeNode4.Text = "Splines";
+            treeNode9.Name = "mobyNode";
+            treeNode9.Text = "Mobys";
+            treeNode10.Name = "tieNode";
+            treeNode10.Text = "Ties";
+            treeNode11.Name = "shrubNode";
+            treeNode11.Text = "Shrubs";
+            treeNode12.Name = "splineNode";
+            treeNode12.Text = "Splines";
             this.objectTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode1,
-            treeNode2,
-            treeNode3,
-            treeNode4});
+            treeNode9,
+            treeNode10,
+            treeNode11,
+            treeNode12});
             this.objectTree.Size = new System.Drawing.Size(262, 264);
             this.objectTree.TabIndex = 16;
             this.objectTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.objectTree_AfterSelect);

@@ -41,6 +41,8 @@ namespace RatchetEdit
         int lastMouseX = 0;
         int lastMouseY = 0;
         public LevelObject selectedObject;
+        Vector3 mouseRay;
+        Vector3 prevMouseRay;
 
         bool xLock = false, yLock = false, zLock = false;
 
@@ -348,35 +350,39 @@ namespace RatchetEdit
                 InvalidateView();
             }
 
-            if (xLock)
-            {
-                float change = Cursor.Position.X - lastMouseX;
-                selectedObject.Translate(change / 100, 0, 0);
-                InvalidateView();
-            }
 
-            if (yLock)
-            {
-                float change = Cursor.Position.X - lastMouseX;
-                selectedObject.Translate(0, -change / 100, 0);
-                InvalidateView();
-            }
-
-            if (zLock)
-            {
-                float change = Cursor.Position.Y - lastMouseY;
-                selectedObject.Translate(0, 0, -change / 100);
-                InvalidateView();
-            }
-
-            lastMouseX = Cursor.Position.X;
-            lastMouseY = Cursor.Position.Y;
 
             Matrix3 rot = Matrix3.CreateRotationX(camera.rotation.X) * Matrix3.CreateRotationY(camera.rotation.Y) * Matrix3.CreateRotationZ(camera.rotation.Z);
             camera.Translate(Vector3.Transform(moveDir, rot));
             Vector3 forward = Vector3.Transform(Vector3.UnitY, rot);
 
             view = Matrix4.LookAt(camera.position, camera.position + forward, Vector3.UnitZ);
+
+
+            mouseRay = MouseToWorldRay(projection, view, new Size(glControl1.Width, glControl1.Height), new Vector2(Cursor.Position.X, Cursor.Position.Y));
+
+            if (xLock)
+            {
+                selectedObject.Translate((mouseRay.X -prevMouseRay.X) * 20, 0, 0);
+                InvalidateView();
+            }
+
+            if (yLock)
+            {
+                selectedObject.Translate(0, (mouseRay.Y - prevMouseRay.Y) * 20, 0);
+                InvalidateView();
+            }
+
+            if (zLock)
+            {
+                selectedObject.Translate(0, 0, (mouseRay.Z - prevMouseRay.Z) * 20);
+                InvalidateView();
+            }
+
+            prevMouseRay = mouseRay;
+
+            lastMouseX = Cursor.Position.X;
+            lastMouseY = Cursor.Position.Y;
 
             if (invalidate)
             {
@@ -428,7 +434,7 @@ namespace RatchetEdit
 
         private void glControl1_Resize(object sender, EventArgs e)
         {
-            GL.Viewport(0, 0, glControl1.Width, glControl1.Height);
+            GL.Viewport(glControl1.Location.X, glControl1.Location.Y, glControl1.Width, glControl1.Height);
             projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)glControl1.Width / glControl1.Height, 0.1f, 800.0f);
         }
 
@@ -731,29 +737,37 @@ namespace RatchetEdit
         #region Misc Input Events
         private void objectTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            if (e.Node.Parent == objectTree.Nodes[0]) {
-                if (!suppressTreeViewSelectEvent) {
+            if (e.Node.Parent == objectTree.Nodes[0])
+            {
+                if (!suppressTreeViewSelectEvent)
+                {
                     SelectObject(level.mobs[e.Node.Index]);
                     camera.MoveBehind(selectedObject);
                 }
                 suppressTreeViewSelectEvent = false;
             }
-            if (e.Node.Parent == objectTree.Nodes[1]) {
-                if (!suppressTreeViewSelectEvent) {
+            if (e.Node.Parent == objectTree.Nodes[1])
+            {
+                if (!suppressTreeViewSelectEvent)
+                {
                     SelectObject(level.ties[e.Node.Index]);
                     camera.MoveBehind(selectedObject);
                 }
                 suppressTreeViewSelectEvent = false;
             }
-            if (e.Node.Parent == objectTree.Nodes[2]) {
-                if (!suppressTreeViewSelectEvent) {
+            if (e.Node.Parent == objectTree.Nodes[2])
+            {
+                if (!suppressTreeViewSelectEvent)
+                {
                     SelectObject(level.shrubs[e.Node.Index]);
                     camera.MoveBehind(selectedObject);
                 }
                 suppressTreeViewSelectEvent = false;
             }
-            if (e.Node.Parent == objectTree.Nodes[3]) {
-                if (!suppressTreeViewSelectEvent) {
+            if (e.Node.Parent == objectTree.Nodes[3])
+            {
+                if (!suppressTreeViewSelectEvent)
+                {
                     SelectObject(level.splines[e.Node.Index]);
                     camera.MoveBehind(selectedObject);
                 }
@@ -838,6 +852,38 @@ namespace RatchetEdit
                 gameplaySerializer.Save(level, mapSaveDialog.FileName);
             }
             InvalidateView();
+        }
+
+        public static Vector3 MouseToWorldRay(Matrix4 projection, Matrix4 view, Size viewport, Vector2 mouse)
+        {
+            Vector3 pos1 = UnProject(ref projection, view, viewport, new Vector3(mouse.X, mouse.Y, 0.1f)); // near
+            Vector3 pos2 = UnProject(ref projection, view, viewport, new Vector3(mouse.X, mouse.Y, 800f));  // far
+            return pos1 - pos2;
+        }
+
+        public static Vector3 UnProject(ref Matrix4 projection, Matrix4 view, Size viewport, Vector3 mouse)
+        {
+            Vector4 vec;
+
+            vec.X = 2.0f * mouse.X / (float)viewport.Width - 1;
+            vec.Y = -(2.0f * mouse.Y / (float)viewport.Height - 1);
+            vec.Z = mouse.Z;
+            vec.W = 1.0f;
+
+            Matrix4 viewInv = Matrix4.Invert(view);
+            Matrix4 projInv = Matrix4.Invert(projection);
+
+            Vector4.Transform(ref vec, ref projInv, out vec);
+            Vector4.Transform(ref vec, ref viewInv, out vec);
+
+            if (vec.W > float.Epsilon || vec.W < -float.Epsilon)
+            {
+                vec.X /= vec.W;
+                vec.Y /= vec.W;
+                vec.Z /= vec.W;
+            }
+
+            return new Vector3(vec.X, vec.Y, vec.Z);
         }
     }
 }

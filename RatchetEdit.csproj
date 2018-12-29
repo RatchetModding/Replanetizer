@@ -56,6 +56,7 @@
     <Compile Include="Headers\EngineHeader.cs" />
     <Compile Include="Headers\GameplayHeader.cs" />
     <Compile Include="Headers\Headers.cs" />
+    <Compile Include="Level Objects\GameCamera.cs" />
     <Compile Include="Level Objects\LevelObject.cs" />
     <Compile Include="Level Objects\ModelObject.cs" />
     <Compile Include="Level Objects\Tie.cs" />

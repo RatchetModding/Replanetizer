@@ -41,6 +41,7 @@ namespace RatchetEdit {
 
         public List<byte[]> pVars;
         public List<SpawnPoint> spawnPoints;
+        public List<GameCamera> gameCameras;
 
         //New file constructor
         public Level() { }
@@ -114,6 +115,7 @@ namespace RatchetEdit {
 
             pVars = gameplayParser.getPvars();
             spawnPoints = gameplayParser.GetSpawnPoints();
+            gameCameras = gameplayParser.GetGameCameras();
 
         engineParser.Close();
             vramParser.Close();

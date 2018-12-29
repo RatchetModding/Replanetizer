@@ -72,6 +72,21 @@ namespace RatchetEdit {
             return levelVariables;
         }
 
+        public List<GameCamera> GetGameCameras()
+        {
+            int cameraCount = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.cameraPointer, 4), 0);
+
+            byte[] cameraBlock = ReadBlock(gameplayFileStream, gameplayHeader.cameraPointer + 0x10, cameraCount * GameCamera.ELEMSIZE);
+
+            List<GameCamera> cameraList = new List<GameCamera>();
+            for(int i = 0; i < cameraCount; i++)
+            {
+                cameraList.Add(new GameCamera(cameraBlock, i));
+            }
+
+            return cameraList;
+        }
+
         public byte[] getLang(uint offset)
         {
             int langLength = ReadInt(ReadBlock(gameplayFileStream, offset + 4, 4), 0);

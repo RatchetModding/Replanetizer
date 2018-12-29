@@ -15,7 +15,7 @@ namespace RatchetEdit.Serializers
 
         public void Save(Level level, String fileName)
         {
-            FileStream fs = File.OpenWrite(fileName);
+            FileStream fs = File.Open(fileName, FileMode.Create);
             GameplayHeader gameplayHeader = new GameplayHeader();            
 
             byte[] mobs = GetMobies(level.mobs);
@@ -24,6 +24,7 @@ namespace RatchetEdit.Serializers
             byte[] pVars = GetPvars(level.pVars);
             byte[] splines = GetSplines(level.splines);
             byte[] spawnPoints = GetSpawnPoints(level.spawnPoints);
+            byte[] gameCameras = GetGameCameras(level.gameCameras);
 
             //Seek past the header
             fs.Seek(0xB0, SeekOrigin.Begin);
@@ -54,6 +55,13 @@ namespace RatchetEdit.Serializers
             seekPast(fs);
             gameplayHeader.italianPointer = (uint)fs.Position;
             fs.Write(level.italian, 0, level.italian.Length);
+
+
+
+
+            seekPast(fs);
+            gameplayHeader.cameraPointer = (uint)fs.Position;
+            fs.Write(gameCameras, 0, gameCameras.Length);
 
             seekPast(fs);
             gameplayHeader.mobyPointer = (uint)fs.Position;
@@ -135,13 +143,27 @@ namespace RatchetEdit.Serializers
             //Header
             WriteUint(ref bytes, 0, (uint)spawnPoints.Count);
 
-            int index = 0;
-            foreach (SpawnPoint spawnPoint in spawnPoints)
+            for(int i = 0; i < spawnPoints.Count; i++)
             {
-                byte[] spawnPointBytes = spawnPoint.serialize();
-                spawnPointBytes.CopyTo(bytes, 0x10 + index * 0x80);
-                index++;
+                byte[] spawnPointBytes = spawnPoints[i].serialize();
+                spawnPointBytes.CopyTo(bytes, 0x10 + i * 0x80);
             }
+            return bytes;
+        }
+
+        public byte[] GetGameCameras(List<GameCamera> gameCameras)
+        {
+            byte[] bytes = new byte[0x10 + gameCameras.Count * GameCamera.ELEMSIZE];
+
+            //Header
+            WriteUint(ref bytes, 0, (uint)gameCameras.Count);
+
+            for(int i = 0; i < gameCameras.Count; i++)
+            {
+                byte[] cameraBytes = gameCameras[i].serialize();
+                cameraBytes.CopyTo(bytes, 0x10 + i * GameCamera.ELEMSIZE);
+            }
+
             return bytes;
         }
 

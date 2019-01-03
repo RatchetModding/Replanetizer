@@ -168,7 +168,6 @@ namespace RatchetEdit
             StreamReader stream = null;
             try
             {
-
                 stream = new StreamReader(Application.StartupPath + "/ModelListRC1.txt");
                 //Console.WriteLine("Loaded model names for Ratchet & Clank.");
 
@@ -246,13 +245,13 @@ namespace RatchetEdit
             {
                 foreach (Spline spline in level.splines)
                 {
-                    drawSpline(spline);
+                    DrawSpline(spline);
                 }
             }
 
             if (selectedObject as ModelObject != null)
             {
-                drawModelMesh((ModelObject)selectedObject);
+                DrawModelMesh((ModelObject)selectedObject);
                 drawTool(selectedObject.position);
             }
 
@@ -260,15 +259,15 @@ namespace RatchetEdit
             GL.UseProgram(shaderID);
 
             if (mobyCheck.Checked && mobyCheck.Enabled)
-                foreach (Moby mob in level.mobs) drawModelObject(mob);
+                foreach (Moby mob in level.mobs) DrawModelObject(mob);
 
             if (tieCheck.Checked && tieCheck.Enabled)
-                foreach (Tie tie in level.ties) drawModelObject(tie);
+                foreach (Tie tie in level.ties) DrawModelObject(tie);
 
             if (shrubCheck.Checked && splineCheck.Enabled)
-                foreach (Tie shrub in level.shrubs) drawModelObject(shrub);
+                foreach (Tie shrub in level.shrubs) DrawModelObject(shrub);
             if (skyboxCheck.Checked && skyboxCheck.Enabled)
-                drawModelModel(level.skybox);
+                DrawModelModel(level.skybox);
 
             if (terrainCheck.Checked && terrainCheck.Enabled)
             {
@@ -278,8 +277,8 @@ namespace RatchetEdit
                 {
                     if (hd.vertexBuffer != null)
                     {
-                        hd.getVBO();
-                        hd.getIBO();
+                        hd.GetVBO();
+                        hd.GetIBO();
 
                         //Bind textures one by one, applying it to the relevant vertices based on the index array
                         foreach (TextureConfig conf in hd.textureConfig)
@@ -438,7 +437,7 @@ namespace RatchetEdit
             projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)glControl1.Width / glControl1.Height, 0.1f, 800.0f);
         }
 
-        private void enableCheck(object sender, EventArgs e)
+        private void EnableCheck(object sender, EventArgs e)
         {
             InvalidateView();
         }
@@ -590,8 +589,11 @@ namespace RatchetEdit
             SelectObject(null);
             InvalidateView();
         }
+
+
         #region RenderFunctions
-        public void drawSpline(Spline spline)
+
+        public void DrawSpline(Spline spline)
         {
             Vector4 color;
             if (spline == selectedObject) color = new Vector4(1, 0, 1, 1);
@@ -601,7 +603,7 @@ namespace RatchetEdit
             GL.EnableVertexAttribArray(0);
             GL.UniformMatrix4(matrixID, false, ref worldView);
             GL.Uniform4(colorID, color);
-            spline.getVBO();
+            spline.GetVBO();
             GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
         }
 
@@ -636,8 +638,7 @@ namespace RatchetEdit
             GL.UseProgram(colorShaderID);
             GL.EnableVertexAttribArray(0);
             GL.UniformMatrix4(matrixID, false, ref worldView);
-            int VBO;
-            GL.GenBuffers(1, out VBO);
+            GL.GenBuffers(1, out int VBO);
             GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
             GL.BufferData(BufferTarget.ArrayBuffer, test.Length * sizeof(float), test, BufferUsageHint.DynamicDraw);
@@ -652,37 +653,24 @@ namespace RatchetEdit
             GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
         }
 
-        private void drawModelObject(ModelObject obj)
+        private void DrawModelObject(ModelObject obj)
         {
             if (obj.model != null && obj.model.vertexBuffer != null)
             {
                 Matrix4 mvp = obj.modelMatrix * worldView;  //Has to be done in this order to work correctly
                 GL.UniformMatrix4(matrixID, false, ref mvp);
-                drawMesh(obj.model);
+                obj.model.Draw(level.textures);
             }
         }
 
-        private void drawModelModel(Model model)
+        private void DrawModelModel(Model model)
         {
             Matrix4 mvp = worldView;
             GL.UniformMatrix4(matrixID, false, ref mvp);
-            drawMesh(model);
+            model.Draw(level.textures);
         }
 
-        private void drawMesh(Model model)
-        {
-            model.getVBO();
-            model.getIBO();
-
-            //Bind textures one by one, applying it to the relevant vertices based on the index array
-            foreach (TextureConfig conf in model.textureConfig)
-            {
-                GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? level.textures[conf.ID].getTexture() : 0);
-                GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
-            }
-        }
-
-        public void drawModelMesh(ModelObject levelObject)
+        public void DrawModelMesh(ModelObject levelObject)
         {
             if (levelObject != null)
             {
@@ -693,8 +681,8 @@ namespace RatchetEdit
                     Matrix4 mvp = levelObject.modelMatrix * worldView;
                     GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
                     GL.UniformMatrix4(matrixID, false, ref mvp);
-                    levelObject.model.getVBO();
-                    levelObject.model.getIBO();
+                    levelObject.model.GetVBO();
+                    levelObject.model.GetIBO();
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.DrawElements(PrimitiveType.Triangles, levelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
@@ -712,7 +700,7 @@ namespace RatchetEdit
                 int objectIndex = splines.IndexOf(spline);
                 byte[] cols = BitConverter.GetBytes(objectIndex + offset);
                 GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
-                spline.getVBO();
+                spline.GetVBO();
                 GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
             }
         }
@@ -725,8 +713,8 @@ namespace RatchetEdit
                     Matrix4 mvp = levelObject.modelMatrix * worldView;  //Has to be done in this order to work correctly
                     GL.UniformMatrix4(matrixID, false, ref mvp);
 
-                    levelObject.model.getVBO();
-                    levelObject.model.getIBO();
+                    levelObject.model.GetVBO();
+                    levelObject.model.GetIBO();
 
                     int objectIndex = levelObjects.IndexOf(levelObject);
                     byte[] cols = BitConverter.GetBytes(objectIndex + offset);
@@ -736,6 +724,7 @@ namespace RatchetEdit
             }
         }
         #endregion
+
         #region Misc Input Events
         private void objectTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
@@ -817,30 +806,6 @@ namespace RatchetEdit
             invalidate = true;
         }
 
-        struct Pixel
-        {
-            public byte R, G, B, A;
-
-            public Pixel(byte[] input)
-            {
-                R = input[0];
-                G = input[1];
-                B = input[2];
-                A = input[3];
-            }
-
-            public uint ToUInt32()
-            {
-                byte[] temp = new byte[] { R, G, B, A };
-                return BitConverter.ToUInt32(temp, 0);
-            }
-
-            public override string ToString()
-            {
-                return R + ", " + G + ", " + B + ", " + A;
-            }
-        }
-
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
             InvalidateView();
@@ -854,38 +819,6 @@ namespace RatchetEdit
                 gameplaySerializer.Save(level, mapSaveDialog.FileName);
             }
             InvalidateView();
-        }
-
-        public static Vector3 MouseToWorldRay(Matrix4 projection, Matrix4 view, Size viewport, Vector2 mouse)
-        {
-            Vector3 pos1 = UnProject(ref projection, view, viewport, new Vector3(mouse.X, mouse.Y, 0.1f)); // near
-            Vector3 pos2 = UnProject(ref projection, view, viewport, new Vector3(mouse.X, mouse.Y, 800f));  // far
-            return pos1 - pos2;
-        }
-
-        public static Vector3 UnProject(ref Matrix4 projection, Matrix4 view, Size viewport, Vector3 mouse)
-        {
-            Vector4 vec;
-
-            vec.X = 2.0f * mouse.X / (float)viewport.Width - 1;
-            vec.Y = -(2.0f * mouse.Y / (float)viewport.Height - 1);
-            vec.Z = mouse.Z;
-            vec.W = 1.0f;
-
-            Matrix4 viewInv = Matrix4.Invert(view);
-            Matrix4 projInv = Matrix4.Invert(projection);
-
-            Vector4.Transform(ref vec, ref projInv, out vec);
-            Vector4.Transform(ref vec, ref viewInv, out vec);
-
-            if (vec.W > float.Epsilon || vec.W < -float.Epsilon)
-            {
-                vec.X /= vec.W;
-                vec.Y /= vec.W;
-                vec.Z /= vec.W;
-            }
-
-            return new Vector3(vec.X, vec.Y, vec.Z);
         }
     }
 }

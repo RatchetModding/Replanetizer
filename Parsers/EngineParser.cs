@@ -11,7 +11,7 @@ namespace RatchetEdit
             engineHead = new EngineHeader(fileStream);
         }
 
-        public List<MobyModel> GetMobyModels()
+        public List<Model> GetMobyModels()
         {
             return GetMobyModels(engineHead.mobyModelPointer);
         }
@@ -40,7 +40,6 @@ namespace RatchetEdit
         {
             return GetTies(shrubModels, engineHead.shrubPointer, engineHead.shrubCount);
         }
-
 
         public List<TerrainModel> GetTerrainModels()
         {

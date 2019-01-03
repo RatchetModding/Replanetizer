@@ -9,7 +9,7 @@ namespace RatchetEdit
 {
     public class GameCamera
     {
-        public const int ELEMSIZE = 0x20;
+        public const int ELEMENTSIZE = 0x20;
 
         public int id;
         public float x;
@@ -22,19 +22,21 @@ namespace RatchetEdit
 
         public GameCamera(byte[] cameraBlock, int num)
         {
-            id = ReadInt(cameraBlock, (num * ELEMSIZE) + 0x00);
-            x = ReadFloat(cameraBlock, (num * ELEMSIZE) + 0x04);
-            y = ReadFloat(cameraBlock, (num * ELEMSIZE) + 0x08);
-            z = ReadFloat(cameraBlock, (num * ELEMSIZE) + 0x0C);
-            unk1 = ReadInt(cameraBlock, (num * ELEMSIZE) + 0x10);
-            unk2 = ReadInt(cameraBlock, (num * ELEMSIZE) + 0x14);
-            unk3 = ReadInt(cameraBlock, (num * ELEMSIZE) + 0x18);
-            id2 = ReadInt(cameraBlock, (num * ELEMSIZE) + 0x1C);
+            int offset = num * ELEMENTSIZE;
+
+            id = ReadInt(cameraBlock, offset + 0x00);
+            x = ReadFloat(cameraBlock, offset + 0x04);
+            y = ReadFloat(cameraBlock, offset + 0x08);
+            z = ReadFloat(cameraBlock, offset + 0x0C);
+            unk1 = ReadInt(cameraBlock, offset + 0x10);
+            unk2 = ReadInt(cameraBlock, offset + 0x14);
+            unk3 = ReadInt(cameraBlock, offset + 0x18);
+            id2 = ReadInt(cameraBlock, offset + 0x1C);
         }
 
-        public byte[] serialize()
+        public byte[] Serialize()
         {
-            byte[] bytes = new byte[ELEMSIZE];
+            byte[] bytes = new byte[ELEMENTSIZE];
 
             WriteUint(ref bytes, 0x00, (uint)id);
             WriteFloat(ref bytes, 0x04, x);

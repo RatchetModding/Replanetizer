@@ -11,58 +11,58 @@ namespace RatchetEdit
 {
     public class LevelVariables
     {
-        [CategoryAttribute("Unknown"), DisplayName("Unknown 01")]
+        [Category("Unknown"), DisplayName("Unknown 01")]
         public uint unk1 { get; set; }
 
-        [CategoryAttribute("Unknown"), DisplayName("Unknown 02")]
+        [Category("Unknown"), DisplayName("Unknown 02")]
         public uint unk2 { get; set; }
 
-        [CategoryAttribute("Unknown"), DisplayName("Unknown 03")]
+        [Category("Unknown"), DisplayName("Unknown 03")]
         public uint unk3 { get; set; }
 
-        [CategoryAttribute("Attributes"), DisplayName("Fog Color")]
+        [Category("Attributes"), DisplayName("Fog Color")]
         public Color fogColor { get; set; }
 
-        [CategoryAttribute("Unknown"), DisplayName("Unknown 04")]
+        [Category("Unknown"), DisplayName("Unknown 04")]
         public uint unk4 { get; set; }
 
-        [CategoryAttribute("Unknown"), DisplayName("Unknown 05")]
+        [Category("Unknown"), DisplayName("Unknown 05")]
         public uint unk5 { get; set; }
 
-        [CategoryAttribute("Attributes"), DisplayName("Fog Distance")]
+        [Category("Attributes"), DisplayName("Fog Distance")]
         public float fogDistance { get; set; }
 
-        [CategoryAttribute("Unknown"), DisplayName("Unknown 06")]
+        [Category("Unknown"), DisplayName("Unknown 06")]
         public float unk6 { get; set; }
 
-        [CategoryAttribute("Attributes"), DisplayName("Deathplane Z")]
+        [Category("Attributes"), DisplayName("Deathplane Z")]
         public float deathPlaneZ { get; set; }
 
-        [CategoryAttribute("Unknown"), DisplayName("Unknown 07")]
+        [Category("Unknown"), DisplayName("Unknown 07")]
         public float unk7 { get; set; }
 
-        [CategoryAttribute("Unknown"), DisplayName("Unknown 08")]
+        [Category("Unknown"), DisplayName("Unknown 08")]
         public float unk8 { get; set; }
 
-        [CategoryAttribute("Unknown"), DisplayName("Unknown 09")]
+        [Category("Unknown"), DisplayName("Unknown 09")]
         public float unk9 { get; set; }
 
-        [CategoryAttribute("Unknown"), DisplayName("Unknown 10")]
+        [Category("Unknown"), DisplayName("Unknown 10")]
         public uint unk10 { get; set; }
 
-        [CategoryAttribute("Unknown"), DisplayName("Unknown 11")]
+        [Category("Unknown"), DisplayName("Unknown 11")]
         public int unk11 { get; set; }
 
-        [CategoryAttribute("Unknown"), DisplayName("Unknown 12")]
+        [Category("Unknown"), DisplayName("Unknown 12")]
         public uint unk12 { get; set; }
 
-        [CategoryAttribute("Unknown"), DisplayName("Unknown 13")]
+        [Category("Unknown"), DisplayName("Unknown 13")]
         public uint unk13 { get; set; }
 
-        [CategoryAttribute("Unknown"), DisplayName("Unknown 14")]
+        [Category("Unknown"), DisplayName("Unknown 14")]
         public uint unk14 { get; set; }
 
-        [CategoryAttribute("Unknown"), DisplayName("Unknown 15")]
+        [Category("Unknown"), DisplayName("Unknown 15")]
         public uint unk15 { get; set; }
 
         public LevelVariables(byte[] levelVarBlock)

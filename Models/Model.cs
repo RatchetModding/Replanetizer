@@ -17,7 +17,7 @@ namespace RatchetEdit
 
     public class Model
     {
-        public short ID { get; set; }
+        public short id { get; set; }
         public float size;
         public float[] vertexBuffer;
         public ushort[] indexBuffer;
@@ -56,7 +56,20 @@ namespace RatchetEdit
             return faceCount;
         }
 
-        public void getVBO()
+        public void Draw(List<Texture> textures)
+        {
+            GetVBO();
+            GetIBO();
+
+            //Bind textures one by one, applying it to the relevant vertices based on the index array
+            foreach (TextureConfig conf in textureConfig)
+            {
+                GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? textures[conf.ID].getTexture() : 0);
+                GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+            }
+        }
+
+        public void GetVBO()
         {
             //Get the vertex buffer object, or create one if one doesn't exist
             if (VBO == 0)
@@ -74,7 +87,7 @@ namespace RatchetEdit
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
         }
 
-        public void getIBO() {
+        public void GetIBO() {
             //Get the index buffer object, or create one if one doesn't exist
             if(IBO == 0)
             {
@@ -108,7 +121,7 @@ namespace RatchetEdit
                     break;
             }
 
-            List<TextureConfig> textureConfigs = new List<TextureConfig>();
+            var textureConfigs = new List<TextureConfig>();
 
             byte[] texBlock = ReadBlock(fs, texturePointer, textureCount * elemSize);
             for (int i = 0; i < textureCount; i++)

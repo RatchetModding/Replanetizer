@@ -33,28 +33,30 @@ namespace RatchetEdit
 
         public Type04(byte[] type04Block, int num)
         {
-            off_00 = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x00);
-            off_04 = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x04);
-            off_08 = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x08);
-            off_0C = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x0C);
+            int offset = num * ELEMENTSIZE;
 
-            off_10 = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x10);
-            off_14 = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x14);
-            off_18 = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x18);
-            off_1C = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x1C);
+            off_00 = ReadFloat(type04Block, offset + 0x00);
+            off_04 = ReadFloat(type04Block, offset + 0x04);
+            off_08 = ReadFloat(type04Block, offset + 0x08);
+            off_0C = ReadFloat(type04Block, offset + 0x0C);
 
-            off_20 = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x20);
-            off_24 = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x24);
-            off_28 = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x28);
-            off_2C = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x2C);
+            off_10 = ReadFloat(type04Block, offset + 0x10);
+            off_14 = ReadFloat(type04Block, offset + 0x14);
+            off_18 = ReadFloat(type04Block, offset + 0x18);
+            off_1C = ReadFloat(type04Block, offset + 0x1C);
 
-            off_30 = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x30);
-            off_34 = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x34);
-            off_38 = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x38);
-            off_3C = ReadFloat(type04Block, (ELEMENTSIZE * num) + 0x3C);
+            off_20 = ReadFloat(type04Block, offset + 0x20);
+            off_24 = ReadFloat(type04Block, offset + 0x24);
+            off_28 = ReadFloat(type04Block, offset + 0x28);
+            off_2C = ReadFloat(type04Block, offset + 0x2C);
+
+            off_30 = ReadFloat(type04Block, offset + 0x30);
+            off_34 = ReadFloat(type04Block, offset + 0x34);
+            off_38 = ReadFloat(type04Block, offset + 0x38);
+            off_3C = ReadFloat(type04Block, offset + 0x3C);
         }
 
-        public byte[] serialize()
+        public byte[] Serialize()
         {
             byte[] bytes = new byte[ELEMENTSIZE];
 

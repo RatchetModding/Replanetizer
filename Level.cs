@@ -9,8 +9,10 @@ namespace RatchetEdit {
         public string path;
         public EngineHeader engineHeader;
 
+        public GameType game;
+
         //Models
-        public List<MobyModel> mobyModels;
+        public List<Model> mobyModels;
         public List<Model> tieModels;
         public List<Model> shrubModels;
         public Model terrainModel;
@@ -61,16 +63,25 @@ namespace RatchetEdit {
         public List<int> tieIds;
         public List<int> shrubIds;
 
+        ~Level()
+        {
+            Console.WriteLine("Level destroyed");
+        }
+
         //New file constructor
         public Level() { }
 
         //Engine file constructor
         public Level(string enginePath) {
+            game = new GameType(1);
+
             path = Path.GetDirectoryName(enginePath);
 
             EngineParser engineParser = new EngineParser(enginePath);
             VramParser vramParser = new VramParser(path + @"/vram.ps3");
-            GameplayParser gameplayParser = new GameplayParser(path + @"/gameplay_ntsc");
+            GameplayParser gameplayParser = new GameplayParser(game, path + @"/gameplay_ntsc");
+
+           
 
             Console.WriteLine("Parsing skybox...");
             skybox = engineParser.GetSkyboxModel();
@@ -110,7 +121,7 @@ namespace RatchetEdit {
             levelVariables = gameplayParser.GetLevelVariables();
 
             Console.WriteLine("Parsing mobs...");
-            mobs = gameplayParser.GetMobies(mobyModels);
+            mobs = gameplayParser.GetMobies(game, mobyModels);
             Console.WriteLine("Added " + mobs.Count + " mobs");
 
             Console.WriteLine("Parsing splines...");
@@ -118,14 +129,14 @@ namespace RatchetEdit {
             Console.WriteLine("Added " + splines.Count + " splines");
 
             Console.WriteLine("Parsing languages...");
-            english = gameplayParser.getEnglish();
-            lang2 = gameplayParser.getLang2();
-            french = gameplayParser.getFrench();
-            german = gameplayParser.getGerman();
-            spanish = gameplayParser.getSpanish();
-            italian = gameplayParser.getItalian();
-            lang7 = gameplayParser.getLang7();
-            lang8 = gameplayParser.getLang8();
+            english = gameplayParser.GetEnglish();
+            lang2 = gameplayParser.GetLang2();
+            french = gameplayParser.GetFrench();
+            german = gameplayParser.GetGerman();
+            spanish = gameplayParser.GetSpanish();
+            italian = gameplayParser.GetItalian();
+            lang7 = gameplayParser.GetLang7();
+            lang8 = gameplayParser.GetLang8();
 
             Console.WriteLine("Parsing other gameplay assets...");
             unk6 = gameplayParser.getUnk6();
@@ -136,12 +147,12 @@ namespace RatchetEdit {
             tieData = gameplayParser.getTieData(ties.Count);
             shrubData = gameplayParser.getShrubData(shrubs.Count);
 
-            type04s = gameplayParser.getType04();
-            type0Cs = gameplayParser.getType0C();
+            type04s = gameplayParser.GetType04s();
+            type0Cs = gameplayParser.GetType0Cs();
             type64s = gameplayParser.GetType64s();
-            type68s = gameplayParser.getType68();
+            type68s = gameplayParser.GetType68s();
             type80s = gameplayParser.getType80();
-            type88s = gameplayParser.getType88();
+            type88s = gameplayParser.GetType88s();
             pVars = gameplayParser.getPvars();
             spawnPoints = gameplayParser.GetSpawnPoints();
             gameCameras = gameplayParser.GetGameCameras();
@@ -154,6 +165,8 @@ namespace RatchetEdit {
             engineParser.Close();
             vramParser.Close();
             gameplayParser.Close();
+
+            Console.WriteLine("Level parsing done");
         }
     }
 }

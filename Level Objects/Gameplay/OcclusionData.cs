@@ -42,7 +42,7 @@ namespace RatchetEdit
 
         }
 
-        public byte[] serialize()
+        public byte[] Serialize()
         {
             byte[] bytes = new byte[0x10 + mobyData.Count * 0x08 + tieData.Count * 0x08 + shrubData.Count * 0x08];
             WriteInt(ref bytes, 0x00, mobyData.Count);
@@ -52,20 +52,20 @@ namespace RatchetEdit
             int offset = 0;
             for(int i = 0; i < mobyData.Count; i++)
             {
-                WriteInt(ref bytes, 0x10 + i * 0x08, mobyData[i].Key);
-                WriteInt(ref bytes, 0x14 + i * 0x08, mobyData[i].Value);
+                BitConverter.GetBytes(mobyData[i].Key).CopyTo(bytes, 0x10 + i * 0x08);
+                BitConverter.GetBytes(mobyData[i].Value).CopyTo(bytes, 0x14 + i * 0x08);
             }
             offset += mobyData.Count * 0x08;
             for (int i = 0; i < tieData.Count; i++)
             {
-                WriteInt(ref bytes, 0x10 + offset + i * 0x08, tieData[i].Key);
-                WriteInt(ref bytes, 0x14 + offset + i * 0x08, tieData[i].Value);
+                BitConverter.GetBytes(tieData[i].Key).CopyTo(bytes, 0x10 + offset + i * 0x08);
+                BitConverter.GetBytes(tieData[i].Value).CopyTo(bytes, 0x14 + offset + i * 0x08);
             }
             offset += tieData.Count * 0x08;
             for (int i = 0; i < shrubData.Count; i++)
             {
-                WriteInt(ref bytes, 0x10 + offset + i * 0x08, shrubData[i].Key);
-                WriteInt(ref bytes, 0x14 + offset + i * 0x08, shrubData[i].Value);
+                BitConverter.GetBytes(shrubData[i].Key).CopyTo(bytes, 0x10 + offset + i * 0x08);
+                BitConverter.GetBytes(shrubData[i].Value).CopyTo(bytes, 0x14 + offset + i * 0x08);
             }
 
             return bytes;

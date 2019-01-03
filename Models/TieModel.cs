@@ -14,14 +14,14 @@ namespace RatchetEdit
         const int TIEVERTELEMSIZE = 0x18;
         const int TIEUVELEMSIZE = 0x08;
 
-        [CategoryAttribute("Attributes"), TypeConverter(typeof(ExpandableObjectConverter)), DisplayName("Header")]
+        [Category("Attributes"), TypeConverter(typeof(ExpandableObjectConverter)), DisplayName("Header")]
         public TieModelHeader head { get; set; }
 
         public TieModel(FileStream fs, TieModelHeader head)
         {
             this.head = head;
             size = 1.0f;
-            ID = head.modelID;
+            id = head.modelID;
 
             textureConfig = GetTextureConfigs(fs, head.texturePointer, head.textureCount, TIETEXELEMSIZE);
             int faceCount = GetFaceCount();

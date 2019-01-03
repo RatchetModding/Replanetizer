@@ -46,48 +46,46 @@ namespace RatchetEdit
             mainForm = main;
             level = main.level;
 
-
-            #region model list setup
+            //Setup model tree
             if (level != null)
             {
-                List<TreeNode> mobyNodes = new List<TreeNode>();
-                foreach (Model mod in level.mobyModels)
-                {
-                    mobyNodes.Add(new TreeNode() {
-                        Text = mod?.ID.ToString("X"),
-                        ForeColor = mod.vertexBuffer != null ? Color.Black : Color.Red
-                    });
-                }
-                TreeNode mobyNode = new TreeNode("Moby", mobyNodes.ToArray());
-                modelView.Nodes.Add(mobyNode);
+                modelView.Nodes.Add(GetModelNodes("Moby", level.mobyModels));
 
+                modelView.Nodes.Add(GetModelNodes("Tie", level.tieModels));
 
-                List<TreeNode> levelModelNodes = new List<TreeNode>();
-                foreach (Model mod in level.tieModels)
-                {
-                    levelModelNodes.Add(new TreeNode()
-                    {
-                        Text = mod?.ID.ToString("X"),
-                        ForeColor = mod.vertexBuffer != null ? Color.Black : Color.Red
-                    });
-                }
-                TreeNode levelNode = new TreeNode("Level", levelModelNodes.ToArray());
-                modelView.Nodes.Add(levelNode);
-
-
-                List<TreeNode> sceneryModelNodes = new List<TreeNode>();
-                foreach (Model mod in level.shrubModels)
-                {
-                    sceneryModelNodes.Add(new TreeNode()
-                    {
-                        Text = mod?.ID.ToString("X"),
-                        ForeColor = mod.vertexBuffer != null ? Color.Black : Color.Red
-                    });
-                }
-                TreeNode sceneryNode = new TreeNode("Scenery", sceneryModelNodes.ToArray());
-                modelView.Nodes.Add(sceneryNode);
+                modelView.Nodes.Add(GetModelNodes("Shrub", level.shrubModels));
             }
-            #endregion
+        }
+
+        public TreeNode GetModelNodes(string name, List<Model> models)
+        {
+            TreeNode newNode = new TreeNode(name);
+            foreach (Model mod in models)
+            {
+                newNode.Nodes.Add(new TreeNode()
+                {
+                    Text = mod?.id.ToString("X"),
+                    ForeColor = mod.vertexBuffer != null ? Color.Black : Color.Red
+                });
+            }
+            return newNode;
+        }
+
+        public void UpdateModel()
+        {
+            if (selectedModel.vertexBuffer != null) //Check that there's actually vertex data to be rendered
+            {
+                scale = Matrix4.CreateScale(selectedModel.size);
+
+                ready = true;
+                invalidate = true;
+            }
+            else
+            {
+                ready = false;
+                invalidate = true;
+            }
+            propertyGrid1.SelectedObject = selectedModel;
         }
 
         private void modelView_AfterSelect(object sender, TreeViewEventArgs e)
@@ -100,16 +98,16 @@ namespace RatchetEdit
                         selectedModel = level.mobyModels[modelView.SelectedNode.Index];
                         LoadObjBtn.Enabled = false;
                         break;
-                    case "Level":
+                    case "Tie":
                         selectedModel = level.tieModels[modelView.SelectedNode.Index];
                         LoadObjBtn.Enabled = true;
                         break;
-                    case "Scenery":
+                    case "Shrub":
                         selectedModel = level.shrubModels[modelView.SelectedNode.Index];
                         LoadObjBtn.Enabled = true;
                         break;
                 }
-                updateModel();
+                UpdateModel();
             }
         }
 
@@ -129,38 +127,21 @@ namespace RatchetEdit
             projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, (float)glControl1.Width / glControl1.Height, 0.1f, 100.0f);
             trans = Matrix4.CreateTranslation(0.0f, 0.0f, -5.0f);
 
-            int VAO;
-            GL.GenVertexArrays(1, out VAO);
+            GL.GenVertexArrays(1, out int VAO);
             GL.BindVertexArray(VAO);
 
-            updateModel();
-        }
-
-        public void updateModel()
-        {
-            if (selectedModel.vertexBuffer != null) //Check that there's actually vertex data to be rendered
-            {
-                scale = Matrix4.CreateScale(selectedModel.size);
-
-                ready = true;
-                invalidate = true;
-            }
-            else
-            {
-                ready = false;
-            }
-            propertyGrid1.SelectedObject = selectedModel;
+            UpdateModel();
         }
 
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
+            glControl1.MakeCurrent();
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
             if (ready)
             {
-                glControl1.MakeCurrent();
                 view = Matrix4.LookAt(new Vector3(10 + zoom, 10 + zoom, 10 + zoom), Vector3.Zero, UP);
                 Matrix4 mvp = trans * scale * rot * view * projection;  //Has to be done in this order to work correctly
-
-                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
                 GL.UseProgram(shaderID);
                 GL.UniformMatrix4(matrixID, false, ref mvp);
@@ -168,20 +149,14 @@ namespace RatchetEdit
                 GL.EnableVertexAttribArray(0);
                 GL.EnableVertexAttribArray(1);
 
-                selectedModel.getIBO();
-                selectedModel.getVBO();
-
-                //Bind textures one by one, applying it to the relevant vertices based on the index array
-                foreach (TextureConfig texConfig in selectedModel.textureConfig)
-                {
-                    GL.BindTexture(TextureTarget.Texture2D, (texConfig.ID > 0) ? level.textures[texConfig.ID].getTexture() : 0);
-                    GL.DrawElements(PrimitiveType.Triangles, texConfig.size, DrawElementsType.UnsignedShort, texConfig.start * sizeof(ushort));
-                }
+                selectedModel.Draw(level.textures);
 
                 GL.DisableVertexAttribArray(1);
                 GL.DisableVertexAttribArray(0);
-                glControl1.SwapBuffers();
+                
             }
+
+            glControl1.SwapBuffers();
         }
 
         private void glControl1_MouseWheel(object sender, MouseEventArgs e)
@@ -221,15 +196,12 @@ namespace RatchetEdit
 
         private void saveObjBtn_Click(object sender, EventArgs e)
         {
-
             Model model = selectedModel;
-
 
             StreamWriter OBJfs = new StreamWriter("out.obj");
             StreamWriter MTLfs = new StreamWriter("out.mtl");
 
-
-            OBJfs.WriteLine("o Object_" + model.ID.ToString("X4"));
+            OBJfs.WriteLine("o Object_" + model.id.ToString("X4"));
             if (model.textureConfig != null)
                 OBJfs.WriteLine("mtllib out.mtl");
 
@@ -292,6 +264,12 @@ namespace RatchetEdit
             }
             OBJfs.Close();
 
+        }
+
+        private void glControl1_Resize(object sender, EventArgs e)
+        {
+            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, (float)glControl1.Width / glControl1.Height, 0.1f, 100.0f);
+            invalidate = true;
         }
     }
 }

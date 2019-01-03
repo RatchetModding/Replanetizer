@@ -14,14 +14,14 @@ namespace RatchetEdit
         const int SHRUBVERTELEMSIZE = 0x18;
         const int SHRUBUVELEMSIZE = 0x08;
 
-        [CategoryAttribute("Attributes"), TypeConverter(typeof(ExpandableObjectConverter)), DisplayName("Header")]
+        [Category("Attributes"), TypeConverter(typeof(ExpandableObjectConverter)), DisplayName("Header")]
         public TieModelHeader head { get; set; }
 
         public ShrubModel(FileStream fs, TieModelHeader head)
         {
             this.head = head;
             size = 1.0f;
-            ID = head.modelID;
+            id = head.modelID;
 
             textureConfig = GetTextureConfigs(fs, head.texturePointer, head.textureCount, SHRUBTEXELEMSIZE);
             int faceCount = GetFaceCount();

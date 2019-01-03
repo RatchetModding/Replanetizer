@@ -97,11 +97,25 @@ namespace RatchetEdit
             occlusionPointer = 0;
         }
 
-        public GameplayHeader(FileStream gameplayFile)
+        public GameplayHeader(GameType game, FileStream gameplayFile)
         {
-            byte[] gameplayHeadBlock = new byte[RAC1GAMEPLAYSIZE];
-            gameplayFile.Read(gameplayHeadBlock, 0, RAC1GAMEPLAYSIZE);
+            byte[] gameplayHeadBlock = new byte[0xA0];
+            gameplayFile.Read(gameplayHeadBlock, 0, 0xA0);
 
+            switch (game.num)
+            {
+                case 1:
+                    GetRC1Vals(gameplayHeadBlock);
+                    break;
+                case 2:
+                case 3:
+                    GetRC2Vals(gameplayHeadBlock);
+                    break;
+            }
+        }
+
+        private void GetRC1Vals(byte[] gameplayHeadBlock)
+        {
             levelVarPointer = ReadInt(gameplayHeadBlock, 0x00);
             type04Pointer = ReadInt(gameplayHeadBlock, 0x04);
             cameraPointer = ReadInt(gameplayHeadBlock, 0x08);
@@ -138,7 +152,7 @@ namespace RatchetEdit
             unkPointer12 = ReadInt(gameplayHeadBlock, 0x6C);//Nullable
 
             splinePointer = ReadInt(gameplayHeadBlock, 0x70);
-            unkPointer13= ReadInt(gameplayHeadBlock, 0x74);//Nullable
+            unkPointer13 = ReadInt(gameplayHeadBlock, 0x74);//Nullable
             unkPointer14 = ReadInt(gameplayHeadBlock, 0x78);//Nullable
             unkPointer15 = ReadInt(gameplayHeadBlock, 0x7C);//Nullable
 
@@ -148,7 +162,57 @@ namespace RatchetEdit
             occlusionPointer = ReadInt(gameplayHeadBlock, 0x8C);//Nullable
         }
 
-        public byte[] serialize()
+        private void GetRC2Vals(byte[] gameplayHeadBlock)
+        {
+            levelVarPointer = ReadInt(gameplayHeadBlock, 0x00);
+            type04Pointer = ReadInt(gameplayHeadBlock, 0x04);
+            cameraPointer = ReadInt(gameplayHeadBlock, 0x08);
+            type0CPointer = ReadInt(gameplayHeadBlock, 0x0C);
+
+            englishPointer = ReadInt(gameplayHeadBlock, 0x10);//Nullable
+            lang2Pointer = ReadInt(gameplayHeadBlock, 0x14);//Nullable
+            frenchPointer = ReadInt(gameplayHeadBlock, 0x18);//Nullable
+            germanPointer = ReadInt(gameplayHeadBlock, 0x1C);//Nullable
+
+            spanishPointer = ReadInt(gameplayHeadBlock, 0x20);//Nullable
+            italianPointer = ReadInt(gameplayHeadBlock, 0x24);//Nullable
+            lang7Pointer = ReadInt(gameplayHeadBlock, 0x28);//Nullable
+            lang8Pointer = ReadInt(gameplayHeadBlock, 0x2C);//Nullable
+
+            //tieIdPointer = ReadInt(gameplayHeadBlock, 0x30);//Nullable
+            //tiePointer = ReadInt(gameplayHeadBlock, 0x34);//Nullable
+            //shrubIdPointer = ReadInt(gameplayHeadBlock, 0x38);//Nullable
+            //shrubPointer = ReadInt(gameplayHeadBlock, 0x3C);//Nullable
+
+            //mobyIdPointer = ReadInt(gameplayHeadBlock, 0x40);//Nullable
+            // = ReadInt(gameplayHeadBlock, 0x44);
+            //unkPointer6 = ReadInt(gameplayHeadBlock, 0x48);
+            mobyPointer = ReadInt(gameplayHeadBlock, 0x4C);
+
+            //unkPointer8 = ReadInt(gameplayHeadBlock, 0x50);//Nullable
+            // = ReadInt(gameplayHeadBlock, 0x54);
+            // = ReadInt(gameplayHeadBlock, 0x58);
+            pvarSizePointer = ReadInt(gameplayHeadBlock, 0x5C);
+
+            pvarPointer = ReadInt(gameplayHeadBlock, 0x60);
+            unkPointer9 = ReadInt(gameplayHeadBlock, 0x64);//Nullable
+            spawnPointPointer = ReadInt(gameplayHeadBlock, 0x68);//Nullable
+            //unkPointer12 = ReadInt(gameplayHeadBlock, 0x6C);//Nullable
+
+            //= ReadInt(gameplayHeadBlock, 0x70);
+            //unkPointer13 = ReadInt(gameplayHeadBlock, 0x74);//Nullable
+            splinePointer = ReadInt(gameplayHeadBlock, 0x78);//Nullable
+            //unkPointer15 = ReadInt(gameplayHeadBlock, 0x7C);//Nullable
+
+            //type80Pointer = ReadInt(gameplayHeadBlock, 0x80);//Nullable
+            //unkPointer17 = ReadInt(gameplayHeadBlock, 0x84);
+            //type88Pointer = ReadInt(gameplayHeadBlock, 0x88);//Nullable
+            //occlusionPointer = ReadInt(gameplayHeadBlock, 0x8C);//Nullable
+
+            occlusionPointer = ReadInt(gameplayHeadBlock, 0x90);//Nullable
+        }
+
+        public byte[] Serialize()
         {
             byte[] bytes = new byte[0xB0];
 

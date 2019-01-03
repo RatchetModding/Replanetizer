@@ -11,7 +11,7 @@ namespace RatchetEdit
     public abstract class LevelObject : ITransformable
     {
         protected Vector3 _position = new Vector3();
-        [CategoryAttribute("Transform"), TypeConverter(typeof(Vector3Converter)), DisplayName("Position")]
+        [Category("Transform"), TypeConverter(typeof(Vector3Converter)), DisplayName("Position")]
         public virtual Vector3 position {
             get { return _position; }
             set {
@@ -20,7 +20,7 @@ namespace RatchetEdit
             }
         }
         protected Vector3 _rotation = new Vector3();
-        [CategoryAttribute("Transform"), TypeConverter(typeof(Vector3Converter)), DisplayName("Rotation")]
+        [Category("Transform"), TypeConverter(typeof(Vector3Converter)), DisplayName("Rotation")]
         public virtual Vector3 rotation {
             get { return _rotation; }
             set {
@@ -30,7 +30,7 @@ namespace RatchetEdit
         }
 
         protected float _scale = 1;
-        [CategoryAttribute("Transform"), DisplayName("Scale")]
+        [Category("Transform"), DisplayName("Scale")]
         public virtual float scale {
             get { return _scale; }
             set {

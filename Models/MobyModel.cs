@@ -13,17 +13,16 @@ namespace RatchetEdit
         const int VERTELEMENTSIZE = 0x28;
         const int TEXTUREELEMENTSIZE = 0x10;
 
-        [CategoryAttribute("Attributes"), TypeConverter(typeof(ExpandableObjectConverter)), DisplayName("Model Header")]
+        [Category("Attributes"), TypeConverter(typeof(ExpandableObjectConverter)), DisplayName("Model Header")]
         public MobyModelHeader head { get; set; }
-
 
         public MobyModel(FileStream fs, short modelID, int offset)
         {
-            ID = modelID;
+            id = modelID;
             if (offset != 0x00)
             {
                 head = new MobyModelHeader(fs, offset);
-                ID = modelID;
+                id = modelID;
                 size = head.scale;
 
                 int faceCount = 0;

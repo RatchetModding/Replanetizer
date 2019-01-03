@@ -21,8 +21,8 @@ namespace RatchetEdit
             }
         }
 
-        protected List<MobyModel> GetMobyModels(int mobyModelPointer) {
-            List<MobyModel> mobyModels = new List<MobyModel>();
+        protected List<Model> GetMobyModels(int mobyModelPointer) {
+            List<Model> mobyModels = new List<Model>();
 
             //Get the moby count from the start of the section
             int mobyModelCount = ReadInt(ReadBlock(fileStream, mobyModelPointer, 4), 0);

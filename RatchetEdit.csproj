@@ -40,6 +40,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.DirectoryServices" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -59,10 +60,19 @@
     <Compile Include="Level Objects\GameCamera.cs" />
     <Compile Include="Level Objects\LevelObject.cs" />
     <Compile Include="Level Objects\ModelObject.cs" />
+    <Compile Include="Level Objects\occlusionData.cs" />
     <Compile Include="Level Objects\Tie.cs" />
     <Compile Include="Level Objects\Moby.cs" />
+    <Compile Include="Level Objects\Type04.cs" />
+    <Compile Include="Level Objects\Type0C.cs" />
+    <Compile Include="Level Objects\Type64.cs" />
+    <Compile Include="Level Objects\Type68.cs" />
+    <Compile Include="Level Objects\Type80.cs" />
+    <Compile Include="Level Objects\Type88.cs" />
     <Compile Include="LevelVariables.cs" />
     <Compile Include="Level Objects\ITransformable.cs" />
+    <Compile Include="Models\Animation\Animation.cs" />
+    <Compile Include="Models\Animation\Frame.cs" />
     <Compile Include="Models\MobyModel.cs" />
     <Compile Include="Models\ShrubModel.cs" />
     <Compile Include="Models\SkyboxModel.cs" />
@@ -89,7 +99,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Parsers\RatchetFileParser.cs" />
     <Compile Include="Serializers\GameplaySerializer.cs" />
-    <Compile Include="SpawnPoint.cs" />
+    <Compile Include="Level Objects\SpawnPoint.cs" />
     <Compile Include="Level Objects\Spline.cs" />
     <Compile Include="Texture.cs" />
     <Compile Include="TextureConfig.cs" />

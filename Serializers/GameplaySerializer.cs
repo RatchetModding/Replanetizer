@@ -25,10 +25,26 @@ namespace RatchetEdit.Serializers
             byte[] splines = GetSplines(level.splines);
             byte[] spawnPoints = GetSpawnPoints(level.spawnPoints);
             byte[] gameCameras = GetGameCameras(level.gameCameras);
+            byte[] type04s = GetType04s(level.type04s);
+            byte[] type0Cs = GetType0Cs(level.type0Cs);
+            byte[] type64s = GetType64s(level.type64s);
+            byte[] type68s = GetType68s(level.type68s);
+            byte[] type80s = GetType80s(level.type80s);
+            byte[] type88s = GetType88s(level.type88s);
+
+            byte[] mobyIds = GetIds(level.mobyIds);
+            byte[] tieIds = GetIds(level.tieIds);
+            byte[] shrubIds = GetIds(level.shrubIds);
+            byte[] off_6C = new byte[0x10];
+            byte[] occlusionData = GetOcclusionData(level.occlusionData);
 
             //Seek past the header
-            fs.Seek(0xB0, SeekOrigin.Begin);
+            fs.Seek(0xA0, SeekOrigin.Begin);
 
+            gameplayHeader.type88Pointer = (int)fs.Position;
+            fs.Write(type88s, 0, type88s.Length);
+
+            seekPast(fs);
             gameplayHeader.levelVarPointer = (int)fs.Position;
             fs.Write(levelVariables, 0, levelVariables.Length);
 
@@ -56,12 +72,33 @@ namespace RatchetEdit.Serializers
             gameplayHeader.italianPointer = (int)fs.Position;
             fs.Write(level.italian, 0, level.italian.Length);
 
+            seekPast(fs);
+            gameplayHeader.lang7Pointer = (int)fs.Position;
+            fs.Write(level.lang7, 0, level.lang7.Length);
 
+            seekPast(fs);
+            gameplayHeader.lang8Pointer = (int)fs.Position;
+            fs.Write(level.lang8, 0, level.lang8.Length);
 
+            seekPast(fs);
+            gameplayHeader.type04Pointer = (int)fs.Position;
+            fs.Write(type04s, 0, type04s.Length);
+
+            seekPast(fs);
+            gameplayHeader.type80Pointer = (int)fs.Position;
+            fs.Write(type80s, 0, type80s.Length);
 
             seekPast(fs);
             gameplayHeader.cameraPointer = (int)fs.Position;
             fs.Write(gameCameras, 0, gameCameras.Length);
+
+            seekPast(fs);
+            gameplayHeader.type0CPointer = (int)fs.Position;
+            fs.Write(type0Cs, 0, type0Cs.Length);
+
+            seekPast(fs);
+            gameplayHeader.mobyIdPointer = (int)fs.Position;
+            fs.Write(mobyIds, 0, mobyIds.Length);
 
             seekPast(fs);
             gameplayHeader.mobyPointer = (int)fs.Position;
@@ -74,6 +111,8 @@ namespace RatchetEdit.Serializers
             seekPast(fs);
             gameplayHeader.pvarPointer = (int)fs.Position;
             fs.Write(pVars, 0, pVars.Length);
+
+            //0x50
 
             seekPast(fs);
             gameplayHeader.unkPointer9 = (int)fs.Position;
@@ -88,6 +127,22 @@ namespace RatchetEdit.Serializers
             fs.Write(level.unk7, 0, level.unk7.Length);
 
             seekPast(fs);
+            gameplayHeader.tieIdPointer = (int)fs.Position;
+            fs.Write(tieIds, 0, tieIds.Length);
+
+            seekPast(fs);
+            gameplayHeader.tiePointer = (int)fs.Position;
+            fs.Write(level.tieData, 0, level.tieData.Length);
+
+            seekPast(fs);
+            gameplayHeader.shrubIdPointer = (int)fs.Position;
+            fs.Write(shrubIds, 0, shrubIds.Length);
+
+            seekPast(fs);
+            gameplayHeader.shrubPointer = (int)fs.Position;
+            fs.Write(level.shrubData, 0, level.shrubData.Length);
+
+            seekPast(fs);
             gameplayHeader.splinePointer = (int)fs.Position;
             fs.Write(splines, 0, splines.Length);
 
@@ -96,10 +151,28 @@ namespace RatchetEdit.Serializers
             fs.Write(spawnPoints, 0, spawnPoints.Length);
 
             seekPast(fs);
+            gameplayHeader.type64Pointer = (int)fs.Position;
+            fs.Write(type64s, 0, type64s.Length);
+
+            seekPast(fs);
+            gameplayHeader.type68Pointer = (int)fs.Position;
+            fs.Write(type68s, 0, type68s.Length);
+
+            seekPast(fs);
+            gameplayHeader.unkPointer12 = (int)fs.Position;
+            fs.Write(off_6C, 0, off_6C.Length);
+
+            seekPast(fs);
             gameplayHeader.unkPointer17 = (int)fs.Position;
             fs.Write(level.unk17, 0, level.unk17.Length);
 
+            //0x78
+            //0x7C
+            //0x74
 
+            seekPast(fs);
+            gameplayHeader.occlusionPointer = (int)fs.Position;
+            fs.Write(occlusionData, 0, occlusionData.Length);
 
             //Seek to the beginning of the file to append the updated header
             byte[] head = gameplayHeader.serialize();
@@ -167,6 +240,117 @@ namespace RatchetEdit.Serializers
             return bytes;
         }
 
+        public byte[] GetType04s(List<Type04> type04s)
+        {
+            byte[] bytes = new byte[0x10 + type04s.Count * Type04.ELEMENTSIZE];
+
+            //Header
+            WriteInt(ref bytes, 0, type04s.Count);
+
+            for (int i = 0; i < type04s.Count; i++)
+            {
+                byte[] type04Byte = type04s[i].serialize();
+                type04Byte.CopyTo(bytes, 0x10 + i * Type04.ELEMENTSIZE);
+            }
+
+            return bytes;
+        }
+
+        public byte[] GetType0Cs(List<Type0C> type0Cs)
+        {
+            byte[] bytes = new byte[0x10 + type0Cs.Count * Type0C.TYPE0CELEMSIZE];
+
+            //Header
+            WriteInt(ref bytes, 0, type0Cs.Count);
+
+            for (int i = 0; i < type0Cs.Count; i++)
+            {
+                byte[] type0CByte = type0Cs[i].serialize();
+                type0CByte.CopyTo(bytes, 0x10 + i * Type0C.TYPE0CELEMSIZE);
+            }
+
+            return bytes;
+        }
+
+        public byte[] GetType64s(List<Type64> type64s)
+        {
+            byte[] bytes = new byte[0x10 + type64s.Count * Type64.ELEMENTSIZE];
+
+            //Header
+            WriteInt(ref bytes, 0, type64s.Count);
+
+            for (int i = 0; i < type64s.Count; i++)
+            {
+                byte[] type64Bytes = type64s[i].serialize();
+                type64Bytes.CopyTo(bytes, 0x10 + i * Type64.ELEMENTSIZE);
+            }
+
+            return bytes;
+        }
+
+        public byte[] GetType68s(List<Type68> type68s)
+        {
+            byte[] bytes = new byte[0x10 + type68s.Count * Type68.TYPE68ELEMSIZE];
+
+            //Header
+            WriteInt(ref bytes, 0, type68s.Count);
+
+            for (int i = 0; i < type68s.Count; i++)
+            {
+                byte[] type68Bytes = type68s[i].serialize();
+                type68Bytes.CopyTo(bytes, 0x10 + i * Type68.TYPE68ELEMSIZE);
+            }
+
+            return bytes;
+        }
+
+        public byte[] GetType88s(List<Type88> type88s)
+        {
+            byte[] bytes = new byte[0x10 + type88s.Count * Type88.TYPE88ELEMSIZE];
+
+            //Header
+            WriteInt(ref bytes, 0, type88s.Count);
+
+            for (int i = 0; i < type88s.Count; i++)
+            {
+                byte[] type88Bytes = type88s[i].serialize();
+                type88Bytes.CopyTo(bytes, 0x10 + i * Type88.TYPE88ELEMSIZE);
+            }
+
+            return bytes;
+        }
+
+
+        public byte[] GetType80s(List<Type80> type80s)
+        {
+            byte[] bytes = new byte[0x10 + type80s.Count * (Type80.HEADSIZE + Type80.DATASIZE)];
+
+            //Header
+            WriteInt(ref bytes, 0, type80s.Count);
+
+            for (int i = 0; i < type80s.Count; i++)
+            {
+                byte[] headBytes = type80s[i].serializeHead();
+                byte[] dataBytes = type80s[i].serializeData();
+
+                headBytes.CopyTo(bytes, 0x10 + i * Type80.HEADSIZE);
+                dataBytes.CopyTo(bytes, 0x10 + Type80.HEADSIZE * type80s.Count + i * Type80.DATASIZE);
+            }
+            return bytes;
+        }
+
+        public byte[] GetIds(List<int> ids)
+        {
+            byte[] bytes = new byte[0x04 + ids.Count * 4];
+            BitConverter.GetBytes(ids.Count).CopyTo(bytes, 0);
+            for (int i = 0; i < ids.Count; i++)
+            {
+                BitConverter.GetBytes(ids[i]).CopyTo(bytes, 0x04 + i * 0x04);
+            }
+            return bytes;
+        }
+
+
         public byte[] GetSplines(List<Spline> splines)
         {
             List<byte[]> splineData = new List<byte[]>();
@@ -232,6 +416,11 @@ namespace RatchetEdit.Serializers
             }
 
             return bytes;
+        }
+
+        public byte[] GetOcclusionData(OcclusionData occlusionData)
+        {
+            return occlusionData.serialize();
         }
 
     }

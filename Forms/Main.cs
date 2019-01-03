@@ -583,8 +583,10 @@ namespace RatchetEdit
 
         public void DeleteMoby(Moby moby)
         {
+            int index = level.mobs.IndexOf(moby);
             level.mobs.Remove(moby);
-            GenerateObjectTree();
+            objectTree.Nodes[0].Nodes[index].Remove();
+            //GenerateObjectTree();
             SelectObject(null);
             InvalidateView();
         }
@@ -652,7 +654,7 @@ namespace RatchetEdit
 
         private void drawModelObject(ModelObject obj)
         {
-            if (obj.model.vertexBuffer != null)
+            if (obj.model != null && obj.model.vertexBuffer != null)
             {
                 Matrix4 mvp = obj.modelMatrix * worldView;  //Has to be done in this order to work correctly
                 GL.UniformMatrix4(matrixID, false, ref mvp);
@@ -718,7 +720,7 @@ namespace RatchetEdit
         {
             foreach (ModelObject levelObject in levelObjects)
             {
-                if (levelObject.model.vertexBuffer != null)
+                if (levelObject.model != null &&  levelObject.model.vertexBuffer != null)
                 {
                     Matrix4 mvp = levelObject.modelMatrix * worldView;  //Has to be done in this order to work correctly
                     GL.UniformMatrix4(matrixID, false, ref mvp);

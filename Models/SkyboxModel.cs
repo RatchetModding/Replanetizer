@@ -14,7 +14,7 @@ namespace RatchetEdit
 
         public SkyboxModel(FileStream fs, int offset)
         {
-            ID = 0;
+            
             size = 1.0f;
             byte[] skyBlockHead = ReadBlock(fs, offset, 0x1C);
 

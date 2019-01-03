@@ -41,10 +41,18 @@ namespace RatchetEdit
 
         public static byte[] ReadBlock(FileStream fs, int offset, int length)
         {
-            fs.Seek(offset, SeekOrigin.Begin);
-            byte[] returnBytes = new byte[length];
-            fs.Read(returnBytes, 0, length);
-            return returnBytes;
+            if(length > 0)
+            {
+                fs.Seek(offset, SeekOrigin.Begin);
+                byte[] returnBytes = new byte[length];
+                fs.Read(returnBytes, 0, length);
+                return returnBytes;
+            }
+            else
+            {
+                byte[] returnBytes = new byte[0x10];
+                return returnBytes;
+            }
         }
 
         public static void WriteUint(ref byte[] byteArr, int offset, uint input)

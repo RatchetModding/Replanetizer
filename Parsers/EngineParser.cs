@@ -11,7 +11,7 @@ namespace RatchetEdit
             engineHead = new EngineHeader(fileStream);
         }
 
-        public List<Model> GetMobyModels()
+        public List<MobyModel> GetMobyModels()
         {
             return GetMobyModels(engineHead.mobyModelPointer);
         }

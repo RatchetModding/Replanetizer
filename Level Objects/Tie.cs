@@ -33,7 +33,7 @@ namespace RatchetEdit
         public uint off_58 { get; set; }
         public uint off_5C { get; set; }
 
-        public int colorOffset;
+        public int colorOffset { get; set; }
         public uint off_64 { get; set; }
         public uint off_68 { get; set; }
         public uint off_6C{ get; set; }

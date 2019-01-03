@@ -13,9 +13,9 @@ namespace RatchetEdit
         public const int RAC1GAMEPLAYSIZE = 0x90;
 
         public int levelVarPointer;
-        public int unkPointer1;
+        public int type04Pointer;
         public int cameraPointer;
-        public int unkPointer2;
+        public int type0CPointer;
 
         public int englishPointer;
         public int lang2Pointer;
@@ -24,8 +24,8 @@ namespace RatchetEdit
 
         public int spanishPointer;
         public int italianPointer;
-        public int unkPointer4;
-        public int unkPointer5;
+        public int lang7Pointer;
+        public int lang8Pointer;
 
         public int tieIdPointer;
         public int tiePointer;
@@ -43,8 +43,8 @@ namespace RatchetEdit
         public int unkPointer9;
 
         public int spawnPointPointer;
-        public int unkPointer10;
-        public int unkPointer11;
+        public int type64Pointer;
+        public int type68Pointer;
         public int unkPointer12;
 
         public int splinePointer;
@@ -52,25 +52,25 @@ namespace RatchetEdit
         public int unkPointer14;
         public int unkPointer15;
 
-        public int unkPointer16;
+        public int type80Pointer;
         public int unkPointer17;
-        public int unkPointer18;
+        public int type88Pointer;
         public int occlusionPointer;
 
         public GameplayHeader()
         {
             levelVarPointer = 0;
-            unkPointer1 = 0;
+            type04Pointer = 0;
             cameraPointer = 0;
-            unkPointer2 = 0;
+            type0CPointer = 0;
             englishPointer = 0;
             lang2Pointer = 0;
             frenchPointer = 0;
             germanPointer = 0;
             spanishPointer = 0;
             italianPointer = 0;
-            unkPointer4 = 0;
-            unkPointer5 = 0;
+            lang7Pointer = 0;
+            lang8Pointer = 0;
             tieIdPointer = 0;
             tiePointer = 0;
             shrubIdPointer = 0;
@@ -84,16 +84,16 @@ namespace RatchetEdit
             pvarPointer = 0;
             unkPointer9 = 0;
             spawnPointPointer = 0;
-            unkPointer10 = 0;
-            unkPointer11 = 0;
+            type64Pointer = 0;
+            type68Pointer = 0;
             unkPointer12 = 0;
             splinePointer = 0;
             unkPointer13 = 0;
             unkPointer14 = 0;
             unkPointer15 = 0;
-            unkPointer16 = 0;
+            type80Pointer = 0;
             unkPointer17 = 0;
-            unkPointer18 = 0;
+            type88Pointer = 0;
             occlusionPointer = 0;
         }
 
@@ -103,9 +103,9 @@ namespace RatchetEdit
             gameplayFile.Read(gameplayHeadBlock, 0, RAC1GAMEPLAYSIZE);
 
             levelVarPointer = ReadInt(gameplayHeadBlock, 0x00);
-            unkPointer1 = ReadInt(gameplayHeadBlock, 0x04);
+            type04Pointer = ReadInt(gameplayHeadBlock, 0x04);
             cameraPointer = ReadInt(gameplayHeadBlock, 0x08);
-            unkPointer2 = ReadInt(gameplayHeadBlock, 0x0C);
+            type0CPointer = ReadInt(gameplayHeadBlock, 0x0C);
 
             englishPointer = ReadInt(gameplayHeadBlock, 0x10);//Nullable
             lang2Pointer = ReadInt(gameplayHeadBlock, 0x14);//Nullable
@@ -114,8 +114,8 @@ namespace RatchetEdit
 
             spanishPointer = ReadInt(gameplayHeadBlock, 0x20);//Nullable
             italianPointer = ReadInt(gameplayHeadBlock, 0x24);//Nullable
-            unkPointer4 = ReadInt(gameplayHeadBlock, 0x28);//Nullable
-            unkPointer5 = ReadInt(gameplayHeadBlock, 0x2C);//Nullable
+            lang7Pointer = ReadInt(gameplayHeadBlock, 0x28);//Nullable
+            lang8Pointer = ReadInt(gameplayHeadBlock, 0x2C);//Nullable
 
             tieIdPointer = ReadInt(gameplayHeadBlock, 0x30);//Nullable
             tiePointer = ReadInt(gameplayHeadBlock, 0x34);//Nullable
@@ -133,8 +133,8 @@ namespace RatchetEdit
             unkPointer9 = ReadInt(gameplayHeadBlock, 0x5C);
 
             spawnPointPointer = ReadInt(gameplayHeadBlock, 0x60);
-            unkPointer10 = ReadInt(gameplayHeadBlock, 0x64);//Nullable
-            unkPointer11 = ReadInt(gameplayHeadBlock, 0x68);//Nullable
+            type64Pointer = ReadInt(gameplayHeadBlock, 0x64);//Nullable
+            type68Pointer = ReadInt(gameplayHeadBlock, 0x68);//Nullable
             unkPointer12 = ReadInt(gameplayHeadBlock, 0x6C);//Nullable
 
             splinePointer = ReadInt(gameplayHeadBlock, 0x70);
@@ -142,9 +142,9 @@ namespace RatchetEdit
             unkPointer14 = ReadInt(gameplayHeadBlock, 0x78);//Nullable
             unkPointer15 = ReadInt(gameplayHeadBlock, 0x7C);//Nullable
 
-            unkPointer16 = ReadInt(gameplayHeadBlock, 0x80);//Nullable
+            type80Pointer = ReadInt(gameplayHeadBlock, 0x80);//Nullable
             unkPointer17 = ReadInt(gameplayHeadBlock, 0x84);
-            unkPointer18 = ReadInt(gameplayHeadBlock, 0x88);//Nullable
+            type88Pointer = ReadInt(gameplayHeadBlock, 0x88);//Nullable
             occlusionPointer = ReadInt(gameplayHeadBlock, 0x8C);//Nullable
         }
 
@@ -153,9 +153,9 @@ namespace RatchetEdit
             byte[] bytes = new byte[0xB0];
 
             WriteInt(ref bytes, 0x00, levelVarPointer);
-            WriteInt(ref bytes, 0x04, unkPointer1);
+            WriteInt(ref bytes, 0x04, type04Pointer);
             WriteInt(ref bytes, 0x08, cameraPointer);
-            WriteInt(ref bytes, 0x0C, unkPointer2);
+            WriteInt(ref bytes, 0x0C, type0CPointer);
 
             WriteInt(ref bytes, 0x10, englishPointer);
             WriteInt(ref bytes, 0x14, lang2Pointer);
@@ -164,8 +164,8 @@ namespace RatchetEdit
 
             WriteInt(ref bytes, 0x20, spanishPointer);
             WriteInt(ref bytes, 0x24, italianPointer);
-            WriteInt(ref bytes, 0x28, unkPointer4);
-            WriteInt(ref bytes, 0x2C, unkPointer5);
+            WriteInt(ref bytes, 0x28, lang7Pointer);
+            WriteInt(ref bytes, 0x2C, lang8Pointer);
 
             WriteInt(ref bytes, 0x30, tieIdPointer);
             WriteInt(ref bytes, 0x34, tiePointer);
@@ -183,8 +183,8 @@ namespace RatchetEdit
             WriteInt(ref bytes, 0x5C, unkPointer9);
 
             WriteInt(ref bytes, 0x60, spawnPointPointer);
-            WriteInt(ref bytes, 0x64, unkPointer10);
-            WriteInt(ref bytes, 0x68, unkPointer11);
+            WriteInt(ref bytes, 0x64, type64Pointer);
+            WriteInt(ref bytes, 0x68, type68Pointer);
             WriteInt(ref bytes, 0x6C, unkPointer12);
 
             WriteInt(ref bytes, 0x70, splinePointer);
@@ -192,9 +192,9 @@ namespace RatchetEdit
             WriteInt(ref bytes, 0x78, unkPointer13);
             WriteInt(ref bytes, 0x7C, unkPointer14);
 
-            WriteInt(ref bytes, 0x80, unkPointer16);
+            WriteInt(ref bytes, 0x80, type80Pointer);
             WriteInt(ref bytes, 0x84, unkPointer17);
-            WriteInt(ref bytes, 0x88, unkPointer18);
+            WriteInt(ref bytes, 0x88, type88Pointer);
             WriteInt(ref bytes, 0x8C, occlusionPointer);
 
             return bytes;

@@ -109,7 +109,6 @@ namespace RatchetEdit
                         LoadObjBtn.Enabled = true;
                         break;
                 }
-
                 updateModel();
             }
         }
@@ -139,11 +138,6 @@ namespace RatchetEdit
 
         public void updateModel()
         {
-            vertCountBox.Text = selectedModel.vertexBuffer?.Length.ToString();
-            faceCountBox.Text = selectedModel.indexBuffer?.Length.ToString();
-            IDBox.Text = selectedModel.ID.ToString("X");
-            sizeBox.Text = selectedModel.size.ToString();
-            texCountBox.Text = selectedModel.textureConfig?.Count.ToString();
             if (selectedModel.vertexBuffer != null) //Check that there's actually vertex data to be rendered
             {
                 scale = Matrix4.CreateScale(selectedModel.size);
@@ -155,6 +149,7 @@ namespace RatchetEdit
             {
                 ready = false;
             }
+            propertyGrid1.SelectedObject = selectedModel;
         }
 
         private void glControl1_Paint(object sender, PaintEventArgs e)

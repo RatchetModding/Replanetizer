@@ -73,6 +73,8 @@ namespace RatchetEdit
         [CategoryAttribute("Attributes"), DisplayName("Cutscene")]
         public int cutscene { get; set; }
 
+        [CategoryAttribute("Attributes"), DisplayName("pVars")]
+        public byte[] pVars { get; set; }
 
         public override float scale
         {
@@ -103,7 +105,7 @@ namespace RatchetEdit
 
         }
 
-        public Moby(byte[] mobyBlock, int offset, List<Model> mobyModels)
+        public Moby(byte[] mobyBlock, int offset, List<MobyModel> mobyModels)
         {
             missionID = ReadInt(mobyBlock, offset + 0x04);
             unk1 = ReadInt(mobyBlock, offset + 0x08);

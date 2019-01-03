@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,32 +10,43 @@ namespace RatchetEdit
 {
     public class MobyModel : Model
     {
-        const int MOBYVERTELEMSIZE = 0x28;
-        const int MOBYTEXELEMSIZE = 0x10;
+        const int VERTELEMENTSIZE = 0x28;
+        const int TEXTUREELEMENTSIZE = 0x10;
+
+        [CategoryAttribute("Attributes"), TypeConverter(typeof(ExpandableObjectConverter)), DisplayName("Model Header")]
+        public MobyModelHeader head { get; set; }
 
 
         public MobyModel(FileStream fs, short modelID, int offset)
         {
             ID = modelID;
-
             if (offset != 0x00)
             {
-                MobyModelHeader head = new MobyModelHeader(fs, offset);
-                if (head.headSize > 0)
+                head = new MobyModelHeader(fs, offset);
+                ID = modelID;
+                size = head.scale;
+
+                int faceCount = 0;
+
+                //Texture configuration
+                if (head.texBlockPointer > 0)
                 {
-                    ID = modelID;
-                    size = head.modelSize;
+                    textureConfig = GetTextureConfigs(fs, head.texBlockPointer, head.texCount, TEXTUREELEMENTSIZE);
+                    faceCount = GetFaceCount();
+                }
 
-                    //Texture configuration
-                    textureConfig = GetTextureConfigs(fs, head.texBlockPointer, head.texCount, MOBYTEXELEMSIZE);
-                    int faceCount = GetFaceCount();
-
+                if (head.vertPointer > 0 && head.vertexCount > 0)
+                {
                     //Get vertex buffer float[vertX, vertY, vertZ, normX, normY, normZ, U, V, reserved, reserved]
-                    vertexBuffer = GetVertices(fs, head.vertPointer, head.vertexCount, MOBYVERTELEMSIZE);
+                    vertexBuffer = GetVertices(fs, head.vertPointer, head.vertexCount, VERTELEMENTSIZE);
+                }
 
+                if (head.indexPointer > 0 && faceCount > 0)
+                {
                     //Index buffer
                     indexBuffer = GetIndices(fs, head.indexPointer, faceCount);
                 }
+
             }
         }
     }

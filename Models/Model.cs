@@ -17,7 +17,7 @@ namespace RatchetEdit
 
     public class Model
     {
-        public short ID;
+        public short ID { get; set; }
         public float size;
         public float[] vertexBuffer;
         public ushort[] indexBuffer;

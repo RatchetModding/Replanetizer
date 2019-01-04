@@ -114,7 +114,7 @@ namespace RatchetEdit {
 
             Console.WriteLine("Parsing terrain elements...");
             terrains = engineParser.GetTerrainModels();
-            Console.WriteLine("Added " + terrains.Count + " terrain elements");
+            Console.WriteLine("Added " + terrains?.Count + " terrain elements");
 
 
             Console.WriteLine("Parsing Level variables...");
@@ -122,7 +122,7 @@ namespace RatchetEdit {
 
             Console.WriteLine("Parsing mobs...");
             mobs = gameplayParser.GetMobies(game, mobyModels);
-            Console.WriteLine("Added " + mobs.Count + " mobs");
+            Console.WriteLine("Added " + mobs?.Count + " mobs");
 
             Console.WriteLine("Parsing splines...");
             splines = gameplayParser.GetSplines();

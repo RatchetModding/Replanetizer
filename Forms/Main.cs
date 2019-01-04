@@ -127,6 +127,7 @@ namespace RatchetEdit
 
             GenerateObjectTree();
 
+
             Moby ratchet = level.mobs[0];
             camera.MoveBehind(ratchet);
         }

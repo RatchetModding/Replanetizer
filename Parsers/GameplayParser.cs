@@ -109,10 +109,12 @@ namespace RatchetEdit {
         //TODO consolidate all these into a single function, as they work pretty much the same
         public List<Moby> GetMobies(GameType game, List<Model> mobyModels)
         {
-            if (gameplayHeader.mobyPointer == 0) { return null; }
-
             List<Moby> mobs = new List<Moby>();
+
+            if (gameplayHeader.mobyPointer == 0) { return mobs; }
+
             int mobyCount = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.mobyPointer, 4), 0);
+
             byte[] mobyBlock = ReadBlock(gameplayFileStream, gameplayHeader.mobyPointer + 0x10, mobyCount * game.mobyElemSize);
             for (int i = 0; i < mobyCount; i ++)
             {

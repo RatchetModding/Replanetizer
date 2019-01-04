@@ -16,7 +16,7 @@ namespace RatchetEdit.Serializers
         public void Save(Level level, String fileName)
         {
             FileStream fs = File.Open(fileName, FileMode.Create);
-            GameplayHeader gameplayHeader = new GameplayHeader();            
+            GameplayHeader gameplayHeader = new GameplayHeader();
 
             byte[] mobs = GetMobies(level.mobs);
             byte[] levelVariables = level.levelVariables.serialize();
@@ -192,6 +192,8 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetMobies(List<Moby> mobs)
         {
+            if(mobs == null) { return new byte[0x10]; }
+
             byte[] bytes = new byte[MOBYLENGTH * mobs.Count + 0x10];
 
             //Header
@@ -211,6 +213,8 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetSpawnPoints(List<SpawnPoint> spawnPoints)
         {
+            if (spawnPoints == null) { return new byte[0x10]; }
+
             byte[] bytes = new byte[0x80 * spawnPoints.Count + 0x10];
 
             //Header
@@ -226,6 +230,8 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetGameCameras(List<GameCamera> gameCameras)
         {
+            if (gameCameras == null) { return new byte[0x10]; }
+
             byte[] bytes = new byte[0x10 + gameCameras.Count * GameCamera.ELEMENTSIZE];
 
             //Header
@@ -242,6 +248,8 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetType04s(List<Type04> type04s)
         {
+            if (type04s == null) { return new byte[0x10]; }
+
             byte[] bytes = new byte[0x10 + type04s.Count * Type04.ELEMENTSIZE];
 
             //Header
@@ -258,6 +266,8 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetType0Cs(List<Type0C> type0Cs)
         {
+            if (type0Cs == null) { return new byte[0x10]; }
+
             byte[] bytes = new byte[0x10 + type0Cs.Count * Type0C.ELEMENTSIZE];
 
             //Header
@@ -274,6 +284,8 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetType64s(List<Type64> type64s)
         {
+            if (type64s == null) { return new byte[0x10]; }
+
             byte[] bytes = new byte[0x10 + type64s.Count * Type64.ELEMENTSIZE];
 
             //Header
@@ -290,6 +302,8 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetType68s(List<Type68> type68s)
         {
+            if (type68s == null) { return new byte[0x10]; }
+
             byte[] bytes = new byte[0x10 + type68s.Count * Type68.ELEMENTSIZE];
 
             //Header
@@ -306,6 +320,8 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetType88s(List<Type88> type88s)
         {
+            if (type88s == null) { return new byte[0x10]; }
+
             byte[] bytes = new byte[0x10 + type88s.Count * Type88.ELEMENTSIZE];
 
             //Header
@@ -323,6 +339,8 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetType80s(List<Type80> type80s)
         {
+            if (type80s == null) { return new byte[0x10]; }
+
             byte[] bytes = new byte[0x10 + type80s.Count * (Type80.HEADSIZE + Type80.DATASIZE)];
 
             //Header
@@ -341,6 +359,8 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetIds(List<int> ids)
         {
+            if (ids == null) { return new byte[0x10]; }
+
             byte[] bytes = new byte[0x04 + ids.Count * 4];
             BitConverter.GetBytes(ids.Count).CopyTo(bytes, 0);
             for (int i = 0; i < ids.Count; i++)
@@ -353,6 +373,8 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetSplines(List<Spline> splines)
         {
+            if (splines == null) { return new byte[0x10]; }
+
             List<byte[]> splineData = new List<byte[]>();
             List<int> offsets = new List<int>();
             int offset = 0;
@@ -394,6 +416,8 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetPvarSizes(List<byte[]> pVars)
         {
+            if (pVars == null) { return new byte[0x10]; }
+
             byte[] bytes = new byte[pVars.Count * 8];
             uint offset = 0;
             for(int i = 0; i < pVars.Count; i++)
@@ -407,6 +431,8 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetPvars(List<byte[]> pVars)
         {
+            if (pVars == null) { return new byte[0x10]; }
+
             var bytes = new byte[pVars.Sum(arr => arr.Length)];
             int index = 0;
             foreach (var pVar in pVars)
@@ -420,6 +446,8 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetOcclusionData(OcclusionData occlusionData)
         {
+            if (occlusionData == null) { return new byte[0x10]; }
+
             return occlusionData.Serialize();
         }
 

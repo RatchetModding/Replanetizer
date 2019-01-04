@@ -96,7 +96,11 @@ namespace RatchetEdit {
             try
             {
                 string[] tokens = ((string)value).Split(' ');
-                return new Vector3(float.Parse(tokens[0]), float.Parse(tokens[1]), float.Parse(tokens[2]));
+                return new Vector3(
+                    Utilities.fToRadians(float.Parse(tokens[0])), 
+                    Utilities.fToRadians(float.Parse(tokens[1])), 
+                    Utilities.fToRadians(float.Parse(tokens[2]))
+                );
             }
             catch
             {
@@ -107,7 +111,12 @@ namespace RatchetEdit {
         public override object ConvertTo( ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
         {
             Vector3 p = (Vector3)value;
-            return Math.Round(p.X, 2) + " " + Math.Round(p.Y, 2) + " " + Math.Round(p.Z, 2);
+            return String.Format(
+                "{0} {1} {2}", 
+                Math.Round(Utilities.fToDegrees(p.X), 2), 
+                Math.Round(Utilities.fToDegrees(p.Y), 2), 
+                Math.Round(Utilities.fToDegrees(p.Z), 2)
+            );
         }
     }
 }

@@ -362,7 +362,7 @@ namespace RatchetEdit
 
             if (xLock)
             {
-                selectedObject.Translate((mouseRay.X -prevMouseRay.X) * 20, 0, 0);
+                selectedObject.Translate((mouseRay.X - prevMouseRay.X) * 20, 0, 0);
                 InvalidateView();
             }
 
@@ -708,7 +708,7 @@ namespace RatchetEdit
         {
             foreach (ModelObject levelObject in levelObjects)
             {
-                if (levelObject.model != null &&  levelObject.model.vertexBuffer != null)
+                if (levelObject.model != null && levelObject.model.vertexBuffer != null)
                 {
                     Matrix4 mvp = levelObject.modelMatrix * worldView;  //Has to be done in this order to work correctly
                     GL.UniformMatrix4(matrixID, false, ref mvp);

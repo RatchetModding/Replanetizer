@@ -41,6 +41,8 @@ namespace RatchetEdit
             }
         }
 
+        float rotationMultiplier = 2.2f;
+
         public Tie(Matrix4 matrix4) {
             modelMatrix = Matrix4.Add(matrix4, new Matrix4());
         }
@@ -71,7 +73,7 @@ namespace RatchetEdit
 
             model = tieModels.Find(tieModel => tieModel.id == modelID);
             UpdateTransformMatrix();
-            _rotation = modelMatrix.ExtractRotation().Xyz * 2;
+            _rotation = modelMatrix.ExtractRotation().Xyz * rotationMultiplier;
             _position = modelMatrix.ExtractTranslation();
         }
 
@@ -127,9 +129,14 @@ namespace RatchetEdit
         }
 
         public override void Rotate(float x, float y, float z) {
-            Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(x,y,z));
+            Vector3 newRotation = new Vector3(
+                x + _rotation.X,
+                y + _rotation.Y,
+                z + _rotation.Z
+            );
+            Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(newRotation));
             Matrix4 result = rotationMatrix * modelMatrix.ClearRotation();
-            _rotation = result.ExtractRotation().Xyz;
+            _rotation = newRotation;//result.ExtractRotation().Xyz * rotationMultiplier;
 
             UpdateMatrixVariables(result);
             UpdateTransformMatrix();

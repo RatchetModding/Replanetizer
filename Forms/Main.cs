@@ -54,7 +54,6 @@ namespace RatchetEdit
 
         bool invalidate = false;
         bool suppressTreeViewSelectEvent = false;
-        bool cancelSelection = false;
         public Main()
         {
             InitializeComponent();
@@ -268,7 +267,7 @@ namespace RatchetEdit
             if (shrubCheck.Checked && splineCheck.Enabled)
                 foreach (Tie shrub in level.shrubs) DrawModelObject(shrub);
             if (skyboxCheck.Checked && skyboxCheck.Enabled)
-                DrawModelModel(level.skybox);
+                DrawModel(level.skybox);
 
             if (terrainCheck.Checked && terrainCheck.Enabled)
             {
@@ -414,11 +413,12 @@ namespace RatchetEdit
 
             if (e.Button == MouseButtons.Left && level != null)
             {
-                LevelObject obj = GetObjectAtScreenPosition(e.Location.X, e.Location.Y);
-                if (!cancelSelection)
-                    SelectObject(obj);
-                cancelSelection = false;
+                bool cancelSelection;
+                LevelObject obj = GetObjectAtScreenPosition(e.Location.X, e.Location.Y, out cancelSelection);
 
+                if (cancelSelection) return;
+
+                SelectObject(obj);
             }
         }
 
@@ -443,7 +443,7 @@ namespace RatchetEdit
             InvalidateView();
         }
 
-        public LevelObject GetObjectAtScreenPosition(int x, int y)
+        public LevelObject GetObjectAtScreenPosition(int x, int y, out bool hitTool)
         {
             LevelObject returnObject = null;
             TreeNode returnNode = null;
@@ -452,12 +452,13 @@ namespace RatchetEdit
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.UseProgram(colorShaderID);
             GL.EnableVertexAttribArray(0);
+            GL.ClearColor(0, 0, 0, 0);
+
             worldView = view * projection;
 
             int offset = 0;
             if (mobyCheck.Checked)
             {
-                GL.ClearColor(0, 0, 0, 0);
                 mobyOffset = offset;
                 fakeDrawObjects(level.mobs.Cast<ModelObject>().ToList(), mobyOffset);
                 offset += level.mobs.Count;
@@ -483,7 +484,9 @@ namespace RatchetEdit
             if (currentTool == Tool.Translate)
             {
                 Console.WriteLine("Current tool is translate");
-                if (selectedObject != null) drawTool(selectedObject.position);
+                if (selectedObject != null) {
+                    drawTool(selectedObject.position);
+                }
             }
 
             Pixel pixel = new Pixel();
@@ -491,29 +494,26 @@ namespace RatchetEdit
             GL.ClearColor(Color.SkyBlue);
             if (pixel.A == 0)
             {
+                bool didHitTool = false;
                 if (pixel.R == 255 && pixel.G == 0 && pixel.B == 0)
                 {
-                    Console.WriteLine("HIT RED!");
+                    didHitTool = true;
                     xLock = true;
-                    cancelSelection = true;
-                    InvalidateView();
-
-                    return null;
                 }
                 else if (pixel.R == 0 && pixel.G == 255 && pixel.B == 0)
                 {
-                    Console.WriteLine("HIT GREEN!");
+                    didHitTool = true;
                     yLock = true;
-                    cancelSelection = true;
-                    InvalidateView();
-                    return null;
                 }
                 else if (pixel.R == 0 && pixel.G == 0 && pixel.B == 255)
                 {
-                    Console.WriteLine("HIT BLUE!");
+                    didHitTool = true;
                     zLock = true;
-                    cancelSelection = true;
+                }
+
+                if (didHitTool) {
                     InvalidateView();
+                    hitTool = true;
                     return null;
                 }
 
@@ -540,6 +540,7 @@ namespace RatchetEdit
 
             primedTreeNode = returnNode;
 
+            hitTool = false;
             return returnObject;
         }
 
@@ -659,15 +660,14 @@ namespace RatchetEdit
 
         private void DrawModelObject(ModelObject obj)
         {
-            if (obj.model != null && obj.model.vertexBuffer != null)
-            {
-                Matrix4 mvp = obj.modelMatrix * worldView;  //Has to be done in this order to work correctly
-                GL.UniformMatrix4(matrixID, false, ref mvp);
-                obj.model.Draw(level.textures);
-            }
+            if (obj.model == null || obj.model.vertexBuffer == null) return;
+            
+            Matrix4 mvp = obj.modelMatrix * worldView;  //Has to be done in this order to work correctly
+            GL.UniformMatrix4(matrixID, false, ref mvp);
+            obj.model.Draw(level.textures);
         }
 
-        private void DrawModelModel(Model model)
+        private void DrawModel(Model model)
         {
             Matrix4 mvp = worldView;
             GL.UniformMatrix4(matrixID, false, ref mvp);
@@ -676,22 +676,20 @@ namespace RatchetEdit
 
         public void DrawModelMesh(ModelObject levelObject)
         {
-            if (levelObject != null)
-            {
-                if (levelObject.model != null && levelObject.model.vertexBuffer != null && levelObject.modelMatrix != null)
-                {
-                    GL.UseProgram(colorShaderID);
-                    GL.EnableVertexAttribArray(0);
-                    Matrix4 mvp = levelObject.modelMatrix * worldView;
-                    GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
-                    GL.UniformMatrix4(matrixID, false, ref mvp);
-                    levelObject.model.GetVBO();
-                    levelObject.model.GetIBO();
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                    GL.DrawElements(PrimitiveType.Triangles, levelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                }
-            }
+            if (levelObject == null) return;
+            if (levelObject.model == null || levelObject.model.vertexBuffer == null || levelObject.modelMatrix == null) return;
+
+            GL.UseProgram(colorShaderID);
+            GL.EnableVertexAttribArray(0);
+            Matrix4 mvp = levelObject.modelMatrix * worldView;
+            GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
+            GL.UniformMatrix4(matrixID, false, ref mvp);
+            levelObject.model.GetVBO();
+            levelObject.model.GetIBO();
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+            GL.DrawElements(PrimitiveType.Triangles, levelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            
         }
 
         public void fakeDrawSplines(List<Spline> splines, int offset)
@@ -712,19 +710,20 @@ namespace RatchetEdit
         {
             foreach (ModelObject levelObject in levelObjects)
             {
-                if (levelObject.model != null && levelObject.model.vertexBuffer != null)
-                {
-                    Matrix4 mvp = levelObject.modelMatrix * worldView;  //Has to be done in this order to work correctly
-                    GL.UniformMatrix4(matrixID, false, ref mvp);
+                if (levelObject.model == null || levelObject.model.vertexBuffer == null)
+                    continue;
+                
+                Matrix4 mvp = levelObject.modelMatrix * worldView;  //Has to be done in this order to work correctly
+                GL.UniformMatrix4(matrixID, false, ref mvp);
 
-                    levelObject.model.GetVBO();
-                    levelObject.model.GetIBO();
+                levelObject.model.GetVBO();
+                levelObject.model.GetIBO();
 
-                    int objectIndex = levelObjects.IndexOf(levelObject);
-                    byte[] cols = BitConverter.GetBytes(objectIndex + offset);
-                    GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
-                    GL.DrawElements(PrimitiveType.Triangles, levelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
-                }
+                int objectIndex = levelObjects.IndexOf(levelObject);
+                byte[] cols = BitConverter.GetBytes(objectIndex + offset);
+                GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
+                GL.DrawElements(PrimitiveType.Triangles, levelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
+                
             }
         }
         #endregion
@@ -732,42 +731,25 @@ namespace RatchetEdit
         #region Misc Input Events
         private void objectTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            if (e.Node.Parent == objectTree.Nodes[0])
-            {
-                if (!suppressTreeViewSelectEvent)
-                {
-                    SelectObject(level.mobs[e.Node.Index]);
-                    camera.MoveBehind(selectedObject);
-                }
+            if (suppressTreeViewSelectEvent) {
                 suppressTreeViewSelectEvent = false;
+                return;
             }
-            if (e.Node.Parent == objectTree.Nodes[1])
-            {
-                if (!suppressTreeViewSelectEvent)
-                {
-                    SelectObject(level.ties[e.Node.Index]);
-                    camera.MoveBehind(selectedObject);
-                }
-                suppressTreeViewSelectEvent = false;
+
+            if (e.Node.Parent == objectTree.Nodes[0]) {
+                SelectObject(level.mobs[e.Node.Index]);
             }
-            if (e.Node.Parent == objectTree.Nodes[2])
-            {
-                if (!suppressTreeViewSelectEvent)
-                {
-                    SelectObject(level.shrubs[e.Node.Index]);
-                    camera.MoveBehind(selectedObject);
-                }
-                suppressTreeViewSelectEvent = false;
+            if (e.Node.Parent == objectTree.Nodes[1]) {
+                SelectObject(level.ties[e.Node.Index]);
             }
-            if (e.Node.Parent == objectTree.Nodes[3])
-            {
-                if (!suppressTreeViewSelectEvent)
-                {
-                    SelectObject(level.splines[e.Node.Index]);
-                    camera.MoveBehind(selectedObject);
-                }
-                suppressTreeViewSelectEvent = false;
+            if (e.Node.Parent == objectTree.Nodes[2]) {
+                SelectObject(level.shrubs[e.Node.Index]);
             }
+            if (e.Node.Parent == objectTree.Nodes[3]) {
+                SelectObject(level.splines[e.Node.Index]);
+            }
+
+            camera.MoveBehind(selectedObject);
         }
 
         private void gotoPositionBtn_Click(object sender, EventArgs e)

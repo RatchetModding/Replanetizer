@@ -72,7 +72,6 @@ namespace RatchetEdit
             off_6C =    ReadUint(levelBlock, offset + 0x6C);
 
             model = tieModels.Find(tieModel => tieModel.id == modelID);
-            UpdateTransformMatrix();
             _rotation = modelMatrix.ExtractRotation().Xyz * rotationMultiplier;
             _position = modelMatrix.ExtractTranslation();
         }
@@ -98,7 +97,6 @@ namespace RatchetEdit
         }
 
         public override void UpdateTransformMatrix() {
-            //modelMatrix = new Matrix4(v1x, v1y, v1z, v1w, v2x, v2y, v2z, v2w, v3x, v3y, v3z, v3w, x, y, z, w);
         }
 
         public override LevelObject Clone() {
@@ -106,7 +104,7 @@ namespace RatchetEdit
         }
 
         void UpdateMatrixVariables(Matrix4 matrix) {
-            this.modelMatrix = matrix;
+            modelMatrix = matrix;
         }
 
         //Transformable methods

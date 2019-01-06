@@ -63,6 +63,7 @@
     <Compile Include="Level Objects\Gameplay\GameCamera.cs" />
     <Compile Include="Level Objects\GameType.cs" />
     <Compile Include="Level Objects\LevelObject.cs" />
+    <Compile Include="Level Objects\MatrixObject.cs" />
     <Compile Include="Level Objects\ModelObject.cs" />
     <Compile Include="Level Objects\Gameplay\OcclusionData.cs" />
     <Compile Include="Level Objects\Engine\Tie.cs" />

@@ -26,24 +26,23 @@ namespace RatchetEdit
         public int off_28;
         public int off_2C;
 
-        public Type88(byte[] type88Block, int num)
-        {
+        public Type88(byte[] block, int num) {
             int offset = num * ELEMENTSIZE;
 
-            off_00 = ReadFloat(type88Block, offset + 0x00);
-            off_04 = ReadFloat(type88Block, offset + 0x04);
-            off_08 = ReadFloat(type88Block, offset + 0x08);
-            off_0C = ReadFloat(type88Block, offset + 0x0C);
+            off_00 = ReadFloat(block, offset + 0x00);
+            off_04 = ReadFloat(block, offset + 0x04);
+            off_08 = ReadFloat(block, offset + 0x08);
+            off_0C = ReadFloat(block, offset + 0x0C);
 
-            off_10 = ReadInt(type88Block, offset + 0x10);
-            off_14 = ReadInt(type88Block, offset + 0x14);
-            off_18 = ReadInt(type88Block, offset + 0x18);
-            off_1C = ReadInt(type88Block, offset + 0x1C);
+            off_10 = ReadInt(block, offset + 0x10);
+            off_14 = ReadInt(block, offset + 0x14);
+            off_18 = ReadInt(block, offset + 0x18);
+            off_1C = ReadInt(block, offset + 0x1C);
 
-            off_20 = ReadInt(type88Block, offset + 0x20);
-            off_24 = ReadInt(type88Block, offset + 0x24);
-            off_28 = ReadInt(type88Block, offset + 0x28);
-            off_2C = ReadInt(type88Block, offset + 0x2C);
+            off_20 = ReadInt(block, offset + 0x20);
+            off_24 = ReadInt(block, offset + 0x24);
+            off_28 = ReadInt(block, offset + 0x28);
+            off_2C = ReadInt(block, offset + 0x2C);
         }
 
         public byte[] Serialize()

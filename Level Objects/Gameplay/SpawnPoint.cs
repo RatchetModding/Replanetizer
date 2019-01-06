@@ -8,61 +8,65 @@ using OpenTK;
 
 namespace RatchetEdit
 {
-    public class SpawnPoint
+    public class SpawnPoint : MatrixObject
     {
         public const int ELEMENTSIZE = 0x80;
         public int id;
         public Matrix4 mat1;
         public Matrix4 mat2;
 
-        public SpawnPoint(byte[] spawnPointBlock, int index)
+        public SpawnPoint(byte[] block, int index)
         {
             id = index;
             int offset = index * ELEMENTSIZE;
 
             mat1 = new Matrix4(
-                ReadFloat(spawnPointBlock, offset + 0x00),
-                ReadFloat(spawnPointBlock, offset + 0x04),
-                ReadFloat(spawnPointBlock, offset + 0x08),
-                ReadFloat(spawnPointBlock, offset + 0x0C),
+                ReadFloat(block, offset + 0x00),
+                ReadFloat(block, offset + 0x04),
+                ReadFloat(block, offset + 0x08),
+                ReadFloat(block, offset + 0x0C),
                                                          
-                ReadFloat(spawnPointBlock, offset + 0x10),
-                ReadFloat(spawnPointBlock, offset + 0x14),
-                ReadFloat(spawnPointBlock, offset + 0x18),
-                ReadFloat(spawnPointBlock, offset + 0x1C),
+                ReadFloat(block, offset + 0x10),
+                ReadFloat(block, offset + 0x14),
+                ReadFloat(block, offset + 0x18),
+                ReadFloat(block, offset + 0x1C),
                                                          
-                ReadFloat(spawnPointBlock, offset + 0x20),
-                ReadFloat(spawnPointBlock, offset + 0x24),
-                ReadFloat(spawnPointBlock, offset + 0x28),
-                ReadFloat(spawnPointBlock, offset + 0x2C),
+                ReadFloat(block, offset + 0x20),
+                ReadFloat(block, offset + 0x24),
+                ReadFloat(block, offset + 0x28),
+                ReadFloat(block, offset + 0x2C),
                                                          
-                ReadFloat(spawnPointBlock, offset + 0x30),
-                ReadFloat(spawnPointBlock, offset + 0x34),
-                ReadFloat(spawnPointBlock, offset + 0x38),
-                ReadFloat(spawnPointBlock, offset + 0x3C)
+                ReadFloat(block, offset + 0x30),
+                ReadFloat(block, offset + 0x34),
+                ReadFloat(block, offset + 0x38),
+                ReadFloat(block, offset + 0x3C)
                 );
 
             mat2 = new Matrix4(
-                ReadFloat(spawnPointBlock, offset + 0x40),
-                ReadFloat(spawnPointBlock, offset + 0x44),
-                ReadFloat(spawnPointBlock, offset + 0x48),
-                ReadFloat(spawnPointBlock, offset + 0x4C),
+                ReadFloat(block, offset + 0x40),
+                ReadFloat(block, offset + 0x44),
+                ReadFloat(block, offset + 0x48),
+                ReadFloat(block, offset + 0x4C),
                                                          
-                ReadFloat(spawnPointBlock, offset + 0x50),
-                ReadFloat(spawnPointBlock, offset + 0x54),
-                ReadFloat(spawnPointBlock, offset + 0x58),
-                ReadFloat(spawnPointBlock, offset + 0x5C),
+                ReadFloat(block, offset + 0x50),
+                ReadFloat(block, offset + 0x54),
+                ReadFloat(block, offset + 0x58),
+                ReadFloat(block, offset + 0x5C),
                                                          
-                ReadFloat(spawnPointBlock, offset + 0x60),
-                ReadFloat(spawnPointBlock, offset + 0x64),
-                ReadFloat(spawnPointBlock, offset + 0x68),
-                ReadFloat(spawnPointBlock, offset + 0x6C),
+                ReadFloat(block, offset + 0x60),
+                ReadFloat(block, offset + 0x64),
+                ReadFloat(block, offset + 0x68),
+                ReadFloat(block, offset + 0x6C),
                                                          
-                ReadFloat(spawnPointBlock, offset + 0x70),
-                ReadFloat(spawnPointBlock, offset + 0x74),
-                ReadFloat(spawnPointBlock, offset + 0x78),
-                ReadFloat(spawnPointBlock, offset + 0x7C)
-                );
+                ReadFloat(block, offset + 0x70),
+                ReadFloat(block, offset + 0x74),
+                ReadFloat(block, offset + 0x78),
+                ReadFloat(block, offset + 0x7C)
+            );
+
+            modelMatrix = mat1 + mat2;
+            _rotation = modelMatrix.ExtractRotation().Xyz * 2.2f;
+            _position = modelMatrix.ExtractTranslation();
         }
 
         public byte[] Serialize()

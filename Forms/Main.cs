@@ -33,7 +33,6 @@ namespace RatchetEdit
         int lastMouseX = 0;
         int lastMouseY = 0;
         public LevelObject selectedObject;
-        Vector3 mouseRay;
         Vector3 prevMouseRay;
 
         bool xLock = false, yLock = false, zLock = false;
@@ -98,10 +97,10 @@ namespace RatchetEdit
         public void GenerateObjectTree()
         {
             objectTree.CollapseAll();
-            objectTree.Nodes[0].Nodes.Clear();
-            objectTree.Nodes[1].Nodes.Clear();
-            objectTree.Nodes[2].Nodes.Clear();
-            objectTree.Nodes[3].Nodes.Clear();
+            foreach(TreeNode treeNode in objectTree.Nodes) {
+                treeNode.Nodes.Clear();
+
+            }
 
             foreach (Moby moby in level.mobs)
             {
@@ -118,10 +117,21 @@ namespace RatchetEdit
                 string shrubName = shrub.modelID.ToString("X");
                 objectTree.Nodes[2].Nodes.Add(shrubName);
             }
-            foreach (Spline spline in level.splines)
-            {
+            foreach (Spline spline in level.splines) {
                 string splineName = spline.name.ToString("X");
                 objectTree.Nodes[3].Nodes.Add(splineName);
+            }
+            foreach (GameCamera gameCamera in level.gameCameras) {
+                string name = gameCamera.id.ToString("X");
+                objectTree.Nodes[4].Nodes.Add(name);
+            }
+            foreach (SpawnPoint spawnPoints in level.spawnPoints) {
+                string name = level.spawnPoints.IndexOf(spawnPoints).ToString("X");
+                objectTree.Nodes[5].Nodes.Add(name);
+            }
+            foreach (Type0C objs in level.type0Cs) {
+                string name = level.type0Cs.IndexOf(objs).ToString("X");
+                objectTree.Nodes[6].Nodes.Add(name);
             }
         }
 
@@ -286,7 +296,7 @@ namespace RatchetEdit
 
             glControl1.view = camera.GetViewMatrix();
 
-            mouseRay = MouseToWorldRay(glControl1.projection, glControl1.view, new Size(glControl1.Width, glControl1.Height), new Vector2(Cursor.Position.X, Cursor.Position.Y));
+            Vector3 mouseRay = MouseToWorldRay(glControl1.projection, glControl1.view, new Size(glControl1.Width, glControl1.Height), new Vector2(Cursor.Position.X, Cursor.Position.Y));
 
             if (xLock)
             {
@@ -578,6 +588,15 @@ namespace RatchetEdit
             }
             if (e.Node.Parent == objectTree.Nodes[3]) {
                 SelectObject(level.splines[e.Node.Index]);
+            }
+            if (e.Node.Parent == objectTree.Nodes[4]) {
+                SelectObject(level.gameCameras[e.Node.Index]);
+            }
+            if (e.Node.Parent == objectTree.Nodes[5]) {
+                SelectObject(level.spawnPoints[e.Node.Index]);
+            }
+            if (e.Node.Parent == objectTree.Nodes[6]) {
+                SelectObject(level.type0Cs[e.Node.Index]);
             }
 
             camera.MoveBehind(selectedObject);

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTK;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -31,29 +32,28 @@ namespace RatchetEdit
         public float off_38;
         public float off_3C;
 
-        public Type04(byte[] type04Block, int num)
-        {
+        public Type04(byte[] block, int num) {
             int offset = num * ELEMENTSIZE;
 
-            off_00 = ReadFloat(type04Block, offset + 0x00);
-            off_04 = ReadFloat(type04Block, offset + 0x04);
-            off_08 = ReadFloat(type04Block, offset + 0x08);
-            off_0C = ReadFloat(type04Block, offset + 0x0C);
+            off_00 = ReadFloat(block, offset + 0x00);
+            off_04 = ReadFloat(block, offset + 0x04);
+            off_08 = ReadFloat(block, offset + 0x08);
+            off_0C = ReadFloat(block, offset + 0x0C);
 
-            off_10 = ReadFloat(type04Block, offset + 0x10);
-            off_14 = ReadFloat(type04Block, offset + 0x14);
-            off_18 = ReadFloat(type04Block, offset + 0x18);
-            off_1C = ReadFloat(type04Block, offset + 0x1C);
+            off_10 = ReadFloat(block, offset + 0x10);
+            off_14 = ReadFloat(block, offset + 0x14);
+            off_18 = ReadFloat(block, offset + 0x18);
+            off_1C = ReadFloat(block, offset + 0x1C);
 
-            off_20 = ReadFloat(type04Block, offset + 0x20);
-            off_24 = ReadFloat(type04Block, offset + 0x24);
-            off_28 = ReadFloat(type04Block, offset + 0x28);
-            off_2C = ReadFloat(type04Block, offset + 0x2C);
+            off_20 = ReadFloat(block, offset + 0x20);
+            off_24 = ReadFloat(block, offset + 0x24);
+            off_28 = ReadFloat(block, offset + 0x28);
+            off_2C = ReadFloat(block, offset + 0x2C);
 
-            off_30 = ReadFloat(type04Block, offset + 0x30);
-            off_34 = ReadFloat(type04Block, offset + 0x34);
-            off_38 = ReadFloat(type04Block, offset + 0x38);
-            off_3C = ReadFloat(type04Block, offset + 0x3C);
+            off_30 = ReadFloat(block, offset + 0x30);
+            off_34 = ReadFloat(block, offset + 0x34);
+            off_38 = ReadFloat(block, offset + 0x38);
+            off_3C = ReadFloat(block, offset + 0x3C);
         }
 
         public byte[] Serialize()

@@ -115,7 +115,7 @@ namespace RatchetEdit
         {
             glControl1.MakeCurrent();
             GL.ClearColor(Color.SkyBlue);
-            shaderID = mainForm.shaderID;
+            shaderID = mainForm.GetShaderID();
 
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
 

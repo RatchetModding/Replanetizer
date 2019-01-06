@@ -38,17 +38,24 @@ namespace RatchetEdit
             return faceCount;
         }
 
-        public void Draw(List<Texture> textures)
-        {
+        public void Draw(List<Texture> textures) {
+
             GetVBO();
             GetIBO();
 
             //Bind textures one by one, applying it to the relevant vertices based on the index array
-            foreach (TextureConfig conf in textureConfig)
-            {
+            foreach (TextureConfig conf in textureConfig) {
                 GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? textures[conf.ID].getTexture() : 0);
                 GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
             }
+        }
+
+        public void Draw(CustomGLControl glControl) {
+            GL.UseProgram(glControl.shaderID);
+
+            Matrix4 worldView = glControl.worldView;
+            GL.UniformMatrix4(glControl.matrixID, false, ref worldView);
+            Draw(glControl.textures);
         }
 
         public void GetVBO()

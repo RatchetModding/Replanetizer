@@ -66,7 +66,7 @@ namespace RatchetEdit
             this.camYLabel = new System.Windows.Forms.Label();
             this.camZLabel = new System.Windows.Forms.Label();
             this.mapOpenDialog = new System.Windows.Forms.OpenFileDialog();
-            this.glControl1 = new OpenTK.GLControl();
+            this.glControl1 = new CustomGLControl();
             this.tickTimer = new System.Windows.Forms.Timer(this.components);
             this.label18 = new System.Windows.Forms.Label();
             this.yawLabel = new System.Windows.Forms.Label();
@@ -403,7 +403,6 @@ namespace RatchetEdit
             this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
             this.glControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseDown);
             this.glControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseUp);
-            this.glControl1.Resize += new System.EventHandler(this.glControl1_Resize);
             // 
             // tickTimer
             // 
@@ -662,7 +661,7 @@ namespace RatchetEdit
         private System.Windows.Forms.Label camZLabel;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
         private System.Windows.Forms.OpenFileDialog mapOpenDialog;
-        private OpenTK.GLControl glControl1;
+        private CustomGLControl glControl1;
         private System.Windows.Forms.Timer tickTimer;
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.Label yawLabel;

@@ -53,6 +53,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Camera.cs" />
+    <Compile Include="CustomGLControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="DataFunctions.cs" />
     <Compile Include="Headers\EngineHeader.cs" />
     <Compile Include="Headers\GameplayHeader.cs" />

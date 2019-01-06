@@ -86,5 +86,9 @@ namespace RatchetEdit
 
             return bytes;
         }
+
+        public override void Render(CustomGLControl glControl, bool selected) {
+            throw new NotImplementedException();
+        }
     }
 }

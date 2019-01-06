@@ -12,6 +12,16 @@ namespace RatchetEdit {
         public Vector3 position = new Vector3();
         public Vector3 rotation = new Vector3(0,0,-0.75f);
 
+        public Matrix3 GetRotationMatrix() {
+           return Matrix3.CreateRotationX(rotation.X) * Matrix3.CreateRotationY(rotation.Y) * Matrix3.CreateRotationZ(rotation.Z);
+
+        }
+
+        public Matrix4 GetViewMatrix() {
+            Vector3 forward = Vector3.Transform(Vector3.UnitY, GetRotationMatrix());
+            return Matrix4.LookAt(position, position + forward, Vector3.UnitZ);
+        }
+
         public void SetPosition(Vector3 position) {
             this.position = position;
         }

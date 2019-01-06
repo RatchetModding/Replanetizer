@@ -49,5 +49,6 @@ namespace RatchetEdit
         public abstract void Translate(Vector3 vector);
         public abstract void UpdateTransformMatrix();
 
+        public abstract void Render(CustomGLControl glControl, bool selected);
     }
 }

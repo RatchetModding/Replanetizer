@@ -187,7 +187,6 @@ namespace RatchetEdit
             properties.Refresh();
         }
         private void glControl1_Paint(object sender, PaintEventArgs e) {
-            Console.WriteLine("MAIN PAINT");
             Render();
         }
 

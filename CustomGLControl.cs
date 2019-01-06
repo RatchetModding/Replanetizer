@@ -67,7 +67,6 @@ namespace RatchetEdit {
 
         protected override void OnPaint(PaintEventArgs e) {
             if (DesignMode) { base.OnPaint(e); return; }
-            Console.WriteLine("GL PAINT");
             worldView = view * projection;
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 

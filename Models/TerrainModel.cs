@@ -22,7 +22,6 @@ namespace RatchetEdit
             foreach(TerrainFragHeader fh in head.heads)
             {
                 textureConfig.AddRange(GetTextureConfigs(fs, fh.texturePointer, fh.textureCount, 0x10));
-                
             }
             int faceCount = GetFaceCount();
 

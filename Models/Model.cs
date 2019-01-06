@@ -15,7 +15,7 @@ namespace RatchetEdit
         General purpose 3D model used for rendering
     */
 
-    public class Model
+    public abstract class Model
     {
         public short id { get; set; }
         public float size;
@@ -24,24 +24,6 @@ namespace RatchetEdit
         public List<TextureConfig> textureConfig;
         int VBO = 0;
         int IBO = 0;
-
-        public Model()
-        {
-        }
-
-        ~Model()
-        {
-            /*if(VBO != 0)
-            {
-                GL.DeleteBuffer(VBO);
-                VBO = 0;
-            }
-            if (IBO != 0)
-            {
-                GL.DeleteBuffer(IBO);
-                IBO = 0;
-            }*/
-        }
 
         protected int GetFaceCount()
         {

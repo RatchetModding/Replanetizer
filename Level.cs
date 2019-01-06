@@ -80,9 +80,7 @@ namespace RatchetEdit {
             EngineParser engineParser = new EngineParser(enginePath);
             VramParser vramParser = new VramParser(path + @"/vram.ps3");
             GameplayParser gameplayParser = new GameplayParser(game, path + @"/gameplay_ntsc");
-
-           
-
+            
             Console.WriteLine("Parsing skybox...");
             skybox = engineParser.GetSkyboxModel();
             Console.WriteLine("Success");

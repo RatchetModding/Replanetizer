@@ -188,8 +188,8 @@ namespace RatchetEdit
             unk3 = ReadInt(mobyBlock, offset + 0x18);
             unk4 = ReadInt(mobyBlock, offset + 0x1C);
 
-            unk5 = ReadInt(mobyBlock, offset + 0x20);
-            unk6 = ReadInt(mobyBlock, offset + 0x24);
+            unk5 = ReadInt(mobyBlock, offset + 0x20); //Group index?
+            unk6 = ReadInt(mobyBlock, offset + 0x24); //Enables Z2
             modelID = ReadInt(mobyBlock, offset + 0x28);
             scale = ReadFloat(mobyBlock, offset + 0x2C);
 
@@ -200,15 +200,15 @@ namespace RatchetEdit
 
             float x = ReadFloat(mobyBlock, offset + 0x40);
             float y = ReadFloat(mobyBlock, offset + 0x44);
-            float z = ReadFloat(mobyBlock, offset + 0x48); //Group index?
-            float rotx = ReadFloat(mobyBlock, offset + 0x4C); //Enables Z2
+            float z = ReadFloat(mobyBlock, offset + 0x48);
+            float rotx = ReadFloat(mobyBlock, offset + 0x4C);
 
             float roty = ReadFloat(mobyBlock, offset + 0x50);
             float rotz = ReadFloat(mobyBlock, offset + 0x54);
-            unk9 = ReadInt(mobyBlock, offset + 0x58);
+            unk9 = ReadInt(mobyBlock, offset + 0x58);  //Breakability?
             unk10 = ReadInt(mobyBlock, offset + 0x5C);
 
-            unk11 = ReadInt(mobyBlock, offset + 0x60);  //Breakability?
+            unk11 = ReadInt(mobyBlock, offset + 0x60);
             unk12 = ReadInt(mobyBlock, offset + 0x64);
             pvarIndex = ReadInt(mobyBlock, offset + 0x68);
             unk13 = ReadInt(mobyBlock, offset + 0x6C);
@@ -256,7 +256,6 @@ namespace RatchetEdit
             WriteFloat(ref buffer, 0x34, position.Y);
             WriteFloat(ref buffer, 0x38, position.Z);
             WriteFloat(ref buffer, 0x3C, rotation.X);
-
             WriteFloat(ref buffer, 0x40, rotation.Y);
             WriteFloat(ref buffer, 0x44, rotation.Z);
             WriteInt(ref buffer, 0x48, unk5);

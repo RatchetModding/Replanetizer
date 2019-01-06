@@ -447,33 +447,38 @@ namespace RatchetEdit
         {
             LevelObject returnObject = null;
             TreeNode returnNode = null;
-            int offset = 0;
+            int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0;
             glControl1.MakeCurrent();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.UseProgram(colorShaderID);
             GL.EnableVertexAttribArray(0);
             worldView = view * projection;
 
+            int offset = 0;
             if (mobyCheck.Checked)
             {
                 GL.ClearColor(0, 0, 0, 0);
-                offset = 0;
-                fakeDrawObjects(level.mobs.Cast<ModelObject>().ToList(), offset);
+                mobyOffset = offset;
+                fakeDrawObjects(level.mobs.Cast<ModelObject>().ToList(), mobyOffset);
+                offset += level.mobs.Count;
             }
             if (tieCheck.Checked)
             {
-                offset += level.mobs.Count;
-                fakeDrawObjects(level.ties.Cast<ModelObject>().ToList(), offset);
+                tieOffset = offset;
+                fakeDrawObjects(level.ties.Cast<ModelObject>().ToList(), tieOffset);
+                offset += level.ties.Count;
             }
             if (shrubCheck.Checked)
             {
-                offset += level.ties.Count;
-                fakeDrawObjects(level.shrubs.Cast<ModelObject>().ToList(), offset);
+                shrubOffset = offset;
+                fakeDrawObjects(level.shrubs.Cast<ModelObject>().ToList(), shrubOffset);
+                offset += level.shrubs.Count;
             }
             if (splineCheck.Checked)
             {
-                offset += level.shrubs.Count;
-                fakeDrawSplines(level.splines, offset);
+                splineOffset = offset;
+                fakeDrawSplines(level.splines, splineOffset);
+                offset += level.splines.Count;
             }
             if (currentTool == Tool.Translate)
             {
@@ -513,25 +518,23 @@ namespace RatchetEdit
                 }
 
                 int id = (int)pixel.ToUInt32();
-                if (id < level.mobs?.Count)
+                if (mobyCheck.Checked && id < level.mobs?.Count)
                 {
                     returnObject = level.mobs[id];
                     returnNode = objectTree.Nodes[0].Nodes[id];
                 }
-                else if (id - level.mobs?.Count < level.ties?.Count)
+                else if (tieCheck.Checked && id - tieOffset < level.ties.Count)
                 {
-                    returnObject = level.ties[id - level.mobs.Count];
-                    returnNode = objectTree.Nodes[1].Nodes[id - level.mobs.Count];
+                    returnObject = level.ties[id - tieOffset];
+                    returnNode = objectTree.Nodes[1].Nodes[id - tieOffset];
                 }
-                else if (id - (level.mobs?.Count + level.ties?.Count) < level.shrubs?.Count)
-                {
-                    returnObject = level.shrubs[id - (level.mobs.Count + level.ties.Count)];
-                    returnNode = objectTree.Nodes[2].Nodes[id - offset];
+                else if (shrubCheck.Checked && id - shrubOffset < level.shrubs.Count) {
+                    returnObject = level.shrubs[id - shrubOffset];
+                    returnNode = objectTree.Nodes[2].Nodes[id - shrubOffset];
                 }
-                else if (id - offset < level.splines?.Count)
-                {
-                    returnObject = level.splines[id - offset];
-                    returnNode = objectTree.Nodes[3].Nodes[id - offset];
+                else if (splineCheck.Checked && id - splineOffset < level.splines.Count) {
+                    returnObject = level.splines[id - splineOffset];
+                    returnNode = objectTree.Nodes[3].Nodes[id - splineOffset];
                 }
             }
 

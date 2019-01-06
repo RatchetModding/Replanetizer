@@ -104,6 +104,8 @@
     <Compile Include="Level Objects\Gameplay\Spline.cs" />
     <Compile Include="Texture.cs" />
     <Compile Include="TextureConfig.cs" />
+    <Compile Include="Tools\Tool.cs" />
+    <Compile Include="Tools\TranslationTool.cs" />
     <Compile Include="Utilities.cs" />
     <EmbeddedResource Include="Forms\Main.resx">
       <DependentUpon>Main.cs</DependentUpon>
@@ -131,21 +133,22 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="shaders\colorshaderfs.glsl">
+    <None Include="Shaders\colorshaderfs.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="shaders\colorshadervs.glsl">
+    <None Include="Shaders\colorshadervs.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="shaders\fs.glsl">
+    <None Include="Shaders\fs.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="shaders\vs.glsl">
+    <None Include="Shaders\vs.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -38,6 +38,8 @@ namespace RatchetEdit {
         }
 
         public void MoveBehind(LevelObject levelObject, float distanceToObject = 5) {
+			if (levelObject == null) return;
+
             float yaw = 0;
 
             if (levelObject as Moby != null) { //If object is moby, load its rotation.

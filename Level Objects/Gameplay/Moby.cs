@@ -24,7 +24,7 @@ namespace RatchetEdit
         [Category("Unknowns"), DisplayName("aUnknown 1")]
         public int unk1 { get; set; }
 
-        [Category("Attributes"), DisplayName("Data value")]
+        [Category("Attributes"), DisplayName("Data Value")]
         public int dataval { get; set; }
 
         [Category("Attributes"), DisplayName("Bolt Drop")]
@@ -33,10 +33,10 @@ namespace RatchetEdit
         [Category("Unknowns"), DisplayName("aUnknown 2")]
         public int unk2 { get; set; }
 
-        [Category("Attributes"), DisplayName("Render distance 1")]
+        [Category("Attributes"), DisplayName("Render Distance 1")]
         public int rend1 { get; set; }
 
-        [Category("Attributes"), DisplayName("Render distance 2")]
+        [Category("Attributes"), DisplayName("Render Distance 2")]
         public int rend2 { get; set; }
 
         [Category("Unknowns"), DisplayName("aUnknown 3")]
@@ -45,7 +45,7 @@ namespace RatchetEdit
         [Category("Unknowns"), DisplayName("aUnknown 4")]
         public int unk4 { get; set; }
 
-        [Category("Attributes"), DisplayName("Group index")]
+        [Category("Attributes"), DisplayName("Group Index")]
         public int unk5 { get; set; }
 
         [Category("Unknowns"), DisplayName("aUnknown 6")]
@@ -57,7 +57,7 @@ namespace RatchetEdit
         [Category("Unknowns"), DisplayName("aUnknown 7")]
         public int unk7 { get; set; }
 
-        [Category("Attributes"), DisplayName("Pvar Index")]
+        [Category("Attributes"), DisplayName("pVar Index")]
         public int pvarIndex { get; set; }
 
         [Category("Unknowns"), DisplayName("aUnknown 8")]

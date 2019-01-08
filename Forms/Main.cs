@@ -655,6 +655,9 @@ namespace RatchetEdit
             scaleToolBtn.Checked = (tool == Tool.Scale);
             splineToolBtn.Checked = (tool == Tool.SplineEditor);
             currentTool = tool;
+
+            if (tool == Tool.SplineEditor) currentSplineVertex = 0;
+
             InvalidateView();
         }
 

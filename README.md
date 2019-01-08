@@ -1,4 +1,4 @@
-# Ratchet Editor v2
+# Replanetizer
 This project is a Level Editor for Ratchet &amp; Clank games on the PS3. 
 
 # Technology

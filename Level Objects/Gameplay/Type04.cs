@@ -32,7 +32,8 @@ namespace RatchetEdit
         public float off_38;
         public float off_3C;
 
-        public Type04(byte[] block, int num) {
+        public Type04(byte[] block, int num)
+        {
             int offset = num * ELEMENTSIZE;
 
             off_00 = ReadFloat(block, offset + 0x00);

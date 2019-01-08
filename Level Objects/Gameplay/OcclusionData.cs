@@ -50,7 +50,7 @@ namespace RatchetEdit
             WriteInt(ref bytes, 0x08, shrubData.Count);
 
             int offset = 0;
-            for(int i = 0; i < mobyData.Count; i++)
+            for (int i = 0; i < mobyData.Count; i++)
             {
                 BitConverter.GetBytes(mobyData[i].Key).CopyTo(bytes, 0x10 + i * 0x08);
                 BitConverter.GetBytes(mobyData[i].Value).CopyTo(bytes, 0x14 + i * 0x08);

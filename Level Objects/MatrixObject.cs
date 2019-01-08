@@ -6,49 +6,62 @@ using System.Text;
 using System.Threading.Tasks;
 using OpenTK;
 
-namespace RatchetEdit {
-    public class MatrixObject : LevelObject {
+namespace RatchetEdit
+{
+    public class MatrixObject : LevelObject
+    {
         [Browsable(false)]
         public Matrix4 modelMatrix { get; set; }
 
-        public override Vector3 position {
+        public override Vector3 position
+        {
             get { return _position; }
-            set {
+            set
+            {
                 Translate(value - _position);
             }
         }
-        public override Vector3 rotation {
+        public override Vector3 rotation
+        {
             get { return _rotation; }
-            set {
+            set
+            {
                 Rotate(value - _rotation);
             }
         }
 
-        public override float scale {
+        public override float scale
+        {
             get { return _scale; }
-            set {
+            set
+            {
                 Scale(value);
             }
         }
 
 
-        public override LevelObject Clone() {
+        public override LevelObject Clone()
+        {
             throw new NotImplementedException();
         }
 
-        public override void Render(CustomGLControl glControl, bool selected) {
+        public override void Render(CustomGLControl glControl, bool selected)
+        {
         }
 
-        void UpdateMatrixVariables(Matrix4 matrix) {
+        void UpdateMatrixVariables(Matrix4 matrix)
+        {
             modelMatrix = matrix;
         }
 
-        public override void UpdateTransformMatrix() {
+        public override void UpdateTransformMatrix()
+        {
             //modelMatrix = new Matrix4(v1x, v1y, v1z, v1w, v2x, v2y, v2z, v2w, v3x, v3y, v3z, v3w, x, y, z, w);
         }
 
         //Transformable methods
-        public override void Translate(float x, float y, float z) {
+        public override void Translate(float x, float y, float z)
+        {
             Vector3 rot = new Vector3(rotation);
             Rotate(-rot); //Rotate to 0,0,0 to do translation in world space.
 
@@ -62,11 +75,13 @@ namespace RatchetEdit {
 
         }
 
-        public override void Translate(Vector3 vector) {
+        public override void Translate(Vector3 vector)
+        {
             Translate(vector.X, vector.Y, vector.Z);
         }
 
-        public override void Rotate(float x, float y, float z) {
+        public override void Rotate(float x, float y, float z)
+        {
             Vector3 newRotation = new Vector3(
                 x + _rotation.X,
                 y + _rotation.Y,
@@ -80,11 +95,13 @@ namespace RatchetEdit {
             UpdateTransformMatrix();
         }
 
-        public override void Rotate(Vector3 vector) {
+        public override void Rotate(Vector3 vector)
+        {
             Rotate(vector.X, vector.Y, vector.Z);
         }
 
-        public override void Scale(float scale) {
+        public override void Scale(float scale)
+        {
             Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
             Matrix4 result = scaleMatrix * modelMatrix.ClearScale();
             _scale = scale;

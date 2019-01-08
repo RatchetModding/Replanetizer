@@ -29,7 +29,7 @@ namespace RatchetEdit
         public int textureCount;
         public int lightingLevel;
         public int textureConfigMenuCount;
-        
+
 
         public EngineHeader(FileStream engineFile)
         {
@@ -50,7 +50,7 @@ namespace RatchetEdit
             shrubModelPointer = ReadInt(engineHeadBlock, 0x2C);
             shrubModelCount = ReadInt(engineHeadBlock, 0x30);
             shrubPointer = ReadInt(engineHeadBlock, 0x34);
-            shrubCount =    ReadInt(engineHeadBlock, 0x38);
+            shrubCount = ReadInt(engineHeadBlock, 0x38);
             terrainPointer = ReadInt(engineHeadBlock, 0x3C);
             //(0x40)null
             //(0x44)null

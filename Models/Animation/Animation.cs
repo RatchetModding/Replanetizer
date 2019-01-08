@@ -28,7 +28,7 @@ namespace RatchetEdit
         public Animation(FileStream fs, int modelOffset, int animationOffset)
         {
             //We only want to parse this data if the offset is not 0
-            if(animationOffset > 0)
+            if (animationOffset > 0)
             {
                 byte[] header = ReadBlock(fs, modelOffset + animationOffset, 0x1C);
                 unk1 = ReadFloat(header, 0x00);

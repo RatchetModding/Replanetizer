@@ -19,31 +19,38 @@ namespace RatchetEdit
         public int colorOffset { get; set; }
         public uint off_64 { get; set; }
         public uint off_68 { get; set; }
-        public uint off_6C{ get; set; }
+        public uint off_6C { get; set; }
 
-        public override Vector3 position {
+        public override Vector3 position
+        {
             get { return _position; }
-            set {
+            set
+            {
                 Translate(value - _position);
             }
         }
-        public override Vector3 rotation {
+        public override Vector3 rotation
+        {
             get { return _rotation; }
-            set {
+            set
+            {
                 Rotate(value - _rotation);
             }
         }
 
-        public override float scale {
+        public override float scale
+        {
             get { return _scale; }
-            set {
+            set
+            {
                 Scale(value);
             }
         }
 
         float rotationMultiplier = 2.2f;
 
-        public Tie(Matrix4 matrix4) {
+        public Tie(Matrix4 matrix4)
+        {
             modelMatrix = Matrix4.Add(matrix4, new Matrix4());
         }
 
@@ -60,16 +67,16 @@ namespace RatchetEdit
             off_4C =    BAToUInt32(levelBlock, offset + 0x4C);
             */
 
-            off_50 =    ReadShort(levelBlock, offset + 0x50);
-            modelID =   ReadUshort(levelBlock, offset + 0x52);
-            off_54 =    ReadUint(levelBlock, offset + 0x54);
-            off_58 =    ReadUint(levelBlock, offset + 0x58);
-            off_5C =    ReadUint(levelBlock, offset + 0x5C);
+            off_50 = ReadShort(levelBlock, offset + 0x50);
+            modelID = ReadUshort(levelBlock, offset + 0x52);
+            off_54 = ReadUint(levelBlock, offset + 0x54);
+            off_58 = ReadUint(levelBlock, offset + 0x58);
+            off_5C = ReadUint(levelBlock, offset + 0x5C);
 
-            colorOffset =ReadInt(levelBlock, offset + 0x60);
-            off_64 =    ReadUint(levelBlock, offset + 0x64);
-            off_68 =    ReadUint(levelBlock, offset + 0x68);
-            off_6C =    ReadUint(levelBlock, offset + 0x6C);
+            colorOffset = ReadInt(levelBlock, offset + 0x60);
+            off_64 = ReadUint(levelBlock, offset + 0x64);
+            off_68 = ReadUint(levelBlock, offset + 0x68);
+            off_6C = ReadUint(levelBlock, offset + 0x6C);
 
             model = tieModels.Find(tieModel => tieModel.id == modelID);
             _rotation = modelMatrix.ExtractRotation().Xyz * rotationMultiplier;
@@ -96,19 +103,23 @@ namespace RatchetEdit
             return bytes;
         }
 
-        public override void UpdateTransformMatrix() {
+        public override void UpdateTransformMatrix()
+        {
         }
 
-        public override LevelObject Clone() {
+        public override LevelObject Clone()
+        {
             return new Tie(modelMatrix);
         }
 
-        void UpdateMatrixVariables(Matrix4 matrix) {
+        void UpdateMatrixVariables(Matrix4 matrix)
+        {
             modelMatrix = matrix;
         }
 
         //Transformable methods
-        public override void Translate(float x, float y, float z) {
+        public override void Translate(float x, float y, float z)
+        {
             Vector3 rot = new Vector3(rotation);
             Rotate(-rot); //Rotate to 0,0,0 to do translation in world space.
 
@@ -122,11 +133,13 @@ namespace RatchetEdit
 
         }
 
-        public override void Translate(Vector3 vector) {
+        public override void Translate(Vector3 vector)
+        {
             Translate(vector.X, vector.Y, vector.Z);
         }
 
-        public override void Rotate(float x, float y, float z) {
+        public override void Rotate(float x, float y, float z)
+        {
             Vector3 newRotation = new Vector3(
                 x + _rotation.X,
                 y + _rotation.Y,
@@ -140,11 +153,13 @@ namespace RatchetEdit
             UpdateTransformMatrix();
         }
 
-        public override void Rotate(Vector3 vector) {
+        public override void Rotate(Vector3 vector)
+        {
             Rotate(vector.X, vector.Y, vector.Z);
         }
 
-        public override void Scale(float scale) {
+        public override void Scale(float scale)
+        {
             Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
             Matrix4 result = scaleMatrix * modelMatrix.ClearScale();
             _scale = scale;

@@ -196,7 +196,7 @@ namespace RatchetEdit
             rend1 = ReadInt(mobyBlock, offset + 0x30);
             rend2 = ReadInt(mobyBlock, offset + 0x34);
             unk7 = ReadInt(mobyBlock, offset + 0x38);
-            unk8  = ReadInt(mobyBlock, offset + 0x3C);
+            unk8 = ReadInt(mobyBlock, offset + 0x3C);
 
             float x = ReadFloat(mobyBlock, offset + 0x40);
             float y = ReadFloat(mobyBlock, offset + 0x44);

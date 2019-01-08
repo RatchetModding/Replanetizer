@@ -18,12 +18,12 @@ namespace RatchetEdit
 
         public static short ReadShort(byte[] buf, int offset)
         {
-            return (short)((buf[offset + 0] << 8) |(buf[offset + 1]));
+            return (short)((buf[offset + 0] << 8) | (buf[offset + 1]));
         }
 
         public static uint ReadUint(byte[] buf, int offset)
         {
-            return (uint)( (buf[offset + 0] << 24) | (buf[offset + 1] << 16) | (buf[offset + 2] << 8) | (buf[offset + 3]) );
+            return (uint)((buf[offset + 0] << 24) | (buf[offset + 1] << 16) | (buf[offset + 2] << 8) | (buf[offset + 3]));
         }
 
         public static ushort ReadUshort(byte[] buf, int offset)
@@ -67,7 +67,7 @@ namespace RatchetEdit
 
         public static byte[] ReadBlock(FileStream fs, int offset, int length)
         {
-            if(length > 0)
+            if (length > 0)
             {
                 fs.Seek(offset, SeekOrigin.Begin);
                 byte[] returnBytes = new byte[length];

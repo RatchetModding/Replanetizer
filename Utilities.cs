@@ -8,22 +8,29 @@ using System.Text;
 using System.Threading.Tasks;
 using OpenTK;
 
-namespace RatchetEdit {
-    public static class Utilities {
-        public static float fToDegrees(float radians) {
+namespace RatchetEdit
+{
+    public static class Utilities
+    {
+        public static float fToDegrees(float radians)
+        {
             return radians * 180 / (float)Math.PI;
         }
-        public static float fToRadians(float angle) {
+        public static float fToRadians(float angle)
+        {
             return (float)Math.PI / 180 * angle;
         }
-        public static float fRound(float value, float numberOfDecimals) {
+        public static float fRound(float value, float numberOfDecimals)
+        {
             float multiplier = (float)Math.Pow(10, numberOfDecimals);
             return (float)Math.Ceiling(value * multiplier) / multiplier;
         }
-        public static float fSin(float input) {
+        public static float fSin(float input)
+        {
             return (float)Math.Sin(input);
         }
-        public static float fCos(float input) {
+        public static float fCos(float input)
+        {
             return (float)Math.Cos(input);
         }
 
@@ -86,19 +93,19 @@ namespace RatchetEdit {
 
     public class Vector3Converter : TypeConverter
     {
-        public override bool CanConvertFrom( ITypeDescriptorContext context, Type sourceType)
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
         {
             return sourceType == typeof(string);
         }
 
-        public override object ConvertFrom( ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
+        public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
         {
             try
             {
                 string[] tokens = ((string)value).Split(' ');
                 return new Vector3(
-                    Utilities.fToRadians(float.Parse(tokens[0])), 
-                    Utilities.fToRadians(float.Parse(tokens[1])), 
+                    Utilities.fToRadians(float.Parse(tokens[0])),
+                    Utilities.fToRadians(float.Parse(tokens[1])),
                     Utilities.fToRadians(float.Parse(tokens[2]))
                 );
             }
@@ -108,13 +115,13 @@ namespace RatchetEdit {
             }
         }
 
-        public override object ConvertTo( ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
+        public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
         {
             Vector3 p = (Vector3)value;
             return String.Format(
-                "{0} {1} {2}", 
-                Math.Round(Utilities.fToDegrees(p.X), 2), 
-                Math.Round(Utilities.fToDegrees(p.Y), 2), 
+                "{0} {1} {2}",
+                Math.Round(Utilities.fToDegrees(p.X), 2),
+                Math.Round(Utilities.fToDegrees(p.Y), 2),
                 Math.Round(Utilities.fToDegrees(p.Z), 2)
             );
         }

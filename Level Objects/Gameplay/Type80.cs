@@ -21,7 +21,8 @@ namespace RatchetEdit
         public Matrix4 mat1;
         public Matrix4 mat2;
 
-        public Type80(byte[] block, byte[] dataBlock, int num) {
+        public Type80(byte[] block, byte[] dataBlock, int num)
+        {
             int headOffset = num * HEADSIZE;
             int dataOffset = num * DATASIZE;
 

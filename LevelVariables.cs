@@ -92,7 +92,7 @@ namespace RatchetEdit
             unk14 = ReadUint(levelVarBlock, 0x48);
             unk15 = ReadUint(levelVarBlock, 0x4C);
 
-            fogColor = Color.FromArgb(r, g, b); 
+            fogColor = Color.FromArgb(r, g, b);
         }
 
         public byte[] serialize()

@@ -6,14 +6,18 @@ using static RatchetEdit.DataFunctions;
 
 namespace RatchetEdit
 {
-    public class RatchetFileParser {
+    public class RatchetFileParser
+    {
         protected FileStream fileStream;
 
-        protected RatchetFileParser(string filePath) {
-            try {
+        protected RatchetFileParser(string filePath)
+        {
+            try
+            {
                 fileStream = File.OpenRead(filePath);
             }
-            catch(Exception e) {
+            catch (Exception e)
+            {
                 Console.WriteLine(e);
                 Console.WriteLine("Couldn't load engine file.");
                 Application.Exit();
@@ -21,7 +25,8 @@ namespace RatchetEdit
             }
         }
 
-        protected List<Model> GetMobyModels(int mobyModelPointer) {
+        protected List<Model> GetMobyModels(int mobyModelPointer)
+        {
             List<Model> mobyModels = new List<Model>();
 
             //Get the moby count from the start of the section
@@ -31,8 +36,8 @@ namespace RatchetEdit
             byte[] mobyIDBlock = ReadBlock(fileStream, mobyModelPointer + 4, mobyModelCount * 8);
             for (int i = 0; i < mobyModelCount; i++)
             {
-                short modelID = ReadShort(mobyIDBlock,  (i * 8) + 2);
-                int offset =   ReadInt(mobyIDBlock,   (i * 8) + 4);
+                short modelID = ReadShort(mobyIDBlock, (i * 8) + 2);
+                int offset = ReadInt(mobyIDBlock, (i * 8) + 4);
                 mobyModels.Add(new MobyModel(fileStream, modelID, offset));
             }
             return mobyModels;
@@ -108,7 +113,7 @@ namespace RatchetEdit
             for (int i = 0; i < terrainHeadCount; i++)
             {
                 TerrainFragHeader head = new TerrainFragHeader(fileStream, terrainHeadBlock, i);
-                if(pointerList.Count < head.slotNum + 1)
+                if (pointerList.Count < head.slotNum + 1)
                 {
                     pointerList.Add(new TerrainHeader(terrainBlock, (head.slotNum * 4)));
                 }
@@ -117,7 +122,7 @@ namespace RatchetEdit
             }
 
             List<TerrainModel> terrainModels = new List<TerrainModel>();
-            foreach(TerrainHeader hd in pointerList)
+            foreach (TerrainHeader hd in pointerList)
             {
                 terrainModels.Add(new TerrainModel(fileStream, hd));
             }

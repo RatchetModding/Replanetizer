@@ -8,7 +8,7 @@ namespace RatchetEdit
 {
     public class GameType
     {
-        readonly int[] mobySizes = {0x78, 0x88, 0x88, 0x70};
+        readonly int[] mobySizes = { 0x78, 0x88, 0x88, 0x70 };
 
         public int num;
         public int mobyElemSize;

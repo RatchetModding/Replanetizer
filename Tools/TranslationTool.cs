@@ -6,9 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RatchetEdit.Tools {
-    class TranslationTool : Tool {
-        public static void Render(Vector3 position, CustomGLControl glControl) {
+namespace RatchetEdit.Tools
+{
+    class TranslationTool : Tool
+    {
+        public static void Render(Vector3 position, CustomGLControl glControl)
+        {
             float[] test = new float[18];
             float length = 2;
             test[0] = position.X - length;

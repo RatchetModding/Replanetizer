@@ -15,7 +15,8 @@ namespace RatchetEdit
         public Matrix4 mat1;
         public Matrix4 mat2;
 
-        public Type68(byte[] block, int num) {
+        public Type68(byte[] block, int num)
+        {
             int offset = num * ELEMENTSIZE;
 
             mat1 = ReadMatrix4(block, offset + 0x00);

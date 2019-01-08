@@ -12,18 +12,22 @@ namespace RatchetEdit
     {
         protected Vector3 _position = new Vector3();
         [Category("Transform"), TypeConverter(typeof(Vector3Converter)), DisplayName("Position")]
-        public virtual Vector3 position {
+        public virtual Vector3 position
+        {
             get { return _position; }
-            set {
+            set
+            {
                 _position = value;
                 UpdateTransformMatrix();
             }
         }
         protected Vector3 _rotation = new Vector3();
         [Category("Transform"), TypeConverter(typeof(Vector3Converter)), DisplayName("Rotation")]
-        public virtual Vector3 rotation {
+        public virtual Vector3 rotation
+        {
             get { return _rotation; }
-            set {
+            set
+            {
                 _rotation = value;
                 UpdateTransformMatrix();
             }
@@ -31,9 +35,11 @@ namespace RatchetEdit
 
         protected float _scale = 1;
         [Category("Transform"), DisplayName("Scale")]
-        public virtual float scale {
+        public virtual float scale
+        {
             get { return _scale; }
-            set {
+            set
+            {
                 _scale = value;
                 UpdateTransformMatrix();
             }

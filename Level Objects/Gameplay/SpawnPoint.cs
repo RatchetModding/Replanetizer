@@ -25,17 +25,17 @@ namespace RatchetEdit
                 ReadFloat(block, offset + 0x04),
                 ReadFloat(block, offset + 0x08),
                 ReadFloat(block, offset + 0x0C),
-                                                         
+
                 ReadFloat(block, offset + 0x10),
                 ReadFloat(block, offset + 0x14),
                 ReadFloat(block, offset + 0x18),
                 ReadFloat(block, offset + 0x1C),
-                                                         
+
                 ReadFloat(block, offset + 0x20),
                 ReadFloat(block, offset + 0x24),
                 ReadFloat(block, offset + 0x28),
                 ReadFloat(block, offset + 0x2C),
-                                                         
+
                 ReadFloat(block, offset + 0x30),
                 ReadFloat(block, offset + 0x34),
                 ReadFloat(block, offset + 0x38),
@@ -47,17 +47,17 @@ namespace RatchetEdit
                 ReadFloat(block, offset + 0x44),
                 ReadFloat(block, offset + 0x48),
                 ReadFloat(block, offset + 0x4C),
-                                                         
+
                 ReadFloat(block, offset + 0x50),
                 ReadFloat(block, offset + 0x54),
                 ReadFloat(block, offset + 0x58),
                 ReadFloat(block, offset + 0x5C),
-                                                         
+
                 ReadFloat(block, offset + 0x60),
                 ReadFloat(block, offset + 0x64),
                 ReadFloat(block, offset + 0x68),
                 ReadFloat(block, offset + 0x6C),
-                                                         
+
                 ReadFloat(block, offset + 0x70),
                 ReadFloat(block, offset + 0x74),
                 ReadFloat(block, offset + 0x78),

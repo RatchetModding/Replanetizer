@@ -19,7 +19,7 @@ namespace RatchetEdit
             size = 1.0f;
 
             textureConfig = new List<TextureConfig>();
-            foreach(TerrainFragHeader fh in head.heads)
+            foreach (TerrainFragHeader fh in head.heads)
             {
                 textureConfig.AddRange(GetTextureConfigs(fs, fh.texturePointer, fh.textureCount, 0x10));
             }

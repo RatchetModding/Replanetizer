@@ -5,8 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RatchetEdit {
-    public interface ITransformable {
+namespace RatchetEdit
+{
+    public interface ITransformable
+    {
         void Translate(float x, float y, float z);
         void Translate(Vector3 vector);
 

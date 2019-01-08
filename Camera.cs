@@ -5,44 +5,54 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RatchetEdit {
-    class Camera : ITransformable {
+namespace RatchetEdit
+{
+    class Camera : ITransformable
+    {
         //Camera variables
         public float speed = 0.2f;
         public Vector3 position = new Vector3();
-        public Vector3 rotation = new Vector3(0,0,-0.75f);
+        public Vector3 rotation = new Vector3(0, 0, -0.75f);
 
-        public Matrix3 GetRotationMatrix() {
-           return Matrix3.CreateRotationX(rotation.X) * Matrix3.CreateRotationY(rotation.Y) * Matrix3.CreateRotationZ(rotation.Z);
+        public Matrix3 GetRotationMatrix()
+        {
+            return Matrix3.CreateRotationX(rotation.X) * Matrix3.CreateRotationY(rotation.Y) * Matrix3.CreateRotationZ(rotation.Z);
 
         }
 
-        public Matrix4 GetViewMatrix() {
+        public Matrix4 GetViewMatrix()
+        {
             Vector3 forward = Vector3.Transform(Vector3.UnitY, GetRotationMatrix());
             return Matrix4.LookAt(position, position + forward, Vector3.UnitZ);
         }
 
-        public void SetPosition(Vector3 position) {
+        public void SetPosition(Vector3 position)
+        {
             this.position = position;
         }
 
-        public void SetPosition(float x, float y, float z) {
-            SetPosition(new Vector3(x,y,z));
+        public void SetPosition(float x, float y, float z)
+        {
+            SetPosition(new Vector3(x, y, z));
         }
 
-        public void SetRotation(float pitch, float yaw) {
+        public void SetRotation(float pitch, float yaw)
+        {
             SetRotation(new Vector3(pitch, 0, yaw));
         }
-        public void SetRotation(Vector3 rotation) {
+        public void SetRotation(Vector3 rotation)
+        {
             this.rotation = rotation;
         }
 
-        public void MoveBehind(LevelObject levelObject, float distanceToObject = 5) {
-			if (levelObject == null) return;
+        public void MoveBehind(LevelObject levelObject, float distanceToObject = 5)
+        {
+            if (levelObject == null) return;
 
             float yaw = 0;
 
-            if (levelObject as Moby != null) { //If object is moby, load its rotation.
+            if (levelObject as Moby != null)
+            { //If object is moby, load its rotation.
                 yaw = ((Moby)levelObject).rotation.Z;
             }
 
@@ -59,23 +69,28 @@ namespace RatchetEdit {
             SetPosition(cameraPosition);
         }
 
-        public void Translate(float x, float y, float z) {
+        public void Translate(float x, float y, float z)
+        {
             Translate(new Vector3(x, y, z));
         }
 
-        public void Translate(Vector3 vector) {
+        public void Translate(Vector3 vector)
+        {
             position += vector;
         }
 
-        public void Rotate(float x, float y, float z) {
+        public void Rotate(float x, float y, float z)
+        {
             Rotate(new Vector3(x, y, z));
         }
 
-        public void Rotate(Vector3 vector) {
+        public void Rotate(Vector3 vector)
+        {
             rotation += vector;
         }
 
-        public void Scale(float scale) {
+        public void Scale(float scale)
+        {
             // N/A
         }
     }

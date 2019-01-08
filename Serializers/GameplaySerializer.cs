@@ -192,7 +192,7 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetMobies(List<Moby> mobs)
         {
-            if(mobs == null) { return new byte[0x10]; }
+            if (mobs == null) { return new byte[0x10]; }
 
             byte[] bytes = new byte[MOBYLENGTH * mobs.Count + 0x10];
 
@@ -201,12 +201,12 @@ namespace RatchetEdit.Serializers
             WriteUint(ref bytes, 4, 0x100);
 
             int index = 0;
-            foreach(Moby moby in mobs)
+            foreach (Moby moby in mobs)
             {
                 byte[] mobyBytes = moby.Serialize();
                 Array.Copy(mobyBytes, 0, bytes, index * MOBYLENGTH + 0x10, MOBYLENGTH);
                 index++;
-            }            
+            }
             return bytes;
         }
 
@@ -220,7 +220,7 @@ namespace RatchetEdit.Serializers
             //Header
             WriteUint(ref bytes, 0, (uint)spawnPoints.Count);
 
-            for(int i = 0; i < spawnPoints.Count; i++)
+            for (int i = 0; i < spawnPoints.Count; i++)
             {
                 byte[] spawnPointBytes = spawnPoints[i].Serialize();
                 spawnPointBytes.CopyTo(bytes, 0x10 + i * 0x80);
@@ -237,7 +237,7 @@ namespace RatchetEdit.Serializers
             //Header
             WriteUint(ref bytes, 0, (uint)gameCameras.Count);
 
-            for(int i = 0; i < gameCameras.Count; i++)
+            for (int i = 0; i < gameCameras.Count; i++)
             {
                 byte[] cameraBytes = gameCameras[i].Serialize();
                 cameraBytes.CopyTo(bytes, 0x10 + i * GameCamera.ELEMENTSIZE);
@@ -378,7 +378,7 @@ namespace RatchetEdit.Serializers
             List<byte[]> splineData = new List<byte[]>();
             List<int> offsets = new List<int>();
             int offset = 0;
-            foreach(Spline spline in splines)
+            foreach (Spline spline in splines)
             {
                 byte[] splineBytes = spline.Serialize();
                 splineData.Add(splineBytes);
@@ -387,12 +387,12 @@ namespace RatchetEdit.Serializers
             }
 
             int offsetBlockLength = offsets.Count * 4;
-            while(offsetBlockLength % 0x10 != 0)
+            while (offsetBlockLength % 0x10 != 0)
             {
                 offsetBlockLength += 0x4;
             }
             byte[] offsetBlock = new byte[offsetBlockLength];
-            for(int i = 0; i < offsets.Count; i++)
+            for (int i = 0; i < offsets.Count; i++)
             {
                 WriteUint(ref offsetBlock, i * 4, (uint)offsets[i]);
             }
@@ -420,7 +420,7 @@ namespace RatchetEdit.Serializers
 
             byte[] bytes = new byte[pVars.Count * 8];
             uint offset = 0;
-            for(int i = 0; i < pVars.Count; i++)
+            for (int i = 0; i < pVars.Count; i++)
             {
                 WriteUint(ref bytes, (i * 8) + 0x00, offset);
                 WriteUint(ref bytes, (i * 8) + 0x04, (uint)pVars[i].Length);

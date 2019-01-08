@@ -4,8 +4,10 @@ using System.IO;
 using System.Windows.Forms;
 using static RatchetEdit.DataFunctions;
 
-namespace RatchetEdit {
-    public class Level {
+namespace RatchetEdit
+{
+    public class Level
+    {
         public string path;
         public EngineHeader engineHeader;
 
@@ -72,7 +74,8 @@ namespace RatchetEdit {
         public Level() { }
 
         //Engine file constructor
-        public Level(string enginePath) {
+        public Level(string enginePath)
+        {
             game = new GameType(1);
 
             path = Path.GetDirectoryName(enginePath);
@@ -80,7 +83,7 @@ namespace RatchetEdit {
             EngineParser engineParser = new EngineParser(enginePath);
             VramParser vramParser = new VramParser(path + @"/vram.ps3");
             GameplayParser gameplayParser = new GameplayParser(game, path + @"/gameplay_ntsc");
-            
+
             Console.WriteLine("Parsing skybox...");
             skybox = engineParser.GetSkyboxModel();
             Console.WriteLine("Success");

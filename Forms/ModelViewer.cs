@@ -90,7 +90,7 @@ namespace RatchetEdit
 
         private void modelView_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            if(e.Node.Level == 1)
+            if (e.Node.Level == 1)
             {
                 switch (e.Node.Parent.Text)
                 {
@@ -153,7 +153,7 @@ namespace RatchetEdit
 
                 GL.DisableVertexAttribArray(1);
                 GL.DisableVertexAttribArray(0);
-                
+
             }
 
             glControl1.SwapBuffers();
@@ -162,7 +162,7 @@ namespace RatchetEdit
         private void glControl1_MouseWheel(object sender, MouseEventArgs e)
         {
             zoom += (e.Delta > 0) ? -0.1f : 0.1f;
-            
+
             invalidate = true;
         }
 

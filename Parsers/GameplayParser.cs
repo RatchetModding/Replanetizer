@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using static RatchetEdit.DataFunctions;
 
-namespace RatchetEdit {
-    class GameplayParser {
+namespace RatchetEdit
+{
+    class GameplayParser
+    {
         FileStream gameplayFileStream;
         GameplayHeader gameplayHeader;
 
@@ -28,7 +30,8 @@ namespace RatchetEdit {
             gameplayHeader = new GameplayHeader(game, gameplayFileStream);
         }
 
-        public List<Spline> GetSplines() {
+        public List<Spline> GetSplines()
+        {
             if (gameplayHeader.splinePointer == 0) { return null; }
 
             List<Spline> splines = new List<Spline>();
@@ -39,7 +42,8 @@ namespace RatchetEdit {
             byte[] splineHeadBlock = ReadBlock(gameplayFileStream, gameplayHeader.splinePointer + 0x10, splineCount * 4);
             byte[] splineBlock = ReadBlock(gameplayFileStream, gameplayHeader.splinePointer + splineOffset, splineSectionSize);
 
-            for (int i = 0; i < splineCount; i++) {
+            for (int i = 0; i < splineCount; i++)
+            {
                 int offset = ReadInt(splineHeadBlock, (i * 4));
                 splines.Add(new Spline(splineBlock, offset));
             }
@@ -116,7 +120,7 @@ namespace RatchetEdit {
             int mobyCount = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.mobyPointer, 4), 0);
 
             byte[] mobyBlock = ReadBlock(gameplayFileStream, gameplayHeader.mobyPointer + 0x10, mobyCount * game.mobyElemSize);
-            for (int i = 0; i < mobyCount; i ++)
+            for (int i = 0; i < mobyCount; i++)
             {
                 mobs.Add(new Moby(game, mobyBlock, i, mobyModels));
             }
@@ -142,7 +146,7 @@ namespace RatchetEdit {
         public List<GameCamera> GetGameCameras()
         {
             List<GameCamera> cameraList = new List<GameCamera>();
-            if(gameplayHeader.cameraPointer == 0) { return cameraList; }
+            if (gameplayHeader.cameraPointer == 0) { return cameraList; }
 
             int cameraCount = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.cameraPointer, 4), 0);
             byte[] cameraBlock = ReadBlock(gameplayFileStream, gameplayHeader.cameraPointer + 0x10, cameraCount * GameCamera.ELEMENTSIZE);
@@ -157,7 +161,7 @@ namespace RatchetEdit {
         public List<Type04> GetType04s()
         {
             List<Type04> type04s = new List<Type04>();
-            if(gameplayHeader.type04Pointer == 0) { return type04s; }
+            if (gameplayHeader.type04Pointer == 0) { return type04s; }
 
             int count = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.type04Pointer, 4), 0);
             byte[] type04Block = ReadBlock(gameplayFileStream, gameplayHeader.type04Pointer + 0x10, Type04.ELEMENTSIZE * count);
@@ -172,11 +176,11 @@ namespace RatchetEdit {
         public List<Type0C> GetType0Cs()
         {
             List<Type0C> type0Cs = new List<Type0C>();
-            if(gameplayHeader.type0CPointer == 0) { return type0Cs; }
+            if (gameplayHeader.type0CPointer == 0) { return type0Cs; }
 
             int count = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.type0CPointer, 4), 0);
             byte[] type0CBlock = ReadBlock(gameplayFileStream, gameplayHeader.type0CPointer + 0x10, Type0C.ELEMENTSIZE * count);
-            for(int i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
             {
                 type0Cs.Add(new Type0C(type0CBlock, i));
             }
@@ -187,7 +191,7 @@ namespace RatchetEdit {
         public List<Type64> GetType64s()
         {
             List<Type64> type64s = new List<Type64>();
-            if(gameplayHeader.type64Pointer == 0) { return type64s; }
+            if (gameplayHeader.type64Pointer == 0) { return type64s; }
 
             int count = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.type64Pointer, 4), 0);
             byte[] type64Block = ReadBlock(gameplayFileStream, gameplayHeader.type64Pointer + 0x10, Type64.ELEMENTSIZE * count);
@@ -202,7 +206,7 @@ namespace RatchetEdit {
         public List<Type68> GetType68s()
         {
             List<Type68> type68s = new List<Type68>();
-            if(gameplayHeader.type68Pointer == 0) { return type68s; }
+            if (gameplayHeader.type68Pointer == 0) { return type68s; }
 
             int count = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.type68Pointer, 4), 0);
             byte[] type68Block = ReadBlock(gameplayFileStream, gameplayHeader.type68Pointer + 0x10, Type68.ELEMENTSIZE * count);
@@ -217,7 +221,7 @@ namespace RatchetEdit {
         public List<Type88> GetType88s()
         {
             List<Type88> type88s = new List<Type88>();
-            if(gameplayHeader.type88Pointer == 0) { return type88s; }
+            if (gameplayHeader.type88Pointer == 0) { return type88s; }
 
             int count = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.type88Pointer, 4), 0);
             byte[] type88Block = ReadBlock(gameplayFileStream, gameplayHeader.type88Pointer + 0x10, Type88.ELEMENTSIZE * count);
@@ -235,7 +239,7 @@ namespace RatchetEdit {
         public List<Type80> getType80()
         {
             List<Type80> type80s = new List<Type80>();
-            if(gameplayHeader.type80Pointer == 0) { return type80s; }
+            if (gameplayHeader.type80Pointer == 0) { return type80s; }
 
             int count = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.type80Pointer, 4), 0);
             byte[] headBlock = ReadBlock(gameplayFileStream, gameplayHeader.type80Pointer + 0x10, Type80.HEADSIZE * count);
@@ -251,7 +255,7 @@ namespace RatchetEdit {
 
         public byte[] getUnk6()
         {
-            if(gameplayHeader.unkPointer6 == 0) { return null; }
+            if (gameplayHeader.unkPointer6 == 0) { return null; }
             int count1 = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.unkPointer6 + 0x00, 4), 0);
             int count2 = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.unkPointer6 + 0x04, 4), 0);
             return ReadBlock(gameplayFileStream, gameplayHeader.unkPointer6, count1 * 4 + count2 + 0x10);
@@ -381,7 +385,8 @@ namespace RatchetEdit {
         }
 
 
-        public void Close() {
+        public void Close()
+        {
             gameplayFileStream.Close();
         }
     }

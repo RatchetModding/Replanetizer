@@ -292,9 +292,9 @@ namespace RatchetEdit
         }
 
         //Transformable methods
-        public override void Rotate(float x, float y, float z)
-        {
-            Rotate(new Vector3(x, y, z));
+
+        public override void Translate(float x, float y, float z) {
+            Translate(new Vector3(x, y, z));
         }
 
         public override void Rotate(Vector3 vector)
@@ -304,12 +304,12 @@ namespace RatchetEdit
 
         public override void Scale(float scale)
         {
-            scale += scale;
+            Console.WriteLine(scale);
+            this.scale *= scale;
         }
 
-        public override void Translate(float x, float y, float z)
-        {
-            Translate(new Vector3(x, y, z));
+        public override void Rotate(float x, float y, float z) {
+            Rotate(new Vector3(x, y, z));
         }
 
         public override void Translate(Vector3 vector)

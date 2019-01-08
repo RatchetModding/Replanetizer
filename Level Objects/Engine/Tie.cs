@@ -43,7 +43,7 @@ namespace RatchetEdit
             get { return _scale; }
             set
             {
-                Scale(value);
+                Scale(value - _scale);
             }
         }
 
@@ -81,6 +81,7 @@ namespace RatchetEdit
             model = tieModels.Find(tieModel => tieModel.id == modelID);
             _rotation = modelMatrix.ExtractRotation().Xyz * rotationMultiplier;
             _position = modelMatrix.ExtractTranslation();
+            _scale = modelMatrix.ExtractScale().Length / 1.7f;
         }
 
         public byte[] Serialize()
@@ -160,9 +161,11 @@ namespace RatchetEdit
 
         public override void Scale(float scale)
         {
-            Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
+            Console.WriteLine(scale);
+
+            Matrix4 scaleMatrix = Matrix4.CreateScale(this.scale * scale);
             Matrix4 result = scaleMatrix * modelMatrix.ClearScale();
-            _scale = scale;
+            _scale = _scale * scale;
 
             UpdateMatrixVariables(result);
             UpdateTransformMatrix();

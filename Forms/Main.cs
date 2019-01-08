@@ -220,15 +220,23 @@ namespace RatchetEdit
 
             glControl1.MakeCurrent();
 
-            if (selectedObject != null)
-            {
-                if (currentTool == Tool.Translate)
+            if (selectedObject != null) 
                 {
-                    TranslationTool.Render(selectedObject != null ? selectedObject.position : new Vector3(), glControl1);
+                if (currentTool == Tool.Translate) 
+                {
+                    TranslationTool.Render(selectedObject.position, glControl1);
                 }
-                if (currentTool == Tool.SplineEditor)
+                else if (currentTool == Tool.Rotate) 
                 {
-                    if (selectedObject as Spline != null)
+                    TranslationTool.Render(selectedObject.position, glControl1);
+                }
+                else if (currentTool == Tool.Scale) 
+                {
+                    TranslationTool.Render(selectedObject.position, glControl1);
+                }
+                else if (currentTool == Tool.SplineEditor) 
+                {
+                    if (selectedObject as Spline != null) 
                     {
                         Spline spline = (Spline)selectedObject;
                         TranslationTool.Render(spline.GetVertex(currentSplineVertex), glControl1);
@@ -277,29 +285,23 @@ namespace RatchetEdit
 
             if (keyState.IsKeyDown(Key.F1))
             {
-                currentTool = Tool.Translate;
-                toolLabel.Text = currentTool.ToString();
+                SelectTool(Tool.Translate);
             }
             else if (keyState.IsKeyDown(Key.F2))
             {
-                currentTool = Tool.Rotate;
-                toolLabel.Text = currentTool.ToString();
+                SelectTool(Tool.Rotate);
             }
             else if (keyState.IsKeyDown(Key.F3))
             {
-                currentTool = Tool.Scale;
-                toolLabel.Text = currentTool.ToString();
+                SelectTool(Tool.Scale);
             }
             else if (keyState.IsKeyDown(Key.F4))
             {
-                currentTool = Tool.SplineEditor;
-                toolLabel.Text = currentTool.ToString();
-                currentSplineVertex = 0;
+                SelectTool(Tool.SplineEditor);
             }
             else if (keyState.IsKeyDown(Key.F5))
             {
-                currentTool = Tool.None;
-                toolLabel.Text = currentTool.ToString();
+                SelectTool(Tool.None);
             }
 
             if (rMouse)
@@ -324,47 +326,68 @@ namespace RatchetEdit
             glControl1.view = camera.GetViewMatrix();
 
             Vector3 mouseRay = MouseToWorldRay(glControl1.projection, glControl1.view, new Size(glControl1.Width, glControl1.Height), new Vector2(Cursor.Position.X, Cursor.Position.Y));
-            if (currentTool == Tool.Translate)
+            bool toolIsBeingDragged = xLock || yLock || zLock;
+            if (toolIsBeingDragged)
             {
-                if (xLock)
-                {
-                    selectedObject.Translate((mouseRay.X - prevMouseRay.X) * 20, 0, 0);
-                    InvalidateView();
-                }
+                if (currentTool == Tool.Translate) {
+                    if (xLock) {
+                        selectedObject.Translate((mouseRay.X - prevMouseRay.X) * 20, 0, 0);
+                    }
 
-                if (yLock)
-                {
-                    selectedObject.Translate(0, (mouseRay.Y - prevMouseRay.Y) * 20, 0);
-                    InvalidateView();
-                }
+                    if (yLock) {
+                        selectedObject.Translate(0, (mouseRay.Y - prevMouseRay.Y) * 20, 0);
+                    }
 
-                if (zLock)
-                {
-                    selectedObject.Translate(0, 0, (mouseRay.Z - prevMouseRay.Z) * 20);
-                    InvalidateView();
+                    if (zLock) {
+                        selectedObject.Translate(0, 0, (mouseRay.Z - prevMouseRay.Z) * 20);
+                    }
                 }
-            }
-            else if (currentTool == Tool.SplineEditor)
-            {
-                if (selectedObject as Spline == null) return;
-                Spline spline = (Spline)selectedObject;
-                if (xLock)
-                {
-                    spline.TranslateVertex(currentSplineVertex, new Vector3((mouseRay.X - prevMouseRay.X) * 20, 0, 0));
-                    InvalidateView();
-                }
+                else if (currentTool == Tool.Rotate) {
+                    if (xLock) {
+                        selectedObject.Rotate((mouseRay.X - prevMouseRay.X) * 20, 0, 0);
+                    }
 
-                if (yLock)
-                {
-                    spline.TranslateVertex(currentSplineVertex, new Vector3(0, (mouseRay.Y - prevMouseRay.Y) * 20, 0));
-                    InvalidateView();
-                }
+                    if (yLock) {
+                        selectedObject.Rotate(0, (mouseRay.Y - prevMouseRay.Y) * 20, 0);
+                    }
 
-                if (zLock)
-                {
-                    spline.TranslateVertex(currentSplineVertex, new Vector3(0, 0, (mouseRay.Z - prevMouseRay.Z) * 20));
-                    InvalidateView();
+                    if (zLock) {
+                        selectedObject.Rotate(0, 0, (mouseRay.Z - prevMouseRay.Z) * 20);
+                    }
                 }
+                else if (currentTool == Tool.Scale) {
+                    if (xLock) {
+                        selectedObject.Scale(1 + (mouseRay.X - prevMouseRay.X) * 20);
+                    }
+
+                    if (yLock) {
+                        selectedObject.Scale(1 + (mouseRay.Y - prevMouseRay.Y) * 20);
+                    }
+
+                    if (zLock) {
+                        selectedObject.Scale(1 + (mouseRay.Z - prevMouseRay.Z) * 20);
+                    }
+                }
+                else if (currentTool == Tool.SplineEditor)
+                {
+                    if (selectedObject as Spline == null) return;
+                    Spline spline = (Spline)selectedObject;
+                    if (xLock)
+                    {
+                        spline.TranslateVertex(currentSplineVertex, new Vector3((mouseRay.X - prevMouseRay.X) * 20, 0, 0));
+                    }
+
+                    if (yLock)
+                    {
+                        spline.TranslateVertex(currentSplineVertex, new Vector3(0, (mouseRay.Y - prevMouseRay.Y) * 20, 0));
+                    }
+
+                    if (zLock)
+                    {
+                        spline.TranslateVertex(currentSplineVertex, new Vector3(0, 0, (mouseRay.Z - prevMouseRay.Z) * 20));
+                    }
+                }
+                InvalidateView();
             }
 
             prevMouseRay = mouseRay;
@@ -424,6 +447,7 @@ namespace RatchetEdit
         private void glControl1_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             if (selectedObject as Spline == null) return;
+            if (currentTool != Tool.SplineEditor) return;
 
             int delta = e.Delta / 120;
             if (delta > 0)
@@ -481,20 +505,23 @@ namespace RatchetEdit
                 fakeDrawSplines(level.splines, splineOffset);
                 offset += level.splines.Count;
             }
-            if (currentTool == Tool.Translate)
-            {
-                Console.WriteLine("Current tool is translate");
-                if (selectedObject != null)
-                {
+            if (selectedObject != null) {
+                if (currentTool == Tool.Translate) {
                     TranslationTool.Render(selectedObject.position, glControl1);
                 }
-            }
-            if (currentTool == Tool.SplineEditor)
-            {
-                if (selectedObject as Spline != null)
+                else if (currentTool == Tool.Rotate) {
+                    TranslationTool.Render(selectedObject.position, glControl1);
+                }
+                else if (currentTool == Tool.Scale) {
+                    TranslationTool.Render(selectedObject.position, glControl1);
+                }
+                else if (currentTool == Tool.SplineEditor)
                 {
-                    Spline spline = (Spline)selectedObject;
-                    TranslationTool.Render(spline.GetVertex(currentSplineVertex), glControl1);
+                    if (selectedObject as Spline != null)
+                    {
+                        Spline spline = (Spline)selectedObject;
+                        TranslationTool.Render(spline.GetVertex(currentSplineVertex), glControl1);
+                    }
                 }
             }
 
@@ -610,6 +637,12 @@ namespace RatchetEdit
                 return;
             }
 
+            if (selectedObject as Spline != null && levelObject as Spline == null) 
+            {
+                //Previous object was spline, new isn't
+                if (currentTool == Tool.SplineEditor) SelectTool(Tool.None);
+            }
+
             selectedObject = levelObject;
             properties.SelectedObject = selectedObject;
             if (primedTreeNode != null)
@@ -620,6 +653,31 @@ namespace RatchetEdit
             }
             UpdateEditorValues();
             InvalidateView();
+        }
+
+        void SelectTool(Tool tool) {
+            if (tool == Tool.Translate) {
+                currentTool = Tool.Translate;
+            }
+            else if (tool == Tool.Rotate) {
+                currentTool = Tool.Rotate;
+            }
+            else if (tool == Tool.Scale) {
+                currentTool = Tool.Scale;
+            }
+            else if (tool == Tool.SplineEditor) {
+                currentTool = Tool.SplineEditor;
+                currentSplineVertex = 0;
+            }
+            else if (tool == Tool.None) {
+                currentTool = Tool.None;
+            }
+            toolLabel.Text = currentTool.ToString();
+            InvalidateView();
+        }
+
+        public void ApplyTool(float x, float y, float z) {
+
         }
 
         public void CloneMoby(Moby moby)

@@ -39,7 +39,7 @@ namespace RatchetEdit
                 ReadFloat(block, offset + 0x30),
                 ReadFloat(block, offset + 0x34),
                 ReadFloat(block, offset + 0x38),
-                ReadFloat(block, offset + 0x3C)
+                1.0f
                 );
 
             mat2 = new Matrix4(
@@ -64,7 +64,7 @@ namespace RatchetEdit
                 ReadFloat(block, offset + 0x7C)
             );
 
-            modelMatrix = mat1 + mat2;
+            modelMatrix = mat1;
             _rotation = modelMatrix.ExtractRotation().Xyz * 2.2f;
             _position = modelMatrix.ExtractTranslation();
         }

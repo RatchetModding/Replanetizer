@@ -42,6 +42,8 @@ namespace RatchetEdit
 
         Camera camera;
 
+        Cube cube;
+
         TreeNode primedTreeNode = null;
 
         int currentSplineVertex = 0;
@@ -78,6 +80,8 @@ namespace RatchetEdit
         {
             level = new Level(fileName);
             InvalidateView();
+
+            //Enable all the buttons in the view tab
             mobyCheck.Enabled = true;
             tieCheck.Enabled = true;
             shrubCheck.Enabled = true;
@@ -85,6 +89,7 @@ namespace RatchetEdit
             terrainCheck.Enabled = true;
             splineCheck.Enabled = true;
             skyboxCheck.Enabled = true;
+            cuboidCheck.Enabled = true;
 
             glControl1.textures = level.textures;
 
@@ -95,6 +100,8 @@ namespace RatchetEdit
 
             UpdateEditorValues();
             InvalidateView();
+
+            cube = new Cube();
         }
 
         public void GenerateObjectTree()
@@ -238,6 +245,8 @@ namespace RatchetEdit
                 }
             }
 
+
+
             if (mobyCheck.Checked && mobyCheck.Enabled)
                 foreach (Moby mob in level.mobs)
                     mob.Render(glControl1, mob == selectedObject);
@@ -262,6 +271,14 @@ namespace RatchetEdit
             if (terrainCheck.Checked && terrainCheck.Enabled)
                 foreach (TerrainModel terrainModel in level.terrains)
                     terrainModel.Draw(glControl1);
+            if(cuboidCheck.Checked && cuboidCheck.Enabled)
+            {
+                foreach(SpawnPoint sp in level.spawnPoints)
+                {
+                    cube.Render(sp, glControl1);
+                }
+            }
+
 
             invalidate = false;
         }

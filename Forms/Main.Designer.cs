@@ -81,10 +81,11 @@ namespace RatchetEdit
             this.rotateToolBtn = new System.Windows.Forms.ToolStripButton();
             this.scaleToolBtn = new System.Windows.Forms.ToolStripButton();
             this.splineToolBtn = new System.Windows.Forms.ToolStripButton();
+            this.glControl1 = new RatchetEdit.CustomGLControl();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.properties = new System.Windows.Forms.PropertyGrid();
             this.mapSaveDialog = new System.Windows.Forms.SaveFileDialog();
-            this.glControl1 = new RatchetEdit.CustomGLControl();
+            this.cuboidCheck = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -172,7 +173,8 @@ namespace RatchetEdit
             this.collCheck,
             this.terrainCheck,
             this.splineCheck,
-            this.skyboxCheck});
+            this.skyboxCheck,
+            this.cuboidCheck});
             this.ViewToolStipItem.Name = "ViewToolStipItem";
             this.ViewToolStipItem.Size = new System.Drawing.Size(44, 20);
             this.ViewToolStipItem.Text = "View";
@@ -184,7 +186,7 @@ namespace RatchetEdit
             this.mobyCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.mobyCheck.Enabled = false;
             this.mobyCheck.Name = "mobyCheck";
-            this.mobyCheck.Size = new System.Drawing.Size(120, 22);
+            this.mobyCheck.Size = new System.Drawing.Size(180, 22);
             this.mobyCheck.Text = "Mobys";
             this.mobyCheck.Click += new System.EventHandler(this.EnableCheck);
             // 
@@ -195,7 +197,7 @@ namespace RatchetEdit
             this.tieCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.tieCheck.Enabled = false;
             this.tieCheck.Name = "tieCheck";
-            this.tieCheck.Size = new System.Drawing.Size(120, 22);
+            this.tieCheck.Size = new System.Drawing.Size(180, 22);
             this.tieCheck.Text = "Ties";
             this.tieCheck.Click += new System.EventHandler(this.EnableCheck);
             // 
@@ -206,7 +208,7 @@ namespace RatchetEdit
             this.shrubCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.shrubCheck.Enabled = false;
             this.shrubCheck.Name = "shrubCheck";
-            this.shrubCheck.Size = new System.Drawing.Size(120, 22);
+            this.shrubCheck.Size = new System.Drawing.Size(180, 22);
             this.shrubCheck.Text = "Shrubs";
             this.shrubCheck.Click += new System.EventHandler(this.EnableCheck);
             // 
@@ -217,7 +219,7 @@ namespace RatchetEdit
             this.collCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.collCheck.Enabled = false;
             this.collCheck.Name = "collCheck";
-            this.collCheck.Size = new System.Drawing.Size(120, 22);
+            this.collCheck.Size = new System.Drawing.Size(180, 22);
             this.collCheck.Text = "Collision";
             this.collCheck.Click += new System.EventHandler(this.EnableCheck);
             // 
@@ -228,7 +230,7 @@ namespace RatchetEdit
             this.terrainCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.terrainCheck.Enabled = false;
             this.terrainCheck.Name = "terrainCheck";
-            this.terrainCheck.Size = new System.Drawing.Size(120, 22);
+            this.terrainCheck.Size = new System.Drawing.Size(180, 22);
             this.terrainCheck.Text = "Terrain";
             this.terrainCheck.Click += new System.EventHandler(this.EnableCheck);
             // 
@@ -237,7 +239,7 @@ namespace RatchetEdit
             this.splineCheck.CheckOnClick = true;
             this.splineCheck.Enabled = false;
             this.splineCheck.Name = "splineCheck";
-            this.splineCheck.Size = new System.Drawing.Size(120, 22);
+            this.splineCheck.Size = new System.Drawing.Size(180, 22);
             this.splineCheck.Text = "Splines";
             this.splineCheck.Click += new System.EventHandler(this.EnableCheck);
             // 
@@ -246,8 +248,9 @@ namespace RatchetEdit
             this.skyboxCheck.CheckOnClick = true;
             this.skyboxCheck.Enabled = false;
             this.skyboxCheck.Name = "skyboxCheck";
-            this.skyboxCheck.Size = new System.Drawing.Size(120, 22);
+            this.skyboxCheck.Size = new System.Drawing.Size(180, 22);
             this.skyboxCheck.Text = "Skybox";
+            this.skyboxCheck.Click += new System.EventHandler(this.EnableCheck);
             // 
             // toolStripMenuItem2
             // 
@@ -546,6 +549,22 @@ namespace RatchetEdit
             this.splineToolBtn.Text = "Spline Tool (F4)";
             this.splineToolBtn.Click += new System.EventHandler(this.splineToolBtn_Click);
             // 
+            // glControl1
+            // 
+            this.glControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.glControl1.BackColor = System.Drawing.Color.Black;
+            this.glControl1.Location = new System.Drawing.Point(3, 3);
+            this.glControl1.Name = "glControl1";
+            this.glControl1.Size = new System.Drawing.Size(999, 651);
+            this.glControl1.TabIndex = 14;
+            this.glControl1.VSync = false;
+            this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
+            this.glControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseDown);
+            this.glControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseUp);
+            this.glControl1.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseWheel);
+            // 
             // splitContainer2
             // 
             this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -588,21 +607,14 @@ namespace RatchetEdit
             // 
             this.mapSaveDialog.FileName = "gameplay_ntsc";
             // 
-            // glControl1
+            // cuboidCheck
             // 
-            this.glControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.glControl1.BackColor = System.Drawing.Color.Black;
-            this.glControl1.Location = new System.Drawing.Point(3, 3);
-            this.glControl1.Name = "glControl1";
-            this.glControl1.Size = new System.Drawing.Size(999, 651);
-            this.glControl1.TabIndex = 14;
-            this.glControl1.VSync = false;
-            this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
-            this.glControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseDown);
-            this.glControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseUp);
-            this.glControl1.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseWheel);
+            this.cuboidCheck.CheckOnClick = true;
+            this.cuboidCheck.Enabled = false;
+            this.cuboidCheck.Name = "cuboidCheck";
+            this.cuboidCheck.Size = new System.Drawing.Size(180, 22);
+            this.cuboidCheck.Text = "Cuboids";
+            this.cuboidCheck.Click += new System.EventHandler(this.EnableCheck);
             // 
             // Main
             // 
@@ -685,6 +697,7 @@ namespace RatchetEdit
         private System.Windows.Forms.ToolStripButton rotateToolBtn;
         private System.Windows.Forms.ToolStripButton scaleToolBtn;
         private System.Windows.Forms.ToolStripButton splineToolBtn;
+        private System.Windows.Forms.ToolStripMenuItem cuboidCheck;
     }
 }
 

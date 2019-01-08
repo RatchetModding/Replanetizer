@@ -1,0 +1,1 @@
+This application includes icons from the materials icon pack located at https://material.io/tools/icons/?style=baseline, which is protected under the apache 2.0 license availible at https://www.apache.org/licenses/LICENSE-2.0.html

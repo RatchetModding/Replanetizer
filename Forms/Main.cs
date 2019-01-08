@@ -23,7 +23,7 @@ namespace RatchetEdit
             Scale,
             SplineEditor
         }
-        Tool currentTool = Tool.Translate;
+        Tool currentTool;
 
         public Level level;
         public ModelViewer modelViewer;
@@ -63,7 +63,7 @@ namespace RatchetEdit
 
             GetModelNames();
 
-            toolLabel.Text = currentTool.ToString();
+            SelectTool(Tool.Translate);
         }
 
         private void mapOpenBtn_Click(object sender, EventArgs e)
@@ -184,12 +184,6 @@ namespace RatchetEdit
         #endregion
 
         private void modelViewerToolBtn_Click(object sender, EventArgs e)
-        {
-            if (selectedObject == null) return;
-            OpenModelViewer();
-        }
-
-        private void openModelViewerBtn_Click(object sender, EventArgs e)
         {
             if (selectedObject == null) return;
             OpenModelViewer();
@@ -656,23 +650,11 @@ namespace RatchetEdit
         }
 
         void SelectTool(Tool tool) {
-            if (tool == Tool.Translate) {
-                currentTool = Tool.Translate;
-            }
-            else if (tool == Tool.Rotate) {
-                currentTool = Tool.Rotate;
-            }
-            else if (tool == Tool.Scale) {
-                currentTool = Tool.Scale;
-            }
-            else if (tool == Tool.SplineEditor) {
-                currentTool = Tool.SplineEditor;
-                currentSplineVertex = 0;
-            }
-            else if (tool == Tool.None) {
-                currentTool = Tool.None;
-            }
-            toolLabel.Text = currentTool.ToString();
+            translateToolBtn.Checked = (tool == Tool.Translate);
+            rotateToolBtn.Checked = (tool == Tool.Rotate);
+            scaleToolBtn.Checked = (tool == Tool.Scale);
+            splineToolBtn.Checked = (tool == Tool.SplineEditor);
+            currentTool = tool;
             InvalidateView();
         }
 
@@ -759,28 +741,12 @@ namespace RatchetEdit
             camera.MoveBehind(selectedObject);
         }
 
-        private void gotoPositionBtn_Click(object sender, EventArgs e)
-        {
-            if (selectedObject == null) return;
-
-            camera.MoveBehind(selectedObject);
-            InvalidateView();
-        }
-
         private void cloneButton_Click(object sender, EventArgs e)
         {
             if (selectedObject as Moby == null) return;
 
             Moby moby = (Moby)selectedObject;
             CloneMoby(moby);
-        }
-
-        private void deleteButton_Click(object sender, EventArgs e)
-        {
-            if (selectedObject as Moby == null) return;
-
-            Moby moby = (Moby)selectedObject;
-            DeleteMoby(moby);
         }
 
         private void splineVertex_ValueChanged(object sender, EventArgs e)
@@ -792,6 +758,42 @@ namespace RatchetEdit
         private void tickTimer_Tick(object sender, EventArgs e)
         {
             Tick();
+        }
+
+        private void translateToolBtn_Click(object sender, EventArgs e)
+        {
+            SelectTool(Tool.Translate);
+        }
+
+        private void rotateToolBtn_Click(object sender, EventArgs e)
+        {
+            SelectTool(Tool.Rotate);
+        }
+
+        private void scaleToolBtn_Click(object sender, EventArgs e)
+        {
+            SelectTool(Tool.Scale);
+        }
+
+        private void splineToolBtn_Click(object sender, EventArgs e)
+        {
+            SelectTool(Tool.SplineEditor);
+        }
+
+        private void deleteBtn_Click(object sender, EventArgs e)
+        {
+            if (selectedObject as Moby == null) return;
+
+            Moby moby = (Moby)selectedObject;
+            DeleteMoby(moby);
+        }
+
+        private void cloneBtn_Click(object sender, EventArgs e)
+        {
+            if (selectedObject as Moby == null) return;
+
+            Moby moby = (Moby)selectedObject;
+            CloneMoby(moby);
         }
 
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)

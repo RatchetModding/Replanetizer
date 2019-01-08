@@ -62,8 +62,6 @@ namespace RatchetEdit
             this.levelVariablesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.openModelViewerBtn = new System.Windows.Forms.Button();
-            this.gotoPositionBtn = new System.Windows.Forms.Button();
             this.label10 = new System.Windows.Forms.Label();
             this.camXLabel = new System.Windows.Forms.Label();
             this.camYLabel = new System.Windows.Forms.Label();
@@ -75,14 +73,16 @@ namespace RatchetEdit
             this.pitchLabel = new System.Windows.Forms.Label();
             this.objectTree = new System.Windows.Forms.TreeView();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.toolstrip1 = new System.Windows.Forms.ToolStrip();
+            this.cloneBtn = new System.Windows.Forms.ToolStripButton();
+            this.deleteBtn = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.translateToolBtn = new System.Windows.Forms.ToolStripButton();
+            this.rotateToolBtn = new System.Windows.Forms.ToolStripButton();
+            this.scaleToolBtn = new System.Windows.Forms.ToolStripButton();
+            this.splineToolBtn = new System.Windows.Forms.ToolStripButton();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.label1 = new System.Windows.Forms.Label();
             this.properties = new System.Windows.Forms.PropertyGrid();
-            this.toolLabel = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.splineVertex = new System.Windows.Forms.NumericUpDown();
-            this.deleteButton = new System.Windows.Forms.Button();
-            this.cloneButton = new System.Windows.Forms.Button();
             this.mapSaveDialog = new System.Windows.Forms.SaveFileDialog();
             this.glControl1 = new RatchetEdit.CustomGLControl();
             this.menuStrip1.SuspendLayout();
@@ -90,11 +90,11 @@ namespace RatchetEdit
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            this.toolstrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splineVertex)).BeginInit();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -127,39 +127,39 @@ namespace RatchetEdit
             // 
             this.toolStripMenuItem4.Enabled = false;
             this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-            this.toolStripMenuItem4.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItem4.Size = new System.Drawing.Size(155, 22);
             this.toolStripMenuItem4.Text = "New";
             // 
             // mapOpenBtn
             // 
             this.mapOpenBtn.Name = "mapOpenBtn";
             this.mapOpenBtn.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.mapOpenBtn.Size = new System.Drawing.Size(180, 22);
+            this.mapOpenBtn.Size = new System.Drawing.Size(155, 22);
             this.mapOpenBtn.Text = "Open...";
             this.mapOpenBtn.Click += new System.EventHandler(this.mapOpenBtn_Click);
             // 
             // mapSaveBtn
             // 
             this.mapSaveBtn.Name = "mapSaveBtn";
-            this.mapSaveBtn.Size = new System.Drawing.Size(180, 22);
+            this.mapSaveBtn.Size = new System.Drawing.Size(155, 22);
             this.mapSaveBtn.Text = "Save";
             // 
             // mapSaveAsBtn
             // 
             this.mapSaveAsBtn.Name = "mapSaveAsBtn";
-            this.mapSaveAsBtn.Size = new System.Drawing.Size(180, 22);
+            this.mapSaveAsBtn.Size = new System.Drawing.Size(155, 22);
             this.mapSaveAsBtn.Text = "Save as...";
             this.mapSaveAsBtn.Click += new System.EventHandler(this.mapSaveAsBtn_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(152, 6);
             // 
             // exitToolBtn
             // 
             this.exitToolBtn.Name = "exitToolBtn";
-            this.exitToolBtn.Size = new System.Drawing.Size(180, 22);
+            this.exitToolBtn.Size = new System.Drawing.Size(155, 22);
             this.exitToolBtn.Text = "Exit";
             this.exitToolBtn.Click += new System.EventHandler(this.exitToolBtn_Click);
             // 
@@ -320,34 +320,9 @@ namespace RatchetEdit
             this.settingsToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.settingsToolStripMenuItem.Text = "Settings";
             // 
-            // openModelViewerBtn
-            // 
-            this.openModelViewerBtn.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.openModelViewerBtn.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.openModelViewerBtn.Location = new System.Drawing.Point(133, 269);
-            this.openModelViewerBtn.Name = "openModelViewerBtn";
-            this.openModelViewerBtn.Size = new System.Drawing.Size(129, 23);
-            this.openModelViewerBtn.TabIndex = 13;
-            this.openModelViewerBtn.Text = "Open in Model Viewer";
-            this.openModelViewerBtn.UseVisualStyleBackColor = true;
-            this.openModelViewerBtn.Click += new System.EventHandler(this.openModelViewerBtn_Click);
-            // 
-            // gotoPositionBtn
-            // 
-            this.gotoPositionBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.gotoPositionBtn.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.gotoPositionBtn.Location = new System.Drawing.Point(4, 269);
-            this.gotoPositionBtn.Name = "gotoPositionBtn";
-            this.gotoPositionBtn.Size = new System.Drawing.Size(124, 23);
-            this.gotoPositionBtn.TabIndex = 12;
-            this.gotoPositionBtn.Text = "Go to Position";
-            this.gotoPositionBtn.UseVisualStyleBackColor = true;
-            this.gotoPositionBtn.Click += new System.EventHandler(this.gotoPositionBtn_Click);
-            // 
             // label10
             // 
-            this.label10.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+            this.label10.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label10.AutoSize = true;
             this.label10.Location = new System.Drawing.Point(4, 323);
@@ -358,7 +333,7 @@ namespace RatchetEdit
             // 
             // camXLabel
             // 
-            this.camXLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+            this.camXLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.camXLabel.AutoSize = true;
             this.camXLabel.Location = new System.Drawing.Point(4, 336);
@@ -369,7 +344,7 @@ namespace RatchetEdit
             // 
             // camYLabel
             // 
-            this.camYLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+            this.camYLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.camYLabel.AutoSize = true;
             this.camYLabel.Location = new System.Drawing.Point(4, 349);
@@ -380,7 +355,7 @@ namespace RatchetEdit
             // 
             // camZLabel
             // 
-            this.camZLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+            this.camZLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.camZLabel.AutoSize = true;
             this.camZLabel.Location = new System.Drawing.Point(4, 362);
@@ -401,7 +376,7 @@ namespace RatchetEdit
             // 
             // label18
             // 
-            this.label18.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+            this.label18.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label18.AutoSize = true;
             this.label18.Location = new System.Drawing.Point(81, 323);
@@ -412,7 +387,7 @@ namespace RatchetEdit
             // 
             // yawLabel
             // 
-            this.yawLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+            this.yawLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.yawLabel.AutoSize = true;
             this.yawLabel.Location = new System.Drawing.Point(81, 336);
@@ -423,7 +398,7 @@ namespace RatchetEdit
             // 
             // pitchLabel
             // 
-            this.pitchLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+            this.pitchLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pitchLabel.AutoSize = true;
             this.pitchLabel.Location = new System.Drawing.Point(81, 349);
@@ -434,8 +409,8 @@ namespace RatchetEdit
             // 
             // objectTree
             // 
-            this.objectTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.objectTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.objectTree.HideSelection = false;
             this.objectTree.Location = new System.Drawing.Point(0, 3);
@@ -474,6 +449,7 @@ namespace RatchetEdit
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.toolstrip1);
             this.splitContainer1.Panel1.Controls.Add(this.glControl1);
             // 
             // splitContainer1.Panel2
@@ -483,6 +459,92 @@ namespace RatchetEdit
             this.splitContainer1.Size = new System.Drawing.Size(1269, 657);
             this.splitContainer1.SplitterDistance = 1000;
             this.splitContainer1.TabIndex = 17;
+            // 
+            // toolstrip1
+            // 
+            this.toolstrip1.ImageScalingSize = new System.Drawing.Size(18, 18);
+            this.toolstrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.cloneBtn,
+            this.deleteBtn,
+            this.toolStripSeparator2,
+            this.translateToolBtn,
+            this.rotateToolBtn,
+            this.scaleToolBtn,
+            this.splineToolBtn});
+            this.toolstrip1.Location = new System.Drawing.Point(0, 0);
+            this.toolstrip1.Name = "toolstrip1";
+            this.toolstrip1.Size = new System.Drawing.Size(1000, 25);
+            this.toolstrip1.TabIndex = 15;
+            this.toolstrip1.Text = "toolStrip1";
+            // 
+            // cloneBtn
+            // 
+            this.cloneBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.cloneBtn.Image = global::RatchetEdit.Properties.Resources.add_button;
+            this.cloneBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.cloneBtn.Name = "cloneBtn";
+            this.cloneBtn.Size = new System.Drawing.Size(23, 22);
+            this.cloneBtn.Text = "Clone Moby";
+            this.cloneBtn.Click += new System.EventHandler(this.cloneBtn_Click);
+            // 
+            // deleteBtn
+            // 
+            this.deleteBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.deleteBtn.Image = global::RatchetEdit.Properties.Resources.delete_button;
+            this.deleteBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.deleteBtn.Name = "deleteBtn";
+            this.deleteBtn.Size = new System.Drawing.Size(23, 22);
+            this.deleteBtn.Text = "Delete Moby (DEL)";
+            this.deleteBtn.Click += new System.EventHandler(this.deleteBtn_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            // 
+            // translateToolBtn
+            // 
+            this.translateToolBtn.CheckOnClick = true;
+            this.translateToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.translateToolBtn.Image = global::RatchetEdit.Properties.Resources.translate_tool;
+            this.translateToolBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.translateToolBtn.Name = "translateToolBtn";
+            this.translateToolBtn.Size = new System.Drawing.Size(23, 22);
+            this.translateToolBtn.Text = "Translate Tool (F1)";
+            this.translateToolBtn.Click += new System.EventHandler(this.translateToolBtn_Click);
+            // 
+            // rotateToolBtn
+            // 
+            this.rotateToolBtn.CheckOnClick = true;
+            this.rotateToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.rotateToolBtn.Image = global::RatchetEdit.Properties.Resources.rotate_tool;
+            this.rotateToolBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.rotateToolBtn.Name = "rotateToolBtn";
+            this.rotateToolBtn.Size = new System.Drawing.Size(23, 22);
+            this.rotateToolBtn.Text = "Rotate Tool (F2)";
+            this.rotateToolBtn.Click += new System.EventHandler(this.rotateToolBtn_Click);
+            // 
+            // scaleToolBtn
+            // 
+            this.scaleToolBtn.CheckOnClick = true;
+            this.scaleToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.scaleToolBtn.Image = global::RatchetEdit.Properties.Resources.scale_tool;
+            this.scaleToolBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.scaleToolBtn.Name = "scaleToolBtn";
+            this.scaleToolBtn.Size = new System.Drawing.Size(23, 22);
+            this.scaleToolBtn.Text = "Scale Tool (F3)";
+            this.scaleToolBtn.Click += new System.EventHandler(this.scaleToolBtn_Click);
+            // 
+            // splineToolBtn
+            // 
+            this.splineToolBtn.CheckOnClick = true;
+            this.splineToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.splineToolBtn.Image = global::RatchetEdit.Properties.Resources.spline_tool;
+            this.splineToolBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.splineToolBtn.Name = "splineToolBtn";
+            this.splineToolBtn.Size = new System.Drawing.Size(23, 22);
+            this.splineToolBtn.Text = "Spline Tool (F4)";
+            this.splineToolBtn.Click += new System.EventHandler(this.splineToolBtn_Click);
             // 
             // splitContainer2
             // 
@@ -497,109 +559,30 @@ namespace RatchetEdit
             // 
             // splitContainer2.Panel2
             // 
-            this.splitContainer2.Panel2.Controls.Add(this.label1);
             this.splitContainer2.Panel2.Controls.Add(this.properties);
-            this.splitContainer2.Panel2.Controls.Add(this.toolLabel);
-            this.splitContainer2.Panel2.Controls.Add(this.gotoPositionBtn);
-            this.splitContainer2.Panel2.Controls.Add(this.label8);
             this.splitContainer2.Panel2.Controls.Add(this.camYLabel);
-            this.splitContainer2.Panel2.Controls.Add(this.splineVertex);
             this.splitContainer2.Panel2.Controls.Add(this.yawLabel);
-            this.splitContainer2.Panel2.Controls.Add(this.deleteButton);
             this.splitContainer2.Panel2.Controls.Add(this.camXLabel);
-            this.splitContainer2.Panel2.Controls.Add(this.cloneButton);
             this.splitContainer2.Panel2.Controls.Add(this.label10);
             this.splitContainer2.Panel2.Controls.Add(this.label18);
             this.splitContainer2.Panel2.Controls.Add(this.camZLabel);
             this.splitContainer2.Panel2.Controls.Add(this.pitchLabel);
-            this.splitContainer2.Panel2.Controls.Add(this.openModelViewerBtn);
             this.splitContainer2.Size = new System.Drawing.Size(265, 657);
             this.splitContainer2.SplitterDistance = 270;
             this.splitContainer2.TabIndex = 21;
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(141, 359);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(35, 13);
-            this.label1.TabIndex = 21;
-            this.label1.Text = "label1";
-            // 
             // properties
             // 
-            this.properties.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.properties.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.properties.HelpVisible = false;
             this.properties.Location = new System.Drawing.Point(0, 3);
             this.properties.Name = "properties";
-            this.properties.Size = new System.Drawing.Size(262, 260);
+            this.properties.Size = new System.Drawing.Size(262, 317);
             this.properties.TabIndex = 19;
             this.properties.ToolbarVisible = false;
             this.properties.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.propertyGrid1_PropertyValueChanged);
-            // 
-            // toolLabel
-            // 
-            this.toolLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.toolLabel.AutoSize = true;
-            this.toolLabel.Location = new System.Drawing.Point(202, 359);
-            this.toolLabel.Name = "toolLabel";
-            this.toolLabel.Size = new System.Drawing.Size(31, 13);
-            this.toolLabel.TabIndex = 20;
-            this.toolLabel.Text = "none";
-            // 
-            // label8
-            // 
-            this.label8.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(199, 323);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(65, 13);
-            this.label8.TabIndex = 18;
-            this.label8.Text = "Spline Index";
-            // 
-            // splineVertex
-            // 
-            this.splineVertex.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.splineVertex.Location = new System.Drawing.Point(202, 336);
-            this.splineVertex.Maximum = new decimal(new int[] {
-            5000,
-            0,
-            0,
-            0});
-            this.splineVertex.Name = "splineVertex";
-            this.splineVertex.Size = new System.Drawing.Size(60, 20);
-            this.splineVertex.TabIndex = 17;
-            this.splineVertex.ValueChanged += new System.EventHandler(this.splineVertex_ValueChanged);
-            // 
-            // deleteButton
-            // 
-            this.deleteButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.deleteButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.deleteButton.ForeColor = System.Drawing.Color.Red;
-            this.deleteButton.Location = new System.Drawing.Point(3, 297);
-            this.deleteButton.Name = "deleteButton";
-            this.deleteButton.Size = new System.Drawing.Size(125, 23);
-            this.deleteButton.TabIndex = 14;
-            this.deleteButton.Text = "Delete Object";
-            this.deleteButton.UseVisualStyleBackColor = true;
-            this.deleteButton.Click += new System.EventHandler(this.deleteButton_Click);
-            // 
-            // cloneButton
-            // 
-            this.cloneButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.cloneButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.cloneButton.Location = new System.Drawing.Point(133, 298);
-            this.cloneButton.Name = "cloneButton";
-            this.cloneButton.Size = new System.Drawing.Size(129, 23);
-            this.cloneButton.TabIndex = 15;
-            this.cloneButton.Text = "Clone Object";
-            this.cloneButton.UseVisualStyleBackColor = true;
-            this.cloneButton.Click += new System.EventHandler(this.cloneButton_Click);
             // 
             // mapSaveDialog
             // 
@@ -607,8 +590,8 @@ namespace RatchetEdit
             // 
             // glControl1
             // 
-            this.glControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.glControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.glControl1.BackColor = System.Drawing.Color.Black;
             this.glControl1.Location = new System.Drawing.Point(3, 3);
@@ -636,15 +619,17 @@ namespace RatchetEdit
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            this.toolstrip1.ResumeLayout(false);
+            this.toolstrip1.PerformLayout();
             this.splitContainer2.Panel1.ResumeLayout(false);
             this.splitContainer2.Panel2.ResumeLayout(false);
             this.splitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
             this.splitContainer2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splineVertex)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -667,8 +652,6 @@ namespace RatchetEdit
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem12;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem13;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem14;
-        private System.Windows.Forms.Button openModelViewerBtn;
-        private System.Windows.Forms.Button gotoPositionBtn;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label camXLabel;
         private System.Windows.Forms.Label camYLabel;
@@ -689,17 +672,19 @@ namespace RatchetEdit
         private System.Windows.Forms.ToolStripMenuItem splineCheck;
         private System.Windows.Forms.TreeView objectTree;
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.Button cloneButton;
-        private System.Windows.Forms.Button deleteButton;
-        private System.Windows.Forms.NumericUpDown splineVertex;
-        private System.Windows.Forms.Label label8;
         private System.Windows.Forms.PropertyGrid properties;
         private System.Windows.Forms.ToolStripMenuItem levelVariablesToolStripMenuItem;
         private System.Windows.Forms.SaveFileDialog mapSaveDialog;
-        private System.Windows.Forms.Label toolLabel;
         private System.Windows.Forms.ToolStripMenuItem skyboxCheck;
         private System.Windows.Forms.SplitContainer splitContainer2;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ToolStrip toolstrip1;
+        private System.Windows.Forms.ToolStripButton cloneBtn;
+        private System.Windows.Forms.ToolStripButton deleteBtn;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripButton translateToolBtn;
+        private System.Windows.Forms.ToolStripButton rotateToolBtn;
+        private System.Windows.Forms.ToolStripButton scaleToolBtn;
+        private System.Windows.Forms.ToolStripButton splineToolBtn;
     }
 }
 

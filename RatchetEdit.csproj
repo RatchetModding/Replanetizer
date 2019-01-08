@@ -125,6 +125,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
@@ -153,6 +154,23 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="Resources\add_button.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\delete_button.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\translate_tool.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\rotate_tool.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\scale_tool.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\spline_tool.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

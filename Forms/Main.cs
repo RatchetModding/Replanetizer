@@ -20,7 +20,8 @@ namespace RatchetEdit
             None,
             Translate,
             Rotate,
-            Scale
+            Scale,
+            SplineEditor
         }
         Tool currentTool = Tool.Translate;
 
@@ -42,6 +43,8 @@ namespace RatchetEdit
         Camera camera;
 
         TreeNode primedTreeNode = null;
+
+        int currentSplineVertex = 0;
 
         bool invalidate = false;
         bool suppressTreeViewSelectEvent = false;
@@ -211,9 +214,16 @@ namespace RatchetEdit
 
             glControl1.MakeCurrent();
 
-            if (selectedObject != null)
-            {
-                TranslationTool.Render(selectedObject != null ? selectedObject.position : new Vector3(), glControl1);
+            if (selectedObject != null) {
+                if(currentTool == Tool.Translate) {
+                    TranslationTool.Render(selectedObject != null ? selectedObject.position : new Vector3(), glControl1);
+                }
+                if (currentTool == Tool.SplineEditor) {
+                    if(selectedObject as Spline != null) {
+                        Spline spline = (Spline)selectedObject;
+                        TranslationTool.Render(spline.GetVertex(currentSplineVertex), glControl1);
+                    }
+                }
             }
 
             if (mobyCheck.Checked && mobyCheck.Enabled)
@@ -270,8 +280,12 @@ namespace RatchetEdit
                 currentTool = Tool.Scale;
                 toolLabel.Text = currentTool.ToString();
             }
-            else if (keyState.IsKeyDown(Key.F4))
-            {
+            else if (keyState.IsKeyDown(Key.F4)) {
+                currentTool = Tool.SplineEditor;
+                toolLabel.Text = currentTool.ToString();
+                currentSplineVertex = 0;
+            }
+            else if (keyState.IsKeyDown(Key.F5)) {
                 currentTool = Tool.None;
                 toolLabel.Text = currentTool.ToString();
             }
@@ -297,23 +311,39 @@ namespace RatchetEdit
             glControl1.view = camera.GetViewMatrix();
 
             Vector3 mouseRay = MouseToWorldRay(glControl1.projection, glControl1.view, new Size(glControl1.Width, glControl1.Height), new Vector2(Cursor.Position.X, Cursor.Position.Y));
+            if (currentTool == Tool.Translate) {
+                if (xLock) {
+                    selectedObject.Translate((mouseRay.X - prevMouseRay.X) * 20, 0, 0);
+                    InvalidateView();
+                }
 
-            if (xLock)
-            {
-                selectedObject.Translate((mouseRay.X - prevMouseRay.X) * 20, 0, 0);
-                InvalidateView();
+                if (yLock) {
+                    selectedObject.Translate(0, (mouseRay.Y - prevMouseRay.Y) * 20, 0);
+                    InvalidateView();
+                }
+
+                if (zLock) {
+                    selectedObject.Translate(0, 0, (mouseRay.Z - prevMouseRay.Z) * 20);
+                    InvalidateView();
+                }
             }
+            else if (currentTool == Tool.SplineEditor) {
+                if (selectedObject as Spline == null) return;
+                Spline spline = (Spline)selectedObject;
+                if (xLock) {
+                    spline.TranslateVertex(currentSplineVertex, new Vector3((mouseRay.X - prevMouseRay.X) * 20, 0, 0));
+                    InvalidateView();
+                }
 
-            if (yLock)
-            {
-                selectedObject.Translate(0, (mouseRay.Y - prevMouseRay.Y) * 20, 0);
-                InvalidateView();
-            }
+                if (yLock) {
+                    spline.TranslateVertex(currentSplineVertex, new Vector3(0, (mouseRay.Y - prevMouseRay.Y) * 20, 0));
+                    InvalidateView();
+                }
 
-            if (zLock)
-            {
-                selectedObject.Translate(0, 0, (mouseRay.Z - prevMouseRay.Z) * 20);
-                InvalidateView();
+                if (zLock) {
+                    spline.TranslateVertex(currentSplineVertex, new Vector3(0, 0, (mouseRay.Z - prevMouseRay.Z) * 20));
+                    InvalidateView();
+                }
             }
 
             prevMouseRay = mouseRay;
@@ -370,6 +400,21 @@ namespace RatchetEdit
             UpdateEditorValues();
         }
 
+        private void glControl1_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e) {
+            if (selectedObject as Spline == null) return;
+
+            int delta = e.Delta / 120;
+            if(delta > 0) {
+                if (currentSplineVertex < ((Spline)selectedObject).GetVertexCount() - 1) {
+                    currentSplineVertex += 1;
+                }
+            }
+            else if (currentSplineVertex > 0) {
+                currentSplineVertex -= 1;
+            }
+            InvalidateView();
+        }
+
 
         #region RenderFunctions
 
@@ -411,11 +456,16 @@ namespace RatchetEdit
                 fakeDrawSplines(level.splines, splineOffset);
                 offset += level.splines.Count;
             }
-            if (currentTool == Tool.Translate)
-            {
+            if (currentTool == Tool.Translate) {
                 Console.WriteLine("Current tool is translate");
                 if (selectedObject != null) {
                     TranslationTool.Render(selectedObject.position, glControl1);
+                }
+            }
+            if (currentTool == Tool.SplineEditor) {
+                if (selectedObject as Spline != null) {
+                    Spline spline = (Spline)selectedObject;
+                    TranslationTool.Render(spline.GetVertex(currentSplineVertex), glControl1);
                 }
             }
 

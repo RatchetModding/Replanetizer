@@ -66,6 +66,24 @@ namespace RatchetEdit
             cnt++;
         }
 
+        public Vector3 GetVertex(int index) {
+            float x = vertexBuffer[index * 3];
+            float y = vertexBuffer[index * 3 + 1];
+            float z = vertexBuffer[index * 3 + 2];
+
+            return new Vector3(x, y, z);
+        }
+
+        public void TranslateVertex(int vertexIndex, Vector3 translationVector) {
+            vertexBuffer[vertexIndex * 3] += translationVector.X;
+            vertexBuffer[vertexIndex * 3 + 1] += translationVector.Y;
+            vertexBuffer[vertexIndex * 3 + 2] += translationVector.Z;
+        }
+
+        public int GetVertexCount() {
+            return vertexBuffer.Length / 3;
+        }
+
         public byte[] Serialize()
         {
             int count = vertexBuffer.Length / 3;

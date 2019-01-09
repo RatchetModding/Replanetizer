@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using static RatchetEdit.DataFunctions;
 
 namespace RatchetEdit
 {
@@ -49,6 +50,12 @@ namespace RatchetEdit
         public SkyboxModel GetSkyboxModel()
         {
             return GetSkyboxModel(engineHead.skyboxPointer);
+        }
+
+
+        public GameType DetectGame()
+        {
+            return DetectGame(0xA0);
         }
     }
 }

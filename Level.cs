@@ -76,11 +76,14 @@ namespace RatchetEdit
         //Engine file constructor
         public Level(string enginePath)
         {
-            game = new GameType(1);
+            
 
             path = Path.GetDirectoryName(enginePath);
 
             EngineParser engineParser = new EngineParser(enginePath);
+
+            game = engineParser.DetectGame();
+
             VramParser vramParser = new VramParser(path + @"/vram.ps3");
             GameplayParser gameplayParser = new GameplayParser(game, path + @"/gameplay_ntsc");
 
@@ -169,5 +172,6 @@ namespace RatchetEdit
 
             Console.WriteLine("Level parsing done");
         }
+
     }
 }

@@ -135,6 +135,22 @@ namespace RatchetEdit
             return new SkyboxModel(fileStream, skyboxPointer);
         }
 
+        protected GameType DetectGame(int offset)
+        {
+            uint magic = ReadUint(ReadBlock(fileStream, offset, 4), 0);
+            switch (magic)
+            {
+                case 0x00000001:
+                    return new GameType(1);
+                case 0xEAA90001:
+                    return new GameType(2);
+                case 0xEAA60001:
+                    return new GameType(3);
+                default:
+                    return new GameType(1);
+            }
+        }
+
 
         public void Close()
         {

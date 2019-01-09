@@ -245,8 +245,6 @@ namespace RatchetEdit
                 }
             }
 
-
-
             if (mobyCheck.Checked && mobyCheck.Enabled)
                 foreach (Moby mob in level.mobs)
                     mob.Render(glControl1, mob == selectedObject);
@@ -263,22 +261,17 @@ namespace RatchetEdit
                 foreach (Spline spline in level.splines)
                     spline.Render(glControl1, spline == selectedObject);
 
+			if(cuboidCheck.Checked && cuboidCheck.Enabled)
+				foreach(SpawnPoint cuboid in level.spawnPoints)
+					cuboid.Render(glControl1, cuboid == selectedObject);
 
 
-            if (skyboxCheck.Checked && skyboxCheck.Enabled)
+			if (skyboxCheck.Checked && skyboxCheck.Enabled)
                 level.skybox.Draw(glControl1);
 
             if (terrainCheck.Checked && terrainCheck.Enabled)
                 foreach (TerrainModel terrainModel in level.terrains)
                     terrainModel.Draw(glControl1);
-            if(cuboidCheck.Checked && cuboidCheck.Enabled)
-            {
-                foreach(SpawnPoint sp in level.spawnPoints)
-                {
-                    cube.Render(sp, glControl1);
-                }
-            }
-
 
             invalidate = false;
         }

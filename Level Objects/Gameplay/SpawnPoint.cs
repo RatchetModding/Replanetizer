@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static RatchetEdit.DataFunctions;
 using OpenTK;
+using OpenTK.Graphics.OpenGL;
 
 namespace RatchetEdit
 {
@@ -15,7 +16,26 @@ namespace RatchetEdit
         public Matrix4 mat1;
         public Matrix4 mat2;
 
-        public SpawnPoint(byte[] block, int index)
+		Matrix4 scaleMatrix = Matrix4.CreateScale(1000f);
+		int IBO;
+		int VBO;
+
+		static readonly float[] cube = new float[]
+		{
+			-1.0f, -1.0f,  1.0f,
+			1.0f, -1.0f,  1.0f,
+			1.0f,  1.0f,  1.0f,
+			-1.0f,  1.0f,  1.0f,
+            // back
+            -1.0f, -1.0f, -1.0f,
+			1.0f, -1.0f, -1.0f,
+			1.0f,  1.0f, -1.0f,
+			-1.0f,  1.0f, -1.0f
+		};
+
+		static readonly ushort[] cubeElements = new ushort[] { 0, 1, 2, 2, 3, 0, 1, 5, 6, 6, 2, 1, 7, 6, 5, 5, 4, 7, 4, 0, 3, 3, 7, 4, 4, 5, 1, 1, 0, 4, 3, 2, 6, 6, 7, 3 };
+
+		public SpawnPoint(byte[] block, int index)
         {
             id = index;
             int offset = index * ELEMENTSIZE;
@@ -67,7 +87,15 @@ namespace RatchetEdit
             modelMatrix = mat1;
             _rotation = modelMatrix.ExtractRotation().Xyz * 2.2f;
             _position = modelMatrix.ExtractTranslation();
-        }
+
+			GL.GenBuffers(1, out VBO);
+			GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
+			GL.BufferData(BufferTarget.ArrayBuffer, cube.Length * sizeof(float), cube, BufferUsageHint.StaticDraw);
+
+			GL.GenBuffers(1, out IBO);
+			GL.BindBuffer(BufferTarget.ElementArrayBuffer, IBO);
+			GL.BufferData(BufferTarget.ElementArrayBuffer, cubeElements.Length * sizeof(ushort), cubeElements, BufferUsageHint.StaticDraw);
+		}
 
         public byte[] Serialize()
         {
@@ -115,5 +143,22 @@ namespace RatchetEdit
 
             return bytes;
         }
-    }
+
+		public override void Render(CustomGLControl glControl, bool selected = false)
+		{
+			GL.UseProgram(glControl.colorShaderID);
+			GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+				Matrix4 mvp = modelMatrix * glControl.worldView;
+				GL.UniformMatrix4(glControl.matrixID, false, ref mvp);
+				GL.Uniform4(glControl.colorID, selected ? selectedColor : normalColor);
+
+				GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
+				GL.BindBuffer(BufferTarget.ElementArrayBuffer, IBO);
+
+				GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+
+				GL.DrawElements(PrimitiveType.Triangles, cubeElements.Length, DrawElementsType.UnsignedShort, 0);
+			GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+		}
+	}
 }

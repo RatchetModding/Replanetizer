@@ -247,15 +247,11 @@ namespace RatchetEdit
 
         public override void Render(CustomGLControl glControl, bool selected = false)
         {
-            Vector4 color;
-            if (selected) color = new Vector4(1, 0, 1, 1);
-            else color = new Vector4(1, 1, 1, 1);
-
             var worldView = glControl.worldView;
 
             GL.UseProgram(glControl.colorShaderID);
             GL.UniformMatrix4(glControl.matrixID, false, ref worldView);
-            GL.Uniform4(glControl.colorID, color);
+            GL.Uniform4(glControl.colorID, selected ? selectedColor : normalColor);
             GetVBO();
             GL.DrawArrays(PrimitiveType.LineStrip, 0, vertexBuffer.Length / 3);
         }

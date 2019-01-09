@@ -16,10 +16,12 @@ namespace RatchetEdit
         public Matrix4 mat1;
         public Matrix4 mat2;
 
-		Matrix4 scaleMatrix = Matrix4.CreateScale(1000f);
 		int IBO;
 		int VBO;
+		// Try to refactor this away at some point
+		private readonly float originalM44;
 
+		static Matrix4 scaleMatrix = Matrix4.CreateScale(1000f);
 		static readonly float[] cube = new float[]
 		{
 			-1.0f, -1.0f,  1.0f,
@@ -84,6 +86,8 @@ namespace RatchetEdit
                 ReadFloat(block, offset + 0x7C)
             );
 
+			originalM44 = ReadFloat(block, offset + 0x3C);
+
             modelMatrix = mat1;
             _rotation = modelMatrix.ExtractRotation().Xyz * 2.2f;
             _position = modelMatrix.ExtractTranslation();
@@ -101,27 +105,29 @@ namespace RatchetEdit
         {
             byte[] bytes = new byte[0x80];
 
-            WriteFloat(ref bytes, 0x00, mat1.M11);
-            WriteFloat(ref bytes, 0x04, mat1.M12);
-            WriteFloat(ref bytes, 0x08, mat1.M13);
-            WriteFloat(ref bytes, 0x0C, mat1.M14);
+			// mat1
+			WriteFloat(ref bytes, 0x00, modelMatrix.M11);
+			WriteFloat(ref bytes, 0x04, modelMatrix.M12);
+			WriteFloat(ref bytes, 0x08, modelMatrix.M13);
+			WriteFloat(ref bytes, 0x0C, modelMatrix.M14);
 
-            WriteFloat(ref bytes, 0x10, mat1.M21);
-            WriteFloat(ref bytes, 0x14, mat1.M22);
-            WriteFloat(ref bytes, 0x18, mat1.M23);
-            WriteFloat(ref bytes, 0x1C, mat1.M24);
+			WriteFloat(ref bytes, 0x10, modelMatrix.M21);
+			WriteFloat(ref bytes, 0x14, modelMatrix.M22);
+			WriteFloat(ref bytes, 0x18, modelMatrix.M23);
+			WriteFloat(ref bytes, 0x1C, modelMatrix.M24);
 
-            WriteFloat(ref bytes, 0x20, mat1.M31);
-            WriteFloat(ref bytes, 0x24, mat1.M32);
-            WriteFloat(ref bytes, 0x28, mat1.M33);
-            WriteFloat(ref bytes, 0x2C, mat1.M34);
+			WriteFloat(ref bytes, 0x20, modelMatrix.M31);
+			WriteFloat(ref bytes, 0x24, modelMatrix.M32);
+			WriteFloat(ref bytes, 0x28, modelMatrix.M33);
+			WriteFloat(ref bytes, 0x2C, modelMatrix.M34);
 
-            WriteFloat(ref bytes, 0x30, mat1.M41);
-            WriteFloat(ref bytes, 0x34, mat1.M42);
-            WriteFloat(ref bytes, 0x38, mat1.M43);
-            WriteFloat(ref bytes, 0x3C, mat1.M44);
+			WriteFloat(ref bytes, 0x30, modelMatrix.M41);
+			WriteFloat(ref bytes, 0x34, modelMatrix.M42);
+			WriteFloat(ref bytes, 0x38, modelMatrix.M43);
+			WriteFloat(ref bytes, 0x3C, originalM44);
 
-            WriteFloat(ref bytes, 0x40, mat2.M11);
+			// mat2
+			WriteFloat(ref bytes, 0x40, mat2.M11);
             WriteFloat(ref bytes, 0x44, mat2.M12);
             WriteFloat(ref bytes, 0x48, mat2.M13);
             WriteFloat(ref bytes, 0x4C, mat2.M14);

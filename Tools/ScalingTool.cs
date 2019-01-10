@@ -10,7 +10,7 @@ namespace RatchetEdit.Tools
 {
     class ScalingTool : Tool
     {
-        public static void Render(Vector3 position, CustomGLControl glControl)
+        public override void Render(Vector3 position, CustomGLControl glControl)
         {
             float[] test = new float[18];
             float length = 1f;
@@ -54,6 +54,10 @@ namespace RatchetEdit.Tools
 
             GL.Uniform4(glControl.colorID, new Vector4(0, 0, 1, 1));
             GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
+        }
+
+        public override ToolType GetToolType() {
+            return ToolType.Scale;
         }
     }
 }

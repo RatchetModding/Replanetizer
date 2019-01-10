@@ -15,15 +15,9 @@ namespace RatchetEdit
 {
     public partial class Main : Form
     {
-        public enum Tool
-        {
-            None,
-            Translate,
-            Rotate,
-            Scale,
-            SplineEditor
-        }
+
         Tool currentTool;
+        Dictionary<Tool.ToolType, Tool> tools = new Dictionary<Tool.ToolType, Tool>();
 
         public Level level;
         public ModelViewer modelViewer;
@@ -48,6 +42,7 @@ namespace RatchetEdit
 
         bool invalidate = false;
         bool suppressTreeViewSelectEvent = false;
+
         public Main()
         {
             InitializeComponent();
@@ -59,11 +54,19 @@ namespace RatchetEdit
             glControl1.MakeCurrent();
             glControl1.InitializeGLConfig();
             camera = new Camera();
-            //Generate vertex array
+
+            InitializeToolList();
 
             GetModelNames();
 
-            SelectTool(Tool.Translate);
+            SelectTool(Tool.ToolType.Translate);
+        }
+
+        private void InitializeToolList() {
+            tools.Add(Tool.ToolType.Translate, new TranslationTool());
+            tools.Add(Tool.ToolType.Rotate, new RotationTool());
+            tools.Add(Tool.ToolType.Scale, new ScalingTool());
+            tools.Add(Tool.ToolType.VertexTranslator, new VertexTranslationTool());
         }
 
         private void mapOpenBtn_Click(object sender, EventArgs e)
@@ -239,27 +242,9 @@ namespace RatchetEdit
                 foreach (TerrainModel terrainModel in level.terrains)
                     terrainModel.Draw(glControl1);
 
-            GL.Clear(ClearBufferMask.DepthBufferBit);
+            RenderTool();
 
-            if (selectedObject != null) {
-                if (currentTool == Tool.Translate) {
-                    TranslationTool.Render(selectedObject.position, glControl1);
-                }
-                else if (currentTool == Tool.Rotate) {
-                    RotationTool.Render(selectedObject.position, glControl1);
-                }
-                else if (currentTool == Tool.Scale) {
-                    ScalingTool.Render(selectedObject.position, glControl1);
-                }
-                else if (currentTool == Tool.SplineEditor) {
-                    if (selectedObject as Spline != null) {
-                        Spline spline = (Spline)selectedObject;
-                        TranslationTool.Render(spline.GetVertex(currentSplineVertex), glControl1);
-                    }
-                }
-            }
-
-            invalidate = false;
+             invalidate = false;
         }
 
         //Called every frame
@@ -302,16 +287,18 @@ namespace RatchetEdit
                 else if (zLock) direction = Vector3.UnitZ;
                 float magnitudeMultiplier = 20;
                 Vector3 magnitude = (mouseRay - prevMouseRay) * magnitudeMultiplier;
-                if (currentTool == Tool.Translate) {
+                Tool.ToolType toolType = currentTool.GetToolType();
+
+                if (toolType == Tool.ToolType.Translate) {
                      selectedObject.Translate(direction * magnitude);
                 }
-                else if (currentTool == Tool.Rotate) {
+                else if (toolType == Tool.ToolType.Rotate) {
                     selectedObject.Rotate(direction * magnitude);
                 }
-                else if (currentTool == Tool.Scale) {
+                else if (toolType == Tool.ToolType.Scale) {
                     selectedObject.Scale(direction * magnitude + Vector3.One);
                 }
-                else if (currentTool == Tool.SplineEditor)
+                else if (toolType == Tool.ToolType.VertexTranslator)
                 {
                     if (selectedObject as Spline == null) return;
                     Spline spline = (Spline)selectedObject;
@@ -334,15 +321,17 @@ namespace RatchetEdit
         private Vector3 GetInputAxes()
         {
             KeyboardState keyState = Keyboard.GetState();
-
+            
             float xAxis = 0, yAxis = 0, zAxis = 0;
 
-            if (keyState.IsKeyDown(Key.W)) yAxis++;
-            if (keyState.IsKeyDown(Key.S)) yAxis--;
-            if (keyState.IsKeyDown(Key.A)) xAxis--;
-            if (keyState.IsKeyDown(Key.D)) xAxis++;
-            if (keyState.IsKeyDown(Key.Q)) zAxis--;
-            if (keyState.IsKeyDown(Key.E)) zAxis++;
+            if (glControl1.Focused) {
+                if (keyState.IsKeyDown(Key.W)) yAxis++;
+                if (keyState.IsKeyDown(Key.S)) yAxis--;
+                if (keyState.IsKeyDown(Key.A)) xAxis--;
+                if (keyState.IsKeyDown(Key.D)) xAxis++;
+                if (keyState.IsKeyDown(Key.Q)) zAxis--;
+                if (keyState.IsKeyDown(Key.E)) zAxis++;
+            }
 
 
             return new Vector3(xAxis, yAxis, zAxis);
@@ -377,7 +366,7 @@ namespace RatchetEdit
         private void glControl1_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             if (selectedObject as Spline == null) return;
-            if (currentTool != Tool.SplineEditor) return;
+            if (currentTool.GetToolType() != Tool.ToolType.VertexTranslator) return;
 
             int delta = e.Delta / 120;
             if (delta > 0)
@@ -436,27 +425,7 @@ namespace RatchetEdit
                 offset += level.splines.Count;
             }
 
-            GL.Clear(ClearBufferMask.DepthBufferBit); //Makes sure tool is rendered on top.
-
-            if (selectedObject != null) {
-                if (currentTool == Tool.Translate) {
-                    TranslationTool.Render(selectedObject.position, glControl1);
-                }
-                else if (currentTool == Tool.Rotate) {
-                    RotationTool.Render(selectedObject.position, glControl1);
-                }
-                else if (currentTool == Tool.Scale) {
-                    ScalingTool.Render(selectedObject.position, glControl1);
-                }
-                else if (currentTool == Tool.SplineEditor)
-                {
-                    if (selectedObject as Spline != null)
-                    {
-                        Spline spline = (Spline)selectedObject;
-                        TranslationTool.Render(spline.GetVertex(currentSplineVertex), glControl1);
-                    }
-                }
-            }
+            RenderTool();
 
             Pixel pixel = new Pixel();
             GL.ReadPixels(x, glControl1.Height - y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixel);
@@ -516,6 +485,22 @@ namespace RatchetEdit
             return returnObject;
         }
 
+        public void RenderTool() {
+            GL.Clear(ClearBufferMask.DepthBufferBit); //Makes sure tool is rendered on top.
+
+            if (selectedObject != null) {
+                if (currentTool.GetToolType() == Tool.ToolType.VertexTranslator) {
+                    if (selectedObject as Spline != null) {
+                        Spline spline = (Spline)selectedObject;
+                        currentTool.Render(spline.GetVertex(currentSplineVertex), glControl1);
+                    }
+                }
+                else {
+                    currentTool.Render(selectedObject.position, glControl1);
+                }
+            }
+        }
+
 
         public void fakeDrawSplines(List<Spline> splines, int offset)
         {
@@ -573,7 +558,7 @@ namespace RatchetEdit
             if (selectedObject as Spline != null && levelObject as Spline == null) 
             {
                 //Previous object was spline, new isn't
-                if (currentTool == Tool.SplineEditor) SelectTool(Tool.None);
+                if (currentTool.GetToolType() == Tool.ToolType.VertexTranslator) SelectTool(Tool.ToolType.None);
             }
 
             selectedObject = levelObject;
@@ -588,14 +573,14 @@ namespace RatchetEdit
             InvalidateView();
         }
 
-        void SelectTool(Tool tool) {
-            translateToolBtn.Checked = (tool == Tool.Translate);
-            rotateToolBtn.Checked = (tool == Tool.Rotate);
-            scaleToolBtn.Checked = (tool == Tool.Scale);
-            splineToolBtn.Checked = (tool == Tool.SplineEditor);
-            currentTool = tool;
+        void SelectTool(Tool.ToolType tool) {
+            translateToolBtn.Checked = (tool == Tool.ToolType.Translate);
+            rotateToolBtn.Checked = (tool == Tool.ToolType.Rotate);
+            scaleToolBtn.Checked = (tool == Tool.ToolType.Scale);
+            splineToolBtn.Checked = (tool == Tool.ToolType.VertexTranslator);
+            currentTool = tools[tool];
 
-            if (tool == Tool.SplineEditor) currentSplineVertex = 0;
+            currentSplineVertex = 0;
 
             InvalidateView();
         }
@@ -638,19 +623,19 @@ namespace RatchetEdit
             char key = Char.ToUpper(e.KeyChar);
 
             if (key == (char)Keys.D1) {
-                SelectTool(Tool.Translate);
+                SelectTool(Tool.ToolType.Translate);
             }
             else if (key == (char)Keys.D2) {
-                SelectTool(Tool.Rotate);
+                SelectTool(Tool.ToolType.Rotate);
             }
             else if (key == (char)Keys.D3) {
-                SelectTool(Tool.Scale);
+                SelectTool(Tool.ToolType.Scale);
             }
             else if (key == (char)Keys.D4) {
-                SelectTool(Tool.SplineEditor);
+                SelectTool(Tool.ToolType.VertexTranslator);
             }
             else if (key == (char)Keys.D5) {
-                SelectTool(Tool.None);
+                SelectTool(Tool.ToolType.None);
             }
 
         }
@@ -721,22 +706,22 @@ namespace RatchetEdit
 
         private void translateToolBtn_Click(object sender, EventArgs e)
         {
-            SelectTool(Tool.Translate);
+            SelectTool(Tool.ToolType.Translate);
         }
 
         private void rotateToolBtn_Click(object sender, EventArgs e)
         {
-            SelectTool(Tool.Rotate);
+            SelectTool(Tool.ToolType.Rotate);
         }
 
         private void scaleToolBtn_Click(object sender, EventArgs e)
         {
-            SelectTool(Tool.Scale);
+            SelectTool(Tool.ToolType.Scale);
         }
 
         private void splineToolBtn_Click(object sender, EventArgs e)
         {
-            SelectTool(Tool.SplineEditor);
+            SelectTool(Tool.ToolType.VertexTranslator);
         }
 
         private void deleteBtn_Click(object sender, EventArgs e)

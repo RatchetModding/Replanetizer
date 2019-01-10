@@ -38,47 +38,7 @@ namespace RatchetEdit
             position = new Vector3(x, y, z);
         }
 
-        public override LevelObject Clone()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void UpdateTransformMatrix()
-        {
-            Matrix4 rotMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
-            Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
-            Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
-            modelMatrix = scaleMatrix * rotMatrix * translationMatrix;
-        }
-
-        //Transformable methods
-        public override void Rotate(float x, float y, float z)
-        {
-            Rotate(new Vector3(x, y, z));
-        }
-
-        public override void Rotate(Vector3 vector)
-        {
-            rotation += vector;
-        }
-
-        public override void Scale(float scale)
-        {
-            scale += scale;
-        }
-
-        public override void Translate(float x, float y, float z)
-        {
-            Translate(new Vector3(x, y, z));
-        }
-
-        public override void Translate(Vector3 vector)
-        {
-            position += vector;
-        }
-
-        public byte[] Serialize()
-        {
+        public byte[] Serialize() {
             byte[] bytes = new byte[ELEMENTSIZE];
 
             WriteUint(ref bytes, 0x00, (uint)id);
@@ -93,9 +53,39 @@ namespace RatchetEdit
             return bytes;
         }
 
+        public override LevelObject Clone()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void UpdateTransformMatrix()
+        {
+            Matrix4 rotMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
+            Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
+            Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
+            modelMatrix = scaleMatrix * rotMatrix * translationMatrix;
+        }
+
+        //Transformable methods
+        public override void Rotate(Vector3 vector)
+        {
+            rotation += vector;
+        }
+
+        public override void Translate(Vector3 vector)
+        {
+            position += vector;
+        }
+        public override void Scale(Vector3 scale) {
+            this.scale *= scale;
+        }
+
+
         public override void Render(CustomGLControl glControl, bool selected)
         {
             throw new NotImplementedException();
         }
+
+
     }
 }

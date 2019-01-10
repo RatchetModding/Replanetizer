@@ -214,30 +214,6 @@ namespace RatchetEdit
 
             glControl1.MakeCurrent();
 
-            if (selectedObject != null) 
-                {
-                if (currentTool == Tool.Translate) 
-                {
-                    TranslationTool.Render(selectedObject.position, glControl1);
-                }
-                else if (currentTool == Tool.Rotate) 
-                {
-                    TranslationTool.Render(selectedObject.position, glControl1);
-                }
-                else if (currentTool == Tool.Scale) 
-                {
-                    TranslationTool.Render(selectedObject.position, glControl1);
-                }
-                else if (currentTool == Tool.SplineEditor) 
-                {
-                    if (selectedObject as Spline != null) 
-                    {
-                        Spline spline = (Spline)selectedObject;
-                        TranslationTool.Render(spline.GetVertex(currentSplineVertex), glControl1);
-                    }
-                }
-            }
-
             if (mobyCheck.Checked && mobyCheck.Enabled)
                 foreach (Moby mob in level.mobs)
                     mob.Render(glControl1, mob == selectedObject);
@@ -262,6 +238,26 @@ namespace RatchetEdit
             if (terrainCheck.Checked && terrainCheck.Enabled)
                 foreach (TerrainModel terrainModel in level.terrains)
                     terrainModel.Draw(glControl1);
+
+            GL.Clear(ClearBufferMask.DepthBufferBit);
+
+            if (selectedObject != null) {
+                if (currentTool == Tool.Translate) {
+                    TranslationTool.Render(selectedObject.position, glControl1);
+                }
+                else if (currentTool == Tool.Rotate) {
+                    TranslationTool.Render(selectedObject.position, glControl1);
+                }
+                else if (currentTool == Tool.Scale) {
+                    TranslationTool.Render(selectedObject.position, glControl1);
+                }
+                else if (currentTool == Tool.SplineEditor) {
+                    if (selectedObject as Spline != null) {
+                        Spline spline = (Spline)selectedObject;
+                        TranslationTool.Render(spline.GetVertex(currentSplineVertex), glControl1);
+                    }
+                }
+            }
 
             invalidate = false;
         }
@@ -323,63 +319,26 @@ namespace RatchetEdit
             bool toolIsBeingDragged = xLock || yLock || zLock;
             if (toolIsBeingDragged)
             {
+                Vector3 direction = Vector3.Zero;
+                if (xLock) direction = Vector3.UnitX;
+                else if (yLock) direction = Vector3.UnitY;
+                else if (zLock) direction = Vector3.UnitZ;
+                float magnitudeMultiplier = 20;
+                Vector3 magnitude = (mouseRay - prevMouseRay) * magnitudeMultiplier;
                 if (currentTool == Tool.Translate) {
-                    if (xLock) {
-                        selectedObject.Translate((mouseRay.X - prevMouseRay.X) * 20, 0, 0);
-                    }
-
-                    if (yLock) {
-                        selectedObject.Translate(0, (mouseRay.Y - prevMouseRay.Y) * 20, 0);
-                    }
-
-                    if (zLock) {
-                        selectedObject.Translate(0, 0, (mouseRay.Z - prevMouseRay.Z) * 20);
-                    }
+                     selectedObject.Translate(direction * magnitude);
                 }
                 else if (currentTool == Tool.Rotate) {
-                    if (xLock) {
-                        selectedObject.Rotate((mouseRay.X - prevMouseRay.X) * 20, 0, 0);
-                    }
-
-                    if (yLock) {
-                        selectedObject.Rotate(0, (mouseRay.Y - prevMouseRay.Y) * 20, 0);
-                    }
-
-                    if (zLock) {
-                        selectedObject.Rotate(0, 0, (mouseRay.Z - prevMouseRay.Z) * 20);
-                    }
+                    selectedObject.Rotate(direction * magnitude);
                 }
                 else if (currentTool == Tool.Scale) {
-                    if (xLock) {
-                        selectedObject.Scale(1 + (mouseRay.X - prevMouseRay.X) * 20);
-                    }
-
-                    if (yLock) {
-                        selectedObject.Scale(1 + (mouseRay.Y - prevMouseRay.Y) * 20);
-                    }
-
-                    if (zLock) {
-                        selectedObject.Scale(1 + (mouseRay.Z - prevMouseRay.Z) * 20);
-                    }
+                    selectedObject.Scale(direction * magnitude + Vector3.One);
                 }
                 else if (currentTool == Tool.SplineEditor)
                 {
                     if (selectedObject as Spline == null) return;
                     Spline spline = (Spline)selectedObject;
-                    if (xLock)
-                    {
-                        spline.TranslateVertex(currentSplineVertex, new Vector3((mouseRay.X - prevMouseRay.X) * 20, 0, 0));
-                    }
-
-                    if (yLock)
-                    {
-                        spline.TranslateVertex(currentSplineVertex, new Vector3(0, (mouseRay.Y - prevMouseRay.Y) * 20, 0));
-                    }
-
-                    if (zLock)
-                    {
-                        spline.TranslateVertex(currentSplineVertex, new Vector3(0, 0, (mouseRay.Z - prevMouseRay.Z) * 20));
-                    }
+                    spline.TranslateVertex(currentSplineVertex, direction * magnitude);
                 }
                 InvalidateView();
             }
@@ -499,6 +458,9 @@ namespace RatchetEdit
                 fakeDrawSplines(level.splines, splineOffset);
                 offset += level.splines.Count;
             }
+
+            GL.Clear(ClearBufferMask.DepthBufferBit); //Makes sure tool is rendered on top.
+
             if (selectedObject != null) {
                 if (currentTool == Tool.Translate) {
                     TranslationTool.Render(selectedObject.position, glControl1);

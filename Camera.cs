@@ -89,9 +89,12 @@ namespace RatchetEdit
             rotation += vector;
         }
 
-        public void Scale(float scale)
-        {
-            // N/A
+        public void Scale(Vector3 scale) {
+           //Not used
+        }
+
+        public void Scale(float x, float y, float z) {
+            //Not used
         }
     }
 }

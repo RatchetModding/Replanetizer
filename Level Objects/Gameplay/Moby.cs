@@ -16,7 +16,7 @@ namespace RatchetEdit
         public const int ELEMENTSIZE = 0x78;
 
         private new Vector3 _rotation = new Vector3();
-        private new float _scale;
+        private new Vector3 _scale = new Vector3();
 
         [Category("Attributes"), DisplayName("Mission ID")]
         public int missionID { get; set; }
@@ -84,27 +84,7 @@ namespace RatchetEdit
         public int unk13;
         public int unk14;
 
-        public override float scale
-        {
-            get { return _scale; }
-            set
-            {
-                _scale = value;
-                UpdateTransformMatrix();
-            }
-        }
-
-        public override Vector3 rotation
-        {
-            get { return _rotation; }
-            set
-            {
-                _rotation = value;
-                UpdateTransformMatrix();
-            }
-        }
-
-        public Moby(Model model, Vector3 position, Vector3 rotation, float scale)
+        public Moby(Model model, Vector3 position, Vector3 rotation, Vector3 scale)
         {
             this.model = model;
             this.position = position;
@@ -137,7 +117,7 @@ namespace RatchetEdit
             drop = ReadInt(mobyBlock, offset + 0x10);
             unk2 = ReadInt(mobyBlock, offset + 0x14);
             modelID = ReadInt(mobyBlock, offset + 0x18);
-            scale = ReadFloat(mobyBlock, offset + 0x1C);
+            float scaleHolder = ReadFloat(mobyBlock, offset + 0x1C);
 
             rend1 = ReadInt(mobyBlock, offset + 0x20);
             rend2 = ReadInt(mobyBlock, offset + 0x24);
@@ -170,6 +150,7 @@ namespace RatchetEdit
             color = Color.FromArgb(r, g, b);
             position = new Vector3(x, y, z);
             rotation = new Vector3(rotx, roty, rotz);
+            scale = new Vector3(scaleHolder, scaleHolder, scaleHolder);
 
             model = mobyModels.Find(mobyModel => mobyModel.id == modelID);
             UpdateTransformMatrix();
@@ -191,7 +172,8 @@ namespace RatchetEdit
             unk5 = ReadInt(mobyBlock, offset + 0x20); //Group index?
             unk6 = ReadInt(mobyBlock, offset + 0x24); //Enables Z2
             modelID = ReadInt(mobyBlock, offset + 0x28);
-            scale = ReadFloat(mobyBlock, offset + 0x2C);
+
+            float scaleHolder = ReadFloat(mobyBlock, offset + 0x2C);
 
             rend1 = ReadInt(mobyBlock, offset + 0x30);
             rend2 = ReadInt(mobyBlock, offset + 0x34);
@@ -201,13 +183,13 @@ namespace RatchetEdit
             float x = ReadFloat(mobyBlock, offset + 0x40);
             float y = ReadFloat(mobyBlock, offset + 0x44);
             float z = ReadFloat(mobyBlock, offset + 0x48);
-            float rotx = ReadFloat(mobyBlock, offset + 0x4C);
 
+            float rotx = ReadFloat(mobyBlock, offset + 0x4C);
             float roty = ReadFloat(mobyBlock, offset + 0x50);
             float rotz = ReadFloat(mobyBlock, offset + 0x54);
+
             unk9 = ReadInt(mobyBlock, offset + 0x58);  //Breakability?
             unk10 = ReadInt(mobyBlock, offset + 0x5C);
-
             unk11 = ReadInt(mobyBlock, offset + 0x60);
             unk12 = ReadInt(mobyBlock, offset + 0x64);
             pvarIndex = ReadInt(mobyBlock, offset + 0x68);
@@ -224,16 +206,13 @@ namespace RatchetEdit
             color = Color.FromArgb(r, g, b);
             position = new Vector3(x, y, z);
             rotation = new Vector3(rotx, roty, rotz);
+            scale = new Vector3(scaleHolder, scaleHolder, scaleHolder); //Mobys only use the X axis of scale
 
             model = mobyModels.Find(mobyModel => mobyModel.id == modelID);
             UpdateTransformMatrix();
         }
 
-
-
-
-
-        public byte[] Serialize()
+        public byte[] ToByteArray()
         {
             byte[] buffer = new byte[ELEMENTSIZE];
 
@@ -245,7 +224,7 @@ namespace RatchetEdit
             WriteInt(ref buffer, 0x10, drop);
             WriteInt(ref buffer, 0x14, unk2);
             WriteInt(ref buffer, 0x18, modelID);
-            WriteFloat(ref buffer, 0x1C, scale);
+            WriteFloat(ref buffer, 0x1C, scale.X);
 
             WriteInt(ref buffer, 0x20, rend1);
             WriteInt(ref buffer, 0x24, rend2);
@@ -277,24 +256,18 @@ namespace RatchetEdit
             return buffer;
         }
 
-        public override LevelObject Clone()
-        {
-            return new Moby(model, new Vector3(position), new Vector3(rotation), scale);
-        }
-
-        public override void UpdateTransformMatrix()
+        public override void UpdateTransformMatrix() 
         {
             if (model == null) return;
             Matrix4 rotMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
-            Matrix4 scaleMatrix = Matrix4.CreateScale(scale * model.size);
+            Matrix4 scaleMatrix = Matrix4.CreateScale(scale.X * model.size);
             Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
             modelMatrix = scaleMatrix * rotMatrix * translationMatrix;
         }
 
-        //Transformable methods
-
-        public override void Translate(float x, float y, float z) {
-            Translate(new Vector3(x, y, z));
+        public override LevelObject Clone()
+        {
+            return new Moby(model, new Vector3(position), new Vector3(rotation), scale);
         }
 
         public override void Rotate(Vector3 vector)
@@ -302,14 +275,9 @@ namespace RatchetEdit
             rotation += vector;
         }
 
-        public override void Scale(float scale)
+        public override void Scale(Vector3 scale) //Mobys only use the X axis of scale
         {
-            Console.WriteLine(scale);
-            this.scale *= scale;
-        }
-
-        public override void Rotate(float x, float y, float z) {
-            Rotate(new Vector3(x, y, z));
+            this.scale *= Vector3.UnitX * scale;
         }
 
         public override void Translate(Vector3 vector)

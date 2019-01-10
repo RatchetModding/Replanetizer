@@ -35,12 +35,12 @@ namespace RatchetEdit
             }
         }
 
-        public override float scale
+        public override Vector3 scale
         {
             get { return _scale; }
             set
             {
-                float requiredScaling = value / _scale;
+                Vector3 requiredScaling = new Vector3(value.X / _scale.X, value.Y / _scale.Y, value.Z / _scale.Z);
                 Scale(requiredScaling);
             }
         }
@@ -57,46 +57,31 @@ namespace RatchetEdit
 
         public Spline(byte[] splineBlock, int offset)
         {
+            LoadFromByteArray(splineBlock, offset);
+        }
+
+        public static LevelObject CreateFromByteArray(byte[] splineBlock, int offset) {
+            return new Spline(splineBlock, offset);
+        }
+
+        public void LoadFromByteArray(byte[] splineBlock, int offset) {
             name = cnt;
             int count = ReadInt(splineBlock, offset);
             vertexBuffer = new float[count * 3];
-            for (int i = 0; i < count; i++)
-            {
+            for (int i = 0; i < count; i++) {
                 vertexBuffer[(i * 3) + 0] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x00);
                 vertexBuffer[(i * 3) + 1] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x04);
                 vertexBuffer[(i * 3) + 2] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x08);
             }
 
-            if (count > 0)
-            {
+            if (count > 0) {
                 _position = new Vector3(vertexBuffer[0], vertexBuffer[1], vertexBuffer[2]);
             }
 
             cnt++;
         }
 
-        public Vector3 GetVertex(int index)
-        {
-            float x = vertexBuffer[index * 3];
-            float y = vertexBuffer[index * 3 + 1];
-            float z = vertexBuffer[index * 3 + 2];
-
-            return new Vector3(x, y, z);
-        }
-
-        public void TranslateVertex(int vertexIndex, Vector3 translationVector)
-        {
-            vertexBuffer[vertexIndex * 3] += translationVector.X;
-            vertexBuffer[vertexIndex * 3 + 1] += translationVector.Y;
-            vertexBuffer[vertexIndex * 3 + 2] += translationVector.Z;
-        }
-
-        public int GetVertexCount()
-        {
-            return vertexBuffer.Length / 3;
-        }
-
-        public byte[] Serialize()
+        public byte[] ToByteArray()
         {
             int count = vertexBuffer.Length / 3;
 
@@ -132,115 +117,106 @@ namespace RatchetEdit
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
         }
 
+        public Vector3 GetVertex(int index) {
+            float x = vertexBuffer[index * 3];
+            float y = vertexBuffer[index * 3 + 1];
+            float z = vertexBuffer[index * 3 + 2];
+
+            return new Vector3(x, y, z);
+        }
+
+        public void SetVertex(int index, Vector3 value) {
+            vertexBuffer[(index * 3) + 0] = value.X;
+            vertexBuffer[(index * 3) + 1] = value.Y;
+            vertexBuffer[(index * 3) + 2] = value.Z;
+        }
+
+        public void TranslateVertex(int vertexIndex, Vector3 translationVector) {
+            vertexBuffer[vertexIndex * 3] += translationVector.X;
+            vertexBuffer[vertexIndex * 3 + 1] += translationVector.Y;
+            vertexBuffer[vertexIndex * 3 + 2] += translationVector.Z;
+        }
+
+        public int GetVertexCount() {
+            return vertexBuffer.Length / 3;
+        }
+
         public override LevelObject Clone()
         {
             return new Spline(name, vertexBuffer);
         }
 
-        public override void UpdateTransformMatrix() { }
-
-        //Transformable methods
-        public override void Translate(float x, float y, float z)
-        {
-            Translate(new Vector3(x, y, z));
-        }
         public override void Translate(Vector3 vector)
         {
             for (int i = 0; i < vertexBuffer.Length / 3; i++)
             {
-                vertexBuffer[(i * 3) + 0] += vector.X;
-                vertexBuffer[(i * 3) + 1] += vector.Y;
-                vertexBuffer[(i * 3) + 2] += vector.Z;
+                SetVertex(i, GetVertex(i) + vector);
             }
 
             _position += vector;
         }
 
-        public override void Rotate(float x, float y, float z)
-        {
-            //Record base position
-            float base_x = vertexBuffer[0];
-            float base_y = vertexBuffer[1];
-            float base_z = vertexBuffer[2];
-
-            for (int i = 0; i < vertexBuffer.Length / 3; i++)
-            {
-                //Record vertex position
-                float vertex_x = vertexBuffer[(i * 3) + 0];
-                float vertex_y = vertexBuffer[(i * 3) + 1];
-                float vertex_z = vertexBuffer[(i * 3) + 2];
-
-                //Get local position relative to base
-                float distance_x = vertex_x - base_x;
-                float distance_y = vertex_y - base_y;
-                float distance_z = vertex_z - base_z;
-
-                //Rotate local position around Z axis
-                float rotated_x1 = distance_x * fCos(z) - distance_y * fSin(z);
-                float rotated_y1 = distance_x * fSin(z) + distance_y * fCos(z);
-                float rotated_z1 = distance_z;
-
-                //Rotate local position around Y axis
-                float rotated_x2 = rotated_x1 * fCos(y) + rotated_z1 * fSin(y);
-                float rotated_y2 = rotated_y1;
-                float rotated_z2 = -rotated_x1 * fSin(y) + rotated_z1 * fCos(y);
-
-                //Rotate local position around X axis
-                float rotated_x3 = rotated_x2;
-                float rotated_y3 = rotated_y2 * fCos(x) - rotated_z2 * fSin(x);
-                float rotated_z3 = rotated_y2 * fSin(x) + rotated_z2 * fCos(x);
-
-                //Add new local position to base position
-                float new_x = base_x + rotated_x3;
-                float new_y = base_y + rotated_y3;
-                float new_z = base_z + rotated_z3;
-
-                //Write new position
-                vertexBuffer[(i * 3) + 0] = new_x;
-                vertexBuffer[(i * 3) + 1] = new_y;
-                vertexBuffer[(i * 3) + 2] = new_z;
-            }
-            _rotation += new Vector3(x, y, z);
-        }
-
         public override void Rotate(Vector3 vector)
         {
-            Rotate(vector.X, vector.Y, vector.Z);
-        }
-
-        public override void Scale(float scale)
-        {
+            float x = vector.X;
+            float y = vector.Y;
+            float z = vector.Z;
             //Record base position
-            float base_x = vertexBuffer[0];
-            float base_y = vertexBuffer[1];
-            float base_z = vertexBuffer[2];
+            Vector3 basePosition = GetVertex(0);
+
 
             for (int i = 0; i < vertexBuffer.Length / 3; i++)
             {
                 //Record vertex position
-                float vertex_x = vertexBuffer[(i * 3) + 0];
-                float vertex_y = vertexBuffer[(i * 3) + 1];
-                float vertex_z = vertexBuffer[(i * 3) + 2];
+                Vector3 vertex = GetVertex(i);
 
                 //Get local position relative to base
-                float distance_x = vertex_x - base_x;
-                float distance_y = vertex_y - base_y;
-                float distance_z = vertex_z - base_z;
+                Vector3 distance = vertex - basePosition;
+                
+                //Rotate local position around Z axis
+                Vector3 rotated1 = new Vector3(
+                    distance.X * fCos(z) - distance.Y * fSin(z),
+                    distance.X * fSin(z) + distance.Y * fCos(z),
+                    distance.Z
+                );
 
-                //Scale local position
-                float scaled_x = distance_x * scale;
-                float scaled_y = distance_y * scale;
-                float scaled_z = distance_z * scale;
+                //Rotate local position around Y axis
+                Vector3 rotated2 = new Vector3(
+                    rotated1.X * fCos(y) + rotated1.Z * fSin(y),
+                    rotated1.Y,
+                    -rotated1.X * fSin(y) + rotated1.Z * fCos(y)
+                );
 
-                //Add new local position and base position
-                float new_x = base_x + scaled_x;
-                float new_y = base_y + scaled_y;
-                float new_z = base_z + scaled_z;
+                //Rotate local position around X axis
+                Vector3 rotated3 = new Vector3(
+                    rotated2.X,
+                    rotated2.Y * fCos(x) - rotated2.Z * fSin(x),
+                    rotated2.Y * fSin(x) + rotated2.Z * fCos(x)
+                );
+
+                //Add new local position to base position
+                Vector3 newPosition = basePosition + rotated3;
 
                 //Write new position
-                vertexBuffer[(i * 3) + 0] = new_x;
-                vertexBuffer[(i * 3) + 1] = new_y;
-                vertexBuffer[(i * 3) + 2] = new_z;
+                SetVertex(i, newPosition);
+            }
+            _rotation += vector;
+        }
+
+        public override void Scale(Vector3 scaleVector)
+        {
+            //Record base position
+            Vector3 basePosition = GetVertex(0);
+
+            for (int i = 0; i < vertexBuffer.Length / 3; i++)
+            {
+                Vector3 vertex = GetVertex(i);
+                Vector3 distance = vertex - basePosition;
+                Vector3 scaledDistance = distance * scaleVector;
+                Vector3 newVertexPosition = basePosition + scaledDistance;
+
+                //Write new position
+                SetVertex(i, newVertexPosition);
             }
             _scale *= scale;
         }

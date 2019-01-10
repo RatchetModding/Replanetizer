@@ -203,7 +203,7 @@ namespace RatchetEdit.Serializers
             int index = 0;
             foreach (Moby moby in mobs)
             {
-                byte[] mobyBytes = moby.Serialize();
+                byte[] mobyBytes = moby.ToByteArray();
                 Array.Copy(mobyBytes, 0, bytes, index * MOBYLENGTH + 0x10, MOBYLENGTH);
                 index++;
             }
@@ -380,7 +380,7 @@ namespace RatchetEdit.Serializers
             int offset = 0;
             foreach (Spline spline in splines)
             {
-                byte[] splineBytes = spline.Serialize();
+                byte[] splineBytes = spline.ToByteArray();
                 splineData.Add(splineBytes);
                 offsets.Add(offset);
                 offset += splineBytes.Length;

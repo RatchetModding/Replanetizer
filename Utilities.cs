@@ -65,6 +65,48 @@ namespace RatchetEdit
 
             return new Vector3(vec.X, vec.Y, vec.Z);
         }
+
+        public static Matrix3 GetRotationMatrix(Vector3 rotation) {
+            return Matrix3.CreateRotationX(rotation.X) * Matrix3.CreateRotationY(rotation.Y) * Matrix3.CreateRotationZ(rotation.Z);
+        }
+
+        public static Matrix4 TranslateMatrixTo(Matrix4 sourceMatrix, Vector3 position) {
+            Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
+            Matrix4 sourceWithoutTranslation = sourceMatrix.ClearTranslation();
+            sourceWithoutTranslation.M41 = position.X;
+            sourceWithoutTranslation.M42 = position.Y;
+            sourceWithoutTranslation.M43 = position.Z;
+            return sourceWithoutTranslation;
+        }
+
+        public static float piClamp(float input) {
+            float pi = (float)Math.PI;
+            float val = input;
+            while (val < -2 * pi) {
+                val += 2 * pi;
+            }
+            while (val > 2 * pi) {
+                val -= 2 * pi;
+            }
+            return val;
+        }
+
+        public static Matrix4 RotateMatrixTo(Matrix4 sourceMatrix, Vector3 rotation) {
+            Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
+            Matrix4 result = rotationMatrix * sourceMatrix.ClearRotation();
+            return result;
+        }
+
+        public static Matrix4 ScaleMatrixTo(Matrix4 sourceMatrix, Vector3 scale) {
+            Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
+            Matrix4 sourceWithoutScale = sourceMatrix.ClearScale();
+            sourceWithoutScale.M11 = scale.X;
+            sourceWithoutScale.M22 = scale.Y;
+            sourceWithoutScale.M33 = scale.Z;
+
+            //Matrix4 output = scaleMatrix * sourceWithoutScale;
+            return sourceWithoutScale;
+        }
     }
 
     struct Pixel
@@ -91,17 +133,42 @@ namespace RatchetEdit
         }
     }
 
-    public class Vector3Converter : TypeConverter
-    {
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-        {
+    public class Vector3Converter : TypeConverter {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) {
             return sourceType == typeof(string);
         }
 
-        public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
-        {
-            try
-            {
+        public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value) {
+            try {
+                string[] tokens = ((string)value).Split(' ');
+                return new Vector3(
+                    float.Parse(tokens[0]),
+                    float.Parse(tokens[1]),
+                    float.Parse(tokens[2])
+                );
+            }
+            catch {
+                return context.PropertyDescriptor.GetValue(context.Instance);
+            }
+        }
+
+        public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType) {
+            Vector3 p = (Vector3)value;
+            return String.Format(
+                "{0} {1} {2}",
+                Math.Round(p.X, 2),
+                Math.Round(p.Y, 2),
+                Math.Round(p.Z, 2)
+            );
+        }
+    }
+    public class Vector3RadiansConverter : TypeConverter {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) {
+            return sourceType == typeof(string);
+        }
+
+        public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value) {
+            try {
                 string[] tokens = ((string)value).Split(' ');
                 return new Vector3(
                     Utilities.fToRadians(float.Parse(tokens[0])),
@@ -109,14 +176,12 @@ namespace RatchetEdit
                     Utilities.fToRadians(float.Parse(tokens[2]))
                 );
             }
-            catch
-            {
+            catch {
                 return context.PropertyDescriptor.GetValue(context.Instance);
             }
         }
 
-        public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
-        {
+        public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType) {
             Vector3 p = (Vector3)value;
             return String.Format(
                 "{0} {1} {2}",

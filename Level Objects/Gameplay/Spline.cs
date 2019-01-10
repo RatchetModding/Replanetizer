@@ -40,7 +40,7 @@ namespace RatchetEdit
             get { return _scale; }
             set
             {
-                Vector3 requiredScaling = new Vector3(value.X / _scale.X, value.Y / _scale.Y, value.Z / _scale.Z);
+                Vector3 requiredScaling = Vector3.Divide(value, _scale);
                 Scale(requiredScaling);
             }
         }
@@ -81,7 +81,7 @@ namespace RatchetEdit
             cnt++;
         }
 
-        public byte[] ToByteArray()
+        public override byte[] ToByteArray()
         {
             int count = vertexBuffer.Length / 3;
 

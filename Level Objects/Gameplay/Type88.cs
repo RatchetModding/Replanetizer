@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OpenTK;
 using static RatchetEdit.DataFunctions;
 
 namespace RatchetEdit
 {
-    public class Type88
+    public class Type88 : LevelObject
     {
         public const int ELEMENTSIZE = 0x30;
 
@@ -46,8 +47,7 @@ namespace RatchetEdit
             off_2C = ReadInt(block, offset + 0x2C);
         }
 
-        public byte[] Serialize()
-        {
+        public override byte[] ToByteArray() {
             byte[] bytes = new byte[ELEMENTSIZE];
 
             WriteFloat(ref bytes, 0x00, off_00);
@@ -67,5 +67,28 @@ namespace RatchetEdit
 
             return bytes;
         }
+
+        public override LevelObject Clone() {
+            throw new NotImplementedException();
+        }
+
+        public override void Render(CustomGLControl glControl, bool selected) {
+            throw new NotImplementedException();
+        }
+
+        public override void Translate(Vector3 vector) {
+            throw new NotImplementedException();
+        }
+
+        public override void Rotate(Vector3 vector) {
+            throw new NotImplementedException();
+        }
+
+        public override void Scale(Vector3 scale) {
+            throw new NotImplementedException();
+        }
+
+
+
     }
 }

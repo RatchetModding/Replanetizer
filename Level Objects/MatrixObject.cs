@@ -8,7 +8,7 @@ using OpenTK;
 
 namespace RatchetEdit
 {
-    public class MatrixObject : LevelObject
+    public abstract class MatrixObject : LevelObject
     {
         [Browsable(false)]
         public Matrix4 modelMatrix { get; set; }
@@ -31,13 +31,6 @@ namespace RatchetEdit
             set {
                 Scale(Vector3.Divide(value, _scale));
             }
-        }
-        public override void Render(CustomGLControl glControl, bool selected) {
-        }
-
-        public override LevelObject Clone()
-        {
-            throw new NotImplementedException();
         }
 
         public override void Translate(Vector3 vector) {

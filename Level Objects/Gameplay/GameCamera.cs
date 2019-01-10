@@ -38,7 +38,7 @@ namespace RatchetEdit
             position = new Vector3(x, y, z);
         }
 
-        public byte[] Serialize() {
+        public override byte[] ToByteArray() {
             byte[] bytes = new byte[ELEMENTSIZE];
 
             WriteUint(ref bytes, 0x00, (uint)id);

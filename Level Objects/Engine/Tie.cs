@@ -78,7 +78,7 @@ namespace RatchetEdit
             _scale = modelMatrix.ExtractScale();
         }
 
-        public byte[] Serialize()
+        public override byte[] ToByteArray()
         {
             var bytes = new byte[ELEMENTSIZE];
 

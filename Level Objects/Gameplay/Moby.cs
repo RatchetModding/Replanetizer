@@ -212,7 +212,7 @@ namespace RatchetEdit
             UpdateTransformMatrix();
         }
 
-        public byte[] ToByteArray()
+        public override byte[] ToByteArray()
         {
             byte[] buffer = new byte[ELEMENTSIZE];
 

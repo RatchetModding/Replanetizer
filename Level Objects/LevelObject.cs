@@ -8,7 +8,7 @@ using OpenTK;
 
 namespace RatchetEdit
 {
-    public abstract class LevelObject : ITransformable
+    public abstract class LevelObject : ITransformable, ISerializable
     {
         protected Vector3 _position = new Vector3();
         [Category("\tTransform"), TypeConverter(typeof(Vector3Converter)), DisplayName("Position")]
@@ -44,6 +44,7 @@ namespace RatchetEdit
         }
 
 
+        public abstract byte[] ToByteArray();
 
         public abstract LevelObject Clone();
         public abstract void Rotate(Vector3 vector);
@@ -66,8 +67,6 @@ namespace RatchetEdit
         public void Translate(float x, float y, float z) {
             Translate(new Vector3(x, y, z));
         }
-
-
 
     }
 }

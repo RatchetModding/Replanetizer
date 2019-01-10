@@ -222,7 +222,7 @@ namespace RatchetEdit.Serializers
 
             for (int i = 0; i < spawnPoints.Count; i++)
             {
-                byte[] spawnPointBytes = spawnPoints[i].Serialize();
+                byte[] spawnPointBytes = spawnPoints[i].ToByteArray();
                 spawnPointBytes.CopyTo(bytes, 0x10 + i * 0x80);
             }
             return bytes;
@@ -239,7 +239,7 @@ namespace RatchetEdit.Serializers
 
             for (int i = 0; i < gameCameras.Count; i++)
             {
-                byte[] cameraBytes = gameCameras[i].Serialize();
+                byte[] cameraBytes = gameCameras[i].ToByteArray();
                 cameraBytes.CopyTo(bytes, 0x10 + i * GameCamera.ELEMENTSIZE);
             }
 
@@ -257,7 +257,7 @@ namespace RatchetEdit.Serializers
 
             for (int i = 0; i < type04s.Count; i++)
             {
-                byte[] type04Byte = type04s[i].Serialize();
+                byte[] type04Byte = type04s[i].ToByteArray();
                 type04Byte.CopyTo(bytes, 0x10 + i * Type04.ELEMENTSIZE);
             }
 
@@ -275,7 +275,7 @@ namespace RatchetEdit.Serializers
 
             for (int i = 0; i < type0Cs.Count; i++)
             {
-                byte[] type0CByte = type0Cs[i].Serialize();
+                byte[] type0CByte = type0Cs[i].ToByteArray();
                 type0CByte.CopyTo(bytes, 0x10 + i * Type0C.ELEMENTSIZE);
             }
 
@@ -293,7 +293,7 @@ namespace RatchetEdit.Serializers
 
             for (int i = 0; i < type64s.Count; i++)
             {
-                byte[] type64Bytes = type64s[i].Serialize();
+                byte[] type64Bytes = type64s[i].ToByteArray();
                 type64Bytes.CopyTo(bytes, 0x10 + i * Type64.ELEMENTSIZE);
             }
 
@@ -311,7 +311,7 @@ namespace RatchetEdit.Serializers
 
             for (int i = 0; i < type68s.Count; i++)
             {
-                byte[] type68Bytes = type68s[i].Serialize();
+                byte[] type68Bytes = type68s[i].ToByteArray();
                 type68Bytes.CopyTo(bytes, 0x10 + i * Type68.ELEMENTSIZE);
             }
 
@@ -329,7 +329,7 @@ namespace RatchetEdit.Serializers
 
             for (int i = 0; i < type88s.Count; i++)
             {
-                byte[] type88Bytes = type88s[i].Serialize();
+                byte[] type88Bytes = type88s[i].ToByteArray();
                 type88Bytes.CopyTo(bytes, 0x10 + i * Type88.ELEMENTSIZE);
             }
 
@@ -448,7 +448,7 @@ namespace RatchetEdit.Serializers
         {
             if (occlusionData == null) { return new byte[0x10]; }
 
-            return occlusionData.Serialize();
+            return occlusionData.ToByteArray();
         }
 
     }

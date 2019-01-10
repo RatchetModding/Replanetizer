@@ -60,5 +60,17 @@ namespace RatchetEdit
 
             return bytes;
         }
+
+        public override byte[] ToByteArray() {
+            throw new NotImplementedException();
+        }
+
+        public override LevelObject Clone() {
+            throw new NotImplementedException();
+        }
+
+        public override void Render(CustomGLControl glControl, bool selected) {
+            throw new NotImplementedException();
+        }
     }
 }

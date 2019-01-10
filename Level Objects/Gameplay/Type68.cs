@@ -26,7 +26,15 @@ namespace RatchetEdit
             _position = modelMatrix.ExtractTranslation();
         }
 
-        public byte[] Serialize()
+        public override LevelObject Clone() {
+            throw new NotImplementedException();
+        }
+
+        public override void Render(CustomGLControl glControl, bool selected) {
+            throw new NotImplementedException();
+        }
+
+        public override byte[] ToByteArray()
         {
             byte[] bytes = new byte[ELEMENTSIZE];
 

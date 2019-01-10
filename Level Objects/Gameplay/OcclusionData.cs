@@ -7,7 +7,7 @@ using static RatchetEdit.DataFunctions;
 
 namespace RatchetEdit
 {
-    public class OcclusionData
+    public class OcclusionData : ISerializable
     {
         public List<KeyValuePair<int, int>> mobyData;
         public List<KeyValuePair<int, int>> tieData;
@@ -42,7 +42,7 @@ namespace RatchetEdit
 
         }
 
-        public byte[] Serialize()
+        public byte[] ToByteArray()
         {
             byte[] bytes = new byte[0x10 + mobyData.Count * 0x08 + tieData.Count * 0x08 + shrubData.Count * 0x08];
             WriteInt(ref bytes, 0x00, mobyData.Count);

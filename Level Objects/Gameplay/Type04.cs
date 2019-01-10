@@ -8,7 +8,7 @@ using static RatchetEdit.DataFunctions;
 
 namespace RatchetEdit
 {
-    public class Type04
+    public class Type04 : LevelObject
     {
         public const int ELEMENTSIZE = 0x40;
 
@@ -57,7 +57,7 @@ namespace RatchetEdit
             off_3C = ReadFloat(block, offset + 0x3C);
         }
 
-        public byte[] Serialize()
+        public override byte[] ToByteArray()
         {
             byte[] bytes = new byte[ELEMENTSIZE];
 
@@ -82,6 +82,25 @@ namespace RatchetEdit
             WriteFloat(ref bytes, 0x3C, off_3C);
 
             return bytes;
+        }
+
+        public override void Translate(Vector3 vector) {
+            throw new NotImplementedException();
+        }
+        public override LevelObject Clone() {
+            throw new NotImplementedException();
+        }
+
+        public override void Render(CustomGLControl glControl, bool selected) {
+            throw new NotImplementedException();
+        }
+
+        public override void Rotate(Vector3 vector) {
+            throw new NotImplementedException();
+        }
+
+        public override void Scale(Vector3 scale) {
+            throw new NotImplementedException();
         }
     }
 }

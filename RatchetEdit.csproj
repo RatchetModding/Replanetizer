@@ -109,6 +109,7 @@
     <Compile Include="Level Objects\Gameplay\Spline.cs" />
     <Compile Include="Texture.cs" />
     <Compile Include="TextureConfig.cs" />
+    <Compile Include="Tools\ScalingTool.cs" />
     <Compile Include="Tools\Tool.cs" />
     <Compile Include="Tools\RotationTool.cs" />
     <Compile Include="Tools\TranslationTool.cs" />

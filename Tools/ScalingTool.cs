@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace RatchetEdit.Tools
 {
-    class RotationTool : Tool
+    class ScalingTool : Tool
     {
         public static void Render(Vector3 position, CustomGLControl glControl)
         {
             float[] test = new float[18];
-            float length = 1.5f;
+            float length = 1f;
             test[0] = position.X - length;
             test[1] = position.Y;
             test[2] = position.Z;

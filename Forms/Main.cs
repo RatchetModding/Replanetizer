@@ -246,10 +246,10 @@ namespace RatchetEdit
                     TranslationTool.Render(selectedObject.position, glControl1);
                 }
                 else if (currentTool == Tool.Rotate) {
-                    TranslationTool.Render(selectedObject.position, glControl1);
+                    RotationTool.Render(selectedObject.position, glControl1);
                 }
                 else if (currentTool == Tool.Scale) {
-                    TranslationTool.Render(selectedObject.position, glControl1);
+                    ScalingTool.Render(selectedObject.position, glControl1);
                 }
                 else if (currentTool == Tool.SplineEditor) {
                     if (selectedObject as Spline != null) {
@@ -270,29 +270,6 @@ namespace RatchetEdit
             float moveSpeed = 10;
             float boostMultiplier = 4;
             float multiplier = ModifierKeys == Keys.Shift ? boostMultiplier : 1;
-
-            KeyboardState keyState = Keyboard.GetState();
-
-            if (keyState.IsKeyDown(Key.F1))
-            {
-                SelectTool(Tool.Translate);
-            }
-            else if (keyState.IsKeyDown(Key.F2))
-            {
-                SelectTool(Tool.Rotate);
-            }
-            else if (keyState.IsKeyDown(Key.F3))
-            {
-                SelectTool(Tool.Scale);
-            }
-            else if (keyState.IsKeyDown(Key.F4))
-            {
-                SelectTool(Tool.SplineEditor);
-            }
-            else if (keyState.IsKeyDown(Key.F5))
-            {
-                SelectTool(Tool.None);
-            }
 
             if (rMouse)
             {
@@ -466,10 +443,10 @@ namespace RatchetEdit
                     TranslationTool.Render(selectedObject.position, glControl1);
                 }
                 else if (currentTool == Tool.Rotate) {
-                    TranslationTool.Render(selectedObject.position, glControl1);
+                    RotationTool.Render(selectedObject.position, glControl1);
                 }
                 else if (currentTool == Tool.Scale) {
-                    TranslationTool.Render(selectedObject.position, glControl1);
+                    ScalingTool.Render(selectedObject.position, glControl1);
                 }
                 else if (currentTool == Tool.SplineEditor)
                 {
@@ -623,10 +600,6 @@ namespace RatchetEdit
             InvalidateView();
         }
 
-        public void ApplyTool(float x, float y, float z) {
-
-        }
-
         public void CloneMoby(Moby moby)
         {
             Moby newMoby = moby.Clone() as Moby;
@@ -660,6 +633,27 @@ namespace RatchetEdit
         }
 
         #region Misc Input Events
+
+        private void glControl1_KeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e) {
+            char key = Char.ToUpper(e.KeyChar);
+
+            if (key == (char)Keys.D1) {
+                SelectTool(Tool.Translate);
+            }
+            else if (key == (char)Keys.D2) {
+                SelectTool(Tool.Rotate);
+            }
+            else if (key == (char)Keys.D3) {
+                SelectTool(Tool.Scale);
+            }
+            else if (key == (char)Keys.D4) {
+                SelectTool(Tool.SplineEditor);
+            }
+            else if (key == (char)Keys.D5) {
+                SelectTool(Tool.None);
+            }
+
+        }
 
         private void EnableCheck(object sender, EventArgs e)
         {

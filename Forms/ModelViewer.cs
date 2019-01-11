@@ -196,14 +196,20 @@ namespace RatchetEdit
 
         private void saveObjBtn_Click(object sender, EventArgs e)
         {
+            if (objSave.ShowDialog() != DialogResult.OK) return;
+
+            string fileName = objSave.FileName;
+            string pathName = Path.GetDirectoryName(fileName);
+            string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
+
             Model model = selectedModel;
 
-            StreamWriter OBJfs = new StreamWriter("out.obj");
-            StreamWriter MTLfs = new StreamWriter("out.mtl");
+            StreamWriter OBJfs = new StreamWriter(fileName);
+            StreamWriter MTLfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl");
 
             OBJfs.WriteLine("o Object_" + model.id.ToString("X4"));
             if (model.textureConfig != null)
-                OBJfs.WriteLine("mtllib out.mtl");
+                OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
 
 
             List<uint> usedMtls = new List<uint>(); //To prevent it from making double mtl entries
@@ -217,7 +223,7 @@ namespace RatchetEdit
                     MTLfs.WriteLine("Ka 1.000000 1.000000 1.000000");
                     MTLfs.WriteLine("Kd 1.000000 1.000000 1.000000");
                     MTLfs.WriteLine("Ni 1.000000");
-                    MTLfs.WriteLine("d 0.000000");
+                    MTLfs.WriteLine("d 1.000000");
                     MTLfs.WriteLine("illum 1");
                     MTLfs.WriteLine("map_Kd tex_" + model.textureConfig[i].ID + ".png");
                     usedMtls.Add(modelTextureID);
@@ -263,7 +269,6 @@ namespace RatchetEdit
                 //OBJfs.WriteLine("f " + (f3 + "/" + f3 + "/" + f3) + " " + (f2 + "/" + f2 + "/" + f2) + " " + (f1 + "/" + f1 + "/" + f1));
             }
             OBJfs.Close();
-
         }
 
         private void glControl1_Resize(object sender, EventArgs e)

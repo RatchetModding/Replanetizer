@@ -111,6 +111,7 @@
     <Compile Include="TextureConfig.cs" />
     <Compile Include="Tools\VertexTranslationTool.cs" />
     <Compile Include="Tools\ScalingTool.cs" />
+    <Compile Include="Tools\Cube.cs" />
     <Compile Include="Tools\Tool.cs" />
     <Compile Include="Tools\RotationTool.cs" />
     <Compile Include="Tools\TranslationTool.cs" />

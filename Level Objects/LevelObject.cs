@@ -10,6 +10,9 @@ namespace RatchetEdit
 {
     public abstract class LevelObject : ITransformable, ISerializable
     {
+		protected static Vector4 normalColor = new Vector4(1, 1, 1, 1); // White
+		protected static Vector4 selectedColor = new Vector4(1, 0, 1, 1); // Purple
+
         protected Vector3 _position = new Vector3();
         [Category("\tTransform"), TypeConverter(typeof(Vector3Converter)), DisplayName("Position")]
         public virtual Vector3 position

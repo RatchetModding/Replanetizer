@@ -42,8 +42,6 @@
 01B0 = Eudora Bridge
 01B1 = Sonic summoner
 01B2 = Platform Booster
-01B6 = Mountain wall
-01C0 = Tree top
 01C7 = Spawner
 01CB = Yellow Enemy
 01CE = Shrub

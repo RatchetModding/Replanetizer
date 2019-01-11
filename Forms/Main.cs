@@ -32,11 +32,10 @@ namespace RatchetEdit
 
         bool xLock = false, yLock = false, zLock = false;
 
-        List<string> modelNames;
+        List<string> mobyNames;
+        List<string> tieNames;
 
         Camera camera;
-
-        Cube cube;
 
         TreeNode primedTreeNode = null;
 
@@ -56,12 +55,25 @@ namespace RatchetEdit
             glControl1.MakeCurrent();
             glControl1.InitializeGLConfig();
             camera = new Camera();
-
+            InitializeObjectTree();
             InitializeToolList();
 
             GetModelNames();
 
             SelectTool(Tool.ToolType.Translate);
+        }
+
+        private void InitializeObjectTree() {
+            TreeNode treeNode1 = new TreeNode("Mobys") { Name = "mobyNode" };
+            TreeNode treeNode2 = new TreeNode("Ties") { Name = "tieNode" };
+            TreeNode treeNode3 = new TreeNode("Shrubs") { Name = "shrubNode" };
+            TreeNode treeNode4 = new TreeNode("Splines") { Name = "splineNode" };
+            TreeNode treeNode5 = new TreeNode("Game Cameras") { Name = "gameCameraNode" };
+            TreeNode treeNode6 = new TreeNode("Spawn points") { Name = "spawnPointNode" };
+            TreeNode treeNode7 = new TreeNode("Type0Cs") { Name = "Type0CNode" };
+            TreeNode[] objectTypes = new TreeNode[] { treeNode1, treeNode2, treeNode3, treeNode4, treeNode5, treeNode6, treeNode7 };
+            objectTree.Nodes.AddRange(objectTypes);
+
         }
 
         private void InitializeToolList() {
@@ -104,33 +116,37 @@ namespace RatchetEdit
 
             UpdateEditorValues();
             InvalidateView();
-
-            cube = new Cube();
         }
 
         public void GenerateObjectTree()
         {
             objectTree.CollapseAll();
+
             foreach (TreeNode treeNode in objectTree.Nodes)
             {
                 treeNode.Nodes.Clear();
+            }
+            TreeNode mobyNode = objectTree.Nodes.Find("mobyNode", false)[0];
+            TreeNode tieNode = objectTree.Nodes.Find("tieNode", false)[0];
+            TreeNode shrubNode = objectTree.Nodes.Find("shrubNode", false)[0];
 
-            }
-
-            foreach (Moby moby in level.mobs)
+            foreach (Moby levelObject in level.mobs)
             {
-                string modelName = modelNames != null ? modelNames.Find(x => x.Substring(0, 4).ToUpper() == moby.modelID.ToString("X4")) : null;
-                objectTree.Nodes[0].Nodes.Add(modelName != null ? modelName.Split('=')[1].Substring(1) : moby.modelID.ToString("X"));
+                string line = mobyNames != null ? mobyNames.Find(x => x.Substring(0, 4).ToUpper() == levelObject.modelID.ToString("X4")) : null;
+                string modelName = line != null ? line.Split('=')[1].Substring(1) : levelObject.modelID.ToString("X");
+                mobyNode.Nodes.Add(modelName);
             }
-            foreach (Tie tie in level.ties)
+            foreach (Tie levelObject in level.ties)
             {
-                string tieName = tie.modelID.ToString("X");
-                objectTree.Nodes[1].Nodes.Add(tieName);
+                string line = tieNames != null ? tieNames.Find(x => x.Substring(0, 4).ToUpper() == levelObject.modelID.ToString("X4")) : null;
+                string modelName = line != null ? line.Split('=')[1].Substring(1) : levelObject.modelID.ToString("X");
+                tieNode.Nodes.Add(modelName);
             }
-            foreach (Tie shrub in level.shrubs)
+            foreach (Tie levelObject in level.shrubs)
             {
-                string shrubName = shrub.modelID.ToString("X");
-                objectTree.Nodes[2].Nodes.Add(shrubName);
+                string line = tieNames != null ? tieNames.Find(x => x.Substring(0, 4).ToUpper() == levelObject.modelID.ToString("X4")) : null;
+                string modelName = line != null ? line.Split('=')[1].Substring(1) : levelObject.modelID.ToString("X");
+                shrubNode.Nodes.Add(modelName);
             }
             foreach (Spline spline in level.splines)
             {
@@ -156,25 +172,48 @@ namespace RatchetEdit
 
         public void GetModelNames()
         {
-            modelNames = new List<string>();
+            GetMobyNames();
+            GetTieNames();
+        }
+
+        private void GetTieNames() {
+            tieNames = new List<string>();
             string stringCounter;
             StreamReader stream = null;
-            try
-            {
+            try {
+                stream = new StreamReader(Application.StartupPath + "/TieModelsRC1.txt");
+                //Console.WriteLine("Loaded model names for Ratchet & Clank.");
+
+            }
+            catch (FileNotFoundException e) {
+                Console.WriteLine(e);
+                Console.WriteLine("Model list file not found! No names for you!");
+                tieNames = null;
+                return;
+            }
+            while ((stringCounter = stream.ReadLine()) != null) {
+                tieNames.Add(stringCounter);
+            }
+            stream.Close();
+        }
+
+        private void GetMobyNames() {
+            mobyNames = new List<string>();
+            string stringCounter;
+            StreamReader stream = null;
+            try {
                 stream = new StreamReader(Application.StartupPath + "/ModelListRC1.txt");
                 //Console.WriteLine("Loaded model names for Ratchet & Clank.");
 
             }
-            catch (FileNotFoundException e)
-            {
+            catch (FileNotFoundException e) {
                 Console.WriteLine(e);
                 Console.WriteLine("Model list file not found! No names for you!");
-                modelNames = null;
+                mobyNames = null;
                 return;
             }
-            while ((stringCounter = stream.ReadLine()) != null)
-            {
-                modelNames.Add(stringCounter);
+            while ((stringCounter = stream.ReadLine()) != null) {
+                mobyNames.Add(stringCounter);
             }
             stream.Close();
         }

@@ -67,6 +67,7 @@ namespace RatchetEdit
             tools.Add(Tool.ToolType.Rotate, new RotationTool());
             tools.Add(Tool.ToolType.Scale, new ScalingTool());
             tools.Add(Tool.ToolType.VertexTranslator, new VertexTranslationTool());
+            tools.Add(Tool.ToolType.None, new TranslationTool());
         }
 
         private void mapOpenBtn_Click(object sender, EventArgs e)

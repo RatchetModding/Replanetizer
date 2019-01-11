@@ -14,10 +14,7 @@ namespace RatchetEdit
     public class Moby : ModelObject
     {
         public const int ELEMENTSIZE = 0x78;
-
-        private new Vector3 _rotation = new Vector3();
-        private new Vector3 _scale = new Vector3();
-
+        
         [Category("Attributes"), DisplayName("Mission ID")]
         public int missionID { get; set; }
 

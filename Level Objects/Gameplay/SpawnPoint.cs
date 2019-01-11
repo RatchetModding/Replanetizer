@@ -21,7 +21,6 @@ namespace RatchetEdit
 		// Try to refactor this away at some point
 		private readonly float originalM44;
 
-		static Matrix4 scaleMatrix = Matrix4.CreateScale(1000f);
 		static readonly float[] cube = new float[]
 		{
 			-1.0f, -1.0f,  1.0f,
@@ -35,7 +34,7 @@ namespace RatchetEdit
 			-1.0f,  1.0f, -1.0f
 		};
 
-		static readonly ushort[] cubeElements = new ushort[] { 0, 1, 2, 2, 3, 0, 1, 5, 6, 6, 2, 1, 7, 6, 5, 5, 4, 7, 4, 0, 3, 3, 7, 4, 4, 5, 1, 1, 0, 4, 3, 2, 6, 6, 7, 3 };
+		public static readonly ushort[] cubeElements = new ushort[] { 0, 1, 2, 2, 3, 0, 1, 5, 6, 6, 2, 1, 7, 6, 5, 5, 4, 7, 4, 0, 3, 3, 7, 4, 4, 5, 1, 1, 0, 4, 3, 2, 6, 6, 7, 3 };
 
 		public SpawnPoint(byte[] block, int index)
         {
@@ -91,15 +90,35 @@ namespace RatchetEdit
             modelMatrix = mat1;
             _rotation = modelMatrix.ExtractRotation().Xyz * 2.2f;
             _position = modelMatrix.ExtractTranslation();
+            _scale = modelMatrix.ExtractScale();
 
-			GL.GenBuffers(1, out VBO);
-			GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
-			GL.BufferData(BufferTarget.ArrayBuffer, cube.Length * sizeof(float), cube, BufferUsageHint.StaticDraw);
-
-			GL.GenBuffers(1, out IBO);
-			GL.BindBuffer(BufferTarget.ElementArrayBuffer, IBO);
-			GL.BufferData(BufferTarget.ElementArrayBuffer, cubeElements.Length * sizeof(ushort), cubeElements, BufferUsageHint.StaticDraw);
+            GetVBO();
+            GetIBO();
 		}
+
+        public void GetVBO() {
+            //Get the vertex buffer object, or create one if one doesn't exist
+            if (VBO == 0) {
+                GL.GenBuffers(1, out VBO);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
+                GL.BufferData(BufferTarget.ArrayBuffer, cube.Length * sizeof(float), cube, BufferUsageHint.StaticDraw);
+
+            }
+            else {
+                GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
+            }
+        }
+
+        public void GetIBO() {
+            if (IBO == 0) {
+                GL.GenBuffers(1, out IBO);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, IBO);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, cubeElements.Length * sizeof(ushort), cubeElements, BufferUsageHint.StaticDraw);
+            }
+            else {
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, IBO);
+            }
+        }
 
         public override LevelObject Clone() {
             throw new NotImplementedException();

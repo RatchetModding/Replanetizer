@@ -242,11 +242,15 @@ namespace RatchetEdit
                     spline.Render(glControl1, spline == selectedObject);
 
 			if(cuboidCheck.Checked && cuboidCheck.Enabled)
-				foreach(SpawnPoint cuboid in level.spawnPoints)
-					cuboid.Render(glControl1, cuboid == selectedObject);
+                foreach (SpawnPoint cuboid in level.spawnPoints)
+                    cuboid.Render(glControl1, cuboid == selectedObject);
+
+            if (cuboidCheck.Checked && cuboidCheck.Enabled)
+                foreach (Type0C cuboid in level.type0Cs)
+                    cuboid.Render(glControl1, cuboid == selectedObject);
 
 
-			if (skyboxCheck.Checked && skyboxCheck.Enabled)
+            if (skyboxCheck.Checked && skyboxCheck.Enabled)
                 level.skybox.Draw(glControl1);
 
             if (terrainCheck.Checked && terrainCheck.Enabled)
@@ -401,7 +405,7 @@ namespace RatchetEdit
         {
             LevelObject returnObject = null;
             TreeNode returnNode = null;
-            int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0;
+            int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0, cuboidOffset = 0;
             glControl1.MakeCurrent();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.UseProgram(glControl1.colorShaderID);
@@ -429,13 +433,17 @@ namespace RatchetEdit
                 fakeDrawObjects(level.shrubs.Cast<ModelObject>().ToList(), shrubOffset);
                 offset += level.shrubs.Count;
             }
-            if (splineCheck.Checked && splineCheck.Enabled)
-            {
+            if (splineCheck.Checked && splineCheck.Enabled) {
                 splineOffset = offset;
                 fakeDrawSplines(level.splines, splineOffset);
                 offset += level.splines.Count;
             }
-
+            if (cuboidCheck.Checked && cuboidCheck.Enabled) {
+                cuboidOffset = offset;
+                fakeDrawCuboids(level.spawnPoints, cuboidOffset);
+                offset += level.spawnPoints.Count;
+            }
+            
             RenderTool();
 
             Pixel pixel = new Pixel();
@@ -483,10 +491,13 @@ namespace RatchetEdit
                     returnObject = level.shrubs[id - shrubOffset];
                     returnNode = objectTree.Nodes[2].Nodes[id - shrubOffset];
                 }
-                else if (splineCheck.Checked && id - splineOffset < level.splines.Count)
-                {
+                else if (splineCheck.Checked && id - splineOffset < level.splines.Count) {
                     returnObject = level.splines[id - splineOffset];
                     returnNode = objectTree.Nodes[3].Nodes[id - splineOffset];
+                }
+                else if (cuboidCheck.Checked && id - cuboidOffset < level.spawnPoints.Count) {
+                    returnObject = level.spawnPoints[id - cuboidOffset];
+                    returnNode = objectTree.Nodes[5].Nodes[id - cuboidOffset];
                 }
             }
 
@@ -513,10 +524,8 @@ namespace RatchetEdit
         }
 
 
-        public void fakeDrawSplines(List<Spline> splines, int offset)
-        {
-            foreach (Spline spline in splines)
-            {
+        public void fakeDrawSplines(List<Spline> splines, int offset) {
+            foreach (Spline spline in splines) {
                 GL.UseProgram(glControl1.colorShaderID);
                 GL.EnableVertexAttribArray(0);
                 var worldView = glControl1.worldView;
@@ -526,6 +535,26 @@ namespace RatchetEdit
                 GL.Uniform4(glControl1.colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
                 spline.GetVBO();
                 GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
+            }
+        }
+        public void fakeDrawCuboids(List<SpawnPoint> cuboids, int offset) {
+            foreach (SpawnPoint cuboid in cuboids) {
+                GL.UseProgram(glControl1.colorShaderID);
+                GL.EnableVertexAttribArray(0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                Matrix4 mvp = cuboid.modelMatrix * glControl1.worldView;
+                GL.UniformMatrix4(glControl1.matrixID, false, ref mvp);
+                int objectIndex = cuboids.IndexOf(cuboid);
+                byte[] cols = BitConverter.GetBytes(objectIndex + offset);
+                GL.Uniform4(glControl1.colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
+
+                cuboid.GetVBO();
+                cuboid.GetIBO();
+
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+
+                GL.DrawElements(PrimitiveType.Triangles, SpawnPoint.cubeElements.Length, DrawElementsType.UnsignedShort, 0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             }
         }
         public void fakeDrawObjects(List<ModelObject> levelObjects, int offset)

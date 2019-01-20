@@ -37,10 +37,10 @@ namespace RatchetEdit
         public int unkPointer6;
         public int unkPointer7;
 
-        public int unkPointer8;
+        public int type50Pointer;
         public int pvarSizePointer;
         public int pvarPointer;
-        public int unkPointer9;
+        public int type5CPointer;
 
         public int spawnPointPointer;
         public int type64Pointer;
@@ -50,7 +50,7 @@ namespace RatchetEdit
         public int splinePointer;
         public int unkPointer13;
         public int unkPointer14;
-        public int unkPointer15;
+        public int type7CPointer;
 
         public int type80Pointer;
         public int unkPointer17;
@@ -79,10 +79,10 @@ namespace RatchetEdit
             mobyPointer = 0;
             unkPointer6 = 0;
             unkPointer7 = 0;
-            unkPointer8 = 0;
+            type50Pointer = 0;
             pvarSizePointer = 0;
             pvarPointer = 0;
-            unkPointer9 = 0;
+            type5CPointer = 0;
             spawnPointPointer = 0;
             type64Pointer = 0;
             type68Pointer = 0;
@@ -90,7 +90,7 @@ namespace RatchetEdit
             splinePointer = 0;
             unkPointer13 = 0;
             unkPointer14 = 0;
-            unkPointer15 = 0;
+            type7CPointer = 0;
             type80Pointer = 0;
             unkPointer17 = 0;
             type88Pointer = 0;
@@ -141,10 +141,10 @@ namespace RatchetEdit
             unkPointer6 = ReadInt(gameplayHeadBlock, 0x48);
             unkPointer7 = ReadInt(gameplayHeadBlock, 0x4C);
 
-            unkPointer8 = ReadInt(gameplayHeadBlock, 0x50);//Nullable
+            type50Pointer = ReadInt(gameplayHeadBlock, 0x50);//Nullable
             pvarSizePointer = ReadInt(gameplayHeadBlock, 0x54);
             pvarPointer = ReadInt(gameplayHeadBlock, 0x58);
-            unkPointer9 = ReadInt(gameplayHeadBlock, 0x5C);
+            type5CPointer = ReadInt(gameplayHeadBlock, 0x5C);
 
             spawnPointPointer = ReadInt(gameplayHeadBlock, 0x60);
             type64Pointer = ReadInt(gameplayHeadBlock, 0x64);//Nullable
@@ -154,7 +154,7 @@ namespace RatchetEdit
             splinePointer = ReadInt(gameplayHeadBlock, 0x70);
             unkPointer13 = ReadInt(gameplayHeadBlock, 0x74);//Nullable
             unkPointer14 = ReadInt(gameplayHeadBlock, 0x78);//Nullable
-            unkPointer15 = ReadInt(gameplayHeadBlock, 0x7C);//Nullable
+            type7CPointer = ReadInt(gameplayHeadBlock, 0x7C);//Nullable
 
             type80Pointer = ReadInt(gameplayHeadBlock, 0x80);//Nullable
             unkPointer17 = ReadInt(gameplayHeadBlock, 0x84);
@@ -195,7 +195,7 @@ namespace RatchetEdit
             pvarSizePointer = ReadInt(gameplayHeadBlock, 0x5C);
 
             pvarPointer = ReadInt(gameplayHeadBlock, 0x60);
-            unkPointer9 = ReadInt(gameplayHeadBlock, 0x64);//Nullable
+            type5CPointer = ReadInt(gameplayHeadBlock, 0x64);//Nullable
             spawnPointPointer = ReadInt(gameplayHeadBlock, 0x68);//Nullable
             //unkPointer12 = ReadInt(gameplayHeadBlock, 0x6C);//Nullable
 
@@ -241,10 +241,10 @@ namespace RatchetEdit
             WriteInt(ref bytes, 0x48, unkPointer6);
             WriteInt(ref bytes, 0x4C, unkPointer7);
 
-            WriteInt(ref bytes, 0x50, unkPointer8);
+            WriteInt(ref bytes, 0x50, type50Pointer);
             WriteInt(ref bytes, 0x54, pvarSizePointer);
             WriteInt(ref bytes, 0x58, pvarPointer);
-            WriteInt(ref bytes, 0x5C, unkPointer9);
+            WriteInt(ref bytes, 0x5C, type5CPointer);
 
             WriteInt(ref bytes, 0x60, spawnPointPointer);
             WriteInt(ref bytes, 0x64, type64Pointer);
@@ -253,8 +253,8 @@ namespace RatchetEdit
 
             WriteInt(ref bytes, 0x70, splinePointer);
             WriteInt(ref bytes, 0x74, unkPointer13);
-            WriteInt(ref bytes, 0x78, unkPointer13);
-            WriteInt(ref bytes, 0x7C, unkPointer14);
+            WriteInt(ref bytes, 0x78, unkPointer14);
+            WriteInt(ref bytes, 0x7C, type7CPointer);
 
             WriteInt(ref bytes, 0x80, type80Pointer);
             WriteInt(ref bytes, 0x84, unkPointer17);

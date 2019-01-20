@@ -31,6 +31,9 @@ namespace RatchetEdit.Serializers
             byte[] type68s = GetType68s(level.type68s);
             byte[] type80s = GetType80s(level.type80s);
             byte[] type88s = GetType88s(level.type88s);
+            byte[] type50s = GetType50s(level.type50s);
+            byte[] type5Cs = GetType50s(level.type5Cs);
+            byte[] type7Cs = GetType7Cs(level.type7Cs);
 
             byte[] mobyIds = GetIds(level.mobyIds);
             byte[] tieIds = GetIds(level.tieIds);
@@ -112,11 +115,13 @@ namespace RatchetEdit.Serializers
             gameplayHeader.pvarPointer = (int)fs.Position;
             fs.Write(pVars, 0, pVars.Length);
 
-            //0x50
+            seekPast(fs);
+            gameplayHeader.type50Pointer = (int)fs.Position;
+            fs.Write(type50s, 0, type50s.Length);
 
             seekPast(fs);
-            gameplayHeader.unkPointer9 = (int)fs.Position;
-            fs.Write(level.unk9, 0, level.unk9.Length);
+            gameplayHeader.type5CPointer = (int)fs.Position;
+            fs.Write(type5Cs, 0, type5Cs.Length);
 
             seekPast(fs);
             gameplayHeader.unkPointer6 = (int)fs.Position;
@@ -166,9 +171,17 @@ namespace RatchetEdit.Serializers
             gameplayHeader.unkPointer17 = (int)fs.Position;
             fs.Write(level.unk17, 0, level.unk17.Length);
 
-            //0x78
-            //0x7C
-            //0x74
+            seekPast(fs);
+            gameplayHeader.type7CPointer = (int)fs.Position;
+            fs.Write(type7Cs, 0, type7Cs.Length);
+
+            seekPast(fs);
+            gameplayHeader.unkPointer14 = (int)fs.Position;
+            fs.Write(level.unk14, 0, level.unk14.Length);
+
+            seekPast(fs);
+            gameplayHeader.unkPointer13 = (int)fs.Position;
+            fs.Write(level.unk13, 0, level.unk13.Length);
 
             seekPast(fs);
             gameplayHeader.occlusionPointer = (int)fs.Position;
@@ -318,6 +331,24 @@ namespace RatchetEdit.Serializers
             return bytes;
         }
 
+        public byte[] GetType7Cs(List<Type7C> type7Cs)
+        {
+            if (type7Cs == null) { return new byte[0x10]; }
+
+            byte[] bytes = new byte[0x10 + type7Cs.Count * Type7C.ELEMENTSIZE];
+
+            //Header
+            WriteInt(ref bytes, 0, type7Cs.Count);
+
+            for (int i = 0; i < type7Cs.Count; i++)
+            {
+                byte[] type7CBytes = type7Cs[i].Serialize();
+                type7CBytes.CopyTo(bytes, 0x10 + i * Type7C.ELEMENTSIZE);
+            }
+
+            return bytes;
+        }
+
         public byte[] GetType88s(List<Type88> type88s)
         {
             if (type88s == null) { return new byte[0x10]; }
@@ -354,6 +385,23 @@ namespace RatchetEdit.Serializers
                 headBytes.CopyTo(bytes, 0x10 + i * Type80.HEADSIZE);
                 dataBytes.CopyTo(bytes, 0x10 + Type80.HEADSIZE * type80s.Count + i * Type80.DATASIZE);
             }
+            return bytes;
+        }
+
+        public byte[] GetType50s(List<KeyValuePair<int,int>> type50s)
+        {
+            if (type50s == null) { return new byte[0x10]; }
+
+            byte[] bytes = new byte[type50s.Count * 8 + 0x08];
+
+            for (int i = 0; i < type50s.Count; i++)
+            {
+                WriteInt(ref bytes, i * 8 + 0, type50s[i].Key);
+                WriteInt(ref bytes, i * 8 + 4, type50s[i].Value);
+            }
+
+            WriteInt(ref bytes, bytes.Length - 8, -1);
+            WriteInt(ref bytes, bytes.Length - 4, -1);
             return bytes;
         }
 

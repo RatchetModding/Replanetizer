@@ -97,6 +97,8 @@ namespace RatchetEdit
             WriteMatrix4(ref bytes, 0x10, mat1);
             WriteMatrix4(ref bytes, 0x50, mat2);
 
+            WriteFloat(ref bytes, 0x4C, originalM44);
+
             return bytes;
         }
 

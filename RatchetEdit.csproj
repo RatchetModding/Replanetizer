@@ -61,6 +61,7 @@
     <Compile Include="Headers\GameplayHeader.cs" />
     <Compile Include="Headers\Headers.cs" />
     <Compile Include="Level Objects\Gameplay\GameCamera.cs" />
+    <Compile Include="Level Objects\Gameplay\Type7C.cs" />
     <Compile Include="Level Objects\GameType.cs" />
     <Compile Include="Level Objects\ISerializable.cs" />
     <Compile Include="Level Objects\LevelObject.cs" />

@@ -13,6 +13,7 @@ namespace RatchetEdit
     {
         public int name;
         public float[] vertexBuffer;
+        public float[] wVals;
 
         static int cnt = 0;
 
@@ -68,10 +69,12 @@ namespace RatchetEdit
             name = cnt;
             int count = ReadInt(splineBlock, offset);
             vertexBuffer = new float[count * 3];
+            wVals = new float[count];
             for (int i = 0; i < count; i++) {
                 vertexBuffer[(i * 3) + 0] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x00);
                 vertexBuffer[(i * 3) + 1] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x04);
                 vertexBuffer[(i * 3) + 2] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x08);
+                wVals[i] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x0C);
             }
 
             if (count > 0) {
@@ -94,7 +97,7 @@ namespace RatchetEdit
                 WriteFloat(ref bytes, (i * 0x10) + 0x10, vertexBuffer[(i * 3) + 0]);
                 WriteFloat(ref bytes, (i * 0x10) + 0x14, vertexBuffer[(i * 3) + 1]);
                 WriteFloat(ref bytes, (i * 0x10) + 0x18, vertexBuffer[(i * 3) + 2]);
-                WriteFloat(ref bytes, (i * 0x10) + 0x1C, -1);
+                WriteFloat(ref bytes, (i * 0x10) + 0x1C, wVals[i]);
             }
             return bytes;
         }

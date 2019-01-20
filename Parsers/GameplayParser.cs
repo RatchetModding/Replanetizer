@@ -218,6 +218,21 @@ namespace RatchetEdit
             return type68s;
         }
 
+        public List<Type7C> GetType7Cs()
+        {
+            List<Type7C> type7Cs = new List<Type7C>();
+            if (gameplayHeader.type7CPointer == 0) { return type7Cs; }
+
+            int count = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.type7CPointer, 4), 0);
+            byte[] type7CBlock = ReadBlock(gameplayFileStream, gameplayHeader.type7CPointer + 0x10, Type7C.ELEMENTSIZE * count);
+            for (int i = 0; i < count; i++)
+            {
+                type7Cs.Add(new Type7C(type7CBlock, i));
+            }
+
+            return type7Cs;
+        }
+
         public List<Type88> GetType88s()
         {
             List<Type88> type88s = new List<Type88>();
@@ -269,18 +284,60 @@ namespace RatchetEdit
             return ReadBlock(gameplayFileStream, gameplayHeader.unkPointer7, count1 + count2 * 8 + 0x10);
         }
 
-        public byte[] getUnk9()
+        public List<KeyValuePair<int, int>> GetType5Cs()
         {
-            if (gameplayHeader.unkPointer9 == 0) { return null; }
-            int length = gameplayHeader.unkPointer6 - gameplayHeader.unkPointer9;
-            return ReadBlock(gameplayFileStream, gameplayHeader.unkPointer9, length);
+            List<KeyValuePair<int, int>> keyValuePairs = new List<KeyValuePair<int, int>>();
+            byte[] bytes;
+            for (int i = 0; (bytes = ReadBlock(gameplayFileStream, gameplayHeader.type5CPointer + i * 8, 8))[0] != 0xFF; i++)
+            {
+                int id = ReadInt(bytes, 0);
+                int value = ReadInt(bytes, 4);
+                keyValuePairs.Add(new KeyValuePair<int, int>(id, value));
+            }
+            return keyValuePairs;
+        }
+
+        public byte[] GetUnk13()
+        {
+            int sectionLength = gameplayHeader.occlusionPointer - gameplayHeader.unkPointer13;
+            if(sectionLength > 0)
+            {
+                return ReadBlock(gameplayFileStream, gameplayHeader.unkPointer13, sectionLength);
+            }
+            else
+            {
+                return new byte[0x10];
+            }
+
         }
 
         public byte[] getUnk17()
         {
             if (gameplayHeader.unkPointer17 == 0) { return null; }
             int sectionLength = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.unkPointer17, 4), 0);
-            return ReadBlock(gameplayFileStream, gameplayHeader.unkPointer17, sectionLength + 0x10);
+            return ReadBlock(gameplayFileStream, gameplayHeader.unkPointer17, sectionLength);
+        }
+
+        public byte[] getUnk14()
+        {
+            if (gameplayHeader.unkPointer14 == 0) { return null; }
+            int sectionLength = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.unkPointer14, 4), 0);
+            return ReadBlock(gameplayFileStream, gameplayHeader.unkPointer14, sectionLength);
+        }
+
+
+        
+        public List<KeyValuePair<int, int>> GetType50s()
+        {
+            List<KeyValuePair<int, int>> keyValuePairs = new List<KeyValuePair<int, int>>();
+            byte[] bytes;
+            for(int i = 0; (bytes = ReadBlock(gameplayFileStream, gameplayHeader.type50Pointer + i * 8, 8))[0] != 0xFF; i++)
+            {
+                int id = ReadInt(bytes, 0);
+                int value = ReadInt(bytes, 4);
+                keyValuePairs.Add(new KeyValuePair<int, int>(id, value));
+            }
+            return keyValuePairs;
         }
 
         public List<int> getMobyIds()
@@ -350,30 +407,40 @@ namespace RatchetEdit
 
         public byte[] getTieData(int tieCount)
         {
-            return ReadBlock(gameplayFileStream, gameplayHeader.tiePointer, 0xE0 * tieCount);
+            return ReadBlock(gameplayFileStream, gameplayHeader.tiePointer, 0x10 + 0xE0 * tieCount);
         }
 
         public byte[] getShrubData(int shrubCount)
         {
-            return ReadBlock(gameplayFileStream, gameplayHeader.tiePointer, 0x70 * shrubCount);
+            return ReadBlock(gameplayFileStream, gameplayHeader.shrubPointer, 0x10 + 0x70 * shrubCount);
         }
 
 
 
-        public List<byte[]> getPvars()
+        public List<byte[]> getPvars(List<Moby> mobs)
         {
-            List<byte[]> pVars = new List<byte[]>();
-            int numpVars = (int)(gameplayHeader.pvarPointer - gameplayHeader.pvarSizePointer) / 8;
+            int pvarCount = 0;
+            foreach (Moby mob in mobs)
+            {
+                if(mob.pvarIndex > pvarCount)
+                {
+                    pvarCount = mob.pvarIndex;
+                }
+            }
 
-            byte[] pVarHeadBlock = ReadBlock(gameplayFileStream, gameplayHeader.pvarSizePointer, numpVars * 8);
+            pvarCount++;
+
+            List<byte[]> pVars = new List<byte[]>();
+
+            byte[] pVarHeadBlock = ReadBlock(gameplayFileStream, gameplayHeader.pvarSizePointer, pvarCount * 8);
             uint pVarSectionLength = 0;
-            for (int i = 0; i < numpVars; i++)
+            for (int i = 0; i < pvarCount; i++)
             {
                 pVarSectionLength += ReadUint(pVarHeadBlock, (i * 8) + 0x04);
             }
 
             byte[] pVarBlock = ReadBlock(gameplayFileStream, gameplayHeader.pvarPointer, (int)pVarSectionLength);
-            for (int i = 0; i < numpVars; i++)
+            for (int i = 0; i < pvarCount; i++)
             {
                 uint mobpVarsStart = ReadUint(pVarHeadBlock, (i * 8));
                 uint mobpVarsCount = ReadUint(pVarHeadBlock, (i * 8) + 0x04);

@@ -45,7 +45,12 @@ namespace RatchetEdit
         public byte[] unk6;
         public byte[] unk7;
         public byte[] unk9;
+        public byte[] unk13;
         public byte[] unk17;
+        public byte[] unk14;
+
+        public List<KeyValuePair<int, int>> type50s;
+        public List<KeyValuePair<int, int>> type5Cs;
 
         public byte[] tieData;
         public byte[] shrubData;
@@ -54,6 +59,7 @@ namespace RatchetEdit
         public List<Type0C> type0Cs;
         public List<Type64> type64s;
         public List<Type68> type68s;
+        public List<Type7C> type7Cs;
         public List<Type80> type80s;
         public List<Type88> type88s;
 
@@ -145,8 +151,9 @@ namespace RatchetEdit
             Console.WriteLine("Parsing other gameplay assets...");
             unk6 = gameplayParser.getUnk6();
             unk7 = gameplayParser.getUnk7();
-            unk9 = gameplayParser.getUnk9();
+            unk13 = gameplayParser.GetUnk13();
             unk17 = gameplayParser.getUnk17();
+            unk14 = gameplayParser.getUnk14();
 
             tieData = gameplayParser.getTieData(ties.Count);
             shrubData = gameplayParser.getShrubData(shrubs.Count);
@@ -155,9 +162,14 @@ namespace RatchetEdit
             type0Cs = gameplayParser.GetType0Cs();
             type64s = gameplayParser.GetType64s();
             type68s = gameplayParser.GetType68s();
+            type7Cs = gameplayParser.GetType7Cs();
             type80s = gameplayParser.getType80();
             type88s = gameplayParser.GetType88s();
-            pVars = gameplayParser.getPvars();
+
+            type50s = gameplayParser.GetType50s();
+            type5Cs = gameplayParser.GetType5Cs();
+
+            pVars = gameplayParser.getPvars(mobs);
             spawnPoints = gameplayParser.GetSpawnPoints();
             gameCameras = gameplayParser.GetGameCameras();
 

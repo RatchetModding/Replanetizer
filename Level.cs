@@ -149,13 +149,13 @@ namespace RatchetEdit
             lang8 = gameplayParser.GetLang8();
 
             Console.WriteLine("Parsing other gameplay assets...");
-            unk6 = gameplayParser.getUnk6();
-            unk7 = gameplayParser.getUnk7();
+            unk6 = gameplayParser.GetUnk6();
+            unk7 = gameplayParser.GetUnk7();
             unk13 = gameplayParser.GetUnk13();
-            unk17 = gameplayParser.getUnk17();
-            unk14 = gameplayParser.getUnk14();
+            unk17 = gameplayParser.GetUnk17();
+            unk14 = gameplayParser.GetUnk14();
 
-            tieData = gameplayParser.getTieData(ties.Count);
+            tieData = gameplayParser.GetTieData(ties.Count);
             shrubData = gameplayParser.getShrubData(shrubs.Count);
 
             type04s = gameplayParser.GetType04s();
@@ -163,20 +163,20 @@ namespace RatchetEdit
             type64s = gameplayParser.GetType64s();
             type68s = gameplayParser.GetType68s();
             type7Cs = gameplayParser.GetType7Cs();
-            type80s = gameplayParser.getType80();
+            type80s = gameplayParser.GetType80();
             type88s = gameplayParser.GetType88s();
 
             type50s = gameplayParser.GetType50s();
             type5Cs = gameplayParser.GetType5Cs();
 
-            pVars = gameplayParser.getPvars(mobs);
+            pVars = gameplayParser.GetPvars(mobs);
             spawnPoints = gameplayParser.GetSpawnPoints();
             gameCameras = gameplayParser.GetGameCameras();
 
-            mobyIds = gameplayParser.getMobyIds();
-            tieIds = gameplayParser.getTieIds();
-            shrubIds = gameplayParser.getShrubIds();
-            occlusionData = gameplayParser.getOcclusionData();
+            mobyIds = gameplayParser.GetMobyIds();
+            tieIds = gameplayParser.GetTieIds();
+            shrubIds = gameplayParser.GetShrubIds();
+            occlusionData = gameplayParser.GetOcclusionData();
 
             engineParser.Close();
             vramParser.Close();

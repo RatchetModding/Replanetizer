@@ -34,7 +34,6 @@ namespace RatchetEdit.Serializers
             byte[] type50s = GetType50s(level.type50s);
             byte[] type5Cs = GetType50s(level.type5Cs);
             byte[] type7Cs = GetType7Cs(level.type7Cs);
-
             byte[] mobyIds = GetIds(level.mobyIds);
             byte[] tieIds = GetIds(level.tieIds);
             byte[] shrubIds = GetIds(level.shrubIds);
@@ -47,143 +46,143 @@ namespace RatchetEdit.Serializers
             gameplayHeader.type88Pointer = (int)fs.Position;
             fs.Write(type88s, 0, type88s.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.levelVarPointer = (int)fs.Position;
             fs.Write(levelVariables, 0, levelVariables.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.englishPointer = (int)fs.Position;
             fs.Write(level.english, 0, level.english.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.lang2Pointer = (int)fs.Position;
             fs.Write(level.lang2, 0, level.lang2.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.frenchPointer = (int)fs.Position;
             fs.Write(level.french, 0, level.french.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.germanPointer = (int)fs.Position;
             fs.Write(level.german, 0, level.german.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.spanishPointer = (int)fs.Position;
             fs.Write(level.spanish, 0, level.spanish.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.italianPointer = (int)fs.Position;
             fs.Write(level.italian, 0, level.italian.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.lang7Pointer = (int)fs.Position;
             fs.Write(level.lang7, 0, level.lang7.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.lang8Pointer = (int)fs.Position;
             fs.Write(level.lang8, 0, level.lang8.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.type04Pointer = (int)fs.Position;
             fs.Write(type04s, 0, type04s.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.type80Pointer = (int)fs.Position;
             fs.Write(type80s, 0, type80s.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.cameraPointer = (int)fs.Position;
             fs.Write(gameCameras, 0, gameCameras.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.type0CPointer = (int)fs.Position;
             fs.Write(type0Cs, 0, type0Cs.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.mobyIdPointer = (int)fs.Position;
             fs.Write(mobyIds, 0, mobyIds.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.mobyPointer = (int)fs.Position;
             fs.Write(mobs, 0, mobs.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.pvarSizePointer = (int)fs.Position;
             fs.Write(pVarSizes, 0, pVarSizes.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.pvarPointer = (int)fs.Position;
             fs.Write(pVars, 0, pVars.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.type50Pointer = (int)fs.Position;
             fs.Write(type50s, 0, type50s.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.type5CPointer = (int)fs.Position;
             fs.Write(type5Cs, 0, type5Cs.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.unkPointer6 = (int)fs.Position;
             fs.Write(level.unk6, 0, level.unk6.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.unkPointer7 = (int)fs.Position;
             fs.Write(level.unk7, 0, level.unk7.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.tieIdPointer = (int)fs.Position;
             fs.Write(tieIds, 0, tieIds.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.tiePointer = (int)fs.Position;
             fs.Write(level.tieData, 0, level.tieData.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.shrubIdPointer = (int)fs.Position;
             fs.Write(shrubIds, 0, shrubIds.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.shrubPointer = (int)fs.Position;
             fs.Write(level.shrubData, 0, level.shrubData.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.splinePointer = (int)fs.Position;
             fs.Write(splines, 0, splines.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.spawnPointPointer = (int)fs.Position;
             fs.Write(spawnPoints, 0, spawnPoints.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.type64Pointer = (int)fs.Position;
             fs.Write(type64s, 0, type64s.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.type68Pointer = (int)fs.Position;
             fs.Write(type68s, 0, type68s.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.unkPointer12 = (int)fs.Position;
             fs.Write(off_6C, 0, off_6C.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.unkPointer17 = (int)fs.Position;
             fs.Write(level.unk17, 0, level.unk17.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.type7CPointer = (int)fs.Position;
             fs.Write(type7Cs, 0, type7Cs.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.unkPointer14 = (int)fs.Position;
             fs.Write(level.unk14, 0, level.unk14.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.unkPointer13 = (int)fs.Position;
             fs.Write(level.unk13, 0, level.unk13.Length);
 
-            seekPast(fs);
+            SeekPast(fs);
             gameplayHeader.occlusionPointer = (int)fs.Position;
             fs.Write(occlusionData, 0, occlusionData.Length);
 
@@ -195,7 +194,7 @@ namespace RatchetEdit.Serializers
             fs.Close();
         }
 
-        private void seekPast(FileStream fs)
+        private void SeekPast(FileStream fs)
         {
             while (fs.Position % 0x10 != 0)
             {

@@ -294,6 +294,20 @@ namespace RatchetEdit
             return keyValuePairs;
         }
 
+
+        public List<KeyValuePair<int, int>> GetType50s()
+        {
+            List<KeyValuePair<int, int>> keyValuePairs = new List<KeyValuePair<int, int>>();
+            byte[] bytes;
+            for (int i = 0; (bytes = ReadBlock(gameplayFileStream, gameplayHeader.type50Pointer + i * 8, 8))[0] != 0xFF; i++)
+            {
+                int id = ReadInt(bytes, 0);
+                int value = ReadInt(bytes, 4);
+                keyValuePairs.Add(new KeyValuePair<int, int>(id, value));
+            }
+            return keyValuePairs;
+        }
+
         public byte[] GetUnk13()
         {
             int sectionLength = gameplayHeader.occlusionPointer - gameplayHeader.unkPointer13;
@@ -321,19 +335,7 @@ namespace RatchetEdit
             int sectionLength = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.unkPointer14, 4), 0);
             return ReadBlock(gameplayFileStream, gameplayHeader.unkPointer14, sectionLength);
         }
-        
-        public List<KeyValuePair<int, int>> GetType50s()
-        {
-            List<KeyValuePair<int, int>> keyValuePairs = new List<KeyValuePair<int, int>>();
-            byte[] bytes;
-            for(int i = 0; (bytes = ReadBlock(gameplayFileStream, gameplayHeader.type50Pointer + i * 8, 8))[0] != 0xFF; i++)
-            {
-                int id = ReadInt(bytes, 0);
-                int value = ReadInt(bytes, 4);
-                keyValuePairs.Add(new KeyValuePair<int, int>(id, value));
-            }
-            return keyValuePairs;
-        }
+
 
         public List<int> GetMobyIds()
         {

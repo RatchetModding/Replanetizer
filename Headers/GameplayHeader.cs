@@ -121,45 +121,45 @@ namespace RatchetEdit
             cameraPointer = ReadInt(gameplayHeadBlock, 0x08);
             type0CPointer = ReadInt(gameplayHeadBlock, 0x0C);
 
-            englishPointer = ReadInt(gameplayHeadBlock, 0x10);//Nullable
-            lang2Pointer = ReadInt(gameplayHeadBlock, 0x14);//Nullable
-            frenchPointer = ReadInt(gameplayHeadBlock, 0x18);//Nullable
-            germanPointer = ReadInt(gameplayHeadBlock, 0x1C);//Nullable
+            englishPointer = ReadInt(gameplayHeadBlock, 0x10);
+            lang2Pointer = ReadInt(gameplayHeadBlock, 0x14);
+            frenchPointer = ReadInt(gameplayHeadBlock, 0x18);
+            germanPointer = ReadInt(gameplayHeadBlock, 0x1C);
 
-            spanishPointer = ReadInt(gameplayHeadBlock, 0x20);//Nullable
-            italianPointer = ReadInt(gameplayHeadBlock, 0x24);//Nullable
-            lang7Pointer = ReadInt(gameplayHeadBlock, 0x28);//Nullable
-            lang8Pointer = ReadInt(gameplayHeadBlock, 0x2C);//Nullable
+            spanishPointer = ReadInt(gameplayHeadBlock, 0x20);
+            italianPointer = ReadInt(gameplayHeadBlock, 0x24);
+            lang7Pointer = ReadInt(gameplayHeadBlock, 0x28);
+            lang8Pointer = ReadInt(gameplayHeadBlock, 0x2C);
 
-            tieIdPointer = ReadInt(gameplayHeadBlock, 0x30);//Nullable
-            tiePointer = ReadInt(gameplayHeadBlock, 0x34);//Nullable
-            shrubIdPointer = ReadInt(gameplayHeadBlock, 0x38);//Nullable
-            shrubPointer = ReadInt(gameplayHeadBlock, 0x3C);//Nullable
+            tieIdPointer = ReadInt(gameplayHeadBlock, 0x30);
+            tiePointer = ReadInt(gameplayHeadBlock, 0x34);
+            shrubIdPointer = ReadInt(gameplayHeadBlock, 0x38);
+            shrubPointer = ReadInt(gameplayHeadBlock, 0x3C);
 
-            mobyIdPointer = ReadInt(gameplayHeadBlock, 0x40);//Nullable
+            mobyIdPointer = ReadInt(gameplayHeadBlock, 0x40);
             mobyPointer = ReadInt(gameplayHeadBlock, 0x44);
             unkPointer6 = ReadInt(gameplayHeadBlock, 0x48);
             unkPointer7 = ReadInt(gameplayHeadBlock, 0x4C);
 
-            type50Pointer = ReadInt(gameplayHeadBlock, 0x50);//Nullable
+            type50Pointer = ReadInt(gameplayHeadBlock, 0x50);
             pvarSizePointer = ReadInt(gameplayHeadBlock, 0x54);
             pvarPointer = ReadInt(gameplayHeadBlock, 0x58);
             type5CPointer = ReadInt(gameplayHeadBlock, 0x5C);
 
             spawnPointPointer = ReadInt(gameplayHeadBlock, 0x60);
-            type64Pointer = ReadInt(gameplayHeadBlock, 0x64);//Nullable
-            type68Pointer = ReadInt(gameplayHeadBlock, 0x68);//Nullable
-            unkPointer12 = ReadInt(gameplayHeadBlock, 0x6C);//Nullable
+            type64Pointer = ReadInt(gameplayHeadBlock, 0x64);
+            type68Pointer = ReadInt(gameplayHeadBlock, 0x68);
+            unkPointer12 = ReadInt(gameplayHeadBlock, 0x6C);
 
             splinePointer = ReadInt(gameplayHeadBlock, 0x70);
-            unkPointer13 = ReadInt(gameplayHeadBlock, 0x74);//Nullable
-            unkPointer14 = ReadInt(gameplayHeadBlock, 0x78);//Nullable
-            type7CPointer = ReadInt(gameplayHeadBlock, 0x7C);//Nullable
+            unkPointer13 = ReadInt(gameplayHeadBlock, 0x74);
+            unkPointer14 = ReadInt(gameplayHeadBlock, 0x78);
+            type7CPointer = ReadInt(gameplayHeadBlock, 0x7C);
 
-            type80Pointer = ReadInt(gameplayHeadBlock, 0x80);//Nullable
+            type80Pointer = ReadInt(gameplayHeadBlock, 0x80);
             unkPointer17 = ReadInt(gameplayHeadBlock, 0x84);
-            type88Pointer = ReadInt(gameplayHeadBlock, 0x88);//Nullable
-            occlusionPointer = ReadInt(gameplayHeadBlock, 0x8C);//Nullable
+            type88Pointer = ReadInt(gameplayHeadBlock, 0x88);
+            occlusionPointer = ReadInt(gameplayHeadBlock, 0x8C);
         }
 
         private void GetRC2Vals(byte[] gameplayHeadBlock)
@@ -169,47 +169,47 @@ namespace RatchetEdit
             cameraPointer = ReadInt(gameplayHeadBlock, 0x08);
             type0CPointer = ReadInt(gameplayHeadBlock, 0x0C);
 
-            englishPointer = ReadInt(gameplayHeadBlock, 0x10);//Nullable
-            lang2Pointer = ReadInt(gameplayHeadBlock, 0x14);//Nullable
-            frenchPointer = ReadInt(gameplayHeadBlock, 0x18);//Nullable
-            germanPointer = ReadInt(gameplayHeadBlock, 0x1C);//Nullable
+            englishPointer = ReadInt(gameplayHeadBlock, 0x10);
+            lang2Pointer = ReadInt(gameplayHeadBlock, 0x14);
+            frenchPointer = ReadInt(gameplayHeadBlock, 0x18);
+            germanPointer = ReadInt(gameplayHeadBlock, 0x1C);
 
-            spanishPointer = ReadInt(gameplayHeadBlock, 0x20);//Nullable
-            italianPointer = ReadInt(gameplayHeadBlock, 0x24);//Nullable
-            lang7Pointer = ReadInt(gameplayHeadBlock, 0x28);//Nullable
-            lang8Pointer = ReadInt(gameplayHeadBlock, 0x2C);//Nullable
+            spanishPointer = ReadInt(gameplayHeadBlock, 0x20);
+            italianPointer = ReadInt(gameplayHeadBlock, 0x24);
+            lang7Pointer = ReadInt(gameplayHeadBlock, 0x28);
+            lang8Pointer = ReadInt(gameplayHeadBlock, 0x2C);
 
-            //tieIdPointer = ReadInt(gameplayHeadBlock, 0x30);//Nullable
-            //tiePointer = ReadInt(gameplayHeadBlock, 0x34);//Nullable
-            //shrubIdPointer = ReadInt(gameplayHeadBlock, 0x38);//Nullable
-            //shrubPointer = ReadInt(gameplayHeadBlock, 0x3C);//Nullable
+            tieIdPointer = ReadInt(gameplayHeadBlock, 0x30);
+            // = ReadInt(gameplayHeadBlock, 0x34);
+            // = ReadInt(gameplayHeadBlock, 0x38);
+            shrubIdPointer = ReadInt(gameplayHeadBlock, 0x3C);
 
-            //mobyIdPointer = ReadInt(gameplayHeadBlock, 0x40);//Nullable
+            shrubPointer = ReadInt(gameplayHeadBlock, 0x40);
             // = ReadInt(gameplayHeadBlock, 0x44);
-            //unkPointer6 = ReadInt(gameplayHeadBlock, 0x48);
+            mobyIdPointer = ReadInt(gameplayHeadBlock, 0x48);
             mobyPointer = ReadInt(gameplayHeadBlock, 0x4C);
 
-            //unkPointer8 = ReadInt(gameplayHeadBlock, 0x50);//Nullable
-            // = ReadInt(gameplayHeadBlock, 0x54);
-            // = ReadInt(gameplayHeadBlock, 0x58);
+            unkPointer6 = ReadInt(gameplayHeadBlock, 0x50);
+            unkPointer7 = ReadInt(gameplayHeadBlock, 0x54);
+            type50Pointer = ReadInt(gameplayHeadBlock, 0x58);
             pvarSizePointer = ReadInt(gameplayHeadBlock, 0x5C);
 
             pvarPointer = ReadInt(gameplayHeadBlock, 0x60);
-            type5CPointer = ReadInt(gameplayHeadBlock, 0x64);//Nullable
-            spawnPointPointer = ReadInt(gameplayHeadBlock, 0x68);//Nullable
-            //unkPointer12 = ReadInt(gameplayHeadBlock, 0x6C);//Nullable
+            type5CPointer = ReadInt(gameplayHeadBlock, 0x64);
+            spawnPointPointer = ReadInt(gameplayHeadBlock, 0x68);
+            type64Pointer = ReadInt(gameplayHeadBlock, 0x6C);
 
-            //= ReadInt(gameplayHeadBlock, 0x70);
-            //unkPointer13 = ReadInt(gameplayHeadBlock, 0x74);//Nullable
-            splinePointer = ReadInt(gameplayHeadBlock, 0x78);//Nullable
-            //unkPointer15 = ReadInt(gameplayHeadBlock, 0x7C);//Nullable
+            type68Pointer = ReadInt(gameplayHeadBlock, 0x70);
+            unkPointer12 = ReadInt(gameplayHeadBlock, 0x74);
+            splinePointer = ReadInt(gameplayHeadBlock, 0x78);
+            unkPointer13 = ReadInt(gameplayHeadBlock, 0x7C);
 
-            //type80Pointer = ReadInt(gameplayHeadBlock, 0x80);//Nullable
-            //unkPointer17 = ReadInt(gameplayHeadBlock, 0x84);
-            //type88Pointer = ReadInt(gameplayHeadBlock, 0x88);//Nullable
-            //occlusionPointer = ReadInt(gameplayHeadBlock, 0x8C);//Nullable
+            // = ReadInt(gameplayHeadBlock, 0x80);
+            type80Pointer = ReadInt(gameplayHeadBlock, 0x84);
+            unkPointer17 = ReadInt(gameplayHeadBlock, 0x88);
+            // = ReadInt(gameplayHeadBlock, 0x8C);
 
-            occlusionPointer = ReadInt(gameplayHeadBlock, 0x90);//Nullable
+            occlusionPointer = ReadInt(gameplayHeadBlock, 0x90);
         }
 
         public byte[] Serialize()

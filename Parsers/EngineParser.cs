@@ -52,6 +52,11 @@ namespace RatchetEdit
             return GetSkyboxModel(engineHead.skyboxPointer);
         }
 
+        public List<UiElement> GetUiElements()
+        {
+            return GetUiElements(engineHead.uiElementPointer);
+        }
+
 
         public GameType DetectGame()
         {

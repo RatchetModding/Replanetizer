@@ -23,6 +23,9 @@ namespace RatchetEdit
         public List<Texture> textures;
         public SkyboxModel skybox;
 
+        public List<UiElement> uiElements;
+
+
         //Level objects
         public List<Moby> mobs;
         public List<Tie> ties;
@@ -126,6 +129,8 @@ namespace RatchetEdit
             terrains = engineParser.GetTerrainModels();
             Console.WriteLine("Added " + terrains?.Count + " terrain elements");
 
+            uiElements = engineParser.GetUiElements();
+            Console.WriteLine("Added " + uiElements?.Count + " ui elements");
 
             Console.WriteLine("Parsing Level variables...");
             levelVariables = gameplayParser.GetLevelVariables();

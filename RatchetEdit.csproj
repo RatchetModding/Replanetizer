@@ -60,6 +60,7 @@
     <Compile Include="Headers\EngineHeader.cs" />
     <Compile Include="Headers\GameplayHeader.cs" />
     <Compile Include="Headers\Headers.cs" />
+    <Compile Include="Level Objects\Engine\UiElement.cs" />
     <Compile Include="Level Objects\Gameplay\GameCamera.cs" />
     <Compile Include="Level Objects\Gameplay\Type7C.cs" />
     <Compile Include="Level Objects\GameType.cs" />
@@ -105,6 +106,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Parsers\RatchetFileParser.cs" />
+    <Compile Include="Serializers\EngineSerializer.cs" />
     <Compile Include="Serializers\GameplaySerializer.cs" />
     <Compile Include="Level Objects\Gameplay\SpawnPoint.cs" />
     <Compile Include="Level Objects\Gameplay\Spline.cs" />

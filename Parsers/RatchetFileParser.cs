@@ -151,6 +151,25 @@ namespace RatchetEdit
             }
         }
 
+        protected List<UiElement> GetUiElements(int offset)
+        {
+            byte[] headBlock = ReadBlock(fileStream, offset, 0x10);
+            short elemCount = ReadShort(headBlock, 0x00);
+            short spriteCount = ReadShort(headBlock, 0x02);
+            int elemOffset = ReadInt(headBlock, 0x04);
+            int spriteOffset = ReadInt(headBlock, 0x08);
+
+            byte[] elemBlock = ReadBlock(fileStream, elemOffset, elemCount * 8);
+            byte[] spriteBlock = ReadBlock(fileStream, spriteOffset, spriteCount * 4);
+
+            var list = new List<UiElement>();
+            for(int i = 0; i < elemCount; i++)
+            {
+                list.Add(new UiElement(elemBlock, i, spriteBlock));
+            }
+            return list;
+        }
+
 
         public void Close()
         {

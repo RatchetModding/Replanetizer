@@ -147,5 +147,14 @@ namespace RatchetEdit
             }
             return data;
         }
+
+        public static int GetLength(int length)
+        {
+            while (length % 0x10 != 0)
+            {
+                length++;
+            }
+            return length;
+        }
     }
 }

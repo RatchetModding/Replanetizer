@@ -161,13 +161,40 @@ namespace RatchetEdit
                 vertexBuffer[(i * 8) + 0] = (ReadFloat(vertBlock, (i * elemSize) + 0x00));    //VertexX
                 vertexBuffer[(i * 8) + 1] = (ReadFloat(vertBlock, (i * elemSize) + 0x04));    //VertexY
                 vertexBuffer[(i * 8) + 2] = (ReadFloat(vertBlock, (i * elemSize) + 0x08));    //VertexZ
-                vertexBuffer[(i * 8) + 3] = 0;    //NormX
+                vertexBuffer[(i * 8) + 3] = (ReadFloat(vertBlock, (i * elemSize) + 0x14));    //Actually vertexcolors
                 vertexBuffer[(i * 8) + 4] = 0;    //NormY
                 vertexBuffer[(i * 8) + 5] = 0;    //NormZ
                 vertexBuffer[(i * 8) + 6] = (ReadFloat(vertBlock, (i * elemSize) + 0x0C));    //UVu
                 vertexBuffer[(i * 8) + 7] = (ReadFloat(vertBlock, (i * elemSize) + 0x10));    //UVv
             }
             return vertexBuffer;
+        }
+
+        public static byte[] GetVertexBytesUV(float[] vertexBuffer)
+        {
+            int vertexCount = vertexBuffer.Length / 8;
+            byte[] vertexBytes = new byte[vertexCount * 0x18];
+
+            for (int i = 0; i < vertexCount; i++)
+            {
+                WriteFloat(ref vertexBytes, (i * 0x18) + 0x00, vertexBuffer[(i * 8) + 0]);
+                WriteFloat(ref vertexBytes, (i * 0x18) + 0x04, vertexBuffer[(i * 8) + 1]);
+                WriteFloat(ref vertexBytes, (i * 0x18) + 0x08, vertexBuffer[(i * 8) + 2]);
+                WriteFloat(ref vertexBytes, (i * 0x18) + 0x0C, vertexBuffer[(i * 8) + 6]);
+                WriteFloat(ref vertexBytes, (i * 0x18) + 0x10, vertexBuffer[(i * 8) + 7]);
+                WriteFloat(ref vertexBytes, (i * 0x18) + 0x14, vertexBuffer[(i * 8) + 3]);
+            }
+            return vertexBytes;
+        }
+
+        public static byte[] GetFaceBytes(ushort[] indexBuffer)
+        {
+            byte[] indexBytes = new byte[indexBuffer.Length * sizeof(ushort)];
+            for (int i = 0; i < indexBuffer.Length; i++)
+            {
+                WriteShort(ref indexBytes, i * sizeof(ushort), (short)indexBuffer[i]);
+            }
+            return indexBytes;
         }
 
         //Get vertices with UV's located somewhere else

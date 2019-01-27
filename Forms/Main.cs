@@ -828,8 +828,13 @@ namespace RatchetEdit
         {
             if (mapSaveDialog.ShowDialog() == DialogResult.OK)
             {
+                string pathName = Path.GetDirectoryName(mapSaveDialog.FileName);
+
                 GameplaySerializer gameplaySerializer = new GameplaySerializer();
                 gameplaySerializer.Save(level, mapSaveDialog.FileName);
+                EngineSerializer engineSerializer = new EngineSerializer();
+                engineSerializer.Save(level, pathName + "/engineTEST.ps3");
+                Console.WriteLine(pathName);
             }
             InvalidateView();
         }

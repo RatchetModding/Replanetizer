@@ -185,6 +185,14 @@ namespace RatchetEdit
     {
         const int ELEMSIZE = 0x30;
 
+        public float off_00;
+        public float off_04;
+        public float off_08;
+        public float off_0C;
+
+        public int off_1C;
+        public short off_20;
+
         public int texturePointer;
         public int textureCount;
         public ushort vertexIndex;
@@ -193,11 +201,21 @@ namespace RatchetEdit
 
         public TerrainFragHeader(FileStream fs, byte[] terrainHeadBlock, int index)
         {
-            texturePointer = ReadInt(terrainHeadBlock, (index * ELEMSIZE) + 0x10);
-            textureCount = ReadInt(terrainHeadBlock, (index * ELEMSIZE) + 0x14);
-            vertexIndex = ReadUshort(terrainHeadBlock, (index * ELEMSIZE) + 0x18);
-            vertexCount = ReadUshort(terrainHeadBlock, (index * ELEMSIZE) + 0x1A);
-            slotNum = ReadUshort(terrainHeadBlock, (index * ELEMSIZE) + 0x22);
+            int offset = index * ELEMSIZE;
+
+            off_00 = ReadFloat(terrainHeadBlock, offset + 0x00);
+            off_04 = ReadFloat(terrainHeadBlock, offset + 0x04);
+            off_08 = ReadFloat(terrainHeadBlock, offset + 0x08);
+            off_0C = ReadFloat(terrainHeadBlock, offset + 0x0C);
+
+            off_1C = ReadInt(terrainHeadBlock, offset + 0x1C);
+            off_20 = ReadShort(terrainHeadBlock, off_20 + 0x20);
+
+            texturePointer = ReadInt(terrainHeadBlock, (offset) + 0x10);
+            textureCount = ReadInt(terrainHeadBlock, (offset) + 0x14);
+            vertexIndex = ReadUshort(terrainHeadBlock, (offset) + 0x18);
+            vertexCount = ReadUshort(terrainHeadBlock, (offset) + 0x1A);
+            slotNum = ReadUshort(terrainHeadBlock, (offset) + 0x22);
         }
     }
 

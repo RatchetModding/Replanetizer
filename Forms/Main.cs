@@ -181,7 +181,7 @@ namespace RatchetEdit
             string stringCounter;
             StreamReader stream = null;
             try {
-                stream = new StreamReader(Application.StartupPath + "/TieModelsRC1.txt");
+                stream = new StreamReader(Application.StartupPath + "/ModelLists/TieModelsRC1.txt");
                 //Console.WriteLine("Loaded model names for Ratchet & Clank.");
 
             }
@@ -202,7 +202,7 @@ namespace RatchetEdit
             string stringCounter;
             StreamReader stream = null;
             try {
-                stream = new StreamReader(Application.StartupPath + "/ModelListRC1.txt");
+                stream = new StreamReader(Application.StartupPath + "/ModelLists/ModelListRC1.txt");
                 //Console.WriteLine("Loaded model names for Ratchet & Clank.");
 
             }

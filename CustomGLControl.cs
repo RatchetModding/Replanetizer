@@ -40,14 +40,14 @@ namespace RatchetEdit
 
             //Setup general shader
             shaderID = GL.CreateProgram();
-            LoadShader("shaders/vs.glsl", ShaderType.VertexShader, shaderID);
-            LoadShader("shaders/fs.glsl", ShaderType.FragmentShader, shaderID);
+            LoadShader("Shaders/vs.glsl", ShaderType.VertexShader, shaderID);
+            LoadShader("Shaders/fs.glsl", ShaderType.FragmentShader, shaderID);
             GL.LinkProgram(shaderID);
 
             //Setup color shader
             colorShaderID = GL.CreateProgram();
-            LoadShader("shaders/colorshadervs.glsl", ShaderType.VertexShader, colorShaderID);
-            LoadShader("shaders/colorshaderfs.glsl", ShaderType.FragmentShader, colorShaderID);
+            LoadShader("Shaders/colorshadervs.glsl", ShaderType.VertexShader, colorShaderID);
+            LoadShader("Shaders/colorshaderfs.glsl", ShaderType.FragmentShader, colorShaderID);
             GL.LinkProgram(colorShaderID);
 
             matrixID = GL.GetUniformLocation(shaderID, "MVP");

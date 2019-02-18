@@ -48,11 +48,10 @@ namespace RatchetEdit
             List<Model> tieModelList = new List<Model>();
 
             //Read the whole header block, and add models based on the count
-            byte[] levelBlock = ReadBlock(fileStream, tieModelPointer, tieModelCount * TieModelHeader.TIEELEMSIZE);
+            byte[] levelBlock = ReadBlock(fileStream, tieModelPointer, tieModelCount * 0x40);
             for (int i = 0; i < tieModelCount; i++)
             {
-                TieModelHeader head = new TieModelHeader(levelBlock, i);
-                tieModelList.Add(new TieModel(fileStream, head));
+                tieModelList.Add(new TieModel(fileStream, levelBlock, i));
             }
 
             return tieModelList;
@@ -63,11 +62,10 @@ namespace RatchetEdit
             List<Model> shrubModelList = new List<Model>();
 
             //Read the whole header block, and add models based on the count
-            byte[] shrubBlock = ReadBlock(fileStream, shrubModelPointer, shrubModelCount * TieModelHeader.TIEELEMSIZE);
+            byte[] shrubBlock = ReadBlock(fileStream, shrubModelPointer, shrubModelCount * 0x40);
             for (int i = 0; i < shrubModelCount; i++)
             {
-                TieModelHeader head = new TieModelHeader(shrubBlock, i);
-                shrubModelList.Add(new ShrubModel(fileStream, head));
+                shrubModelList.Add(new ShrubModel(fileStream, shrubBlock, i));
             }
             return shrubModelList;
         }
@@ -93,10 +91,37 @@ namespace RatchetEdit
             byte[] tieBlock = ReadBlock(fileStream, tiePointer, tieCount * 0x70);
             for (int i = 0; i < tieCount; i++)
             {
-                Tie tie = new Tie(tieBlock, i, tieModels);
+                Tie tie = new Tie(tieBlock, i, tieModels, fileStream);
                 ties.Add(tie);
             }
             return ties;
+        }
+
+        protected List<Shrub> GetShrubs(List<Model> shrubModels, int shrubPointer, int shrubCount)
+        {
+            List<Shrub> shrubs = new List<Shrub>();
+
+            //Read the whole texture header block, and add textures based on the count
+            byte[] shrubBlock = ReadBlock(fileStream, shrubPointer, shrubCount * 0x70);
+            for (int i = 0; i < shrubCount; i++)
+            {
+                Shrub shrub = new Shrub(shrubBlock, i, shrubModels);
+                shrubs.Add(shrub);
+            }
+            return shrubs;
+        }
+
+        protected List<Light> GetLights(int lightPointer, int lightCount)
+        {
+            List<Light> lightList = new List<Light>();
+
+            //Read the whole header block, and add lights based on the count
+            byte[] lightBlock = ReadBlock(fileStream, lightPointer, lightCount * 0x40);
+            for (int i = 0; i < lightCount; i++)
+            {
+                lightList.Add(new Light(lightBlock, i));
+            }
+            return lightList;
         }
 
 
@@ -147,7 +172,7 @@ namespace RatchetEdit
                 case 0xEAA60001:
                     return new GameType(3);
                 default:
-                    return new GameType(1);
+                    return new GameType(3);
             }
         }
 
@@ -170,6 +195,56 @@ namespace RatchetEdit
             return list;
         }
 
+        protected List<Animation> GetPlayerAnimations(int offset, MobyModel ratchet)
+        {
+            int count = ratchet.animations.Count;
+            byte boneCount = (byte)ratchet.boneMatrices.Count;
+
+            byte[] headBlock = ReadBlock(fileStream, offset, count * 0x04);
+            List<Animation> animations = new List<Animation>();
+            for(int i = 0; i < count; i++)
+            {
+                animations.Add(new Animation(fileStream, ReadInt(headBlock, i * 4), 0, boneCount, true));
+            }
+            return animations;
+        }
+
+        protected List<Model> GetWeapons(int weaponPointer, int count)
+        {
+            List<Model> weaponModels = new List<Model>();
+
+            //Each moby is stored as a [MobyID, offset] pair
+            byte[] mobyIDBlock = ReadBlock(fileStream, weaponPointer, count * 0x10);
+            for (int i = 0; i < count; i++)
+            {
+                short modelID = ReadShort(mobyIDBlock, (i * 0x10) + 2);
+                int offset = ReadInt(mobyIDBlock, (i * 0x10) + 4);
+                weaponModels.Add(new MobyModel(fileStream, modelID, offset));
+            }
+            return weaponModels;
+        }
+
+        protected byte[] GetLightConfig(int lightConfigOffset)
+        {
+            return ReadBlock(fileStream, lightConfigOffset, 0x30);
+        }
+
+        protected List<int> GetTextureConfigMenu(int textureConfigMenuOffset, int textureConfigMenuCount)
+        {
+            List<int> textureConfigMenuList = new List<int>();
+            byte[] textureConfigMenuBlock = ReadBlock(fileStream, textureConfigMenuOffset, textureConfigMenuCount * 4);
+
+            for (int i = 0; i < textureConfigMenuCount; i++)
+            {
+                textureConfigMenuList.Add(ReadInt(textureConfigMenuBlock, i * 4));
+            }
+            return textureConfigMenuList;
+        }
+
+        protected byte[] ReadArbBytes(int offset, int length)
+        {
+            return ReadBlock(fileStream, offset, length);
+        }
 
         public void Close()
         {

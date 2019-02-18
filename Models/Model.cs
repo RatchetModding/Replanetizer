@@ -19,11 +19,13 @@ namespace RatchetEdit
     {
         public short id { get; set; }
         public float size;
-        public float[] vertexBuffer;
-        public ushort[] indexBuffer;
-        public List<TextureConfig> textureConfig;
-        int VBO = 0;
-        int IBO = 0;
+        public float[] vertexBuffer = {  };
+        public ushort[] indexBuffer = {  };
+        public uint[] weights;
+        public uint[] ids;
+        public List<TextureConfig> textureConfig = new List<TextureConfig>();
+        public int VBO = 0;
+        public int IBO = 0;
 
         protected int GetFaceCount()
         {
@@ -40,7 +42,6 @@ namespace RatchetEdit
 
         public void Draw(List<Texture> textures)
         {
-
             GetVBO();
             GetIBO();
 
@@ -98,7 +99,7 @@ namespace RatchetEdit
         //Get texture configs of different types using elemsize
         public static List<TextureConfig> GetTextureConfigs(FileStream fs, int texturePointer, int textureCount, int elemSize)
         {
-            int IDoffset = 0, startOffset = 0, sizeOffset = 0;
+            int IDoffset = 0, startOffset = 0, sizeOffset = 0, modeOffset = 0;
 
             switch (elemSize)
             {
@@ -106,16 +107,17 @@ namespace RatchetEdit
                     IDoffset = 0x00;
                     startOffset = 0x04;
                     sizeOffset = 0x08;
+                    modeOffset = 0x0C;
                     break;
                 case 0x18:
                     IDoffset = 0x00;
                     startOffset = 0x08;
                     sizeOffset = 0x0C;
+                    modeOffset = 0x14;
                     break;
             }
 
             var textureConfigs = new List<TextureConfig>();
-
             byte[] texBlock = ReadBlock(fs, texturePointer, textureCount * elemSize);
             for (int i = 0; i < textureCount; i++)
             {
@@ -123,16 +125,18 @@ namespace RatchetEdit
                 textureConfig.ID = ReadInt(texBlock, (i * elemSize) + IDoffset);
                 textureConfig.start = ReadInt(texBlock, (i * elemSize) + startOffset);
                 textureConfig.size = ReadInt(texBlock, (i * elemSize) + sizeOffset);
+                textureConfig.mode = ReadInt(texBlock, (i * elemSize) + modeOffset);
                 textureConfigs.Add(textureConfig);
             }
             return textureConfigs;
         }
 
         //Get vertices with UV's baked in
-        public static float[] GetVertices(FileStream fs, int vertexPointer, int vertexCount, int elemSize)
+        public float[] GetVertices(FileStream fs, int vertexPointer, int vertexCount, int elemSize)
         {
             float[] vertexBuffer = new float[vertexCount * 8];
-
+            weights = new uint[vertexCount];
+            ids = new uint[vertexCount];
             //List<float> vertexBuffer = new List<float>();
             byte[] vertBlock = ReadBlock(fs, vertexPointer, vertexCount * elemSize);
             for (int i = 0; i < vertexCount; i++)
@@ -145,8 +149,69 @@ namespace RatchetEdit
                 vertexBuffer[(i * 8) + 5] = (ReadFloat(vertBlock, (i * elemSize) + 0x14));    //NormZ
                 vertexBuffer[(i * 8) + 6] = (ReadFloat(vertBlock, (i * elemSize) + 0x18));    //UVu
                 vertexBuffer[(i * 8) + 7] = (ReadFloat(vertBlock, (i * elemSize) + 0x1C));    //UVv
+                if(elemSize == 0x28)
+                {
+                    weights[i] = (ReadUint(vertBlock, (i * elemSize) + 0x20));
+                    ids[i] = (ReadUint(vertBlock, (i * elemSize) + 0x24));
+                }
+
+
             }
             return vertexBuffer;
+        }
+
+        public byte[] SerializeVertices()
+        {
+            int elemSize = 0x28;
+            byte[] outBytes = new byte[(vertexBuffer.Length / 8) * elemSize];
+
+            for (int i = 0; i < vertexBuffer.Length / 8; i++)
+            {
+                WriteFloat(ref outBytes, (i * elemSize) + 0x00, vertexBuffer[(i * 8) + 0]);
+                WriteFloat(ref outBytes, (i * elemSize) + 0x04, vertexBuffer[(i * 8) + 1]);
+                WriteFloat(ref outBytes, (i * elemSize) + 0x08, vertexBuffer[(i * 8) + 2]);
+                WriteFloat(ref outBytes, (i * elemSize) + 0x0C, vertexBuffer[(i * 8) + 3]);
+                WriteFloat(ref outBytes, (i * elemSize) + 0x10, vertexBuffer[(i * 8) + 4]);
+                WriteFloat(ref outBytes, (i * elemSize) + 0x14, vertexBuffer[(i * 8) + 5]);
+                WriteFloat(ref outBytes, (i * elemSize) + 0x18, vertexBuffer[(i * 8) + 6]);
+                WriteFloat(ref outBytes, (i * elemSize) + 0x1C, vertexBuffer[(i * 8) + 7]);
+                WriteUint(ref outBytes, (i * elemSize) + 0x20, weights[i]);
+                WriteUint(ref outBytes, (i * elemSize) + 0x24, ids[i]);
+            }
+
+            return outBytes;
+        }
+
+        public byte[] SerializeTieVertices()
+        {
+            int elemSize = 0x18;
+            byte[] outBytes = new byte[(vertexBuffer.Length / 8) * elemSize];
+
+            for (int i = 0; i < vertexBuffer.Length / 8; i++)
+            {
+                WriteFloat(ref outBytes, (i * elemSize) + 0x00, vertexBuffer[(i * 8) + 0]);
+                WriteFloat(ref outBytes, (i * elemSize) + 0x04, vertexBuffer[(i * 8) + 1]);
+                WriteFloat(ref outBytes, (i * elemSize) + 0x08, vertexBuffer[(i * 8) + 2]);
+                WriteFloat(ref outBytes, (i * elemSize) + 0x0C, vertexBuffer[(i * 8) + 3]);
+                WriteFloat(ref outBytes, (i * elemSize) + 0x10, vertexBuffer[(i * 8) + 4]);
+                WriteFloat(ref outBytes, (i * elemSize) + 0x14, vertexBuffer[(i * 8) + 5]);
+            }
+
+            return outBytes;
+        }
+
+        public byte[] SerializeUVs()
+        {
+            int elemSize = 0x08;
+            byte[] outBytes = new byte[(vertexBuffer.Length / 8) * elemSize];
+
+            for (int i = 0; i < vertexBuffer.Length / 8; i++)
+            {
+                WriteFloat(ref outBytes, (i * elemSize) + 0x00, vertexBuffer[(i * 8) + 6]);
+                WriteFloat(ref outBytes, (i * elemSize) + 0x04, vertexBuffer[(i * 8) + 7]);
+            }
+
+            return outBytes;
         }
 
         //Get vertices with UV's baked in, but no normals
@@ -187,7 +252,7 @@ namespace RatchetEdit
             return vertexBytes;
         }
 
-        public static byte[] GetFaceBytes(ushort[] indexBuffer)
+        public byte[] GetFaceBytes()
         {
             byte[] indexBytes = new byte[indexBuffer.Length * sizeof(ushort)];
             for (int i = 0; i < indexBuffer.Length; i++)
@@ -224,9 +289,14 @@ namespace RatchetEdit
         {
             ushort[] indexBuffer = new ushort[faceCount];
             byte[] indexBlock = ReadBlock(fs, indexPointer, faceCount * sizeof(ushort));
+
+            ushort negate = 0;
+
             for (int i = 0; i < faceCount; i++)
             {
-                indexBuffer[i] = (ReadUshort(indexBlock, i * sizeof(ushort)));
+                ushort face = ReadUshort(indexBlock, i * sizeof(ushort));
+                if (i == 0 && face > 0) negate = face;
+                indexBuffer[i] = (ushort)(face - negate);
             }
 
             return indexBuffer;

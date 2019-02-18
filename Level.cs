@@ -17,11 +17,40 @@ namespace RatchetEdit
         public List<Model> mobyModels;
         public List<Model> tieModels;
         public List<Model> shrubModels;
+        public List<Model> weaponModels;
         public Model terrainModel;
         public Model collisionModel;
         public List<Model> chunks;
         public List<Texture> textures;
         public SkyboxModel skybox;
+
+
+
+        public byte[] terrainBytes;
+        public byte[] renderDefBytes;
+        public byte[] collBytes;
+        public byte[] billboardBytes;
+        public byte[] soundConfigBytes;
+
+
+        /*
+        //Testbed
+        public byte[] mobyModelBytes;
+        public byte[] playerAnimBytes;
+        public byte[] weaponModelBytes;
+        public byte[] tieModelBytes;
+        public byte[] tieBytes;
+        public byte[] shrubModelBytes;
+        public byte[] shrubBytes;
+        public byte[] menuTextureBytes;
+        public byte[] lightBytes;
+        public byte[] lightConfigBytes;
+        */
+
+
+
+
+        public List<Animation> playerAnimations;
 
         public List<UiElement> uiElements;
 
@@ -29,9 +58,11 @@ namespace RatchetEdit
         //Level objects
         public List<Moby> mobs;
         public List<Tie> ties;
-        public List<Tie> shrubs;
+        public List<Shrub> shrubs;
+        public List<Light> lights;
         public List<Spline> splines;
         public List<TerrainModel> terrains;
+        public List<int> textureConfigMenus;
 
         public LevelVariables levelVariables;
         public OcclusionData occlusionData;
@@ -51,6 +82,8 @@ namespace RatchetEdit
         public byte[] unk13;
         public byte[] unk17;
         public byte[] unk14;
+
+        public byte[] lightConfig;
 
         public List<KeyValuePair<int, int>> type50s;
         public List<KeyValuePair<int, int>> type5Cs;
@@ -96,6 +129,30 @@ namespace RatchetEdit
             VramParser vramParser = new VramParser(path + @"/vram.ps3");
             GameplayParser gameplayParser = new GameplayParser(game, path + @"/gameplay_ntsc");
 
+
+            //REMOVE THESE ASAP!!!!!111
+            terrainBytes = engineParser.GetTerrainBytes();
+            renderDefBytes = engineParser.GetRenderDefBytes();
+            collBytes = engineParser.GetCollisionBytes();
+            billboardBytes = engineParser.GetBillboardBytes();
+            soundConfigBytes = engineParser.GetSoundConfigBytes();
+
+
+            /*
+            //Testbed
+            mobyModelBytes = engineParser.GetMobyModelBytes();
+            playerAnimBytes = engineParser.GetPlayerAnimBytes();
+            weaponModelBytes = engineParser.GetWeaponModelBytes();
+            tieModelBytes = engineParser.GetTieModelBytes();
+            tieBytes = engineParser.GetTieBytes();
+            shrubModelBytes = engineParser.GetShrubModelBytes();
+            shrubBytes = engineParser.GetShrubBytes();
+            menuTextureBytes = engineParser.GetMenuTextureBytes();
+            lightBytes = engineParser.GetLightBytes();
+            lightConfigBytes = engineParser.GetLightConfigBytes();
+            */
+
+
             Console.WriteLine("Parsing skybox...");
             skybox = engineParser.GetSkyboxModel();
             Console.WriteLine("Success");
@@ -112,6 +169,10 @@ namespace RatchetEdit
             shrubModels = engineParser.GetShrubModels();
             Console.WriteLine("Added " + shrubModels.Count + " shrub models");
 
+            Console.WriteLine("Parsing weapons...");
+            weaponModels = engineParser.GetWeapons();
+            Console.WriteLine("Added " + weaponModels.Count + " weapons");
+
             Console.WriteLine("Parsing textures...");
             textures = engineParser.GetTextures();
             vramParser.GetTextures(textures);
@@ -125,9 +186,17 @@ namespace RatchetEdit
             shrubs = engineParser.GetShrubs(shrubModels);
             Console.WriteLine("Added " + shrubs.Count + " Shrubs");
 
+            Console.WriteLine("Parsing Lights...");
+            lights = engineParser.GetLights();
+            Console.WriteLine("Added " + lights.Count + " lights");
+
             Console.WriteLine("Parsing terrain elements...");
             terrains = engineParser.GetTerrainModels();
             Console.WriteLine("Added " + terrains?.Count + " terrain elements");
+
+            Console.WriteLine("Parsing player animations...");
+            playerAnimations = engineParser.GetPlayerAnimations((MobyModel)mobyModels[0]);
+            Console.WriteLine("Added " + playerAnimations?.Count + " player animations");
 
             uiElements = engineParser.GetUiElements();
             Console.WriteLine("Added " + uiElements?.Count + " ui elements");
@@ -142,6 +211,9 @@ namespace RatchetEdit
             Console.WriteLine("Parsing splines...");
             splines = gameplayParser.GetSplines();
             Console.WriteLine("Added " + splines.Count + " splines");
+
+            lightConfig = engineParser.GetLightConfig();
+            textureConfigMenus = engineParser.GetTextureConfigMenu();
 
             Console.WriteLine("Parsing languages...");
             english = gameplayParser.GetEnglish();

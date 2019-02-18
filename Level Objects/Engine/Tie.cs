@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using OpenTK;
 using static RatchetEdit.DataFunctions;
 
@@ -16,10 +17,11 @@ namespace RatchetEdit
         public uint off_58 { get; set; }
         public uint off_5C { get; set; }
 
-        public int colorOffset { get; set; }
         public uint off_64 { get; set; }
         public uint off_68 { get; set; }
         public uint off_6C { get; set; }
+
+        public byte[] colorBytes;
 
         float rotationMultiplier = 2.2f;
 
@@ -54,7 +56,7 @@ namespace RatchetEdit
             modelMatrix = Matrix4.Add(matrix4, new Matrix4());
         }
 
-        public Tie(byte[] levelBlock, int num, List<Model> tieModels)
+        public Tie(byte[] levelBlock, int num, List<Model> tieModels, FileStream fs)
         {
             int offset = num * ELEMENTSIZE;
 
@@ -73,18 +75,20 @@ namespace RatchetEdit
             off_58 = ReadUint(levelBlock, offset + 0x58);
             off_5C = ReadUint(levelBlock, offset + 0x5C);
 
-            colorOffset = ReadInt(levelBlock, offset + 0x60);
+            int colorOffset = ReadInt(levelBlock, offset + 0x60);
             off_64 = ReadUint(levelBlock, offset + 0x64);
             off_68 = ReadUint(levelBlock, offset + 0x68);
             off_6C = ReadUint(levelBlock, offset + 0x6C);
 
             model = tieModels.Find(tieModel => tieModel.id == modelID);
+            colorBytes = ReadBlock(fs, colorOffset, (model.vertexBuffer.Length / 8) * 4);
+
             _rotation = modelMatrix.ExtractRotation().Xyz * rotationMultiplier;
             _position = modelMatrix.ExtractTranslation();
             _scale = modelMatrix.ExtractScale();
         }
 
-        public override byte[] ToByteArray()
+        public byte[] ToByteArray(int colorOffset)
         {
             var bytes = new byte[ELEMENTSIZE];
 
@@ -100,6 +104,13 @@ namespace RatchetEdit
             WriteUint(ref bytes, 0x64, off_64);
             WriteUint(ref bytes, 0x68, off_68);
             WriteUint(ref bytes, 0x6C, off_6C);
+
+            return bytes;
+        }
+
+        public override byte[] ToByteArray()
+        {
+            var bytes = new byte[ELEMENTSIZE];
 
             return bytes;
         }

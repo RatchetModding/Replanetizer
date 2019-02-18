@@ -142,7 +142,7 @@ namespace RatchetEdit
                 string modelName = line != null ? line.Split('=')[1].Substring(1) : levelObject.modelID.ToString("X");
                 tieNode.Nodes.Add(modelName);
             }
-            foreach (Tie levelObject in level.shrubs)
+            foreach (Shrub levelObject in level.shrubs)
             {
                 string line = tieNames != null ? tieNames.Find(x => x.Substring(0, 4).ToUpper() == levelObject.modelID.ToString("X4")) : null;
                 string modelName = line != null ? line.Split('=')[1].Substring(1) : levelObject.modelID.ToString("X");
@@ -273,7 +273,7 @@ namespace RatchetEdit
                     tie.Render(glControl1, tie == selectedObject);
 
             if (shrubCheck.Checked && splineCheck.Enabled)
-                foreach (Tie shrub in level.shrubs)
+                foreach (Shrub shrub in level.shrubs)
                     shrub.Render(glControl1, shrub == selectedObject);
 
             if (splineCheck.Checked && splineCheck.Enabled)
@@ -293,8 +293,8 @@ namespace RatchetEdit
                 level.skybox.Draw(glControl1);
 
             if (terrainCheck.Checked && terrainCheck.Enabled)
-                foreach (TerrainModel terrainModel in level.terrains)
-                    terrainModel.Draw(glControl1);
+                foreach (TerrainModel tFrag in level.terrains)
+                    tFrag.Draw(glControl1);
 
             RenderTool();
 
@@ -309,6 +309,8 @@ namespace RatchetEdit
             float moveSpeed = 10;
             float boostMultiplier = 4;
             float multiplier = ModifierKeys == Keys.Shift ? boostMultiplier : 1;
+
+
 
             if (rMouse)
             {
@@ -685,6 +687,14 @@ namespace RatchetEdit
             InvalidateView();
         }
 
+        public void DeleteTie(Tie tie)
+        {
+            level.ties.Remove(tie);
+            //GenerateObjectTree();
+            SelectObject(null);
+            InvalidateView();
+        }
+
 
         public int GetShaderID()
         {
@@ -715,6 +725,13 @@ namespace RatchetEdit
             }
             else if (key == (char)Keys.D5) {
                 SelectTool(Tool.ToolType.None);
+            }
+            else if (key == (char)Keys.D6)
+            {
+                Console.WriteLine("G");
+                if (selectedObject as Tie == null) return;
+                Tie tie = (Tie)selectedObject;
+                DeleteTie(tie);
             }
 
         }
@@ -819,6 +836,33 @@ namespace RatchetEdit
             CloneMoby(moby);
         }
 
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Bitmap bmp;
+            using (var ms = new MemoryStream(level.textures[1].data)) 
+            {
+                bmp = new Bitmap(ms);
+            }
+            pictureBox1.Image = bmp;
+
+
+            /*MobyModel ratchet = (MobyModel)level.mobyModels.Find(i => i.id == 1246);
+            MobyModel theGuy = (MobyModel)level.mobyModels.Find(i => i.id == 114);
+            ratchet.vertexBuffer = theGuy.vertexBuffer;
+            ratchet.indexBuffer = theGuy.indexBuffer;
+            ratchet.textureConfig = theGuy.textureConfig;
+            ratchet.weights = theGuy.weights;
+            ratchet.ids = theGuy.ids;
+            ratchet.animations = theGuy.animations;
+            ratchet.boneMatrices = theGuy.boneMatrices;
+            ratchet.boneDatas = theGuy.boneDatas;
+            ratchet.modelSounds = theGuy.modelSounds;
+            ratchet.vertexCount2 = theGuy.vertexCount2;
+            //ratchet.size *= 2.5f;
+            ratchet.VBO = 0;
+            ratchet.IBO = 0;*/
+        }
+
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
             InvalidateView();
@@ -833,7 +877,7 @@ namespace RatchetEdit
                 GameplaySerializer gameplaySerializer = new GameplaySerializer();
                 gameplaySerializer.Save(level, mapSaveDialog.FileName);
                 EngineSerializer engineSerializer = new EngineSerializer();
-                engineSerializer.Save(level, pathName + "/engineTEST.ps3");
+                engineSerializer.Save(level, pathName + "/engine.ps3");
                 Console.WriteLine(pathName);
             }
             InvalidateView();

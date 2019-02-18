@@ -60,6 +60,8 @@
     <Compile Include="Headers\EngineHeader.cs" />
     <Compile Include="Headers\GameplayHeader.cs" />
     <Compile Include="Headers\Headers.cs" />
+    <Compile Include="Level Objects\Engine\Light.cs" />
+    <Compile Include="Level Objects\Engine\Shrub.cs" />
     <Compile Include="Level Objects\Engine\UiElement.cs" />
     <Compile Include="Level Objects\Gameplay\GameCamera.cs" />
     <Compile Include="Level Objects\Gameplay\Type7C.cs" />
@@ -80,7 +82,12 @@
     <Compile Include="LevelVariables.cs" />
     <Compile Include="Level Objects\ITransformable.cs" />
     <Compile Include="Models\Animation\Animation.cs" />
+    <Compile Include="Models\Animation\Attachment.cs" />
+    <Compile Include="Models\Animation\BoneData.cs" />
+    <Compile Include="Models\Animation\BoneMatrix.cs" />
     <Compile Include="Models\Animation\Frame.cs" />
+    <Compile Include="Models\Animation\ModelSound.cs" />
+    <Compile Include="Models\Collision.cs" />
     <Compile Include="Models\MobyModel.cs" />
     <Compile Include="Models\ShrubModel.cs" />
     <Compile Include="Models\SkyboxModel.cs" />

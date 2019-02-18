@@ -115,6 +115,13 @@ namespace RatchetEdit
             byteArr[offset + 1] = byt[0];
         }
 
+        public static void WriteUshort(ref byte[] byteArr, int offset, ushort input)
+        {
+            byte[] byt = BitConverter.GetBytes(input);
+            byteArr[offset + 0] = byt[1];
+            byteArr[offset + 1] = byt[0];
+        }
+
         public static void WriteMatrix4(ref byte[] byteArray, int offset, Matrix4 input)
         {
             WriteFloat(ref byteArray, offset + 0x00, input.M11);
@@ -151,6 +158,15 @@ namespace RatchetEdit
         public static int GetLength(int length)
         {
             while (length % 0x10 != 0)
+            {
+                length++;
+            }
+            return length;
+        }
+
+        public static int GetLength100(int length)
+        {
+            while (length % 0x100 != 0)
             {
                 length++;
             }

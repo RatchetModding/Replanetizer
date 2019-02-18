@@ -54,6 +54,8 @@ namespace RatchetEdit
                 modelView.Nodes.Add(GetModelNodes("Tie", level.tieModels));
 
                 modelView.Nodes.Add(GetModelNodes("Shrub", level.shrubModels));
+
+                modelView.Nodes.Add(GetModelNodes("Weapon", level.weaponModels));
             }
         }
 
@@ -104,6 +106,10 @@ namespace RatchetEdit
                         break;
                     case "Shrub":
                         selectedModel = level.shrubModels[modelView.SelectedNode.Index];
+                        LoadObjBtn.Enabled = true;
+                        break;
+                    case "Weapon":
+                        selectedModel = level.weaponModels[modelView.SelectedNode.Index];
                         LoadObjBtn.Enabled = true;
                         break;
                 }

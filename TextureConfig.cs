@@ -11,5 +11,6 @@ namespace RatchetEdit
         public int ID;
         public int start;
         public int size;
+        public int mode;
     }
 }

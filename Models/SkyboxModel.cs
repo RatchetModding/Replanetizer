@@ -108,7 +108,7 @@ namespace RatchetEdit
             byte[] vertexBytes = GetVertexBytesUV(vertexBuffer);
 
             int faceOffset = GetLength(vertOffset + vertexBytes.Length);
-            byte[] faceBytes = GetFaceBytes(indexBuffer);
+            byte[] faceBytes = GetFaceBytes();
 
             int endOffset = GetLength(faceOffset + faceBytes.Length);
 

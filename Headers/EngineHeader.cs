@@ -14,12 +14,12 @@ namespace RatchetEdit
         const int RAC1ENGINESIZE = 0x90;
 
         public int mobyModelPointer;
-        public int renderDefPointer;
-        public int type08Pointer;
-        public int type0CPointer;
+        public int renderDefPointer;            // TODO
+        public int type08Pointer;               // TODO     xx
+        public int type0CPointer;               // TODO     xx
 
         public int skyboxPointer;
-        public int collisionPointer;
+        public int collisionPointer;            // TODO
         public int playerAnimationPointer;
         public int tieModelPointer;
 
@@ -31,11 +31,11 @@ namespace RatchetEdit
         public int shrubModelCount;
         public int shrubPointer;
         public int shrubCount;
-        public int terrainPointer;
+        public int terrainPointer;              // TODO
 
-        public int type40Pointer;
-        public int type44Pointer;
-        public int soundConfigPointer;
+        public int type40Pointer;               // TODO     xx
+        public int type44Pointer;               // TODO     xx
+        public int soundConfigPointer;          // TODO
         public int weaponPointer;
 
         public int weaponCount;
@@ -48,12 +48,8 @@ namespace RatchetEdit
         public int textureConfigMenuPointer;
         public int textureConfigMenuCount;
 
-        public int texture2dPointer;
+        public int texture2dPointer;            // TODO
         public int uiElementPointer;
-        public int null1Pointer;
-        public int onePointer;
-
-        public int twoPointer;
 
         public EngineHeader()
         {

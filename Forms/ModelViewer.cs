@@ -98,7 +98,7 @@ namespace RatchetEdit
                 {
                     case "Moby":
                         selectedModel = level.mobyModels[modelView.SelectedNode.Index];
-                        LoadObjBtn.Enabled = false;
+                        LoadObjBtn.Enabled = true;
                         break;
                     case "Tie":
                         selectedModel = level.tieModels[modelView.SelectedNode.Index];
@@ -287,53 +287,123 @@ namespace RatchetEdit
         {
             if (objOpen.ShowDialog() != DialogResult.OK) return;
 
-            var vertBuff = new List<float>();
+            var vertexList = new List<float>();
+            var nomalList = new List<float>();
+            var uvList = new List<float>();
+
+            var vertexBufferList = new List<float>();
+            var conf = new List<TextureConfig>();
             var indBuff = new List<ushort>();
+
             string line;
             StreamReader file = new StreamReader(objOpen.FileName);
+
+            ushort indCnt = 0, prevCnt = 0;
+            int mod = selectedModel.textureConfig[0].mode;
+
             while ((line = file.ReadLine()) != null)
             {
                 string[] g = line.Split(' ');
                 switch (g[0])
                 {
                     case "v":
-                        vertBuff.Add(float.Parse(g[1]));
-                        vertBuff.Add(float.Parse(g[2]));
-                        vertBuff.Add(float.Parse(g[3]));
-                        vertBuff.Add(float.Parse(g[1]));
-                        vertBuff.Add(float.Parse(g[2]));
-                        vertBuff.Add(float.Parse(g[3]));
-                        vertBuff.Add(0);
-                        vertBuff.Add(1);
+                        vertexList.Add(float.Parse(g[1]));
+                        vertexList.Add(float.Parse(g[2]));
+                        vertexList.Add(float.Parse(g[3]));
+                        break;
+                    case "vn":
+                        nomalList.Add(float.Parse(g[1]));
+                        nomalList.Add(float.Parse(g[2]));
+                        nomalList.Add(float.Parse(g[3]));
+                        break;
+                    case "vt":
+                        uvList.Add(float.Parse(g[1]));
+                        uvList.Add(float.Parse(g[2]));
+                        break;
+                    case "usemtl":
+                        TextureConfig c1 = new TextureConfig();
+                        c1.ID = 0x2d8;
+                        c1.start = prevCnt;
+                        c1.size = indCnt - prevCnt;
+                        c1.mode = mod;
+                        conf.Add(c1);
+
+                        prevCnt = indCnt;
                         break;
 
                     case "f":
-                        string f1 = g[1].Split('/')[0];
-                        string f2 = g[2].Split('/')[0];
-                        string f3 = g[3].Split('/')[0];
+                        string[] f1 = g[1].Split('/');
+                        string[] f2 = g[2].Split('/');
+                        string[] f3 = g[3].Split('/');
 
-                        indBuff.Add((ushort)(ushort.Parse(f1) - 1));
-                        indBuff.Add((ushort)(ushort.Parse(f2) - 1));
-                        indBuff.Add((ushort)(ushort.Parse(f3) - 1));
-                        break;
-                    default:
-                        Console.WriteLine(g[0]);
+                        ushort vert1 = (ushort)(ushort.Parse(f1[0]) - 1);
+                        ushort vert2 = (ushort)(ushort.Parse(f2[0]) - 1);
+                        ushort vert3 = (ushort)(ushort.Parse(f3[0]) - 1);
+
+                        ushort normal1 = (ushort)(ushort.Parse(f1[2]) - 1);
+                        ushort normal2 = (ushort)(ushort.Parse(f2[2]) - 1);
+                        ushort normal3 = (ushort)(ushort.Parse(f3[2]) - 1);
+
+                        ushort uv1 = (ushort)(ushort.Parse(f1[1]) - 1);
+                        ushort uv2 = (ushort)(ushort.Parse(f2[1]) - 1);
+                        ushort uv3 = (ushort)(ushort.Parse(f3[1]) - 1);
+
+
+                        indBuff.Add((ushort)(indCnt + 0));
+                        indBuff.Add((ushort)(indCnt + 1));
+                        indBuff.Add((ushort)(indCnt + 2));
+
+                        vertexBufferList.Add(vertexList[(vert1) * 3 + 0]);
+                        vertexBufferList.Add(vertexList[(vert1) * 3 + 1]);
+                        vertexBufferList.Add(vertexList[(vert1) * 3 + 2]);
+
+                        vertexBufferList.Add(nomalList[(normal1) * 3 + 0]);
+                        vertexBufferList.Add(nomalList[(normal1) * 3 + 1]);
+                        vertexBufferList.Add(nomalList[(normal1) * 3 + 2]);
+
+                        vertexBufferList.Add(uvList[uv1 * 2 + 0]);
+                        vertexBufferList.Add(1f - uvList[uv1 * 2 + 1]);
+
+
+                        vertexBufferList.Add(vertexList[(vert2) * 3 + 0]);
+                        vertexBufferList.Add(vertexList[(vert2) * 3 + 1]);
+                        vertexBufferList.Add(vertexList[(vert2) * 3 + 2]);
+
+                        vertexBufferList.Add(nomalList[(normal2) * 3 + 0]);
+                        vertexBufferList.Add(nomalList[(normal2) * 3 + 1]);
+                        vertexBufferList.Add(nomalList[(normal2) * 3 + 2]);
+
+                        vertexBufferList.Add(uvList[uv2 * 2 + 0]);
+                        vertexBufferList.Add(1f - uvList[uv2 * 2 + 1]);
+
+
+                        vertexBufferList.Add(vertexList[(vert3) * 3 + 0]);
+                        vertexBufferList.Add(vertexList[(vert3) * 3 + 1]);
+                        vertexBufferList.Add(vertexList[(vert3) * 3 + 2]);
+
+                        vertexBufferList.Add(nomalList[(normal3) * 3 + 0]);
+                        vertexBufferList.Add(nomalList[(normal3) * 3 + 1]);
+                        vertexBufferList.Add(nomalList[(normal3) * 3 + 2]);
+
+                        vertexBufferList.Add(uvList[uv3 * 2 + 0]);
+                        vertexBufferList.Add(1f - uvList[uv3 * 2 + 1]);
+
+                        indCnt += 3;
                         break;
                 }
             }
-            //TieModel mod = (TieModel)selectedModel;
 
-            selectedModel.vertexBuffer = vertBuff.ToArray();
-            selectedModel.indexBuffer = indBuff.ToArray();
-
-            
-            var conf = new List<TextureConfig>();
             TextureConfig cc = new TextureConfig();
-            cc.ID = 0x2d8;
-            cc.start = 0;
-            cc.size = selectedModel.indexBuffer.Length;
-            cc.mode = 0xd;
+            cc.ID = 428;
+            cc.start = prevCnt;
+            cc.size = indCnt - prevCnt;
+            cc.mode = mod;
             conf.Add(cc);
+
+            prevCnt = indCnt;
+
+            selectedModel.vertexBuffer = vertexBufferList.ToArray();
+            selectedModel.indexBuffer = indBuff.ToArray();
 
             selectedModel.textureConfig = conf;
 

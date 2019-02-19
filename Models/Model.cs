@@ -23,7 +23,9 @@ namespace RatchetEdit
         public ushort[] indexBuffer = {  };
         public uint[] weights;
         public uint[] ids;
-        public List<TextureConfig> textureConfig = new List<TextureConfig>();
+
+
+        public List<TextureConfig> textureConfig { get; set; } = new List<TextureConfig>();
         public int VBO = 0;
         public int IBO = 0;
 

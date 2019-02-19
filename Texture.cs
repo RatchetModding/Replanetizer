@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -108,9 +109,7 @@ namespace RatchetEdit
                 else
                 {
                     int size = ((width + 3) / 4) * ((height + 3) / 4) * 16;
-                    byte[] texPart = new byte[size];
-                    Array.Copy(data, offset, texPart, 0, size);
-                    GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, InternalFormat.CompressedRgbaS3tcDxt5Ext, width, height, 0, size, texPart);
+                    GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, InternalFormat.CompressedRgbaS3tcDxt5Ext, width, height, 0, size, data);
                     GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
                 }
 
@@ -118,6 +117,7 @@ namespace RatchetEdit
             }
             return textureID;
         }
+
 
         public byte[] GetTexture2D()
         {

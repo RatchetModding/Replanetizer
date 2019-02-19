@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,6 +12,33 @@ namespace RatchetEdit
 {
     public static class DataFunctions
     {
+        [StructLayout(LayoutKind.Explicit)]
+        struct FloatUnion
+        {
+            [FieldOffset(0)]
+            public byte byte0;
+            [FieldOffset(1)]
+            public byte byte1;
+            [FieldOffset(2)]
+            public byte byte2;
+            [FieldOffset(3)]
+            public byte byte3;
+
+            [FieldOffset(0)]
+            public float value;
+        }
+
+        static FloatUnion flt;
+
+        public static float ReadFloat(byte[] buf, int offset)
+        {
+            flt.byte0 = buf[offset + 3];
+            flt.byte1 = buf[offset + 2];
+            flt.byte2 = buf[offset + 1];
+            flt.byte3 = buf[offset];
+            return flt.value;
+        }
+
         public static int ReadInt(byte[] buf, int offset)
         {
             return (buf[offset + 0] << 24) | (buf[offset + 1] << 16) | (buf[offset + 2] << 8) | (buf[offset + 3]);
@@ -29,15 +57,6 @@ namespace RatchetEdit
         public static ushort ReadUshort(byte[] buf, int offset)
         {
             return (ushort)((buf[offset + 0] << 8) | (buf[offset + 1]));
-        }
-
-
-        public static float ReadFloat(byte[] buf, int offset)
-        {
-            byte[] temp = new byte[4];
-            Array.Copy(buf, offset, temp, 0, 4);
-            Array.Reverse(temp);
-            return BitConverter.ToSingle(temp, 0);
         }
 
         public static Matrix4 ReadMatrix4(byte[] buf, int offset)

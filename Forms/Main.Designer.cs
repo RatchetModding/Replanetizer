@@ -77,10 +77,8 @@ namespace RatchetEdit
             this.splineToolBtn = new System.Windows.Forms.ToolStripButton();
             this.glControl1 = new RatchetEdit.CustomGLControl();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.button1 = new System.Windows.Forms.Button();
             this.properties = new System.Windows.Forms.PropertyGrid();
             this.mapSaveDialog = new System.Windows.Forms.SaveFileDialog();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -91,7 +89,6 @@ namespace RatchetEdit
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -210,9 +207,7 @@ namespace RatchetEdit
             // 
             // collCheck
             // 
-            this.collCheck.Checked = true;
             this.collCheck.CheckOnClick = true;
-            this.collCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.collCheck.Enabled = false;
             this.collCheck.Name = "collCheck";
             this.collCheck.Size = new System.Drawing.Size(120, 22);
@@ -562,8 +557,6 @@ namespace RatchetEdit
             // 
             // splitContainer2.Panel2
             // 
-            this.splitContainer2.Panel2.Controls.Add(this.pictureBox1);
-            this.splitContainer2.Panel2.Controls.Add(this.button1);
             this.splitContainer2.Panel2.Controls.Add(this.properties);
             this.splitContainer2.Panel2.Controls.Add(this.camYLabel);
             this.splitContainer2.Panel2.Controls.Add(this.yawLabel);
@@ -576,16 +569,6 @@ namespace RatchetEdit
             this.splitContainer2.SplitterDistance = 270;
             this.splitContainer2.TabIndex = 21;
             // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(163, 331);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 20;
-            this.button1.Text = "button1";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
             // properties
             // 
             this.properties.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -594,7 +577,7 @@ namespace RatchetEdit
             this.properties.HelpVisible = false;
             this.properties.Location = new System.Drawing.Point(0, 3);
             this.properties.Name = "properties";
-            this.properties.Size = new System.Drawing.Size(262, 101);
+            this.properties.Size = new System.Drawing.Size(262, 317);
             this.properties.TabIndex = 19;
             this.properties.ToolbarVisible = false;
             this.properties.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.propertyGrid1_PropertyValueChanged);
@@ -602,14 +585,6 @@ namespace RatchetEdit
             // mapSaveDialog
             // 
             this.mapSaveDialog.FileName = "gameplay_ntsc";
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Location = new System.Drawing.Point(7, 110);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(246, 171);
-            this.pictureBox1.TabIndex = 21;
-            this.pictureBox1.TabStop = false;
             // 
             // Main
             // 
@@ -637,7 +612,6 @@ namespace RatchetEdit
             this.splitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
             this.splitContainer2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -694,8 +668,6 @@ namespace RatchetEdit
         private System.Windows.Forms.ToolStripButton scaleToolBtn;
         private System.Windows.Forms.ToolStripButton splineToolBtn;
         private System.Windows.Forms.ToolStripMenuItem cuboidCheck;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.PictureBox pictureBox1;
     }
 }
 

@@ -18,6 +18,7 @@ namespace RatchetEdit
         public Matrix4 view;
         public int shaderID;
         public int colorShaderID;
+        public int collisionShaderID;
         public int matrixID;
         public int colorID;
         public int currentSplineVertex = 0;
@@ -49,6 +50,12 @@ namespace RatchetEdit
             LoadShader("shaders/colorshadervs.glsl", ShaderType.VertexShader, colorShaderID);
             LoadShader("shaders/colorshaderfs.glsl", ShaderType.FragmentShader, colorShaderID);
             GL.LinkProgram(colorShaderID);
+
+            //Setup color shader
+            collisionShaderID = GL.CreateProgram();
+            LoadShader("shaders/collisionshadervs.glsl", ShaderType.VertexShader, collisionShaderID);
+            LoadShader("shaders/collisionshaderfs.glsl", ShaderType.FragmentShader, collisionShaderID);
+            GL.LinkProgram(collisionShaderID);
 
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
             colorID = GL.GetUniformLocation(colorShaderID, "incolor");

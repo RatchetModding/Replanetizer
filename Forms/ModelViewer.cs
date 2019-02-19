@@ -282,5 +282,63 @@ namespace RatchetEdit
             projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, (float)glControl1.Width / glControl1.Height, 0.1f, 100.0f);
             invalidate = true;
         }
+
+        private void LoadObjBtn_Click(object sender, EventArgs e)
+        {
+            if (objOpen.ShowDialog() != DialogResult.OK) return;
+
+            var vertBuff = new List<float>();
+            var indBuff = new List<ushort>();
+            string line;
+            StreamReader file = new StreamReader(objOpen.FileName);
+            while ((line = file.ReadLine()) != null)
+            {
+                string[] g = line.Split(' ');
+                switch (g[0])
+                {
+                    case "v":
+                        vertBuff.Add(float.Parse(g[1]));
+                        vertBuff.Add(float.Parse(g[2]));
+                        vertBuff.Add(float.Parse(g[3]));
+                        vertBuff.Add(float.Parse(g[1]));
+                        vertBuff.Add(float.Parse(g[2]));
+                        vertBuff.Add(float.Parse(g[3]));
+                        vertBuff.Add(0);
+                        vertBuff.Add(1);
+                        break;
+
+                    case "f":
+                        string f1 = g[1].Split('/')[0];
+                        string f2 = g[2].Split('/')[0];
+                        string f3 = g[3].Split('/')[0];
+
+                        indBuff.Add((ushort)(ushort.Parse(f1) - 1));
+                        indBuff.Add((ushort)(ushort.Parse(f2) - 1));
+                        indBuff.Add((ushort)(ushort.Parse(f3) - 1));
+                        break;
+                    default:
+                        Console.WriteLine(g[0]);
+                        break;
+                }
+            }
+            //TieModel mod = (TieModel)selectedModel;
+
+            selectedModel.vertexBuffer = vertBuff.ToArray();
+            selectedModel.indexBuffer = indBuff.ToArray();
+
+            
+            var conf = new List<TextureConfig>();
+            TextureConfig cc = new TextureConfig();
+            cc.ID = 0x2d8;
+            cc.start = 0;
+            cc.size = selectedModel.indexBuffer.Length;
+            cc.mode = 0xd;
+            conf.Add(cc);
+
+            selectedModel.textureConfig = conf;
+
+            selectedModel.VBO = 0;
+            selectedModel.IBO = 0;
+        }
     }
 }

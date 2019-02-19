@@ -214,6 +214,8 @@ namespace RatchetEdit
 
             lightConfig = engineParser.GetLightConfig();
             textureConfigMenus = engineParser.GetTextureConfigMenu();
+            collisionModel = engineParser.GetCollisionModel();
+
 
             Console.WriteLine("Parsing languages...");
             english = gameplayParser.GetEnglish();

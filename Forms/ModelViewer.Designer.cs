@@ -36,6 +36,7 @@
             this.tickTimer = new System.Windows.Forms.Timer(this.components);
             this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
             this.objSave = new System.Windows.Forms.SaveFileDialog();
+            this.objOpen = new System.Windows.Forms.OpenFileDialog();
             this.SuspendLayout();
             // 
             // modelView
@@ -68,6 +69,7 @@
             this.LoadObjBtn.TabIndex = 5;
             this.LoadObjBtn.Text = "Load From .obj";
             this.LoadObjBtn.UseVisualStyleBackColor = true;
+            this.LoadObjBtn.Click += new System.EventHandler(this.LoadObjBtn_Click);
             // 
             // glControl1
             // 
@@ -107,6 +109,11 @@
             // 
             this.objSave.Filter = "OBJ file|.obj";
             // 
+            // objOpen
+            // 
+            this.objOpen.FileName = "openFileDialog1";
+            this.objOpen.Filter = "obj files (*.obj)|*.obj";
+            // 
             // ModelViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -134,5 +141,6 @@
         private System.Windows.Forms.Timer tickTimer;
         private System.Windows.Forms.PropertyGrid propertyGrid1;
         private System.Windows.Forms.SaveFileDialog objSave;
+        private System.Windows.Forms.OpenFileDialog objOpen;
     }
 }

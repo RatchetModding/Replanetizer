@@ -63,11 +63,6 @@ namespace RatchetEdit
                 rot[3] = ReadShort(frameBlock, translationPointer + i * 8 + 0x06);
                 translations.Add(rot);
             }
-
-            /*if (offset == 0x5982A0)
-            {
-                Serialize();
-            }*/
         }
 
         public byte[] Serialize()
@@ -116,10 +111,6 @@ namespace RatchetEdit
             rotationBytes.CopyTo(outBytes, 0x10);
             sec0Bytes.CopyTo(outBytes, 0x10 + rotationBytes.Length);
             translationBytes.CopyTo(outBytes, 0x10 + rotationBytes.Length + sec0Bytes.Length);
-
-            /*FileStream fs = File.Open("gg.bin", FileMode.Create);
-            fs.Write(outBytes, 0, outBytes.Length);
-            fs.Close();*/
 
             return outBytes;
         }

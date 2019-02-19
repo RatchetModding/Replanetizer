@@ -13,16 +13,6 @@ namespace RatchetEdit
 
         public void Save(Level level, String fileName)
         {
-            /*byte[] outBytes = WriteTextures(level.textures);
-
-
-            FileStream outfs = File.Open("gg.bin", FileMode.Create);
-            outfs.Write(outBytes, 0, outBytes.Length);
-            outfs.Close();*/
-
-
-
-
             FileStream fs = File.Open(fileName, FileMode.Create);
             EngineHeader engineHeader = new EngineHeader();
 
@@ -38,6 +28,7 @@ namespace RatchetEdit
             engineHeader.skyboxPointer = (int)fs.Position;
             byte[] skyboxBytes = level.skybox.Serialize((int)fs.Position);
             fs.Write(skyboxBytes, 0, skyboxBytes.Length);
+
 
 
             // Fix these
@@ -94,8 +85,6 @@ namespace RatchetEdit
             byte[] shrubBytes = WriteShrubs(level.shrubs);
             fs.Write(shrubBytes, 0, shrubBytes.Length);
 
-
-
             SeekPast(fs);
             engineHeader.textureConfigMenuPointer = (int)fs.Position;
             byte[] menuTextureBytes = WriteTextureConfigMenus(level.textureConfigMenus);
@@ -125,14 +114,11 @@ namespace RatchetEdit
             SeekPast(fs);
             engineHeader.lightConfigPointer = (int)fs.Position;
             fs.Write(level.lightConfig, 0, level.lightConfig.Length);
-            
 
             SeekPast(fs);
             engineHeader.texturePointer = (int)fs.Position;
             byte[] textureBytes = WriteTextures(level.textures);
             fs.Write(textureBytes, 0, textureBytes.Length);
-
-
 
 
             // Counts
@@ -410,7 +396,6 @@ namespace RatchetEdit
                     animOffsets.Add(0);
                 }
             }
-
 
             byte[] outBytes = new byte[offsetListLength + animByteList.Count];
             for (int i = 0; i < animations.Count; i++)

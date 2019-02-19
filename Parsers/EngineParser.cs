@@ -82,6 +82,11 @@ namespace RatchetEdit
             return GetTextureConfigMenu(engineHead.textureConfigMenuPointer, engineHead.textureConfigMenuCount);
         }
 
+        public Model GetCollisionModel()
+        {
+            return GetCollisionModel(engineHead.collisionPointer);
+        }
+
 
 
 

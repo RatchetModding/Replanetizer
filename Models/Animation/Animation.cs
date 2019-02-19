@@ -31,49 +31,36 @@ namespace RatchetEdit
         public Animation(FileStream fs, int modelOffset, int animationOffset, byte boneCount, bool force=false)
         {
             //Only try to parse if the offset is non-zero
-            if (animationOffset > 0 || force)
+            if (animationOffset == 0 && !force)
+                return;
+
+            // Header
+            byte[] header = ReadBlock(fs, modelOffset + animationOffset, 0x1C);
+            unk1 = ReadFloat(header, 0x00);
+            unk2 = ReadFloat(header, 0x04);
+            unk3 = ReadFloat(header, 0x08);
+            unk4 = ReadFloat(header, 0x0C);
+
+            byte frameCount = header[0x10];
+            unk5 = header[0x11];
+            byte soundsCount = header[0x12];
+            unk7 = header[0x13];
+
+            null1 = ReadUint(header, 0x14);
+            speed = ReadFloat(header, 0x18);
+
+            // Frames
+            byte[] animationPointerBlock = ReadBlock(fs, modelOffset + animationOffset + 0x1C, frameCount * 0x04);
+            for (int i = 0; i < frameCount; i++)
             {
-                // Header
-                byte[] header = ReadBlock(fs, modelOffset + animationOffset, 0x1C);
-                unk1 = ReadFloat(header, 0x00);
-                unk2 = ReadFloat(header, 0x04);
-                unk3 = ReadFloat(header, 0x08);
-                unk4 = ReadFloat(header, 0x0C);
+                frames.Add(new Frame(fs, modelOffset + ReadInt(animationPointerBlock, i * 0x04), boneCount));
+            }
 
-                byte frameCount = header[0x10];
-                unk5 = header[0x11];
-                byte soundsCount = header[0x12];
-                unk7 = header[0x13];
-
-                null1 = ReadUint(header, 0x14);
-                speed = ReadFloat(header, 0x18);
-
-                // Frames
-                byte[] animationPointerBlock = ReadBlock(fs, modelOffset + animationOffset + 0x1C, frameCount * 0x04);
-                for (int i = 0; i < frameCount; i++)
-                {
-                    frames.Add(new Frame(fs, modelOffset + ReadInt(animationPointerBlock, i * 0x04), boneCount));
-                }
-
-                // Sound configs
-                byte[] extrasBlock = ReadBlock(fs, (modelOffset + animationOffset) + 0x1C + frameCount * 0x04, soundsCount * 4);
-                for (int i = 0; i < soundsCount; i++)
-                {
-                    sounds.Add(ReadInt(extrasBlock, i * 4));
-                }
-
-                /*
-                if (modelOffset + animationOffset == 0x598240)
-                {
-                    Serialize();
-                }
-
-                 // Dumps animation to file
-                    byte[] outBytes = ReadBlock(fs, modelOffset + animationOffset, 0x1C + frameCount * 0x04 + 0x20);
-                    FileStream outfs = File.Open("anims/gg" + modelOffset.ToString() + ".bin", FileMode.Create);
-                    outfs.Write(outBytes, 0, outBytes.Length);
-                    outfs.Close();
-                */
+            // Sound configs
+            byte[] extrasBlock = ReadBlock(fs, (modelOffset + animationOffset) + 0x1C + frameCount * 0x04, soundsCount * 4);
+            for (int i = 0; i < soundsCount; i++)
+            {
+                sounds.Add(ReadInt(extrasBlock, i * 4));
             }
         }
 
@@ -122,12 +109,6 @@ namespace RatchetEdit
                 frameBytes[i].CopyTo(outBytes, offs);
                 offs += frameBytes[i].Length;
             }
-
-            /*
-            FileStream outfs = File.Open("gg.bin", FileMode.Create);
-            outfs.Write(outBytes, 0, outBytes.Length);
-            outfs.Close();
-            */
 
             return outBytes;
         }

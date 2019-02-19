@@ -195,12 +195,6 @@ namespace RatchetEdit
                     indexBuffer = GetIndices(fs, indexPointer, faceCount);
                 }
             }
-
-
-            if (id == 0x0)
-            {
-                //Serialize();
-            }
         }
 
 
@@ -353,13 +347,10 @@ namespace RatchetEdit
 
 
             // Mesh header
-
             WriteInt(ref outbytes, meshDataOffset + 0x00, textureConfig.Count);
-
             //Othercount
             WriteInt(ref outbytes, meshDataOffset + 0x08, textureConfigOffset);
             //otheroffset
-
             WriteInt(ref outbytes, meshDataOffset + 0x10, vertOffset);
             WriteInt(ref outbytes, meshDataOffset + 0x14, faceOffset);
             WriteShort(ref outbytes, meshDataOffset + 0x18, (short)(vertexBytes.Length / VERTELEMENTSIZE));
@@ -373,12 +364,6 @@ namespace RatchetEdit
                 WriteInt(ref outbytes, textureConfigOffset + i * 0x10 + 0x08, textureConfig[i].size);
                 WriteInt(ref outbytes, textureConfigOffset + i * 0x10 + 0x0C, textureConfig[i].mode);
             }
-
-
-
-            /*FileStream outfs = File.Open("gg.bin", FileMode.Create);
-            outfs.Write(outbytes, 0, outbytes.Length);
-            outfs.Close();*/
             
             return outbytes;
         }

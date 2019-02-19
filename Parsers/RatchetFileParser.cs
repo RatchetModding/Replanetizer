@@ -241,6 +241,11 @@ namespace RatchetEdit
             return textureConfigMenuList;
         }
 
+        protected Model GetCollisionModel(int collisionOffset)
+        {
+            return new Collision(fileStream, collisionOffset);
+        }
+
         protected byte[] ReadArbBytes(int offset, int length)
         {
             return ReadBlock(fileStream, offset, length);

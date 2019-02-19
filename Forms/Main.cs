@@ -296,6 +296,12 @@ namespace RatchetEdit
                 foreach (TerrainModel tFrag in level.terrains)
                     tFrag.Draw(glControl1);
 
+            if (collCheck.Checked && collCheck.Enabled)
+            {
+                Collision col = (Collision)level.collisionModel;
+                col.DrawCol(glControl1);
+            }
+
             RenderTool();
 
              invalidate = false;
@@ -695,6 +701,14 @@ namespace RatchetEdit
             InvalidateView();
         }
 
+        public void DeleteShrub(Shrub shrub)
+        {
+            level.shrubs.Remove(shrub);
+            //GenerateObjectTree();
+            SelectObject(null);
+            InvalidateView();
+        }
+
 
         public int GetShaderID()
         {
@@ -729,9 +743,17 @@ namespace RatchetEdit
             else if (key == (char)Keys.D6)
             {
                 Console.WriteLine("G");
-                if (selectedObject as Tie == null) return;
-                Tie tie = (Tie)selectedObject;
-                DeleteTie(tie);
+                if (selectedObject as Tie != null)
+                {
+                    Tie tie = (Tie)selectedObject;
+                    DeleteTie(tie);
+                }
+
+                if (selectedObject as Shrub != null)
+                {
+                    Shrub shrub = (Shrub)selectedObject;
+                    DeleteShrub(shrub);
+                }
             }
 
         }
@@ -834,33 +856,6 @@ namespace RatchetEdit
 
             Moby moby = (Moby)selectedObject;
             CloneMoby(moby);
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            Bitmap bmp;
-            using (var ms = new MemoryStream(level.textures[1].data)) 
-            {
-                bmp = new Bitmap(ms);
-            }
-            pictureBox1.Image = bmp;
-
-
-            /*MobyModel ratchet = (MobyModel)level.mobyModels.Find(i => i.id == 1246);
-            MobyModel theGuy = (MobyModel)level.mobyModels.Find(i => i.id == 114);
-            ratchet.vertexBuffer = theGuy.vertexBuffer;
-            ratchet.indexBuffer = theGuy.indexBuffer;
-            ratchet.textureConfig = theGuy.textureConfig;
-            ratchet.weights = theGuy.weights;
-            ratchet.ids = theGuy.ids;
-            ratchet.animations = theGuy.animations;
-            ratchet.boneMatrices = theGuy.boneMatrices;
-            ratchet.boneDatas = theGuy.boneDatas;
-            ratchet.modelSounds = theGuy.modelSounds;
-            ratchet.vertexCount2 = theGuy.vertexCount2;
-            //ratchet.size *= 2.5f;
-            ratchet.VBO = 0;
-            ratchet.IBO = 0;*/
         }
 
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)

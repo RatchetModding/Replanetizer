@@ -878,6 +878,47 @@ namespace RatchetEdit
             CloneMoby(moby);
         }
 
+        private void button1_Click(object sender, EventArgs e)
+        {
+            /*MobyModel ratchet = (MobyModel)level.mobyModels.Find(mob => mob.id == 0);
+            MobyModel theguy = (MobyModel)level.mobyModels.Find(mob => mob.id == 114);
+
+            ratchet.vertexBuffer = theguy.vertexBuffer;
+            ratchet.indexBuffer = theguy.indexBuffer;
+            ratchet.boneDatas = theguy.boneDatas;
+            ratchet.boneMatrices = theguy.boneMatrices;
+            ratchet.textureConfig = theguy.textureConfig;
+            ratchet.modelSounds = theguy.modelSounds;
+            ratchet.unk1 = theguy.unk1;
+            ratchet.unk2 = theguy.unk2;
+            ratchet.unk3 = theguy.unk3;
+            ratchet.unk4 = theguy.unk4;
+            ratchet.unk6 = theguy.unk6;
+
+            //ratchet.color2 = theguy.color2;
+
+            //ratchet.lpBoneCount = theguy.lpBoneCount;
+            //ratchet.count3 = theguy.count3;
+            //ratchet.count4 = theguy.count4;
+            //ratchet.count8 = theguy.count8;
+            //ratchet.attachments = theguy.attachments;
+            //ratchet.vertexCount2 = theguy.vertexCount2;
+            //ratchet.type10Block = theguy.type10Block;
+
+
+            ratchet.weights = theguy.weights;
+            ratchet.ids = theguy.ids;
+
+            for (int i = 0; i < theguy.animations.Count; i++)
+            {
+                level.playerAnimations[i] = theguy.animations[i];
+            }
+
+            ratchet.IBO = 0;
+            ratchet.VBO = 0;*/
+
+        }
+
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
             InvalidateView();
@@ -892,7 +933,7 @@ namespace RatchetEdit
                 GameplaySerializer gameplaySerializer = new GameplaySerializer();
                 gameplaySerializer.Save(level, mapSaveDialog.FileName);
                 EngineSerializer engineSerializer = new EngineSerializer();
-                engineSerializer.Save(level, pathName + "/engine.ps3");
+                engineSerializer.Save(level, pathName);
                 Console.WriteLine(pathName);
             }
             InvalidateView();

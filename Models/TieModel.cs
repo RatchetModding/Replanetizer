@@ -15,14 +15,14 @@ namespace RatchetEdit
         const int TIEVERTELEMSIZE = 0x18;
         const int TIEUVELEMSIZE = 0x08;
 
-        public float off_00 { get; set; }
-        public float off_04 { get; set; }
-        public float off_08 { get; set; }
-        public float off_0C { get; set; }
+        public float cullingX { get; set; }
+        public float cullingY { get; set; }
+        public float cullingZ { get; set; }
+        public float cullingRadius { get; set; }
 
         public uint off_20 { get; set; }
-        public short off_2A { get; set; }
-        public uint off_2C { get; set; }
+        public short wiggleMode { get; set; }
+        public float off_2C { get; set; }
 
         public uint off_34 { get; set; }
         public uint off_38 { get; set; }
@@ -32,26 +32,26 @@ namespace RatchetEdit
         public TieModel(FileStream fs, byte[] tieBlock, int num)
         {
             int offset = num * 0x40;
-            off_00 = ReadFloat(tieBlock, offset + 0x00);
-            off_04 = ReadFloat(tieBlock, offset + 0x04);
-            off_08 = ReadFloat(tieBlock, offset + 0x08);
-            off_0C = ReadFloat(tieBlock, offset + 0x0C);
+            cullingX = ReadFloat(tieBlock, offset + 0x00);
+            cullingY = ReadFloat(tieBlock, offset + 0x04);
+            cullingZ = ReadFloat(tieBlock, offset + 0x08);
+            cullingRadius = ReadFloat(tieBlock, offset + 0x0C);
 
             int vertexPointer = ReadInt(tieBlock, offset + 0x10);
             int UVPointer = ReadInt(tieBlock, offset + 0x14);
             int indexPointer = ReadInt(tieBlock, offset + 0x18);
             int texturePointer = ReadInt(tieBlock, offset + 0x1C);
 
-            off_20 = ReadUint(tieBlock, offset + 0x20);
+            off_20 = ReadUint(tieBlock, offset + 0x20);                 //null
             int vertexCount = ReadInt(tieBlock, offset + 0x24);
             short textureCount = ReadShort(tieBlock, offset + 0x28);
-            off_2A = ReadShort(tieBlock, offset + 0x2A);
-            off_2C = ReadUint(tieBlock, offset + 0x2C);
+            wiggleMode = ReadShort(tieBlock, offset + 0x2A);
+            off_2C = ReadFloat(tieBlock, offset + 0x2C);
 
             id = ReadShort(tieBlock, offset + 0x30);
-            off_34 = ReadUint(tieBlock, offset + 0x34);
-            off_38 = ReadUint(tieBlock, offset + 0x38);
-            off_3C = ReadUint(tieBlock, offset + 0x3C);
+            off_34 = ReadUint(tieBlock, offset + 0x34);                 //null
+            off_38 = ReadUint(tieBlock, offset + 0x38);                 //null
+            off_3C = ReadUint(tieBlock, offset + 0x3C);                 //null
 
             size = 1.0f;
 
@@ -69,10 +69,10 @@ namespace RatchetEdit
         {
             byte[] outBytes = new byte[0x40];
 
-            WriteFloat(ref outBytes, 0x00, off_00);
-            WriteFloat(ref outBytes, 0x04, off_04);
-            WriteFloat(ref outBytes, 0x08, off_08);
-            WriteFloat(ref outBytes, 0x0C, off_0C);
+            WriteFloat(ref outBytes, 0x00, cullingX);
+            WriteFloat(ref outBytes, 0x04, cullingY);
+            WriteFloat(ref outBytes, 0x08, cullingZ);
+            WriteFloat(ref outBytes, 0x0C, cullingRadius);
 
             int texturePointer = GetLength(offStart);
             int vertexPointer = GetLength(texturePointer + textureConfig.Count * TIETEXELEMSIZE); //+ 0x70
@@ -87,8 +87,8 @@ namespace RatchetEdit
             WriteUint(ref outBytes, 0x20, off_20);
             WriteInt(ref outBytes, 0x24, vertexBuffer.Length / 8);
             WriteShort(ref outBytes, 0x28, (short)textureConfig.Count);
-            WriteShort(ref outBytes, 0x2A, off_2A);
-            WriteUint(ref outBytes, 0x2C, off_2C);
+            WriteShort(ref outBytes, 0x2A, wiggleMode);
+            WriteFloat(ref outBytes, 0x2C, off_2C);
 
             WriteShort(ref outBytes, 0x30, id);
             WriteUint(ref outBytes, 0x34, off_34);

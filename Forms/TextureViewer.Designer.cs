@@ -50,7 +50,7 @@
             // ImportBtn
             // 
             this.ImportBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.ImportBtn.Location = new System.Drawing.Point(12, 588);
+            this.ImportBtn.Location = new System.Drawing.Point(12, 597);
             this.ImportBtn.Name = "ImportBtn";
             this.ImportBtn.Size = new System.Drawing.Size(117, 32);
             this.ImportBtn.TabIndex = 2;
@@ -85,7 +85,7 @@
             this.textureImage.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.textureImage.Location = new System.Drawing.Point(12, 25);
             this.textureImage.Name = "textureImage";
-            this.textureImage.Size = new System.Drawing.Size(449, 246);
+            this.textureImage.Size = new System.Drawing.Size(560, 256);
             this.textureImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.textureImage.TabIndex = 12;
             this.textureImage.TabStop = false;
@@ -96,9 +96,9 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.texListView.LargeImageList = this.texImages;
-            this.texListView.Location = new System.Drawing.Point(12, 277);
+            this.texListView.Location = new System.Drawing.Point(12, 287);
             this.texListView.Name = "texListView";
-            this.texListView.Size = new System.Drawing.Size(449, 305);
+            this.texListView.Size = new System.Drawing.Size(560, 304);
             this.texListView.TabIndex = 13;
             this.texListView.UseCompatibleStateImageBehavior = false;
             this.texListView.VirtualMode = true;
@@ -108,7 +108,8 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(381, 588);
+            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.button1.Location = new System.Drawing.Point(492, 597);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(80, 32);
             this.button1.TabIndex = 14;
@@ -119,7 +120,8 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(295, 588);
+            this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.button2.Location = new System.Drawing.Point(406, 597);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(80, 32);
             this.button2.TabIndex = 15;
@@ -131,7 +133,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(473, 632);
+            this.ClientSize = new System.Drawing.Size(584, 641);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.texListView);

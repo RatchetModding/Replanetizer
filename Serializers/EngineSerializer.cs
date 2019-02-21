@@ -10,10 +10,12 @@ namespace RatchetEdit
 {
     class EngineSerializer
     {
+        public string pathName;
 
-        public void Save(Level level, String fileName)
+        public void Save(Level level, String pathName)
         {
-            FileStream fs = File.Open(fileName, FileMode.Create);
+            this.pathName = pathName;
+            FileStream fs = File.Open(pathName + "/engine.ps3", FileMode.Create);
             EngineHeader engineHeader = new EngineHeader();
 
             // Seek past the header, as we don't have the data ready for it yet
@@ -382,7 +384,7 @@ namespace RatchetEdit
 
             byte[] vramBys = vramBytes.ToArray();
 
-            FileStream fs = File.Open("gg.bin", FileMode.Create);
+            FileStream fs = File.Open(pathName + "/vram.ps3", FileMode.Create);
             fs.Write(vramBys, 0, vramBys.Length);
             fs.Close();
 

@@ -129,14 +129,10 @@ namespace RatchetEdit
                 }
                 else
                 {
-                    
                     int size = ((width + 3) / 4) * ((height + 3) / 4) * 16;
                     GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, InternalFormat.CompressedRgbaS3tcDxt5Ext, width, height, 0, size, data);
                     GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-                    
                 }
-
-                //Console.WriteLine("Created new texture with ID: " + textureID.ToString());
             }
             return textureID;
         }

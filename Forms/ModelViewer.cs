@@ -311,6 +311,8 @@ namespace RatchetEdit
             var conf = new List<TextureConfig>();
             var indBuff = new List<ushort>();
 
+
+
             string line;
             StreamReader file = new StreamReader(objOpen.FileName);
 

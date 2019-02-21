@@ -135,7 +135,6 @@ namespace RatchetEdit
 
             GameplayParser gameplayParser = new GameplayParser(game, path + @"/gameplay_ntsc");
 
-
             //REMOVE THESE ASAP!!!!!111
             terrainBytes = engineParser.GetTerrainBytes();
             renderDefBytes = engineParser.GetRenderDefBytes();

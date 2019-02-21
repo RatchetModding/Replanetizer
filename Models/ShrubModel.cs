@@ -15,10 +15,10 @@ namespace RatchetEdit
         const int SHRUBVERTELEMSIZE = 0x18;
         const int SHRUBUVELEMSIZE = 0x08;
 
-        public float off_00 { get; set; }
-        public float off_04 { get; set; }
-        public float off_08 { get; set; }
-        public float off_0C { get; set; }
+        public float cullingX { get; set; }
+        public float cullingY { get; set; }
+        public float cullingZ { get; set; }
+        public float cullingRadius { get; set; }
 
         public uint off_20 { get; set; }
         public short off_2A { get; set; }
@@ -32,10 +32,10 @@ namespace RatchetEdit
         public ShrubModel(FileStream fs, byte[] tieBlock, int num)
         {
             int offset = num * 0x40;
-            off_00 = ReadFloat(tieBlock, offset + 0x00);
-            off_04 = ReadFloat(tieBlock, offset + 0x04);
-            off_08 = ReadFloat(tieBlock, offset + 0x08);
-            off_0C = ReadFloat(tieBlock, offset + 0x0C);
+            cullingX = ReadFloat(tieBlock, offset + 0x00);
+            cullingY = ReadFloat(tieBlock, offset + 0x04);
+            cullingZ = ReadFloat(tieBlock, offset + 0x08);
+            cullingRadius = ReadFloat(tieBlock, offset + 0x0C);
 
             int vertexPointer = ReadInt(tieBlock, offset + 0x10);
             int UVPointer = ReadInt(tieBlock, offset + 0x14);
@@ -69,10 +69,10 @@ namespace RatchetEdit
         {
             byte[] outBytes = new byte[0x40];
 
-            WriteFloat(ref outBytes, 0x00, off_00);
-            WriteFloat(ref outBytes, 0x04, off_04);
-            WriteFloat(ref outBytes, 0x08, off_08);
-            WriteFloat(ref outBytes, 0x0C, off_0C);
+            WriteFloat(ref outBytes, 0x00, cullingX);
+            WriteFloat(ref outBytes, 0x04, cullingY);
+            WriteFloat(ref outBytes, 0x08, cullingZ);
+            WriteFloat(ref outBytes, 0x0C, cullingRadius);
 
             int texturePointer = GetLength(offStart);
             int vertexPointer = GetLength(texturePointer + textureConfig.Count * SHRUBTEXELEMSIZE); //+ 0x70

@@ -75,10 +75,11 @@ namespace RatchetEdit
             this.rotateToolBtn = new System.Windows.Forms.ToolStripButton();
             this.scaleToolBtn = new System.Windows.Forms.ToolStripButton();
             this.splineToolBtn = new System.Windows.Forms.ToolStripButton();
-            this.glControl1 = new RatchetEdit.CustomGLControl();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.properties = new System.Windows.Forms.PropertyGrid();
             this.mapSaveDialog = new System.Windows.Forms.SaveFileDialog();
+            this.glControl1 = new RatchetEdit.CustomGLControl();
+            this.button1 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -121,39 +122,39 @@ namespace RatchetEdit
             // 
             this.toolStripMenuItem4.Enabled = false;
             this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-            this.toolStripMenuItem4.Size = new System.Drawing.Size(155, 22);
+            this.toolStripMenuItem4.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItem4.Text = "New";
             // 
             // mapOpenBtn
             // 
             this.mapOpenBtn.Name = "mapOpenBtn";
             this.mapOpenBtn.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.mapOpenBtn.Size = new System.Drawing.Size(155, 22);
+            this.mapOpenBtn.Size = new System.Drawing.Size(180, 22);
             this.mapOpenBtn.Text = "Open...";
             this.mapOpenBtn.Click += new System.EventHandler(this.mapOpenBtn_Click);
             // 
             // mapSaveBtn
             // 
             this.mapSaveBtn.Name = "mapSaveBtn";
-            this.mapSaveBtn.Size = new System.Drawing.Size(155, 22);
+            this.mapSaveBtn.Size = new System.Drawing.Size(180, 22);
             this.mapSaveBtn.Text = "Save";
             // 
             // mapSaveAsBtn
             // 
             this.mapSaveAsBtn.Name = "mapSaveAsBtn";
-            this.mapSaveAsBtn.Size = new System.Drawing.Size(155, 22);
+            this.mapSaveAsBtn.Size = new System.Drawing.Size(180, 22);
             this.mapSaveAsBtn.Text = "Save as...";
             this.mapSaveAsBtn.Click += new System.EventHandler(this.mapSaveAsBtn_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(152, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
             // 
             // exitToolBtn
             // 
             this.exitToolBtn.Name = "exitToolBtn";
-            this.exitToolBtn.Size = new System.Drawing.Size(155, 22);
+            this.exitToolBtn.Size = new System.Drawing.Size(180, 22);
             this.exitToolBtn.Text = "Exit";
             this.exitToolBtn.Click += new System.EventHandler(this.exitToolBtn_Click);
             // 
@@ -528,23 +529,6 @@ namespace RatchetEdit
             this.splineToolBtn.Text = "Spline Tool (F4)";
             this.splineToolBtn.Click += new System.EventHandler(this.splineToolBtn_Click);
             // 
-            // glControl1
-            // 
-            this.glControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.glControl1.BackColor = System.Drawing.Color.Black;
-            this.glControl1.Location = new System.Drawing.Point(3, 3);
-            this.glControl1.Name = "glControl1";
-            this.glControl1.Size = new System.Drawing.Size(999, 651);
-            this.glControl1.TabIndex = 14;
-            this.glControl1.VSync = false;
-            this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
-            this.glControl1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.glControl1_KeyPress);
-            this.glControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseDown);
-            this.glControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseUp);
-            this.glControl1.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseWheel);
-            // 
             // splitContainer2
             // 
             this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -558,6 +542,7 @@ namespace RatchetEdit
             // 
             // splitContainer2.Panel2
             // 
+            this.splitContainer2.Panel2.Controls.Add(this.button1);
             this.splitContainer2.Panel2.Controls.Add(this.properties);
             this.splitContainer2.Panel2.Controls.Add(this.camYLabel);
             this.splitContainer2.Panel2.Controls.Add(this.yawLabel);
@@ -586,6 +571,33 @@ namespace RatchetEdit
             // mapSaveDialog
             // 
             this.mapSaveDialog.FileName = "gameplay_ntsc";
+            // 
+            // glControl1
+            // 
+            this.glControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.glControl1.BackColor = System.Drawing.Color.Black;
+            this.glControl1.Location = new System.Drawing.Point(3, 3);
+            this.glControl1.Name = "glControl1";
+            this.glControl1.Size = new System.Drawing.Size(999, 651);
+            this.glControl1.TabIndex = 14;
+            this.glControl1.VSync = false;
+            this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
+            this.glControl1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.glControl1_KeyPress);
+            this.glControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseDown);
+            this.glControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseUp);
+            this.glControl1.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseWheel);
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(149, 341);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 20;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // Main
             // 
@@ -669,6 +681,7 @@ namespace RatchetEdit
         private System.Windows.Forms.ToolStripButton scaleToolBtn;
         private System.Windows.Forms.ToolStripButton splineToolBtn;
         private System.Windows.Forms.ToolStripMenuItem cuboidCheck;
+        private System.Windows.Forms.Button button1;
     }
 }
 

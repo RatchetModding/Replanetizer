@@ -12,6 +12,7 @@ namespace RatchetEdit
     class VramParser
     {
         FileStream fileStream;
+        public bool valid = false;
 
         public VramParser(string filepath)
         {
@@ -23,9 +24,10 @@ namespace RatchetEdit
             {
                 Console.WriteLine(e);
                 MessageBox.Show("vram.ps3 missing!", "Missing file", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                Application.Exit();
+                //Application.Exit();
                 return;
             }
+            valid = true;
         }
 
         public void GetTextures(List<Texture> textures)

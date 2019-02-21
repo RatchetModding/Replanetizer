@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using OpenTK.Graphics.OpenGL;
 using static RatchetEdit.DataFunctions;
+
 
 namespace RatchetEdit
 {
@@ -14,10 +17,10 @@ namespace RatchetEdit
     {
         public const int TEXTUREELEMSIZE = 0x24;
 
-        public int ID;
+        public Bitmap renderedImage;
 
-        public short rawWidth;
-        public short rawHeight;
+
+        public int ID;
 
         public short width;
         public short height;
@@ -25,8 +28,6 @@ namespace RatchetEdit
         public short mipMapCount;
         public int vramPointer;
         public byte[] data;
-        public byte[] texHeader;
-        public bool reverseRGB;
         int textureID = 0;
 
 
@@ -40,6 +41,26 @@ namespace RatchetEdit
 
         public int off_20;
 
+
+        public Texture(int id, short width, short height, byte[] data)
+        {
+            this.ID = id;
+            this.width = width;
+            this.height = height;
+            this.data = data;
+
+            mipMapCount = 1;
+            off_06 = unchecked((short)0x8829);
+            off_08 = 0x00010101;
+            off_0C = unchecked((int)0x80030000);
+
+            off_10 = 0x0000AAE4;
+            off_14 = 0x02063E80;
+            off_1C = 0x00100000;
+
+            off_20 = 0x00FF0000;
+        }
+
         public Texture(byte[] textureBlock, int offset)
         {
             ID = offset;
@@ -51,21 +72,18 @@ namespace RatchetEdit
 
             off_10 = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x10);
             off_14 = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x14);
-            rawWidth = ReadShort(textureBlock, (offset * TEXTUREELEMSIZE) + 0x18);
-            rawHeight = ReadShort(textureBlock, (offset * TEXTUREELEMSIZE) + 0x1A);
+            width = ReadShort(textureBlock, (offset * TEXTUREELEMSIZE) + 0x18);
+            height = ReadShort(textureBlock, (offset * TEXTUREELEMSIZE) + 0x1A);
             off_1C = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x1C);
 
             off_20 = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x20);
-
-            height = rawHeight;
-            width = rawWidth;
         }
 
-        public byte[] Serialize()
+        public byte[] Serialize(int vramOffset)
         {
             byte[] outBytes = new byte[0x24];
 
-            WriteInt(ref outBytes, 0x00, vramPointer);
+            WriteInt(ref outBytes, 0x00, vramOffset);
             WriteShort(ref outBytes, 0x04, mipMapCount);
             WriteShort(ref outBytes, 0x06, off_06);
             WriteInt(ref outBytes, 0x08, off_08);
@@ -73,8 +91,8 @@ namespace RatchetEdit
 
             WriteInt(ref outBytes, 0x10, off_10);
             WriteInt(ref outBytes, 0x14, off_14);
-            WriteShort(ref outBytes, 0x18, rawWidth);
-            WriteShort(ref outBytes, 0x1A, rawHeight);
+            WriteShort(ref outBytes, 0x18, width);
+            WriteShort(ref outBytes, 0x1A, height);
             WriteInt(ref outBytes, 0x1C, off_1C);
 
             WriteInt(ref outBytes, 0x20, off_20);
@@ -92,25 +110,30 @@ namespace RatchetEdit
 
                 if (mipMapCount > 1)
                 {
+                    int mipWidth = width;
+                    int mipHeight = height;
+
                     for (int level = 0; level < mipMapCount; level++)
                     {
-                        if (width > 0 && height > 0)
+                        if (mipWidth > 0 && mipHeight > 0)
                         {
-                            int size = ((width + 3) / 4) * ((height + 3) / 4) * 16;
+                            int size = ((mipWidth + 3) / 4) * ((mipHeight + 3) / 4) * 16;
                             byte[] texPart = new byte[size];
                             Array.Copy(data, offset, texPart, 0, size);
-                            GL.CompressedTexImage2D(TextureTarget.Texture2D, level, InternalFormat.CompressedRgbaS3tcDxt5Ext, width, height, 0, size, texPart);
+                            GL.CompressedTexImage2D(TextureTarget.Texture2D, level, InternalFormat.CompressedRgbaS3tcDxt5Ext, mipWidth, mipHeight, 0, size, texPart);
                             offset += size;
-                            width /= 2;
-                            height /= 2;
+                            mipWidth /= 2;
+                            mipHeight /= 2;
                         }
                     }
                 }
                 else
                 {
+                    
                     int size = ((width + 3) / 4) * ((height + 3) / 4) * 16;
                     GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, InternalFormat.CompressedRgbaS3tcDxt5Ext, width, height, 0, size, data);
                     GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+                    
                 }
 
                 //Console.WriteLine("Created new texture with ID: " + textureID.ToString());
@@ -119,11 +142,158 @@ namespace RatchetEdit
         }
 
 
-        public byte[] GetTexture2D()
+        public Bitmap getTextureImage()
         {
-            byte[] g = new byte[1000];
-            GL.GetTexImage(TextureTarget.Texture2D, 0, PixelFormat.Rgba, PixelType.Bitmap, g);
-            return g;
+            Bitmap texImageBMap;
+            byte[] imgRaw;
+            imgRaw = DecompressDxt5(data, width, height);
+
+            if(imgRaw != null)
+            {
+                texImageBMap = new Bitmap(width, height, 4 * width, System.Drawing.Imaging.PixelFormat.Format32bppArgb, Marshal.UnsafeAddrOfPinnedArrayElement(imgRaw, 0));
+                return texImageBMap;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+
+        internal static byte[] DecompressDxt5(byte[] imageData, int width, int height)
+        {
+            if (imageData != null)
+            {
+                using (MemoryStream imageStream = new MemoryStream(imageData))
+                    return DecompressDxt5(imageStream, width, height);
+            }
+            return null;
+        }
+
+        internal static byte[] DecompressDxt5(Stream imageStream, int width, int height)
+        {
+            byte[] imageData = new byte[width * height * 4];
+
+            using (BinaryReader imageReader = new BinaryReader(imageStream))
+            {
+                int blockCountX = (width + 3) / 4;
+                int blockCountY = (height + 3) / 4;
+
+                for (int y = 0; y < blockCountY; y++)
+                {
+                    for (int x = 0; x < blockCountX; x++)
+                    {
+                        DecompressDxt5Block(imageReader, x, y, blockCountX, width, height, imageData);
+                    }
+                }
+            }
+
+            return imageData;
+        }
+
+        private static void DecompressDxt5Block(BinaryReader imageReader, int x, int y, int blockCountX, int width, int height, byte[] imageData)
+        {
+            byte alpha0 = imageReader.ReadByte();
+            byte alpha1 = imageReader.ReadByte();
+
+            ulong alphaMask = (ulong)imageReader.ReadByte();
+            alphaMask += (ulong)imageReader.ReadByte() << 8;
+            alphaMask += (ulong)imageReader.ReadByte() << 16;
+            alphaMask += (ulong)imageReader.ReadByte() << 24;
+            alphaMask += (ulong)imageReader.ReadByte() << 32;
+            alphaMask += (ulong)imageReader.ReadByte() << 40;
+
+            ushort c0 = imageReader.ReadUInt16();
+            ushort c1 = imageReader.ReadUInt16();
+
+            byte r0, g0, b0;
+            byte r1, g1, b1;
+            ConvertRgb565ToRgb888(c0, out b0, out g0, out r0);
+            ConvertRgb565ToRgb888(c1, out b1, out g1, out r1);
+
+            uint lookupTable = imageReader.ReadUInt32();
+
+            for (int blockY = 0; blockY < 4; blockY++)
+            {
+                for (int blockX = 0; blockX < 4; blockX++)
+                {
+                    byte r = 0, g = 0, b = 0, a = 255;
+                    uint index = (lookupTable >> 2 * (4 * blockY + blockX)) & 0x03;
+
+                    uint alphaIndex = (uint)((alphaMask >> 3 * (4 * blockY + blockX)) & 0x07);
+                    if (alphaIndex == 0)
+                    {
+                        a = alpha0;
+                    }
+                    else if (alphaIndex == 1)
+                    {
+                        a = alpha1;
+                    }
+                    else if (alpha0 > alpha1)
+                    {
+                        a = (byte)(((8 - alphaIndex) * alpha0 + (alphaIndex - 1) * alpha1) / 7);
+                    }
+                    else if (alphaIndex == 6)
+                    {
+                        a = 0;
+                    }
+                    else if (alphaIndex == 7)
+                    {
+                        a = 0xff;
+                    }
+                    else
+                    {
+                        a = (byte)(((6 - alphaIndex) * alpha0 + (alphaIndex - 1) * alpha1) / 5);
+                    }
+
+                    switch (index)
+                    {
+                        case 0:
+                            r = r0;
+                            g = g0;
+                            b = b0;
+                            break;
+                        case 1:
+                            r = r1;
+                            g = g1;
+                            b = b1;
+                            break;
+                        case 2:
+                            r = (byte)((2 * r0 + r1) / 3);
+                            g = (byte)((2 * g0 + g1) / 3);
+                            b = (byte)((2 * b0 + b1) / 3);
+                            break;
+                        case 3:
+                            r = (byte)((r0 + 2 * r1) / 3);
+                            g = (byte)((g0 + 2 * g1) / 3);
+                            b = (byte)((b0 + 2 * b1) / 3);
+                            break;
+                    }
+
+                    int px = (x << 2) + blockX;
+                    int py = (y << 2) + blockY;
+                    if ((px < width) && (py < height))
+                    {
+                        int offset = ((py * width) + px) << 2;
+                        imageData[offset] = r;
+                        imageData[offset + 1] = g;
+                        imageData[offset + 2] = b;
+                        imageData[offset + 3] = a;
+                    }
+                }
+            }
+        }
+        private static void ConvertRgb565ToRgb888(ushort color, out byte r, out byte g, out byte b)
+        {
+            int temp;
+
+            temp = (color >> 11) * 255 + 16;
+            r = (byte)((temp / 32 + temp) / 32);
+            temp = ((color & 0x07E0) >> 5) * 255 + 32;
+            g = (byte)((temp / 64 + temp) / 64);
+            temp = (color & 0x001F) * 255 + 16;
+            b = (byte)((temp / 32 + temp) / 32);
         }
     }
 }
+

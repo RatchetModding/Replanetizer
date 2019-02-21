@@ -21,6 +21,7 @@ namespace RatchetEdit
 
         public Level level;
         public ModelViewer modelViewer;
+        public TextureViewer textureViewer;
 
         //Input variables
         bool rMouse = false;
@@ -95,6 +96,7 @@ namespace RatchetEdit
         void LoadLevel(string fileName)
         {
             level = new Level(fileName);
+            if (level.valid == false) return;
             InvalidateView();
 
             //Enable all the buttons in the view tab
@@ -231,12 +233,30 @@ namespace RatchetEdit
                 modelViewer.BringToFront();
             }
         }
+
+        public void OpenTextureViewer()
+        {
+            if (textureViewer == null || textureViewer.IsDisposed)
+            {
+                textureViewer = new TextureViewer(this);
+                textureViewer.Show();
+            }
+            else
+            {
+                textureViewer.BringToFront();
+            }
+        }
         #endregion
 
         private void modelViewerToolBtn_Click(object sender, EventArgs e)
         {
             if (selectedObject == null) return;
             OpenModelViewer();
+        }
+
+        private void toolStripMenuItem11_Click(object sender, EventArgs e)
+        {
+            OpenTextureViewer();
         }
 
         private void exitToolBtn_Click(object sender, EventArgs e)

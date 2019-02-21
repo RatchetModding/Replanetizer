@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
@@ -88,6 +83,8 @@ namespace RatchetEdit
                 invalidate = true;
             }
             propertyGrid1.SelectedObject = selectedModel;
+
+            UpdateTextures();
         }
 
         private void modelView_AfterSelect(object sender, TreeViewEventArgs e)
@@ -137,6 +134,25 @@ namespace RatchetEdit
             GL.BindVertexArray(VAO);
 
             UpdateModel();
+
+        }
+
+        private void UpdateTextures()
+        {
+            textureList.Images.Clear();
+            textureView.Items.Clear();
+            int index = 0;
+            foreach (TextureConfig conf in selectedModel.textureConfig)
+            {
+                if (conf.ID == -1) continue;
+
+                textureList.Images.Add(mainForm.level.textures[conf.ID].getTextureImage());
+                ListViewItem item = new ListViewItem();
+                item.ImageIndex = index;
+                item.Text = conf.ID.ToString();
+                this.textureView.Items.Add(item);
+                index++;
+            }
         }
 
         private void glControl1_Paint(object sender, PaintEventArgs e)
@@ -409,6 +425,25 @@ namespace RatchetEdit
 
             selectedModel.VBO = 0;
             selectedModel.IBO = 0;
+
+            UpdateModel();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            UpdateTextures();
+        }
+
+        private void textureView_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textureView_DoubleClick(object sender, EventArgs e)
+        {
+            Console.WriteLine("G");
+            TextureViewer texView = new TextureViewer(mainForm, this, selectedModel.textureConfig[textureView.SelectedIndices[0]]);
+            texView.Show();
         }
     }
 }

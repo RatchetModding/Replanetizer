@@ -11,6 +11,8 @@
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -32,6 +34,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Magick.NET-Q16-x86, Version=7.11.0.0, Culture=neutral, PublicKeyToken=2004825badfa91ec, processorArchitecture=x86">
+      <HintPath>packages\Magick.NET-Q16-x86.7.11.0\lib\net40\Magick.NET-Q16-x86.dll</HintPath>
+    </Reference>
     <Reference Include="OpenTK, Version=3.0.1.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>packages\OpenTK.3.0.1\lib\net20\OpenTK.dll</HintPath>
     </Reference>
@@ -57,6 +62,12 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="DataFunctions.cs" />
+    <Compile Include="Forms\TextureViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\TextureViewer.Designer.cs">
+      <DependentUpon>TextureViewer.cs</DependentUpon>
+    </Compile>
     <Compile Include="Headers\EngineHeader.cs" />
     <Compile Include="Headers\GameplayHeader.cs" />
     <Compile Include="Headers\Headers.cs" />
@@ -132,6 +143,9 @@
     <EmbeddedResource Include="Forms\ModelViewer.resx">
       <DependentUpon>ModelViewer.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\TextureViewer.resx">
+      <DependentUpon>TextureViewer.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -194,4 +208,11 @@
     <None Include="Resources\spline_tool.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="packages\Magick.NET-Q16-x86.7.11.0\build\net40\Magick.NET-Q16-x86.targets" Condition="Exists('packages\Magick.NET-Q16-x86.7.11.0\build\net40\Magick.NET-Q16-x86.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\Magick.NET-Q16-x86.7.11.0\build\net40\Magick.NET-Q16-x86.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Magick.NET-Q16-x86.7.11.0\build\net40\Magick.NET-Q16-x86.targets'))" />
+  </Target>
 </Project>

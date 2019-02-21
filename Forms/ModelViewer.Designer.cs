@@ -37,6 +37,8 @@
             this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
             this.objSave = new System.Windows.Forms.SaveFileDialog();
             this.objOpen = new System.Windows.Forms.OpenFileDialog();
+            this.textureView = new System.Windows.Forms.ListView();
+            this.textureList = new System.Windows.Forms.ImageList(this.components);
             this.SuspendLayout();
             // 
             // modelView
@@ -52,9 +54,9 @@
             // saveObjBtn
             // 
             this.saveObjBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.saveObjBtn.Location = new System.Drawing.Point(874, 533);
+            this.saveObjBtn.Location = new System.Drawing.Point(1049, 533);
             this.saveObjBtn.Name = "saveObjBtn";
-            this.saveObjBtn.Size = new System.Drawing.Size(83, 33);
+            this.saveObjBtn.Size = new System.Drawing.Size(98, 33);
             this.saveObjBtn.TabIndex = 4;
             this.saveObjBtn.Text = "Save to .obj";
             this.saveObjBtn.UseVisualStyleBackColor = true;
@@ -63,7 +65,7 @@
             // LoadObjBtn
             // 
             this.LoadObjBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.LoadObjBtn.Location = new System.Drawing.Point(780, 533);
+            this.LoadObjBtn.Location = new System.Drawing.Point(955, 533);
             this.LoadObjBtn.Name = "LoadObjBtn";
             this.LoadObjBtn.Size = new System.Drawing.Size(88, 33);
             this.LoadObjBtn.TabIndex = 5;
@@ -79,7 +81,7 @@
             this.glControl1.BackColor = System.Drawing.Color.Black;
             this.glControl1.Location = new System.Drawing.Point(175, 12);
             this.glControl1.Name = "glControl1";
-            this.glControl1.Size = new System.Drawing.Size(599, 554);
+            this.glControl1.Size = new System.Drawing.Size(774, 554);
             this.glControl1.TabIndex = 6;
             this.glControl1.VSync = false;
             this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
@@ -99,9 +101,9 @@
             this.propertyGrid1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.propertyGrid1.HelpVisible = false;
-            this.propertyGrid1.Location = new System.Drawing.Point(780, 12);
+            this.propertyGrid1.Location = new System.Drawing.Point(955, 274);
             this.propertyGrid1.Name = "propertyGrid1";
-            this.propertyGrid1.Size = new System.Drawing.Size(177, 515);
+            this.propertyGrid1.Size = new System.Drawing.Size(192, 253);
             this.propertyGrid1.TabIndex = 7;
             this.propertyGrid1.ToolbarVisible = false;
             // 
@@ -114,11 +116,31 @@
             this.objOpen.FileName = "openFileDialog1";
             this.objOpen.Filter = "obj files (*.obj)|*.obj";
             // 
+            // textureView
+            // 
+            this.textureView.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.textureView.LargeImageList = this.textureList;
+            this.textureView.Location = new System.Drawing.Point(955, 12);
+            this.textureView.Name = "textureView";
+            this.textureView.Size = new System.Drawing.Size(192, 256);
+            this.textureView.SmallImageList = this.textureList;
+            this.textureView.TabIndex = 10;
+            this.textureView.UseCompatibleStateImageBehavior = false;
+            this.textureView.SelectedIndexChanged += new System.EventHandler(this.textureView_SelectedIndexChanged);
+            this.textureView.DoubleClick += new System.EventHandler(this.textureView_DoubleClick);
+            // 
+            // textureList
+            // 
+            this.textureList.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit;
+            this.textureList.ImageSize = new System.Drawing.Size(32, 32);
+            this.textureList.TransparentColor = System.Drawing.Color.Transparent;
+            // 
             // ModelViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(969, 578);
+            this.ClientSize = new System.Drawing.Size(1159, 578);
+            this.Controls.Add(this.textureView);
             this.Controls.Add(this.propertyGrid1);
             this.Controls.Add(this.glControl1);
             this.Controls.Add(this.LoadObjBtn);
@@ -142,5 +164,7 @@
         private System.Windows.Forms.PropertyGrid propertyGrid1;
         private System.Windows.Forms.SaveFileDialog objSave;
         private System.Windows.Forms.OpenFileDialog objOpen;
+        private System.Windows.Forms.ListView textureView;
+        private System.Windows.Forms.ImageList textureList;
     }
 }

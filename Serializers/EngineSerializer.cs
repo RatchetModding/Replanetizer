@@ -365,11 +365,26 @@ namespace RatchetEdit
 
         private byte[] WriteTextures(List<Texture> textures)
         {
+            List<byte> vramBytes = new List<byte>();
+
+            int vramOffset = 0;
+
             byte[] outBytes = new byte[textures.Count * 0x24];
             for (int i = 0; i < textures.Count; i++)
             {
-                textures[i].Serialize().CopyTo(outBytes, i * 0x24);
+                while (vramBytes.Count % 0x10 != 0) vramBytes.Add(0);
+                vramOffset = vramBytes.Count;
+
+                textures[i].Serialize(vramOffset).CopyTo(outBytes, i * 0x24);
+                vramBytes.AddRange(textures[i].data);
             }
+
+
+            byte[] vramBys = vramBytes.ToArray();
+
+            FileStream fs = File.Open("gg.bin", FileMode.Create);
+            fs.Write(vramBys, 0, vramBys.Length);
+            fs.Close();
 
             return outBytes;
         }

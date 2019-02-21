@@ -75,10 +75,10 @@ namespace RatchetEdit
             this.rotateToolBtn = new System.Windows.Forms.ToolStripButton();
             this.scaleToolBtn = new System.Windows.Forms.ToolStripButton();
             this.splineToolBtn = new System.Windows.Forms.ToolStripButton();
-            this.glControl1 = new RatchetEdit.CustomGLControl();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.properties = new System.Windows.Forms.PropertyGrid();
             this.mapSaveDialog = new System.Windows.Forms.SaveFileDialog();
+            this.glControl1 = new RatchetEdit.CustomGLControl();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -284,6 +284,7 @@ namespace RatchetEdit
             this.toolStripMenuItem11.Name = "toolStripMenuItem11";
             this.toolStripMenuItem11.Size = new System.Drawing.Size(174, 22);
             this.toolStripMenuItem11.Text = "Textures";
+            this.toolStripMenuItem11.Click += new System.EventHandler(this.toolStripMenuItem11_Click);
             // 
             // toolStripMenuItem12
             // 
@@ -374,7 +375,7 @@ namespace RatchetEdit
             // tickTimer
             // 
             this.tickTimer.Enabled = true;
-            this.tickTimer.Interval = 16;
+            this.tickTimer.Interval = 1;
             this.tickTimer.Tick += new System.EventHandler(this.tickTimer_Tick);
             // 
             // label18
@@ -527,23 +528,6 @@ namespace RatchetEdit
             this.splineToolBtn.Text = "Spline Tool (F4)";
             this.splineToolBtn.Click += new System.EventHandler(this.splineToolBtn_Click);
             // 
-            // glControl1
-            // 
-            this.glControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.glControl1.BackColor = System.Drawing.Color.Black;
-            this.glControl1.Location = new System.Drawing.Point(3, 3);
-            this.glControl1.Name = "glControl1";
-            this.glControl1.Size = new System.Drawing.Size(999, 651);
-            this.glControl1.TabIndex = 14;
-            this.glControl1.VSync = false;
-            this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
-            this.glControl1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.glControl1_KeyPress);
-            this.glControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseDown);
-            this.glControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseUp);
-            this.glControl1.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseWheel);
-            // 
             // splitContainer2
             // 
             this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -585,6 +569,23 @@ namespace RatchetEdit
             // mapSaveDialog
             // 
             this.mapSaveDialog.FileName = "gameplay_ntsc";
+            // 
+            // glControl1
+            // 
+            this.glControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.glControl1.BackColor = System.Drawing.Color.Black;
+            this.glControl1.Location = new System.Drawing.Point(3, 3);
+            this.glControl1.Name = "glControl1";
+            this.glControl1.Size = new System.Drawing.Size(999, 651);
+            this.glControl1.TabIndex = 14;
+            this.glControl1.VSync = false;
+            this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
+            this.glControl1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.glControl1_KeyPress);
+            this.glControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseDown);
+            this.glControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseUp);
+            this.glControl1.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseWheel);
             // 
             // Main
             // 

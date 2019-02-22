@@ -22,6 +22,8 @@ namespace RatchetEdit
         public Level level;
         public ModelViewer modelViewer;
         public TextureViewer textureViewer;
+        public SpriteViewer spriteViewer;
+        public UIViewer uiViewer;
 
         //Input variables
         bool rMouse = false;
@@ -246,7 +248,43 @@ namespace RatchetEdit
                 textureViewer.BringToFront();
             }
         }
+
+        public void OpenSpriteViewer()
+        {
+            if (spriteViewer == null || spriteViewer.IsDisposed)
+            {
+                spriteViewer = new SpriteViewer(this);
+                spriteViewer.Show();
+            }
+            else
+            {
+                spriteViewer.BringToFront();
+            }
+        }
+
+        public void OpenUISpriteViewer()
+        {
+            if (uiViewer == null || uiViewer.IsDisposed)
+            {
+                uiViewer = new UIViewer(this);
+                uiViewer.Show();
+            }
+            else
+            {
+                uiViewer.BringToFront();
+            }
+        }
         #endregion
+
+        private void UISpriteToolBtn_Click(object sender, EventArgs e)
+        {
+            OpenUISpriteViewer();
+        }
+
+        private void spriteViewerToolBtn_Click(object sender, EventArgs e)
+        {
+            OpenSpriteViewer();
+        }
 
         private void modelViewerToolBtn_Click(object sender, EventArgs e)
         {
@@ -831,6 +869,7 @@ namespace RatchetEdit
             CloneMoby(moby);
         }
 
+
         private void splineVertex_ValueChanged(object sender, EventArgs e)
         {
             //currentSplineVertex = (int)splineVertex.Value;
@@ -916,8 +955,8 @@ namespace RatchetEdit
 
             ratchet.IBO = 0;
             ratchet.VBO = 0;*/
-
         }
+
 
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {

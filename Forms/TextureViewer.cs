@@ -21,6 +21,9 @@ namespace RatchetEdit
         public Main main;
         public TextureConfig conf;
         public ModelViewer mod;
+        public UIViewer uiView;
+
+        public int returnVal;
 
         public List<ListViewItem> virtualCache = new List<ListViewItem>();
 
@@ -28,18 +31,6 @@ namespace RatchetEdit
         {
             this.main = main;
             InitializeComponent();
-        }
-
-        public TextureViewer(Main main, ModelViewer mod, TextureConfig conf)
-        {
-            InitializeComponent();
-
-            this.mod = mod;
-            this.conf = conf;
-            this.main = main;
-
-            button1.Visible = true;
-            button2.Visible = true;
         }
 
         private void TextureViewer_Load(object sender, EventArgs e)
@@ -92,7 +83,7 @@ namespace RatchetEdit
                 for (int i = 0; i < test; i++)
                 {
                     Image images = main.level.textures[i].getTextureImage();
-                    this.Invoke(new MethodInvoker(delegate { loadForGrid(images, i, -1); }));
+                    this?.Invoke(new MethodInvoker(delegate { loadForGrid(images, i, -1); }));
                 }
                 return;
             }
@@ -177,17 +168,27 @@ namespace RatchetEdit
 
         private void button1_Click(object sender, EventArgs e)
         {
-            ListView.SelectedIndexCollection col = texListView.SelectedIndices;
-            conf.ID = texListView.Items[col[0]].ImageIndex;
-            mod.UpdateModel();
-            this.Close();
+            CloseForm();
         }
 
         private void texListView_MouseDoubleClick(object sender, MouseEventArgs e)
         {
+            CloseForm();
+        }
+
+        private void CloseForm()
+        {
             ListView.SelectedIndexCollection col = texListView.SelectedIndices;
-            conf.ID = texListView.Items[col[0]].ImageIndex;
-            mod.UpdateModel();
+            if (col.Count > 0)
+                returnVal = texListView.Items[col[0]].ImageIndex;
+
+            DialogResult = DialogResult.OK;
+            this.Close();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            DialogResult = DialogResult.Cancel;
             this.Close();
         }
     }

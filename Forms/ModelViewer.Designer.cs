@@ -126,7 +126,6 @@
             this.textureView.SmallImageList = this.textureList;
             this.textureView.TabIndex = 10;
             this.textureView.UseCompatibleStateImageBehavior = false;
-            this.textureView.SelectedIndexChanged += new System.EventHandler(this.textureView_SelectedIndexChanged);
             this.textureView.DoubleClick += new System.EventHandler(this.textureView_DoubleClick);
             // 
             // textureList

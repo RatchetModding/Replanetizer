@@ -436,16 +436,18 @@ namespace RatchetEdit
             UpdateTextures();
         }
 
-        private void textureView_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void textureView_DoubleClick(object sender, EventArgs e)
         {
-            Console.WriteLine("G");
-            TextureViewer texView = new TextureViewer(mainForm, this, selectedModel.textureConfig[textureView.SelectedIndices[0]]);
-            texView.Show();
+            using (var form = new TextureViewer(mainForm))
+            {
+                var result = form.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    int val = form.returnVal;
+                    selectedModel.textureConfig[textureView.SelectedIndices[0]].ID = val;
+                    UpdateModel();
+                }
+            }
         }
     }
 }

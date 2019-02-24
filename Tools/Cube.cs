@@ -44,7 +44,7 @@ namespace RatchetEdit
             GL.BufferData(BufferTarget.ElementArrayBuffer, cubeElements.Length * sizeof(ushort), cubeElements, BufferUsageHint.StaticDraw);
         }
 
-        public void Render(SpawnPoint sp, CustomGLControl glControl)
+        public void Render(Cuboid sp, CustomGLControl glControl)
         {
             GL.UseProgram(glControl.colorShaderID);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);

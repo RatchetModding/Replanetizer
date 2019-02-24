@@ -102,7 +102,7 @@ namespace RatchetEdit
         public List<Type88> type88s;
 
         public List<byte[]> pVars;
-        public List<SpawnPoint> spawnPoints;
+        public List<Cuboid> cuboids;
         public List<GameCamera> gameCameras;
 
         public List<int> mobyIds;
@@ -254,7 +254,7 @@ namespace RatchetEdit
             type5Cs = gameplayParser.GetType5Cs();
 
             pVars = gameplayParser.GetPvars(mobs);
-            spawnPoints = gameplayParser.GetSpawnPoints();
+            cuboids = gameplayParser.GetSpawnPoints();
             gameCameras = gameplayParser.GetGameCameras();
 
             mobyIds = gameplayParser.GetMobyIds();

@@ -71,7 +71,7 @@ namespace RatchetEdit
                     for (int x = 0; x < xCount; x++)
                     {
                         int vOffset = ReadInt(collision, xOffset + (x * 4) + 4);
-                        if (vOffset == 0) { Console.WriteLine("Skipped"); continue;  }
+                        if (vOffset == 0) { continue; }
 
                         ushort faceCount = ReadUshort(collision, vOffset);
                         byte vertexCount = collision[vOffset + 2];

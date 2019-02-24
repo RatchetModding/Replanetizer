@@ -23,7 +23,7 @@ namespace RatchetEdit.Serializers
             byte[] pVarSizes = GetPvarSizes(level.pVars);
             byte[] pVars = GetPvars(level.pVars);
             byte[] splines = GetSplines(level.splines);
-            byte[] spawnPoints = GetSpawnPoints(level.spawnPoints);
+            byte[] spawnPoints = GetSpawnPoints(level.cuboids);
             byte[] gameCameras = GetGameCameras(level.gameCameras);
             byte[] type04s = GetType04s(level.type04s);
             byte[] type0Cs = GetType0Cs(level.type0Cs);
@@ -223,7 +223,7 @@ namespace RatchetEdit.Serializers
         }
 
 
-        public byte[] GetSpawnPoints(List<SpawnPoint> spawnPoints)
+        public byte[] GetSpawnPoints(List<Cuboid> spawnPoints)
         {
             if (spawnPoints == null) { return new byte[0x10]; }
 

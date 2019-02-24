@@ -39,6 +39,8 @@
             this.objOpen = new System.Windows.Forms.OpenFileDialog();
             this.textureView = new System.Windows.Forms.ListView();
             this.textureList = new System.Windows.Forms.ImageList(this.components);
+            this.button1 = new System.Windows.Forms.Button();
+            this.iqeSave = new System.Windows.Forms.SaveFileDialog();
             this.SuspendLayout();
             // 
             // modelView
@@ -69,7 +71,7 @@
             this.LoadObjBtn.Name = "LoadObjBtn";
             this.LoadObjBtn.Size = new System.Drawing.Size(88, 33);
             this.LoadObjBtn.TabIndex = 5;
-            this.LoadObjBtn.Text = "Load From .obj";
+            this.LoadObjBtn.Text = "Load from .obj";
             this.LoadObjBtn.UseVisualStyleBackColor = true;
             this.LoadObjBtn.Click += new System.EventHandler(this.LoadObjBtn_Click);
             // 
@@ -101,9 +103,9 @@
             this.propertyGrid1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.propertyGrid1.HelpVisible = false;
-            this.propertyGrid1.Location = new System.Drawing.Point(955, 274);
+            this.propertyGrid1.Location = new System.Drawing.Point(955, 202);
             this.propertyGrid1.Name = "propertyGrid1";
-            this.propertyGrid1.Size = new System.Drawing.Size(192, 253);
+            this.propertyGrid1.Size = new System.Drawing.Size(192, 286);
             this.propertyGrid1.TabIndex = 7;
             this.propertyGrid1.ToolbarVisible = false;
             // 
@@ -122,7 +124,7 @@
             this.textureView.LargeImageList = this.textureList;
             this.textureView.Location = new System.Drawing.Point(955, 12);
             this.textureView.Name = "textureView";
-            this.textureView.Size = new System.Drawing.Size(192, 256);
+            this.textureView.Size = new System.Drawing.Size(192, 184);
             this.textureView.SmallImageList = this.textureList;
             this.textureView.TabIndex = 10;
             this.textureView.UseCompatibleStateImageBehavior = false;
@@ -134,11 +136,26 @@
             this.textureList.ImageSize = new System.Drawing.Size(32, 32);
             this.textureList.TransparentColor = System.Drawing.Color.Transparent;
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(955, 494);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(192, 33);
+            this.button1.TabIndex = 11;
+            this.button1.Text = "Save as .iqe";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click_1);
+            // 
+            // iqeSave
+            // 
+            this.iqeSave.Filter = "Inter-Quake Model (*.iqe)|*.iqe";
+            // 
             // ModelViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1159, 578);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.textureView);
             this.Controls.Add(this.propertyGrid1);
             this.Controls.Add(this.glControl1);
@@ -165,5 +182,7 @@
         private System.Windows.Forms.OpenFileDialog objOpen;
         private System.Windows.Forms.ListView textureView;
         private System.Windows.Forms.ImageList textureList;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.SaveFileDialog iqeSave;
     }
 }

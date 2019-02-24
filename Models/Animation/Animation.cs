@@ -34,6 +34,9 @@ namespace RatchetEdit
             if (animationOffset == 0 && !force)
                 return;
 
+            if (modelOffset == 0)
+                return;
+
             // Header
             byte[] header = ReadBlock(fs, modelOffset + animationOffset, 0x1C);
             unk1 = ReadFloat(header, 0x00);

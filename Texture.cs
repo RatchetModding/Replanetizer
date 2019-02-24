@@ -19,17 +19,12 @@ namespace RatchetEdit
 
         public Bitmap renderedImage;
 
-
-        public int ID;
-
         public short width;
         public short height;
-        public int imageSize;
         public short mipMapCount;
         public int vramPointer;
         public byte[] data;
         int textureID = 0;
-
 
         public short off_06;
         public int off_08;
@@ -44,7 +39,6 @@ namespace RatchetEdit
 
         public Texture(int id, short width, short height, byte[] data)
         {
-            this.ID = id;
             this.width = width;
             this.height = height;
             this.data = data;
@@ -63,7 +57,6 @@ namespace RatchetEdit
 
         public Texture(byte[] textureBlock, int offset)
         {
-            ID = offset;
             vramPointer = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x00);
             mipMapCount = ReadShort(textureBlock, (offset * TEXTUREELEMSIZE) + 0x04);
             off_06 = ReadShort(textureBlock, (offset * TEXTUREELEMSIZE) + 0x06);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -19,6 +20,9 @@ namespace RatchetEdit
         Tool currentTool;
         Dictionary<Tool.ToolType, Tool> tools = new Dictionary<Tool.ToolType, Tool>();
 
+        Dictionary<int, string> mobNames, tieNames;
+
+
         public Level level;
         public ModelViewer modelViewer;
         public TextureViewer textureViewer;
@@ -34,9 +38,6 @@ namespace RatchetEdit
         Vector3 prevMouseRay;
 
         bool xLock = false, yLock = false, zLock = false;
-
-        List<string> mobyNames;
-        List<string> tieNames;
 
         Camera camera;
 
@@ -58,25 +59,16 @@ namespace RatchetEdit
             glControl1.MakeCurrent();
             glControl1.InitializeGLConfig();
             camera = new Camera();
-            InitializeObjectTree();
-            InitializeToolList();
 
             GetModelNames();
-
+            InitializeObjectTree();
+            InitializeToolList();
             SelectTool(Tool.ToolType.Translate);
         }
 
-        private void InitializeObjectTree() {
-            TreeNode treeNode1 = new TreeNode("Mobys") { Name = "mobyNode" };
-            TreeNode treeNode2 = new TreeNode("Ties") { Name = "tieNode" };
-            TreeNode treeNode3 = new TreeNode("Shrubs") { Name = "shrubNode" };
-            TreeNode treeNode4 = new TreeNode("Splines") { Name = "splineNode" };
-            TreeNode treeNode5 = new TreeNode("Game Cameras") { Name = "gameCameraNode" };
-            TreeNode treeNode6 = new TreeNode("Spawn points") { Name = "spawnPointNode" };
-            TreeNode treeNode7 = new TreeNode("Type0Cs") { Name = "Type0CNode" };
-            TreeNode[] objectTypes = new TreeNode[] { treeNode1, treeNode2, treeNode3, treeNode4, treeNode5, treeNode6, treeNode7 };
-            objectTree.Nodes.AddRange(objectTypes);
-
+        private void InitializeObjectTree()
+        {
+            objectTreeView1.init(mobNames, tieNames);
         }
 
         private void InitializeToolList() {
@@ -99,127 +91,54 @@ namespace RatchetEdit
         {
             level = new Level(fileName);
             if (level.valid == false) return;
-            InvalidateView();
-
-            //Enable all the buttons in the view tab
-            mobyCheck.Enabled = true;
-            tieCheck.Enabled = true;
-            shrubCheck.Enabled = true;
-            collCheck.Enabled = true;
-            terrainCheck.Enabled = true;
-            splineCheck.Enabled = true;
-            skyboxCheck.Enabled = true;
-            cuboidCheck.Enabled = true;
-
-            glControl1.textures = level.textures;
-
-            GenerateObjectTree();
 
             Moby ratchet = level.mobs[0];
             camera.MoveBehind(ratchet);
 
-            UpdateEditorValues();
             InvalidateView();
+            Tick();
+
+            //Enable all the buttons in the view tab
+            foreach (ToolStripMenuItem menuButton in ViewToolStipItem.DropDownItems)
+                menuButton.Enabled = true;
+
+            glControl1.textures = level.textures;
+            GenerateObjectTree();
+            UpdateEditorValues();
+            
         }
 
         public void GenerateObjectTree()
         {
-            objectTree.CollapseAll();
-
-            foreach (TreeNode treeNode in objectTree.Nodes)
-            {
-                treeNode.Nodes.Clear();
-            }
-            TreeNode mobyNode = objectTree.Nodes.Find("mobyNode", false)[0];
-            TreeNode tieNode = objectTree.Nodes.Find("tieNode", false)[0];
-            TreeNode shrubNode = objectTree.Nodes.Find("shrubNode", false)[0];
-
-            foreach (Moby levelObject in level.mobs)
-            {
-                string line = mobyNames != null ? mobyNames.Find(x => x.Substring(0, 4).ToUpper() == levelObject.modelID.ToString("X4")) : null;
-                string modelName = line != null ? line.Split('=')[1].Substring(1) : levelObject.modelID.ToString("X");
-                mobyNode.Nodes.Add(modelName);
-            }
-            foreach (Tie levelObject in level.ties)
-            {
-                string line = tieNames != null ? tieNames.Find(x => x.Substring(0, 4).ToUpper() == levelObject.modelID.ToString("X4")) : null;
-                string modelName = line != null ? line.Split('=')[1].Substring(1) : levelObject.modelID.ToString("X");
-                tieNode.Nodes.Add(modelName);
-            }
-            foreach (Shrub levelObject in level.shrubs)
-            {
-                string line = tieNames != null ? tieNames.Find(x => x.Substring(0, 4).ToUpper() == levelObject.modelID.ToString("X4")) : null;
-                string modelName = line != null ? line.Split('=')[1].Substring(1) : levelObject.modelID.ToString("X");
-                shrubNode.Nodes.Add(modelName);
-            }
-            foreach (Spline spline in level.splines)
-            {
-                string splineName = spline.name.ToString("X");
-                objectTree.Nodes[3].Nodes.Add(splineName);
-            }
-            foreach (GameCamera gameCamera in level.gameCameras)
-            {
-                string name = gameCamera.id.ToString("X");
-                objectTree.Nodes[4].Nodes.Add(name);
-            }
-            foreach (SpawnPoint spawnPoints in level.spawnPoints)
-            {
-                string name = level.spawnPoints.IndexOf(spawnPoints).ToString("X");
-                objectTree.Nodes[5].Nodes.Add(name);
-            }
-            foreach (Type0C objs in level.type0Cs)
-            {
-                string name = level.type0Cs.IndexOf(objs).ToString("X");
-                objectTree.Nodes[6].Nodes.Add(name);
-            }
+            objectTreeView1.updateEntries(level);
         }
-
+        
         public void GetModelNames()
         {
-            GetMobyNames();
-            GetTieNames();
+            mobNames = GetModelNames("/ModelListRC1.txt");
+            tieNames = GetModelNames("/TieModelsRC1.txt");
         }
 
-        private void GetTieNames() {
-            tieNames = new List<string>();
+        private Dictionary<int, string> GetModelNames(string fileName) {
+            var modelNames = new Dictionary<int, string>();
             string stringCounter;
             StreamReader stream = null;
             try {
-                stream = new StreamReader(Application.StartupPath + "/TieModelsRC1.txt");
-                //Console.WriteLine("Loaded model names for Ratchet & Clank.");
-
+                stream = new StreamReader(Application.StartupPath + fileName);
+                while ((stringCounter = stream.ReadLine()) != null)
+                {
+                    string[] stringPart = stringCounter.Split('=');
+                    int tieId = int.Parse(stringPart[0], NumberStyles.HexNumber);
+                    modelNames.Add(tieId, stringPart[1]);
+                }
             }
             catch (FileNotFoundException e) {
                 Console.WriteLine(e);
                 Console.WriteLine("Model list file not found! No names for you!");
-                tieNames = null;
-                return;
-            }
-            while ((stringCounter = stream.ReadLine()) != null) {
-                tieNames.Add(stringCounter);
+                return modelNames;
             }
             stream.Close();
-        }
-
-        private void GetMobyNames() {
-            mobyNames = new List<string>();
-            string stringCounter;
-            StreamReader stream = null;
-            try {
-                stream = new StreamReader(Application.StartupPath + "/ModelListRC1.txt");
-                //Console.WriteLine("Loaded model names for Ratchet & Clank.");
-
-            }
-            catch (FileNotFoundException e) {
-                Console.WriteLine(e);
-                Console.WriteLine("Model list file not found! No names for you!");
-                mobyNames = null;
-                return;
-            }
-            while ((stringCounter = stream.ReadLine()) != null) {
-                mobyNames.Add(stringCounter);
-            }
-            stream.Close();
+            return modelNames;
         }
 
         #region Open Viewers
@@ -276,6 +195,7 @@ namespace RatchetEdit
         }
         #endregion
 
+        #region MenuButtons
         private void UISpriteToolBtn_Click(object sender, EventArgs e)
         {
             OpenUISpriteViewer();
@@ -301,6 +221,7 @@ namespace RatchetEdit
         {
             Close();
         }
+        #endregion MenuButtons
 
         private void UpdateEditorValues()
         {
@@ -339,10 +260,10 @@ namespace RatchetEdit
                     spline.Render(glControl1, spline == selectedObject);
 
 			if(cuboidCheck.Checked && cuboidCheck.Enabled)
-                foreach (SpawnPoint cuboid in level.spawnPoints)
+                foreach (Cuboid cuboid in level.cuboids)
                     cuboid.Render(glControl1, cuboid == selectedObject);
 
-            if (cuboidCheck.Checked && cuboidCheck.Enabled)
+            if (type0CCheck.Checked && type0CCheck.Enabled)
                 foreach (Type0C cuboid in level.type0Cs)
                     cuboid.Render(glControl1, cuboid == selectedObject);
 
@@ -545,8 +466,8 @@ namespace RatchetEdit
             }
             if (cuboidCheck.Checked && cuboidCheck.Enabled) {
                 cuboidOffset = offset;
-                fakeDrawCuboids(level.spawnPoints, cuboidOffset);
-                offset += level.spawnPoints.Count;
+                fakeDrawCuboids(level.cuboids, cuboidOffset);
+                offset += level.cuboids.Count;
             }
             
             RenderTool();
@@ -584,25 +505,25 @@ namespace RatchetEdit
                 if (mobyCheck.Checked && id < level.mobs?.Count)
                 {
                     returnObject = level.mobs[id];
-                    returnNode = objectTree.Nodes[0].Nodes[id];
+                    returnNode = objectTreeView1.mobyNode;
                 }
                 else if (tieCheck.Checked && id - tieOffset < level.ties.Count)
                 {
                     returnObject = level.ties[id - tieOffset];
-                    returnNode = objectTree.Nodes[1].Nodes[id - tieOffset];
+                    returnNode = objectTreeView1.tieNode;
                 }
                 else if (shrubCheck.Checked && id - shrubOffset < level.shrubs.Count)
                 {
                     returnObject = level.shrubs[id - shrubOffset];
-                    returnNode = objectTree.Nodes[2].Nodes[id - shrubOffset];
+                    returnNode = objectTreeView1.shrubNode.Nodes[id - shrubOffset];
                 }
                 else if (splineCheck.Checked && id - splineOffset < level.splines.Count) {
                     returnObject = level.splines[id - splineOffset];
-                    returnNode = objectTree.Nodes[3].Nodes[id - splineOffset];
+                    returnNode = objectTreeView1.splineNode.Nodes[id - splineOffset];
                 }
-                else if (cuboidCheck.Checked && id - cuboidOffset < level.spawnPoints.Count) {
-                    returnObject = level.spawnPoints[id - cuboidOffset];
-                    returnNode = objectTree.Nodes[5].Nodes[id - cuboidOffset];
+                else if (cuboidCheck.Checked && id - cuboidOffset < level.cuboids.Count) {
+                    returnObject = level.cuboids[id - cuboidOffset];
+                    returnNode = objectTreeView1.cuboidNode.Nodes[id - cuboidOffset];
                 }
             }
 
@@ -642,8 +563,8 @@ namespace RatchetEdit
                 GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
             }
         }
-        public void fakeDrawCuboids(List<SpawnPoint> cuboids, int offset) {
-            foreach (SpawnPoint cuboid in cuboids) {
+        public void fakeDrawCuboids(List<Cuboid> cuboids, int offset) {
+            foreach (Cuboid cuboid in cuboids) {
                 GL.UseProgram(glControl1.colorShaderID);
                 GL.EnableVertexAttribArray(0);
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
@@ -658,7 +579,7 @@ namespace RatchetEdit
 
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
 
-                GL.DrawElements(PrimitiveType.Triangles, SpawnPoint.cubeElements.Length, DrawElementsType.UnsignedShort, 0);
+                GL.DrawElements(PrimitiveType.Triangles, Cuboid.cubeElements.Length, DrawElementsType.UnsignedShort, 0);
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             }
         }
@@ -711,7 +632,7 @@ namespace RatchetEdit
             if (primedTreeNode != null)
             {
                 suppressTreeViewSelectEvent = true;
-                objectTree.SelectedNode = primedTreeNode;
+                objectTreeView1.SelectedNode = primedTreeNode;
                 primedTreeNode = null;
             }
             UpdateEditorValues();
@@ -745,7 +666,7 @@ namespace RatchetEdit
         {
             int index = level.mobs.IndexOf(moby);
             level.mobs.Remove(moby);
-            objectTree.Nodes[0].Nodes[index].Remove();
+            objectTreeView1.mobyNode.Nodes[index].Remove();
             //GenerateObjectTree();
             SelectObject(null);
             InvalidateView();
@@ -753,7 +674,9 @@ namespace RatchetEdit
 
         public void DeleteTie(Tie tie)
         {
+            int index = level.ties.IndexOf(tie);
             level.ties.Remove(tie);
+            objectTreeView1.tieNode.Nodes[index].Remove();
             //GenerateObjectTree();
             SelectObject(null);
             InvalidateView();
@@ -821,46 +744,6 @@ namespace RatchetEdit
             InvalidateView();
         }
 
-        private void objectTree_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            if (suppressTreeViewSelectEvent)
-            {
-                suppressTreeViewSelectEvent = false;
-                return;
-            }
-
-            if (e.Node.Parent == objectTree.Nodes[0])
-            {
-                SelectObject(level.mobs[e.Node.Index]);
-            }
-            if (e.Node.Parent == objectTree.Nodes[1])
-            {
-                SelectObject(level.ties[e.Node.Index]);
-            }
-            if (e.Node.Parent == objectTree.Nodes[2])
-            {
-                SelectObject(level.shrubs[e.Node.Index]);
-            }
-            if (e.Node.Parent == objectTree.Nodes[3])
-            {
-                SelectObject(level.splines[e.Node.Index]);
-            }
-            if (e.Node.Parent == objectTree.Nodes[4])
-            {
-                SelectObject(level.gameCameras[e.Node.Index]);
-            }
-            if (e.Node.Parent == objectTree.Nodes[5])
-            {
-                SelectObject(level.spawnPoints[e.Node.Index]);
-            }
-            if (e.Node.Parent == objectTree.Nodes[6])
-            {
-                SelectObject(level.type0Cs[e.Node.Index]);
-            }
-
-            camera.MoveBehind(selectedObject);
-        }
-
         private void cloneButton_Click(object sender, EventArgs e)
         {
             if (selectedObject as Moby == null) return;
@@ -915,6 +798,52 @@ namespace RatchetEdit
 
             Moby moby = (Moby)selectedObject;
             CloneMoby(moby);
+        }
+
+        private void objectTreeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            if (suppressTreeViewSelectEvent)
+            {
+                suppressTreeViewSelectEvent = false;
+                return;
+            }
+
+            if (e.Node.Parent == null) return;
+            
+
+            if (e.Node.Parent == objectTreeView1.splineNode)
+            {
+                SelectObject(level.splines[e.Node.Index]);
+            }
+            else if (e.Node.Parent == objectTreeView1.cameraNode)
+            {
+                SelectObject(level.gameCameras[e.Node.Index]);
+            }
+            else if (e.Node.Parent == objectTreeView1.cuboidNode)
+            {
+                SelectObject(level.cuboids[e.Node.Index]);
+            }
+            else if (e.Node.Parent == objectTreeView1.type0CNode)
+            {
+                SelectObject(level.type0Cs[e.Node.Index]);
+            }
+
+            if (e.Node.Parent.Parent == null) return;
+
+            if (e.Node.Parent.Parent == objectTreeView1.mobyNode)
+            {
+                SelectObject(level.mobs[(int)e.Node.Tag]);
+            }
+            else if (e.Node.Parent.Parent == objectTreeView1.tieNode)
+            {
+                SelectObject(level.ties[(int)e.Node.Tag]);
+            }
+            else if (e.Node.Parent == objectTreeView1.shrubNode)
+            {
+                SelectObject(level.shrubs[e.Node.Index]);
+            }
+
+            camera.MoveBehind(selectedObject);
         }
 
         private void button1_Click(object sender, EventArgs e)

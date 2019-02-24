@@ -127,7 +127,7 @@ namespace RatchetEdit
 
             selectedModel = (mainForm.selectedObject as ModelObject)?.model;
 
-            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, (float)glControl1.Width / glControl1.Height, 0.1f, 100.0f);
+            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, (float)glControl1.Width / glControl1.Height, 0.1f, 1000000.0f);
             trans = Matrix4.CreateTranslation(0.0f, 0.0f, -5.0f);
 
             GL.GenVertexArrays(1, out int VAO);
@@ -311,8 +311,6 @@ namespace RatchetEdit
             var conf = new List<TextureConfig>();
             var indBuff = new List<ushort>();
 
-
-
             string line;
             StreamReader file = new StreamReader(objOpen.FileName);
 
@@ -448,6 +446,136 @@ namespace RatchetEdit
                     UpdateModel();
                 }
             }
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            if (iqeSave.ShowDialog() != DialogResult.OK) return;
+            Console.WriteLine(iqeSave.FileName);
+            string filePath = Path.GetDirectoryName(iqeSave.FileName);
+
+            if (selectedModel as MobyModel == null) return;
+
+            StreamWriter spookyStream = new StreamWriter(iqeSave.FileName);
+
+            spookyStream.WriteLine("# Inter-Quake Export");
+
+            var mobyModel = selectedModel as MobyModel;
+
+            int idx = 0;
+            foreach (BoneMatrix mat in mobyModel.boneMatrices)
+            {
+                Vector3 vec = mat.mat1.ExtractTranslation();
+                Quaternion quat = mat.mat1.ExtractRotation();
+                quat.Normalize();             
+
+                short par = (short)(mat.bb / 0x40);
+
+                spookyStream.WriteLine("joint h" + idx.ToString() + " "  + (par == 0 ? "" : par.ToString()));
+                spookyStream.WriteLine("pq " + vec.X.ToString() + " " + vec.Y.ToString() + " " + vec.Z.ToString());
+                idx++;
+            }
+
+            List<Animation> anims;
+            if (mobyModel.id == 0)
+                anims = level.playerAnimations;
+            else
+                anims = mobyModel.animations;
+
+
+            int animIndex = 0;
+            foreach(Animation anim in anims)
+            {
+                if (anim.frames.Count == 0) continue;
+                spookyStream.WriteLine("animation " + animIndex.ToString());
+                spookyStream.WriteLine("framerate " + 60f * anim.speed);
+
+                int frameIndex = 0;
+                foreach (Frame frame in anim.frames)
+                {
+                    idx = 0;
+                    spookyStream.WriteLine("frame " + frameIndex.ToString());
+                    foreach (short[] quat in frame.rotations)
+                    {
+                        BoneMatrix mat = mobyModel.boneMatrices[idx];
+                        Vector3 vec = mat.mat1.ExtractTranslation();
+
+                        /*
+                        foreach(short[] tran in frame.translations)
+                        {
+                            if(tran[3] / 0x100 == idx)
+                            {
+                                x *= -tran[0] / 32767f;
+                                y *= -tran[1] / 32767f;
+                                z *= -tran[2] / 32767f;
+                            }
+                        }*/
+
+                        spookyStream.WriteLine("pq " + vec.X.ToString() + " " + vec.Y.ToString() + " " + vec.Z.ToString() + " " + quat[0] / 32767f + " " + quat[1] / 32767f + " " + quat[2] / 32767f + " " + -quat[3] / 32767f);
+                        idx++;
+                    }
+                    frameIndex++;
+                }
+                animIndex++;
+            }
+            
+
+
+            Model model = selectedModel;
+
+            //Faces
+            int tCnt = 0;
+            for (int i = 0; i < model.indexBuffer.Length / 3; i++)
+            {
+                if (model.textureConfig != null && tCnt < model.textureConfig.Count)
+                {
+                    if (i * 3 >= model.textureConfig[tCnt].start)
+                    {
+                        spookyStream.WriteLine("mesh " + model.textureConfig[tCnt].ID.ToString(""));
+                        if (model.textureConfig[tCnt].ID != -1)
+                        {
+                            spookyStream.WriteLine("material " + model.textureConfig[tCnt].ID.ToString("x") + ".png");
+                            Bitmap bump = level.textures[model.textureConfig[tCnt].ID].getTextureImage();
+                            bump.Save(filePath + "/" + model.textureConfig[tCnt].ID.ToString("x") + ".png");
+                            Console.WriteLine(filePath + "/" + model.textureConfig[tCnt].ID.ToString("x") + ".png");
+                        }
+                        tCnt++;
+                    }
+                }
+                int f1 = model.indexBuffer[i * 3 + 0];
+                int f2 = model.indexBuffer[i * 3 + 1];
+                int f3 = model.indexBuffer[i * 3 + 2];
+                spookyStream.WriteLine("fm " + f1 + " " + f2 + " " + f3);
+            }
+
+            //Vertices, normals, UV's
+            for (int x = 0; x < model.vertexBuffer.Length / 8; x++)
+            {
+                float px = model.vertexBuffer[(x * 0x08) + 0x0] * 1024f;
+                float py = model.vertexBuffer[(x * 0x08) + 0x1] * 1024f;
+                float pz = model.vertexBuffer[(x * 0x08) + 0x2] * 1024f;
+                //float px = model.vertexBuffer[(x * 0x08) + 0x0];
+                //float py = model.vertexBuffer[(x * 0x08) + 0x1];
+                //float pz = model.vertexBuffer[(x * 0x08) + 0x2];
+                float nx = model.vertexBuffer[(x * 0x08) + 0x3];
+                float ny = model.vertexBuffer[(x * 0x08) + 0x4];
+                float nz = model.vertexBuffer[(x * 0x08) + 0x5];
+                float tu = model.vertexBuffer[(x * 0x08) + 0x6];
+                float tv = model.vertexBuffer[(x * 0x08) + 0x7];
+                spookyStream.WriteLine("vp " + px.ToString("G") + " " + py.ToString("G") + " " + pz.ToString("G"));
+                spookyStream.WriteLine("vn " + nx.ToString("G") + " " + ny.ToString("G") + " " + nz.ToString("G"));
+                spookyStream.WriteLine("vt " + tu.ToString("G") + " " + tv.ToString("G"));
+
+                byte[] weights = BitConverter.GetBytes(model.weights[x]);
+                byte[] indices = BitConverter.GetBytes(model.ids[x]);
+
+                spookyStream.WriteLine("vb " + indices[3].ToString() + " " + (weights[3] / 255f).ToString() + " " + indices[2].ToString() + " " + (weights[2] / 255f).ToString() + " " + indices[1].ToString() + " " + (weights[1] / 255f).ToString() + " " + indices[0].ToString() + " " + (weights[0] / 255f).ToString());
+            }
+
+
+
+
+            spookyStream.Close();
         }
     }
 }

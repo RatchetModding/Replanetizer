@@ -128,17 +128,17 @@ namespace RatchetEdit
         }
 
 
-        public List<SpawnPoint> GetSpawnPoints()
+        public List<Cuboid> GetSpawnPoints()
         {
-            List<SpawnPoint> spawnPoints = new List<SpawnPoint>();
+            List<Cuboid> spawnPoints = new List<Cuboid>();
 
             if (gameplayHeader.spawnPointPointer == 0) { return spawnPoints; }
 
             int spawnPointCount = ReadInt(ReadBlock(gameplayFileStream, gameplayHeader.spawnPointPointer, 4), 0);
-            byte[] spawnPointBlock = ReadBlock(gameplayFileStream, gameplayHeader.spawnPointPointer + 0x10, spawnPointCount * SpawnPoint.ELEMENTSIZE);
+            byte[] spawnPointBlock = ReadBlock(gameplayFileStream, gameplayHeader.spawnPointPointer + 0x10, spawnPointCount * Cuboid.ELEMENTSIZE);
             for (int i = 0; i < spawnPointCount; i++)
             {
-                spawnPoints.Add(new SpawnPoint(spawnPointBlock, i));
+                spawnPoints.Add(new Cuboid(spawnPointBlock, i));
             }
             return spawnPoints;
         }

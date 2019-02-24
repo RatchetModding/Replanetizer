@@ -60,7 +60,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Camera.cs" />
-    <Compile Include="CustomGLControl.cs">
+    <Compile Include="CustomControls\ObjectTreeView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="CustomControls\ObjectTreeView.Designer.cs">
+      <DependentUpon>ObjectTreeView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CustomControls\CustomGLControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="DataFunctions.cs" />
@@ -151,6 +157,12 @@
     <Compile Include="Tools\RotationTool.cs" />
     <Compile Include="Tools\TranslationTool.cs" />
     <Compile Include="Utilities.cs" />
+    <EmbeddedResource Include="CustomControls\ObjectTreeView.resx">
+      <DependentUpon>ObjectTreeView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CustomControls\CustomGLControl.resx">
+      <DependentUpon>CustomGLControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\Main.resx">
       <DependentUpon>Main.cs</DependentUpon>
     </EmbeddedResource>

@@ -58,6 +58,8 @@ namespace RatchetEdit
                 isModel = false;
                 return;
             }
+
+
                 
             // Header
             byte[] headBlock = ReadBlock(fs, offset, HEADERSIZE);
@@ -257,6 +259,7 @@ namespace RatchetEdit
                 }
                 attachmentBytes.InsertRange(0, attachmentHead);
             }
+
 
 
             int boneMatrixOffset = GetLength(attachmentOffset + attachmentBytes.Count);

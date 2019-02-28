@@ -1,10 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+using System.Collections.Generic;
+using RatchetEdit.Models;
+using RatchetEdit.Headers;
+using RatchetEdit.LevelObjects;
+using RatchetEdit.Models.Animations;
 using static RatchetEdit.DataFunctions;
 
-namespace RatchetEdit
+namespace RatchetEdit.Parsers
 {
     public class RatchetFileParser
     {

@@ -110,8 +110,9 @@
     <Compile Include="Level Objects\Gameplay\Type68.cs" />
     <Compile Include="Level Objects\Gameplay\Type80.cs" />
     <Compile Include="Level Objects\Gameplay\Type88.cs" />
-    <Compile Include="LevelVariables.cs" />
+    <Compile Include="Level Objects\Gameplay\LevelVariables.cs" />
     <Compile Include="Level Objects\ITransformable.cs" />
+    <Compile Include="Parsers\ModelReader.cs" />
     <Compile Include="Models\Animation\Animation.cs" />
     <Compile Include="Models\Animation\Attachment.cs" />
     <Compile Include="Models\Animation\BoneData.cs" />
@@ -124,6 +125,7 @@
     <Compile Include="Models\SkyboxModel.cs" />
     <Compile Include="Models\TerrainModel.cs" />
     <Compile Include="Models\TieModel.cs" />
+    <Compile Include="Serializers\ModelWriter.cs" />
     <Compile Include="Parsers\GameplayParser.cs" />
     <Compile Include="Parsers\EngineParser.cs" />
     <Compile Include="Forms\Main.cs">
@@ -146,10 +148,10 @@
     <Compile Include="Parsers\RatchetFileParser.cs" />
     <Compile Include="Serializers\EngineSerializer.cs" />
     <Compile Include="Serializers\GameplaySerializer.cs" />
-    <Compile Include="Level Objects\Gameplay\SpawnPoint.cs" />
+    <Compile Include="Level Objects\Gameplay\Cuboid.cs" />
     <Compile Include="Level Objects\Gameplay\Spline.cs" />
-    <Compile Include="Texture.cs" />
-    <Compile Include="TextureConfig.cs" />
+    <Compile Include="Models\Texture.cs" />
+    <Compile Include="Models\TextureConfig.cs" />
     <Compile Include="Tools\VertexTranslationTool.cs" />
     <Compile Include="Tools\ScalingTool.cs" />
     <Compile Include="Tools\Cube.cs" />

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace RatchetEdit
 {
     public class GameType
@@ -12,6 +7,7 @@ namespace RatchetEdit
 
         public int num;
         public int mobyElemSize;
+        public int engineSize;
 
         public GameType(int gameNum)
         {

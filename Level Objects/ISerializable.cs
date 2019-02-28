@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RatchetEdit {
+﻿
+namespace RatchetEdit.LevelObjects
+{
     public interface ISerializable {
         byte[] ToByteArray();
     }

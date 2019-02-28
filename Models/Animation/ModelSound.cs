@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static RatchetEdit.DataFunctions;
+﻿using static RatchetEdit.DataFunctions;
 
-namespace RatchetEdit
+namespace RatchetEdit.Models.Animations
 {
     public class ModelSound
     {
@@ -20,7 +15,7 @@ namespace RatchetEdit
 
         public int volume;
         public int distortion;
-        public int distortion2; //unsure
+        public int distortion2;
         public short off_18;
         public short listIndex;
         public int off_1C;

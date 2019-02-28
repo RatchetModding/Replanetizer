@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static RatchetEdit.DataFunctions;
+using RatchetEdit.Models.Animations;
 
-namespace RatchetEdit
+namespace RatchetEdit.Models
 {
     public class MobyModel : Model
     {
@@ -49,6 +46,8 @@ namespace RatchetEdit
         // Unparsed sections
         public byte[] type10Block = {  };                  // Hitbox
         
+
+        public MobyModel() { }
 
         public MobyModel(FileStream fs, short modelID, int offset)
         {

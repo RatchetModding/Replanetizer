@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static RatchetEdit.DataFunctions;
+﻿using static RatchetEdit.DataFunctions;
 using OpenTK.Graphics.OpenGL;
 using OpenTK;
 using static RatchetEdit.Utilities;
-namespace RatchetEdit
+namespace RatchetEdit.LevelObjects
 {
     public class Spline : LevelObject, ITransformable
     {

@@ -30,14 +30,14 @@
         {
             this.components = new System.ComponentModel.Container();
             this.texImages = new System.Windows.Forms.ImageList(this.components);
-            this.ImportBtn = new System.Windows.Forms.Button();
-            this.addTextureDialog = new System.Windows.Forms.OpenFileDialog();
+            this.importBtn = new System.Windows.Forms.Button();
+            this.openTextureDialog = new System.Windows.Forms.OpenFileDialog();
             this.texAmountLabel = new System.Windows.Forms.Label();
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.textureImage = new System.Windows.Forms.PictureBox();
-            this.texListView = new System.Windows.Forms.ListView();
-            this.button1 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
+            this.textureView = new System.Windows.Forms.ListView();
+            this.okBtn = new System.Windows.Forms.Button();
+            this.cancelBtn = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.textureImage)).BeginInit();
             this.SuspendLayout();
             // 
@@ -47,20 +47,20 @@
             this.texImages.ImageSize = new System.Drawing.Size(64, 64);
             this.texImages.TransparentColor = System.Drawing.Color.Transparent;
             // 
-            // ImportBtn
+            // importBtn
             // 
-            this.ImportBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.ImportBtn.Location = new System.Drawing.Point(12, 597);
-            this.ImportBtn.Name = "ImportBtn";
-            this.ImportBtn.Size = new System.Drawing.Size(117, 32);
-            this.ImportBtn.TabIndex = 2;
-            this.ImportBtn.Text = "Import";
-            this.ImportBtn.UseVisualStyleBackColor = true;
-            this.ImportBtn.Click += new System.EventHandler(this.ImportBtn_Click);
+            this.importBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.importBtn.Location = new System.Drawing.Point(12, 597);
+            this.importBtn.Name = "importBtn";
+            this.importBtn.Size = new System.Drawing.Size(117, 32);
+            this.importBtn.TabIndex = 2;
+            this.importBtn.Text = "Import";
+            this.importBtn.UseVisualStyleBackColor = true;
+            this.importBtn.Click += new System.EventHandler(this.ImportBtn_Click);
             // 
-            // addTextureDialog
+            // openTextureDialog
             // 
-            this.addTextureDialog.FileName = "openFileDialog1";
+            this.openTextureDialog.FileName = "openFileDialog1";
             // 
             // texAmountLabel
             // 
@@ -90,56 +90,57 @@
             this.textureImage.TabIndex = 12;
             this.textureImage.TabStop = false;
             // 
-            // texListView
+            // textureView
             // 
-            this.texListView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.textureView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.texListView.LargeImageList = this.texImages;
-            this.texListView.Location = new System.Drawing.Point(12, 287);
-            this.texListView.Name = "texListView";
-            this.texListView.Size = new System.Drawing.Size(560, 304);
-            this.texListView.TabIndex = 13;
-            this.texListView.UseCompatibleStateImageBehavior = false;
-            this.texListView.VirtualMode = true;
-            this.texListView.RetrieveVirtualItem += new System.Windows.Forms.RetrieveVirtualItemEventHandler(this.texListView_RetrieveVirtualItem);
-            this.texListView.SelectedIndexChanged += new System.EventHandler(this.texListView_SelectedIndexChanged);
-            this.texListView.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.texListView_MouseDoubleClick);
+            this.textureView.LargeImageList = this.texImages;
+            this.textureView.Location = new System.Drawing.Point(12, 287);
+            this.textureView.Name = "textureView";
+            this.textureView.Size = new System.Drawing.Size(560, 304);
+            this.textureView.TabIndex = 13;
+            this.textureView.UseCompatibleStateImageBehavior = false;
+            this.textureView.VirtualMode = true;
+            this.textureView.RetrieveVirtualItem += new System.Windows.Forms.RetrieveVirtualItemEventHandler(this.TexListView_RetrieveVirtualItem);
+            this.textureView.SelectedIndexChanged += new System.EventHandler(this.TexListView_SelectedIndexChanged);
+            this.textureView.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.CloseButtonClick);
             // 
-            // button1
+            // okBtn
             // 
-            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(492, 597);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(80, 32);
-            this.button1.TabIndex = 14;
-            this.button1.Text = "Ok";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.okBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.okBtn.Location = new System.Drawing.Point(492, 597);
+            this.okBtn.Name = "okBtn";
+            this.okBtn.Size = new System.Drawing.Size(80, 32);
+            this.okBtn.TabIndex = 14;
+            this.okBtn.Text = "Ok";
+            this.okBtn.UseVisualStyleBackColor = true;
+            this.okBtn.Click += new System.EventHandler(this.CloseButtonClick);
             // 
-            // button2
+            // cancelBtn
             // 
-            this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button2.Location = new System.Drawing.Point(406, 597);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(80, 32);
-            this.button2.TabIndex = 15;
-            this.button2.Text = "Cancel";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.cancelBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.cancelBtn.Location = new System.Drawing.Point(406, 597);
+            this.cancelBtn.Name = "cancelBtn";
+            this.cancelBtn.Size = new System.Drawing.Size(80, 32);
+            this.cancelBtn.TabIndex = 15;
+            this.cancelBtn.Text = "Cancel";
+            this.cancelBtn.UseVisualStyleBackColor = true;
+            this.cancelBtn.Click += new System.EventHandler(this.button2_Click);
             // 
             // TextureViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(584, 641);
-            this.Controls.Add(this.button2);
-            this.Controls.Add(this.button1);
-            this.Controls.Add(this.texListView);
+            this.Controls.Add(this.cancelBtn);
+            this.Controls.Add(this.okBtn);
+            this.Controls.Add(this.textureView);
             this.Controls.Add(this.textureImage);
             this.Controls.Add(this.texAmountLabel);
-            this.Controls.Add(this.ImportBtn);
+            this.Controls.Add(this.importBtn);
             this.Name = "TextureViewer";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "TextureViewer";
             this.Load += new System.EventHandler(this.TextureViewer_Load);
             ((System.ComponentModel.ISupportInitialize)(this.textureImage)).EndInit();
@@ -150,13 +151,13 @@
 
         #endregion
         private System.Windows.Forms.ImageList texImages;
-        private System.Windows.Forms.Button ImportBtn;
-        private System.Windows.Forms.OpenFileDialog addTextureDialog;
+        private System.Windows.Forms.Button importBtn;
+        private System.Windows.Forms.OpenFileDialog openTextureDialog;
         private System.Windows.Forms.Label texAmountLabel;
         private System.Windows.Forms.ImageList imageList1;
         private System.Windows.Forms.PictureBox textureImage;
-        private System.Windows.Forms.ListView texListView;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.ListView textureView;
+        private System.Windows.Forms.Button okBtn;
+        private System.Windows.Forms.Button cancelBtn;
     }
 }

@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using static RatchetEdit.DataFunctions;
 
-namespace RatchetEdit
+namespace RatchetEdit.Headers
 {
     public class EngineHeader
     {
@@ -51,47 +45,8 @@ namespace RatchetEdit
         public int texture2dPointer;            // TODO
         public int uiElementPointer;
 
-        public EngineHeader()
-        {
-            mobyModelPointer = 0;
-            renderDefPointer = 0;
-            type08Pointer = 0;
-            type0CPointer = 0;
 
-            skyboxPointer = 0;
-            collisionPointer = 0;
-            playerAnimationPointer = 0;
-            tieModelPointer = 0;
-
-            tieModelCount = 0;
-            tiePointer = 0;
-            tieCount = 0;
-            shrubModelPointer = 0;
-
-            shrubModelCount = 0;
-            shrubPointer = 0;
-            shrubCount = 0;
-            terrainPointer = 0;
-
-            type40Pointer = 0;
-            type44Pointer = 0;
-            soundConfigPointer = 0;
-            weaponPointer = 0;
-
-            weaponCount = 0;
-            texturePointer = 0;
-            textureCount = 0;
-            lightPointer = 0;
-
-            lightCount = 0;
-            lightConfigPointer = 0;
-            textureConfigMenuPointer = 0;
-            textureConfigMenuCount = 0;
-
-            texture2dPointer = 0;
-            uiElementPointer = 0;
-        }
-
+        public EngineHeader() { }
 
         public EngineHeader(FileStream engineFile)
         {

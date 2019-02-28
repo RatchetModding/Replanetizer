@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using static RatchetEdit.DataFunctions;
 
-namespace RatchetEdit
+namespace RatchetEdit.Models
 {
     class ShrubModel : Model
     {

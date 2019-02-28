@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using static RatchetEdit.DataFunctions;
 
-namespace RatchetEdit
+namespace RatchetEdit.Headers
 {
     public class GameplayHeader
     {
-        public const int RAC1GAMEPLAYSIZE = 0x90;
+        public const int GAMEPLAYSIZE = 0xA0;
 
         public int levelVarPointer;
         public int type04Pointer;
@@ -57,50 +52,12 @@ namespace RatchetEdit
         public int type88Pointer;
         public int occlusionPointer;
 
-        public GameplayHeader()
-        {
-            levelVarPointer = 0;
-            type04Pointer = 0;
-            cameraPointer = 0;
-            type0CPointer = 0;
-            englishPointer = 0;
-            lang2Pointer = 0;
-            frenchPointer = 0;
-            germanPointer = 0;
-            spanishPointer = 0;
-            italianPointer = 0;
-            lang7Pointer = 0;
-            lang8Pointer = 0;
-            tieIdPointer = 0;
-            tiePointer = 0;
-            shrubIdPointer = 0;
-            shrubPointer = 0;
-            mobyIdPointer = 0;
-            mobyPointer = 0;
-            unkPointer6 = 0;
-            unkPointer7 = 0;
-            type50Pointer = 0;
-            pvarSizePointer = 0;
-            pvarPointer = 0;
-            type5CPointer = 0;
-            spawnPointPointer = 0;
-            type64Pointer = 0;
-            type68Pointer = 0;
-            unkPointer12 = 0;
-            splinePointer = 0;
-            unkPointer13 = 0;
-            unkPointer14 = 0;
-            type7CPointer = 0;
-            type80Pointer = 0;
-            unkPointer17 = 0;
-            type88Pointer = 0;
-            occlusionPointer = 0;
-        }
+        public GameplayHeader(){}
 
         public GameplayHeader(GameType game, FileStream gameplayFile)
         {
-            byte[] gameplayHeadBlock = new byte[0xA0];
-            gameplayFile.Read(gameplayHeadBlock, 0, 0xA0);
+            byte[] gameplayHeadBlock = new byte[GAMEPLAYSIZE];
+            gameplayFile.Read(gameplayHeadBlock, 0, GAMEPLAYSIZE);
 
             switch (game.num)
             {
@@ -214,7 +171,7 @@ namespace RatchetEdit
 
         public byte[] Serialize()
         {
-            byte[] bytes = new byte[0xB0];
+            byte[] bytes = new byte[GAMEPLAYSIZE];
 
             WriteInt(ref bytes, 0x00, levelVarPointer);
             WriteInt(ref bytes, 0x04, type04Pointer);

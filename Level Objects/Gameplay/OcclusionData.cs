@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using RatchetEdit.Headers;
 using static RatchetEdit.DataFunctions;
 
-namespace RatchetEdit
+namespace RatchetEdit.LevelObjects
 {
     public class OcclusionData : ISerializable
     {

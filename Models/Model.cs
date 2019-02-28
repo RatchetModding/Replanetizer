@@ -1,15 +1,10 @@
-﻿using System;
+﻿using System.IO;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO.Compression;
-using static RatchetEdit.DataFunctions;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using static RatchetEdit.DataFunctions;
 
-namespace RatchetEdit
+namespace RatchetEdit.Models
 {
     /*
         General purpose 3D model used for rendering
@@ -61,7 +56,7 @@ namespace RatchetEdit
 
             Matrix4 worldView = glControl.worldView;
             GL.UniformMatrix4(glControl.matrixID, false, ref worldView);
-            Draw(glControl.textures);
+            Draw(glControl.level.textures);
         }
 
         public void GetVBO()

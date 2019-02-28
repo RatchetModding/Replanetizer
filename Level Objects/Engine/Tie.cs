@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using OpenTK;
+using RatchetEdit.Models;
 using static RatchetEdit.DataFunctions;
 
 
-namespace RatchetEdit
+namespace RatchetEdit.LevelObjects
 {
     public class Tie : ModelObject
     {

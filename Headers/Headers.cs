@@ -1,13 +1,8 @@
-﻿using System;
+﻿using System.IO;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static RatchetEdit.DataFunctions;
-using OpenTK.Graphics.OpenGL;
 
-namespace RatchetEdit
+namespace RatchetEdit.Headers
 {
     class Headers
     {

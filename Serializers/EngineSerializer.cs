@@ -1,12 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using RatchetEdit.Models;
+using RatchetEdit.Headers;
+using RatchetEdit.LevelObjects;
+using RatchetEdit.Models.Animations;
 using static RatchetEdit.DataFunctions;
 
-namespace RatchetEdit
+
+namespace RatchetEdit.Serializers
 {
     class EngineSerializer
     {
@@ -36,20 +38,13 @@ namespace RatchetEdit
             // Fix these
 
             // 0x3c - terrain
-            SeekPast(fs);
-            engineHeader.terrainPointer = (int)fs.Position;
-            fs.Write(level.terrainBytes, 0, level.terrainBytes.Length);
+            engineHeader.terrainPointer = SeekWrite(fs, level.terrainBytes);
 
             // 0x04 - renderdef
-            SeekPast(fs);
-            engineHeader.renderDefPointer = (int)fs.Position;
-            fs.Write(level.renderDefBytes, 0, level.renderDefBytes.Length);
+            engineHeader.renderDefPointer = SeekWrite(fs, level.renderDefBytes);
 
             // 0x14 - collision
-            SeekPast(fs);
-            engineHeader.collisionPointer = (int)fs.Position;
-            fs.Write(level.collBytes, 0, level.collBytes.Length);
-
+            engineHeader.collisionPointer = SeekWrite(fs, level.collBytes);
 
 
             SeekPast(fs);
@@ -82,56 +77,26 @@ namespace RatchetEdit
             byte[] shrubModelBytes = WriteShrubModels(level.shrubModels, (int)fs.Position);
             fs.Write(shrubModelBytes, 0, shrubModelBytes.Length);
 
-            SeekPast(fs);
-            engineHeader.shrubPointer = (int)fs.Position;
-            byte[] shrubBytes = WriteShrubs(level.shrubs);
-            fs.Write(shrubBytes, 0, shrubBytes.Length);
-
-            SeekPast(fs);
-            engineHeader.textureConfigMenuPointer = (int)fs.Position;
-            byte[] menuTextureBytes = WriteTextureConfigMenus(level.textureConfigMenus);
-            fs.Write(menuTextureBytes, 0, menuTextureBytes.Length);
-
-
+            engineHeader.shrubPointer = SeekWrite(fs, WriteShrubs(level.shrubs));
+            engineHeader.textureConfigMenuPointer = SeekWrite(fs, WriteTextureConfigMenus(level.textureConfigMenus));
 
             // And these
-
-            // 0x70 2dtexturestuff
-            SeekPast(fs);
-            engineHeader.texture2dPointer = (int)fs.Position;
-            fs.Write(level.billboardBytes, 0, level.billboardBytes.Length);
-
-            // 0x48 soundconfigs
-            SeekPast(fs);
-            engineHeader.soundConfigPointer = (int)fs.Position;
-            fs.Write(level.soundConfigBytes, 0, level.soundConfigBytes.Length);
-            
-
-
-            SeekPast(fs);
-            engineHeader.lightPointer = (int)fs.Position;
-            byte[] lightBytes = WriteLights(level.lights);
-            fs.Write(lightBytes, 0, lightBytes.Length);
-
-            SeekPast(fs);
-            engineHeader.lightConfigPointer = (int)fs.Position;
-            fs.Write(level.lightConfig, 0, level.lightConfig.Length);
-
-            SeekPast(fs);
-            engineHeader.texturePointer = (int)fs.Position;
-            byte[] textureBytes = WriteTextures(level.textures);
-            fs.Write(textureBytes, 0, textureBytes.Length);
+            engineHeader.texture2dPointer = SeekWrite(fs, level.billboardBytes);        // 0x70 2dtexturestuff
+            engineHeader.soundConfigPointer = SeekWrite(fs, level.soundConfigBytes);    // 0x48 soundconfigs
+            engineHeader.lightPointer = SeekWrite(fs, WriteLights(level.lights));
+            engineHeader.lightConfigPointer = SeekWrite(fs, level.lightConfig);
+            engineHeader.texturePointer = SeekWrite(fs, WriteTextures(level.textures));
 
 
             // Counts
-            engineHeader.tieModelCount = level.tieModels.Count();
-            engineHeader.tieCount = level.ties.Count();
-            engineHeader.shrubModelCount = level.shrubModels.Count();
-            engineHeader.shrubCount = level.shrubs.Count();
-            engineHeader.weaponCount = level.weaponModels.Count();
-            engineHeader.textureCount = level.textures.Count();
-            engineHeader.lightCount = level.lights.Count();
-            engineHeader.textureConfigMenuCount = level.textureConfigMenus.Count();
+            engineHeader.tieModelCount = level.tieModels.Count;
+            engineHeader.tieCount = level.ties.Count;
+            engineHeader.shrubModelCount = level.shrubModels.Count;
+            engineHeader.shrubCount = level.shrubs.Count;
+            engineHeader.weaponCount = level.weaponModels.Count;
+            engineHeader.textureCount = level.textures.Count;
+            engineHeader.lightCount = level.lights.Count;
+            engineHeader.textureConfigMenuCount = level.textureConfigMenus.Count;
 
 
             // Seek to the beginning and write the header now that we have all the pointers
@@ -143,6 +108,16 @@ namespace RatchetEdit
 
             //*/
         }
+
+
+        private int SeekWrite(FileStream fs, byte[] bytes)
+        {
+            SeekPast(fs);
+            int pos = (int)fs.Position;
+            fs.Write(bytes, 0, bytes.Length);
+            return pos;
+        }
+
 
         private void SeekPast(FileStream fs)
         {
@@ -156,21 +131,21 @@ namespace RatchetEdit
         {
             short offset = 0;
             var spriteIds = new List<int>();
-            byte[] elemBytes = new byte[uiElements.Count() * 8];
-            for(int i = 0; i < uiElements.Count(); i++)
+            byte[] elemBytes = new byte[uiElements.Count * 8];
+            for (int i = 0; i < uiElements.Count; i++)
             {
                 WriteShort(ref elemBytes, i * 8 + 0x00, uiElements[i].id);
                 if (uiElements[i].id == -1) continue;
-                WriteShort(ref elemBytes, i * 8 + 0x02, (short)uiElements[i].sprites.Count());
+                WriteShort(ref elemBytes, i * 8 + 0x02, (short)uiElements[i].sprites.Count);
                 WriteShort(ref elemBytes, i * 8 + 0x04, offset);
 
                 spriteIds.AddRange(uiElements[i].sprites);
 
-                offset += (short)uiElements[i].sprites.Count();
+                offset += (short)uiElements[i].sprites.Count;
             }
 
-            byte[] spriteBytes = new byte[spriteIds.Count() * 4];
-            for (int i = 0; i < spriteIds.Count(); i++)
+            byte[] spriteBytes = new byte[spriteIds.Count * 4];
+            for (int i = 0; i < spriteIds.Count; i++)
             {
                 WriteInt(ref spriteBytes, i * 4, spriteIds[i]);
             }
@@ -186,8 +161,8 @@ namespace RatchetEdit
             int sectionEnd = (int)fs.Position;
 
             byte[] headBytes = new byte[0x10];
-            WriteShort(ref headBytes, 0x00, (short)uiElements.Count());
-            WriteShort(ref headBytes, 0x02, (short)spriteIds.Count());
+            WriteShort(ref headBytes, 0x00, (short)uiElements.Count);
+            WriteShort(ref headBytes, 0x02, (short)spriteIds.Count);
             WriteInt(ref headBytes, 0x04, elemStart);
             WriteInt(ref headBytes, 0x08, spriteStart);
 
@@ -271,7 +246,7 @@ namespace RatchetEdit
                 ties[i].ToByteArray(initOffset + colorBytes.Count).CopyTo(headBytes, i * 0x70);
                 byte[] colByte = ties[i].colorBytes;
                 colorBytes.AddRange(colByte);
-                while((colorBytes.Count % 0x80) != 0)
+                while ((colorBytes.Count % 0x80) != 0)
                 {
                     colorBytes.Add(0);
                 }

@@ -1,13 +1,10 @@
 ﻿using OpenTK;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using RatchetEdit.LevelObjects;
 
 namespace RatchetEdit
 {
-    class Camera : ITransformable
+    public class Camera : ITransformable
     {
         //Camera variables
         public float speed = 0.2f;
@@ -17,7 +14,6 @@ namespace RatchetEdit
         public Matrix3 GetRotationMatrix()
         {
             return Matrix3.CreateRotationX(rotation.X) * Matrix3.CreateRotationY(rotation.Y) * Matrix3.CreateRotationZ(rotation.Z);
-
         }
 
         public Matrix4 GetViewMatrix()
@@ -51,9 +47,10 @@ namespace RatchetEdit
 
             float yaw = 0;
 
-            if (levelObject as Moby != null)
-            { //If object is moby, load its rotation.
-                yaw = ((Moby)levelObject).rotation.Z;
+            // If object is moby, load its rotation.
+            if (levelObject is Moby moby)
+            { 
+                yaw = moby.rotation.Z;
             }
 
             yaw = yaw - (float)Math.PI / 2;
@@ -61,12 +58,12 @@ namespace RatchetEdit
 
             float ypos = (float)-Math.Cos(yaw);
             float xpos = (float)Math.Sin(yaw);
-            Vector3 cameraPosition = new Vector3(
+
+            SetPosition(new Vector3(
                 levelObject.position.X + xpos * distanceToObject,
                 levelObject.position.Y + ypos * distanceToObject,
                 levelObject.position.Z + distanceToObject / 2
-            );
-            SetPosition(cameraPosition);
+            ));
         }
 
         public void Translate(float x, float y, float z)

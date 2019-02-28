@@ -1,8 +1,9 @@
 ﻿using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System.ComponentModel;
+using RatchetEdit.Models;
 
-namespace RatchetEdit
+namespace RatchetEdit.LevelObjects
 {
     public abstract class ModelObject : LevelObject
     {
@@ -22,7 +23,7 @@ namespace RatchetEdit
             GL.UseProgram(glControl.shaderID);
             Matrix4 mvp = modelMatrix * glControl.worldView;  //Has to be done in this order to work correctly
             GL.UniformMatrix4(glControl.matrixID, false, ref mvp);
-            model.Draw(glControl.textures);
+            model.Draw(glControl.level.textures);
 
             if (selected)
             {

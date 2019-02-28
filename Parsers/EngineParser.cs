@@ -1,9 +1,13 @@
-﻿using System.Collections.Generic;
-using static RatchetEdit.DataFunctions;
+﻿using System;
+using System.Collections.Generic;
+using RatchetEdit.LevelObjects;
+using RatchetEdit.Models;
+using RatchetEdit.Models.Animations;
+using RatchetEdit.Headers;
 
-namespace RatchetEdit
+namespace RatchetEdit.Parsers
 {
-    public class EngineParser : RatchetFileParser
+    public class EngineParser : RatchetFileParser, IDisposable
     {
         EngineHeader engineHead;
 
@@ -88,8 +92,7 @@ namespace RatchetEdit
         }
 
 
-
-
+        // TODO: Arbitrary bytes, parse properly
         public byte[] GetTerrainBytes()
         {
             return ReadArbBytes(engineHead.terrainPointer, engineHead.renderDefPointer - engineHead.terrainPointer);
@@ -115,71 +118,14 @@ namespace RatchetEdit
             return ReadArbBytes(engineHead.soundConfigPointer, engineHead.lightPointer - engineHead.soundConfigPointer);
         }
 
-
-
-        /*
-        /// <summary>
-        /// Test
-        /// </summary>
-        /// <returns>stuff</returns>
-        public byte[] GetMobyModelBytes()
-        {
-            return ReadArbBytes(engineHead.mobyModelPointer, engineHead.playerAnimationPointer - engineHead.mobyModelPointer);
-        }
-
-        public byte[] GetPlayerAnimBytes()
-        {
-            return ReadArbBytes(engineHead.playerAnimationPointer, engineHead.weaponPointer - engineHead.playerAnimationPointer);
-        }
-
-        public byte[] GetWeaponModelBytes()
-        {
-            return ReadArbBytes(engineHead.weaponPointer, engineHead.tieModelPointer - engineHead.weaponPointer);
-        }
-
-        public byte[] GetTieModelBytes()
-        {
-            return ReadArbBytes(engineHead.tieModelPointer, engineHead.tiePointer - engineHead.tieModelPointer);
-        }
-
-        public byte[] GetTieBytes()
-        {
-            return ReadArbBytes(engineHead.tiePointer, engineHead.shrubModelPointer - engineHead.tiePointer);
-        }
-
-        public byte[] GetShrubModelBytes()
-        {
-            return ReadArbBytes(engineHead.shrubModelPointer, engineHead.shrubPointer - engineHead.shrubModelPointer);
-        }
-
-        public byte[] GetShrubBytes()
-        {
-            return ReadArbBytes(engineHead.shrubPointer, engineHead.textureConfigMenuPointer - engineHead.shrubPointer);
-        }
-
-        public byte[] GetMenuTextureBytes()
-        {
-            return ReadArbBytes(engineHead.textureConfigMenuPointer, engineHead.texture2dPointer - engineHead.textureConfigMenuPointer);
-        }
-
-        public byte[] GetLightBytes()
-        {
-            return ReadArbBytes(engineHead.lightPointer, engineHead.lightConfigPointer - engineHead.lightPointer);
-        }
-
-        public byte[] GetLightConfigBytes()
-        {
-            return ReadArbBytes(engineHead.lightConfigPointer, engineHead.texturePointer - engineHead.lightConfigPointer);
-        }
-        
-        */
-
-
-
-
         public GameType DetectGame()
         {
             return DetectGame(0xA0);
+        }
+
+        public void Dispose()
+        {
+            fileStream.Close();
         }
     }
 }

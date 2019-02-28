@@ -30,67 +30,48 @@
         {
             this.components = new System.ComponentModel.Container();
             this.modelView = new System.Windows.Forms.TreeView();
-            this.saveObjBtn = new System.Windows.Forms.Button();
-            this.LoadObjBtn = new System.Windows.Forms.Button();
-            this.glControl1 = new OpenTK.GLControl();
+            this.glControl = new OpenTK.GLControl();
             this.tickTimer = new System.Windows.Forms.Timer(this.components);
-            this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
-            this.objSave = new System.Windows.Forms.SaveFileDialog();
+            this.modelProperties = new System.Windows.Forms.PropertyGrid();
+            this.modelSave = new System.Windows.Forms.SaveFileDialog();
             this.objOpen = new System.Windows.Forms.OpenFileDialog();
             this.textureView = new System.Windows.Forms.ListView();
             this.textureList = new System.Windows.Forms.ImageList(this.components);
-            this.button1 = new System.Windows.Forms.Button();
-            this.iqeSave = new System.Windows.Forms.SaveFileDialog();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importFromobjToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // modelView
             // 
             this.modelView.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.modelView.Location = new System.Drawing.Point(12, 12);
+            this.modelView.Location = new System.Drawing.Point(12, 27);
             this.modelView.Name = "modelView";
-            this.modelView.Size = new System.Drawing.Size(157, 554);
+            this.modelView.Size = new System.Drawing.Size(157, 539);
             this.modelView.TabIndex = 0;
             this.modelView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.modelView_AfterSelect);
             // 
-            // saveObjBtn
+            // glControl
             // 
-            this.saveObjBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.saveObjBtn.Location = new System.Drawing.Point(1049, 533);
-            this.saveObjBtn.Name = "saveObjBtn";
-            this.saveObjBtn.Size = new System.Drawing.Size(98, 33);
-            this.saveObjBtn.TabIndex = 4;
-            this.saveObjBtn.Text = "Save to .obj";
-            this.saveObjBtn.UseVisualStyleBackColor = true;
-            this.saveObjBtn.Click += new System.EventHandler(this.saveObjBtn_Click);
-            // 
-            // LoadObjBtn
-            // 
-            this.LoadObjBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.LoadObjBtn.Location = new System.Drawing.Point(955, 533);
-            this.LoadObjBtn.Name = "LoadObjBtn";
-            this.LoadObjBtn.Size = new System.Drawing.Size(88, 33);
-            this.LoadObjBtn.TabIndex = 5;
-            this.LoadObjBtn.Text = "Load from .obj";
-            this.LoadObjBtn.UseVisualStyleBackColor = true;
-            this.LoadObjBtn.Click += new System.EventHandler(this.LoadObjBtn_Click);
-            // 
-            // glControl1
-            // 
-            this.glControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.glControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.glControl1.BackColor = System.Drawing.Color.Black;
-            this.glControl1.Location = new System.Drawing.Point(175, 12);
-            this.glControl1.Name = "glControl1";
-            this.glControl1.Size = new System.Drawing.Size(774, 554);
-            this.glControl1.TabIndex = 6;
-            this.glControl1.VSync = false;
-            this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
-            this.glControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseDown);
-            this.glControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseUp);
-            this.glControl1.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseWheel);
-            this.glControl1.Resize += new System.EventHandler(this.glControl1_Resize);
+            this.glControl.BackColor = System.Drawing.Color.Black;
+            this.glControl.Location = new System.Drawing.Point(175, 27);
+            this.glControl.Name = "glControl";
+            this.glControl.Size = new System.Drawing.Size(774, 539);
+            this.glControl.TabIndex = 6;
+            this.glControl.VSync = false;
+            this.glControl.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
+            this.glControl.MouseDown += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseDown);
+            this.glControl.MouseUp += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseUp);
+            this.glControl.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseWheel);
+            this.glControl.Resize += new System.EventHandler(this.glControl1_Resize);
             // 
             // tickTimer
             // 
@@ -98,20 +79,20 @@
             this.tickTimer.Interval = 16;
             this.tickTimer.Tick += new System.EventHandler(this.tickTimer_Tick);
             // 
-            // propertyGrid1
+            // modelProperties
             // 
-            this.propertyGrid1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.modelProperties.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.propertyGrid1.HelpVisible = false;
-            this.propertyGrid1.Location = new System.Drawing.Point(955, 202);
-            this.propertyGrid1.Name = "propertyGrid1";
-            this.propertyGrid1.Size = new System.Drawing.Size(192, 286);
-            this.propertyGrid1.TabIndex = 7;
-            this.propertyGrid1.ToolbarVisible = false;
+            this.modelProperties.HelpVisible = false;
+            this.modelProperties.Location = new System.Drawing.Point(955, 254);
+            this.modelProperties.Name = "modelProperties";
+            this.modelProperties.Size = new System.Drawing.Size(192, 312);
+            this.modelProperties.TabIndex = 7;
+            this.modelProperties.ToolbarVisible = false;
             // 
-            // objSave
+            // modelSave
             // 
-            this.objSave.Filter = "OBJ file|.obj";
+            this.modelSave.Filter = "Inter-Quake Model (*.iqe)|*.iqe|OBJ file|.obj";
             // 
             // objOpen
             // 
@@ -122,9 +103,9 @@
             // 
             this.textureView.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.textureView.LargeImageList = this.textureList;
-            this.textureView.Location = new System.Drawing.Point(955, 12);
+            this.textureView.Location = new System.Drawing.Point(955, 27);
             this.textureView.Name = "textureView";
-            this.textureView.Size = new System.Drawing.Size(192, 184);
+            this.textureView.Size = new System.Drawing.Size(192, 221);
             this.textureView.SmallImageList = this.textureList;
             this.textureView.TabIndex = 10;
             this.textureView.UseCompatibleStateImageBehavior = false;
@@ -136,53 +117,90 @@
             this.textureList.ImageSize = new System.Drawing.Size(32, 32);
             this.textureList.TransparentColor = System.Drawing.Color.Transparent;
             // 
-            // button1
+            // menuStrip1
             // 
-            this.button1.Location = new System.Drawing.Point(955, 494);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(192, 33);
-            this.button1.TabIndex = 11;
-            this.button1.Text = "Save as .iqe";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click_1);
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fileToolStripMenuItem});
+            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(1159, 24);
+            this.menuStrip1.TabIndex = 12;
+            this.menuStrip1.Text = "menuStrip1";
             // 
-            // iqeSave
+            // fileToolStripMenuItem
             // 
-            this.iqeSave.Filter = "Inter-Quake Model (*.iqe)|*.iqe";
+            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.newToolStripMenuItem,
+            this.importFromobjToolStripMenuItem,
+            this.saveToolStripMenuItem,
+            this.exitToolStripMenuItem});
+            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
+            this.fileToolStripMenuItem.Text = "&File";
+            // 
+            // newToolStripMenuItem
+            // 
+            this.newToolStripMenuItem.Name = "newToolStripMenuItem";
+            this.newToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.newToolStripMenuItem.Text = "New";
+            // 
+            // importFromobjToolStripMenuItem
+            // 
+            this.importFromobjToolStripMenuItem.Name = "importFromobjToolStripMenuItem";
+            this.importFromobjToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.importFromobjToolStripMenuItem.Text = "Import model";
+            this.importFromobjToolStripMenuItem.Click += new System.EventHandler(this.importFromobjToolStripMenuItem_Click);
+            // 
+            // saveToolStripMenuItem
+            // 
+            this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveToolStripMenuItem.Text = "Export model";
+            this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
+            // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exitToolStripMenuItem.Text = "Exit";
             // 
             // ModelViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1159, 578);
-            this.Controls.Add(this.button1);
             this.Controls.Add(this.textureView);
-            this.Controls.Add(this.propertyGrid1);
-            this.Controls.Add(this.glControl1);
-            this.Controls.Add(this.LoadObjBtn);
-            this.Controls.Add(this.saveObjBtn);
+            this.Controls.Add(this.modelProperties);
+            this.Controls.Add(this.glControl);
             this.Controls.Add(this.modelView);
+            this.Controls.Add(this.menuStrip1);
+            this.MainMenuStrip = this.menuStrip1;
             this.Name = "ModelViewer";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "ModelViewer";
             this.Load += new System.EventHandler(this.ModelViewer_Load);
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
 
         private System.Windows.Forms.TreeView modelView;
-        private System.Windows.Forms.Button saveObjBtn;
-        private System.Windows.Forms.Button LoadObjBtn;
-        private OpenTK.GLControl glControl1;
+        private OpenTK.GLControl glControl;
         private System.Windows.Forms.Timer tickTimer;
-        private System.Windows.Forms.PropertyGrid propertyGrid1;
-        private System.Windows.Forms.SaveFileDialog objSave;
+        private System.Windows.Forms.PropertyGrid modelProperties;
+        private System.Windows.Forms.SaveFileDialog modelSave;
         private System.Windows.Forms.OpenFileDialog objOpen;
         private System.Windows.Forms.ListView textureView;
         private System.Windows.Forms.ImageList textureList;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.SaveFileDialog iqeSave;
+        private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem newToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importFromobjToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
     }
 }

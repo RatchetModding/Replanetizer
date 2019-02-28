@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using static RatchetEdit.DataFunctions;
 
-namespace RatchetEdit
+namespace RatchetEdit.Models
 {
     public class SkyboxModel : Model
     {
@@ -62,7 +59,7 @@ namespace RatchetEdit
 
         public byte[] Serialize(int startOffset)
         {
-            int faceStart = GetLength(0x1C + textureConfigs.Count() * 4);
+            int faceStart = GetLength(0x1C + textureConfigs.Count * 4);
             int faceLength = textureConfigs.Count * 0x10;
             foreach(List<TextureConfig> conf in textureConfigs)
             {

@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Windows.Forms;
+using RatchetEdit.LevelObjects;
 
 namespace RatchetEdit
 {
@@ -27,7 +21,7 @@ namespace RatchetEdit
             InitializeComponent();
         }
 
-        public void init(Dictionary<int, string> mobNames, Dictionary<int, string> tieNames)
+        public void Init(Dictionary<int, string> mobNames, Dictionary<int, string> tieNames)
         {
             // Get the name lists
             this.mobNames = mobNames;
@@ -43,7 +37,7 @@ namespace RatchetEdit
             Nodes.Add(type0CNode);
         }
 
-        public void updateEntries(Level level)
+        public void UpdateEntries(Level level)
         {
             // Clear all the nodes to prepare for new data
             foreach (TreeNode node in Nodes)

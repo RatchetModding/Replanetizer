@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static RatchetEdit.DataFunctions;
+﻿using static RatchetEdit.DataFunctions;
 
-namespace RatchetEdit
+namespace RatchetEdit.Models.Animations
 {
     public class BoneData
     {
@@ -21,6 +16,8 @@ namespace RatchetEdit
             unk2 = ReadFloat(boneDataBlock, offset + 0x04);
             unk3 = ReadFloat(boneDataBlock, offset + 0x08);
             unk4 = ReadFloat(boneDataBlock, offset + 0x0C);
+
+            //unk4 = 0;
         }
 
         public byte[] Serialize()

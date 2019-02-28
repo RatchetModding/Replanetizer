@@ -57,16 +57,10 @@ namespace RatchetEdit
             this.levelVariablesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.label10 = new System.Windows.Forms.Label();
-            this.camXLabel = new System.Windows.Forms.Label();
-            this.camYLabel = new System.Windows.Forms.Label();
-            this.camZLabel = new System.Windows.Forms.Label();
             this.mapOpenDialog = new System.Windows.Forms.OpenFileDialog();
             this.tickTimer = new System.Windows.Forms.Timer(this.components);
-            this.label18 = new System.Windows.Forms.Label();
-            this.yawLabel = new System.Windows.Forms.Label();
-            this.pitchLabel = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.glControl = new RatchetEdit.CustomGLControl();
             this.toolstrip1 = new System.Windows.Forms.ToolStrip();
             this.cloneBtn = new System.Windows.Forms.ToolStripButton();
             this.deleteBtn = new System.Windows.Forms.ToolStripButton();
@@ -75,10 +69,16 @@ namespace RatchetEdit
             this.rotateToolBtn = new System.Windows.Forms.ToolStripButton();
             this.scaleToolBtn = new System.Windows.Forms.ToolStripButton();
             this.splineToolBtn = new System.Windows.Forms.ToolStripButton();
-            this.glControl1 = new RatchetEdit.CustomGLControl();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.objectTreeView1 = new RatchetEdit.ObjectTreeView();
+            this.objectTree = new RatchetEdit.ObjectTreeView();
             this.properties = new System.Windows.Forms.PropertyGrid();
+            this.camYLabel = new System.Windows.Forms.Label();
+            this.yawLabel = new System.Windows.Forms.Label();
+            this.camXLabel = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
+            this.camZLabel = new System.Windows.Forms.Label();
+            this.pitchLabel = new System.Windows.Forms.Label();
             this.mapSaveDialog = new System.Windows.Forms.SaveFileDialog();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -183,7 +183,7 @@ namespace RatchetEdit
             this.mobyCheck.Name = "mobyCheck";
             this.mobyCheck.Size = new System.Drawing.Size(120, 22);
             this.mobyCheck.Text = "Mobys";
-            this.mobyCheck.Click += new System.EventHandler(this.EnableCheck);
+            this.mobyCheck.CheckedChanged += new System.EventHandler(this.mobyCheck_CheckedChanged);
             // 
             // tieCheck
             // 
@@ -194,7 +194,7 @@ namespace RatchetEdit
             this.tieCheck.Name = "tieCheck";
             this.tieCheck.Size = new System.Drawing.Size(120, 22);
             this.tieCheck.Text = "Ties";
-            this.tieCheck.Click += new System.EventHandler(this.EnableCheck);
+            this.tieCheck.CheckedChanged += new System.EventHandler(this.tieCheck_CheckedChanged);
             // 
             // shrubCheck
             // 
@@ -205,7 +205,7 @@ namespace RatchetEdit
             this.shrubCheck.Name = "shrubCheck";
             this.shrubCheck.Size = new System.Drawing.Size(120, 22);
             this.shrubCheck.Text = "Shrubs";
-            this.shrubCheck.Click += new System.EventHandler(this.EnableCheck);
+            this.shrubCheck.CheckedChanged += new System.EventHandler(this.shrubCheck_CheckedChanged);
             // 
             // collCheck
             // 
@@ -214,7 +214,7 @@ namespace RatchetEdit
             this.collCheck.Name = "collCheck";
             this.collCheck.Size = new System.Drawing.Size(120, 22);
             this.collCheck.Text = "Collision";
-            this.collCheck.Click += new System.EventHandler(this.EnableCheck);
+            this.collCheck.CheckedChanged += new System.EventHandler(this.collCheck_CheckedChanged);
             // 
             // terrainCheck
             // 
@@ -225,7 +225,7 @@ namespace RatchetEdit
             this.terrainCheck.Name = "terrainCheck";
             this.terrainCheck.Size = new System.Drawing.Size(120, 22);
             this.terrainCheck.Text = "Terrain";
-            this.terrainCheck.Click += new System.EventHandler(this.EnableCheck);
+            this.terrainCheck.CheckedChanged += new System.EventHandler(this.terrainCheck_CheckedChanged);
             // 
             // splineCheck
             // 
@@ -234,7 +234,7 @@ namespace RatchetEdit
             this.splineCheck.Name = "splineCheck";
             this.splineCheck.Size = new System.Drawing.Size(120, 22);
             this.splineCheck.Text = "Splines";
-            this.splineCheck.Click += new System.EventHandler(this.EnableCheck);
+            this.splineCheck.CheckedChanged += new System.EventHandler(this.splineCheck_CheckedChanged);
             // 
             // skyboxCheck
             // 
@@ -243,7 +243,7 @@ namespace RatchetEdit
             this.skyboxCheck.Name = "skyboxCheck";
             this.skyboxCheck.Size = new System.Drawing.Size(120, 22);
             this.skyboxCheck.Text = "Skybox";
-            this.skyboxCheck.Click += new System.EventHandler(this.EnableCheck);
+            this.skyboxCheck.CheckedChanged += new System.EventHandler(this.skyboxCheck_CheckedChanged);
             // 
             // cuboidCheck
             // 
@@ -252,7 +252,7 @@ namespace RatchetEdit
             this.cuboidCheck.Name = "cuboidCheck";
             this.cuboidCheck.Size = new System.Drawing.Size(120, 22);
             this.cuboidCheck.Text = "Cuboids";
-            this.cuboidCheck.Click += new System.EventHandler(this.EnableCheck);
+            this.cuboidCheck.CheckedChanged += new System.EventHandler(this.cuboidCheck_CheckedChanged);
             // 
             // type0CCheck
             // 
@@ -261,7 +261,7 @@ namespace RatchetEdit
             this.type0CCheck.Name = "type0CCheck";
             this.type0CCheck.Size = new System.Drawing.Size(120, 22);
             this.type0CCheck.Text = "Type0Cs";
-            this.type0CCheck.Click += new System.EventHandler(this.EnableCheck);
+            this.type0CCheck.CheckedChanged += new System.EventHandler(this.type0CCheck_CheckedChanged);
             // 
             // toolStripMenuItem2
             // 
@@ -337,50 +337,6 @@ namespace RatchetEdit
             this.settingsToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.settingsToolStripMenuItem.Text = "Settings";
             // 
-            // label10
-            // 
-            this.label10.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(4, 323);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(43, 13);
-            this.label10.TabIndex = 10;
-            this.label10.Text = "Camera";
-            // 
-            // camXLabel
-            // 
-            this.camXLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.camXLabel.AutoSize = true;
-            this.camXLabel.Location = new System.Drawing.Point(4, 336);
-            this.camXLabel.Name = "camXLabel";
-            this.camXLabel.Size = new System.Drawing.Size(13, 13);
-            this.camXLabel.TabIndex = 11;
-            this.camXLabel.Text = "0";
-            // 
-            // camYLabel
-            // 
-            this.camYLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.camYLabel.AutoSize = true;
-            this.camYLabel.Location = new System.Drawing.Point(4, 349);
-            this.camYLabel.Name = "camYLabel";
-            this.camYLabel.Size = new System.Drawing.Size(13, 13);
-            this.camYLabel.TabIndex = 12;
-            this.camYLabel.Text = "0";
-            // 
-            // camZLabel
-            // 
-            this.camZLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.camZLabel.AutoSize = true;
-            this.camZLabel.Location = new System.Drawing.Point(4, 362);
-            this.camZLabel.Name = "camZLabel";
-            this.camZLabel.Size = new System.Drawing.Size(13, 13);
-            this.camZLabel.TabIndex = 13;
-            this.camZLabel.Text = "0";
-            // 
             // mapOpenDialog
             // 
             this.mapOpenDialog.Filter = "Engine file|engine.ps3";
@@ -391,39 +347,6 @@ namespace RatchetEdit
             this.tickTimer.Interval = 1;
             this.tickTimer.Tick += new System.EventHandler(this.tickTimer_Tick);
             // 
-            // label18
-            // 
-            this.label18.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(81, 323);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(47, 13);
-            this.label18.TabIndex = 15;
-            this.label18.Text = "Rotation";
-            // 
-            // yawLabel
-            // 
-            this.yawLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.yawLabel.AutoSize = true;
-            this.yawLabel.Location = new System.Drawing.Point(81, 336);
-            this.yawLabel.Name = "yawLabel";
-            this.yawLabel.Size = new System.Drawing.Size(13, 13);
-            this.yawLabel.TabIndex = 11;
-            this.yawLabel.Text = "0";
-            // 
-            // pitchLabel
-            // 
-            this.pitchLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.pitchLabel.AutoSize = true;
-            this.pitchLabel.Location = new System.Drawing.Point(81, 349);
-            this.pitchLabel.Name = "pitchLabel";
-            this.pitchLabel.Size = new System.Drawing.Size(13, 13);
-            this.pitchLabel.TabIndex = 12;
-            this.pitchLabel.Text = "0";
-            // 
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -432,8 +355,8 @@ namespace RatchetEdit
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.glControl);
             this.splitContainer1.Panel1.Controls.Add(this.toolstrip1);
-            this.splitContainer1.Panel1.Controls.Add(this.glControl1);
             // 
             // splitContainer1.Panel2
             // 
@@ -442,6 +365,22 @@ namespace RatchetEdit
             this.splitContainer1.Size = new System.Drawing.Size(1269, 657);
             this.splitContainer1.SplitterDistance = 1000;
             this.splitContainer1.TabIndex = 17;
+            // 
+            // glControl
+            // 
+            this.glControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.glControl.BackColor = System.Drawing.Color.Black;
+            this.glControl.Location = new System.Drawing.Point(3, 28);
+            this.glControl.Name = "glControl";
+            this.glControl.Size = new System.Drawing.Size(994, 629);
+            this.glControl.TabIndex = 16;
+            this.glControl.VSync = false;
+            this.glControl.ObjectClick += new System.EventHandler<RatchetEdit.RatchetEventArgs>(this.glControl_ObjectClick);
+            this.glControl.ObjectDeleted += new System.EventHandler<RatchetEdit.RatchetEventArgs>(this.glControl_ObjectDeleted);
+            this.glControl.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
+            this.glControl.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.glControl_MouseDoubleClick);
             // 
             // toolstrip1
             // 
@@ -529,23 +468,6 @@ namespace RatchetEdit
             this.splineToolBtn.Text = "Spline Tool (F4)";
             this.splineToolBtn.Click += new System.EventHandler(this.splineToolBtn_Click);
             // 
-            // glControl1
-            // 
-            this.glControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.glControl1.BackColor = System.Drawing.Color.Black;
-            this.glControl1.Location = new System.Drawing.Point(3, 3);
-            this.glControl1.Name = "glControl1";
-            this.glControl1.Size = new System.Drawing.Size(999, 651);
-            this.glControl1.TabIndex = 14;
-            this.glControl1.VSync = false;
-            this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
-            this.glControl1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.glControl1_KeyPress);
-            this.glControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseDown);
-            this.glControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseUp);
-            this.glControl1.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseWheel);
-            // 
             // splitContainer2
             // 
             this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -555,7 +477,7 @@ namespace RatchetEdit
             // 
             // splitContainer2.Panel1
             // 
-            this.splitContainer2.Panel1.Controls.Add(this.objectTreeView1);
+            this.splitContainer2.Panel1.Controls.Add(this.objectTree);
             // 
             // splitContainer2.Panel2
             // 
@@ -571,13 +493,13 @@ namespace RatchetEdit
             this.splitContainer2.SplitterDistance = 270;
             this.splitContainer2.TabIndex = 21;
             // 
-            // objectTreeView1
+            // objectTree
             // 
-            this.objectTreeView1.Location = new System.Drawing.Point(4, 3);
-            this.objectTreeView1.Name = "objectTreeView1";
-            this.objectTreeView1.Size = new System.Drawing.Size(258, 264);
-            this.objectTreeView1.TabIndex = 0;
-            this.objectTreeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.objectTreeView1_AfterSelect);
+            this.objectTree.Location = new System.Drawing.Point(4, 3);
+            this.objectTree.Name = "objectTree";
+            this.objectTree.Size = new System.Drawing.Size(258, 264);
+            this.objectTree.TabIndex = 0;
+            this.objectTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.objectTreeView1_AfterSelect);
             // 
             // properties
             // 
@@ -591,6 +513,83 @@ namespace RatchetEdit
             this.properties.TabIndex = 19;
             this.properties.ToolbarVisible = false;
             this.properties.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.propertyGrid1_PropertyValueChanged);
+            // 
+            // camYLabel
+            // 
+            this.camYLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.camYLabel.AutoSize = true;
+            this.camYLabel.Location = new System.Drawing.Point(4, 349);
+            this.camYLabel.Name = "camYLabel";
+            this.camYLabel.Size = new System.Drawing.Size(13, 13);
+            this.camYLabel.TabIndex = 12;
+            this.camYLabel.Text = "0";
+            // 
+            // yawLabel
+            // 
+            this.yawLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.yawLabel.AutoSize = true;
+            this.yawLabel.Location = new System.Drawing.Point(81, 336);
+            this.yawLabel.Name = "yawLabel";
+            this.yawLabel.Size = new System.Drawing.Size(13, 13);
+            this.yawLabel.TabIndex = 11;
+            this.yawLabel.Text = "0";
+            // 
+            // camXLabel
+            // 
+            this.camXLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.camXLabel.AutoSize = true;
+            this.camXLabel.Location = new System.Drawing.Point(4, 336);
+            this.camXLabel.Name = "camXLabel";
+            this.camXLabel.Size = new System.Drawing.Size(13, 13);
+            this.camXLabel.TabIndex = 11;
+            this.camXLabel.Text = "0";
+            // 
+            // label10
+            // 
+            this.label10.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(4, 323);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(43, 13);
+            this.label10.TabIndex = 10;
+            this.label10.Text = "Camera";
+            // 
+            // label18
+            // 
+            this.label18.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(81, 323);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(47, 13);
+            this.label18.TabIndex = 15;
+            this.label18.Text = "Rotation";
+            // 
+            // camZLabel
+            // 
+            this.camZLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.camZLabel.AutoSize = true;
+            this.camZLabel.Location = new System.Drawing.Point(4, 362);
+            this.camZLabel.Name = "camZLabel";
+            this.camZLabel.Size = new System.Drawing.Size(13, 13);
+            this.camZLabel.TabIndex = 13;
+            this.camZLabel.Text = "0";
+            // 
+            // pitchLabel
+            // 
+            this.pitchLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.pitchLabel.AutoSize = true;
+            this.pitchLabel.Location = new System.Drawing.Point(81, 349);
+            this.pitchLabel.Name = "pitchLabel";
+            this.pitchLabel.Size = new System.Drawing.Size(13, 13);
+            this.pitchLabel.TabIndex = 12;
+            this.pitchLabel.Text = "0";
             // 
             // mapSaveDialog
             // 
@@ -606,7 +605,7 @@ namespace RatchetEdit
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Main";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Ratchet Level Editor";
+            this.Text = "Replanetizer";
             this.Load += new System.EventHandler(this.Main_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
@@ -650,7 +649,6 @@ namespace RatchetEdit
         private System.Windows.Forms.Label camZLabel;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
         private System.Windows.Forms.OpenFileDialog mapOpenDialog;
-        private CustomGLControl glControl1;
         private System.Windows.Forms.Timer tickTimer;
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.Label yawLabel;
@@ -678,7 +676,8 @@ namespace RatchetEdit
         private System.Windows.Forms.ToolStripButton splineToolBtn;
         private System.Windows.Forms.ToolStripMenuItem cuboidCheck;
         private System.Windows.Forms.ToolStripMenuItem type0CCheck;
-        private ObjectTreeView objectTreeView1;
+        private ObjectTreeView objectTree;
+        private CustomGLControl glControl;
     }
 }
 

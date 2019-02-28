@@ -1,15 +1,11 @@
-﻿using System;
+﻿using System.IO;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static RatchetEdit.DataFunctions;
+using System.Runtime.InteropServices;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
-using System.Runtime.InteropServices;
+using static RatchetEdit.DataFunctions;
 
-namespace RatchetEdit
+namespace RatchetEdit.Models
 {
     [StructLayout(LayoutKind.Explicit)]
     struct FloatColor

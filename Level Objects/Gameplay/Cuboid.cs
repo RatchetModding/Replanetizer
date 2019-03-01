@@ -171,7 +171,6 @@ namespace RatchetEdit.LevelObjects
 
 		public override void Render(CustomGLControl glControl, bool selected = false)
 		{
-			GL.UseProgram(glControl.colorShaderID);
 			GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
 				Matrix4 mvp = modelMatrix * glControl.worldView;
 				GL.UniformMatrix4(glControl.matrixID, false, ref mvp);

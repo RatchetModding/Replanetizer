@@ -97,10 +97,13 @@ namespace RatchetEdit
         #region Open Viewers
         private void OpenModelViewer()
         {
-            if ((modelViewer == null || modelViewer.IsDisposed) && (GetSelectedObject() is ModelObject modelObj))
+            if ((modelViewer == null || modelViewer.IsDisposed))
             {
-                modelViewer = new ModelViewer(this, modelObj.model);
-                modelViewer.Show();
+                if((GetSelectedObject() is ModelObject modelObj))
+                {
+                    modelViewer = new ModelViewer(this, modelObj.model);
+                    modelViewer.Show();
+                }
             }
             else
             {

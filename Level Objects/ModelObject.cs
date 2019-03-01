@@ -20,7 +20,6 @@ namespace RatchetEdit.LevelObjects
         public override void Render(CustomGLControl glControl, bool selected = false)
         {
             if (model == null || model.vertexBuffer == null || model.textureConfig.Count == 0) return;
-            GL.UseProgram(glControl.shaderID);
             Matrix4 mvp = modelMatrix * glControl.worldView;  //Has to be done in this order to work correctly
             GL.UniformMatrix4(glControl.matrixID, false, ref mvp);
             model.Draw(glControl.level.textures);
@@ -44,6 +43,7 @@ namespace RatchetEdit.LevelObjects
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
             GL.DrawElements(PrimitiveType.Triangles, model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            GL.UseProgram(glControl.shaderID);
 
         }
     }

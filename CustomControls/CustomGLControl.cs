@@ -72,20 +72,20 @@ namespace RatchetEdit
 
             //Setup general shader
             shaderID = GL.CreateProgram();
-            LoadShader("shaders/vs.glsl", ShaderType.VertexShader, shaderID);
-            LoadShader("shaders/fs.glsl", ShaderType.FragmentShader, shaderID);
+            LoadShader("Shaders/vs.glsl", ShaderType.VertexShader, shaderID);
+            LoadShader("Shaders/fs.glsl", ShaderType.FragmentShader, shaderID);
             GL.LinkProgram(shaderID);
 
             //Setup color shader
             colorShaderID = GL.CreateProgram();
-            LoadShader("shaders/colorshadervs.glsl", ShaderType.VertexShader, colorShaderID);
-            LoadShader("shaders/colorshaderfs.glsl", ShaderType.FragmentShader, colorShaderID);
+            LoadShader("Shaders/colorshadervs.glsl", ShaderType.VertexShader, colorShaderID);
+            LoadShader("Shaders/colorshaderfs.glsl", ShaderType.FragmentShader, colorShaderID);
             GL.LinkProgram(colorShaderID);
 
             //Setup color shader
             collisionShaderID = GL.CreateProgram();
-            LoadShader("shaders/collisionshadervs.glsl", ShaderType.VertexShader, collisionShaderID);
-            LoadShader("shaders/collisionshaderfs.glsl", ShaderType.FragmentShader, collisionShaderID);
+            LoadShader("Shaders/collisionshadervs.glsl", ShaderType.VertexShader, collisionShaderID);
+            LoadShader("Shaders/collisionshaderfs.glsl", ShaderType.FragmentShader, collisionShaderID);
             GL.LinkProgram(collisionShaderID);
 
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
@@ -377,7 +377,7 @@ namespace RatchetEdit
             }
         }
 
-        void LoadShader(String filename, ShaderType type, int program)
+        void LoadShader(string filename, ShaderType type, int program)
         {
             int address = GL.CreateShader(type);
             using (StreamReader sr = new StreamReader(filename))
@@ -421,6 +421,8 @@ namespace RatchetEdit
         {
             rMouse = e.Button == MouseButtons.Right;
             lMouse = e.Button == MouseButtons.Left;
+
+            Console.WriteLine(e.Button.ToString());
 
             if (e.Button == MouseButtons.Left && level != null)
             {
@@ -490,9 +492,15 @@ namespace RatchetEdit
             Pixel pixel = new Pixel();
             GL.ReadPixels(x, Height - y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixel);
 
+            //Console.WriteLine("R: {0}, G: {1}, B: {2}, A: {3}", pixel.R, pixel.G, pixel.B, pixel.A);
+
             GL.ClearColor(Color.SkyBlue);
-            if (pixel.A == 0)
+
+            // Some GPU's put the alpha at 0, others at 255
+            if (pixel.A == 255 || pixel.A == 0)
             {
+                pixel.A = 0;
+
                 bool didHitTool = false;
                 if (pixel.R == 255 && pixel.G == 0 && pixel.B == 0)
                 {
@@ -516,6 +524,8 @@ namespace RatchetEdit
                     hitTool = true;
                     return null;
                 }
+
+
 
                 int id = (int)pixel.ToUInt32();
                 if (enableMoby && id < level.mobs?.Count)
@@ -558,11 +568,14 @@ namespace RatchetEdit
 
             worldView = view * projection;
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            
 
             GL.EnableVertexAttribArray(0);
             GL.EnableVertexAttribArray(1);
 
             MakeCurrent();
+
+            GL.UseProgram(shaderID);
 
             if (enableMoby)
                 foreach (Moby mob in level.mobs)
@@ -580,6 +593,15 @@ namespace RatchetEdit
                 foreach (Spline spline in level.splines)
                     spline.Render(this, spline == selectedObject);
 
+            if (enableTerrain)
+                foreach (TerrainModel tFrag in level.terrains)
+                    tFrag.Draw(this);
+
+            if (enableSkybox)
+                level.skybox.Draw(this);
+
+            GL.UseProgram(colorShaderID);
+
             if (enableCuboid)
                 foreach (Cuboid cuboid in level.cuboids)
                     cuboid.Render(this, cuboid == selectedObject);
@@ -587,13 +609,6 @@ namespace RatchetEdit
             if (enableType0C)
                 foreach (Type0C cuboid in level.type0Cs)
                     cuboid.Render(this, cuboid == selectedObject);
-
-            if (enableSkybox)
-                level.skybox.Draw(this);
-
-            if (enableTerrain)
-                foreach (TerrainModel tFrag in level.terrains)
-                    tFrag.Draw(this);
 
             if (enableCollision)
             {

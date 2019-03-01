@@ -52,8 +52,6 @@ namespace RatchetEdit.Models
 
         public void Draw(CustomGLControl glControl)
         {
-            GL.UseProgram(glControl.shaderID);
-
             Matrix4 worldView = glControl.worldView;
             GL.UniformMatrix4(glControl.matrixID, false, ref worldView);
             Draw(glControl.level.textures);

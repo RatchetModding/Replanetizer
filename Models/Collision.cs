@@ -138,7 +138,6 @@ namespace RatchetEdit.Models
 
         public void DrawCol(CustomGLControl glControl)
         {
-            GL.UseProgram(glControl.colorShaderID);
             Matrix4 worldView = glControl.worldView;
             GL.UniformMatrix4(glControl.matrixID, false, ref worldView);
             GL.Uniform4(glControl.colorID, new Vector4(1, 1, 1, 1));

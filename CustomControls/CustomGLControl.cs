@@ -48,11 +48,6 @@ namespace RatchetEdit
         public CustomGLControl()
         {
             InitializeComponent();
-
-            translateTool = new TranslationTool();
-            rotationTool = new RotationTool();
-            scalingTool = new ScalingTool();
-            vertexTranslator = new VertexTranslationTool();
         }
 
         private void CustomGLControl_Load(object sender, EventArgs e)
@@ -94,6 +89,11 @@ namespace RatchetEdit
             projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 800.0f);
 
             camera = new Camera();
+
+            translateTool = new TranslationTool();
+            rotationTool = new RotationTool();
+            scalingTool = new ScalingTool();
+            vertexTranslator = new VertexTranslationTool();
 
             initialized = true;
         }

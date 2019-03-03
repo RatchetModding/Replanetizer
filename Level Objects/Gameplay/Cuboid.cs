@@ -17,9 +17,8 @@ namespace RatchetEdit.LevelObjects
 		// Try to refactor this away at some point
 		private readonly float originalM44;
 
-		static readonly float[] cube = new float[]
-		{
-			-1.0f, -1.0f,  1.0f,
+		static readonly float[] cube = {
+            -1.0f, -1.0f,  1.0f,
 			1.0f, -1.0f,  1.0f,
 			1.0f,  1.0f,  1.0f,
 			-1.0f,  1.0f,  1.0f,
@@ -30,7 +29,20 @@ namespace RatchetEdit.LevelObjects
 			-1.0f,  1.0f, -1.0f
 		};
 
-		public static readonly ushort[] cubeElements = new ushort[] { 0, 1, 2, 2, 3, 0, 1, 5, 6, 6, 2, 1, 7, 6, 5, 5, 4, 7, 4, 0, 3, 3, 7, 4, 4, 5, 1, 1, 0, 4, 3, 2, 6, 6, 7, 3 };
+		public static readonly ushort[] cubeElements = { 
+            0, 1, 2, 
+            2, 3, 0, 
+            1, 5, 6, 
+            6, 2, 1, 
+            7, 6, 5, 
+            5, 4, 7, 
+            4, 0, 3, 
+            3, 7, 4, 
+            4, 5, 1, 
+            1, 0, 4, 
+            3, 2, 6, 
+            6, 7, 3 
+        };
 
 		public Cuboid(byte[] block, int index)
         {

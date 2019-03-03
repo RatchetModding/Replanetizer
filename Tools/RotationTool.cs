@@ -1,56 +1,44 @@
-﻿using OpenTK;
+﻿using System;
+using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
 namespace RatchetEdit.Tools
 {
     class RotationTool : Tool
     {
-        public override void Render(Vector3 position, CustomGLControl glControl)
+        public RotationTool()
         {
-            float[] test = new float[18];
             float length = 1.5f;
-            test[0] = position.X - length;
-            test[1] = position.Y;
-            test[2] = position.Z;
 
-            test[3] = position.X + length;
-            test[4] = position.Y;
-            test[5] = position.Z;
-
-            test[6] = position.X;
-            test[7] = position.Y - length;
-            test[8] = position.Z;
-
-            test[9] = position.X;
-            test[10] = position.Y + length;
-            test[11] = position.Z;
-
-            test[12] = position.X;
-            test[13] = position.Y;
-            test[14] = position.Z - length;
-
-            test[15] = position.X;
-            test[16] = position.Y;
-            test[17] = position.Z + length;
-
-            GL.UseProgram(glControl.colorShaderID);
-            var worldView = glControl.worldView;
-            GL.UniformMatrix4(glControl.matrixID, false, ref worldView);
-            GL.GenBuffers(1, out int VBO);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
-            GL.BufferData(BufferTarget.ArrayBuffer, test.Length * sizeof(float), test, BufferUsageHint.DynamicDraw);
-
-            GL.Uniform4(glControl.colorID, new Vector4(1, 0, 0, 1));
-            GL.DrawArrays(PrimitiveType.LineStrip, 0, 2);
-
-            GL.Uniform4(glControl.colorID, new Vector4(0, 1, 0, 1));
-            GL.DrawArrays(PrimitiveType.LineStrip, 2, 2);
-
-            GL.Uniform4(glControl.colorID, new Vector4(0, 0, 1, 1));
-            GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
+            vb = new float[]{
+                -length,    0,          0,
+                length,     0,          0,
+                0,          -length,    0,
+                0,          length,     0,
+                0,          0,          -length,
+                0,          0,          length,
+            };
         }
 
+        public override void Render(Vector3 position, CustomGLControl control)
+        {
+            GL.UseProgram(control.colorShaderID);
+
+            GetVBO();
+
+            Matrix4 modelMatrix = Matrix4.CreateTranslation(position);
+            var mvp = modelMatrix * control.worldView;
+            GL.UniformMatrix4(control.matrixID, false, ref mvp);
+           
+            GL.Uniform4(control.colorID, new Vector4(1, 0, 0, 1));
+            GL.DrawArrays(PrimitiveType.LineStrip, 0, 2);
+
+            GL.Uniform4(control.colorID, new Vector4(0, 1, 0, 1));
+            GL.DrawArrays(PrimitiveType.LineStrip, 2, 2);
+
+            GL.Uniform4(control.colorID, new Vector4(0, 0, 1, 1));
+            GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
+        }
         public override ToolType GetToolType() {
             return ToolType.Rotate;
         }

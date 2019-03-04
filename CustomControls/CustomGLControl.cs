@@ -364,13 +364,13 @@ namespace RatchetEdit
             // Render tool on top of everything
             GL.Clear(ClearBufferMask.DepthBufferBit); 
 
-            if (selectedObject != null)
+            if ((selectedObject != null) && (currentTool != null))
             {
                 if ((currentTool is VertexTranslationTool) && (selectedObject is Spline spline))
                 {
                     currentTool.Render(spline.GetVertex(currentSplineVertex), this);
                 }
-                else if (currentTool != null)
+                else
                 {
                     currentTool.Render(selectedObject.position, this);
                 }

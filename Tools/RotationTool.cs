@@ -22,8 +22,6 @@ namespace RatchetEdit.Tools
 
         public override void Render(Vector3 position, CustomGLControl control)
         {
-            GL.UseProgram(control.colorShaderID);
-
             GetVBO();
 
             Matrix4 modelMatrix = Matrix4.CreateTranslation(position);

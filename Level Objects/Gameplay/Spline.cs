@@ -116,7 +116,7 @@ namespace RatchetEdit.LevelObjects
         }
 
         public Vector3 GetVertex(int index) {
-            float x = vertexBuffer[index * 3];
+            float x = vertexBuffer[index * 3 + 0];
             float y = vertexBuffer[index * 3 + 1];
             float z = vertexBuffer[index * 3 + 2];
 
@@ -130,7 +130,7 @@ namespace RatchetEdit.LevelObjects
         }
 
         public void TranslateVertex(int vertexIndex, Vector3 translationVector) {
-            vertexBuffer[vertexIndex * 3] += translationVector.X;
+            vertexBuffer[vertexIndex * 3 + 0] += translationVector.X;
             vertexBuffer[vertexIndex * 3 + 1] += translationVector.Y;
             vertexBuffer[vertexIndex * 3 + 2] += translationVector.Z;
         }

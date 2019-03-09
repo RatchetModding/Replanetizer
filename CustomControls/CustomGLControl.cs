@@ -304,13 +304,14 @@ namespace RatchetEdit
 
         public void FakeDrawSplines(List<Spline> splines, int offset)
         {
-            foreach (Spline spline in splines)
+            for(int i = 0; i < splines.Count; i++)
             {
+                Spline spline = splines[i];
                 GL.UseProgram(colorShaderID);
                 GL.EnableVertexAttribArray(0);
                 GL.UniformMatrix4(matrixID, false, ref worldView);
-                int objectIndex = splines.IndexOf(spline);
-                byte[] cols = BitConverter.GetBytes(objectIndex + offset);
+
+                byte[] cols = BitConverter.GetBytes(i + offset);
                 GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
                 spline.GetVBO();
                 GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
@@ -318,15 +319,17 @@ namespace RatchetEdit
         }
         public void FakeDrawCuboids(List<Cuboid> cuboids, int offset)
         {
-            foreach (Cuboid cuboid in cuboids)
+            for (int i = 0; i < cuboids.Count; i++)
             {
+                Cuboid cuboid = cuboids[i];
+
                 GL.UseProgram(colorShaderID);
                 GL.EnableVertexAttribArray(0);
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                 Matrix4 mvp = cuboid.modelMatrix * worldView;
                 GL.UniformMatrix4(matrixID, false, ref mvp);
-                int objectIndex = cuboids.IndexOf(cuboid);
-                byte[] cols = BitConverter.GetBytes(objectIndex + offset);
+
+                byte[] cols = BitConverter.GetBytes(i + offset);
                 GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
 
                 cuboid.GetVBO();
@@ -340,8 +343,10 @@ namespace RatchetEdit
         }
         public void FakeDrawObjects(List<ModelObject> levelObjects, int offset)
         {
-            foreach (ModelObject levelObject in levelObjects)
+            for(int i = 0; i < levelObjects.Count; i++)
             {
+                ModelObject levelObject = levelObjects[i];
+
                 if (levelObject.model == null || levelObject.model.vertexBuffer == null)
                     continue;
 
@@ -351,8 +356,7 @@ namespace RatchetEdit
                 levelObject.model.GetVBO();
                 levelObject.model.GetIBO();
 
-                int objectIndex = levelObjects.IndexOf(levelObject);
-                byte[] cols = BitConverter.GetBytes(objectIndex + offset);
+                byte[] cols = BitConverter.GetBytes(i + offset);
                 GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
                 GL.DrawElements(PrimitiveType.Triangles, levelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
 
@@ -454,102 +458,108 @@ namespace RatchetEdit
             GL.ClearColor(0, 0, 0, 0);
 
             worldView = view * projection;
-
+            
             int offset = 0;
+
+            
             if (enableMoby)
             {
                 mobyOffset = offset;
                 FakeDrawObjects(level.mobs.Cast<ModelObject>().ToList(), mobyOffset);
                 offset += level.mobs.Count;
             }
+           
             if (enableTie)
             {
                 tieOffset = offset;
                 FakeDrawObjects(level.ties.Cast<ModelObject>().ToList(), tieOffset);
                 offset += level.ties.Count;
             }
-            if (enableShrub)
-            {
-                shrubOffset = offset;
-                FakeDrawObjects(level.shrubs.Cast<ModelObject>().ToList(), shrubOffset);
-                offset += level.shrubs.Count;
-            }
-            if (enableSpline)
-            {
-                splineOffset = offset;
-                FakeDrawSplines(level.splines, splineOffset);
-                offset += level.splines.Count;
-            }
-            if (enableCuboid)
-            {
-                cuboidOffset = offset;
-                FakeDrawCuboids(level.cuboids, cuboidOffset);
-                offset += level.cuboids.Count;
-            }
+            
+           if (enableShrub)
+           {
+               shrubOffset = offset;
+               FakeDrawObjects(level.shrubs.Cast<ModelObject>().ToList(), shrubOffset);
+               offset += level.shrubs.Count;
+           }
 
-            RenderTool();
+           if (enableSpline)
+           {
+               splineOffset = offset;
+               FakeDrawSplines(level.splines, splineOffset);
+               offset += level.splines.Count;
+           }
 
-            Pixel pixel = new Pixel();
-            GL.ReadPixels(x, Height - y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixel);
+           if (enableCuboid)
+           {
+               cuboidOffset = offset;
+               FakeDrawCuboids(level.cuboids, cuboidOffset);
+               offset += level.cuboids.Count;
+           }
 
-            //Console.WriteLine("R: {0}, G: {1}, B: {2}, A: {3}", pixel.R, pixel.G, pixel.B, pixel.A);
+           RenderTool();
 
-            GL.ClearColor(Color.SkyBlue);
+           Pixel pixel = new Pixel();
+           GL.ReadPixels(x, Height - y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixel);
 
-            // Some GPU's put the alpha at 0, others at 255
-            if (pixel.A == 255 || pixel.A == 0)
-            {
-                pixel.A = 0;
+           //Console.WriteLine("R: {0}, G: {1}, B: {2}, A: {3}", pixel.R, pixel.G, pixel.B, pixel.A);
 
-                bool didHitTool = false;
-                if (pixel.R == 255 && pixel.G == 0 && pixel.B == 0)
-                {
-                    didHitTool = true;
-                    xLock = true;
-                }
-                else if (pixel.R == 0 && pixel.G == 255 && pixel.B == 0)
-                {
-                    didHitTool = true;
-                    yLock = true;
-                }
-                else if (pixel.R == 0 && pixel.G == 0 && pixel.B == 255)
-                {
-                    didHitTool = true;
-                    zLock = true;
-                }
+           GL.ClearColor(Color.SkyBlue);
 
-                if (didHitTool)
-                {
-                    InvalidateView();
-                    hitTool = true;
-                    return null;
-                }
+           // Some GPU's put the alpha at 0, others at 255
+           if (pixel.A == 255 || pixel.A == 0)
+           {
+               pixel.A = 0;
+
+               bool didHitTool = false;
+               if (pixel.R == 255 && pixel.G == 0 && pixel.B == 0)
+               {
+                   didHitTool = true;
+                   xLock = true;
+               }
+               else if (pixel.R == 0 && pixel.G == 255 && pixel.B == 0)
+               {
+                   didHitTool = true;
+                   yLock = true;
+               }
+               else if (pixel.R == 0 && pixel.G == 0 && pixel.B == 255)
+               {
+                   didHitTool = true;
+                   zLock = true;
+               }
+
+               if (didHitTool)
+               {
+                   InvalidateView();
+                   hitTool = true;
+                   return null;
+               }
 
 
 
-                int id = (int)pixel.ToUInt32();
-                if (enableMoby && id < level.mobs?.Count)
-                {
-                    returnObject = level.mobs[id];
-                }
-                else if (enableTie && id - tieOffset < level.ties.Count)
-                {
-                    returnObject = level.ties[id - tieOffset];
-                }
-                else if (enableShrub && id - shrubOffset < level.shrubs.Count)
-                {
-                    returnObject = level.shrubs[id - shrubOffset];
-                }
-                else if (enableSpline && id - splineOffset < level.splines.Count)
-                {
-                    returnObject = level.splines[id - splineOffset];
-                }
-                else if (enableCuboid && id - cuboidOffset < level.cuboids.Count)
-                {
-                    returnObject = level.cuboids[id - cuboidOffset];
-                }
-            }
-
+               int id = (int)pixel.ToUInt32();
+               if (enableMoby && id < level.mobs?.Count)
+               {
+                   returnObject = level.mobs[id];
+               }
+               else if (enableTie && id - tieOffset < level.ties.Count)
+               {
+                   returnObject = level.ties[id - tieOffset];
+               }
+               else if (enableShrub && id - shrubOffset < level.shrubs.Count)
+               {
+                   returnObject = level.shrubs[id - shrubOffset];
+               }
+               else if (enableSpline && id - splineOffset < level.splines.Count)
+               {
+                   returnObject = level.splines[id - splineOffset];
+               }
+               else if (enableCuboid && id - cuboidOffset < level.cuboids.Count)
+               {
+                   returnObject = level.cuboids[id - cuboidOffset];
+               }
+           }
+           
             hitTool = false;
             return returnObject;
         }

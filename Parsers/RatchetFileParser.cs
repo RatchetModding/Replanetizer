@@ -31,10 +31,10 @@ namespace RatchetEdit.Parsers
 
         protected List<Model> GetMobyModels(int mobyModelPointer)
         {
-            List<Model> mobyModels = new List<Model>();
-
             //Get the moby count from the start of the section
             int mobyModelCount = ReadInt(ReadBlock(fileStream, mobyModelPointer, 4), 0);
+
+            List<Model> mobyModels = new List<Model>(mobyModelCount);
 
             //Each moby is stored as a [MobyID, offset] pair
             byte[] mobyIDBlock = ReadBlock(fileStream, mobyModelPointer + 4, mobyModelCount * 8);
@@ -49,7 +49,7 @@ namespace RatchetEdit.Parsers
 
         protected List<Model> GetTieModels(int tieModelPointer, int tieModelCount)
         {
-            List<Model> tieModelList = new List<Model>();
+            List<Model> tieModelList = new List<Model>(tieModelCount);
 
             //Read the whole header block, and add models based on the count
             byte[] levelBlock = ReadBlock(fileStream, tieModelPointer, tieModelCount * 0x40);
@@ -63,7 +63,7 @@ namespace RatchetEdit.Parsers
 
         protected List<Model> GetShrubModels(int shrubModelPointer, int shrubModelCount)
         {
-            List<Model> shrubModelList = new List<Model>();
+            List<Model> shrubModelList = new List<Model>(shrubModelCount);
 
             //Read the whole header block, and add models based on the count
             byte[] shrubBlock = ReadBlock(fileStream, shrubModelPointer, shrubModelCount * 0x40);
@@ -76,7 +76,7 @@ namespace RatchetEdit.Parsers
 
         protected List<Texture> GetTextures(int texturePointer, int textureCount)
         {
-            List<Texture> textureList = new List<Texture>();
+            List<Texture> textureList = new List<Texture>(textureCount);
 
             //Read the whole texture header block, and add textures based on the count
             byte[] textureBlock = ReadBlock(fileStream, texturePointer, textureCount * Texture.TEXTUREELEMSIZE);
@@ -89,7 +89,7 @@ namespace RatchetEdit.Parsers
 
         protected List<Tie> GetTies(List<Model> tieModels, int tiePointer, int tieCount)
         {
-            List<Tie> ties = new List<Tie>();
+            List<Tie> ties = new List<Tie>(tieCount);
 
             //Read the whole texture header block, and add textures based on the count
             byte[] tieBlock = ReadBlock(fileStream, tiePointer, tieCount * 0x70);
@@ -103,9 +103,9 @@ namespace RatchetEdit.Parsers
 
         protected List<Shrub> GetShrubs(List<Model> shrubModels, int shrubPointer, int shrubCount)
         {
-            List<Shrub> shrubs = new List<Shrub>();
+            List<Shrub> shrubs = new List<Shrub>(shrubCount);
 
-            //Read the whole texture header block, and add textures based on the count
+            //Read the whole texture header block, and add models based on the count
             byte[] shrubBlock = ReadBlock(fileStream, shrubPointer, shrubCount * 0x70);
             for (int i = 0; i < shrubCount; i++)
             {
@@ -117,7 +117,7 @@ namespace RatchetEdit.Parsers
 
         protected List<Light> GetLights(int lightPointer, int lightCount)
         {
-            List<Light> lightList = new List<Light>();
+            List<Light> lightList = new List<Light>(lightCount);
 
             //Read the whole header block, and add lights based on the count
             byte[] lightBlock = ReadBlock(fileStream, lightPointer, lightCount * 0x40);
@@ -131,11 +131,12 @@ namespace RatchetEdit.Parsers
 
         protected List<TerrainModel> GetTerrainModels(int terrainModelPointer)
         {
-            List<TerrainHeader> pointerList = new List<TerrainHeader>();
             //Read the whole terrain header
             byte[] terrainBlock = ReadBlock(fileStream, terrainModelPointer, 0x60);
             int terrainHeadPointer = ReadInt(terrainBlock, 0);
             ushort terrainHeadCount = ReadUshort(terrainBlock, 0x06);
+
+            List<TerrainHeader> pointerList = new List<TerrainHeader>(terrainHeadCount);
 
 
             byte[] terrainHeadBlock = ReadBlock(fileStream, terrainHeadPointer, terrainHeadCount * 0x30);
@@ -150,7 +151,7 @@ namespace RatchetEdit.Parsers
                 pointerList[head.slotNum].heads.Add(head);
             }
 
-            List<TerrainModel> terrainModels = new List<TerrainModel>();
+            List<TerrainModel> terrainModels = new List<TerrainModel>(pointerList.Count);
             foreach (TerrainHeader hd in pointerList)
             {
                 terrainModels.Add(new TerrainModel(fileStream, hd));
@@ -191,7 +192,7 @@ namespace RatchetEdit.Parsers
             byte[] elemBlock = ReadBlock(fileStream, elemOffset, elemCount * 8);
             byte[] spriteBlock = ReadBlock(fileStream, spriteOffset, spriteCount * 4);
 
-            var list = new List<UiElement>();
+            var list = new List<UiElement>(elemCount);
             for(int i = 0; i < elemCount; i++)
             {
                 list.Add(new UiElement(elemBlock, i, spriteBlock));
@@ -205,7 +206,7 @@ namespace RatchetEdit.Parsers
             byte boneCount = (byte)ratchet.boneMatrices.Count;
 
             byte[] headBlock = ReadBlock(fileStream, offset, count * 0x04);
-            List<Animation> animations = new List<Animation>();
+            List<Animation> animations = new List<Animation>(ratchet.animations.Count);
             for(int i = 0; i < count; i++)
             {
                 animations.Add(new Animation(fileStream, ReadInt(headBlock, i * 4), 0, boneCount, true));
@@ -215,7 +216,7 @@ namespace RatchetEdit.Parsers
 
         protected List<Model> GetWeapons(int weaponPointer, int count)
         {
-            List<Model> weaponModels = new List<Model>();
+            List<Model> weaponModels = new List<Model>(count);
 
             //Each moby is stored as a [MobyID, offset] pair
             byte[] mobyIDBlock = ReadBlock(fileStream, weaponPointer, count * 0x10);
@@ -235,7 +236,7 @@ namespace RatchetEdit.Parsers
 
         protected List<int> GetTextureConfigMenu(int textureConfigMenuOffset, int textureConfigMenuCount)
         {
-            List<int> textureConfigMenuList = new List<int>();
+            List<int> textureConfigMenuList = new List<int>(textureConfigMenuCount);
             byte[] textureConfigMenuBlock = ReadBlock(fileStream, textureConfigMenuOffset, textureConfigMenuCount * 4);
 
             for (int i = 0; i < textureConfigMenuCount; i++)

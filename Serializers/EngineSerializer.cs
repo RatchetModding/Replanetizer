@@ -18,86 +18,40 @@ namespace RatchetEdit.Serializers
         {
             this.pathName = pathName;
             FileStream fs = File.Open(pathName + "/engine.ps3", FileMode.Create);
-            EngineHeader engineHeader = new EngineHeader();
 
             // Seek past the header, as we don't have the data ready for it yet
             fs.Seek(0x90, SeekOrigin.Begin);
 
-            engineHeader.uiElementPointer = (int)fs.Position;
-            WriteUiElements(fs, level.uiElements);
-
-
-            // Write all the different data types to the file
-            SeekPast(fs);
-            engineHeader.skyboxPointer = (int)fs.Position;
-            byte[] skyboxBytes = level.skybox.Serialize((int)fs.Position);
-            fs.Write(skyboxBytes, 0, skyboxBytes.Length);
-
-
-
-            // Fix these
-
-            // 0x3c - terrain
-            engineHeader.terrainPointer = SeekWrite(fs, level.terrainBytes);
-
-            // 0x04 - renderdef
-            engineHeader.renderDefPointer = SeekWrite(fs, level.renderDefBytes);
-
-            // 0x14 - collision
-            engineHeader.collisionPointer = SeekWrite(fs, level.collBytes);
-
-
-            SeekPast(fs);
-            engineHeader.mobyModelPointer = (int)fs.Position;
-            byte[] mobyModelBytes = WriteMobies(level.mobyModels, (int)fs.Position);
-            fs.Write(mobyModelBytes, 0, mobyModelBytes.Length);
-
-            SeekPast(fs);
-            engineHeader.playerAnimationPointer = (int)fs.Position;
-            byte[] playerAnimationBytes = WritePlayerAnimations(level.playerAnimations, (int)fs.Position);
-            fs.Write(playerAnimationBytes, 0, playerAnimationBytes.Length);
-
-            SeekPast(fs);
-            engineHeader.weaponPointer = (int)fs.Position;
-            byte[] weaponModelBytes = WriteWeapons(level.weaponModels, (int)fs.Position);
-            fs.Write(weaponModelBytes, 0, weaponModelBytes.Length);
-
-            SeekPast(fs);
-            engineHeader.tieModelPointer = (int)fs.Position;
-            byte[] tiemodelBytes = WriteTieModels(level.tieModels, (int)fs.Position);
-            fs.Write(tiemodelBytes, 0, tiemodelBytes.Length);
-
-            SeekPast(fs);
-            engineHeader.tiePointer = (int)fs.Position;
-            byte[] tieBytes = WriteTies(level.ties, (int)fs.Position);
-            fs.Write(tieBytes, 0, tieBytes.Length);
-
-            SeekPast(fs);
-            engineHeader.shrubModelPointer = (int)fs.Position;
-            byte[] shrubModelBytes = WriteShrubModels(level.shrubModels, (int)fs.Position);
-            fs.Write(shrubModelBytes, 0, shrubModelBytes.Length);
-
-            engineHeader.shrubPointer = SeekWrite(fs, WriteShrubs(level.shrubs));
-            engineHeader.textureConfigMenuPointer = SeekWrite(fs, WriteTextureConfigMenus(level.textureConfigMenus));
-
-            // And these
-            engineHeader.texture2dPointer = SeekWrite(fs, level.billboardBytes);        // 0x70 2dtexturestuff
-            engineHeader.soundConfigPointer = SeekWrite(fs, level.soundConfigBytes);    // 0x48 soundconfigs
-            engineHeader.lightPointer = SeekWrite(fs, WriteLights(level.lights));
-            engineHeader.lightConfigPointer = SeekWrite(fs, level.lightConfig);
-            engineHeader.texturePointer = SeekWrite(fs, WriteTextures(level.textures));
-
-
-            // Counts
-            engineHeader.tieModelCount = level.tieModels.Count;
-            engineHeader.tieCount = level.ties.Count;
-            engineHeader.shrubModelCount = level.shrubModels.Count;
-            engineHeader.shrubCount = level.shrubs.Count;
-            engineHeader.weaponCount = level.weaponModels.Count;
-            engineHeader.textureCount = level.textures.Count;
-            engineHeader.lightCount = level.lights.Count;
-            engineHeader.textureConfigMenuCount = level.textureConfigMenus.Count;
-
+            EngineHeader engineHeader = new EngineHeader
+            {
+                uiElementPointer =          SeekWrite(fs, WriteUiElements(level.uiElements, (int)fs.Position)),
+                skyboxPointer =             SeekWrite(fs, level.skybox.Serialize((int)fs.Position)),
+                terrainPointer =            SeekWrite(fs, level.terrainBytes),              // 0x3c - terrain
+                renderDefPointer =          SeekWrite(fs, level.renderDefBytes),            // 0x04 - renderdef
+                collisionPointer =          SeekWrite(fs, level.collBytes),                 // 0x14 - collision
+                mobyModelPointer =          SeekWrite(fs, WriteMobies(level.mobyModels, (int)fs.Position)),
+                playerAnimationPointer =    SeekWrite(fs, WritePlayerAnimations(level.playerAnimations, (int)fs.Position)),
+                weaponPointer =             SeekWrite(fs, WriteWeapons(level.weaponModels, (int)fs.Position)),
+                tieModelPointer =           SeekWrite(fs, WriteTieModels(level.tieModels, (int)fs.Position)),
+                tiePointer =                SeekWrite(fs, WriteTies(level.ties, (int)fs.Position)),
+                shrubModelPointer =         SeekWrite(fs, WriteShrubModels(level.shrubModels, (int)fs.Position)),
+                shrubPointer =              SeekWrite(fs, WriteShrubs(level.shrubs)),
+                textureConfigMenuPointer =  SeekWrite(fs, WriteTextureConfigMenus(level.textureConfigMenus)),
+                texture2dPointer =          SeekWrite(fs, level.billboardBytes),            // 0x70 2dtexturestuff
+                soundConfigPointer =        SeekWrite(fs, level.soundConfigBytes),          // 0x48 soundconfigs
+                lightPointer =              SeekWrite(fs, WriteLights(level.lights)),
+                lightConfigPointer =        SeekWrite(fs, level.lightConfig),
+                texturePointer =            SeekWrite(fs, WriteTextures(level.textures)),
+                // Counts
+                tieModelCount =             level.tieModels.Count,
+                tieCount =                  level.ties.Count,
+                shrubModelCount =           level.shrubModels.Count,
+                shrubCount =                level.shrubs.Count,
+                weaponCount =               level.weaponModels.Count,
+                textureCount =              level.textures.Count,
+                lightCount =                level.lights.Count,
+                textureConfigMenuCount =    level.textureConfigMenus.Count
+            };
 
             // Seek to the beginning and write the header now that we have all the pointers
             byte[] head = engineHeader.Serialize();
@@ -105,19 +59,15 @@ namespace RatchetEdit.Serializers
             fs.Write(head, 0, head.Length);
 
             fs.Close();
-
-            //*/
         }
-
 
         private int SeekWrite(FileStream fs, byte[] bytes)
         {
-            SeekPast(fs);
             int pos = (int)fs.Position;
             fs.Write(bytes, 0, bytes.Length);
+            SeekPast(fs);
             return pos;
         }
-
 
         private void SeekPast(FileStream fs)
         {
@@ -127,7 +77,7 @@ namespace RatchetEdit.Serializers
             }
         }
 
-        private void WriteUiElements(FileStream fs, List<UiElement> uiElements)
+        private byte[] WriteUiElements(List<UiElement> uiElements, int fileOffset)
         {
             short offset = 0;
             var spriteIds = new List<int>();
@@ -150,15 +100,8 @@ namespace RatchetEdit.Serializers
                 WriteInt(ref spriteBytes, i * 4, spriteIds[i]);
             }
 
-
-            int headStart = (int)fs.Position;
-            fs.Seek(0x10, SeekOrigin.Current);
-            int elemStart = (int)fs.Position;
-            fs.Write(elemBytes, 0, elemBytes.Length);
-            SeekPast(fs);
-            int spriteStart = (int)fs.Position;
-            fs.Write(spriteBytes, 0, spriteBytes.Length);
-            int sectionEnd = (int)fs.Position;
+            int elemStart = fileOffset + 0x10;
+            int spriteStart = GetLength(elemStart + elemBytes.Length);
 
             byte[] headBytes = new byte[0x10];
             WriteShort(ref headBytes, 0x00, (short)uiElements.Count);
@@ -166,9 +109,12 @@ namespace RatchetEdit.Serializers
             WriteInt(ref headBytes, 0x04, elemStart);
             WriteInt(ref headBytes, 0x08, spriteStart);
 
-            fs.Seek(headStart, SeekOrigin.Begin);
-            fs.Write(headBytes, 0, headBytes.Length);
-            fs.Seek(sectionEnd, SeekOrigin.Begin);
+            byte[] outBytes = new byte[headBytes.Length + GetLength(elemBytes.Length) + GetLength(spriteBytes.Length)];
+            headBytes.CopyTo(outBytes, 0);
+            elemBytes.CopyTo(outBytes, 0x10);
+            spriteBytes.CopyTo(outBytes, 0x10 + GetLength(elemBytes.Length));
+
+            return outBytes;
         }
 
         private byte[] WriteMobies(List<Model> mobyModels, int initOffset)

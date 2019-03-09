@@ -28,8 +28,8 @@ namespace RatchetEdit
 
         private void Main_Load(object sender, EventArgs e)
         {
-            mobNames = GetModelNames("/ModelListRC1.txt");
-            tieNames = GetModelNames("/TieModelsRC1.txt");
+            mobNames = GetModelNames("/ModelLists/ModelListRC1.txt");
+            tieNames = GetModelNames("/ModelLists/TieModelsRC1.txt");
             objectTree.Init(mobNames, tieNames);
             glControl.SelectTool(glControl.translateTool);
         }

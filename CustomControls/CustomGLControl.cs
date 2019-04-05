@@ -619,18 +619,29 @@ namespace RatchetEdit
                 Process process = Process.GetProcessesByName("rpcs3")[0];
                 IntPtr processHandle = OpenProcess(PROCESS_WM_READ, false, process.Id);
                 int bytesRead = 0;
-                byte[] buffer = new byte[0x20000];
 
-                ReadProcessMemory((int)processHandle, 0x34435F880, buffer, buffer.Length, ref bytesRead);
+				byte[] ptrbuf = new byte[0xC];
 
-                for(int i = 0; i < 0x200; i++)
+				ReadProcessMemory((int)processHandle, 0x300A390A0, ptrbuf, ptrbuf.Length, ref bytesRead);
+				int firstMoby = ReadInt(ptrbuf, 0x00);
+				int lastMoby = ReadInt(ptrbuf, 0x08);
+
+                byte[] mobys = new byte[lastMoby + 0x100 - firstMoby];
+
+                ReadProcessMemory((int)processHandle, 0x300000000 + firstMoby, mobys, mobys.Length, ref bytesRead);
+
+                for(int i = 0; i < mobys.Length; i += 0x100)
                 {
-                    int offs = i * 0x100;
-                    ushort modId = ReadUshort(buffer, offs + 0xA6);
+					// If dead
+					if(mobys[i + 0x20] > 0x7F) continue;
+
+                    ushort modId = ReadUshort(mobys, i + 0xA6);
+					float scale = ReadFloat(mobys, i + 0x2C);
+
                     //Console.WriteLine(modId);
                     level.mobs.Add(new Moby(level.mobyModels.Find(x => x.id == modId),
-                        new Vector3(ReadFloat(buffer, offs + 0x10), ReadFloat(buffer, offs + 0x14), ReadFloat(buffer, offs + 0x18)),
-                        new Vector3(ReadFloat(buffer, offs + 0x40), ReadFloat(buffer, offs + 0x44), ReadFloat(buffer, offs + 0x48)),
+                        new Vector3(ReadFloat(mobys, i + 0x10), ReadFloat(mobys, i + 0x14), ReadFloat(mobys, i + 0x18)),
+                        new Vector3(ReadFloat(mobys, i + 0x40), ReadFloat(mobys, i + 0x44), ReadFloat(mobys, i + 0x48)),
                         new Vector3(1, 1, 1))
                         );
                 }

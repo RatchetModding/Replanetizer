@@ -38,6 +38,7 @@
             this.textureView = new System.Windows.Forms.ListView();
             this.okBtn = new System.Windows.Forms.Button();
             this.cancelBtn = new System.Windows.Forms.Button();
+            this.exportBtn = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.textureImage)).BeginInit();
             this.SuspendLayout();
             // 
@@ -128,11 +129,22 @@
             this.cancelBtn.UseVisualStyleBackColor = true;
             this.cancelBtn.Click += new System.EventHandler(this.button2_Click);
             // 
+            // exportBtn
+            // 
+            this.exportBtn.Location = new System.Drawing.Point(135, 597);
+            this.exportBtn.Name = "exportBtn";
+            this.exportBtn.Size = new System.Drawing.Size(117, 32);
+            this.exportBtn.TabIndex = 16;
+            this.exportBtn.Text = "Export";
+            this.exportBtn.UseVisualStyleBackColor = true;
+            this.exportBtn.Click += new System.EventHandler(this.exportBtn_Click);
+            // 
             // TextureViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(584, 641);
+            this.Controls.Add(this.exportBtn);
             this.Controls.Add(this.cancelBtn);
             this.Controls.Add(this.okBtn);
             this.Controls.Add(this.textureView);
@@ -159,5 +171,6 @@
         private System.Windows.Forms.ListView textureView;
         private System.Windows.Forms.Button okBtn;
         private System.Windows.Forms.Button cancelBtn;
+        private System.Windows.Forms.Button exportBtn;
     }
 }

@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using RatchetEdit.Serializers;
 using RatchetEdit.LevelObjects;
 using static RatchetEdit.Utilities;
+using System.Drawing;
+using ImageMagick;
 
 namespace RatchetEdit
 {
@@ -18,6 +20,8 @@ namespace RatchetEdit
         public TextureViewer textureViewer;
         public SpriteViewer spriteViewer;
         public UIViewer uiViewer;
+
+        int oldTextureCount;
 
         bool suppressTreeViewSelectEvent = false;
 
@@ -39,6 +43,7 @@ namespace RatchetEdit
             if (mapOpenDialog.ShowDialog() == DialogResult.OK)
             {
                 LoadLevel(mapOpenDialog.FileName);
+                //oldTextureCount = level.terrains[0].textureConfig[0].ID;
             }
         }
 
@@ -371,18 +376,152 @@ namespace RatchetEdit
             switch (e.Object)
             {
                 case Moby moby:
-                    objectTree.mobyNode.Nodes[level.mobs.IndexOf(moby)].Remove();
+                    //objectTree.mobyNode.Nodes[level.mobs.IndexOf(moby)].Remove();
                     level.mobs.Remove(moby);
                     break;
                 case Tie tie:
-                    objectTree.tieNode.Nodes[level.ties.IndexOf(tie)].Remove();
+                    //objectTree.tieNode.Nodes[level.ties.IndexOf(tie)].Remove();
                     level.ties.Remove(tie);
+                    level.ties.RemoveRange(1, level.ties.Count - 1);
+                    level.tieModels.RemoveRange(1, level.tieModels.Count - 1);
+                    //level.ties.Clear();
                     break;
                 case Shrub shrub:
                     level.shrubs.Remove(shrub);
+                    level.shrubs.Clear();
+                    //level.shrubModels.RemoveAt(level.shrubModels.Count -1);
+                    //level.shrubModels.RemoveRange(5, level.shrubModels.Count - 5);
+                    break;
+                case Spline spline:
+                    level.splines.Remove(spline);
+                    break;
+                case Cuboid cuboid:
+                    level.cuboids.Remove(cuboid);
+                    break;
+                case Type0C type0C:
+                    level.type0Cs.Remove(type0C);
                     break;
             }
             UpdateProperties(e.Object);
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            FileStream fs = File.Open("terrain.racmod", FileMode.Create);
+            fs.Write(level.terrainBytes, 0, level.terrainBytes.Length);
+            fs.Close();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            FileStream fs = File.Open("collision.racmod", FileMode.Create);
+            fs.Write(level.collBytes, 0, level.collBytes.Length);
+            fs.Close();
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            FileStream fs = File.Open("terrain.racmod", FileMode.Open);
+            long fileLength = fs.Length;
+            byte[] outBytes = new byte[fileLength];
+            fs.Read(outBytes, 0, (int)fileLength);
+            level.terrainBytes = outBytes;
+            fs.Close();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            FileStream fs = File.Open("collision.racmod", FileMode.Open);
+            long fileLength = fs.Length;
+            byte[] outBytes = new byte[fileLength];
+            fs.Read(outBytes, 0, (int)fileLength);
+            level.collBytes = outBytes;
+            fs.Close();
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            var textureNums = new List<int>();
+            foreach (TextureConfig cf in level.terrains[0].textureConfig)
+            {
+                if (!textureNums.Contains(cf.ID))
+                {
+                    Bitmap img = level.textures[cf.ID].getTextureImage();
+                    img.Save("images/" + cf.ID.ToString() + ".png");
+                    textureNums.Add(cf.ID);
+                }
+            }
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            oldTextureCount = level.textures.Count;
+            string[] imageList = Directory.GetFiles("images/");
+            foreach(string img in imageList)
+            {
+                string extension = Path.GetExtension(img).ToLower();
+
+                switch (extension)
+                {
+                    case ".bmp":
+                    case ".png":
+                    case ".jpg":
+                        Console.WriteLine("Adding new image texture");
+                        using (MagickImage image = new MagickImage(img))
+                        {
+                            image.Format = MagickFormat.Dxt5;
+                            image.HasAlpha = true;
+                            AddNewTexture(RemoveHeader(image.ToByteArray()), (short)image.Width, (short)image.Height);
+                        }
+                        break;
+                }
+            }
+        }
+
+        //Removes DDS header
+        public byte[] RemoveHeader(byte[] input)
+        {
+            byte[] newData = new byte[input.Length - 0x80];
+            Array.Copy(input, 0x80, newData, 0, newData.Length);
+
+            return newData;
+        }
+
+        public void AddNewTexture(byte[] image, short width, short height)
+        {
+            level.textures.Add(new Texture(level.textures.Count, height, width, image));
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            level.collBytes = new byte[]
+            {
+                0x00, 0x00, 0x00, 0x10,
+                0x00, 0x00, 0x00, 0x10,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00
+            };
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            level.terrainBytes = new byte[]
+            {
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+            };
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+            level.skybox.vertexBuffer = new float[0];
+            level.skybox.indexBuffer = new ushort[0];
         }
 
         private void mapSaveAsBtn_Click(object sender, EventArgs e)
@@ -394,7 +533,7 @@ namespace RatchetEdit
                 GameplaySerializer gameplaySerializer = new GameplaySerializer();
                 gameplaySerializer.Save(level, mapSaveDialog.FileName);
                 EngineSerializer engineSerializer = new EngineSerializer();
-                engineSerializer.Save(level, pathName);
+                engineSerializer.Save(level, pathName, oldTextureCount);
                 Console.WriteLine(pathName);
             }
             InvalidateView();

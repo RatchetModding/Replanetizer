@@ -14,7 +14,7 @@ namespace RatchetEdit.Serializers
     {
         public string pathName;
 
-        public void Save(Level level, String pathName)
+        public void Save(Level level, String pathName, int textureCount)
         {
             this.pathName = pathName;
             FileStream fs = File.Open(pathName + "/engine.ps3", FileMode.Create);
@@ -75,6 +75,49 @@ namespace RatchetEdit.Serializers
             {
                 fs.Seek(4, SeekOrigin.Current);
             }
+        }
+
+        private byte[] WriteTerrainBytes(byte[] terrainBlock, int fileOffset, int textureCount)
+        {
+            int texOffset0 = ReadInt(terrainBlock, 0x70);
+            int off_00 = ReadInt(terrainBlock, 0x00);
+            int off_08 = ReadInt(terrainBlock, 0x08);
+            int off_18 = ReadInt(terrainBlock, 0x18);
+            int off_28 = ReadInt(terrainBlock, 0x28);
+            int off_38 = ReadInt(terrainBlock, 0x38);
+
+            WriteInt(ref terrainBlock, 0x00, off_00 + fileOffset);
+            WriteInt(ref terrainBlock, 0x08, off_08 + fileOffset);
+            WriteInt(ref terrainBlock, 0x18, off_18 + fileOffset);
+            WriteInt(ref terrainBlock, 0x28, off_28 + fileOffset);
+            WriteInt(ref terrainBlock, 0x38, off_38 + fileOffset);
+
+            short headCount = ReadShort(terrainBlock, 0x06);
+
+            int texCount = 0;
+            for (int i = 0; i < headCount; i++)
+            {
+                int texOffset = ReadInt(terrainBlock, 0x70 + i * 0x30);
+                WriteInt(ref terrainBlock, 0x70 + i * 0x30, texOffset + fileOffset);
+                texCount += ReadShort(terrainBlock, 0x76 + i * 0x30);
+            }
+
+
+            
+
+            for (int i = 0; i < texCount; i++)
+            {
+                int texId = ReadInt(terrainBlock, texOffset0 + i * 0x10);
+                WriteInt(ref terrainBlock, texOffset0 + i * 0x10, texId + textureCount);
+            }
+
+            Console.WriteLine("Texutre0offset: " + texOffset0);
+            Console.WriteLine("textureCount: " + textureCount);
+            Console.WriteLine("texCount: " + texCount);
+
+
+
+            return terrainBlock;
         }
 
         private byte[] WriteUiElements(List<UiElement> uiElements, int fileOffset)

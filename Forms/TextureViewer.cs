@@ -166,5 +166,11 @@ namespace RatchetEdit
             DialogResult = DialogResult.Cancel;
             Close();
         }
+
+        private void exportBtn_Click(object sender, EventArgs e)
+        {
+            Bitmap image = main.level.textures[textureView.SelectedIndices[0]].getTextureImage();
+            image.Save(textureView.SelectedIndices[0].ToString() + ".png");
+        }
     }
 }

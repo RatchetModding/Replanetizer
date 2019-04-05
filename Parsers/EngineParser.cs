@@ -95,17 +95,39 @@ namespace RatchetEdit.Parsers
         // TODO: Arbitrary bytes, parse properly
         public byte[] GetTerrainBytes()
         {
-            return ReadArbBytes(engineHead.terrainPointer, engineHead.renderDefPointer - engineHead.terrainPointer);
+            if(engineHead.renderDefPointer > 0)
+            {
+                return GetTerrainBytes(engineHead.terrainPointer, engineHead.renderDefPointer - engineHead.terrainPointer);
+            }
+            else
+            {
+                return GetTerrainBytes(engineHead.terrainPointer, engineHead.skyboxPointer - engineHead.terrainPointer);
+            }
+            
         }
 
         public byte[] GetRenderDefBytes()
         {
-            return ReadArbBytes(engineHead.renderDefPointer, engineHead.collisionPointer - engineHead.renderDefPointer);
+            if(engineHead.renderDefPointer > 0)
+            {
+                return ReadArbBytes(engineHead.renderDefPointer, engineHead.collisionPointer - engineHead.renderDefPointer);
+            }
+            else
+            {
+                return new byte[0];
+            }
         }
 
         public byte[] GetCollisionBytes()
         {
-            return ReadArbBytes(engineHead.collisionPointer, engineHead.mobyModelPointer - engineHead.collisionPointer);
+            if(engineHead.collisionPointer > 0)
+            {
+                return ReadArbBytes(engineHead.collisionPointer, engineHead.mobyModelPointer - engineHead.collisionPointer);
+            }
+            else
+            {
+                return new byte[0];
+            }
         }
 
         public byte[] GetBillboardBytes()

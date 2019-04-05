@@ -11,11 +11,30 @@ using RatchetEdit.Tools;
 using RatchetEdit.Models;
 using RatchetEdit.LevelObjects;
 using static RatchetEdit.Utilities;
+using static RatchetEdit.DataFunctions;
+
+// Used for memory reading
+using System.Runtime.InteropServices;
+using System.Diagnostics;
+using System.Text;
+
 
 namespace RatchetEdit
 {
     public class CustomGLControl : GLControl
     {
+        const int PROCESS_WM_READ = 0x0010;
+
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+
+        [DllImport("kernel32.dll")]
+        public static extern bool ReadProcessMemory(int hProcess, Int64 lpBaseAddress, byte[] lpBuffer, int dwSize, ref int lpNumberOfBytesRead);
+
+
+
+
+
         public Level level;
 
         public Matrix4 worldView;
@@ -107,6 +126,11 @@ namespace RatchetEdit
             enableTerrain = true;
 
             Moby ratchet = level.mobs[0];
+
+            //ratchet.position = new Vector3(0, 0, 100);
+
+            Console.WriteLine(level.mobs.Count);
+
             camera.MoveBehind(ratchet);
 
             SelectObject(null);
@@ -278,7 +302,7 @@ namespace RatchetEdit
             if (invalidate)
             {
                 Invalidate();
-                invalidate = false;
+                //invalidate = false;
             }
         }
 
@@ -588,8 +612,36 @@ namespace RatchetEdit
             GL.UseProgram(shaderID);
 
             if (enableMoby)
+            {
+                level.mobs.Clear();
+                
+
+                Process process = Process.GetProcessesByName("rpcs3")[0];
+                IntPtr processHandle = OpenProcess(PROCESS_WM_READ, false, process.Id);
+                int bytesRead = 0;
+                byte[] buffer = new byte[0x20000];
+
+                ReadProcessMemory((int)processHandle, 0x34435F880, buffer, buffer.Length, ref bytesRead);
+
+                for(int i = 0; i < 0x200; i++)
+                {
+                    int offs = i * 0x100;
+                    ushort modId = ReadUshort(buffer, offs + 0xA6);
+                    //Console.WriteLine(modId);
+                    level.mobs.Add(new Moby(level.mobyModels.Find(x => x.id == modId),
+                        new Vector3(ReadFloat(buffer, offs + 0x10), ReadFloat(buffer, offs + 0x14), ReadFloat(buffer, offs + 0x18)),
+                        new Vector3(ReadFloat(buffer, offs + 0x40), ReadFloat(buffer, offs + 0x44), ReadFloat(buffer, offs + 0x48)),
+                        new Vector3(1, 1, 1))
+                        );
+                }
+
+
                 foreach (Moby mob in level.mobs)
+                {
                     mob.Render(this, mob == selectedObject);
+                }
+            }
+
 
             if (enableTie)
                 foreach (Tie tie in level.ties)

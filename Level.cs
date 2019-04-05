@@ -6,6 +6,7 @@ using RatchetEdit.Models;
 using RatchetEdit.Parsers;
 using RatchetEdit.Headers;
 using RatchetEdit.Models.Animations;
+using System.Drawing;
 
 namespace RatchetEdit
 {
@@ -23,7 +24,6 @@ namespace RatchetEdit
         public List<Model> tieModels;
         public List<Model> shrubModels;
         public List<Model> weaponModels;
-        public Model terrainModel;
         public Model collisionModel;
         public List<Model> chunks;
         public List<Texture> textures;
@@ -234,6 +234,7 @@ namespace RatchetEdit
 
             vramParser.GetTextures(textures);
             vramParser.Close();
+
 
             Console.WriteLine("Level parsing done");
             valid = true;

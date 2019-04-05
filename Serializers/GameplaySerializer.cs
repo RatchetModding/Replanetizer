@@ -70,10 +70,14 @@ namespace RatchetEdit.Serializers
 
         private int SeekWrite(FileStream fs, byte[] bytes)
         {
-            SeekPast(fs);
-            int pos = (int)fs.Position;
-            fs.Write(bytes, 0, bytes.Length);
-            return pos;
+            if (bytes != null)
+            {
+                SeekPast(fs);
+                int pos = (int)fs.Position;
+                fs.Write(bytes, 0, bytes.Length);
+                return pos;
+            }
+            else return 0;
         }
 
         private void SeekPast(FileStream fs)

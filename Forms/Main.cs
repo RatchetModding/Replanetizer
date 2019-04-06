@@ -197,10 +197,11 @@ namespace RatchetEdit
 
         }
 
-        //Called every frame
+        // Called every frame
         private void tickTimer_Tick(object sender, EventArgs e)
         {
             glControl.Tick();
+            properties.Refresh();
         }
 
         private void cloneBtn_Click(object sender, EventArgs e)
@@ -522,6 +523,14 @@ namespace RatchetEdit
         {
             level.skybox.vertexBuffer = new float[0];
             level.skybox.indexBuffer = new ushort[0];
+        }
+
+        private void button10_Click(object sender, EventArgs e)
+        {
+            if (glControl.selectedObject is Moby moby)
+            {
+                Console.WriteLine(moby.pVarMemoryAddress);
+            }
         }
 
         private void mapSaveAsBtn_Click(object sender, EventArgs e)

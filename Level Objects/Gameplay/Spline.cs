@@ -2,6 +2,8 @@
 using OpenTK.Graphics.OpenGL;
 using OpenTK;
 using static RatchetEdit.Utilities;
+using System.ComponentModel;
+
 namespace RatchetEdit.LevelObjects
 {
     public class Spline : LevelObject, ITransformable
@@ -9,6 +11,9 @@ namespace RatchetEdit.LevelObjects
         public int name;
         public float[] vertexBuffer;
         public float[] wVals;
+
+        [Category("Attributes"), DisplayName("offset")]
+        public long offset { get; set; }
 
         static int cnt = 0;
 
@@ -53,6 +58,7 @@ namespace RatchetEdit.LevelObjects
 
         public Spline(byte[] splineBlock, int offset)
         {
+            this.offset = offset;
             LoadFromByteArray(splineBlock, offset);
         }
 
@@ -222,6 +228,7 @@ namespace RatchetEdit.LevelObjects
         public override void Render(CustomGLControl glControl, bool selected = false)
         {
             var worldView = glControl.worldView;
+            
             GL.UniformMatrix4(glControl.matrixID, false, ref worldView);
             GL.Uniform4(glControl.colorID, selected ? selectedColor : normalColor);
             GetVBO();

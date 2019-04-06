@@ -71,6 +71,7 @@ namespace RatchetEdit
             this.splineToolBtn = new System.Windows.Forms.ToolStripButton();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.objectTree = new RatchetEdit.ObjectTreeView();
+            this.button9 = new System.Windows.Forms.Button();
             this.button8 = new System.Windows.Forms.Button();
             this.button7 = new System.Windows.Forms.Button();
             this.button6 = new System.Windows.Forms.Button();
@@ -88,7 +89,7 @@ namespace RatchetEdit
             this.camZLabel = new System.Windows.Forms.Label();
             this.pitchLabel = new System.Windows.Forms.Label();
             this.mapSaveDialog = new System.Windows.Forms.SaveFileDialog();
-            this.button9 = new System.Windows.Forms.Button();
+            this.button10 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -490,6 +491,7 @@ namespace RatchetEdit
             // 
             // splitContainer2.Panel2
             // 
+            this.splitContainer2.Panel2.Controls.Add(this.button10);
             this.splitContainer2.Panel2.Controls.Add(this.button9);
             this.splitContainer2.Panel2.Controls.Add(this.button8);
             this.splitContainer2.Panel2.Controls.Add(this.button7);
@@ -519,6 +521,17 @@ namespace RatchetEdit
             this.objectTree.TabIndex = 0;
             this.objectTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.objectTreeView1_AfterSelect);
             // 
+            // button9
+            // 
+            this.button9.Location = new System.Drawing.Point(23, 339);
+            this.button9.Name = "button9";
+            this.button9.Size = new System.Drawing.Size(105, 23);
+            this.button9.TabIndex = 28;
+            this.button9.Text = "Remove skybox";
+            this.button9.UseVisualStyleBackColor = true;
+            this.button9.Visible = false;
+            this.button9.Click += new System.EventHandler(this.button9_Click);
+            // 
             // button8
             // 
             this.button8.Location = new System.Drawing.Point(23, 318);
@@ -527,6 +540,7 @@ namespace RatchetEdit
             this.button8.TabIndex = 27;
             this.button8.Text = "Remove terrain";
             this.button8.UseVisualStyleBackColor = true;
+            this.button8.Visible = false;
             this.button8.Click += new System.EventHandler(this.button8_Click);
             // 
             // button7
@@ -537,6 +551,7 @@ namespace RatchetEdit
             this.button7.TabIndex = 26;
             this.button7.Text = "Remove collision";
             this.button7.UseVisualStyleBackColor = true;
+            this.button7.Visible = false;
             this.button7.Click += new System.EventHandler(this.button7_Click);
             // 
             // button6
@@ -547,6 +562,7 @@ namespace RatchetEdit
             this.button6.TabIndex = 25;
             this.button6.Text = "Imp tex";
             this.button6.UseVisualStyleBackColor = true;
+            this.button6.Visible = false;
             this.button6.Click += new System.EventHandler(this.button6_Click);
             // 
             // button5
@@ -557,6 +573,7 @@ namespace RatchetEdit
             this.button5.TabIndex = 24;
             this.button5.Text = "Export tex";
             this.button5.UseVisualStyleBackColor = true;
+            this.button5.Visible = false;
             this.button5.Click += new System.EventHandler(this.button5_Click);
             // 
             // button4
@@ -567,6 +584,7 @@ namespace RatchetEdit
             this.button4.TabIndex = 23;
             this.button4.Text = "Imp coll";
             this.button4.UseVisualStyleBackColor = true;
+            this.button4.Visible = false;
             this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
             // button3
@@ -577,6 +595,7 @@ namespace RatchetEdit
             this.button3.TabIndex = 22;
             this.button3.Text = "imp terr";
             this.button3.UseVisualStyleBackColor = true;
+            this.button3.Visible = false;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
             // button2
@@ -587,6 +606,7 @@ namespace RatchetEdit
             this.button2.TabIndex = 21;
             this.button2.Text = "Export colli";
             this.button2.UseVisualStyleBackColor = true;
+            this.button2.Visible = false;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // button1
@@ -597,6 +617,7 @@ namespace RatchetEdit
             this.button1.TabIndex = 20;
             this.button1.Text = "Export ter";
             this.button1.UseVisualStyleBackColor = true;
+            this.button1.Visible = false;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // properties
@@ -693,15 +714,15 @@ namespace RatchetEdit
             // 
             this.mapSaveDialog.FileName = "gameplay_ntsc";
             // 
-            // button9
+            // button10
             // 
-            this.button9.Location = new System.Drawing.Point(23, 339);
-            this.button9.Name = "button9";
-            this.button9.Size = new System.Drawing.Size(105, 23);
-            this.button9.TabIndex = 28;
-            this.button9.Text = "Remove skybox";
-            this.button9.UseVisualStyleBackColor = true;
-            this.button9.Click += new System.EventHandler(this.button9_Click);
+            this.button10.Location = new System.Drawing.Point(7, 357);
+            this.button10.Name = "button10";
+            this.button10.Size = new System.Drawing.Size(75, 23);
+            this.button10.TabIndex = 18;
+            this.button10.Text = "button10";
+            this.button10.UseVisualStyleBackColor = true;
+            this.button10.Click += new System.EventHandler(this.button10_Click);
             // 
             // Main
             // 
@@ -795,6 +816,7 @@ namespace RatchetEdit
         private System.Windows.Forms.Button button7;
         private System.Windows.Forms.Button button8;
         private System.Windows.Forms.Button button9;
+        private System.Windows.Forms.Button button10;
     }
 }
 

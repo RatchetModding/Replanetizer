@@ -71,11 +71,18 @@ namespace RatchetEdit.LevelObjects
         [Category("Attributes"), DisplayName("pVars")]
         public byte[] pVars { get; set; }
 
+        public long pVarMemoryAddress;
+
         public int unk10;
         public int unk11;
         public int unk12;
         public int unk13;
         public int unk14;
+
+        public Moby()
+        {
+
+        }
 
         public Moby(Model model, Vector3 position, Vector3 rotation, Vector3 scale)
         {
@@ -86,7 +93,7 @@ namespace RatchetEdit.LevelObjects
 
         }
 
-        public Moby(GameType game, byte[] mobyBlock, int num, List<Model> mobyModels)
+        public Moby(GameType game, byte[] mobyBlock, int num, List<Model> mobyModels, bool fromMemory = false)
         {
             switch (game.num)
             {
@@ -252,10 +259,13 @@ namespace RatchetEdit.LevelObjects
         public override void UpdateTransformMatrix() 
         {
             if (model == null) return;
-            Matrix4 rotMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
-            Matrix4 scaleMatrix = Matrix4.CreateScale(scale.X * model.size);
+            Matrix4 roxtMatrix = Matrix4.CreateRotationX(rotation.X);
+            Matrix4 roytMatrix = Matrix4.CreateRotationY(rotation.Y);
+            Matrix4 roztMatrix = Matrix4.CreateRotationZ(rotation.Z);
+
+            Matrix4 scaleMatrix = Matrix4.CreateScale(scale.X);
             Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
-            modelMatrix = scaleMatrix * rotMatrix * translationMatrix;
+            modelMatrix = scaleMatrix * roxtMatrix * roytMatrix * roztMatrix * translationMatrix;
         }
 
         public override LevelObject Clone()

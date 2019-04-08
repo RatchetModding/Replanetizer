@@ -8,11 +8,27 @@ using RatchetEdit.LevelObjects;
 using static RatchetEdit.Utilities;
 using System.Drawing;
 using ImageMagick;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
+using static RatchetEdit.DataFunctions;
 
 namespace RatchetEdit
 {
     public partial class Main : Form
     {
+        // Read and write acceess
+        const int PROCESS_WM_READ = 0x38;
+
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+
+        [DllImport("kernel32.dll")]
+        public static extern bool ReadProcessMemory(IntPtr hProcess, Int64 lpBaseAddress, byte[] lpBuffer, int dwSize, ref int lpNumberOfBytesRead);
+
+        [DllImport("kernel32.dll")]
+        static extern bool WriteProcessMemory(IntPtr hProcess, Int64 lpBaseAddress, byte[] lpBuffer, int nSize, ref int lpNumberOfBytesWritten);
+
+
         Dictionary<int, string> mobNames, tieNames;
 
         public Level level;
@@ -20,6 +36,9 @@ namespace RatchetEdit
         public TextureViewer textureViewer;
         public SpriteViewer spriteViewer;
         public UIViewer uiViewer;
+
+        Process process;
+        IntPtr processHandle;
 
         int oldTextureCount;
 
@@ -193,8 +212,6 @@ namespace RatchetEdit
             camZLabel.Text = String.Format("Z: {0}", fRound(glControl.camera.position.Z, 2).ToString());
             pitchLabel.Text = String.Format("Pitch: {0}", fRound(fToDegrees(glControl.camera.rotation.X), 2).ToString());
             yawLabel.Text = String.Format("Yaw: {0}", fRound(fToDegrees(glControl.camera.rotation.Z), 2).ToString());
-
-
         }
 
         // Called every frame
@@ -202,6 +219,19 @@ namespace RatchetEdit
         {
             glControl.Tick();
             properties.Refresh();
+
+            /*if (GetSelectedObject() is Moby moby)
+            {
+                byte[] pvars = new byte[0x100];
+                int gg = 0;
+                ReadProcessMemory(processHandle, moby.pVarMemoryAddress, pvars, pvars.Length, ref gg);
+                for (int i = 0; i < pvars.Length / 4; i++)
+                {
+                    //pvarView.Items.Add(pvars[i].ToString("X2"));
+                    pvarBox.Items[i] = ReadUint(pvars, i * 4).ToString("X");
+                }
+            } */
+
         }
 
         private void cloneBtn_Click(object sender, EventArgs e)
@@ -369,6 +399,7 @@ namespace RatchetEdit
                 modelViewer = new ModelViewer(this, modelObject.model);
                 modelViewer.Show();
             }*/
+
             UpdateProperties(e.Object);
         }
 
@@ -383,13 +414,13 @@ namespace RatchetEdit
                 case Tie tie:
                     //objectTree.tieNode.Nodes[level.ties.IndexOf(tie)].Remove();
                     level.ties.Remove(tie);
-                    level.ties.RemoveRange(1, level.ties.Count - 1);
-                    level.tieModels.RemoveRange(1, level.tieModels.Count - 1);
+                    //level.ties.RemoveRange(1, level.ties.Count - 1);
+                    //level.tieModels.RemoveRange(1, level.tieModels.Count - 1);
                     //level.ties.Clear();
                     break;
                 case Shrub shrub:
                     level.shrubs.Remove(shrub);
-                    level.shrubs.Clear();
+                    //level.shrubs.Clear();
                     //level.shrubModels.RemoveAt(level.shrubModels.Count -1);
                     //level.shrubModels.RemoveRange(5, level.shrubModels.Count - 5);
                     break;
@@ -531,6 +562,11 @@ namespace RatchetEdit
             {
                 Console.WriteLine(moby.pVarMemoryAddress);
             }
+        }
+
+        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
 
         private void mapSaveAsBtn_Click(object sender, EventArgs e)

@@ -8,6 +8,7 @@ namespace RatchetEdit.LevelObjects
     public class Cuboid : MatrixObject
     {
         public const int ELEMENTSIZE = 0x80;
+
         public int id;
         public Matrix4 mat1;
         public Matrix4 mat2;
@@ -49,56 +50,16 @@ namespace RatchetEdit.LevelObjects
             id = index;
             int offset = index * ELEMENTSIZE;
 
-            mat1 = new Matrix4(
-                ReadFloat(block, offset + 0x00),
-                ReadFloat(block, offset + 0x04),
-                ReadFloat(block, offset + 0x08),
-                ReadFloat(block, offset + 0x0C),
+            mat1 = ReadMatrix4(block, offset + 0x00);
+            mat2 = ReadMatrix4(block, offset + 0x40);
 
-                ReadFloat(block, offset + 0x10),
-                ReadFloat(block, offset + 0x14),
-                ReadFloat(block, offset + 0x18),
-                ReadFloat(block, offset + 0x1C),
+            originalM44 = ReadFloat(block, offset + 0x3C);
 
-                ReadFloat(block, offset + 0x20),
-                ReadFloat(block, offset + 0x24),
-                ReadFloat(block, offset + 0x28),
-                ReadFloat(block, offset + 0x2C),
+            rotation = mat1.ExtractRotation();
+            position = mat1.ExtractTranslation();
+            scale = mat1.ExtractScale();
 
-                ReadFloat(block, offset + 0x30),
-                ReadFloat(block, offset + 0x34),
-                ReadFloat(block, offset + 0x38),
-                1.0f
-                );
-
-            mat2 = new Matrix4(
-                ReadFloat(block, offset + 0x40),
-                ReadFloat(block, offset + 0x44),
-                ReadFloat(block, offset + 0x48),
-                ReadFloat(block, offset + 0x4C),
-
-                ReadFloat(block, offset + 0x50),
-                ReadFloat(block, offset + 0x54),
-                ReadFloat(block, offset + 0x58),
-                ReadFloat(block, offset + 0x5C),
-
-                ReadFloat(block, offset + 0x60),
-                ReadFloat(block, offset + 0x64),
-                ReadFloat(block, offset + 0x68),
-                ReadFloat(block, offset + 0x6C),
-
-                ReadFloat(block, offset + 0x70),
-                ReadFloat(block, offset + 0x74),
-                ReadFloat(block, offset + 0x78),
-                ReadFloat(block, offset + 0x7C)
-            );
-
-			originalM44 = ReadFloat(block, offset + 0x3C);
-
-            modelMatrix = mat1;
-            _rotation = modelMatrix.ExtractRotation().Xyz * 2.2f;
-            _position = modelMatrix.ExtractTranslation();
-            _scale = modelMatrix.ExtractScale();
+            UpdateTransformMatrix();
 
             GetVBO();
             GetIBO();
@@ -136,47 +97,10 @@ namespace RatchetEdit.LevelObjects
         {
             byte[] bytes = new byte[0x80];
 
-			// mat1
-			WriteFloat(ref bytes, 0x00, modelMatrix.M11);
-			WriteFloat(ref bytes, 0x04, modelMatrix.M12);
-			WriteFloat(ref bytes, 0x08, modelMatrix.M13);
-			WriteFloat(ref bytes, 0x0C, modelMatrix.M14);
+            WriteMatrix4(ref bytes, 0x00, modelMatrix);
+            WriteMatrix4(ref bytes, 0x40, mat2);
 
-			WriteFloat(ref bytes, 0x10, modelMatrix.M21);
-			WriteFloat(ref bytes, 0x14, modelMatrix.M22);
-			WriteFloat(ref bytes, 0x18, modelMatrix.M23);
-			WriteFloat(ref bytes, 0x1C, modelMatrix.M24);
-
-			WriteFloat(ref bytes, 0x20, modelMatrix.M31);
-			WriteFloat(ref bytes, 0x24, modelMatrix.M32);
-			WriteFloat(ref bytes, 0x28, modelMatrix.M33);
-			WriteFloat(ref bytes, 0x2C, modelMatrix.M34);
-
-			WriteFloat(ref bytes, 0x30, modelMatrix.M41);
-			WriteFloat(ref bytes, 0x34, modelMatrix.M42);
-			WriteFloat(ref bytes, 0x38, modelMatrix.M43);
-			WriteFloat(ref bytes, 0x3C, originalM44);
-
-			// mat2
-			WriteFloat(ref bytes, 0x40, mat2.M11);
-            WriteFloat(ref bytes, 0x44, mat2.M12);
-            WriteFloat(ref bytes, 0x48, mat2.M13);
-            WriteFloat(ref bytes, 0x4C, mat2.M14);
-
-            WriteFloat(ref bytes, 0x50, mat2.M21);
-            WriteFloat(ref bytes, 0x54, mat2.M22);
-            WriteFloat(ref bytes, 0x58, mat2.M23);
-            WriteFloat(ref bytes, 0x5C, mat2.M24);
-
-            WriteFloat(ref bytes, 0x60, mat2.M31);
-            WriteFloat(ref bytes, 0x64, mat2.M32);
-            WriteFloat(ref bytes, 0x68, mat2.M33);
-            WriteFloat(ref bytes, 0x6C, mat2.M34);
-
-            WriteFloat(ref bytes, 0x70, mat2.M41);
-            WriteFloat(ref bytes, 0x74, mat2.M42);
-            WriteFloat(ref bytes, 0x78, mat2.M43);
-            WriteFloat(ref bytes, 0x7C, mat2.M44);
+            WriteFloat(ref bytes, 0x3C, originalM44);
 
             return bytes;
         }

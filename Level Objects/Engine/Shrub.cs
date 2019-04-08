@@ -8,7 +8,7 @@ namespace RatchetEdit.LevelObjects
 {
     public class Shrub : ModelObject
     {
-        const int ELEMENTSIZE = 0x70;
+        public const int ELEMENTSIZE = 0x70;
 
         public short off_50 { get; set; }
         public uint off_54 { get; set; }
@@ -22,33 +22,6 @@ namespace RatchetEdit.LevelObjects
 
         public byte[] colorBytes;
 
-        float rotationMultiplier = 2.2f;
-
-        public override Vector3 position
-        {
-            get { return _position; }
-            set
-            {
-                Translate(value - _position);
-            }
-        }
-        public override Vector3 rotation
-        {
-            get { return _rotation; }
-            set
-            {
-                Rotate(_rotation - value);
-            }
-        }
-
-        public override Vector3 scale
-        {
-            get { return _scale; }
-            set
-            {
-                Scale(Vector3.Divide(value, _scale));
-            }
-        }
 
         public Shrub(Matrix4 matrix4)
         {
@@ -81,9 +54,9 @@ namespace RatchetEdit.LevelObjects
 
             model = shrubModels.Find(shrubModel => shrubModel.id == modelID);
 
-            _rotation = modelMatrix.ExtractRotation().Xyz * rotationMultiplier;
-            _position = modelMatrix.ExtractTranslation();
-            _scale = modelMatrix.ExtractScale();
+            rotation = modelMatrix.ExtractRotation();
+            position = modelMatrix.ExtractTranslation();
+            scale = modelMatrix.ExtractScale();
         }
 
         public override byte[] ToByteArray()
@@ -109,25 +82,6 @@ namespace RatchetEdit.LevelObjects
         public override LevelObject Clone()
         {
             return new Tie(modelMatrix);
-        }
-
-        public override void Translate(Vector3 vector)
-        {
-            modelMatrix = Utilities.TranslateMatrixTo(modelMatrix, vector + position);
-            _position = modelMatrix.ExtractTranslation();
-        }
-
-        public override void Rotate(Vector3 vector)
-        {
-            Vector3 newRotation = vector + _rotation;
-            modelMatrix = Utilities.RotateMatrixTo(modelMatrix, vector + rotation);
-            _rotation = newRotation;
-        }
-
-        public override void Scale(Vector3 vector)
-        {
-            modelMatrix = Utilities.ScaleMatrixTo(modelMatrix, vector * scale);
-            _scale = modelMatrix.ExtractScale();
         }
     }
 }

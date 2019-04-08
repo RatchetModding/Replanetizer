@@ -38,8 +38,6 @@ namespace RatchetEdit
         Process process;
         IntPtr processHandle;
 
-
-
         public Level level;
 
         public Matrix4 worldView;
@@ -55,7 +53,6 @@ namespace RatchetEdit
         private Vector3 prevMouseRay;
         private int lastMouseX, lastMouseY;
         private bool xLock, yLock, zLock, rMouse, lMouse;
-        private bool enableTranslateTool, enableRotateTool, enableScaleTool, enableSplineTool;
 
         public bool initialized, invalidate;
         public bool enableMoby, enableTie, enableShrub, enableSpline,
@@ -81,8 +78,8 @@ namespace RatchetEdit
 
             MakeCurrent();
 
-            process = Process.GetProcessesByName("rpcs3")[0];
-            processHandle = OpenProcess(PROCESS_WM_READ, false, process.Id);
+            //process = Process.GetProcessesByName("rpcs3")[0];
+            //processHandle = OpenProcess(PROCESS_WM_READ, false, process.Id);
 
             GL.GenVertexArrays(1, out int VAO);
             GL.BindVertexArray(VAO);
@@ -236,10 +233,11 @@ namespace RatchetEdit
 
         public void SelectTool(Tool tool = null)
         {
-            enableTranslateTool = (tool is TranslationTool);
-            enableRotateTool = (tool is RotationTool);
-            enableScaleTool = (tool is ScalingTool);
-            enableSplineTool = (tool is VertexTranslationTool);
+            //enableTranslateTool = (tool is TranslationTool);
+            //enableRotateTool = (tool is RotationTool);
+            //enableScaleTool = (tool is ScalingTool);
+            //enableSplineTool = (tool is VertexTranslationTool);
+
             currentTool = tool;
 
             currentSplineVertex = 0;
@@ -270,8 +268,8 @@ namespace RatchetEdit
             view = camera.GetViewMatrix();
 
             Vector3 mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), new Vector2(Cursor.Position.X, Cursor.Position.Y));
-            bool toolIsBeingDragged = xLock || yLock || zLock;
-            if (toolIsBeingDragged)
+
+            if (xLock || yLock || zLock)
             {
                 Vector3 direction = Vector3.Zero;
                 if (xLock) direction = Vector3.UnitX;
@@ -663,11 +661,8 @@ namespace RatchetEdit
 
             if (enableMoby)
             {
-                //level.mobs.Clear();
-
+                /*
                 int bytesRead = 0;
-
-
                 byte[] camBfr = new byte[0x20];
                 ReadProcessMemory(processHandle, 0x300951500, camBfr, camBfr.Length, ref bytesRead);
                 //camera.position = new Vector3(ReadFloat(camBfr, 0x00), ReadFloat(camBfr, 0x04), ReadFloat(camBfr, 0x08));
@@ -702,13 +697,9 @@ namespace RatchetEdit
                     }
 
                     ushort modId = ReadUshort(mobys, i + 0xA6);
-
                     if (modId == 0x3EF) continue;
-
 					float scale = ReadFloat(mobys, i + 0x2C);
-
                     Model mod = level.mobyModels.Find(x => x.id == modId);
-
                     if (mod == null)
                     {
                         mod = level.mobyModels.Find(x => x.id == 500);
@@ -719,17 +710,8 @@ namespace RatchetEdit
                     mob.rotation = new Vector3(ReadFloat(mobys, i + 0x40), ReadFloat(mobys, i + 0x44), ReadFloat(mobys, i + 0x48));
                     mob.scale = new Vector3(scale, scale, scale);
                     level.mobs[i / 0x100].modelID = modId;
-
-                    //Moby mob = new Moby(mod,
-                    //new Vector3(ReadFloat(mobys, i + 0x10), ReadFloat(mobys, i + 0x14), ReadFloat(mobys, i + 0x18)),
-                    //new Vector3(ReadFloat(mobys, i + 0x40), ReadFloat(mobys, i + 0x44), ReadFloat(mobys, i + 0x48)),
-                    //new Vector3(scale, scale, scale));
-                    //mob.modelID = modId;
-
-                    //Console.WriteLine(modId);
-                    //level.mobs.Add(mob);
                 }
-
+                */
 
                 foreach (Moby mob in level.mobs)
                 {

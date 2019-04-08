@@ -22,7 +22,7 @@ namespace RatchetEdit.Serializers
 
             GameplayHeader gameplayHeader = new GameplayHeader
             {
-                type88Pointer =     SeekWrite(fs, GetType88Bytes(level.type88s)),
+                type88Pointer =     SeekWrite(fs, SerializeLevelObjects(level.type88s, Type88.ELEMENTSIZE)),
                 levelVarPointer =   SeekWrite(fs, level.levelVariables.serialize()),
                 englishPointer =    SeekWrite(fs, level.english),
                 lang2Pointer =      SeekWrite(fs, level.lang2),
@@ -32,10 +32,10 @@ namespace RatchetEdit.Serializers
                 italianPointer =    SeekWrite(fs, level.italian),
                 lang7Pointer =      SeekWrite(fs, level.lang7),
                 lang8Pointer =      SeekWrite(fs, level.lang8),
-                type04Pointer =     SeekWrite(fs, GetType04Bytes(level.type04s)),
+                type04Pointer =     SeekWrite(fs, SerializeLevelObjects(level.type04s, Type04.ELEMENTSIZE)),
                 type80Pointer =     SeekWrite(fs, GetType80Bytes(level.type80s)),
-                cameraPointer =     SeekWrite(fs, GetGameCameraBytes(level.gameCameras)),
-                type0CPointer =     SeekWrite(fs, GetType0CBytes(level.type0Cs)),
+                cameraPointer =     SeekWrite(fs, SerializeLevelObjects(level.gameCameras, GameCamera.ELEMENTSIZE)),
+                type0CPointer =     SeekWrite(fs, SerializeLevelObjects(level.type0Cs, Type0C.ELEMENTSIZE)),
                 mobyIdPointer =     SeekWrite(fs, GetIdBytes(level.mobyIds)),
                 mobyPointer =       SeekWrite(fs, GetMobyBytes(level.mobs)),
                 pvarSizePointer =   SeekWrite(fs, GetPvarSizeBytes(level.pVars)),
@@ -49,9 +49,9 @@ namespace RatchetEdit.Serializers
                 shrubIdPointer =    SeekWrite(fs, GetIdBytes(level.shrubIds)),
                 shrubPointer =      SeekWrite(fs, level.shrubData),
                 splinePointer =     SeekWrite(fs, GetSplineBytes(level.splines)),
-                spawnPointPointer = SeekWrite(fs, GetSpawnPointBytes(level.cuboids)),
-                type64Pointer =     SeekWrite(fs, GetType64Bytes(level.type64s)),
-                type68Pointer =     SeekWrite(fs, GetType68Bytes(level.type68s)),
+                cuboidPointer =     SeekWrite(fs, SerializeLevelObjects(level.cuboids, Cuboid.ELEMENTSIZE)),
+                type64Pointer =     SeekWrite(fs, SerializeLevelObjects(level.type64s, Type64.ELEMENTSIZE)),
+                type68Pointer =     SeekWrite(fs, SerializeLevelObjects(level.type68s, Type68.ELEMENTSIZE)),
                 unkPointer12 =      SeekWrite(fs, new byte[0x10]),
                 unkPointer17 =      SeekWrite(fs, level.unk17),
                 type7CPointer =     SeekWrite(fs, GetType7CBytes(level.type7Cs)),
@@ -105,103 +105,18 @@ namespace RatchetEdit.Serializers
             return bytes;
         }
 
-
-        public byte[] GetSpawnPointBytes(List<Cuboid> spawnPoints)
+        public byte[] SerializeLevelObjects<T>(List<T> levelobjects, int elementSize) where T : LevelObject
         {
-            if (spawnPoints == null) { return new byte[0x10]; }
+            if (levelobjects == null) { return new byte[0x10]; }
 
-            byte[] bytes = new byte[0x10 + spawnPoints.Count * 0x80];
+            byte[] bytes = new byte[0x10 + levelobjects.Count * elementSize];
 
             //Header
-            WriteUint(ref bytes, 0, (uint)spawnPoints.Count);
+            WriteInt(ref bytes, 0, levelobjects.Count);
 
-            for (int i = 0; i < spawnPoints.Count; i++)
+            for (int i = 0; i < levelobjects.Count; i++)
             {
-                spawnPoints[i].ToByteArray().CopyTo(bytes, 0x10 + i * 0x80);
-            }
-            return bytes;
-        }
-
-        public byte[] GetGameCameraBytes(List<GameCamera> gameCameras)
-        {
-            if (gameCameras == null) { return new byte[0x10]; }
-
-            byte[] bytes = new byte[0x10 + gameCameras.Count * GameCamera.ELEMENTSIZE];
-
-            //Header
-            WriteUint(ref bytes, 0, (uint)gameCameras.Count);
-
-            for (int i = 0; i < gameCameras.Count; i++)
-            {
-                gameCameras[i].ToByteArray().CopyTo(bytes, 0x10 + i * GameCamera.ELEMENTSIZE);
-            }
-
-            return bytes;
-        }
-
-        public byte[] GetType04Bytes(List<Type04> type04s)
-        {
-            if (type04s == null) { return new byte[0x10]; }
-
-            byte[] bytes = new byte[0x10 + type04s.Count * Type04.ELEMENTSIZE];
-
-            //Header
-            WriteInt(ref bytes, 0, type04s.Count);
-
-            for (int i = 0; i < type04s.Count; i++)
-            {
-                type04s[i].ToByteArray().CopyTo(bytes, 0x10 + i * Type04.ELEMENTSIZE);
-            }
-
-            return bytes;
-        }
-
-        public byte[] GetType0CBytes(List<Type0C> type0Cs)
-        {
-            if (type0Cs == null) { return new byte[0x10]; }
-
-            byte[] bytes = new byte[0x10 + type0Cs.Count * Type0C.ELEMENTSIZE];
-
-            //Header
-            WriteInt(ref bytes, 0, type0Cs.Count);
-
-            for (int i = 0; i < type0Cs.Count; i++)
-            {
-                type0Cs[i].ToByteArray().CopyTo(bytes, 0x10 + i * Type0C.ELEMENTSIZE);
-            }
-
-            return bytes;
-        }
-
-        public byte[] GetType64Bytes(List<Type64> type64s)
-        {
-            if (type64s == null) { return new byte[0x10]; }
-
-            byte[] bytes = new byte[0x10 + type64s.Count * Type64.ELEMENTSIZE];
-
-            //Header
-            WriteInt(ref bytes, 0, type64s.Count);
-
-            for (int i = 0; i < type64s.Count; i++)
-            {
-                type64s[i].ToByteArray().CopyTo(bytes, 0x10 + i * Type64.ELEMENTSIZE);
-            }
-
-            return bytes;
-        }
-
-        public byte[] GetType68Bytes(List<Type68> type68s)
-        {
-            if (type68s == null) { return new byte[0x10]; }
-
-            byte[] bytes = new byte[0x10 + type68s.Count * Type68.ELEMENTSIZE];
-
-            //Header
-            WriteInt(ref bytes, 0, type68s.Count);
-
-            for (int i = 0; i < type68s.Count; i++)
-            {
-                type68s[i].ToByteArray().CopyTo(bytes, 0x10 + i * Type68.ELEMENTSIZE);
+                levelobjects[i].ToByteArray().CopyTo(bytes, 0x10 + i * elementSize);
             }
 
             return bytes;
@@ -223,24 +138,6 @@ namespace RatchetEdit.Serializers
 
             return bytes;
         }
-
-        public byte[] GetType88Bytes(List<Type88> type88s)
-        {
-            if (type88s == null) { return new byte[0x10]; }
-
-            byte[] bytes = new byte[0x10 + type88s.Count * Type88.ELEMENTSIZE];
-
-            //Header
-            WriteInt(ref bytes, 0, type88s.Count);
-
-            for (int i = 0; i < type88s.Count; i++)
-            {
-                type88s[i].ToByteArray().CopyTo(bytes, 0x10 + i * Type88.ELEMENTSIZE);
-            }
-
-            return bytes;
-        }
-
 
         public byte[] GetType80Bytes(List<Type80> type80s)
         {

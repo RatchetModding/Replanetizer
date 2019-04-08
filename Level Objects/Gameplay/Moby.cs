@@ -10,7 +10,7 @@ namespace RatchetEdit.LevelObjects
     public class Moby : ModelObject
     {
         public const int ELEMENTSIZE = 0x78;
-        
+
         [Category("Attributes"), DisplayName("Mission ID")]
         public int missionID { get; set; }
 
@@ -84,13 +84,12 @@ namespace RatchetEdit.LevelObjects
 
         }
 
-        public Moby(Model model, Vector3 position, Vector3 rotation, Vector3 scale)
+        public Moby(Model model, Vector3 position, Quaternion rotation, Vector3 scale)
         {
             this.model = model;
             this.position = position;
             this.rotation = rotation;
             this.scale = scale;
-
         }
 
         public Moby(GameType game, byte[] mobyBlock, int num, List<Model> mobyModels, bool fromMemory = false)
@@ -149,7 +148,7 @@ namespace RatchetEdit.LevelObjects
 
             color = Color.FromArgb(r, g, b);
             position = new Vector3(x, y, z);
-            rotation = new Vector3(rotx, roty, rotz);
+            rotation = new Quaternion(rotx, roty, rotz);
             scale = new Vector3(scaleHolder, scaleHolder, scaleHolder);
 
             model = mobyModels.Find(mobyModel => mobyModel.id == modelID);
@@ -205,8 +204,8 @@ namespace RatchetEdit.LevelObjects
 
             color = Color.FromArgb(r, g, b);
             position = new Vector3(x, y, z);
-            rotation = new Vector3(rotx, roty, rotz);
-            scale = new Vector3(scaleHolder, scaleHolder, scaleHolder); //Mobys only use the X axis of scale
+            rotation = new Quaternion(rotx, roty, rotz);
+            scale = new Vector3(scaleHolder); //Mobys only use the X axis of scale
 
             model = mobyModels.Find(mobyModel => mobyModel.id == modelID);
             UpdateTransformMatrix();
@@ -256,36 +255,18 @@ namespace RatchetEdit.LevelObjects
             return buffer;
         }
 
-        public override void UpdateTransformMatrix() 
-        {
-            if (model == null) return;
-            Matrix4 roxtMatrix = Matrix4.CreateRotationX(rotation.X);
-            Matrix4 roytMatrix = Matrix4.CreateRotationY(rotation.Y);
-            Matrix4 roztMatrix = Matrix4.CreateRotationZ(rotation.Z);
-
-            Matrix4 scaleMatrix = Matrix4.CreateScale(scale.X);
-            Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
-            modelMatrix = scaleMatrix * roxtMatrix * roytMatrix * roztMatrix * translationMatrix;
-        }
 
         public override LevelObject Clone()
         {
-            return new Moby(model, new Vector3(position), new Vector3(rotation), scale);
+            return new Moby(model, new Vector3(position), rotation, scale);
         }
 
-        public override void Rotate(Vector3 vector)
+        public override void UpdateTransformMatrix()
         {
-            rotation += vector;
-        }
-
-        public override void Scale(Vector3 scale) //Mobys only use the X axis of scale
-        {
-            this.scale *= Vector3.UnitX * scale;
-        }
-
-        public override void Translate(Vector3 vector)
-        {
-            position += vector;
+            Matrix4 rot = Matrix4.CreateFromQuaternion(rotation);
+            Matrix4 scaleMatrix = Matrix4.CreateScale(scale * model.size);
+            Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
+            modelMatrix = scaleMatrix * rot * translationMatrix;
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.ComponentModel;
 using OpenTK;
+using OpenTK.Graphics.ES10;
 
 namespace RatchetEdit
 {
@@ -87,8 +88,14 @@ namespace RatchetEdit
         }
 
         public static Matrix4 RotateMatrixTo(Matrix4 sourceMatrix, Vector3 rotation) {
-            Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
-            Matrix4 result = rotationMatrix * sourceMatrix.ClearRotation();
+            Matrix4 xrot = Matrix4.CreateRotationX(rotation.X);
+            //Matrix4 yrot = Matrix4.CreateRotationY(rotation.Y);
+            //Matrix4 zrot = Matrix4.CreateRotationZ(rotation.Z);
+
+
+            //Matrix4 rotationMatrix = xrot * yrot * zrot;
+            
+            Matrix4 result = xrot * sourceMatrix.ClearRotation();
             return result;
         }
 
@@ -98,7 +105,6 @@ namespace RatchetEdit
             sourceWithoutScale.M11 = scale.X;
             sourceWithoutScale.M22 = scale.Y;
             sourceWithoutScale.M33 = scale.Z;
-
             //Matrix4 output = scaleMatrix * sourceWithoutScale;
             return sourceWithoutScale;
         }

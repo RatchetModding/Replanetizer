@@ -37,7 +37,7 @@ namespace RatchetEdit.Headers
         public int pvarPointer;
         public int type5CPointer;
 
-        public int spawnPointPointer;
+        public int cuboidPointer;
         public int type64Pointer;
         public int type68Pointer;
         public int unkPointer12;
@@ -103,7 +103,7 @@ namespace RatchetEdit.Headers
             pvarPointer = ReadInt(gameplayHeadBlock, 0x58);
             type5CPointer = ReadInt(gameplayHeadBlock, 0x5C);
 
-            spawnPointPointer = ReadInt(gameplayHeadBlock, 0x60);
+            cuboidPointer = ReadInt(gameplayHeadBlock, 0x60);
             type64Pointer = ReadInt(gameplayHeadBlock, 0x64);
             type68Pointer = ReadInt(gameplayHeadBlock, 0x68);
             unkPointer12 = ReadInt(gameplayHeadBlock, 0x6C);
@@ -153,7 +153,7 @@ namespace RatchetEdit.Headers
 
             pvarPointer = ReadInt(gameplayHeadBlock, 0x60);
             type5CPointer = ReadInt(gameplayHeadBlock, 0x64);
-            spawnPointPointer = ReadInt(gameplayHeadBlock, 0x68);
+            cuboidPointer = ReadInt(gameplayHeadBlock, 0x68);
             type64Pointer = ReadInt(gameplayHeadBlock, 0x6C);
 
             type68Pointer = ReadInt(gameplayHeadBlock, 0x70);
@@ -203,7 +203,7 @@ namespace RatchetEdit.Headers
             WriteInt(ref bytes, 0x58, pvarPointer);
             WriteInt(ref bytes, 0x5C, type5CPointer);
 
-            WriteInt(ref bytes, 0x60, spawnPointPointer);
+            WriteInt(ref bytes, 0x60, cuboidPointer);
             WriteInt(ref bytes, 0x64, type64Pointer);
             WriteInt(ref bytes, 0x68, type68Pointer);
             WriteInt(ref bytes, 0x6C, unkPointer12);

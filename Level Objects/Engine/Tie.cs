@@ -24,44 +24,16 @@ namespace RatchetEdit.LevelObjects
 
         public byte[] colorBytes;
 
-        float rotationMultiplier = 2.2f;
-
-        public override Vector3 position
-        {
-            get { return _position; }
-            set
-            {
-                Translate(value - _position);
-            }
-        }
-        public override Vector3 rotation
-        {
-            get { return _rotation; }
-            set
-            {
-                Rotate(_rotation - value);
-            }
-        }
-
-        public override Vector3 scale
-        {
-            get { return _scale; }
-            set
-            {
-                Scale(Vector3.Divide(value, _scale));
-            }
-        }
-
         public Tie(Matrix4 matrix4)
         {
-            modelMatrix = Matrix4.Add(matrix4, new Matrix4());
+            modelMatrix = matrix4;
         }
 
         public Tie(byte[] levelBlock, int num, List<Model> tieModels, FileStream fs)
         {
             int offset = num * ELEMENTSIZE;
 
-            modelMatrix = ReadMatrix4(levelBlock, offset + 0x00);
+            Matrix4 mat1 = ReadMatrix4(levelBlock, offset + 0x00);
 
             /* These offsets are just placeholders for the render distance quaternion which is set in-game
             off_40 =    BAToUInt32(levelBlock, offset + 0x40);
@@ -84,9 +56,13 @@ namespace RatchetEdit.LevelObjects
             model = tieModels.Find(tieModel => tieModel.id == modelID);
             colorBytes = ReadBlock(fs, colorOffset, (model.vertexBuffer.Length / 8) * 4);
 
-            _rotation = modelMatrix.ExtractRotation().Xyz * rotationMultiplier;
-            _position = modelMatrix.ExtractTranslation();
-            _scale = modelMatrix.ExtractScale();
+
+            //modelMatrix = mat1;
+            rotation = mat1.ExtractRotation();
+            position = mat1.ExtractTranslation();
+            scale = mat1.ExtractScale();
+
+            UpdateTransformMatrix();
         }
 
         public byte[] ToByteArray(int colorOffset)
@@ -119,25 +95,6 @@ namespace RatchetEdit.LevelObjects
         public override LevelObject Clone()
         {
             return new Tie(modelMatrix);
-        }
-
-        public override void Translate(Vector3 vector)
-        {
-            modelMatrix = Utilities.TranslateMatrixTo(modelMatrix, vector + position);
-            _position = modelMatrix.ExtractTranslation();
-        }
-
-        public override void Rotate(Vector3 vector)
-        {
-            Vector3 newRotation = vector + _rotation;
-            modelMatrix = Utilities.RotateMatrixTo(modelMatrix, vector + rotation);
-            _rotation = newRotation;
-        }
-
-        public override void Scale(Vector3 vector)
-        {
-            modelMatrix = Utilities.ScaleMatrixTo(modelMatrix, vector * scale);
-            _scale = modelMatrix.ExtractScale();
         }
     }
 }

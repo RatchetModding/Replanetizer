@@ -71,6 +71,7 @@ namespace RatchetEdit
             this.splineToolBtn = new System.Windows.Forms.ToolStripButton();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.objectTree = new RatchetEdit.ObjectTreeView();
+            this.button10 = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
             this.button8 = new System.Windows.Forms.Button();
             this.button7 = new System.Windows.Forms.Button();
@@ -89,7 +90,6 @@ namespace RatchetEdit
             this.camZLabel = new System.Windows.Forms.Label();
             this.pitchLabel = new System.Windows.Forms.Label();
             this.mapSaveDialog = new System.Windows.Forms.SaveFileDialog();
-            this.button10 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -384,7 +384,7 @@ namespace RatchetEdit
             this.glControl.BackColor = System.Drawing.Color.Black;
             this.glControl.Location = new System.Drawing.Point(3, 28);
             this.glControl.Name = "glControl";
-            this.glControl.Size = new System.Drawing.Size(994, 629);
+            this.glControl.Size = new System.Drawing.Size(994, 626);
             this.glControl.TabIndex = 16;
             this.glControl.VSync = false;
             this.glControl.ObjectClick += new System.EventHandler<RatchetEdit.RatchetEventArgs>(this.glControl_ObjectClick);
@@ -520,6 +520,16 @@ namespace RatchetEdit
             this.objectTree.Size = new System.Drawing.Size(258, 264);
             this.objectTree.TabIndex = 0;
             this.objectTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.objectTreeView1_AfterSelect);
+            // 
+            // button10
+            // 
+            this.button10.Location = new System.Drawing.Point(7, 357);
+            this.button10.Name = "button10";
+            this.button10.Size = new System.Drawing.Size(75, 23);
+            this.button10.TabIndex = 18;
+            this.button10.Text = "button10";
+            this.button10.UseVisualStyleBackColor = true;
+            this.button10.Click += new System.EventHandler(this.button10_Click);
             // 
             // button9
             // 
@@ -713,16 +723,6 @@ namespace RatchetEdit
             // mapSaveDialog
             // 
             this.mapSaveDialog.FileName = "gameplay_ntsc";
-            // 
-            // button10
-            // 
-            this.button10.Location = new System.Drawing.Point(7, 357);
-            this.button10.Name = "button10";
-            this.button10.Size = new System.Drawing.Size(75, 23);
-            this.button10.TabIndex = 18;
-            this.button10.Text = "button10";
-            this.button10.UseVisualStyleBackColor = true;
-            this.button10.Click += new System.EventHandler(this.button10_Click);
             // 
             // Main
             // 

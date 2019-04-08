@@ -9,9 +9,6 @@ namespace RatchetEdit.LevelObjects
     {
         public const int ELEMENTSIZE = 0x20;
 
-        [Browsable(false)]
-        public Matrix4 modelMatrix { get; set; }
-
         public int id;
         public int unk1;
         public int unk2;
@@ -34,17 +31,18 @@ namespace RatchetEdit.LevelObjects
             position = new Vector3(x, y, z);
         }
 
-        public override byte[] ToByteArray() {
+        public override byte[] ToByteArray()
+        {
             byte[] bytes = new byte[ELEMENTSIZE];
 
-            WriteUint(ref bytes, 0x00, (uint)id);
+            WriteInt(ref bytes, 0x00, id);
             WriteFloat(ref bytes, 0x04, position.X);
             WriteFloat(ref bytes, 0x08, position.Y);
             WriteFloat(ref bytes, 0x0C, position.Z);
-            WriteUint(ref bytes, 0x10, (uint)unk1);
-            WriteUint(ref bytes, 0x14, (uint)unk2);
-            WriteUint(ref bytes, 0x18, (uint)unk3);
-            WriteUint(ref bytes, 0x1C, (uint)id2);
+            WriteInt(ref bytes, 0x10, unk1);
+            WriteInt(ref bytes, 0x14, unk2);
+            WriteInt(ref bytes, 0x18, unk3);
+            WriteInt(ref bytes, 0x1C, id2);
 
             return bytes;
         }
@@ -53,29 +51,6 @@ namespace RatchetEdit.LevelObjects
         {
             throw new NotImplementedException();
         }
-
-        public override void UpdateTransformMatrix()
-        {
-            Matrix4 rotMatrix = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(rotation));
-            Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
-            Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
-            modelMatrix = scaleMatrix * rotMatrix * translationMatrix;
-        }
-
-        //Transformable methods
-        public override void Rotate(Vector3 vector)
-        {
-            rotation += vector;
-        }
-
-        public override void Translate(Vector3 vector)
-        {
-            position += vector;
-        }
-        public override void Scale(Vector3 scale) {
-            this.scale *= scale;
-        }
-
 
         public override void Render(CustomGLControl glControl, bool selected)
         {

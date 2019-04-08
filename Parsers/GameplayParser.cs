@@ -119,7 +119,7 @@ namespace RatchetEdit.Parsers
 
             int mobyCount = ReadInt(ReadBlock(fileStream, gameplayHeader.mobyPointer, 4), 0);
 
-            byte[] mobyBlock = ReadBlock(fileStream, gameplayHeader.mobyPointer + 0x10, mobyCount * game.mobyElemSize);
+            byte[] mobyBlock = ReadBlock(fileStream, gameplayHeader.mobyPointer + 0x10, game.mobyElemSize * mobyCount);
             for (int i = 0; i < mobyCount; i++)
             {
                 mobs.Add(new Moby(game, mobyBlock, i, mobyModels));
@@ -127,20 +127,19 @@ namespace RatchetEdit.Parsers
             return mobs;
         }
 
-
-        public List<Cuboid> GetSpawnPoints()
+        public List<Cuboid> GetCuboids()
         {
-            var spawnPoints = new List<Cuboid>();
+            var cuboids = new List<Cuboid>();
 
-            if (gameplayHeader.spawnPointPointer == 0) { return spawnPoints; }
+            if (gameplayHeader.cuboidPointer == 0) { return cuboids; }
 
-            int spawnPointCount = ReadInt(ReadBlock(fileStream, gameplayHeader.spawnPointPointer, 4), 0);
-            byte[] spawnPointBlock = ReadBlock(fileStream, gameplayHeader.spawnPointPointer + 0x10, spawnPointCount * Cuboid.ELEMENTSIZE);
-            for (int i = 0; i < spawnPointCount; i++)
+            int cuboidCount = ReadInt(ReadBlock(fileStream, gameplayHeader.cuboidPointer, 4), 0);
+            byte[] spawnPointBlock = ReadBlock(fileStream, gameplayHeader.cuboidPointer + 0x10, Cuboid.ELEMENTSIZE * cuboidCount);
+            for (int i = 0; i < cuboidCount; i++)
             {
-                spawnPoints.Add(new Cuboid(spawnPointBlock, i));
+                cuboids.Add(new Cuboid(spawnPointBlock, i));
             }
-            return spawnPoints;
+            return cuboids;
         }
 
         public List<GameCamera> GetGameCameras()
@@ -149,7 +148,7 @@ namespace RatchetEdit.Parsers
             if (gameplayHeader.cameraPointer == 0) { return cameraList; }
 
             int cameraCount = ReadInt(ReadBlock(fileStream, gameplayHeader.cameraPointer, 4), 0);
-            byte[] cameraBlock = ReadBlock(fileStream, gameplayHeader.cameraPointer + 0x10, cameraCount * GameCamera.ELEMENTSIZE);
+            byte[] cameraBlock = ReadBlock(fileStream, gameplayHeader.cameraPointer + 0x10, GameCamera.ELEMENTSIZE * cameraCount);
             for (int i = 0; i < cameraCount; i++)
             {
                 cameraList.Add(new GameCamera(cameraBlock, i));
@@ -202,7 +201,7 @@ namespace RatchetEdit.Parsers
 
             return type64s;
         }
-
+        
         public List<Type68> GetType68s()
         {
             var type68s = new List<Type68>();
@@ -218,6 +217,20 @@ namespace RatchetEdit.Parsers
             return type68s;
         }
 
+        public List<Type88> GetType88s()
+        {
+            var type88s = new List<Type88>();
+            if (gameplayHeader.type88Pointer == 0) { return type88s; }
+
+            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.type88Pointer, 4), 0);
+            byte[] type88Block = ReadBlock(fileStream, gameplayHeader.type88Pointer + 0x10, Type88.ELEMENTSIZE * count);
+            for (int i = 0; i < count; i++)
+            {
+                type88s.Add(new Type88(type88Block, i));
+            }
+            return type88s;
+        }
+
         public List<Type7C> GetType7Cs()
         {
             var type7Cs = new List<Type7C>();
@@ -231,21 +244,6 @@ namespace RatchetEdit.Parsers
             }
 
             return type7Cs;
-        }
-
-        public List<Type88> GetType88s()
-        {
-            var type88s = new List<Type88>();
-            if (gameplayHeader.type88Pointer == 0) { return type88s; }
-
-            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.type88Pointer, 4), 0);
-            byte[] type88Block = ReadBlock(fileStream, gameplayHeader.type88Pointer + 0x10, Type88.ELEMENTSIZE * count);
-            for (int i = 0; i < count; i++)
-            {
-                type88s.Add(new Type88(type88Block, i));
-            }
-
-            return type88s;
         }
 
         public List<Type80> GetType80()

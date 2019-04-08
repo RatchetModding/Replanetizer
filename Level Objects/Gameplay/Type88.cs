@@ -72,18 +72,6 @@ namespace RatchetEdit.LevelObjects
             throw new NotImplementedException();
         }
 
-        public override void Translate(Vector3 vector) {
-            throw new NotImplementedException();
-        }
-
-        public override void Rotate(Vector3 vector) {
-            throw new NotImplementedException();
-        }
-
-        public override void Scale(Vector3 scale) {
-            throw new NotImplementedException();
-        }
-
 
 
     }

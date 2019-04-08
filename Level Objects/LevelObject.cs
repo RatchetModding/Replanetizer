@@ -5,56 +5,52 @@ namespace RatchetEdit.LevelObjects
 {
     public abstract class LevelObject : ITransformable, ISerializable
     {
-		protected static Vector4 normalColor = new Vector4(1, 1, 1, 1); // White
-		protected static Vector4 selectedColor = new Vector4(1, 0, 1, 1); // Purple
+        protected static Vector4 normalColor = new Vector4(1, 1, 1, 1); // White
+        protected static Vector4 selectedColor = new Vector4(1, 0, 1, 1); // Purple
 
-        protected Vector3 _position = new Vector3();
-        [Category("\tTransform"), TypeConverter(typeof(Vector3Converter)), DisplayName("Position")]
-        public virtual Vector3 position
-        {
-            get { return _position; }
-            set
-            {
-                _position = value;
-                UpdateTransformMatrix();
-            }
-        }
-        protected Vector3 _rotation = new Vector3();
-        [Category("\tTransform"), TypeConverter(typeof(Vector3RadiansConverter)), DisplayName("Rotation")]
-        public virtual Vector3 rotation
-        {
-            get { return _rotation; }
-            set
-            {
-                _rotation = value;
-                UpdateTransformMatrix();
-            }
-        }
+        public Matrix4 modelMatrix { get; set; }
 
-        protected Vector3 _scale = new Vector3();
-        [Category("\tTransform"), TypeConverter(typeof(Vector3Converter)), DisplayName("Scale")]
-        public virtual Vector3 scale {
-            get { return _scale; }
-            set {
-                _scale = value;
-                UpdateTransformMatrix();
-            }
-        }
+
+        public Vector3 position = new Vector3();
+        public Vector3 scale = new Vector3();
+        public Quaternion rotation = new Quaternion();
 
 
         public abstract byte[] ToByteArray();
 
         public abstract LevelObject Clone();
-        public abstract void Rotate(Vector3 vector);
-        public abstract void Translate(Vector3 vector);
-        public abstract void Scale(Vector3 scale);
         public abstract void Render(CustomGLControl glControl, bool selected);
 
-        public virtual void UpdateTransformMatrix() { } // Not required to implement
+        // Virtual, since some objects (moby) override it
+        public virtual void UpdateTransformMatrix()
+        {
+            Matrix4 rot = Matrix4.CreateFromQuaternion(rotation);
+            Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
+            Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
+            modelMatrix = scaleMatrix * rot * translationMatrix;
+        }
+
+        public void Translate(Vector3 vector)
+        {
+            position += vector;
+            UpdateTransformMatrix();
+        }
+
+        public void Rotate(Vector3 vector)
+        {
+            rotation *= Quaternion.FromEulerAngles(vector);
+            UpdateTransformMatrix();
+        }
+
+        public void Scale(Vector3 scale)
+        {
+            this.scale *= scale;
+            UpdateTransformMatrix();
+        }
 
 
         public void Scale(float val) { //To uniformly scale object
-            Scale(new Vector3(val, val, val));
+            Scale(new Vector3(val));
         }
         public void Scale(float x, float y, float z) {
             Rotate(new Vector3(x, y, z));

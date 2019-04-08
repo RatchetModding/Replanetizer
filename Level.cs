@@ -215,7 +215,7 @@ namespace RatchetEdit
                 type5Cs = gameplayParser.GetType5Cs();
 
                 pVars = gameplayParser.GetPvars(mobs);
-                cuboids = gameplayParser.GetSpawnPoints();
+                cuboids = gameplayParser.GetCuboids();
                 gameCameras = gameplayParser.GetGameCameras();
 
                 mobyIds = gameplayParser.GetMobyIds();

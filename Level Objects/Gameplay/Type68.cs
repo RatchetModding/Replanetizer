@@ -18,8 +18,8 @@ namespace RatchetEdit.LevelObjects
             mat1 = ReadMatrix4(block, offset + 0x00);
             mat2 = ReadMatrix4(block, offset + 0x40);
             modelMatrix = mat1 + mat2;
-            _rotation = modelMatrix.ExtractRotation().Xyz * 2.2f;
-            _position = modelMatrix.ExtractTranslation();
+            rotation = modelMatrix.ExtractRotation();
+            position = modelMatrix.ExtractTranslation();
         }
 
         public override LevelObject Clone() {

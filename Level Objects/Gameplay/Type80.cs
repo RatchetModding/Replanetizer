@@ -30,9 +30,9 @@ namespace RatchetEdit.LevelObjects
             mat1 = ReadMatrix4(dataBlock, dataOffset + 0x00); //May be matrix data, but i'm not sure.
             mat2 = ReadMatrix4(dataBlock, dataOffset + 0x40); //Don't think this is a matrix.
 
-            modelMatrix = mat1;
-            _rotation = modelMatrix.ExtractRotation().Xyz * 2.2f;
-            _position = modelMatrix.ExtractTranslation();
+            rotation = mat1.ExtractRotation();
+            position = mat1.ExtractTranslation();
+            UpdateTransformMatrix();
         }
 
         public byte[] SerializeHead()

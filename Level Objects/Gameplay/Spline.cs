@@ -19,7 +19,7 @@ namespace RatchetEdit.LevelObjects
 
         int VBO;
 
-        public override Vector3 position
+        /*public override Vector3 position
         {
             get { return _position; }
             set
@@ -30,10 +30,7 @@ namespace RatchetEdit.LevelObjects
         public override Vector3 rotation
         {
             get { return _rotation; }
-            set
-            {
-                Rotate(value - _rotation);
-            }
+            set { Rotate(value - _rotation); }
         }
 
         public override Vector3 scale
@@ -44,7 +41,7 @@ namespace RatchetEdit.LevelObjects
                 Vector3 requiredScaling = Vector3.Divide(value, _scale);
                 Scale(requiredScaling);
             }
-        }
+        }*/
 
         public Spline(int name, float[] vertexBuffer)
         {
@@ -79,7 +76,7 @@ namespace RatchetEdit.LevelObjects
             }
 
             if (count > 0) {
-                _position = new Vector3(vertexBuffer[0], vertexBuffer[1], vertexBuffer[2]);
+                //_position = new Vector3(vertexBuffer[0], vertexBuffer[1], vertexBuffer[2]);
             }
 
             cnt++;
@@ -150,7 +147,7 @@ namespace RatchetEdit.LevelObjects
             return new Spline(name, vertexBuffer);
         }
 
-        public override void Translate(Vector3 vector)
+        /*public override void Translate(Vector3 vector)
         {
             for (int i = 0; i < vertexBuffer.Length / 3; i++)
             {
@@ -223,7 +220,7 @@ namespace RatchetEdit.LevelObjects
                 SetVertex(i, newVertexPosition);
             }
             _scale *= scale;
-        }
+        }*/
 
         public override void Render(CustomGLControl glControl, bool selected = false)
         {

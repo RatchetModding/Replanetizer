@@ -7,6 +7,7 @@ namespace RatchetEdit.LevelObjects
     public class Type64 : MatrixObject
     {
         public const int ELEMENTSIZE = 0x80;
+
         public int id;
         public Matrix4 mat1;
         public Matrix4 mat2;
@@ -19,8 +20,8 @@ namespace RatchetEdit.LevelObjects
             mat2 = ReadMatrix4(block, offset + 0x40);
 
             modelMatrix = mat1 + mat2;
-            _rotation = modelMatrix.ExtractRotation().Xyz * 2.2f;
-            _position = modelMatrix.ExtractTranslation();
+            rotation = modelMatrix.ExtractRotation();
+            position = modelMatrix.ExtractTranslation();
         }
 
         public override byte[] ToByteArray()

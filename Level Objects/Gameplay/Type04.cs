@@ -28,6 +28,8 @@ namespace RatchetEdit.LevelObjects
         public float off_38;
         public float off_3C;
 
+
+
         public Type04(byte[] block, int num)
         {
             int offset = num * ELEMENTSIZE;
@@ -80,9 +82,7 @@ namespace RatchetEdit.LevelObjects
             return bytes;
         }
 
-        public override void Translate(Vector3 vector) {
-            throw new NotImplementedException();
-        }
+
         public override LevelObject Clone() {
             throw new NotImplementedException();
         }
@@ -91,12 +91,5 @@ namespace RatchetEdit.LevelObjects
             throw new NotImplementedException();
         }
 
-        public override void Rotate(Vector3 vector) {
-            throw new NotImplementedException();
-        }
-
-        public override void Scale(Vector3 scale) {
-            throw new NotImplementedException();
-        }
     }
 }

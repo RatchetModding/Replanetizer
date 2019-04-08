@@ -9,6 +9,7 @@ namespace RatchetEdit.LevelObjects
     {
         //Looks like 0C can be some sort of trigger that is tripped off when you go near them. They're generally placed in rivers with current and in front of unlockable doors.
         public const int ELEMENTSIZE = 0x90;
+
         public int off_00;
         public int off_04;
         public int off_08;
@@ -42,16 +43,15 @@ namespace RatchetEdit.LevelObjects
             off_08 = ReadInt(block, offset + 0x08);
             off_0C = ReadInt(block, offset + 0x0C);
 
-
             mat1 = ReadMatrix4(block, offset + 0x10);
-            mat1.M44 = 1;
-            originalM44 = ReadFloat(block, offset + 0x4C);
             mat2 = ReadMatrix4(block, offset + 0x50);
 
-            modelMatrix = mat1;
-            _rotation = modelMatrix.ExtractRotation().Xyz * 2.2f;
-            _position = modelMatrix.ExtractTranslation();
-            _scale = modelMatrix.ExtractScale();
+            originalM44 = ReadFloat(block, offset + 0x4C);
+
+            rotation = mat1.ExtractRotation();
+            position = mat1.ExtractTranslation();
+            scale = mat1.ExtractScale();
+            UpdateTransformMatrix();
 
             GetVBO();
             GetIBO();

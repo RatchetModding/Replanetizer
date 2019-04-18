@@ -36,22 +36,22 @@ namespace RatchetEdit
 
         public static int ReadInt(byte[] buf, int offset)
         {
-            return (buf[offset + 0] << 24) | (buf[offset + 1] << 16) | (buf[offset + 2] << 8) | (buf[offset + 3]);
+            return buf[offset + 0] << 24 | buf[offset + 1] << 16 | buf[offset + 2] << 8 | buf[offset + 3];
         }
 
         public static short ReadShort(byte[] buf, int offset)
         {
-            return (short)((buf[offset + 0] << 8) | (buf[offset + 1]));
+            return (short)(buf[offset + 0] << 8 | buf[offset + 1]);
         }
 
         public static uint ReadUint(byte[] buf, int offset)
         {
-            return (uint)((buf[offset + 0] << 24) | (buf[offset + 1] << 16) | (buf[offset + 2] << 8) | (buf[offset + 3]));
+            return (uint)(buf[offset + 0] << 24 | buf[offset + 1] << 16 | buf[offset + 2] << 8 | buf[offset + 3]);
         }
 
         public static ushort ReadUshort(byte[] buf, int offset)
         {
-            return (ushort)((buf[offset + 0] << 8) | (buf[offset + 1]));
+            return (ushort)(buf[offset + 0] << 8 | buf[offset + 1]);
         }
 
         public static Matrix4 ReadMatrix4(byte[] buf, int offset)
@@ -159,7 +159,7 @@ namespace RatchetEdit
             WriteFloat(byteArray, offset + 0x3C, input.M44);
         }
 
-        public static byte[] getBytes(byte[] array, int ind, int length)
+        public static byte[] GetBytes(byte[] array, int ind, int length)
         {
             byte[] data = new byte[length];
             for (int i = 0; i < length; i++)

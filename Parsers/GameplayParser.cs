@@ -440,7 +440,7 @@ namespace RatchetEdit.Parsers
             {
                 uint mobpVarsStart = ReadUint(pVarHeadBlock, (i * 8));
                 uint mobpVarsCount = ReadUint(pVarHeadBlock, (i * 8) + 0x04);
-                byte[] mobpVars = getBytes(pVarBlock, (int)mobpVarsStart, (int)mobpVarsCount);
+                byte[] mobpVars = GetBytes(pVarBlock, (int)mobpVarsStart, (int)mobpVarsCount);
                 pVars.Add(mobpVars);
             }
 

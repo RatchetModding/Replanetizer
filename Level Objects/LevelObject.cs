@@ -8,7 +8,7 @@ namespace RatchetEdit.LevelObjects
         protected static Vector4 normalColor = new Vector4(1, 1, 1, 1); // White
         protected static Vector4 selectedColor = new Vector4(1, 0, 1, 1); // Purple
 
-        public Matrix4 modelMatrix { get; set; }
+        public Matrix4 modelMatrix;
 
 
         public Vector3 position = new Vector3();

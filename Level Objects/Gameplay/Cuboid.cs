@@ -53,7 +53,7 @@ namespace RatchetEdit.LevelObjects
             mat1 = ReadMatrix4(block, offset + 0x00);
             mat2 = ReadMatrix4(block, offset + 0x40);
 
-            originalM44 = ReadFloat(block, offset + 0x3C);
+            originalM44 = mat1.M44;
 
             rotation = mat1.ExtractRotation();
             position = mat1.ExtractTranslation();
@@ -97,10 +97,9 @@ namespace RatchetEdit.LevelObjects
         {
             byte[] bytes = new byte[0x80];
 
+            modelMatrix.M44 = originalM44;
             WriteMatrix4(bytes, 0x00, modelMatrix);
             WriteMatrix4(bytes, 0x40, mat2);
-
-            WriteFloat(bytes, 0x3C, originalM44);
 
             return bytes;
         }

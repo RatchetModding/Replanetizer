@@ -578,7 +578,7 @@ namespace RatchetEdit
                 GameplaySerializer gameplaySerializer = new GameplaySerializer();
                 gameplaySerializer.Save(level, mapSaveDialog.FileName);
                 EngineSerializer engineSerializer = new EngineSerializer();
-                engineSerializer.Save(level, pathName, oldTextureCount);
+                engineSerializer.Save(level, pathName);
                 Console.WriteLine(pathName);
             }
             InvalidateView();

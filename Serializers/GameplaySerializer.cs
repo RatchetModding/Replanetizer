@@ -13,7 +13,7 @@ namespace RatchetEdit.Serializers
         public const int MOBYLENGTH = 0x78;
 
 
-        public void Save(Level level, String fileName)
+        public void Save(Level level, string fileName)
         {
             FileStream fs = File.Open(fileName, FileMode.Create);
 

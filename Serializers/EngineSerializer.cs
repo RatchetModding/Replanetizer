@@ -14,7 +14,7 @@ namespace RatchetEdit.Serializers
     {
         public string pathName;
 
-        public void Save(Level level, String pathName, int textureCount)
+        public void Save(Level level, string pathName)
         {
             this.pathName = pathName;
             FileStream fs = File.Open(pathName + "/engine.ps3", FileMode.Create);

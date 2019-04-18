@@ -119,7 +119,8 @@ namespace RatchetEdit.Serializers
         {
             short offset = 0;
             var spriteIds = new List<int>();
-            byte[] elemBytes = new byte[uiElements.Count * 8];
+            var elemBytes = new byte[uiElements.Count * 8];
+
             for (int i = 0; i < uiElements.Count; i++)
             {
                 WriteShort(elemBytes, i * 8 + 0x00, uiElements[i].id);
@@ -132,7 +133,7 @@ namespace RatchetEdit.Serializers
                 offset += (short)uiElements[i].sprites.Count;
             }
 
-            byte[] spriteBytes = new byte[spriteIds.Count * 4];
+            var spriteBytes = new byte[spriteIds.Count * 4];
             for (int i = 0; i < spriteIds.Count; i++)
             {
                 WriteInt(spriteBytes, i * 4, spriteIds[i]);
@@ -141,13 +142,13 @@ namespace RatchetEdit.Serializers
             int elemStart = fileOffset + 0x10;
             int spriteStart = GetLength(elemStart + elemBytes.Length);
 
-            byte[] headBytes = new byte[0x10];
+            var headBytes = new byte[0x10];
             WriteShort(headBytes, 0x00, (short)uiElements.Count);
             WriteShort(headBytes, 0x02, (short)spriteIds.Count);
             WriteInt(headBytes, 0x04, elemStart);
             WriteInt(headBytes, 0x08, spriteStart);
 
-            byte[] outBytes = new byte[headBytes.Length + GetLength(elemBytes.Length) + GetLength(spriteBytes.Length)];
+            var outBytes = new byte[headBytes.Length + GetLength(elemBytes.Length) + GetLength(spriteBytes.Length)];
             headBytes.CopyTo(outBytes, 0);
             elemBytes.CopyTo(outBytes, 0x10);
             spriteBytes.CopyTo(outBytes, 0x10 + GetLength(elemBytes.Length));
@@ -155,14 +156,13 @@ namespace RatchetEdit.Serializers
             return outBytes;
         }
 
-        private byte[] WriteMobies(List<Model> mobyModels, int initOffset)
+        private byte[] WriteMobies(List<Model> mobyModels, int offset)
         {
-            int offs = initOffset;
-            byte[] headBytes = new byte[mobyModels.Count * 8 + 4];
-            WriteInt(headBytes, 0, mobyModels.Count);
-            offs += GetLength(headBytes.Length);
+            var headBytes = new byte[mobyModels.Count * 8 + 4];
+            var bodBytes = new List<byte>();
 
-            List<byte> bodBytes = new List<byte>();
+            WriteInt(headBytes, 0, mobyModels.Count);
+            offset += GetLength(headBytes.Length);
 
             for (int i = 0; i < mobyModels.Count; i++)
             {
@@ -172,14 +172,14 @@ namespace RatchetEdit.Serializers
                 if (!g.isModel)
                     continue;
 
-                WriteInt(headBytes, 4 + i * 8 + 4, offs);
+                WriteInt(headBytes, 4 + i * 8 + 4, offset);
                 byte[] bodyByte = g.Serialize();
                 bodBytes.AddRange(bodyByte);
-                offs += GetLength(bodyByte.Length);
+                offset += GetLength(bodyByte.Length);
 
             }
 
-            byte[] outBuff = new byte[GetLength(headBytes.Length) + bodBytes.Count];
+            var outBuff = new byte[GetLength(headBytes.Length) + bodBytes.Count];
             headBytes.CopyTo(outBuff, 0);
             bodBytes.CopyTo(outBuff, GetLength(headBytes.Length));
 
@@ -187,14 +187,13 @@ namespace RatchetEdit.Serializers
         }
 
 
-        private byte[] WriteWeapons(List<Model> weaponModels, int initOffset)
+        private byte[] WriteWeapons(List<Model> weaponModels, int offset)
         {
-            int offs = initOffset;
-            byte[] headBytes = new byte[weaponModels.Count * 0x10];
-            int headLength = GetLength(headBytes.Length);
-            offs += headLength;
+            var headBytes = new byte[weaponModels.Count * 0x10];
+            var bodyBytes = new List<byte>();
 
-            List<byte> bodBytes = new List<byte>();
+            int headLength = GetLength(headBytes.Length);
+            offset += headLength;
 
             for (int i = 0; i < weaponModels.Count; i++)
             {
@@ -205,29 +204,30 @@ namespace RatchetEdit.Serializers
                     continue;
 
                 byte[] bodyByte = g.Serialize();
-                WriteInt(headBytes, i * 0x10 + 4, offs);
+                WriteInt(headBytes, i * 0x10 + 4, offset);
                 WriteInt(headBytes, i * 0x10 + 8, bodyByte.Length);
-                bodBytes.AddRange(bodyByte);
-                offs += GetLength(bodyByte.Length);
+                bodyBytes.AddRange(bodyByte);
+                offset += GetLength(bodyByte.Length);
 
             }
 
-            byte[] outBuff = new byte[headLength + bodBytes.Count];
+            var outBuff = new byte[headLength + bodyBytes.Count];
             headBytes.CopyTo(outBuff, 0);
-            bodBytes.CopyTo(outBuff, headLength);
+            bodyBytes.CopyTo(outBuff, headLength);
 
             return outBuff;
         }
 
         private byte[] WriteTies(List<Tie> ties, int offset)
         {
-            byte[] headBytes = new byte[ties.Count * 0x70];
-            List<byte> colorBytes = new List<byte>();
-            int initOffset = offset + ties.Count * 0x70;
+            offset += ties.Count * 0x70;
+
+            var headBytes = new byte[ties.Count * 0x70];
+            var colorBytes = new List<byte>();
 
             for (int i = 0; i < ties.Count; i++)
             {
-                ties[i].ToByteArray(initOffset + colorBytes.Count).CopyTo(headBytes, i * 0x70);
+                ties[i].ToByteArray(offset + colorBytes.Count).CopyTo(headBytes, i * 0x70);
                 byte[] colByte = ties[i].colorBytes;
                 colorBytes.AddRange(colByte);
                 while ((colorBytes.Count % 0x80) != 0)
@@ -236,7 +236,7 @@ namespace RatchetEdit.Serializers
                 }
             }
 
-            byte[] outBytes = new byte[headBytes.Length + colorBytes.Count];
+            var outBytes = new byte[headBytes.Length + colorBytes.Count];
             headBytes.CopyTo(outBytes, 0);
             colorBytes.CopyTo(outBytes, headBytes.Length);
 
@@ -245,7 +245,7 @@ namespace RatchetEdit.Serializers
 
         private byte[] WriteShrubs(List<Shrub> shrubs)
         {
-            byte[] outBytes = new byte[shrubs.Count * 0x70];
+            var outBytes = new byte[shrubs.Count * 0x70];
             for (int i = 0; i < shrubs.Count; i++)
             {
                 shrubs[i].ToByteArray().CopyTo(outBytes, i * 0x70);
@@ -256,7 +256,7 @@ namespace RatchetEdit.Serializers
 
         private byte[] WriteLights(List<Light> lights)
         {
-            byte[] outBytes = new byte[lights.Count * 0x40];
+            var outBytes = new byte[lights.Count * 0x40];
             for (int i = 0; i < lights.Count; i++)
             {
                 lights[i].Serialize().CopyTo(outBytes, i * 0x40);
@@ -267,7 +267,7 @@ namespace RatchetEdit.Serializers
 
         private byte[] WriteTextureConfigMenus(List<int> textureConfigMenus)
         {
-            byte[] outBytes = new byte[textureConfigMenus.Count * 0x4];
+            var outBytes = new byte[textureConfigMenus.Count * 0x4];
             for (int i = 0; i < textureConfigMenus.Count; i++)
             {
                 WriteInt(outBytes, i * 4, textureConfigMenus[i]);
@@ -276,48 +276,48 @@ namespace RatchetEdit.Serializers
             return outBytes;
         }
 
-        private byte[] WriteTieModels(List<Model> tiemodels, int startOff)
+        private byte[] WriteTieModels(List<Model> tiemodels, int offset)
         {
-            byte[] headBytes = new byte[tiemodels.Count * 0x40];
-            List<byte> bodyBytes = new List<byte>();
+            offset += tiemodels.Count * 0x40;
 
-            startOff += tiemodels.Count * 0x40;
+            var headBytes = new byte[tiemodels.Count * 0x40];
+            var bodyBytes = new List<byte>();
 
             for (int i = 0; i < tiemodels.Count; i++)
             {
                 TieModel g = (TieModel)tiemodels[i];
-                byte[] tieByte = g.SerializeHead(startOff);
-                byte[] bodBytes = g.SerializeBody(startOff);
+                byte[] tieByte = g.SerializeHead(offset);
+                byte[] bodBytes = g.SerializeBody(offset);
                 bodyBytes.AddRange(bodBytes);
-                startOff += bodBytes.Length;
+                offset += bodBytes.Length;
                 tieByte.CopyTo(headBytes, i * 0x40);
             }
 
-            byte[] outBytes = new byte[headBytes.Length + bodyBytes.Count];
+            var outBytes = new byte[headBytes.Length + bodyBytes.Count];
             headBytes.CopyTo(outBytes, 0);
             bodyBytes.CopyTo(outBytes, headBytes.Length);
 
             return outBytes;
         }
 
-        private byte[] WriteShrubModels(List<Model> shrubmodels, int startOff)
+        private byte[] WriteShrubModels(List<Model> shrubmodels, int offset)
         {
-            byte[] headBytes = new byte[shrubmodels.Count * 0x40];
-            List<byte> bodyBytes = new List<byte>();
+            offset += shrubmodels.Count * 0x40;
 
-            startOff += shrubmodels.Count * 0x40;
+            var headBytes = new byte[shrubmodels.Count * 0x40];
+            var bodyBytes = new List<byte>();
 
             for (int i = 0; i < shrubmodels.Count; i++)
             {
                 ShrubModel g = (ShrubModel)shrubmodels[i];
-                byte[] tieByte = g.SerializeHead(startOff);
-                byte[] bodBytes = g.SerializeBody(startOff);
+                byte[] tieByte = g.SerializeHead(offset);
+                byte[] bodBytes = g.SerializeBody(offset);
                 bodyBytes.AddRange(bodBytes);
-                startOff += bodBytes.Length;
+                offset += bodBytes.Length;
                 tieByte.CopyTo(headBytes, i * 0x40);
             }
 
-            byte[] outBytes = new byte[headBytes.Length + bodyBytes.Count];
+            var outBytes = new byte[headBytes.Length + bodyBytes.Count];
             headBytes.CopyTo(outBytes, 0);
             bodyBytes.CopyTo(outBytes, headBytes.Length);
 
@@ -326,25 +326,20 @@ namespace RatchetEdit.Serializers
 
         private byte[] WriteTextures(List<Texture> textures)
         {
-            List<byte> vramBytes = new List<byte>();
+            var vramBytes = new List<byte>();
+            var outBytes = new byte[textures.Count * 0x24];
 
-            int vramOffset = 0;
-
-            byte[] outBytes = new byte[textures.Count * 0x24];
             for (int i = 0; i < textures.Count; i++)
             {
                 while (vramBytes.Count % 0x10 != 0) vramBytes.Add(0);
-                vramOffset = vramBytes.Count;
+                int vramOffset = vramBytes.Count;
 
                 textures[i].Serialize(vramOffset).CopyTo(outBytes, i * 0x24);
                 vramBytes.AddRange(textures[i].data);
             }
 
-
-            byte[] vramBys = vramBytes.ToArray();
-
             FileStream fs = File.Open(pathName + "/vram.ps3", FileMode.Create);
-            fs.Write(vramBys, 0, vramBys.Length);
+            fs.Write(vramBytes.ToArray(), 0, vramBytes.Count);
             fs.Close();
 
             return outBytes;
@@ -355,8 +350,8 @@ namespace RatchetEdit.Serializers
             int offsetListLength = GetLength(animations.Count * 4);
             animationOffset += offsetListLength;
 
-            List<byte> animByteList = new List<byte>();
-            List<int> animOffsets = new List<int>();
+            var animByteList = new List<byte>();
+            var animOffsets = new List<int>();
 
             foreach (Animation anim in animations)
             {
@@ -373,7 +368,7 @@ namespace RatchetEdit.Serializers
                 }
             }
 
-            byte[] outBytes = new byte[offsetListLength + animByteList.Count];
+            var outBytes = new byte[offsetListLength + animByteList.Count];
             for (int i = 0; i < animations.Count; i++)
             {
                 WriteInt(outBytes, i * 0x04, animOffsets[i]);
@@ -381,11 +376,6 @@ namespace RatchetEdit.Serializers
             animByteList.CopyTo(outBytes, offsetListLength);
 
             return outBytes;
-        }
-
-        private void WriteSkybox(FileStream fs, List<UiElement> uiElements)
-        {
-
         }
     }
 }

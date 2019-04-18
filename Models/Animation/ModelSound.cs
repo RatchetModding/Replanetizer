@@ -38,15 +38,15 @@ namespace RatchetEdit.Models.Animations
         {
             byte[] outBytes = new byte[0x20];
 
-            WriteInt(ref outBytes, 0x00, off_00);
-            WriteFloat(ref outBytes, 0x04, distance);
-            WriteInt(ref outBytes, 0x08, masterVolume);
-            WriteInt(ref outBytes, 0x0C, volume);
-            WriteInt(ref outBytes, 0x10, distortion);
-            WriteInt(ref outBytes, 0x14, distortion2);
-            WriteShort(ref outBytes, 0x18, off_18);
-            WriteShort(ref outBytes, 0x1A, listIndex);
-            WriteInt(ref outBytes, 0x1C, off_1C);
+            WriteInt(outBytes, 0x00, off_00);
+            WriteFloat(outBytes, 0x04, distance);
+            WriteInt(outBytes, 0x08, masterVolume);
+            WriteInt(outBytes, 0x0C, volume);
+            WriteInt(outBytes, 0x10, distortion);
+            WriteInt(outBytes, 0x14, distortion2);
+            WriteShort(outBytes, 0x18, off_18);
+            WriteShort(outBytes, 0x1A, listIndex);
+            WriteInt(outBytes, 0x1C, off_1C);
 
             return outBytes;
         }

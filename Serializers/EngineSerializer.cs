@@ -86,11 +86,11 @@ namespace RatchetEdit.Serializers
             int off_28 = ReadInt(terrainBlock, 0x28);
             int off_38 = ReadInt(terrainBlock, 0x38);
 
-            WriteInt(ref terrainBlock, 0x00, off_00 + fileOffset);
-            WriteInt(ref terrainBlock, 0x08, off_08 + fileOffset);
-            WriteInt(ref terrainBlock, 0x18, off_18 + fileOffset);
-            WriteInt(ref terrainBlock, 0x28, off_28 + fileOffset);
-            WriteInt(ref terrainBlock, 0x38, off_38 + fileOffset);
+            WriteInt(terrainBlock, 0x00, off_00 + fileOffset);
+            WriteInt(terrainBlock, 0x08, off_08 + fileOffset);
+            WriteInt(terrainBlock, 0x18, off_18 + fileOffset);
+            WriteInt(terrainBlock, 0x28, off_28 + fileOffset);
+            WriteInt(terrainBlock, 0x38, off_38 + fileOffset);
 
             short headCount = ReadShort(terrainBlock, 0x06);
 
@@ -98,24 +98,19 @@ namespace RatchetEdit.Serializers
             for (int i = 0; i < headCount; i++)
             {
                 int texOffset = ReadInt(terrainBlock, 0x70 + i * 0x30);
-                WriteInt(ref terrainBlock, 0x70 + i * 0x30, texOffset + fileOffset);
+                WriteInt(terrainBlock, 0x70 + i * 0x30, texOffset + fileOffset);
                 texCount += ReadShort(terrainBlock, 0x76 + i * 0x30);
             }
-
-
-            
 
             for (int i = 0; i < texCount; i++)
             {
                 int texId = ReadInt(terrainBlock, texOffset0 + i * 0x10);
-                WriteInt(ref terrainBlock, texOffset0 + i * 0x10, texId + textureCount);
+                WriteInt(terrainBlock, texOffset0 + i * 0x10, texId + textureCount);
             }
 
             Console.WriteLine("Texutre0offset: " + texOffset0);
             Console.WriteLine("textureCount: " + textureCount);
             Console.WriteLine("texCount: " + texCount);
-
-
 
             return terrainBlock;
         }
@@ -127,10 +122,10 @@ namespace RatchetEdit.Serializers
             byte[] elemBytes = new byte[uiElements.Count * 8];
             for (int i = 0; i < uiElements.Count; i++)
             {
-                WriteShort(ref elemBytes, i * 8 + 0x00, uiElements[i].id);
+                WriteShort(elemBytes, i * 8 + 0x00, uiElements[i].id);
                 if (uiElements[i].id == -1) continue;
-                WriteShort(ref elemBytes, i * 8 + 0x02, (short)uiElements[i].sprites.Count);
-                WriteShort(ref elemBytes, i * 8 + 0x04, offset);
+                WriteShort(elemBytes, i * 8 + 0x02, (short)uiElements[i].sprites.Count);
+                WriteShort(elemBytes, i * 8 + 0x04, offset);
 
                 spriteIds.AddRange(uiElements[i].sprites);
 
@@ -140,17 +135,17 @@ namespace RatchetEdit.Serializers
             byte[] spriteBytes = new byte[spriteIds.Count * 4];
             for (int i = 0; i < spriteIds.Count; i++)
             {
-                WriteInt(ref spriteBytes, i * 4, spriteIds[i]);
+                WriteInt(spriteBytes, i * 4, spriteIds[i]);
             }
 
             int elemStart = fileOffset + 0x10;
             int spriteStart = GetLength(elemStart + elemBytes.Length);
 
             byte[] headBytes = new byte[0x10];
-            WriteShort(ref headBytes, 0x00, (short)uiElements.Count);
-            WriteShort(ref headBytes, 0x02, (short)spriteIds.Count);
-            WriteInt(ref headBytes, 0x04, elemStart);
-            WriteInt(ref headBytes, 0x08, spriteStart);
+            WriteShort(headBytes, 0x00, (short)uiElements.Count);
+            WriteShort(headBytes, 0x02, (short)spriteIds.Count);
+            WriteInt(headBytes, 0x04, elemStart);
+            WriteInt(headBytes, 0x08, spriteStart);
 
             byte[] outBytes = new byte[headBytes.Length + GetLength(elemBytes.Length) + GetLength(spriteBytes.Length)];
             headBytes.CopyTo(outBytes, 0);
@@ -164,20 +159,20 @@ namespace RatchetEdit.Serializers
         {
             int offs = initOffset;
             byte[] headBytes = new byte[mobyModels.Count * 8 + 4];
-            WriteInt(ref headBytes, 0, mobyModels.Count);
+            WriteInt(headBytes, 0, mobyModels.Count);
             offs += GetLength(headBytes.Length);
 
             List<byte> bodBytes = new List<byte>();
 
             for (int i = 0; i < mobyModels.Count; i++)
             {
-                WriteInt(ref headBytes, 4 + i * 8, mobyModels[i].id);
+                WriteInt(headBytes, 4 + i * 8, mobyModels[i].id);
 
                 MobyModel g = (MobyModel)mobyModels[i];
                 if (!g.isModel)
                     continue;
 
-                WriteInt(ref headBytes, 4 + i * 8 + 4, offs);
+                WriteInt(headBytes, 4 + i * 8 + 4, offs);
                 byte[] bodyByte = g.Serialize();
                 bodBytes.AddRange(bodyByte);
                 offs += GetLength(bodyByte.Length);
@@ -203,15 +198,15 @@ namespace RatchetEdit.Serializers
 
             for (int i = 0; i < weaponModels.Count; i++)
             {
-                WriteInt(ref headBytes, i * 0x10, weaponModels[i].id);
+                WriteInt(headBytes, i * 0x10, weaponModels[i].id);
 
                 MobyModel g = (MobyModel)weaponModels[i];
                 if (!g.isModel)
                     continue;
 
                 byte[] bodyByte = g.Serialize();
-                WriteInt(ref headBytes, i * 0x10 + 4, offs);
-                WriteInt(ref headBytes, i * 0x10 + 8, bodyByte.Length);
+                WriteInt(headBytes, i * 0x10 + 4, offs);
+                WriteInt(headBytes, i * 0x10 + 8, bodyByte.Length);
                 bodBytes.AddRange(bodyByte);
                 offs += GetLength(bodyByte.Length);
 
@@ -275,7 +270,7 @@ namespace RatchetEdit.Serializers
             byte[] outBytes = new byte[textureConfigMenus.Count * 0x4];
             for (int i = 0; i < textureConfigMenus.Count; i++)
             {
-                WriteInt(ref outBytes, i * 4, textureConfigMenus[i]);
+                WriteInt(outBytes, i * 4, textureConfigMenus[i]);
             }
 
             return outBytes;
@@ -381,7 +376,7 @@ namespace RatchetEdit.Serializers
             byte[] outBytes = new byte[offsetListLength + animByteList.Count];
             for (int i = 0; i < animations.Count; i++)
             {
-                WriteInt(ref outBytes, i * 0x04, animOffsets[i]);
+                WriteInt(outBytes, i * 0x04, animOffsets[i]);
             }
             animByteList.CopyTo(outBytes, offsetListLength);
 

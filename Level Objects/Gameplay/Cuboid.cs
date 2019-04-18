@@ -97,10 +97,10 @@ namespace RatchetEdit.LevelObjects
         {
             byte[] bytes = new byte[0x80];
 
-            WriteMatrix4(ref bytes, 0x00, modelMatrix);
-            WriteMatrix4(ref bytes, 0x40, mat2);
+            WriteMatrix4(bytes, 0x00, modelMatrix);
+            WriteMatrix4(bytes, 0x40, mat2);
 
-            WriteFloat(ref bytes, 0x3C, originalM44);
+            WriteFloat(bytes, 0x3C, originalM44);
 
             return bytes;
         }

@@ -94,30 +94,30 @@ namespace RatchetEdit.LevelObjects
         {
             byte[] bytes = new byte[0x50];
 
-            WriteUint(ref bytes, 0x00, unk1);
-            WriteUint(ref bytes, 0x04, unk2);
-            WriteUint(ref bytes, 0x08, unk3);
-            WriteUint(ref bytes, 0x0C, fogColor.R);
+            WriteUint(bytes, 0x00, unk1);
+            WriteUint(bytes, 0x04, unk2);
+            WriteUint(bytes, 0x08, unk3);
+            WriteUint(bytes, 0x0C, fogColor.R);
 
-            WriteUint(ref bytes, 0x10, fogColor.G);
-            WriteUint(ref bytes, 0x14, fogColor.B);
-            WriteUint(ref bytes, 0x18, unk4);
-            WriteUint(ref bytes, 0x1C, unk5);
+            WriteUint(bytes, 0x10, fogColor.G);
+            WriteUint(bytes, 0x14, fogColor.B);
+            WriteUint(bytes, 0x18, unk4);
+            WriteUint(bytes, 0x1C, unk5);
 
-            WriteFloat(ref bytes, 0x20, fogDistance);
-            WriteFloat(ref bytes, 0x24, unk6);
-            WriteFloat(ref bytes, 0x28, deathPlaneZ);
-            WriteFloat(ref bytes, 0x2C, unk7);
+            WriteFloat(bytes, 0x20, fogDistance);
+            WriteFloat(bytes, 0x24, unk6);
+            WriteFloat(bytes, 0x28, deathPlaneZ);
+            WriteFloat(bytes, 0x2C, unk7);
 
-            WriteFloat(ref bytes, 0x30, unk8);
-            WriteFloat(ref bytes, 0x34, unk9);
-            WriteUint(ref bytes, 0x38, unk10);
-            WriteUint(ref bytes, 0x3C, (uint)unk11);
+            WriteFloat(bytes, 0x30, unk8);
+            WriteFloat(bytes, 0x34, unk9);
+            WriteUint(bytes, 0x38, unk10);
+            WriteUint(bytes, 0x3C, (uint)unk11);
 
-            WriteUint(ref bytes, 0x40, unk12);
-            WriteUint(ref bytes, 0x44, unk13);
-            WriteUint(ref bytes, 0x48, unk14);
-            WriteUint(ref bytes, 0x4C, unk15);
+            WriteUint(bytes, 0x40, unk12);
+            WriteUint(bytes, 0x44, unk13);
+            WriteUint(bytes, 0x48, unk14);
+            WriteUint(bytes, 0x4C, unk15);
 
             return bytes;
         }

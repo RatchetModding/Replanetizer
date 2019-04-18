@@ -79,7 +79,7 @@ namespace RatchetEdit
                 );
         }
 
-        public static byte[] ReadBlock(FileStream fs, int offset, int length)
+        public static byte[] ReadBlock(FileStream fs, long offset, int length)
         {
             if (length > 0)
             {
@@ -95,7 +95,7 @@ namespace RatchetEdit
             }
         }
 
-        public static void WriteUint(ref byte[] byteArr, int offset, uint input)
+        public static void WriteUint(byte[] byteArr, int offset, uint input)
         {
             byte[] byt = BitConverter.GetBytes(input);
             byteArr[offset + 0] = byt[3];
@@ -104,7 +104,7 @@ namespace RatchetEdit
             byteArr[offset + 3] = byt[0];
         }
 
-        public static void WriteInt(ref byte[] byteArr, int offset, int input)
+        public static void WriteInt(byte[] byteArr, int offset, int input)
         {
             byte[] byt = BitConverter.GetBytes(input);
             byteArr[offset + 0] = byt[3];
@@ -113,7 +113,7 @@ namespace RatchetEdit
             byteArr[offset + 3] = byt[0];
         }
 
-        public static void WriteFloat(ref byte[] byteArr, int offset, float input)
+        public static void WriteFloat(byte[] byteArr, int offset, float input)
         {
             byte[] byt = BitConverter.GetBytes(input);
             byteArr[offset + 0] = byt[3];
@@ -122,41 +122,41 @@ namespace RatchetEdit
             byteArr[offset + 3] = byt[0];
         }
 
-        public static void WriteShort(ref byte[] byteArr, int offset, short input)
+        public static void WriteShort(byte[] byteArr, int offset, short input)
         {
             byte[] byt = BitConverter.GetBytes(input);
             byteArr[offset + 0] = byt[1];
             byteArr[offset + 1] = byt[0];
         }
 
-        public static void WriteUshort(ref byte[] byteArr, int offset, ushort input)
+        public static void WriteUshort(byte[] byteArr, int offset, ushort input)
         {
             byte[] byt = BitConverter.GetBytes(input);
             byteArr[offset + 0] = byt[1];
             byteArr[offset + 1] = byt[0];
         }
 
-        public static void WriteMatrix4(ref byte[] byteArray, int offset, Matrix4 input)
+        public static void WriteMatrix4(byte[] byteArray, int offset, Matrix4 input)
         {
-            WriteFloat(ref byteArray, offset + 0x00, input.M11);
-            WriteFloat(ref byteArray, offset + 0x04, input.M12);
-            WriteFloat(ref byteArray, offset + 0x08, input.M13);
-            WriteFloat(ref byteArray, offset + 0x0C, input.M14);
+            WriteFloat(byteArray, offset + 0x00, input.M11);
+            WriteFloat(byteArray, offset + 0x04, input.M12);
+            WriteFloat(byteArray, offset + 0x08, input.M13);
+            WriteFloat(byteArray, offset + 0x0C, input.M14);
 
-            WriteFloat(ref byteArray, offset + 0x10, input.M21);
-            WriteFloat(ref byteArray, offset + 0x14, input.M22);
-            WriteFloat(ref byteArray, offset + 0x18, input.M23);
-            WriteFloat(ref byteArray, offset + 0x1C, input.M24);
+            WriteFloat(byteArray, offset + 0x10, input.M21);
+            WriteFloat(byteArray, offset + 0x14, input.M22);
+            WriteFloat(byteArray, offset + 0x18, input.M23);
+            WriteFloat(byteArray, offset + 0x1C, input.M24);
 
-            WriteFloat(ref byteArray, offset + 0x20, input.M31);
-            WriteFloat(ref byteArray, offset + 0x24, input.M32);
-            WriteFloat(ref byteArray, offset + 0x28, input.M33);
-            WriteFloat(ref byteArray, offset + 0x2C, input.M34);
+            WriteFloat(byteArray, offset + 0x20, input.M31);
+            WriteFloat(byteArray, offset + 0x24, input.M32);
+            WriteFloat(byteArray, offset + 0x28, input.M33);
+            WriteFloat(byteArray, offset + 0x2C, input.M34);
 
-            WriteFloat(ref byteArray, offset + 0x30, input.M41);
-            WriteFloat(ref byteArray, offset + 0x34, input.M42);
-            WriteFloat(ref byteArray, offset + 0x38, input.M43);
-            WriteFloat(ref byteArray, offset + 0x3C, input.M44);
+            WriteFloat(byteArray, offset + 0x30, input.M41);
+            WriteFloat(byteArray, offset + 0x34, input.M42);
+            WriteFloat(byteArray, offset + 0x38, input.M43);
+            WriteFloat(byteArray, offset + 0x3C, input.M44);
         }
 
         public static byte[] getBytes(byte[] array, int ind, int length)

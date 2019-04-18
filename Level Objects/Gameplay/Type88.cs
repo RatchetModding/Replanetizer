@@ -46,20 +46,20 @@ namespace RatchetEdit.LevelObjects
         public override byte[] ToByteArray() {
             byte[] bytes = new byte[ELEMENTSIZE];
 
-            WriteFloat(ref bytes, 0x00, off_00);
-            WriteFloat(ref bytes, 0x04, off_04);
-            WriteFloat(ref bytes, 0x08, off_08);
-            WriteFloat(ref bytes, 0x0C, off_0C);
+            WriteFloat(bytes, 0x00, off_00);
+            WriteFloat(bytes, 0x04, off_04);
+            WriteFloat(bytes, 0x08, off_08);
+            WriteFloat(bytes, 0x0C, off_0C);
 
-            WriteInt(ref bytes, 0x10, off_10);
-            WriteInt(ref bytes, 0x14, off_14);
-            WriteInt(ref bytes, 0x18, off_18);
-            WriteInt(ref bytes, 0x1C, off_1C);
+            WriteInt(bytes, 0x10, off_10);
+            WriteInt(bytes, 0x14, off_14);
+            WriteInt(bytes, 0x18, off_18);
+            WriteInt(bytes, 0x1C, off_1C);
 
-            WriteInt(ref bytes, 0x20, off_20);
-            WriteInt(ref bytes, 0x24, off_24);
-            WriteInt(ref bytes, 0x28, off_28);
-            WriteInt(ref bytes, 0x2C, off_2C);
+            WriteInt(bytes, 0x20, off_20);
+            WriteInt(bytes, 0x24, off_24);
+            WriteInt(bytes, 0x28, off_28);
+            WriteInt(bytes, 0x2C, off_2C);
 
             return bytes;
         }

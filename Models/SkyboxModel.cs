@@ -69,11 +69,11 @@ namespace RatchetEdit.Models
             int headLength = faceStart + faceLength;
 
             var headBytes = new byte[headLength];
-            WriteInt(ref headBytes, 0x00, off_00);
-            WriteShort(ref headBytes, 0x04, off_04);
-            WriteShort(ref headBytes, 0x06, (short)textureConfigs.Count);
-            WriteInt(ref headBytes, 0x08, off_08);
-            WriteInt(ref headBytes, 0x0C, off_0C);
+            WriteInt(headBytes, 0x00, off_00);
+            WriteShort(headBytes, 0x04, off_04);
+            WriteShort(headBytes, 0x06, (short)textureConfigs.Count);
+            WriteInt(headBytes, 0x08, off_08);
+            WriteInt(headBytes, 0x0C, off_0C);
 
             int offs = faceStart;
             int[] headList = new int[textureConfigs.Count];
@@ -82,24 +82,24 @@ namespace RatchetEdit.Models
                 headList[i] = startOffset + offs;
                 if(textureConfigs[i][0].ID == 0)
                 {
-                    WriteShort(ref headBytes, offs + 0x00, 1);
+                    WriteShort(headBytes, offs + 0x00, 1);
                 }
 
-                WriteShort(ref headBytes, offs + 0x02, (short)textureConfigs[i].Count);
+                WriteShort(headBytes, offs + 0x02, (short)textureConfigs[i].Count);
                 offs += 0x10;
                 foreach (var conf in textureConfigs[i])
                 {
-                    WriteInt(ref headBytes, offs, conf.ID);
+                    WriteInt(headBytes, offs, conf.ID);
                     offs += 4;
-                    WriteInt(ref headBytes, offs, conf.start);
+                    WriteInt(headBytes, offs, conf.start);
                     offs += 4;
-                    WriteInt(ref headBytes, offs, conf.size);
+                    WriteInt(headBytes, offs, conf.size);
                     offs += 8;
                 }
             }
             for(int i = 0; i < headList.Length; i++)
             {
-                WriteInt(ref headBytes, 0x1C + i * 4, headList[i]);
+                WriteInt(headBytes, 0x1C + i * 4, headList[i]);
             }
 
 
@@ -116,8 +116,8 @@ namespace RatchetEdit.Models
             vertexBytes.CopyTo(returnBytes, vertOffset);
             faceBytes.CopyTo(returnBytes, faceOffset);
 
-            WriteInt(ref returnBytes, 0x14, startOffset + vertOffset);
-            WriteInt(ref returnBytes, 0x18, startOffset + faceOffset);
+            WriteInt(returnBytes, 0x14, startOffset + vertOffset);
+            WriteInt(returnBytes, 0x18, startOffset + faceOffset);
 
             return returnBytes;
         }

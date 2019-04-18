@@ -32,8 +32,8 @@ namespace RatchetEdit.Models
         {
             byte[] outBytes = new byte[4 + GetLength4(aBones.Count + bBones.Count + 1)];
 
-            WriteShort(ref outBytes, 0, (short)aBones.Count);
-            WriteShort(ref outBytes, 2, (short)bBones.Count);
+            WriteShort(outBytes, 0, (short)aBones.Count);
+            WriteShort(outBytes, 2, (short)bBones.Count);
 
             int offs = 4;
             for(int i = 0; i < aBones.Count; i++)

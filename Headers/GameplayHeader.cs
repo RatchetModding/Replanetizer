@@ -173,50 +173,50 @@ namespace RatchetEdit.Headers
         {
             byte[] bytes = new byte[GAMEPLAYSIZE];
 
-            WriteInt(ref bytes, 0x00, levelVarPointer);
-            WriteInt(ref bytes, 0x04, type04Pointer);
-            WriteInt(ref bytes, 0x08, cameraPointer);
-            WriteInt(ref bytes, 0x0C, type0CPointer);
+            WriteInt(bytes, 0x00, levelVarPointer);
+            WriteInt(bytes, 0x04, type04Pointer);
+            WriteInt(bytes, 0x08, cameraPointer);
+            WriteInt(bytes, 0x0C, type0CPointer);
 
-            WriteInt(ref bytes, 0x10, englishPointer);
-            WriteInt(ref bytes, 0x14, lang2Pointer);
-            WriteInt(ref bytes, 0x18, frenchPointer);
-            WriteInt(ref bytes, 0x1C, germanPointer);
+            WriteInt(bytes, 0x10, englishPointer);
+            WriteInt(bytes, 0x14, lang2Pointer);
+            WriteInt(bytes, 0x18, frenchPointer);
+            WriteInt(bytes, 0x1C, germanPointer);
 
-            WriteInt(ref bytes, 0x20, spanishPointer);
-            WriteInt(ref bytes, 0x24, italianPointer);
-            WriteInt(ref bytes, 0x28, lang7Pointer);
-            WriteInt(ref bytes, 0x2C, lang8Pointer);
+            WriteInt(bytes, 0x20, spanishPointer);
+            WriteInt(bytes, 0x24, italianPointer);
+            WriteInt(bytes, 0x28, lang7Pointer);
+            WriteInt(bytes, 0x2C, lang8Pointer);
 
-            WriteInt(ref bytes, 0x30, tieIdPointer);
-            WriteInt(ref bytes, 0x34, tiePointer);
-            WriteInt(ref bytes, 0x38, shrubIdPointer);
-            WriteInt(ref bytes, 0x3C, shrubPointer);
+            WriteInt(bytes, 0x30, tieIdPointer);
+            WriteInt(bytes, 0x34, tiePointer);
+            WriteInt(bytes, 0x38, shrubIdPointer);
+            WriteInt(bytes, 0x3C, shrubPointer);
 
-            WriteInt(ref bytes, 0x40, mobyIdPointer);
-            WriteInt(ref bytes, 0x44, mobyPointer);
-            WriteInt(ref bytes, 0x48, unkPointer6);
-            WriteInt(ref bytes, 0x4C, unkPointer7);
+            WriteInt(bytes, 0x40, mobyIdPointer);
+            WriteInt(bytes, 0x44, mobyPointer);
+            WriteInt(bytes, 0x48, unkPointer6);
+            WriteInt(bytes, 0x4C, unkPointer7);
 
-            WriteInt(ref bytes, 0x50, type50Pointer);
-            WriteInt(ref bytes, 0x54, pvarSizePointer);
-            WriteInt(ref bytes, 0x58, pvarPointer);
-            WriteInt(ref bytes, 0x5C, type5CPointer);
+            WriteInt(bytes, 0x50, type50Pointer);
+            WriteInt(bytes, 0x54, pvarSizePointer);
+            WriteInt(bytes, 0x58, pvarPointer);
+            WriteInt(bytes, 0x5C, type5CPointer);
 
-            WriteInt(ref bytes, 0x60, cuboidPointer);
-            WriteInt(ref bytes, 0x64, type64Pointer);
-            WriteInt(ref bytes, 0x68, type68Pointer);
-            WriteInt(ref bytes, 0x6C, unkPointer12);
+            WriteInt(bytes, 0x60, cuboidPointer);
+            WriteInt(bytes, 0x64, type64Pointer);
+            WriteInt(bytes, 0x68, type68Pointer);
+            WriteInt(bytes, 0x6C, unkPointer12);
 
-            WriteInt(ref bytes, 0x70, splinePointer);
-            WriteInt(ref bytes, 0x74, unkPointer13);
-            WriteInt(ref bytes, 0x78, unkPointer14);
-            WriteInt(ref bytes, 0x7C, type7CPointer);
+            WriteInt(bytes, 0x70, splinePointer);
+            WriteInt(bytes, 0x74, unkPointer13);
+            WriteInt(bytes, 0x78, unkPointer14);
+            WriteInt(bytes, 0x7C, type7CPointer);
 
-            WriteInt(ref bytes, 0x80, type80Pointer);
-            WriteInt(ref bytes, 0x84, unkPointer17);
-            WriteInt(ref bytes, 0x88, type88Pointer);
-            WriteInt(ref bytes, 0x8C, occlusionPointer);
+            WriteInt(bytes, 0x80, type80Pointer);
+            WriteInt(bytes, 0x84, unkPointer17);
+            WriteInt(bytes, 0x88, type88Pointer);
+            WriteInt(bytes, 0x8C, occlusionPointer);
 
             return bytes;
         }

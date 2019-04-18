@@ -304,9 +304,9 @@ namespace RatchetEdit
 
                             byte[] buff = new byte[0x0C];
                             Vector3 vec = spline.GetVertex(currentSplineVertex);
-                            WriteFloat(ref buff, 0x00, vec.X);
-                            WriteFloat(ref buff, 0x04, vec.Y);
-                            WriteFloat(ref buff, 0x08, vec.Z);
+                            WriteFloat(buff, 0x00, vec.X);
+                            WriteFloat(buff, 0x04, vec.Y);
+                            WriteFloat(buff, 0x08, vec.Z);
 
                             WriteProcessMemory(processHandle, splinePtr + currentSplineVertex * 0x10, buff, buff.Length, ref bytesRead);
                         }

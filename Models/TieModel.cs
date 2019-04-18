@@ -63,31 +63,31 @@ namespace RatchetEdit.Models
         {
             byte[] outBytes = new byte[0x40];
 
-            WriteFloat(ref outBytes, 0x00, cullingX);
-            WriteFloat(ref outBytes, 0x04, cullingY);
-            WriteFloat(ref outBytes, 0x08, cullingZ);
-            WriteFloat(ref outBytes, 0x0C, cullingRadius);
+            WriteFloat(outBytes, 0x00, cullingX);
+            WriteFloat(outBytes, 0x04, cullingY);
+            WriteFloat(outBytes, 0x08, cullingZ);
+            WriteFloat(outBytes, 0x0C, cullingRadius);
 
             int texturePointer = GetLength(offStart);
             int vertexPointer = GetLength(texturePointer + textureConfig.Count * TIETEXELEMSIZE); //+ 0x70
             int UVPointer = GetLength(vertexPointer + (vertexBuffer.Length / 8) * TIEVERTELEMSIZE);
             int indexPointer = GetLength(UVPointer + (vertexBuffer.Length / 8) * TIEUVELEMSIZE);
 
-            WriteInt(ref outBytes, 0x10, vertexPointer);
-            WriteInt(ref outBytes, 0x14, UVPointer);
-            WriteInt(ref outBytes, 0x18, indexPointer);
-            WriteInt(ref outBytes, 0x1C, texturePointer);
+            WriteInt(outBytes, 0x10, vertexPointer);
+            WriteInt(outBytes, 0x14, UVPointer);
+            WriteInt(outBytes, 0x18, indexPointer);
+            WriteInt(outBytes, 0x1C, texturePointer);
 
-            WriteUint(ref outBytes, 0x20, off_20);
-            WriteInt(ref outBytes, 0x24, vertexBuffer.Length / 8);
-            WriteShort(ref outBytes, 0x28, (short)textureConfig.Count);
-            WriteShort(ref outBytes, 0x2A, wiggleMode);
-            WriteFloat(ref outBytes, 0x2C, off_2C);
+            WriteUint(outBytes, 0x20, off_20);
+            WriteInt(outBytes, 0x24, vertexBuffer.Length / 8);
+            WriteShort(outBytes, 0x28, (short)textureConfig.Count);
+            WriteShort(outBytes, 0x2A, wiggleMode);
+            WriteFloat(outBytes, 0x2C, off_2C);
 
-            WriteShort(ref outBytes, 0x30, id);
-            WriteUint(ref outBytes, 0x34, off_34);
-            WriteUint(ref outBytes, 0x38, off_38);
-            WriteUint(ref outBytes, 0x3C, off_3C);
+            WriteShort(outBytes, 0x30, id);
+            WriteUint(outBytes, 0x34, off_34);
+            WriteUint(outBytes, 0x38, off_38);
+            WriteUint(outBytes, 0x3C, off_3C);
 
             return outBytes;
         }
@@ -107,12 +107,12 @@ namespace RatchetEdit.Models
 
             for (int i = 0; i < textureConfig.Count; i++)
             {
-                WriteInt(ref outBytes, texturePointer + i * 0x18 + 0x00, textureConfig[i].ID);
-                WriteInt(ref outBytes, texturePointer + i * 0x18 + 0x04, -1);
-                WriteInt(ref outBytes, texturePointer + i * 0x18 + 0x08, textureConfig[i].start);
-                WriteInt(ref outBytes, texturePointer + i * 0x18 + 0x0C, textureConfig[i].size);
-                WriteInt(ref outBytes, texturePointer + i * 0x18 + 0x10, 0);
-                WriteInt(ref outBytes, texturePointer + i * 0x18 + 0x14, textureConfig[i].mode);
+                WriteInt(outBytes, texturePointer + i * 0x18 + 0x00, textureConfig[i].ID);
+                WriteInt(outBytes, texturePointer + i * 0x18 + 0x04, -1);
+                WriteInt(outBytes, texturePointer + i * 0x18 + 0x08, textureConfig[i].start);
+                WriteInt(outBytes, texturePointer + i * 0x18 + 0x0C, textureConfig[i].size);
+                WriteInt(outBytes, texturePointer + i * 0x18 + 0x10, 0);
+                WriteInt(outBytes, texturePointer + i * 0x18 + 0x14, textureConfig[i].mode);
             }
 
             return outBytes;

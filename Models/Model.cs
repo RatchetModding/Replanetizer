@@ -162,16 +162,16 @@ namespace RatchetEdit.Models
 
             for (int i = 0; i < vertexBuffer.Length / 8; i++)
             {
-                WriteFloat(ref outBytes, (i * elemSize) + 0x00, vertexBuffer[(i * 8) + 0]);
-                WriteFloat(ref outBytes, (i * elemSize) + 0x04, vertexBuffer[(i * 8) + 1]);
-                WriteFloat(ref outBytes, (i * elemSize) + 0x08, vertexBuffer[(i * 8) + 2]);
-                WriteFloat(ref outBytes, (i * elemSize) + 0x0C, vertexBuffer[(i * 8) + 3]);
-                WriteFloat(ref outBytes, (i * elemSize) + 0x10, vertexBuffer[(i * 8) + 4]);
-                WriteFloat(ref outBytes, (i * elemSize) + 0x14, vertexBuffer[(i * 8) + 5]);
-                WriteFloat(ref outBytes, (i * elemSize) + 0x18, vertexBuffer[(i * 8) + 6]);
-                WriteFloat(ref outBytes, (i * elemSize) + 0x1C, vertexBuffer[(i * 8) + 7]);
-                WriteUint(ref outBytes, (i * elemSize) + 0x20, weights[i]);
-                WriteUint(ref outBytes, (i * elemSize) + 0x24, ids[i]);
+                WriteFloat(outBytes, (i * elemSize) + 0x00, vertexBuffer[(i * 8) + 0]);
+                WriteFloat(outBytes, (i * elemSize) + 0x04, vertexBuffer[(i * 8) + 1]);
+                WriteFloat(outBytes, (i * elemSize) + 0x08, vertexBuffer[(i * 8) + 2]);
+                WriteFloat(outBytes, (i * elemSize) + 0x0C, vertexBuffer[(i * 8) + 3]);
+                WriteFloat(outBytes, (i * elemSize) + 0x10, vertexBuffer[(i * 8) + 4]);
+                WriteFloat(outBytes, (i * elemSize) + 0x14, vertexBuffer[(i * 8) + 5]);
+                WriteFloat(outBytes, (i * elemSize) + 0x18, vertexBuffer[(i * 8) + 6]);
+                WriteFloat(outBytes, (i * elemSize) + 0x1C, vertexBuffer[(i * 8) + 7]);
+                WriteUint(outBytes, (i * elemSize) + 0x20, weights[i]);
+                WriteUint(outBytes, (i * elemSize) + 0x24, ids[i]);
             }
 
             return outBytes;
@@ -184,12 +184,12 @@ namespace RatchetEdit.Models
 
             for (int i = 0; i < vertexBuffer.Length / 8; i++)
             {
-                WriteFloat(ref outBytes, (i * elemSize) + 0x00, vertexBuffer[(i * 8) + 0]);
-                WriteFloat(ref outBytes, (i * elemSize) + 0x04, vertexBuffer[(i * 8) + 1]);
-                WriteFloat(ref outBytes, (i * elemSize) + 0x08, vertexBuffer[(i * 8) + 2]);
-                WriteFloat(ref outBytes, (i * elemSize) + 0x0C, vertexBuffer[(i * 8) + 3]);
-                WriteFloat(ref outBytes, (i * elemSize) + 0x10, vertexBuffer[(i * 8) + 4]);
-                WriteFloat(ref outBytes, (i * elemSize) + 0x14, vertexBuffer[(i * 8) + 5]);
+                WriteFloat(outBytes, (i * elemSize) + 0x00, vertexBuffer[(i * 8) + 0]);
+                WriteFloat(outBytes, (i * elemSize) + 0x04, vertexBuffer[(i * 8) + 1]);
+                WriteFloat(outBytes, (i * elemSize) + 0x08, vertexBuffer[(i * 8) + 2]);
+                WriteFloat(outBytes, (i * elemSize) + 0x0C, vertexBuffer[(i * 8) + 3]);
+                WriteFloat(outBytes, (i * elemSize) + 0x10, vertexBuffer[(i * 8) + 4]);
+                WriteFloat(outBytes, (i * elemSize) + 0x14, vertexBuffer[(i * 8) + 5]);
             }
 
             return outBytes;
@@ -202,8 +202,8 @@ namespace RatchetEdit.Models
 
             for (int i = 0; i < vertexBuffer.Length / 8; i++)
             {
-                WriteFloat(ref outBytes, (i * elemSize) + 0x00, vertexBuffer[(i * 8) + 6]);
-                WriteFloat(ref outBytes, (i * elemSize) + 0x04, vertexBuffer[(i * 8) + 7]);
+                WriteFloat(outBytes, (i * elemSize) + 0x00, vertexBuffer[(i * 8) + 6]);
+                WriteFloat(outBytes, (i * elemSize) + 0x04, vertexBuffer[(i * 8) + 7]);
             }
 
             return outBytes;
@@ -237,12 +237,12 @@ namespace RatchetEdit.Models
 
             for (int i = 0; i < vertexCount; i++)
             {
-                WriteFloat(ref vertexBytes, (i * 0x18) + 0x00, vertexBuffer[(i * 8) + 0]);
-                WriteFloat(ref vertexBytes, (i * 0x18) + 0x04, vertexBuffer[(i * 8) + 1]);
-                WriteFloat(ref vertexBytes, (i * 0x18) + 0x08, vertexBuffer[(i * 8) + 2]);
-                WriteFloat(ref vertexBytes, (i * 0x18) + 0x0C, vertexBuffer[(i * 8) + 6]);
-                WriteFloat(ref vertexBytes, (i * 0x18) + 0x10, vertexBuffer[(i * 8) + 7]);
-                WriteFloat(ref vertexBytes, (i * 0x18) + 0x14, vertexBuffer[(i * 8) + 3]);
+                WriteFloat(vertexBytes, (i * 0x18) + 0x00, vertexBuffer[(i * 8) + 0]);
+                WriteFloat(vertexBytes, (i * 0x18) + 0x04, vertexBuffer[(i * 8) + 1]);
+                WriteFloat(vertexBytes, (i * 0x18) + 0x08, vertexBuffer[(i * 8) + 2]);
+                WriteFloat(vertexBytes, (i * 0x18) + 0x0C, vertexBuffer[(i * 8) + 6]);
+                WriteFloat(vertexBytes, (i * 0x18) + 0x10, vertexBuffer[(i * 8) + 7]);
+                WriteFloat(vertexBytes, (i * 0x18) + 0x14, vertexBuffer[(i * 8) + 3]);
             }
             return vertexBytes;
         }
@@ -252,7 +252,7 @@ namespace RatchetEdit.Models
             byte[] indexBytes = new byte[indexBuffer.Length * sizeof(ushort)];
             for (int i = 0; i < indexBuffer.Length; i++)
             {
-                WriteShort(ref indexBytes, i * sizeof(ushort), (short)indexBuffer[i]);
+                WriteShort(indexBytes, i * sizeof(ushort), (short)indexBuffer[i]);
             }
             return indexBytes;
         }

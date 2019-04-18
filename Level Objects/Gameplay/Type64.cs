@@ -28,8 +28,8 @@ namespace RatchetEdit.LevelObjects
         {
             byte[] bytes = new byte[ELEMENTSIZE];
 
-            WriteMatrix4(ref bytes, 0x00, mat1);
-            WriteMatrix4(ref bytes, 0x40, mat2);
+            WriteMatrix4(bytes, 0x00, mat1);
+            WriteMatrix4(bytes, 0x40, mat2);
 
             return bytes;
         }

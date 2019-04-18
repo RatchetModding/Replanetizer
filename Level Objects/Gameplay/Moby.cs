@@ -215,42 +215,42 @@ namespace RatchetEdit.LevelObjects
         {
             byte[] buffer = new byte[ELEMENTSIZE];
 
-            WriteInt(ref buffer, 0x00, ELEMENTSIZE);
-            WriteInt(ref buffer, 0x04, missionID);
-            WriteInt(ref buffer, 0x08, unk1);
-            WriteInt(ref buffer, 0x0C, dataval);
+            WriteInt(buffer, 0x00, ELEMENTSIZE);
+            WriteInt(buffer, 0x04, missionID);
+            WriteInt(buffer, 0x08, unk1);
+            WriteInt(buffer, 0x0C, dataval);
 
-            WriteInt(ref buffer, 0x10, drop);
-            WriteInt(ref buffer, 0x14, unk2);
-            WriteInt(ref buffer, 0x18, modelID);
-            WriteFloat(ref buffer, 0x1C, scale.X);
+            WriteInt(buffer, 0x10, drop);
+            WriteInt(buffer, 0x14, unk2);
+            WriteInt(buffer, 0x18, modelID);
+            WriteFloat(buffer, 0x1C, scale.X);
 
-            WriteInt(ref buffer, 0x20, rend1);
-            WriteInt(ref buffer, 0x24, rend2);
-            WriteInt(ref buffer, 0x28, unk3);
-            WriteInt(ref buffer, 0x2C, unk4);
+            WriteInt(buffer, 0x20, rend1);
+            WriteInt(buffer, 0x24, rend2);
+            WriteInt(buffer, 0x28, unk3);
+            WriteInt(buffer, 0x2C, unk4);
 
-            WriteFloat(ref buffer, 0x30, position.X);
-            WriteFloat(ref buffer, 0x34, position.Y);
-            WriteFloat(ref buffer, 0x38, position.Z);
-            WriteFloat(ref buffer, 0x3C, rotation.X);
-            WriteFloat(ref buffer, 0x40, rotation.Y);
-            WriteFloat(ref buffer, 0x44, rotation.Z);
-            WriteInt(ref buffer, 0x48, unk5);
-            WriteInt(ref buffer, 0x4C, unk6);
+            WriteFloat(buffer, 0x30, position.X);
+            WriteFloat(buffer, 0x34, position.Y);
+            WriteFloat(buffer, 0x38, position.Z);
+            WriteFloat(buffer, 0x3C, rotation.X);
+            WriteFloat(buffer, 0x40, rotation.Y);
+            WriteFloat(buffer, 0x44, rotation.Z);
+            WriteInt(buffer, 0x48, unk5);
+            WriteInt(buffer, 0x4C, unk6);
 
-            WriteFloat(ref buffer, 0x50, z2);
-            WriteInt(ref buffer, 0x54, unk7);
-            WriteInt(ref buffer, 0x58, pvarIndex);
-            WriteInt(ref buffer, 0x5C, unk8);
+            WriteFloat(buffer, 0x50, z2);
+            WriteInt(buffer, 0x54, unk7);
+            WriteInt(buffer, 0x58, pvarIndex);
+            WriteInt(buffer, 0x5C, unk8);
 
-            WriteInt(ref buffer, 0x60, unk9);
-            WriteUint(ref buffer, 0x64, color.R);
-            WriteUint(ref buffer, 0x68, color.G);
-            WriteUint(ref buffer, 0x6C, color.B);
+            WriteInt(buffer, 0x60, unk9);
+            WriteUint(buffer, 0x64, color.R);
+            WriteUint(buffer, 0x68, color.G);
+            WriteUint(buffer, 0x6C, color.B);
 
-            WriteInt(ref buffer, 0x70, light);
-            WriteInt(ref buffer, 0x74, cutscene);
+            WriteInt(buffer, 0x70, light);
+            WriteInt(buffer, 0x74, cutscene);
 
             return buffer;
         }

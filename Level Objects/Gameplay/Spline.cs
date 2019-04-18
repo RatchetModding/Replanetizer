@@ -88,14 +88,14 @@ namespace RatchetEdit.LevelObjects
 
             byte[] bytes = new byte[count * 0x10 + 0x10];
 
-            WriteUint(ref bytes, 0, (uint)count);
+            WriteUint(bytes, 0, (uint)count);
 
             for (int i = 0; i < count; i++)
             {
-                WriteFloat(ref bytes, (i * 0x10) + 0x10, vertexBuffer[(i * 3) + 0]);
-                WriteFloat(ref bytes, (i * 0x10) + 0x14, vertexBuffer[(i * 3) + 1]);
-                WriteFloat(ref bytes, (i * 0x10) + 0x18, vertexBuffer[(i * 3) + 2]);
-                WriteFloat(ref bytes, (i * 0x10) + 0x1C, wVals[i]);
+                WriteFloat(bytes, (i * 0x10) + 0x10, vertexBuffer[(i * 3) + 0]);
+                WriteFloat(bytes, (i * 0x10) + 0x14, vertexBuffer[(i * 3) + 1]);
+                WriteFloat(bytes, (i * 0x10) + 0x18, vertexBuffer[(i * 3) + 2]);
+                WriteFloat(bytes, (i * 0x10) + 0x1C, wVals[i]);
             }
             return bytes;
         }

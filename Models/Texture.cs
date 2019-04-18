@@ -70,19 +70,19 @@ namespace RatchetEdit
         {
             byte[] outBytes = new byte[0x24];
 
-            WriteInt(ref outBytes, 0x00, vramOffset);
-            WriteShort(ref outBytes, 0x04, mipMapCount);
-            WriteShort(ref outBytes, 0x06, off_06);
-            WriteInt(ref outBytes, 0x08, off_08);
-            WriteInt(ref outBytes, 0x0C, off_0C);
+            WriteInt(outBytes, 0x00, vramOffset);
+            WriteShort(outBytes, 0x04, mipMapCount);
+            WriteShort(outBytes, 0x06, off_06);
+            WriteInt(outBytes, 0x08, off_08);
+            WriteInt(outBytes, 0x0C, off_0C);
 
-            WriteInt(ref outBytes, 0x10, off_10);
-            WriteInt(ref outBytes, 0x14, off_14);
-            WriteShort(ref outBytes, 0x18, width);
-            WriteShort(ref outBytes, 0x1A, height);
-            WriteInt(ref outBytes, 0x1C, off_1C);
+            WriteInt(outBytes, 0x10, off_10);
+            WriteInt(outBytes, 0x14, off_14);
+            WriteShort(outBytes, 0x18, width);
+            WriteShort(outBytes, 0x1A, height);
+            WriteInt(outBytes, 0x1C, off_1C);
 
-            WriteInt(ref outBytes, 0x20, off_20);
+            WriteInt(outBytes, 0x20, off_20);
 
             return outBytes;
         }

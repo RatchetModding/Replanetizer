@@ -24,10 +24,10 @@ namespace RatchetEdit.Models.Animations
         {
             byte[] outBytes = new byte[0x10];
 
-            WriteFloat(ref outBytes, 0x00, unk1);
-            WriteFloat(ref outBytes, 0x04, unk2);
-            WriteFloat(ref outBytes, 0x08, unk3);
-            WriteFloat(ref outBytes, 0x0C, unk4);
+            WriteFloat(outBytes, 0x00, unk1);
+            WriteFloat(outBytes, 0x04, unk2);
+            WriteFloat(outBytes, 0x08, unk3);
+            WriteFloat(outBytes, 0x0C, unk4);
 
             return outBytes;
         }

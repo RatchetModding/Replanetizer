@@ -67,22 +67,22 @@ namespace RatchetEdit.Models.Animations
         {
             // Head
             byte[] head = new byte[0x1C];
-            WriteFloat(ref head, 0x00, unk1);
-            WriteFloat(ref head, 0x04, unk2);
-            WriteFloat(ref head, 0x08, unk3);
-            WriteFloat(ref head, 0x0C, unk4);
+            WriteFloat(head, 0x00, unk1);
+            WriteFloat(head, 0x04, unk2);
+            WriteFloat(head, 0x08, unk3);
+            WriteFloat(head, 0x0C, unk4);
             head[0x10] = (byte)frames.Count;
             head[0x11] = unk5;
             head[0x12] = (byte)sounds.Count;
             head[0x13] = unk7;
-            WriteUint(ref head, 0x14, null1);
-            WriteFloat(ref head, 0x18, speed);
+            WriteUint(head, 0x14, null1);
+            WriteFloat(head, 0x18, speed);
 
             // Sound configs
             byte[] soundBytes = new byte[sounds.Count * 4];
             for (int i = 0; i < sounds.Count; i++)
             {
-                WriteInt(ref soundBytes, i * 4, sounds[i]);
+                WriteInt(soundBytes, i * 4, sounds[i]);
             }
 
             // Frames
@@ -104,7 +104,7 @@ namespace RatchetEdit.Models.Animations
             soundBytes.CopyTo(outBytes, 0x1C + frames.Count * 4);
             for(int i = 0; i < frameBytes.Count; i++)
             {
-                WriteInt(ref outBytes, 0x1C + i * 4, offs + baseOffset);
+                WriteInt(outBytes, 0x1C + i * 4, offs + baseOffset);
                 frameBytes[i].CopyTo(outBytes, offs);
                 offs += frameBytes[i].Length;
             }

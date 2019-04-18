@@ -270,11 +270,11 @@ namespace RatchetEdit.Parsers
             int off_28 = ReadInt(terrainBlock, 0x28);
             int off_38 = ReadInt(terrainBlock, 0x38);
 
-            WriteInt(ref terrainBlock, 0x00, 0x60);
-            WriteInt(ref terrainBlock, 0x08, off_08 - headOffset);
-            WriteInt(ref terrainBlock, 0x18, off_18 - headOffset);
-            WriteInt(ref terrainBlock, 0x28, off_28 - headOffset);
-            WriteInt(ref terrainBlock, 0x38, off_38 - headOffset);
+            WriteInt(terrainBlock, 0x00, 0x60);
+            WriteInt(terrainBlock, 0x08, off_08 - headOffset);
+            WriteInt(terrainBlock, 0x18, off_18 - headOffset);
+            WriteInt(terrainBlock, 0x28, off_28 - headOffset);
+            WriteInt(terrainBlock, 0x38, off_38 - headOffset);
 
             short headCount = ReadShort(terrainBlock, 0x06);
 
@@ -282,7 +282,7 @@ namespace RatchetEdit.Parsers
             for (int i = 0; i < headCount; i++)
             {
                 int texOffset = ReadInt(terrainBlock, 0x70 + i * 0x30);
-                WriteInt(ref terrainBlock, 0x70 + i * 0x30, texOffset - headOffset);
+                WriteInt(terrainBlock, 0x70 + i * 0x30, texOffset - headOffset);
                 texCount += ReadShort(terrainBlock, 0x76 + i * 0x30);
             }
 
@@ -298,7 +298,7 @@ namespace RatchetEdit.Parsers
             for (int i = 0; i < texCount; i++)
             {
                 int texId = ReadInt(terrainBlock, texOffset0 + i * 0x10);
-                WriteInt(ref terrainBlock, texOffset0 + i * 0x10, texId - lowestOffset);
+                WriteInt(terrainBlock, texOffset0 + i * 0x10, texId - lowestOffset);
             }
 
             Console.WriteLine("Lowest offset: " + lowestOffset);

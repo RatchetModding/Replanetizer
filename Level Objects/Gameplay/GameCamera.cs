@@ -35,14 +35,14 @@ namespace RatchetEdit.LevelObjects
         {
             byte[] bytes = new byte[ELEMENTSIZE];
 
-            WriteInt(ref bytes, 0x00, id);
-            WriteFloat(ref bytes, 0x04, position.X);
-            WriteFloat(ref bytes, 0x08, position.Y);
-            WriteFloat(ref bytes, 0x0C, position.Z);
-            WriteInt(ref bytes, 0x10, unk1);
-            WriteInt(ref bytes, 0x14, unk2);
-            WriteInt(ref bytes, 0x18, unk3);
-            WriteInt(ref bytes, 0x1C, id2);
+            WriteInt(bytes, 0x00, id);
+            WriteFloat(bytes, 0x04, position.X);
+            WriteFloat(bytes, 0x08, position.Y);
+            WriteFloat(bytes, 0x0C, position.Z);
+            WriteInt(bytes, 0x10, unk1);
+            WriteInt(bytes, 0x14, unk2);
+            WriteInt(bytes, 0x18, unk3);
+            WriteInt(bytes, 0x1C, id2);
 
             return bytes;
         }

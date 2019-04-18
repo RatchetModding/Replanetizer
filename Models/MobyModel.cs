@@ -247,11 +247,11 @@ namespace RatchetEdit.Models
             if (attachments != null)
             {
                 byte[] attachmentHead = new byte[4 + attachments.Count * 4];
-                WriteInt(ref attachmentHead, 0, attachments.Count);
+                WriteInt(attachmentHead, 0, attachments.Count);
                 int attOffset = attachmentOffset + 4 + attachments.Count * 4;
                 for (int i = 0; i < attachments.Count; i++)
                 {
-                    WriteInt(ref attachmentHead, 4 + i * 4, attOffset);
+                    WriteInt(attachmentHead, 4 + i * 4, attOffset);
                     byte[] attBytes = attachments[i].Serialize();
                     attachmentBytes.AddRange(attBytes);
                     attOffset += attBytes.Length;
@@ -290,7 +290,7 @@ namespace RatchetEdit.Models
 
             // Header
             if(vertexBuffer.Length != 0)
-                WriteInt(ref outbytes, 0x00, meshDataOffset);
+                WriteInt(outbytes, 0x00, meshDataOffset);
 
             outbytes[0x08] = (byte)(boneMatrices.Count);
             outbytes[0x09] = lpBoneCount;
@@ -302,36 +302,36 @@ namespace RatchetEdit.Models
             outbytes[0x0F] = count8;
 
             if(type10Block.Length != 0)
-                WriteInt(ref outbytes, 0x10, type10Offset);
+                WriteInt(outbytes, 0x10, type10Offset);
             
             if(boneMatrices.Count != 0) { 
-                WriteInt(ref outbytes, 0x14, boneMatrixOffset);
-                WriteInt(ref outbytes, 0x18, boneDataOffset);
+                WriteInt(outbytes, 0x14, boneMatrixOffset);
+                WriteInt(outbytes, 0x18, boneDataOffset);
             }
             
             if(attachments.Count != 0)
-                WriteInt(ref outbytes, 0x1C, attachmentOffset);
+                WriteInt(outbytes, 0x1C, attachmentOffset);
             
 
             //null
-            WriteFloat(ref outbytes, 0x24, size);
+            WriteFloat(outbytes, 0x24, size);
             if(modelSounds.Count != 0)
-                WriteInt(ref outbytes, 0x28, soundOffset);
+                WriteInt(outbytes, 0x28, soundOffset);
             
             
             //null
 
-            WriteFloat(ref outbytes, 0x30, unk1);
-            WriteFloat(ref outbytes, 0x34, unk2);
-            WriteFloat(ref outbytes, 0x38, unk3);
-            WriteFloat(ref outbytes, 0x3C, unk4);
+            WriteFloat(outbytes, 0x30, unk1);
+            WriteFloat(outbytes, 0x34, unk2);
+            WriteFloat(outbytes, 0x38, unk3);
+            WriteFloat(outbytes, 0x3C, unk4);
 
-            WriteUint(ref outbytes, 0x40, color2);
-            WriteUint(ref outbytes, 0x44, unk6);
+            WriteUint(outbytes, 0x40, color2);
+            WriteUint(outbytes, 0x44, unk6);
 
             for (int i = 0; i < animations.Count; i++)
             {
-                WriteInt(ref outbytes, HEADERSIZE + i * 0x04, animOffsets[i]);
+                WriteInt(outbytes, HEADERSIZE + i * 0x04, animOffsets[i]);
             }
 
             vertexBytes.CopyTo(outbytes, vertOffset);
@@ -349,22 +349,22 @@ namespace RatchetEdit.Models
 
 
             // Mesh header
-            WriteInt(ref outbytes, meshDataOffset + 0x00, textureConfig.Count);
+            WriteInt(outbytes, meshDataOffset + 0x00, textureConfig.Count);
             //Othercount
-            WriteInt(ref outbytes, meshDataOffset + 0x08, textureConfigOffset);
+            WriteInt(outbytes, meshDataOffset + 0x08, textureConfigOffset);
             //otheroffset
-            WriteInt(ref outbytes, meshDataOffset + 0x10, vertOffset);
-            WriteInt(ref outbytes, meshDataOffset + 0x14, faceOffset);
-            WriteShort(ref outbytes, meshDataOffset + 0x18, (short)(vertexBytes.Length / VERTELEMENTSIZE));
-            WriteShort(ref outbytes, meshDataOffset + 0x1C, (short)(vertexCount2));
+            WriteInt(outbytes, meshDataOffset + 0x10, vertOffset);
+            WriteInt(outbytes, meshDataOffset + 0x14, faceOffset);
+            WriteShort(outbytes, meshDataOffset + 0x18, (short)(vertexBytes.Length / VERTELEMENTSIZE));
+            WriteShort(outbytes, meshDataOffset + 0x1C, (short)(vertexCount2));
 
 
             for (int i = 0; i < textureConfig.Count; i++)
             {
-                WriteInt(ref outbytes, textureConfigOffset + i * 0x10 + 0x00, textureConfig[i].ID);
-                WriteInt(ref outbytes, textureConfigOffset + i * 0x10 + 0x04, textureConfig[i].start);
-                WriteInt(ref outbytes, textureConfigOffset + i * 0x10 + 0x08, textureConfig[i].size);
-                WriteInt(ref outbytes, textureConfigOffset + i * 0x10 + 0x0C, textureConfig[i].mode);
+                WriteInt(outbytes, textureConfigOffset + i * 0x10 + 0x04, textureConfig[i].start);
+                WriteInt(outbytes, textureConfigOffset + i * 0x10 + 0x08, textureConfig[i].size);
+                WriteInt(outbytes, textureConfigOffset + i * 0x10 + 0x0C, textureConfig[i].mode);
+                WriteInt(outbytes, textureConfigOffset + i * 0x10 + 0x00, textureConfig[i].ID);
             }
             
             return outbytes;

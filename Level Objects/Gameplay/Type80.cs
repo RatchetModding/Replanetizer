@@ -39,10 +39,10 @@ namespace RatchetEdit.LevelObjects
         {
             byte[] bytes = new byte[HEADSIZE];
 
-            WriteFloat(ref bytes, 0x00, off_00);
-            WriteFloat(ref bytes, 0x04, off_04);
-            WriteFloat(ref bytes, 0x08, off_08);
-            WriteFloat(ref bytes, 0x0C, off_0C);
+            WriteFloat(bytes, 0x00, off_00);
+            WriteFloat(bytes, 0x04, off_04);
+            WriteFloat(bytes, 0x08, off_08);
+            WriteFloat(bytes, 0x0C, off_0C);
 
             return bytes;
         }
@@ -51,8 +51,8 @@ namespace RatchetEdit.LevelObjects
         {
             byte[] bytes = new byte[DATASIZE];
 
-            WriteMatrix4(ref bytes, 0x00, mat1);
-            WriteMatrix4(ref bytes, 0x40, mat2);
+            WriteMatrix4(bytes, 0x00, mat1);
+            WriteMatrix4(bytes, 0x40, mat2);
 
             return bytes;
         }

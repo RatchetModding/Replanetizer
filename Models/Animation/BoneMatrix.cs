@@ -41,7 +41,7 @@ namespace RatchetEdit.Models.Animations
         {
             byte[] outBytes = new byte[0x40];
 
-            WriteMatrix4(ref outBytes, 0, mat1);
+            WriteMatrix4(outBytes, 0, mat1);
 
             return outBytes;
         }

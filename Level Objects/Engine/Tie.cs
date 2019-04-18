@@ -69,18 +69,18 @@ namespace RatchetEdit.LevelObjects
         {
             var bytes = new byte[ELEMENTSIZE];
 
-            WriteMatrix4(ref bytes, 0x00, modelMatrix);
+            WriteMatrix4(bytes, 0x00, modelMatrix);
 
-            WriteShort(ref bytes, 0x50, off_50);
-            WriteShort(ref bytes, 0x52, (short)modelID);
-            WriteUint(ref bytes, 0x54, off_54);
-            WriteUint(ref bytes, 0x58, off_58);
-            WriteUint(ref bytes, 0x5C, off_5C);
+            WriteShort(bytes, 0x50, off_50);
+            WriteShort(bytes, 0x52, (short)modelID);
+            WriteUint(bytes, 0x54, off_54);
+            WriteUint(bytes, 0x58, off_58);
+            WriteUint(bytes, 0x5C, off_5C);
 
-            WriteInt(ref bytes, 0x60, colorOffset);
-            WriteUint(ref bytes, 0x64, off_64);
-            WriteUint(ref bytes, 0x68, off_68);
-            WriteUint(ref bytes, 0x6C, off_6C);
+            WriteInt(bytes, 0x60, colorOffset);
+            WriteUint(bytes, 0x64, off_64);
+            WriteUint(bytes, 0x68, off_68);
+            WriteUint(bytes, 0x6C, off_6C);
 
             return bytes;
         }

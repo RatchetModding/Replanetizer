@@ -12,7 +12,6 @@ namespace RatchetEdit.Serializers
     {
         public const int MOBYLENGTH = 0x78;
 
-
         public void Save(Level level, string fileName)
         {
             FileStream fs = File.Open(fileName, FileMode.Create);
@@ -90,7 +89,7 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetMobyBytes(List<Moby> mobs)
         {
-            if (mobs == null) { return new byte[0x10]; }
+            if (mobs == null) return new byte[0x10];
 
             byte[] bytes = new byte[0x10 + mobs.Count * MOBYLENGTH];
 
@@ -107,7 +106,7 @@ namespace RatchetEdit.Serializers
 
         public byte[] SerializeLevelObjects<T>(List<T> levelobjects, int elementSize) where T : LevelObject
         {
-            if (levelobjects == null) { return new byte[0x10]; }
+            if (levelobjects == null) return new byte[0x10];
 
             byte[] bytes = new byte[0x10 + levelobjects.Count * elementSize];
 
@@ -124,7 +123,7 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetType7CBytes(List<Type7C> type7Cs)
         {
-            if (type7Cs == null) { return new byte[0x10]; }
+            if (type7Cs == null) return new byte[0x10];
 
             byte[] bytes = new byte[0x10 + type7Cs.Count * Type7C.ELEMENTSIZE];
 
@@ -141,7 +140,7 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetType80Bytes(List<Type80> type80s)
         {
-            if (type80s == null) { return new byte[0x10]; }
+            if (type80s == null) return new byte[0x10];
 
             byte[] bytes = new byte[0x10 + type80s.Count * (Type80.HEADSIZE + Type80.DATASIZE)];
 
@@ -161,7 +160,7 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetKeyValueBytes(List<KeyValuePair<int, int>> type50s)
         {
-            if (type50s == null) { return new byte[0x10]; }
+            if (type50s == null) return new byte[0x10];
 
             byte[] bytes = new byte[type50s.Count * 8 + 0x08];
 
@@ -180,7 +179,7 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetIdBytes(List<int> ids)
         {
-            if (ids == null) { return new byte[0x10]; }
+            if (ids == null) return new byte[0x10];
 
             byte[] bytes = new byte[0x04 + ids.Count * 4];
             BitConverter.GetBytes(ids.Count).CopyTo(bytes, 0);
@@ -194,7 +193,7 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetSplineBytes(List<Spline> splines)
         {
-            if (splines == null) { return new byte[0x10]; }
+            if (splines == null) return new byte[0x10];
 
             List<byte> splineData = new List<byte>();
             List<int> offsets = new List<int>();
@@ -226,7 +225,7 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetPvarSizeBytes(List<byte[]> pVars)
         {
-            if (pVars == null) { return new byte[0x10]; }
+            if (pVars == null) return new byte[0x10];
 
             byte[] bytes = new byte[pVars.Count * 8];
             uint offset = 0;
@@ -241,7 +240,7 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetPvarBytes(List<byte[]> pVars)
         {
-            if (pVars == null) { return new byte[0x10]; }
+            if (pVars == null) return new byte[0x10];
 
             var bytes = new byte[pVars.Sum(arr => arr.Length)];
             int index = 0;
@@ -256,7 +255,7 @@ namespace RatchetEdit.Serializers
 
         public byte[] GetOcclusionBytes(OcclusionData occlusionData)
         {
-            if (occlusionData == null) { return new byte[0x10]; }
+            if (occlusionData == null) return new byte[0x10];
 
             return occlusionData.ToByteArray();
         }

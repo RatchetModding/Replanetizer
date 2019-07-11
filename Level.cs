@@ -51,14 +51,14 @@ namespace RatchetEdit
         public LevelVariables levelVariables;
         public OcclusionData occlusionData;
 
-        public byte[] english;
-        public byte[] lang2;
-        public byte[] french;
-        public byte[] german;
-        public byte[] spanish;
-        public byte[] italian;
-        public byte[] lang7;
-        public byte[] lang8;
+        public Dictionary<int, String> english;
+        public Dictionary<int, String> lang2;
+        public Dictionary<int, String> french;
+        public Dictionary<int, String> german;
+        public Dictionary<int, String> spanish;
+        public Dictionary<int, String> italian;
+        public Dictionary<int, String> lang7;
+        public Dictionary<int, String> lang8;
 
         public byte[] unk6;
         public byte[] unk7;

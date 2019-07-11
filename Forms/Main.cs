@@ -18,6 +18,7 @@ namespace RatchetEdit
         public TextureViewer textureViewer;
         public SpriteViewer spriteViewer;
         public UIViewer uiViewer;
+        public LanguageViewer languageViewer;
 
         bool suppressTreeViewSelectEvent = false;
 
@@ -149,6 +150,19 @@ namespace RatchetEdit
                 uiViewer.BringToFront();
             }
         }
+
+        public void OpenLanguageViewer()
+        {
+            if (languageViewer == null || languageViewer.IsDisposed)
+            {
+                languageViewer = new LanguageViewer(this);
+                languageViewer.Show();
+            }
+            else
+            {
+                languageViewer.BringToFront();
+            }
+        }
         #endregion
 
         #region MenuButtons
@@ -171,6 +185,12 @@ namespace RatchetEdit
         {
             OpenTextureViewer();
         }
+
+        private void languageDataToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenLanguageViewer();
+        }
+
 
         private void exitToolBtn_Click(object sender, EventArgs e)
         {

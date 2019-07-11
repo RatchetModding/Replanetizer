@@ -1,5 +1,6 @@
 ﻿using OpenTK;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -93,6 +94,24 @@ namespace RatchetEdit
                 byte[] returnBytes = new byte[0x10];
                 return returnBytes;
             }
+        }
+
+        public static String ReadString(FileStream fs, int offset)
+        {
+            String output = "";
+            fs.Seek(offset, SeekOrigin.Begin);
+            int pos = offset;
+
+            byte[] buffer = new byte[4];
+            fs.Read(buffer, 0, 4);
+            output += System.Text.Encoding.ASCII.GetString(buffer);
+            while (buffer[3] != 0x00)
+            {
+                fs.Read(buffer, 0, 4);
+                output += System.Text.Encoding.ASCII.GetString(buffer);
+            }
+
+            return output;
         }
 
         public static void WriteUint(ref byte[] byteArr, int offset, uint input)

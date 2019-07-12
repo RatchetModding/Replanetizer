@@ -111,7 +111,7 @@ namespace RatchetEdit.Serializers
                 int entrySize = entry.Value.Length + 1;
                 if (entrySize % 4 != 0)
                 {
-                    entrySize += (4 - entrySize % 4);
+                    entrySize += 4 - (entrySize % 4);
                 }
 
                 System.Text.Encoding.ASCII.GetBytes(entry.Value, 0, entry.Value.Length, bytes, textPos);

@@ -16,12 +16,16 @@ namespace RatchetEdit
 
         private void ShowLanguageText(Dictionary<int, String> languageData)
         {
+            var items = new List<ListViewItem>(languageData.Count);
+
             foreach (KeyValuePair<int, String> entry in languageData)
             {
                 ListViewItem item = new ListViewItem(entry.Key.ToString());
                 item.SubItems.Add(entry.Value);
-                languageTextList.Items.Add(item);
+                items.Add(item);
             }
+
+            languageTextList.Items.AddRange(items.ToArray());
         }
 
         private void UpdateList()

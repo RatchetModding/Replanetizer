@@ -22,7 +22,7 @@ namespace RatchetEdit
         private Matrix4 projection;
         private Matrix4 view;
 
-        public int shaderID, colorShaderID, collisionShaderID;
+        public int shaderID, colorShaderID, collisionShaderID, animationShader;
         public int matrixID, colorID;
 
         private int currentSplineVertex;
@@ -82,6 +82,12 @@ namespace RatchetEdit
             LoadShader("Shaders/collisionshadervs.glsl", ShaderType.VertexShader, collisionShaderID);
             LoadShader("Shaders/collisionshaderfs.glsl", ShaderType.FragmentShader, collisionShaderID);
             GL.LinkProgram(collisionShaderID);
+
+            // Setup animated shader
+            animationShader = GL.CreateProgram();
+            LoadShader("Shaders/animationShadervs.glsl", ShaderType.VertexShader, animationShader);
+            LoadShader("Shaders/animationShaderfs.glsl", ShaderType.FragmentShader, animationShader);
+            GL.LinkProgram(animationShader);
 
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
             colorID = GL.GetUniformLocation(colorShaderID, "incolor");

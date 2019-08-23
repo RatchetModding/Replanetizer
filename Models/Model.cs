@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using static RatchetEdit.DataFunctions;
+using System;
 
 namespace RatchetEdit.Models
 {
@@ -23,6 +24,8 @@ namespace RatchetEdit.Models
         public List<TextureConfig> textureConfig { get; set; } = new List<TextureConfig>();
         public int VBO = 0;
         public int IBO = 0;
+        public int jointIndicesBuffer = 0;
+        public int vertexWeightBuffer = 0;
 
         protected int GetFaceCount()
         {
@@ -49,6 +52,59 @@ namespace RatchetEdit.Models
                 GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
             }
         }
+        public void DrawAnimated(List<Texture> textures)
+        {
+            GetVBO();
+            GetIBO();
+            GetJointIndices();
+            GetWeights();
+
+
+            //Bind textures one by one, applying it to the relevant vertices based on the index array
+            foreach (TextureConfig conf in textureConfig)
+            {
+                GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? textures[conf.ID].getTexture() : 0);
+                GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+            }
+        }
+
+        public void GetJointIndices()
+        {
+            //Get the vertex buffer object, or create one if one doesn't exist
+            if (jointIndicesBuffer == 0)
+            {
+
+                GL.GenBuffers(1, out jointIndicesBuffer);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, jointIndicesBuffer);
+                GL.BufferData(BufferTarget.ArrayBuffer, ids.Length * sizeof(uint), ids, BufferUsageHint.StaticDraw);
+                
+                //Console.WriteLine("Generated VBO with ID: " + VBO.ToString());
+            }
+            else
+            {
+                GL.BindBuffer(BufferTarget.ArrayBuffer, jointIndicesBuffer);
+            }
+            GL.VertexAttribPointer(2, 4, VertexAttribPointerType.UnsignedByte, false, sizeof(int), IntPtr.Zero);
+        }
+
+        public void GetWeights()
+        {
+            //Get the vertex buffer object, or create one if one doesn't exist
+            if (vertexWeightBuffer == 0)
+            {
+
+                GL.GenBuffers(1, out vertexWeightBuffer);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vertexWeightBuffer);
+                GL.BufferData(BufferTarget.ArrayBuffer, weights.Length * sizeof(uint), weights, BufferUsageHint.StaticDraw);
+
+                //Console.WriteLine("Generated VBO with ID: " + VBO.ToString());
+            }
+            else
+            {
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vertexWeightBuffer);
+            }
+            GL.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(int), IntPtr.Zero);
+        }
 
         public void Draw(CustomGLControl glControl)
         {
@@ -56,6 +112,9 @@ namespace RatchetEdit.Models
             GL.UniformMatrix4(glControl.matrixID, false, ref worldView);
             Draw(glControl.level.textures);
         }
+
+
+
 
         public void GetVBO()
         {

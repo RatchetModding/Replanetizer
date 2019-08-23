@@ -229,6 +229,11 @@ namespace RatchetEdit
             return glControl.shaderID;
         }
 
+        public int GetAnimationShader()
+        {
+            return glControl.animationShader;
+        }
+
         void InvalidateView()
         {
             glControl.invalidate = true;

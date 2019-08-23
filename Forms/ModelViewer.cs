@@ -6,6 +6,8 @@ using System.Windows.Forms;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using RatchetEdit.Models;
+using RatchetEdit.Models.Animations;
+using System.Linq;
 
 namespace RatchetEdit
 {
@@ -15,7 +17,7 @@ namespace RatchetEdit
         private Level level;
         private Model selectedModel;
 
-        private int shaderID, matrixID;
+        private int shaderID, matrixID, jointID;
 
         private int lastMouseX;
         private float xDelta;
@@ -27,6 +29,9 @@ namespace RatchetEdit
         private Matrix4 trans, scale, worldView, rot = Matrix4.Identity;
 
         private TreeNode mobyNode, tieNode, shrubNode, weaponNode;
+
+        private int frameNum = 0;
+        private int animationNum = 0;
 
         public ModelViewer(Main main, Model model)
         {
@@ -52,9 +57,10 @@ namespace RatchetEdit
         {
             glControl.MakeCurrent();
             GL.ClearColor(Color.CornflowerBlue);
-            shaderID = mainForm.GetShaderID();
+            shaderID = mainForm.GetAnimationShader();
 
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
+            jointID = GL.GetUniformLocation(shaderID, "Bone");
 
             GL.Enable(EnableCap.DepthTest);
             GL.EnableClientState(ArrayCap.VertexArray);
@@ -169,16 +175,148 @@ namespace RatchetEdit
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             // Has to be done in this order to work correctly
-            Matrix4 mvp = trans * scale * rot * worldView;
+            //
+
+
 
             GL.UseProgram(shaderID);
-            GL.UniformMatrix4(matrixID, false, ref mvp);
+
 
             GL.EnableVertexAttribArray(0);
             GL.EnableVertexAttribArray(1);
+            GL.EnableVertexAttribArray(2);
+            GL.EnableVertexAttribArray(3);
 
-            selectedModel.Draw(level.textures);
 
+            MobyModel drawModel = (MobyModel)level.mobyModels.Where(c => c.id == 0x424).FirstOrDefault();
+            Matrix4 modelScale = Matrix4.CreateScale(0.01f);
+
+            int maxPar = 0;
+
+            Matrix4[] translationMatrices = new Matrix4[100];
+
+            if (selectedModel is MobyModel model)
+            {
+
+                for (int i = 0; i < model.boneDatas.Count; i++)
+                {
+                    Matrix4 mat = model.boneMatrices[i].mat1;
+                    float x = mat.M41 / 1024f;
+                    float y = mat.M42 / 1024f;
+                    float z = mat.M43 / 1024f;
+
+                    float x2 = model.boneDatas[i].unk1 / 1024f;
+                    float y2 = model.boneDatas[i].unk2 / 1024f;
+                    float z2 = model.boneDatas[i].unk3 / 1024f;
+
+                    Matrix4 matt = Matrix4.CreateTranslation(x2, y2, z2);
+                    //matt.Invert();
+                    translationMatrices[i] = matt;
+
+                }
+
+                Console.WriteLine("Bone count: " + model.boneMatrices.Count);
+                for (int i = 0; i < model.boneDatas.Count; i++)
+                {
+                    Matrix4 mat = model.boneMatrices[i].mat1;
+                    float x = mat.M41 / 1024f;
+                    float y = mat.M42 / 1024f;
+                    float z = mat.M43 / 1024f;
+
+                    float x2 = model.boneDatas[i].unk1 / 1024f;
+                    float y2 = model.boneDatas[i].unk2 / 1024f;
+                    float z2 = model.boneDatas[i].unk3 / 1024f;
+
+                    Matrix4 matt = Matrix4.CreateTranslation(x2, y2, z2);
+                    matt.Invert();
+
+                    int parent = model.boneMatrices[i].bb / 0x40;
+
+                    //Matrix4 mat2 = Matrix4.CreateScale(1 / 1024f);
+                    //Matrix4 mat4 = mat * mat2;
+
+                    Animation anim = model.animations[animationNum];
+                    Frame frame = anim.frames[frameNum];
+                    short[] rots = frame.rotations[i];
+
+                    Console.WriteLine(rots[0] / 32767f);
+
+                    Quaternion quat = new Quaternion((rots[0] / 32767f) * 180f, (rots[1] / 32767f) * 180f, (rots[2] / 32767f) *180f, (-rots[3] / 32767f) *180f);
+
+                    Matrix4 animationRotation = Matrix4.CreateFromQuaternion(quat);
+
+                    /*
+                    float xx = model.boneDatas[i].unk1 / 1024f;
+                    float yy = model.boneDatas[i].unk2 / 1024f;
+                    float zz = model.boneDatas[i].unk3 / 1024f;
+                    */
+
+                    Matrix4 translation = Matrix4.CreateTranslation(x, y, z);
+                    Matrix4 postTranslation = Matrix4.CreateTranslation(x2, y2, z2);
+
+                    //Matrix4 mvpa =  modelScale * translation * scale * rot * worldView;
+                    //GL.UniformMatrix4(matrixID, false, ref mvpa);
+
+                    
+
+                    if (parent == 0)
+                    {
+                        translationMatrices[i] = animationRotation;
+                        Console.WriteLine("Parent bone");
+                    }
+                    else
+                    {
+                        Matrix4 parentIvert = translationMatrices[0];
+                        parentIvert.Invert();
+                        translationMatrices[i] += animationRotation + translationMatrices[parent];
+                    }
+
+                    if (parent > maxPar) maxPar = parent;
+
+                    //translationMatrices[i] = Matrix4.Identity;
+
+                    //translationMatrices[i] = Matrix4.Identity;
+                }
+
+                
+                /*for (int i = 0; i < model.boneDatas.Count; i++)
+                {
+                    Matrix4 mat = model.boneMatrices[i].mat1;
+                    float x = mat.M41 / 1024f;
+                    float y = mat.M42 / 1024f;
+                    float z = mat.M43 / 1024f;
+
+                    float x2 = model.boneDatas[i].unk1 / 1024f;
+                    float y2 = model.boneDatas[i].unk2 / 1024f;
+                    float z2 = model.boneDatas[i].unk3 / 1024f;
+
+                    Matrix4 matt = Matrix4.CreateTranslation(x, y, z);
+                   matt.Invert();
+
+
+                    Matrix4 scaler = Matrix4.CreateScale(1 / 1024f);
+
+                    translationMatrices[i] *= mat * scaler;
+                }*/
+
+            }
+            GL.UniformMatrix4(jointID, 100, false, ref translationMatrices[0].Row0.X);
+
+            //Console.WriteLine(translationMatrices[50].ToString());
+            Console.WriteLine("Max parent: " + maxPar);
+           
+
+
+            Matrix4 mvp =  scale * rot * worldView;
+            GL.UniformMatrix4(matrixID, false, ref mvp);
+
+
+            selectedModel.DrawAnimated(level.textures);
+
+            //selectedModel.Draw(level.textures);
+
+            GL.DisableVertexAttribArray(3);
+            GL.DisableVertexAttribArray(2);
             GL.DisableVertexAttribArray(1);
             GL.DisableVertexAttribArray(0);
             glControl.SwapBuffers();
@@ -193,6 +331,73 @@ namespace RatchetEdit
             invalidate = true;
         }
 
+        private void Button1_Click(object sender, EventArgs e)
+        {
+            if (frameNum > 0)
+            {
+                frameNum--;
+                label1.Text = frameNum.ToString();
+                invalidate = true;
+            }
+        }
+
+        private void Button2_Click(object sender, EventArgs e)
+        {
+
+            if (selectedModel is MobyModel model)
+            {
+                if(frameNum < model.animations[animationNum].frames.Count - 1)
+                {
+                    frameNum++;
+                } else
+                {
+                    frameNum = 0;
+                }
+                label1.Text = frameNum.ToString();
+                invalidate = true;
+            }
+        }
+
+        private void NumericUpDown1_ValueChanged(object sender, EventArgs e)
+        {
+            if(numericUpDown1.Value < 0)
+            {
+                numericUpDown1.Value = 0;
+            }
+
+            if(selectedModel is MobyModel model)
+            {
+                if (numericUpDown1.Value > model.animations.Count - 1)
+                {
+                    numericUpDown1.Value = model.animations.Count - 1;
+                }
+            }
+
+            animationNum = (int)numericUpDown1.Value;
+            frameNum = 0;
+        }
+
+        private void Button3_Click(object sender, EventArgs e)
+        {
+            timer1.Enabled = !timer1.Enabled;
+        }
+
+        private void Timer1_Tick(object sender, EventArgs e)
+        {
+            if (selectedModel is MobyModel model)
+            {
+                if (frameNum < model.animations[animationNum].frames.Count - 1)
+                {
+                    frameNum++;
+                }
+                else
+                {
+                    frameNum = 0;
+                }
+                label1.Text = frameNum.ToString();
+                invalidate = true;
+            }
+        }
 
         private void tickTimer_Tick(object sender, EventArgs e)
         {

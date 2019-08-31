@@ -268,5 +268,33 @@ namespace RatchetEdit.LevelObjects
             Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
             modelMatrix = scaleMatrix * rot * translationMatrix;
         }
+
+        public void UpdateFromMemory(byte[] mobyMemory, int offset, List<Model> models)
+        {
+            pVarMemoryAddress = 0x300000000 + ReadUint(mobyMemory, offset + 0x78);
+
+            // If dead
+            if (mobyMemory[offset + 0x20] > 0x7F)
+            {
+                model = null;
+                return;
+            }
+
+            ushort modId = ReadUshort(mobyMemory, offset + 0xA6);
+            float mobScale = ReadFloat(mobyMemory, offset + 0x2C);
+            Model mod = models.Find(x => x.id == modId);
+
+            if (mod == null)
+            {
+                mod = models.Find(x => x.id == 500);
+            }
+
+            model = mod;
+            position = new Vector3(ReadFloat(mobyMemory, offset + 0x10), ReadFloat(mobyMemory, offset + 0x14), ReadFloat(mobyMemory, offset + 0x18));
+            rotation = Quaternion.FromEulerAngles(ReadFloat(mobyMemory, offset + 0x40), ReadFloat(mobyMemory, offset + 0x44), ReadFloat(mobyMemory, offset + 0x48));
+            scale = new Vector3(mobScale / model.size);
+            UpdateTransformMatrix();
+            modelID = modId;
+        }
     }
 }

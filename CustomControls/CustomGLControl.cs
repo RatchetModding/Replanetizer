@@ -13,31 +13,11 @@ using RatchetEdit.LevelObjects;
 using static RatchetEdit.Utilities;
 using static RatchetEdit.DataFunctions;
 
-// Used for memory reading
-using System.Runtime.InteropServices;
-using System.Diagnostics;
-using System.Text;
-
 
 namespace RatchetEdit
 {
     public class CustomGLControl : GLControl
     {
-        // Read and write acceess
-        const int PROCESS_WM_READ = 0x38;
-
-        [DllImport("kernel32.dll")]
-        public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
-
-        [DllImport("kernel32.dll")]
-        public static extern bool ReadProcessMemory(IntPtr hProcess, Int64 lpBaseAddress, byte[] lpBuffer, int dwSize, ref int lpNumberOfBytesRead);
-
-        [DllImport("kernel32.dll")]
-        static extern bool WriteProcessMemory(IntPtr hProcess, Int64 lpBaseAddress, byte[] lpBuffer, int nSize, ref int lpNumberOfBytesWritten);
-
-        Process process;
-        IntPtr processHandle;
-
         public Level level;
 
         public Matrix4 worldView;
@@ -65,6 +45,7 @@ namespace RatchetEdit
         public event EventHandler<RatchetEventArgs> ObjectClick;
         public event EventHandler<RatchetEventArgs> ObjectDeleted;
 
+        MemoryHook hook;
 
         public CustomGLControl()
         {
@@ -77,9 +58,6 @@ namespace RatchetEdit
             if (DesignMode) return;
 
             MakeCurrent();
-
-            //process = Process.GetProcessesByName("rpcs3")[0];
-            //processHandle = OpenProcess(PROCESS_WM_READ, false, process.Id);
 
             GL.GenVertexArrays(1, out int VAO);
             GL.BindVertexArray(VAO);
@@ -139,6 +117,7 @@ namespace RatchetEdit
             camera.MoveBehind(ratchet);
 
             SelectObject(null);
+            hook = new MemoryHook(level.game.num);
         }
 
         public void SelectObject(LevelObject newObject = null)
@@ -293,7 +272,7 @@ namespace RatchetEdit
                     case VertexTranslationTool t:
                         if (selectedObject is Spline spline)
                         {
-                            spline.TranslateVertex(currentSplineVertex, direction * magnitude);
+                            /*spline.TranslateVertex(currentSplineVertex, direction * magnitude);
                             //write at 0x346BA1180 + 0xC0 + spline.offset + currentSplineVertex * 0x10;
                             // List of splines 0x300A51BE0
 
@@ -308,7 +287,7 @@ namespace RatchetEdit
                             WriteFloat(buff, 0x04, vec.Y);
                             WriteFloat(buff, 0x08, vec.Z);
 
-                            WriteProcessMemory(processHandle, splinePtr + currentSplineVertex * 0x10, buff, buff.Length, ref bytesRead);
+                            WriteProcessMemory(processHandle, splinePtr + currentSplineVertex * 0x10, buff, buff.Length, ref bytesRead);*/
                         }
                         break;
                 }
@@ -349,7 +328,7 @@ namespace RatchetEdit
 
         public void FakeDrawSplines(List<Spline> splines, int offset)
         {
-            for(int i = 0; i < splines.Count; i++)
+            for (int i = 0; i < splines.Count; i++)
             {
                 Spline spline = splines[i];
                 GL.UseProgram(colorShaderID);
@@ -388,7 +367,7 @@ namespace RatchetEdit
         }
         public void FakeDrawObjects(List<ModelObject> levelObjects, int offset)
         {
-            for(int i = 0; i < levelObjects.Count; i++)
+            for (int i = 0; i < levelObjects.Count; i++)
             {
                 ModelObject levelObject = levelObjects[i];
 
@@ -411,7 +390,7 @@ namespace RatchetEdit
         public void RenderTool()
         {
             // Render tool on top of everything
-            GL.Clear(ClearBufferMask.DepthBufferBit); 
+            GL.Clear(ClearBufferMask.DepthBufferBit);
 
             if ((selectedObject != null) && (currentTool != null))
             {
@@ -492,33 +471,6 @@ namespace RatchetEdit
             zLock = false;
         }
 
-        private void GetSplinesFromMemory()
-        {
-            byte[] head = new byte[0x10];
-            int bytesRead = 0;
-            ReadProcessMemory(processHandle, 0x346BA1180, head, head.Length, ref bytesRead);
-
-
-            var splines = new List<Spline>();
-            int splineCount = ReadInt(head, 0);
-            int splineOffset = ReadInt(head, 4);
-            int splineSectionSize = ReadInt(head, 8);
-
-            byte[] splineHeadBlock = new byte[splineCount * 4];
-            ReadProcessMemory(processHandle, 0x346BA1180 + 0x10, splineHeadBlock, splineHeadBlock.Length, ref bytesRead);
-
-            byte[] splineBlock = new byte[splineSectionSize];
-            ReadProcessMemory(processHandle, 0x346BA1180 + splineOffset, splineBlock, splineBlock.Length, ref bytesRead);
-
-            for (int i = 0; i < splineCount; i++)
-            {
-                int offset = ReadInt(splineHeadBlock, (i * 4));
-                splines.Add(new Spline(splineBlock, offset));
-            }
-
-            level.splines = splines;
-        }
-
         public LevelObject GetObjectAtScreenPosition(int x, int y, out bool hitTool)
         {
             LevelObject returnObject = null;
@@ -530,108 +482,108 @@ namespace RatchetEdit
             GL.ClearColor(0, 0, 0, 0);
 
             worldView = view * projection;
-            
+
             int offset = 0;
 
-            
+
             if (enableMoby)
             {
                 mobyOffset = offset;
                 FakeDrawObjects(level.mobs.Cast<ModelObject>().ToList(), mobyOffset);
                 offset += level.mobs.Count;
             }
-           
+
             if (enableTie)
             {
                 tieOffset = offset;
                 FakeDrawObjects(level.ties.Cast<ModelObject>().ToList(), tieOffset);
                 offset += level.ties.Count;
             }
-            
-           if (enableShrub)
-           {
-               shrubOffset = offset;
-               FakeDrawObjects(level.shrubs.Cast<ModelObject>().ToList(), shrubOffset);
-               offset += level.shrubs.Count;
-           }
 
-           if (enableSpline)
-           {
-               splineOffset = offset;
-               FakeDrawSplines(level.splines, splineOffset);
-               offset += level.splines.Count;
-           }
+            if (enableShrub)
+            {
+                shrubOffset = offset;
+                FakeDrawObjects(level.shrubs.Cast<ModelObject>().ToList(), shrubOffset);
+                offset += level.shrubs.Count;
+            }
 
-           if (enableCuboid)
-           {
-               cuboidOffset = offset;
-               FakeDrawCuboids(level.cuboids, cuboidOffset);
-               offset += level.cuboids.Count;
-           }
+            if (enableSpline)
+            {
+                splineOffset = offset;
+                FakeDrawSplines(level.splines, splineOffset);
+                offset += level.splines.Count;
+            }
 
-           RenderTool();
+            if (enableCuboid)
+            {
+                cuboidOffset = offset;
+                FakeDrawCuboids(level.cuboids, cuboidOffset);
+                offset += level.cuboids.Count;
+            }
 
-           Pixel pixel = new Pixel();
-           GL.ReadPixels(x, Height - y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixel);
+            RenderTool();
 
-           //Console.WriteLine("R: {0}, G: {1}, B: {2}, A: {3}", pixel.R, pixel.G, pixel.B, pixel.A);
+            Pixel pixel = new Pixel();
+            GL.ReadPixels(x, Height - y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixel);
 
-           GL.ClearColor(Color.SkyBlue);
+            //Console.WriteLine("R: {0}, G: {1}, B: {2}, A: {3}", pixel.R, pixel.G, pixel.B, pixel.A);
 
-           // Some GPU's put the alpha at 0, others at 255
-           if (pixel.A == 255 || pixel.A == 0)
-           {
-               pixel.A = 0;
+            GL.ClearColor(Color.SkyBlue);
 
-               bool didHitTool = false;
-               if (pixel.R == 255 && pixel.G == 0 && pixel.B == 0)
-               {
-                   didHitTool = true;
-                   xLock = true;
-               }
-               else if (pixel.R == 0 && pixel.G == 255 && pixel.B == 0)
-               {
-                   didHitTool = true;
-                   yLock = true;
-               }
-               else if (pixel.R == 0 && pixel.G == 0 && pixel.B == 255)
-               {
-                   didHitTool = true;
-                   zLock = true;
-               }
+            // Some GPU's put the alpha at 0, others at 255
+            if (pixel.A == 255 || pixel.A == 0)
+            {
+                pixel.A = 0;
 
-               if (didHitTool)
-               {
-                   InvalidateView();
-                   hitTool = true;
-                   return null;
-               }
+                bool didHitTool = false;
+                if (pixel.R == 255 && pixel.G == 0 && pixel.B == 0)
+                {
+                    didHitTool = true;
+                    xLock = true;
+                }
+                else if (pixel.R == 0 && pixel.G == 255 && pixel.B == 0)
+                {
+                    didHitTool = true;
+                    yLock = true;
+                }
+                else if (pixel.R == 0 && pixel.G == 0 && pixel.B == 255)
+                {
+                    didHitTool = true;
+                    zLock = true;
+                }
+
+                if (didHitTool)
+                {
+                    InvalidateView();
+                    hitTool = true;
+                    return null;
+                }
 
 
 
-               int id = (int)pixel.ToUInt32();
-               if (enableMoby && id < level.mobs?.Count)
-               {
-                   returnObject = level.mobs[id];
-               }
-               else if (enableTie && id - tieOffset < level.ties.Count)
-               {
-                   returnObject = level.ties[id - tieOffset];
-               }
-               else if (enableShrub && id - shrubOffset < level.shrubs.Count)
-               {
-                   returnObject = level.shrubs[id - shrubOffset];
-               }
-               else if (enableSpline && id - splineOffset < level.splines.Count)
-               {
-                   returnObject = level.splines[id - splineOffset];
-               }
-               else if (enableCuboid && id - cuboidOffset < level.cuboids.Count)
-               {
-                   returnObject = level.cuboids[id - cuboidOffset];
-               }
-           }
-           
+                int id = (int)pixel.ToUInt32();
+                if (enableMoby && id < level.mobs?.Count)
+                {
+                    returnObject = level.mobs[id];
+                }
+                else if (enableTie && id - tieOffset < level.ties.Count)
+                {
+                    returnObject = level.ties[id - tieOffset];
+                }
+                else if (enableShrub && id - shrubOffset < level.shrubs.Count)
+                {
+                    returnObject = level.shrubs[id - shrubOffset];
+                }
+                else if (enableSpline && id - splineOffset < level.splines.Count)
+                {
+                    returnObject = level.splines[id - splineOffset];
+                }
+                else if (enableCuboid && id - cuboidOffset < level.cuboids.Count)
+                {
+                    returnObject = level.cuboids[id - cuboidOffset];
+                }
+            }
+
             hitTool = false;
             return returnObject;
         }
@@ -650,7 +602,7 @@ namespace RatchetEdit
 
             worldView = view * projection;
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            
+
 
             GL.EnableVertexAttribArray(0);
             GL.EnableVertexAttribArray(1);
@@ -661,57 +613,7 @@ namespace RatchetEdit
 
             if (enableMoby)
             {
-                /*
-                int bytesRead = 0;
-                byte[] camBfr = new byte[0x20];
-                ReadProcessMemory(processHandle, 0x300951500, camBfr, camBfr.Length, ref bytesRead);
-                //camera.position = new Vector3(ReadFloat(camBfr, 0x00), ReadFloat(camBfr, 0x04), ReadFloat(camBfr, 0x08));
-                //camera.rotation = new Vector3(ReadFloat(camBfr, 0x10), ReadFloat(camBfr, 0x14), ReadFloat(camBfr, 0x18) - (float)(Math.PI / 2));
-
-                byte[] ptrbuf = new byte[0xC];
-
-				ReadProcessMemory(processHandle, 0x300A390A0, ptrbuf, ptrbuf.Length, ref bytesRead);
-				int firstMoby = ReadInt(ptrbuf, 0x00);
-				int lastMoby = ReadInt(ptrbuf, 0x08);
-
-                byte[] mobys = new byte[lastMoby + 0x100 - firstMoby];
-
-                ReadProcessMemory(processHandle, 0x300000000 + firstMoby, mobys, mobys.Length, ref bytesRead);
-
-                while (level.mobs.Count < mobys.Length / 0x100)
-                {
-                    level.mobs.Add(new Moby());
-                }
-
-                for(int i = 0; i < mobys.Length; i += 0x100)
-                {
-                    Moby mob = level.mobs[i / 0x100];
-
-                    mob.pVarMemoryAddress = 0x300000000 + ReadUint(mobys, i + 0x78);
-
-                    // If dead
-                    if (mobys[i + 0x20] > 0x7F)
-                    {
-                        mob.model = null;
-                        continue;
-                    }
-
-                    ushort modId = ReadUshort(mobys, i + 0xA6);
-                    if (modId == 0x3EF) continue;
-					float scale = ReadFloat(mobys, i + 0x2C);
-                    Model mod = level.mobyModels.Find(x => x.id == modId);
-                    if (mod == null)
-                    {
-                        mod = level.mobyModels.Find(x => x.id == 500);
-                    }                    
-
-                    mob.model = mod;
-                    mob.position = new Vector3(ReadFloat(mobys, i + 0x10), ReadFloat(mobys, i + 0x14), ReadFloat(mobys, i + 0x18));
-                    mob.rotation = new Vector3(ReadFloat(mobys, i + 0x40), ReadFloat(mobys, i + 0x44), ReadFloat(mobys, i + 0x48));
-                    mob.scale = new Vector3(scale, scale, scale);
-                    level.mobs[i / 0x100].modelID = modId;
-                }
-                */
+                hook.UpdateMobys(level.mobs, level.mobyModels);
 
                 foreach (Moby mob in level.mobs)
                 {
@@ -740,7 +642,7 @@ namespace RatchetEdit
             if (enableSpline)
                 foreach (Spline spline in level.splines)
                     //if(selectedObject == spline)
-                        spline.Render(this, spline == selectedObject);
+                    spline.Render(this, spline == selectedObject);
 
             if (enableCuboid)
                 foreach (Cuboid cuboid in level.cuboids)

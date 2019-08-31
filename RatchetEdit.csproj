@@ -132,6 +132,8 @@
     <Compile Include="Level Objects\Gameplay\Type88.cs" />
     <Compile Include="Level Objects\Gameplay\LevelVariables.cs" />
     <Compile Include="Level Objects\ITransformable.cs" />
+    <Compile Include="MemoryAddresses.cs" />
+    <Compile Include="MemoryHook.cs" />
     <Compile Include="Parsers\ModelReader.cs" />
     <Compile Include="Models\Animation\Animation.cs" />
     <Compile Include="Models\Animation\Attachment.cs" />

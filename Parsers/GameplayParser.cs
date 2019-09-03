@@ -134,9 +134,20 @@ namespace RatchetEdit.Parsers
             int mobyCount = ReadInt(ReadBlock(fileStream, gameplayHeader.mobyPointer, 4), 0);
 
             byte[] mobyBlock = ReadBlock(fileStream, gameplayHeader.mobyPointer + 0x10, mobyCount * game.mobyElemSize);
+			byte[] pVarSizesBlock = ReadBlock(fileStream, gameplayHeader.pvarSizePointer, gameplayHeader.pvarPointer - gameplayHeader.pvarSizePointer);
+
+			// Like this because padding is a thing
+			int pVarSizeBlockSize = ReadInt(pVarSizesBlock, pVarSizesBlock.Length - 8) + ReadInt(pVarSizesBlock, pVarSizesBlock.Length - 4);
+			if (pVarSizeBlockSize == 0)
+			{
+				pVarSizeBlockSize = ReadInt(pVarSizesBlock, pVarSizesBlock.Length - 0x10) + ReadInt(pVarSizesBlock, pVarSizesBlock.Length - 0xC);
+			}
+
+			byte[] pVarBlock = ReadBlock(fileStream, gameplayHeader.pvarPointer, pVarSizeBlockSize);
+
             for (int i = 0; i < mobyCount; i++)
             {
-                mobs.Add(new Moby(game, mobyBlock, i, mobyModels));
+                mobs.Add(new Moby(game, mobyBlock, i, mobyModels, pVarSizesBlock, pVarBlock));
             }
             return mobs;
         }

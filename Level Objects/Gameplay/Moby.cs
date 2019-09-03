@@ -12,7 +12,7 @@ namespace RatchetEdit.LevelObjects
         public const int ELEMENTSIZE = 0x78;
         
         [Category("Attributes"), DisplayName("Mission ID")]
-        public int missionID { get; set; }
+        public int MissionID { get; set; }
 
         [Category("Unknowns"), DisplayName("aUnknown 1")]
         public int unk1 { get; set; }
@@ -83,10 +83,9 @@ namespace RatchetEdit.LevelObjects
             this.position = position;
             this.rotation = rotation;
             this.scale = scale;
-
         }
 
-        public Moby(GameType game, byte[] mobyBlock, int num, List<Model> mobyModels)
+        public Moby(GameType game, byte[] mobyBlock, int num, List<Model> mobyModels, byte[] pVarSizes, byte[] pVars)
         {
             switch (game.num)
             {
@@ -98,12 +97,20 @@ namespace RatchetEdit.LevelObjects
                     GetRC23Vals(game, mobyBlock, num, mobyModels);
                     break;
             }
+
+			if (pvarIndex != -1)
+			{
+				int pVarOffset = ReadInt(pVarSizes, pvarIndex * 8);
+				int pVarSize = ReadInt(pVarSizes, pvarIndex * 8 + 4);
+
+				this.pVars = getBytes(pVars, pVarOffset, pVarSize);
+			}
         }
 
         private void GetRC1Vals(GameType game, byte[] mobyBlock, int num, List<Model> mobyModels)
         {
             int offset = num * game.mobyElemSize;
-            missionID = ReadInt(mobyBlock, offset + 0x04);
+            MissionID = ReadInt(mobyBlock, offset + 0x04);
             unk1 = ReadInt(mobyBlock, offset + 0x08);
             dataval = ReadInt(mobyBlock, offset + 0x0C);
 
@@ -153,7 +160,7 @@ namespace RatchetEdit.LevelObjects
         {
             int offset = num * game.mobyElemSize;
 
-            missionID = ReadInt(mobyBlock, offset + 0x04);
+            MissionID = ReadInt(mobyBlock, offset + 0x04);
             unk1 = ReadInt(mobyBlock, offset + 0x08);
             dataval = ReadInt(mobyBlock, offset + 0x0C);
 
@@ -210,7 +217,7 @@ namespace RatchetEdit.LevelObjects
             byte[] buffer = new byte[ELEMENTSIZE];
 
             WriteInt(ref buffer, 0x00, ELEMENTSIZE);
-            WriteInt(ref buffer, 0x04, missionID);
+            WriteInt(ref buffer, 0x04, MissionID);
             WriteInt(ref buffer, 0x08, unk1);
             WriteInt(ref buffer, 0x0C, dataval);
 

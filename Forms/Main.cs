@@ -408,6 +408,11 @@ namespace RatchetEdit
             UpdateProperties(e.Object);
         }
 
+        private void GlControl_Load(object sender, EventArgs e)
+        {
+
+        }
+
         private void mapSaveAsBtn_Click(object sender, EventArgs e)
         {
             if (mapSaveDialog.ShowDialog() == DialogResult.OK)

@@ -399,7 +399,7 @@ namespace RatchetEdit
 
             base.OnResize(e);
             if (!initialized) return;
-            GL.Viewport(Location.X, Location.Y, Width, Height);
+            GL.Viewport(0, 0, Width, Height);
             projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 800.0f);
 
         }
@@ -425,8 +425,6 @@ namespace RatchetEdit
         {
             rMouse = e.Button == MouseButtons.Right;
             lMouse = e.Button == MouseButtons.Left;
-
-            Console.WriteLine(e.Button.ToString());
 
             if (e.Button == MouseButtons.Left && level != null)
             {

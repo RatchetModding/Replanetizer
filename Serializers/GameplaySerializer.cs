@@ -23,14 +23,14 @@ namespace RatchetEdit.Serializers
             {
                 type88Pointer =     SeekWrite(fs, SerializeLevelObjects(level.type88s, Type88.ELEMENTSIZE)),
                 levelVarPointer =   SeekWrite(fs, level.levelVariables.serialize()),
-                englishPointer =    SeekWrite(fs, level.english),
-                lang2Pointer =      SeekWrite(fs, level.lang2),
-                frenchPointer =     SeekWrite(fs, level.french),
-                germanPointer =     SeekWrite(fs, level.german),
-                spanishPointer =    SeekWrite(fs, level.spanish),
-                italianPointer =    SeekWrite(fs, level.italian),
-                lang7Pointer =      SeekWrite(fs, level.lang7),
-                lang8Pointer =      SeekWrite(fs, level.lang8),
+                englishPointer =    SeekWrite(fs, GetLangBytes(level.english)),
+                lang2Pointer =      SeekWrite(fs, GetLangBytes(level.lang2)),
+                frenchPointer =     SeekWrite(fs, GetLangBytes(level.french)),
+                germanPointer =     SeekWrite(fs, GetLangBytes(level.german)),
+                spanishPointer =    SeekWrite(fs, GetLangBytes(level.spanish)),
+                italianPointer =    SeekWrite(fs, GetLangBytes(level.italian)),
+                lang7Pointer =      SeekWrite(fs, GetLangBytes(level.lang7)),
+                lang8Pointer =      SeekWrite(fs, GetLangBytes(level.lang8)),
                 type04Pointer =     SeekWrite(fs, SerializeLevelObjects(level.type04s, Type04.ELEMENTSIZE)),
                 type80Pointer =     SeekWrite(fs, GetType80Bytes(level.type80s)),
                 cameraPointer =     SeekWrite(fs, SerializeLevelObjects(level.gameCameras, GameCamera.ELEMENTSIZE)),
@@ -85,6 +85,50 @@ namespace RatchetEdit.Serializers
             {
                 fs.Seek(4, SeekOrigin.Current);
             }
+        }
+
+        public static byte[] GetLangBytes(Dictionary<int, String> languageData)
+        {
+            int headerSize = (languageData.Count() * 16) + 8;
+            int dataSize = 0;
+            foreach (KeyValuePair<int, String> entry in languageData)
+            {
+                int entrySize = entry.Value.Length + 1;
+                if (entrySize % 4 != 0)
+                {
+                    entrySize += (4 - entrySize % 4);
+                }
+                dataSize += entrySize;
+            }
+
+            int totalSize = headerSize + dataSize;
+            byte[] bytes = new byte[totalSize];
+
+            WriteUint(bytes, 0, (uint)languageData.Count());
+            WriteUint(bytes, 4, (uint)totalSize);
+
+            int textPos = headerSize;
+            int headerPos = 8;
+
+            foreach (KeyValuePair<int, String> entry in languageData)
+            {
+                int entrySize = entry.Value.Length + 1;
+                if (entrySize % 4 != 0)
+                {
+                    entrySize += 4 - (entrySize % 4);
+                }
+
+                System.Text.Encoding.ASCII.GetBytes(entry.Value, 0, entry.Value.Length, bytes, textPos);
+
+                WriteUint(bytes, headerPos, (uint)textPos);
+                WriteUint(bytes, headerPos + 4, (uint)entry.Key);
+                WriteUint(bytes, headerPos + 8, 0xFFFFFFFF);
+                WriteUint(bytes, headerPos + 12, 0);
+                headerPos += 16;
+                textPos += entrySize;
+            }
+
+            return bytes;
         }
 
         public byte[] GetMobyBytes(List<Moby> mobs)

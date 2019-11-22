@@ -90,6 +90,12 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="DataFunctions.cs" />
+    <Compile Include="Forms\LanguageViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\LanguageViewer.Designer.cs">
+      <DependentUpon>LanguageViewer.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\SpriteViewer.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -113,6 +119,7 @@
     <Compile Include="Headers\Headers.cs" />
     <Compile Include="Level Objects\Engine\Light.cs" />
     <Compile Include="Level Objects\Engine\Shrub.cs" />
+    <Compile Include="Level Objects\Engine\TerrainFragment.cs" />
     <Compile Include="Level Objects\Engine\UiElement.cs" />
     <Compile Include="Level Objects\Gameplay\GameCamera.cs" />
     <Compile Include="Level Objects\Gameplay\Type7C.cs" />
@@ -186,6 +193,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CustomControls\CustomGLControl.resx">
       <DependentUpon>CustomGLControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\LanguageViewer.resx">
+      <DependentUpon>LanguageViewer.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\Main.resx">
       <DependentUpon>Main.cs</DependentUpon>

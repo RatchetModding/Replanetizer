@@ -92,7 +92,7 @@ namespace RatchetEdit.Models
         }
 
         //Get texture configs of different types using elemsize
-        public static List<TextureConfig> GetTextureConfigs(FileStream fs, int texturePointer, int textureCount, int elemSize)
+        public static List<TextureConfig> GetTextureConfigs(FileStream fs, int texturePointer, int textureCount, int elemSize, bool negate = false)
         {
             int IDoffset = 0, startOffset = 0, sizeOffset = 0, modeOffset = 0;
 
@@ -114,6 +114,7 @@ namespace RatchetEdit.Models
 
             var textureConfigs = new List<TextureConfig>();
             byte[] texBlock = ReadBlock(fs, texturePointer, textureCount * elemSize);
+            int neg = 0;
             for (int i = 0; i < textureCount; i++)
             {
                 TextureConfig textureConfig = new TextureConfig();
@@ -121,6 +122,12 @@ namespace RatchetEdit.Models
                 textureConfig.start = ReadInt(texBlock, (i * elemSize) + startOffset);
                 textureConfig.size = ReadInt(texBlock, (i * elemSize) + sizeOffset);
                 textureConfig.mode = ReadInt(texBlock, (i * elemSize) + modeOffset);
+                if (negate)
+                {
+                    if (i == 0) neg = textureConfig.start;
+                    textureConfig.start -= neg;
+                }
+
                 textureConfigs.Add(textureConfig);
             }
             return textureConfigs;
@@ -280,18 +287,15 @@ namespace RatchetEdit.Models
         }
 
         //Get indices
-        public static ushort[] GetIndices(FileStream fs, int indexPointer, int faceCount)
+        public static ushort[] GetIndices(FileStream fs, int indexPointer, int faceCount, int offset = 0)
         {
             ushort[] indexBuffer = new ushort[faceCount];
             byte[] indexBlock = ReadBlock(fs, indexPointer, faceCount * sizeof(ushort));
 
-            ushort negate = 0;
-
             for (int i = 0; i < faceCount; i++)
             {
                 ushort face = ReadUshort(indexBlock, i * sizeof(ushort));
-                if (i == 0 && face > 0) negate = face;
-                indexBuffer[i] = (ushort)(face - negate);
+                indexBuffer[i] = (ushort)(face - offset);
             }
 
             return indexBuffer;

@@ -423,7 +423,7 @@ namespace RatchetEdit
 
             base.OnResize(e);
             if (!initialized) return;
-            GL.Viewport(Location.X, Location.Y, Width, Height);
+            GL.Viewport(0, 0, Width, Height);
             projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 800.0f);
 
         }
@@ -450,8 +450,6 @@ namespace RatchetEdit
             rMouse = e.Button == MouseButtons.Right;
             lMouse = e.Button == MouseButtons.Left;
 
-            Console.WriteLine(e.Button.ToString());
-
             if (e.Button == MouseButtons.Left && level != null)
             {
                 LevelObject obj = GetObjectAtScreenPosition(e.Location.X, e.Location.Y, out bool cancelSelection);
@@ -474,7 +472,7 @@ namespace RatchetEdit
         public LevelObject GetObjectAtScreenPosition(int x, int y, out bool hitTool)
         {
             LevelObject returnObject = null;
-            int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0, cuboidOffset = 0;
+            int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0, cuboidOffset = 0, tfragOffset = 0;
             MakeCurrent();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.UseProgram(colorShaderID);
@@ -521,6 +519,13 @@ namespace RatchetEdit
                 offset += level.cuboids.Count;
             }
 
+            if (enableTerrain)
+            {
+                tfragOffset = offset;
+                FakeDrawObjects(level.terrains.Cast<ModelObject>().ToList(), tfragOffset);
+                offset += level.cuboids.Count;
+            }
+
             RenderTool();
 
             Pixel pixel = new Pixel();
@@ -561,29 +566,33 @@ namespace RatchetEdit
 
 
 
-                int id = (int)pixel.ToUInt32();
-                if (enableMoby && id < level.mobs?.Count)
-                {
-                    returnObject = level.mobs[id];
-                }
-                else if (enableTie && id - tieOffset < level.ties.Count)
-                {
-                    returnObject = level.ties[id - tieOffset];
-                }
-                else if (enableShrub && id - shrubOffset < level.shrubs.Count)
-                {
-                    returnObject = level.shrubs[id - shrubOffset];
-                }
-                else if (enableSpline && id - splineOffset < level.splines.Count)
-                {
-                    returnObject = level.splines[id - splineOffset];
-                }
-                else if (enableCuboid && id - cuboidOffset < level.cuboids.Count)
-                {
-                    returnObject = level.cuboids[id - cuboidOffset];
-                }
+               int id = (int)pixel.ToUInt32();
+               if (enableMoby && id < level.mobs?.Count)
+               {
+                   returnObject = level.mobs[id];
+               }
+               else if (enableTie && id - tieOffset < level.ties.Count)
+               {
+                   returnObject = level.ties[id - tieOffset];
+               }
+               else if (enableShrub && id - shrubOffset < level.shrubs.Count)
+               {
+                   returnObject = level.shrubs[id - shrubOffset];
+               }
+               else if (enableSpline && id - splineOffset < level.splines.Count)
+               {
+                   returnObject = level.splines[id - splineOffset];
+               }
+               else if (enableCuboid && id - cuboidOffset < level.cuboids.Count)
+               {
+                   returnObject = level.cuboids[id - cuboidOffset];
+               }
+               else if (enableTerrain && id - tfragOffset < level.terrains.Count)
+               {
+                   returnObject = level.terrains[id - tfragOffset];
+               }
             }
-
+           
             hitTool = false;
             return returnObject;
         }
@@ -631,8 +640,8 @@ namespace RatchetEdit
                     shrub.Render(this, shrub == selectedObject);
 
             if (enableTerrain)
-                foreach (TerrainModel tFrag in level.terrains)
-                    tFrag.Draw(this);
+                foreach (TerrainFragment tFrag in level.terrains)
+                    tFrag.Render(this, tFrag == selectedObject);
 
             if (enableSkybox)
                 level.skybox.Draw(this);

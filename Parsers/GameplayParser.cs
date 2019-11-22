@@ -62,49 +62,63 @@ namespace RatchetEdit.Parsers
 
 
 
-        public byte[] GetLang(int offset)
+        public Dictionary<int, String> GetLang(int offset)
         {
             if (offset == 0) { return null; }
+            int numItems = ReadInt(ReadBlock(fileStream, offset, 4), 0);
             int langLength = ReadInt(ReadBlock(fileStream, offset + 4, 4), 0);
-            return ReadBlock(fileStream, offset, langLength);
+
+            Dictionary<int, String> languageData = new Dictionary<int, String>();
+
+            for (int i = 0; i < numItems; i++)
+            {
+                int pointerOffset = offset + 8 + (i * 16);
+                int textPointer = ReadInt(ReadBlock(fileStream, pointerOffset, 4), 0);
+                int textId = ReadInt(ReadBlock(fileStream, pointerOffset + 4, 4), 0);
+
+                String textData = ReadString(fileStream, textPointer + offset);
+                languageData.Add(textId, textData);
+            }
+
+            return languageData;
         }
 
-        public byte[] GetEnglish()
+        public Dictionary<int, String> GetEnglish()
         {
             return GetLang(gameplayHeader.englishPointer);
         }
 
-        public byte[] GetLang2()
+        public Dictionary<int, String> GetLang2()
         {
             return GetLang(gameplayHeader.lang2Pointer);
         }
 
-        public byte[] GetFrench()
+        public Dictionary<int, String> GetFrench()
         {
             return GetLang(gameplayHeader.frenchPointer);
         }
 
-        public byte[] GetGerman()
+        public Dictionary<int, String> GetGerman()
         {
             return GetLang(gameplayHeader.germanPointer);
         }
 
-        public byte[] GetSpanish()
+        public Dictionary<int, String> GetSpanish()
         {
             return GetLang(gameplayHeader.spanishPointer);
         }
 
-        public byte[] GetItalian()
+        public Dictionary<int, String> GetItalian()
         {
             return GetLang(gameplayHeader.italianPointer);
         }
 
-        public byte[] GetLang7()
+        public Dictionary<int, String> GetLang7()
         {
             return GetLang(gameplayHeader.lang7Pointer);
         }
 
-        public byte[] GetLang8()
+        public Dictionary<int, String> GetLang8()
         {
             return GetLang(gameplayHeader.lang8Pointer);
         }

@@ -55,6 +55,7 @@ namespace RatchetEdit
             this.UISpriteToolBtn = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem14 = new System.Windows.Forms.ToolStripMenuItem();
             this.levelVariablesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.languageDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mapOpenDialog = new System.Windows.Forms.OpenFileDialog();
@@ -71,16 +72,6 @@ namespace RatchetEdit
             this.splineToolBtn = new System.Windows.Forms.ToolStripButton();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.objectTree = new RatchetEdit.ObjectTreeView();
-            this.button10 = new System.Windows.Forms.Button();
-            this.button9 = new System.Windows.Forms.Button();
-            this.button8 = new System.Windows.Forms.Button();
-            this.button7 = new System.Windows.Forms.Button();
-            this.button6 = new System.Windows.Forms.Button();
-            this.button5 = new System.Windows.Forms.Button();
-            this.button4 = new System.Windows.Forms.Button();
-            this.button3 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
-            this.button1 = new System.Windows.Forms.Button();
             this.properties = new System.Windows.Forms.PropertyGrid();
             this.camYLabel = new System.Windows.Forms.Label();
             this.yawLabel = new System.Windows.Forms.Label();
@@ -282,7 +273,8 @@ namespace RatchetEdit
             this.spriteViewerToolBtn,
             this.UISpriteToolBtn,
             this.toolStripMenuItem14,
-            this.levelVariablesToolStripMenuItem});
+            this.levelVariablesToolStripMenuItem,
+            this.languageDataToolStripMenuItem});
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
             this.toolStripMenuItem2.Size = new System.Drawing.Size(63, 20);
             this.toolStripMenuItem2.Text = "Window";
@@ -332,6 +324,13 @@ namespace RatchetEdit
             this.levelVariablesToolStripMenuItem.Name = "levelVariablesToolStripMenuItem";
             this.levelVariablesToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
             this.levelVariablesToolStripMenuItem.Text = "Level Variables";
+            // 
+            // languageDataToolStripMenuItem
+            // 
+            this.languageDataToolStripMenuItem.Name = "languageDataToolStripMenuItem";
+            this.languageDataToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+            this.languageDataToolStripMenuItem.Text = "Language Data";
+            this.languageDataToolStripMenuItem.Click += new System.EventHandler(this.languageDataToolStripMenuItem_Click);
             // 
             // toolStripMenuItem3
             // 
@@ -491,16 +490,6 @@ namespace RatchetEdit
             // 
             // splitContainer2.Panel2
             // 
-            this.splitContainer2.Panel2.Controls.Add(this.button10);
-            this.splitContainer2.Panel2.Controls.Add(this.button9);
-            this.splitContainer2.Panel2.Controls.Add(this.button8);
-            this.splitContainer2.Panel2.Controls.Add(this.button7);
-            this.splitContainer2.Panel2.Controls.Add(this.button6);
-            this.splitContainer2.Panel2.Controls.Add(this.button5);
-            this.splitContainer2.Panel2.Controls.Add(this.button4);
-            this.splitContainer2.Panel2.Controls.Add(this.button3);
-            this.splitContainer2.Panel2.Controls.Add(this.button2);
-            this.splitContainer2.Panel2.Controls.Add(this.button1);
             this.splitContainer2.Panel2.Controls.Add(this.properties);
             this.splitContainer2.Panel2.Controls.Add(this.camYLabel);
             this.splitContainer2.Panel2.Controls.Add(this.yawLabel);
@@ -515,120 +504,14 @@ namespace RatchetEdit
             // 
             // objectTree
             // 
+            this.objectTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.objectTree.Location = new System.Drawing.Point(4, 3);
             this.objectTree.Name = "objectTree";
             this.objectTree.Size = new System.Drawing.Size(258, 264);
             this.objectTree.TabIndex = 0;
             this.objectTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.objectTreeView1_AfterSelect);
-            // 
-            // button10
-            // 
-            this.button10.Location = new System.Drawing.Point(7, 357);
-            this.button10.Name = "button10";
-            this.button10.Size = new System.Drawing.Size(75, 23);
-            this.button10.TabIndex = 18;
-            this.button10.Text = "button10";
-            this.button10.UseVisualStyleBackColor = true;
-            this.button10.Click += new System.EventHandler(this.button10_Click);
-            // 
-            // button9
-            // 
-            this.button9.Location = new System.Drawing.Point(23, 339);
-            this.button9.Name = "button9";
-            this.button9.Size = new System.Drawing.Size(105, 23);
-            this.button9.TabIndex = 28;
-            this.button9.Text = "Remove skybox";
-            this.button9.UseVisualStyleBackColor = true;
-            this.button9.Visible = false;
-            this.button9.Click += new System.EventHandler(this.button9_Click);
-            // 
-            // button8
-            // 
-            this.button8.Location = new System.Drawing.Point(23, 318);
-            this.button8.Name = "button8";
-            this.button8.Size = new System.Drawing.Size(105, 23);
-            this.button8.TabIndex = 27;
-            this.button8.Text = "Remove terrain";
-            this.button8.UseVisualStyleBackColor = true;
-            this.button8.Visible = false;
-            this.button8.Click += new System.EventHandler(this.button8_Click);
-            // 
-            // button7
-            // 
-            this.button7.Location = new System.Drawing.Point(23, 297);
-            this.button7.Name = "button7";
-            this.button7.Size = new System.Drawing.Size(105, 23);
-            this.button7.TabIndex = 26;
-            this.button7.Text = "Remove collision";
-            this.button7.UseVisualStyleBackColor = true;
-            this.button7.Visible = false;
-            this.button7.Click += new System.EventHandler(this.button7_Click);
-            // 
-            // button6
-            // 
-            this.button6.Location = new System.Drawing.Point(134, 357);
-            this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(52, 23);
-            this.button6.TabIndex = 25;
-            this.button6.Text = "Imp tex";
-            this.button6.UseVisualStyleBackColor = true;
-            this.button6.Visible = false;
-            this.button6.Click += new System.EventHandler(this.button6_Click);
-            // 
-            // button5
-            // 
-            this.button5.Location = new System.Drawing.Point(192, 357);
-            this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(70, 23);
-            this.button5.TabIndex = 24;
-            this.button5.Text = "Export tex";
-            this.button5.UseVisualStyleBackColor = true;
-            this.button5.Visible = false;
-            this.button5.Click += new System.EventHandler(this.button5_Click);
-            // 
-            // button4
-            // 
-            this.button4.Location = new System.Drawing.Point(134, 336);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(52, 23);
-            this.button4.TabIndex = 23;
-            this.button4.Text = "Imp coll";
-            this.button4.UseVisualStyleBackColor = true;
-            this.button4.Visible = false;
-            this.button4.Click += new System.EventHandler(this.button4_Click);
-            // 
-            // button3
-            // 
-            this.button3.Location = new System.Drawing.Point(134, 318);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(52, 23);
-            this.button3.TabIndex = 22;
-            this.button3.Text = "imp terr";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Visible = false;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
-            // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(192, 339);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(70, 23);
-            this.button2.TabIndex = 21;
-            this.button2.Text = "Export colli";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Visible = false;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
-            // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(192, 318);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(70, 23);
-            this.button1.TabIndex = 20;
-            this.button1.Text = "Export ter";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Visible = false;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // properties
             // 
@@ -807,16 +690,7 @@ namespace RatchetEdit
         private System.Windows.Forms.ToolStripMenuItem type0CCheck;
         private ObjectTreeView objectTree;
         private CustomGLControl glControl;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Button button4;
-        private System.Windows.Forms.Button button3;
-        private System.Windows.Forms.Button button6;
-        private System.Windows.Forms.Button button5;
-        private System.Windows.Forms.Button button7;
-        private System.Windows.Forms.Button button8;
-        private System.Windows.Forms.Button button9;
-        private System.Windows.Forms.Button button10;
+        private System.Windows.Forms.ToolStripMenuItem languageDataToolStripMenuItem;
     }
 }
 

@@ -112,6 +112,7 @@ namespace RatchetEdit.Models
                                 vertexList.Add(ReadFloat(collision, pOffset + 4) / div + 4 * (yShift + y + 0.5f));  //Vertex Y
                                 vertexList.Add(ReadFloat(collision, pOffset + 8) / div + 4 * (zShift + z + 0.5f));  //Vertex Z
 
+                                /*
                                 switch (collisionType[v])
                                 {
                                     case 0x1F:
@@ -124,6 +125,12 @@ namespace RatchetEdit.Models
                                         fc.b = 0;
                                         break;
                                 }
+                                */
+
+                                // Colorize different types of collision without knowing what they are
+                                fc.r = (byte)((collisionType[v] & 0x03) << 6);
+                                fc.g = (byte)((collisionType[v] & 0x0C) << 4);
+                                fc.b = (byte)(collisionType[v] & 0xF0);
 
                                 vertexList.Add(fc.value);
                                 totalVertexCount++;

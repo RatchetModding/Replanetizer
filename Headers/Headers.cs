@@ -1,51 +1,32 @@
 ﻿using System.IO;
 using System.Collections.Generic;
 using static RatchetEdit.DataFunctions;
+using System;
 
 namespace RatchetEdit.Headers
 {
     class Headers
     {
     }
-
-    public class TerrainHeader
+    public class TerrainHead
     {
-        public int vertexPointer;
-        public int RGBAPointer;
-        public int UVPointer;
-        public int indexPointer;
-        public int vertexCount;
-        public List<TerrainFragHeader> heads;
+        public ushort headCount;
+        public List<int> vertexPointers = new List<int>();
+        public List<int> rgbaPointers = new List<int>();
+        public List<int> UVpointers = new List<int>();
+        public List<int> indexPointers = new List<int>();
 
-        public TerrainHeader(byte[] terrainBlock, int offset)
+        public TerrainHead(byte[] terrainBlock)
         {
-            vertexPointer = ReadInt(terrainBlock, offset + 0x08);
-            RGBAPointer = ReadInt(terrainBlock, offset + 0x18);
-            UVPointer = ReadInt(terrainBlock, offset + 0x28);
-            indexPointer = ReadInt(terrainBlock, offset + 0x38);
-            heads = new List<TerrainFragHeader>();
-        }
-    }
+            headCount = ReadUshort(terrainBlock, 0x06);
 
-
-
-    public class TerrainFragHeader
-    {
-        const int ELEMSIZE = 0x30;
-
-        public int texturePointer;
-        public int textureCount;
-        public ushort vertexIndex;
-        public ushort vertexCount;
-        public ushort slotNum;
-
-        public TerrainFragHeader(FileStream fs, byte[] terrainHeadBlock, int index)
-        {
-            texturePointer = ReadInt(terrainHeadBlock, (index * ELEMSIZE) + 0x10);
-            textureCount = ReadInt(terrainHeadBlock, (index * ELEMSIZE) + 0x14);
-            vertexIndex = ReadUshort(terrainHeadBlock, (index * ELEMSIZE) + 0x18);
-            vertexCount = ReadUshort(terrainHeadBlock, (index * ELEMSIZE) + 0x1A);
-            slotNum = ReadUshort(terrainHeadBlock, (index * ELEMSIZE) + 0x22);
+            for (int i = 0; i < 4; i++)
+            {
+                vertexPointers.Add(ReadInt(terrainBlock, 0x08 + i * 4));
+                rgbaPointers.Add(ReadInt(terrainBlock, 0x18 + i * 4));
+                UVpointers.Add(ReadInt(terrainBlock, 0x28 + i * 4));
+                indexPointers.Add(ReadInt(terrainBlock, 0x38 + i * 4));
+            }
         }
     }
 

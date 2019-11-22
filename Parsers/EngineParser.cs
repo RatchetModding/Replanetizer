@@ -51,7 +51,7 @@ namespace RatchetEdit.Parsers
             return GetShrubs(shrubModels, engineHead.shrubPointer, engineHead.shrubCount);
         }
 
-        public List<TerrainModel> GetTerrainModels()
+        public List<TerrainFragment> GetTerrainModels()
         {
             return GetTerrainModels(engineHead.terrainPointer);
         }

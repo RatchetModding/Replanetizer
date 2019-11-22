@@ -45,20 +45,20 @@ namespace RatchetEdit
         public List<Shrub> shrubs;
         public List<Light> lights;
         public List<Spline> splines;
-        public List<TerrainModel> terrains;
+        public List<TerrainFragment> terrains;
         public List<int> textureConfigMenus;
 
         public LevelVariables levelVariables;
         public OcclusionData occlusionData;
 
-        public byte[] english;
-        public byte[] lang2;
-        public byte[] french;
-        public byte[] german;
-        public byte[] spanish;
-        public byte[] italian;
-        public byte[] lang7;
-        public byte[] lang8;
+        public Dictionary<int, String> english;
+        public Dictionary<int, String> lang2;
+        public Dictionary<int, String> french;
+        public Dictionary<int, String> german;
+        public Dictionary<int, String> spanish;
+        public Dictionary<int, String> italian;
+        public Dictionary<int, String> lang7;
+        public Dictionary<int, String> lang8;
 
         public byte[] unk6;
         public byte[] unk7;
@@ -182,7 +182,7 @@ namespace RatchetEdit
 
                 Console.WriteLine("Parsing splines...");
                 splines = gameplayParser.GetSplines();
-                Console.WriteLine("Added " + splines.Count + " splines");
+                //Console.WriteLine("Added " + splines.Count + " splines");
 
                 Console.WriteLine("Parsing languages...");
                 english = gameplayParser.GetEnglish();

@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL;
 using static RatchetEdit.DataFunctions;
+using System.Drawing.Imaging;
 
 namespace RatchetEdit
 {
@@ -11,7 +12,8 @@ namespace RatchetEdit
     {
         public const int TEXTUREELEMSIZE = 0x24;
 
-        public Bitmap renderedImage;
+        public Image renderedImage;
+        public Bitmap img;
 
         public short width;
         public short height;
@@ -127,19 +129,18 @@ namespace RatchetEdit
 
         public Bitmap getTextureImage()
         {
-            Bitmap texImageBMap;
-            byte[] imgRaw;
-            imgRaw = DecompressDxt5(data, width, height);
+            if (img != null) return img;
 
-            if(imgRaw != null)
+            byte[] imgData = DecompressDxt5(data, width, height);
+            if (imgData != null)
             {
-                texImageBMap = new Bitmap(width, height, 4 * width, System.Drawing.Imaging.PixelFormat.Format32bppArgb, Marshal.UnsafeAddrOfPinnedArrayElement(imgRaw, 0));
-                return texImageBMap;
+                img = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                BitmapData bmData = img.LockBits(new Rectangle(0, 0, img.Width, img.Height), ImageLockMode.ReadWrite, img.PixelFormat);
+                IntPtr pNative = bmData.Scan0;
+                Marshal.Copy(imgData, 0, pNative, width * height * 4);
+                img.UnlockBits(bmData);
             }
-            else
-            {
-                return null;
-            }
+            return img;
         }
 
 

@@ -66,6 +66,7 @@ namespace RatchetEdit
         public void UpdateMobys(List<Moby> levelMobs, List<Model> models)
         {
             if (!IsX64()) return;
+            Console.WriteLine("gaming");
 
             int bytesRead = 0;
             byte[] ptrbuf = new byte[0xC];

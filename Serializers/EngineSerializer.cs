@@ -26,7 +26,7 @@ namespace RatchetEdit.Serializers
             {
                 uiElementPointer =          SeekWrite(fs, WriteUiElements(level.uiElements, (int)fs.Position)),
                 skyboxPointer =             SeekWrite(fs, level.skybox.Serialize((int)fs.Position)),
-                terrainPointer =            SeekWrite(fs, level.terrainBytes),              // 0x3c - terrain
+                terrainPointer =            SeekWrite(fs, WriteTfrags(level.terrains, (int)fs.Position)),              // 0x3c - terrain
                 renderDefPointer =          SeekWrite(fs, level.renderDefBytes),            // 0x04 - renderdef
                 collisionPointer =          SeekWrite(fs, level.collBytes),                 // 0x14 - collision
                 mobyModelPointer =          SeekWrite(fs, WriteMobies(level.mobyModels, (int)fs.Position)),
@@ -77,6 +77,88 @@ namespace RatchetEdit.Serializers
             }
         }
 
+        private byte[] WriteTfrags(List<TerrainFragment> tFrags, int fileOffset)
+        {
+            List<byte> vertBytes = new List<byte>();
+            List<byte> rgbaBytes = new List<byte>();
+            List<byte> uvBytes = new List<byte>();
+            List<byte> indexBytes = new List<byte>();
+            List<byte> textureBytes = new List<byte>();
+
+            byte[] tfragHeads = new byte[0x30 * tFrags.Count];
+
+            for (int i = 0; i < tFrags.Count; i++)
+            {
+                int offset = i * 0x30;
+                WriteFloat(tfragHeads, offset + 0x00, tFrags[i].off_00);
+                WriteFloat(tfragHeads, offset + 0x04, tFrags[i].off_04);
+                WriteFloat(tfragHeads, offset + 0x08, tFrags[i].off_08);
+                WriteFloat(tfragHeads, offset + 0x0C, tFrags[i].off_0C);
+
+                WriteInt(tfragHeads, offset + 0x10, fileOffset + 0x60 + tfragHeads.Length + textureBytes.Count);
+                WriteInt(tfragHeads, offset + 0x14, tFrags[i].model.textureConfig.Count);
+
+                WriteUshort(tfragHeads, offset + 0x18, (ushort)(vertBytes.Count / 0x1C));
+                WriteUshort(tfragHeads, offset + 0x1a, (ushort)(tFrags[i].model.vertexBuffer.Length / 8));
+
+                WriteUshort(tfragHeads, offset + 0x1C, tFrags[i].off_1C);
+                WriteUshort(tfragHeads, offset + 0x1E, tFrags[i].off_1E);
+                WriteUshort(tfragHeads, offset + 0x20, tFrags[i].off_20);
+                WriteUint(tfragHeads, offset + 0x24, tFrags[i].off_24);
+                WriteUint(tfragHeads, offset + 0x28, tFrags[i].off_28);
+                WriteUint(tfragHeads, offset + 0x2C, tFrags[i].off_2C);
+
+                foreach (var texConf in tFrags[i].model.textureConfig)
+                {
+                    byte[] texBytes = new byte[0x10];
+                    WriteInt(texBytes, 0x00, texConf.ID);
+                    WriteInt(texBytes, 0x04, texConf.start + indexBytes.Count / 2);
+                    WriteInt(texBytes, 0x08, texConf.size);
+                    WriteInt(texBytes, 0x0C, texConf.mode);
+                    textureBytes.AddRange(texBytes);
+                }
+
+                indexBytes.AddRange(tFrags[i].model.GetFaceBytes((ushort)(vertBytes.Count / 0x1C)));
+                TerrainModel mod = (TerrainModel)(tFrags[i].model);
+                vertBytes.AddRange(mod.SerializeVerts());
+                rgbaBytes.AddRange(tFrags[i].model.rgbas);
+                uvBytes.AddRange(tFrags[i].model.SerializeUVs());
+            }
+
+            List<byte> outBytes = new List<byte>();
+
+            byte[] head = new byte[0x60];
+            WriteInt(head, 0, fileOffset + 0x60);
+            WriteUshort(head, 0x4, (ushort)tFrags.Count);
+            WriteUshort(head, 0x6, (ushort)tFrags.Count);
+
+            outBytes.AddRange(head);
+            outBytes.AddRange(tfragHeads);
+            outBytes.AddRange(textureBytes);
+            Pad(outBytes);
+            int vertOffset = fileOffset + outBytes.Count;
+            outBytes.AddRange(vertBytes);
+            Pad(outBytes);
+            int rgbaOffset = fileOffset + outBytes.Count;
+            outBytes.AddRange(rgbaBytes);
+            Pad(outBytes);
+            int uvOffset = fileOffset + outBytes.Count;
+            outBytes.AddRange(uvBytes);
+            Pad(outBytes);
+            int indexOffset = fileOffset + outBytes.Count;
+            outBytes.AddRange(indexBytes);
+            Pad(outBytes);
+
+            byte[] outByteArr = outBytes.ToArray();
+
+            WriteInt(outByteArr, 0x08, vertOffset);
+            WriteInt(outByteArr, 0x18, rgbaOffset);
+            WriteInt(outByteArr, 0x28, uvOffset);
+            WriteInt(outByteArr, 0x38, indexOffset);
+
+            Console.WriteLine(outByteArr.Length);
+            return outByteArr;
+        }
         private byte[] WriteTerrainBytes(byte[] terrainBlock, int fileOffset, int textureCount)
         {
             int texOffset0 = ReadInt(terrainBlock, 0x70);

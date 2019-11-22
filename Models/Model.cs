@@ -18,6 +18,7 @@ namespace RatchetEdit.Models
         public ushort[] indexBuffer = {  };
         public uint[] weights;
         public uint[] ids;
+        public byte[] rgbas;
 
 
         public List<TextureConfig> textureConfig { get; set; } = new List<TextureConfig>();
@@ -184,6 +185,8 @@ namespace RatchetEdit.Models
             return outBytes;
         }
 
+
+
         public byte[] SerializeTieVertices()
         {
             int elemSize = 0x18;
@@ -254,12 +257,12 @@ namespace RatchetEdit.Models
             return vertexBytes;
         }
 
-        public byte[] GetFaceBytes()
+        public byte[] GetFaceBytes(ushort offset = 0)
         {
             byte[] indexBytes = new byte[indexBuffer.Length * sizeof(ushort)];
             for (int i = 0; i < indexBuffer.Length; i++)
             {
-                WriteShort(indexBytes, i * sizeof(ushort), (short)indexBuffer[i]);
+                WriteUshort(indexBytes, i * sizeof(ushort), (ushort)(indexBuffer[i] + offset));
             }
             return indexBytes;
         }
@@ -300,5 +303,6 @@ namespace RatchetEdit.Models
 
             return indexBuffer;
         }
+
     }
 }

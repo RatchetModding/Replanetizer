@@ -204,5 +204,13 @@ namespace RatchetEdit
             }
             return length;
         }
+
+        public static void Pad(List<byte> arr)
+        {
+            while (arr.Count % 0x10 != 0)
+            {
+                arr.Add(0);
+            }
+        }
     }
 }

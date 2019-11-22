@@ -44,13 +44,13 @@ namespace RatchetEdit.LevelObjects
             off_0C = ReadFloat(tfragBlock, offset + 0x0C);
 
 
-            off_1C =                ReadUshort(tfragBlock, offset + 0x1C);
-            off_1E =                ReadUshort(tfragBlock, offset + 0x1E);
-            off_20 =                ReadUshort(tfragBlock, offset + 0x20);
+            off_1C = ReadUshort(tfragBlock, offset + 0x1C);
+            off_1E = ReadUshort(tfragBlock, offset + 0x1E);
+            off_20 = ReadUshort(tfragBlock, offset + 0x20);
 
-            off_24 =                ReadUint(tfragBlock, offset + 0x24);
-            off_28 =                ReadUint(tfragBlock, offset + 0x28);
-            off_2C =                ReadUint(tfragBlock, offset + 0x2C);
+            off_24 = ReadUint(tfragBlock, offset + 0x24);
+            off_28 = ReadUint(tfragBlock, offset + 0x28);
+            off_2C = ReadUint(tfragBlock, offset + 0x2C);
 
             model = new TerrainModel(fs, head, tfragBlock, num);
             modelMatrix = Matrix4.Identity;

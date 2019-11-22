@@ -45,7 +45,7 @@ namespace RatchetEdit
         public List<Shrub> shrubs;
         public List<Light> lights;
         public List<Spline> splines;
-        public List<TerrainModel> terrains;
+        public List<TerrainFragment> terrains;
         public List<int> textureConfigMenus;
 
         public LevelVariables levelVariables;
@@ -182,7 +182,7 @@ namespace RatchetEdit
 
                 Console.WriteLine("Parsing splines...");
                 splines = gameplayParser.GetSplines();
-                Console.WriteLine("Added " + splines.Count + " splines");
+                //Console.WriteLine("Added " + splines.Count + " splines");
 
                 Console.WriteLine("Parsing languages...");
                 english = gameplayParser.GetEnglish();

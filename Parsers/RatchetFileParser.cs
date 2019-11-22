@@ -129,15 +129,23 @@ namespace RatchetEdit.Parsers
         }
 
 
-        protected List<TerrainModel> GetTerrainModels(int terrainModelPointer)
+        protected List<TerrainFragment> GetTerrainModels(int terrainModelPointer)
         {
+            List<TerrainFragment> tFrags = new List<TerrainFragment>();
+
             //Read the whole terrain header
             byte[] terrainBlock = ReadBlock(fileStream, terrainModelPointer, 0x60);
-            int terrainHeadPointer = ReadInt(terrainBlock, 0);
-            ushort terrainHeadCount = ReadUshort(terrainBlock, 0x06);
+            TerrainHead head = new TerrainHead(terrainBlock);
 
+            byte[] tfragBlock = ReadBlock(fileStream, terrainModelPointer + 0x60, head.headCount * 0x30);
+
+            for (int i = 0; i < head.headCount; i++)
+            {
+                tFrags.Add(new TerrainFragment(fileStream, head, tfragBlock, i));
+            }
+
+            /*
             List<TerrainHeader> pointerList = new List<TerrainHeader>(terrainHeadCount);
-
 
             byte[] terrainHeadBlock = ReadBlock(fileStream, terrainHeadPointer, terrainHeadCount * 0x30);
             for (int i = 0; i < terrainHeadCount; i++)
@@ -155,9 +163,9 @@ namespace RatchetEdit.Parsers
             foreach (TerrainHeader hd in pointerList)
             {
                 terrainModels.Add(new TerrainModel(fileStream, hd));
-            }
+            }*/
 
-            return terrainModels;
+            return tFrags;
         }
 
         protected SkyboxModel GetSkyboxModel(int skyboxPointer)

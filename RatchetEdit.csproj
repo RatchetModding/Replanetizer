@@ -99,6 +99,7 @@
     <Compile Include="Headers\Headers.cs" />
     <Compile Include="Level Objects\Engine\Light.cs" />
     <Compile Include="Level Objects\Engine\Shrub.cs" />
+    <Compile Include="Level Objects\Engine\TerrainFragment.cs" />
     <Compile Include="Level Objects\Engine\UiElement.cs" />
     <Compile Include="Level Objects\Gameplay\GameCamera.cs" />
     <Compile Include="Level Objects\Gameplay\Type7C.cs" />

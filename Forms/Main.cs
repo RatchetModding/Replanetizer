@@ -391,15 +391,18 @@ namespace RatchetEdit
             switch (e.Object)
             {
                 case Moby moby:
-                    objectTree.mobyNode.Nodes[level.mobs.IndexOf(moby)].Remove();
+                    //objectTree.mobyNode.Nodes[level.mobs.IndexOf(moby)].Remove();
                     level.mobs.Remove(moby);
                     break;
                 case Tie tie:
-                    objectTree.tieNode.Nodes[level.ties.IndexOf(tie)].Remove();
+                    //objectTree.tieNode.Nodes[level.ties.IndexOf(tie)].Remove();
                     level.ties.Remove(tie);
                     break;
                 case Shrub shrub:
                     level.shrubs.Remove(shrub);
+                    break;
+                case TerrainFragment tFrag:
+                    level.terrains.Remove(tFrag);
                     break;
             }
             UpdateProperties(e.Object);

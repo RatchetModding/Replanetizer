@@ -15,6 +15,7 @@ namespace RatchetEdit.Models
 
         public int null1 { get; set; }
 
+        public byte boneCount { get; set;  }
         public byte lpBoneCount { get; set; }            // Low poly bone count
         public byte count3 { get; set; }
         public byte count4 { get; set; }
@@ -37,8 +38,16 @@ namespace RatchetEdit.Models
         public List<Animation> animations { get; set; } = new List<Animation>();
         public List<ModelSound> modelSounds { get; set; } = new List<ModelSound>();
         public List<Attachment> attachments { get; set; } = new List<Attachment>();
+        public List<byte> indexAttachments { get; set; } = new List<byte>();
         public List<BoneMatrix> boneMatrices { get; set; } = new List<BoneMatrix>();
         public List<BoneData> boneDatas { get; set; } = new List<BoneData>();
+        
+        
+        public List<byte> otherBuffer { get; set; } = new List<byte>();
+        public List<TextureConfig> otherTextureConfigs { get; set; } = new List<TextureConfig>();
+        public List<ushort> otherIndexBuffer { get; set; } = new List<ushort>();
+
+
 
         public bool isModel = true;
 
@@ -66,8 +75,12 @@ namespace RatchetEdit.Models
             int meshPointer = ReadInt(headBlock, 0x00);
             null1 = ReadInt(headBlock, 0x04);
 
-            byte boneCount = headBlock[0x08];
+            boneCount = headBlock[0x08];
             lpBoneCount = headBlock[0x09];
+
+            if (boneCount == 0) boneCount = lpBoneCount;
+
+            Console.WriteLine("bonecount: " + boneCount + "lpBoneCOunt: " + lpBoneCount);
             count3 = headBlock[0x0A];
             count4 = headBlock[0x0B];
             byte animationCount = headBlock[0x0C];
@@ -141,12 +154,27 @@ namespace RatchetEdit.Models
             if (attachmentPointer > 0)
             {
                 int attachmentCount = ReadInt(ReadBlock(fs, offset + attachmentPointer, 4), 0);
-                byte[] headerBlock = ReadBlock(fs, offset + attachmentPointer + 4, attachmentCount * 4);
-                for (int i = 0; i < attachmentCount; i++)
+                if (attachmentCount > 0)
                 {
-                    int attachmentOffset = ReadInt(headerBlock, i * 4);
-                    attachments.Add(new Attachment(fs, offset + attachmentOffset));
+                    byte[] headerBlock = ReadBlock(fs, offset + attachmentPointer + 4, attachmentCount * 4);
+                    for (int i = 0; i < attachmentCount; i++)
+                    {
+                        int attachmentOffset = ReadInt(headerBlock, i * 4);
+                        attachments.Add(new Attachment(fs, offset + attachmentOffset));
+                    }
                 }
+                else
+                {
+                    int attid = 0;
+                    while (true)
+                    {
+                        byte val = ReadBlock(fs, offset + attachmentPointer + 4 + attid, 1)[0];
+                        if (val == 0xff) break;
+                        indexAttachments.Add(val);
+                        attid++;
+                    }
+                }
+
             }
 
 
@@ -172,6 +200,9 @@ namespace RatchetEdit.Models
                 int vertPointer = offset + ReadInt(meshHeader, 0x10);
                 int indexPointer = offset + ReadInt(meshHeader, 0x14);
                 ushort vertexCount = ReadUshort(meshHeader, 0x18);
+                ushort otherVertCount = ReadUshort(meshHeader, 0x1a);
+
+                int otherPointer = vertPointer + vertexCount * 0x28;
 
                 vertexCount2 = ReadUshort(meshHeader, 0x1C);     //These vertices are not affected by color2
 
@@ -195,19 +226,50 @@ namespace RatchetEdit.Models
                     //Index buffer
                     indexBuffer = GetIndices(fs, indexPointer, faceCount);
                 }
+                if (otherPointer > 0)
+                {
+                    otherBuffer.AddRange(ReadBlockNopad(fs, otherPointer, otherVertCount * 0x20));
+                    otherTextureConfigs = GetTextureConfigs(fs, otherBlockPointer, otherCount, 0x10);
+                    int otherfaceCount = 0;
+                    foreach (TextureConfig tex in otherTextureConfigs)
+                    {
+                        otherfaceCount += tex.size;
+                    }
+                    otherIndexBuffer.AddRange(GetIndices(fs, indexPointer + faceCount * sizeof(ushort), otherfaceCount));
+                }
             }
         }
 
 
 
 
-        public byte[] Serialize()
+        public byte[] Serialize(int offset)
         {
+            // Sometimes the mobys offset is not 0x10 aligned with the file,
+            // but the internal offsets are supposed to be
+            int alignment = 0x10 - (offset % 0x10);
+            if (alignment == 0x10) alignment = 0;
+
+            // We need to reserve some room for Ratchet's menu animations
+            // this is hardcoded as 0x1c in the ELF, thus we have to just check
+            // if the id of the current model is 0 I.E Ratchet, and add this offset
             int stupidOffset = 0;
-            if (id == 0) stupidOffset = 0x1c * 4;
+            if (id == 0)
+            {
+                stupidOffset = 0x20 * 4;
+            }
+            
+
 
             byte[] vertexBytes = SerializeVertices();
             byte[] faceBytes = GetFaceBytes();
+
+
+            byte[] otherFaceBytes = new byte[otherIndexBuffer.Count * sizeof(ushort)];
+            for (int i = 0; i < otherIndexBuffer.Count; i++)
+            {
+                WriteUshort(otherFaceBytes, i * sizeof(ushort), otherIndexBuffer[i]);
+            }
 
             //sounds
             byte[] soundBytes = new byte[modelSounds.Count * 0x20];
@@ -233,18 +295,26 @@ namespace RatchetEdit.Models
                 boneDataByte.CopyTo(boneDataBytes, i * 0x10);
             }
 
-            
-            int meshDataOffset = GetLength(HEADERSIZE + animations.Count * 4 + stupidOffset);
-            int textureConfigOffset = meshDataOffset + 0x20;
-            int vertOffset = textureConfigOffset + textureConfig.Count * 0x10;
-            int faceOffset = GetLength(vertOffset + vertexBytes.Length);
-            int type10Offset = GetLength(faceOffset + faceBytes.Length);
-            int soundOffset = GetLength(type10Offset + type10Block.Length);
-            int attachmentOffset = GetLength(soundOffset + soundBytes.Length);
+            int hack = 0;
+            if (id > 2) hack = 0x20;
+            int meshDataOffset = GetLength(HEADERSIZE + animations.Count * 4 + stupidOffset + hack, alignment);
+            int textureConfigOffset = GetLength(meshDataOffset + 0x20, alignment);
+            int otherTextureConfigOffset = GetLength(textureConfigOffset + textureConfig.Count * 0x10, alignment);
+
+            int file80 = 0;
+            if(vertexBuffer.Length != 0)
+                file80 = DistToFile80(offset + otherTextureConfigOffset + otherTextureConfigs.Count * 0x10);
+            int vertOffset = GetLength(otherTextureConfigOffset + otherTextureConfigs.Count * 0x10 + file80, alignment);
+            int otherOffset = vertOffset + vertexBytes.Length;
+            int faceOffset = GetLength(otherOffset + otherBuffer.Count, alignment);
+            int otherFaceOffset = faceOffset + faceBytes.Length;
+            int type10Offset = GetLength(otherFaceOffset + otherFaceBytes.Length, alignment);
+            int soundOffset = GetLength(type10Offset + type10Block.Length, alignment);
+            int attachmentOffset = GetLength(soundOffset + soundBytes.Length, alignment);
 
 
             List<byte> attachmentBytes = new List<byte>();
-            if (attachments != null)
+            if (attachments.Count > 0)
             {
                 byte[] attachmentHead = new byte[4 + attachments.Count * 4];
                 WriteInt(attachmentHead, 0, attachments.Count);
@@ -257,13 +327,18 @@ namespace RatchetEdit.Models
                     attOffset += attBytes.Length;
                 }
                 attachmentBytes.InsertRange(0, attachmentHead);
+            } else if (indexAttachments.Count > 0)
+            {
+                attachmentBytes.AddRange(new byte[]{ 0,0,0,0});
+                attachmentBytes.AddRange(indexAttachments);
+                attachmentBytes.Add(0xff);
             }
 
 
 
-            int boneMatrixOffset = GetLength(attachmentOffset + attachmentBytes.Count);
-            int boneDataOffset = GetLength(boneMatrixOffset + boneMatrixBytes.Length);
-            int animationOffset = GetLength(boneDataOffset + boneDataBytes.Length);
+            int boneMatrixOffset = GetLength(attachmentOffset + attachmentBytes.Count, alignment);
+            int boneDataOffset = GetLength(boneMatrixOffset + boneMatrixBytes.Length, alignment);
+            int animationOffset = GetLength(boneDataOffset + boneDataBytes.Length, alignment);
             int newAnimationOffset = animationOffset;
             List<byte> animByteList = new List<byte>();
 
@@ -274,7 +349,7 @@ namespace RatchetEdit.Models
                 if (anim.frames.Count != 0)
                 {
                     animOffsets.Add(newAnimationOffset);
-                    byte[] anima = anim.Serialize(newAnimationOffset);
+                    byte[] anima = anim.Serialize(newAnimationOffset, offset);
                     animByteList.AddRange(anima);
                     newAnimationOffset += anima.Length;
                 }
@@ -284,7 +359,7 @@ namespace RatchetEdit.Models
                 }
             }
 
-            int modelLength = GetLength(newAnimationOffset);
+            int modelLength = newAnimationOffset;
             byte[] outbytes = new byte[modelLength];
 
 
@@ -292,7 +367,7 @@ namespace RatchetEdit.Models
             if(vertexBuffer.Length != 0)
                 WriteInt(outbytes, 0x00, meshDataOffset);
 
-            outbytes[0x08] = (byte)(boneMatrices.Count);
+            outbytes[0x08] = boneCount;
             outbytes[0x09] = lpBoneCount;
             outbytes[0x0A] = count3;
             outbytes[0x0B] = count4;
@@ -304,12 +379,12 @@ namespace RatchetEdit.Models
             if(type10Block.Length != 0)
                 WriteInt(outbytes, 0x10, type10Offset);
             
-            if(boneMatrices.Count != 0) { 
+            if(id != 1 && id != 2) { 
                 WriteInt(outbytes, 0x14, boneMatrixOffset);
                 WriteInt(outbytes, 0x18, boneDataOffset);
             }
             
-            if(attachments.Count != 0)
+            if(attachments.Count != 0 || indexAttachments.Count != 0)
                 WriteInt(outbytes, 0x1C, attachmentOffset);
             
 
@@ -334,8 +409,11 @@ namespace RatchetEdit.Models
                 WriteInt(outbytes, HEADERSIZE + i * 0x04, animOffsets[i]);
             }
 
+            otherBuffer.CopyTo(outbytes, otherOffset);
             vertexBytes.CopyTo(outbytes, vertOffset);
             faceBytes.CopyTo(outbytes, faceOffset);
+            otherFaceBytes.CopyTo(outbytes, otherFaceOffset);
+
             if(type10Block != null)
             {
                 type10Block.CopyTo(outbytes, type10Offset);
@@ -350,23 +428,39 @@ namespace RatchetEdit.Models
 
             // Mesh header
             WriteInt(outbytes, meshDataOffset + 0x00, textureConfig.Count);
+            WriteInt(outbytes, meshDataOffset + 0x04, otherTextureConfigs.Count);
             //Othercount
-            WriteInt(outbytes, meshDataOffset + 0x08, textureConfigOffset);
+            if (textureConfig.Count != 0)
+                WriteInt(outbytes, meshDataOffset + 0x08, textureConfigOffset);
+            if (otherTextureConfigs.Count != 0)
+                WriteInt(outbytes, meshDataOffset + 0x0c, otherTextureConfigOffset);
             //otheroffset
-            WriteInt(outbytes, meshDataOffset + 0x10, vertOffset);
-            WriteInt(outbytes, meshDataOffset + 0x14, faceOffset);
+            if (vertexBuffer.Length != 0)
+                WriteInt(outbytes, meshDataOffset + 0x10, vertOffset);
+
+            if(faceBytes.Length != 0)
+                WriteInt(outbytes, meshDataOffset + 0x14, faceOffset);
             WriteShort(outbytes, meshDataOffset + 0x18, (short)(vertexBytes.Length / VERTELEMENTSIZE));
+            WriteShort(outbytes, meshDataOffset + 0x1a, (short)(otherBuffer.Count / 0x20));
             WriteShort(outbytes, meshDataOffset + 0x1C, (short)(vertexCount2));
 
 
             for (int i = 0; i < textureConfig.Count; i++)
             {
+                WriteInt(outbytes, textureConfigOffset + i * 0x10 + 0x00, textureConfig[i].ID);
                 WriteInt(outbytes, textureConfigOffset + i * 0x10 + 0x04, textureConfig[i].start);
                 WriteInt(outbytes, textureConfigOffset + i * 0x10 + 0x08, textureConfig[i].size);
                 WriteInt(outbytes, textureConfigOffset + i * 0x10 + 0x0C, textureConfig[i].mode);
-                WriteInt(outbytes, textureConfigOffset + i * 0x10 + 0x00, textureConfig[i].ID);
             }
-            
+
+            for (int i = 0; i < otherTextureConfigs.Count; i++)
+            {
+                WriteInt(outbytes, otherTextureConfigOffset + i * 0x10 + 0x00, otherTextureConfigs[i].ID);
+                WriteInt(outbytes, otherTextureConfigOffset + i * 0x10 + 0x04, otherTextureConfigs[i].start);
+                WriteInt(outbytes, otherTextureConfigOffset + i * 0x10 + 0x08, otherTextureConfigs[i].size);
+                WriteInt(outbytes, otherTextureConfigOffset + i * 0x10 + 0x0C, otherTextureConfigs[i].mode);
+            }
+
             return outbytes;
         }
     }

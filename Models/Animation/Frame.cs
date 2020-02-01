@@ -14,7 +14,7 @@ namespace RatchetEdit.Models.Animations
         public List<short[]> sec0s { get; set; }
         public List<short[]> translations { get; set; }
 
-        public Frame(FileStream fs, int offset, byte boneCount)
+        public Frame(FileStream fs, int offset, int boneCount)
         {
             byte[] header = ReadBlock(fs, offset, 0x10);
             speed = ReadFloat(header, 0x00);

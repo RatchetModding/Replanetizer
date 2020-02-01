@@ -32,6 +32,7 @@
             this.languageTextList = new System.Windows.Forms.ListView();
             this.textId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.textData = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.SuspendLayout();
             // 
             // languageList
@@ -59,6 +60,7 @@
             this.textId,
             this.textData});
             this.languageTextList.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.languageTextList.HideSelection = false;
             this.languageTextList.Location = new System.Drawing.Point(119, 0);
             this.languageTextList.Name = "languageTextList";
             this.languageTextList.Size = new System.Drawing.Size(681, 507);
@@ -96,5 +98,6 @@
         private System.Windows.Forms.ListView languageTextList;
         private System.Windows.Forms.ColumnHeader textId;
         private System.Windows.Forms.ColumnHeader textData;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
     }
 }

@@ -7,11 +7,14 @@ namespace RatchetEdit.Models.Animations
     {
         public Matrix4 mat1;
         public short bb;
+        public Vector4 col3;
 
         public BoneMatrix(byte[] boneBlock, int num)
         {
             int offset = num * 0x40;
             mat1 = ReadMatrix4(boneBlock, offset);
+
+            col3 = mat1.Column3;
             
             mat1.M14 = 0;
             mat1.M24 = 0;
@@ -40,8 +43,9 @@ namespace RatchetEdit.Models.Animations
         public byte[] Serialize()
         {
             byte[] outBytes = new byte[0x40];
-
-            WriteMatrix4(outBytes, 0, mat1);
+            Matrix4 mat = mat1;
+            mat.Column3 = col3;
+            WriteMatrix4(outBytes, 0, mat);
 
             return outBytes;
         }

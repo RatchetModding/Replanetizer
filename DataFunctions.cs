@@ -96,6 +96,18 @@ namespace RatchetEdit
             }
         }
 
+        public static byte[] ReadBlockNopad(FileStream fs, long offset, int length)
+        {
+            if (length > 0)
+            {
+                fs.Seek(offset, SeekOrigin.Begin);
+                byte[] returnBytes = new byte[length];
+                fs.Read(returnBytes, 0, length);
+                return returnBytes;
+            }
+            return new byte[0];
+        }
+
         public static String ReadString(FileStream fs, int offset)
         {
             String output = "";
@@ -187,9 +199,30 @@ namespace RatchetEdit
             return data;
         }
 
-        public static int GetLength(int length)
+        public static int GetLength(int length, int alignment = 0)
         {
-            while (length % 0x10 != 0)
+            while (length % 0x10 != alignment)
+            {
+                length++;
+            }
+            return length;
+        }
+
+        // vertexbuffers are often aligned to the nearest 0x80 in the file
+        public static int DistToFile80(int length, int alignment = 0)
+        {
+            int added = 0;
+            while (length % 0x80 != alignment)
+            {
+                length++;
+                added++;
+            }
+            return added;
+        }
+
+        public static int GetLength20(int length, int alignment = 0)
+        {
+            while (length % 0x20 != alignment)
             {
                 length++;
             }

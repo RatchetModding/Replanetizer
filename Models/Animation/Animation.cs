@@ -24,7 +24,7 @@ namespace RatchetEdit.Models.Animations
         {
 
         }
-        public Animation(FileStream fs, int modelOffset, int animationOffset, byte boneCount, bool force=false)
+        public Animation(FileStream fs, int modelOffset, int animationOffset, int boneCount, bool force=false)
         {
             //Only try to parse if the offset is non-zero
             if (animationOffset == 0 && !force)
@@ -63,7 +63,7 @@ namespace RatchetEdit.Models.Animations
             }
         }
 
-        public byte[] Serialize(int baseOffset = 0)
+        public byte[] Serialize(int baseOffset = 0, int fileOffset = 0)
         {
             // Head
             byte[] head = new byte[0x1C];
@@ -95,8 +95,15 @@ namespace RatchetEdit.Models.Animations
                 framesSize += frameByte.Length;
             }
 
-            int offs = GetLength(0x1C + frames.Count * 4 + soundBytes.Length);
-
+            // The end of the list needs to be aligned to 0x20
+            int offs;
+            if ((fileOffset + baseOffset) % 0x20 == 0)
+            {
+                offs = GetLength20(0x1C + frames.Count * 4 + soundBytes.Length);
+            } else
+            {
+                offs = GetLength20(0x1C + frames.Count * 4 + soundBytes.Length + 0x10) - 0x10;
+            }
 
             // Make out array and copy to it
             byte[] outBytes = new byte[offs + framesSize];

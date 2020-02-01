@@ -69,7 +69,8 @@ namespace RatchetEdit.Models
             WriteFloat(outBytes, 0x0C, cullingRadius);
 
             int texturePointer = GetLength(offStart);
-            int vertexPointer = GetLength(texturePointer + textureConfig.Count * TIETEXELEMSIZE); //+ 0x70
+            int hack = DistToFile80(texturePointer + textureConfig.Count * TIETEXELEMSIZE);
+            int vertexPointer = GetLength(texturePointer + textureConfig.Count * TIETEXELEMSIZE + hack); //+ 0x70
             int UVPointer = GetLength(vertexPointer + (vertexBuffer.Length / 8) * TIEVERTELEMSIZE);
             int indexPointer = GetLength(UVPointer + (vertexBuffer.Length / 8) * TIEUVELEMSIZE);
 
@@ -95,7 +96,8 @@ namespace RatchetEdit.Models
         public byte[] SerializeBody(int offStart)
         {
             int texturePointer = 0;
-            int vertexPointer = GetLength(texturePointer + textureConfig.Count * TIETEXELEMSIZE); //+ 0x70
+            int hack = DistToFile80(offStart + texturePointer + textureConfig.Count * TIETEXELEMSIZE);
+            int vertexPointer = GetLength(texturePointer + textureConfig.Count * TIETEXELEMSIZE + hack); //+ 0x70
             int UVPointer = GetLength(vertexPointer + (vertexBuffer.Length / 8) * TIEVERTELEMSIZE);
             int indexPointer = GetLength(UVPointer + (vertexBuffer.Length / 8) * TIEUVELEMSIZE);
             int length = GetLength(indexPointer + indexBuffer.Length * 2);

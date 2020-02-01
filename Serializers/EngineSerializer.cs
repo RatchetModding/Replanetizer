@@ -244,7 +244,7 @@ namespace RatchetEdit.Serializers
             var bodBytes = new List<byte>();
 
             WriteInt(headBytes, 0, mobyModels.Count);
-            offset += GetLength(headBytes.Length);
+            offset += headBytes.Length;
 
             for (int i = 0; i < mobyModels.Count; i++)
             {
@@ -255,15 +255,14 @@ namespace RatchetEdit.Serializers
                     continue;
 
                 WriteInt(headBytes, 4 + i * 8 + 4, offset);
-                byte[] bodyByte = g.Serialize();
+                byte[] bodyByte = g.Serialize(offset);
                 bodBytes.AddRange(bodyByte);
-                offset += GetLength(bodyByte.Length);
-
+                offset += bodyByte.Length;
             }
 
-            var outBuff = new byte[GetLength(headBytes.Length) + bodBytes.Count];
+            var outBuff = new byte[headBytes.Length + bodBytes.Count];
             headBytes.CopyTo(outBuff, 0);
-            bodBytes.CopyTo(outBuff, GetLength(headBytes.Length));
+            bodBytes.CopyTo(outBuff,headBytes.Length);
 
             return outBuff;
         }
@@ -285,11 +284,11 @@ namespace RatchetEdit.Serializers
                 if (!g.isModel)
                     continue;
 
-                byte[] bodyByte = g.Serialize();
+                byte[] bodyByte = g.Serialize(offset);
                 WriteInt(headBytes, i * 0x10 + 4, offset);
                 WriteInt(headBytes, i * 0x10 + 8, bodyByte.Length);
                 bodyBytes.AddRange(bodyByte);
-                offset += GetLength(bodyByte.Length);
+                offset += bodyByte.Length;
 
             }
 
@@ -312,15 +311,21 @@ namespace RatchetEdit.Serializers
                 ties[i].ToByteArray(offset + colorBytes.Count).CopyTo(headBytes, i * 0x70);
                 byte[] colByte = ties[i].colorBytes;
                 colorBytes.AddRange(colByte);
-                while ((colorBytes.Count % 0x80) != 0)
+
+                if (i != ties.Count - 1)
                 {
-                    colorBytes.Add(0);
+                    while ((colorBytes.Count % 0x80) != 0)
+                    {
+                        colorBytes.Add(0);
+                    }
                 }
+
             }
 
-            var outBytes = new byte[headBytes.Length + colorBytes.Count];
+            int hack = DistToFile80(offset);
+            var outBytes = new byte[headBytes.Length + hack + colorBytes.Count];
             headBytes.CopyTo(outBytes, 0);
-            colorBytes.CopyTo(outBytes, headBytes.Length);
+            colorBytes.CopyTo(outBytes, headBytes.Length + hack);
 
             return outBytes;
         }
@@ -440,7 +445,7 @@ namespace RatchetEdit.Serializers
                 if (anim.frames.Count != 0)
                 {
                     animOffsets.Add(animationOffset);
-                    byte[] anima = anim.Serialize(0);
+                    byte[] anima = anim.Serialize(0, animationOffset);
                     animByteList.AddRange(anima);
                     animationOffset += anima.Length;
                 }

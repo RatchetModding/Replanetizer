@@ -36,6 +36,8 @@ namespace RatchetEdit
         private readonly IntPtr processHandle;
         private readonly MemoryAddresses addresses;
 
+        public bool hookWorking = false; 
+
         public MemoryHook(int gameNum)
         {
             switch (gameNum)
@@ -50,12 +52,20 @@ namespace RatchetEdit
                 default:
                     break;
             }
-            process = Process.GetProcessesByName("rpcs3")[0];
-            processHandle = OpenProcess(PROCESS_WM_READ, false, process.Id);
+
+            Process[] processList = Process.GetProcessesByName("rpcs3");
+            if (processList.Length > 0)
+            {
+                process = processList[0];
+                processHandle = OpenProcess(PROCESS_WM_READ, false, process.Id);
+
+                hookWorking = true;
+            }
         }
 
         public void UpdateCamera(Camera camera)
         {
+            if (!hookWorking) return;
             int bytesRead = 0;
             byte[] camBfr = new byte[0x20];
             ReadProcessMemory(processHandle, addresses.camera, camBfr, camBfr.Length, ref bytesRead);
@@ -65,6 +75,7 @@ namespace RatchetEdit
 
         public void UpdateMobys(List<Moby> levelMobs, List<Model> models)
         {
+            if (!hookWorking) return;
             if (!IsX64()) return;
             Console.WriteLine("gaming");
 

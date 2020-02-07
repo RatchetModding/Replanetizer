@@ -11,6 +11,7 @@ using ImageMagick;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using static RatchetEdit.DataFunctions;
+using RatchetEdit.Forms;
 
 namespace RatchetEdit
 {
@@ -458,6 +459,12 @@ namespace RatchetEdit
                     break;
             }
             UpdateProperties(e.Object);
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AboutBox1 box = new AboutBox1();
+            box.Show();
         }
 
         private void mapSaveAsBtn_Click(object sender, EventArgs e)

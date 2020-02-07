@@ -81,6 +81,7 @@ namespace RatchetEdit
             this.camZLabel = new System.Windows.Forms.Label();
             this.pitchLabel = new System.Windows.Forms.Label();
             this.mapSaveDialog = new System.Windows.Forms.SaveFileDialog();
+            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -114,6 +115,7 @@ namespace RatchetEdit
             this.mapSaveBtn,
             this.mapSaveAsBtn,
             this.toolStripSeparator1,
+            this.aboutToolStripMenuItem,
             this.exitToolBtn});
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
             this.toolStripMenuItem1.Size = new System.Drawing.Size(37, 20);
@@ -123,39 +125,39 @@ namespace RatchetEdit
             // 
             this.toolStripMenuItem4.Enabled = false;
             this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-            this.toolStripMenuItem4.Size = new System.Drawing.Size(155, 22);
+            this.toolStripMenuItem4.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItem4.Text = "New";
             // 
             // mapOpenBtn
             // 
             this.mapOpenBtn.Name = "mapOpenBtn";
             this.mapOpenBtn.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.mapOpenBtn.Size = new System.Drawing.Size(155, 22);
+            this.mapOpenBtn.Size = new System.Drawing.Size(180, 22);
             this.mapOpenBtn.Text = "Open...";
             this.mapOpenBtn.Click += new System.EventHandler(this.mapOpenBtn_Click);
             // 
             // mapSaveBtn
             // 
             this.mapSaveBtn.Name = "mapSaveBtn";
-            this.mapSaveBtn.Size = new System.Drawing.Size(155, 22);
+            this.mapSaveBtn.Size = new System.Drawing.Size(180, 22);
             this.mapSaveBtn.Text = "Save";
             // 
             // mapSaveAsBtn
             // 
             this.mapSaveAsBtn.Name = "mapSaveAsBtn";
-            this.mapSaveAsBtn.Size = new System.Drawing.Size(155, 22);
+            this.mapSaveAsBtn.Size = new System.Drawing.Size(180, 22);
             this.mapSaveAsBtn.Text = "Save as...";
             this.mapSaveAsBtn.Click += new System.EventHandler(this.mapSaveAsBtn_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(152, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
             // 
             // exitToolBtn
             // 
             this.exitToolBtn.Name = "exitToolBtn";
-            this.exitToolBtn.Size = new System.Drawing.Size(155, 22);
+            this.exitToolBtn.Size = new System.Drawing.Size(180, 22);
             this.exitToolBtn.Text = "Exit";
             this.exitToolBtn.Click += new System.EventHandler(this.exitToolBtn_Click);
             // 
@@ -182,7 +184,7 @@ namespace RatchetEdit
             this.mobyCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.mobyCheck.Enabled = false;
             this.mobyCheck.Name = "mobyCheck";
-            this.mobyCheck.Size = new System.Drawing.Size(120, 22);
+            this.mobyCheck.Size = new System.Drawing.Size(180, 22);
             this.mobyCheck.Text = "Mobys";
             this.mobyCheck.CheckedChanged += new System.EventHandler(this.mobyCheck_CheckedChanged);
             // 
@@ -193,7 +195,7 @@ namespace RatchetEdit
             this.tieCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.tieCheck.Enabled = false;
             this.tieCheck.Name = "tieCheck";
-            this.tieCheck.Size = new System.Drawing.Size(120, 22);
+            this.tieCheck.Size = new System.Drawing.Size(180, 22);
             this.tieCheck.Text = "Ties";
             this.tieCheck.CheckedChanged += new System.EventHandler(this.tieCheck_CheckedChanged);
             // 
@@ -204,7 +206,7 @@ namespace RatchetEdit
             this.shrubCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.shrubCheck.Enabled = false;
             this.shrubCheck.Name = "shrubCheck";
-            this.shrubCheck.Size = new System.Drawing.Size(120, 22);
+            this.shrubCheck.Size = new System.Drawing.Size(180, 22);
             this.shrubCheck.Text = "Shrubs";
             this.shrubCheck.CheckedChanged += new System.EventHandler(this.shrubCheck_CheckedChanged);
             // 
@@ -213,7 +215,7 @@ namespace RatchetEdit
             this.collCheck.CheckOnClick = true;
             this.collCheck.Enabled = false;
             this.collCheck.Name = "collCheck";
-            this.collCheck.Size = new System.Drawing.Size(120, 22);
+            this.collCheck.Size = new System.Drawing.Size(180, 22);
             this.collCheck.Text = "Collision";
             this.collCheck.CheckedChanged += new System.EventHandler(this.collCheck_CheckedChanged);
             // 
@@ -224,7 +226,7 @@ namespace RatchetEdit
             this.terrainCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.terrainCheck.Enabled = false;
             this.terrainCheck.Name = "terrainCheck";
-            this.terrainCheck.Size = new System.Drawing.Size(120, 22);
+            this.terrainCheck.Size = new System.Drawing.Size(180, 22);
             this.terrainCheck.Text = "Terrain";
             this.terrainCheck.CheckedChanged += new System.EventHandler(this.terrainCheck_CheckedChanged);
             // 
@@ -233,7 +235,7 @@ namespace RatchetEdit
             this.splineCheck.CheckOnClick = true;
             this.splineCheck.Enabled = false;
             this.splineCheck.Name = "splineCheck";
-            this.splineCheck.Size = new System.Drawing.Size(120, 22);
+            this.splineCheck.Size = new System.Drawing.Size(180, 22);
             this.splineCheck.Text = "Splines";
             this.splineCheck.CheckedChanged += new System.EventHandler(this.splineCheck_CheckedChanged);
             // 
@@ -242,7 +244,7 @@ namespace RatchetEdit
             this.skyboxCheck.CheckOnClick = true;
             this.skyboxCheck.Enabled = false;
             this.skyboxCheck.Name = "skyboxCheck";
-            this.skyboxCheck.Size = new System.Drawing.Size(120, 22);
+            this.skyboxCheck.Size = new System.Drawing.Size(180, 22);
             this.skyboxCheck.Text = "Skybox";
             this.skyboxCheck.CheckedChanged += new System.EventHandler(this.skyboxCheck_CheckedChanged);
             // 
@@ -251,7 +253,7 @@ namespace RatchetEdit
             this.cuboidCheck.CheckOnClick = true;
             this.cuboidCheck.Enabled = false;
             this.cuboidCheck.Name = "cuboidCheck";
-            this.cuboidCheck.Size = new System.Drawing.Size(120, 22);
+            this.cuboidCheck.Size = new System.Drawing.Size(180, 22);
             this.cuboidCheck.Text = "Cuboids";
             this.cuboidCheck.CheckedChanged += new System.EventHandler(this.cuboidCheck_CheckedChanged);
             // 
@@ -260,7 +262,7 @@ namespace RatchetEdit
             this.type0CCheck.CheckOnClick = true;
             this.type0CCheck.Enabled = false;
             this.type0CCheck.Name = "type0CCheck";
-            this.type0CCheck.Size = new System.Drawing.Size(120, 22);
+            this.type0CCheck.Size = new System.Drawing.Size(180, 22);
             this.type0CCheck.Text = "Type0Cs";
             this.type0CCheck.CheckedChanged += new System.EventHandler(this.type0CCheck_CheckedChanged);
             // 
@@ -282,53 +284,53 @@ namespace RatchetEdit
             // modelViewerToolBtn
             // 
             this.modelViewerToolBtn.Name = "modelViewerToolBtn";
-            this.modelViewerToolBtn.Size = new System.Drawing.Size(174, 22);
+            this.modelViewerToolBtn.Size = new System.Drawing.Size(180, 22);
             this.modelViewerToolBtn.Text = "Model Viewer";
             this.modelViewerToolBtn.Click += new System.EventHandler(this.modelViewerToolBtn_Click);
             // 
             // toolStripMenuItem10
             // 
             this.toolStripMenuItem10.Name = "toolStripMenuItem10";
-            this.toolStripMenuItem10.Size = new System.Drawing.Size(174, 22);
+            this.toolStripMenuItem10.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItem10.Text = "Level object viewer";
             // 
             // toolStripMenuItem11
             // 
             this.toolStripMenuItem11.Name = "toolStripMenuItem11";
-            this.toolStripMenuItem11.Size = new System.Drawing.Size(174, 22);
+            this.toolStripMenuItem11.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItem11.Text = "Textures";
             this.toolStripMenuItem11.Click += new System.EventHandler(this.toolStripMenuItem11_Click);
             // 
             // spriteViewerToolBtn
             // 
             this.spriteViewerToolBtn.Name = "spriteViewerToolBtn";
-            this.spriteViewerToolBtn.Size = new System.Drawing.Size(174, 22);
+            this.spriteViewerToolBtn.Size = new System.Drawing.Size(180, 22);
             this.spriteViewerToolBtn.Text = "Sprites";
             this.spriteViewerToolBtn.Click += new System.EventHandler(this.spriteViewerToolBtn_Click);
             // 
             // UISpriteToolBtn
             // 
             this.UISpriteToolBtn.Name = "UISpriteToolBtn";
-            this.UISpriteToolBtn.Size = new System.Drawing.Size(174, 22);
+            this.UISpriteToolBtn.Size = new System.Drawing.Size(180, 22);
             this.UISpriteToolBtn.Text = "UI Sprites";
             this.UISpriteToolBtn.Click += new System.EventHandler(this.UISpriteToolBtn_Click);
             // 
             // toolStripMenuItem14
             // 
             this.toolStripMenuItem14.Name = "toolStripMenuItem14";
-            this.toolStripMenuItem14.Size = new System.Drawing.Size(174, 22);
+            this.toolStripMenuItem14.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItem14.Text = "Console";
             // 
             // levelVariablesToolStripMenuItem
             // 
             this.levelVariablesToolStripMenuItem.Name = "levelVariablesToolStripMenuItem";
-            this.levelVariablesToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+            this.levelVariablesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.levelVariablesToolStripMenuItem.Text = "Level Variables";
             // 
             // languageDataToolStripMenuItem
             // 
             this.languageDataToolStripMenuItem.Name = "languageDataToolStripMenuItem";
-            this.languageDataToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+            this.languageDataToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.languageDataToolStripMenuItem.Text = "Language Data";
             this.languageDataToolStripMenuItem.Click += new System.EventHandler(this.languageDataToolStripMenuItem_Click);
             // 
@@ -343,7 +345,7 @@ namespace RatchetEdit
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.settingsToolStripMenuItem.Text = "Settings";
             // 
             // mapOpenDialog
@@ -607,6 +609,13 @@ namespace RatchetEdit
             // 
             this.mapSaveDialog.FileName = "gameplay_ntsc";
             // 
+            // aboutToolStripMenuItem
+            // 
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.aboutToolStripMenuItem.Text = "About";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -691,6 +700,7 @@ namespace RatchetEdit
         private ObjectTreeView objectTree;
         private CustomGLControl glControl;
         private System.Windows.Forms.ToolStripMenuItem languageDataToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
     }
 }
 

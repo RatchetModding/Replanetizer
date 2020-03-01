@@ -19,6 +19,8 @@ namespace RatchetEdit.Models.Animations
         public List<Frame> frames { get; set; } = new List<Frame>();
         public List<int> sounds { get; set; } = new List<int>();
 
+        public List<byte> unknownBytes { get; set; } = new List<byte>();
+
 
         public Animation()
         {
@@ -47,6 +49,12 @@ namespace RatchetEdit.Models.Animations
 
             null1 = ReadUint(header, 0x14);
             speed = ReadFloat(header, 0x18);
+
+            if (null1 != 0)
+            {
+                unknownBytes.AddRange(ReadBlock(fs, modelOffset + null1, 0x60));
+            }
+
 
             // Frames
             byte[] animationPointerBlock = ReadBlock(fs, modelOffset + animationOffset + 0x1C, frameCount * 0x04);
@@ -106,9 +114,11 @@ namespace RatchetEdit.Models.Animations
             }
 
             // Make out array and copy to it
-            byte[] outBytes = new byte[offs + framesSize];
+            byte[] outBytes = new byte[offs + framesSize + unknownBytes.Count];
             head.CopyTo(outBytes, 0);
             soundBytes.CopyTo(outBytes, 0x1C + frames.Count * 4);
+            unknownBytes.CopyTo(outBytes, offs);
+            offs += unknownBytes.Count;
             for(int i = 0; i < frameBytes.Count; i++)
             {
                 WriteInt(outBytes, 0x1C + i * 4, offs + baseOffset);

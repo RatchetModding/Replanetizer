@@ -244,7 +244,8 @@ namespace RatchetEdit.Parsers
 
         protected byte[] GetLightConfig(int lightConfigOffset)
         {
-            return ReadBlock(fileStream, lightConfigOffset, 0x60);
+            int len = DistToFile80(lightConfigOffset + 0x30) + 0x30;
+            return ReadBlock(fileStream, lightConfigOffset, len);
         }
 
         protected List<int> GetTextureConfigMenu(int textureConfigMenuOffset, int textureConfigMenuCount)

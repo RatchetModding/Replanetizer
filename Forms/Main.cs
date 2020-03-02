@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using static RatchetEdit.DataFunctions;
 using RatchetEdit.Forms;
+using RatchetEdit.Parsers;
 
 namespace RatchetEdit
 {
@@ -465,6 +466,30 @@ namespace RatchetEdit
         {
             AboutBox1 box = new AboutBox1();
             box.Show();
+        }
+
+        private void collisionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (collisionSaveDialog.ShowDialog() == DialogResult.OK)
+            {
+                FileStream fs = File.Open(collisionSaveDialog.FileName, FileMode.Create);
+                fs.Write(level.collBytes, 0, level.collBytes.Length);
+                fs.Close();
+            }
+        }
+
+        private void collisionToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            if (collisionOpenDialog.ShowDialog() == DialogResult.OK)
+            {
+                FileStream fs = File.Open(collisionOpenDialog.FileName, FileMode.Open);
+                Console.WriteLine(fs.Length);
+                Console.WriteLine(level.collBytes.Length);
+                level.collBytes = ReadBlock(fs, 0, (int)fs.Length);
+                Console.WriteLine(level.collBytes.Length);
+                fs.Close();
+            }
+            InvalidateView();
         }
 
         private void mapSaveAsBtn_Click(object sender, EventArgs e)

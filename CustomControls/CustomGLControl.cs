@@ -110,10 +110,6 @@ namespace RatchetEdit
 
             Moby ratchet = level.mobs[0];
 
-            //ratchet.position = new Vector3(0, 0, 100);
-
-            Console.WriteLine(level.mobs.Count);
-
             camera.MoveBehind(ratchet);
 
             SelectObject(null);

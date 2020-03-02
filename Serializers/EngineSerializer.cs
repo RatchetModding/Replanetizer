@@ -185,7 +185,6 @@ namespace RatchetEdit.Serializers
                 WriteInt(outByteArr, 0x38 + i * 4, indexOffsets[i]);
             }
 
-            Console.WriteLine(outByteArr.Length);
             return outByteArr;
         }
         private byte[] WriteTerrainBytes(byte[] terrainBlock, int fileOffset, int textureCount)
@@ -218,10 +217,6 @@ namespace RatchetEdit.Serializers
                 int texId = ReadInt(terrainBlock, texOffset0 + i * 0x10);
                 WriteInt(terrainBlock, texOffset0 + i * 0x10, texId + textureCount);
             }
-
-            Console.WriteLine("Texutre0offset: " + texOffset0);
-            Console.WriteLine("textureCount: " + textureCount);
-            Console.WriteLine("texCount: " + texCount);
 
             return terrainBlock;
         }

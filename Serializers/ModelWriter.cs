@@ -37,7 +37,6 @@ namespace RatchetEdit
                     float zz = mobyModel.boneDatas[i].unk3 / 1024f;
 
                     short par = (short)(mobyModel.boneMatrices[i].bb / 0x40);
-                    Console.WriteLine(par.ToString());
                     spookyStream.WriteLine("joint h" + i.ToString() + " " + (par == 0 ? "" : par.ToString()));
                     spookyStream.WriteLine("pq " + xx.ToString() + " " + yy.ToString() + " " + zz.ToString());
                 }

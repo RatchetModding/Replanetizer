@@ -483,10 +483,7 @@ namespace RatchetEdit
             if (collisionOpenDialog.ShowDialog() == DialogResult.OK)
             {
                 FileStream fs = File.Open(collisionOpenDialog.FileName, FileMode.Open);
-                Console.WriteLine(fs.Length);
-                Console.WriteLine(level.collBytes.Length);
                 level.collBytes = ReadBlock(fs, 0, (int)fs.Length);
-                Console.WriteLine(level.collBytes.Length);
                 fs.Close();
             }
             InvalidateView();
@@ -502,7 +499,6 @@ namespace RatchetEdit
                 gameplaySerializer.Save(level, mapSaveDialog.FileName);
                 EngineSerializer engineSerializer = new EngineSerializer();
                 engineSerializer.Save(level, pathName);
-                Console.WriteLine(pathName);
             }
             InvalidateView();
         }

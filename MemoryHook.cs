@@ -77,7 +77,6 @@ namespace RatchetEdit
         {
             if (!hookWorking) return;
             if (!IsX64()) return;
-            Console.WriteLine("gaming");
 
             int bytesRead = 0;
             byte[] ptrbuf = new byte[0xC];

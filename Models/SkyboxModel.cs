@@ -50,7 +50,6 @@ namespace RatchetEdit.Models
             }
 
             int faceCount = GetFaceCount();
-            Console.WriteLine("vertexCount: " + vertexCount.ToString());
             vertexBuffer = GetVerticesUV(fs, vertOffset, vertexCount, VERTELEMSIZE);
 
             indexBuffer = GetIndices(fs, faceOffset, faceCount);

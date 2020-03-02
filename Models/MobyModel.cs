@@ -80,7 +80,6 @@ namespace RatchetEdit.Models
 
             if (boneCount == 0) boneCount = lpBoneCount;
 
-            Console.WriteLine("bonecount: " + boneCount + "lpBoneCOunt: " + lpBoneCount);
             count3 = headBlock[0x0A];
             count4 = headBlock[0x0B];
             byte animationCount = headBlock[0x0C];

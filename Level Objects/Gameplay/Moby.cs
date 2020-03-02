@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using OpenTK;
@@ -213,6 +214,8 @@ namespace RatchetEdit.LevelObjects
 
         public override byte[] ToByteArray()
         {
+            Vector3 eulerAngles = ToEulerAngles(modelMatrix.ExtractRotation());
+
             byte[] buffer = new byte[ELEMENTSIZE];
 
             WriteInt(buffer, 0x00, ELEMENTSIZE);
@@ -233,9 +236,10 @@ namespace RatchetEdit.LevelObjects
             WriteFloat(buffer, 0x30, position.X);
             WriteFloat(buffer, 0x34, position.Y);
             WriteFloat(buffer, 0x38, position.Z);
-            WriteFloat(buffer, 0x3C, rotation.X);
-            WriteFloat(buffer, 0x40, rotation.Y);
-            WriteFloat(buffer, 0x44, rotation.Z);
+            WriteFloat(buffer, 0x3C, eulerAngles.X);
+
+            WriteFloat(buffer, 0x40, eulerAngles.Y);
+            WriteFloat(buffer, 0x44, eulerAngles.Z);
             WriteInt(buffer, 0x48, unk5);
             WriteInt(buffer, 0x4C, unk6);
 

@@ -221,10 +221,10 @@ namespace RatchetEdit.Parsers
             return weaponModels;
         }
 
-        protected byte[] GetLightConfig(int lightConfigOffset)
+        protected LightConfig GetLightConfig(int lightConfigOffset)
         {
             int len = DistToFile80(lightConfigOffset + 0x30) + 0x30;
-            return ReadBlock(fileStream, lightConfigOffset, len);
+            return new LightConfig(ReadBlock(fileStream, lightConfigOffset, 0x30), len);
         }
 
         protected List<int> GetTextureConfigMenu(int textureConfigMenuOffset, int textureConfigMenuCount)

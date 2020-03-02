@@ -76,7 +76,7 @@ namespace RatchetEdit.Parsers
             return GetWeapons(engineHead.weaponPointer, engineHead.weaponCount);
         }
 
-        public byte[] GetLightConfig()
+        public LightConfig GetLightConfig()
         {
             return GetLightConfig(engineHead.lightConfigPointer);
         }

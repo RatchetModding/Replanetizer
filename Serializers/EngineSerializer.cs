@@ -40,7 +40,7 @@ namespace RatchetEdit.Serializers
                 texture2dPointer =          SeekWrite(fs, level.billboardBytes),            // 0x70 2dtexturestuff
                 soundConfigPointer =        SeekWrite(fs, level.soundConfigBytes),          // 0x48 soundconfigs
                 lightPointer =              SeekWrite(fs, WriteLights(level.lights)),
-                lightConfigPointer =        SeekWrite(fs, level.lightConfig),
+                lightConfigPointer =        SeekWrite(fs, WriteLightConfig(level.lightConfig)),
                 texturePointer =            SeekWrite(fs, WriteTextures(level.textures)),
                 // Counts
                 tieModelCount =             level.tieModels.Count,
@@ -75,6 +75,12 @@ namespace RatchetEdit.Serializers
             {
                 fs.Seek(4, SeekOrigin.Current);
             }
+        }
+
+        private byte[] WriteLightConfig(LightConfig config)
+        {
+
+            return config.Serialize();
         }
 
         private byte[] WriteTfrags(List<TerrainFragment> tFrags, int fileOffset)

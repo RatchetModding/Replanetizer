@@ -66,7 +66,7 @@ namespace RatchetEdit
         public byte[] unk17;
         public byte[] unk14;
 
-        public byte[] lightConfig;
+        public LightConfig lightConfig;
 
         public List<KeyValuePair<int, int>> type50s;
         public List<KeyValuePair<int, int>> type5Cs;

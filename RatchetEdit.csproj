@@ -57,8 +57,8 @@
     <Reference Include="Magick.NET-Q16-AnyCPU, Version=7.11.0.0, Culture=neutral, PublicKeyToken=2004825badfa91ec, processorArchitecture=MSIL">
       <HintPath>packages\Magick.NET-Q16-AnyCPU.7.11.0\lib\net40\Magick.NET-Q16-AnyCPU.dll</HintPath>
     </Reference>
-    <Reference Include="OpenTK, Version=3.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <HintPath>packages\OpenTK.3.1.0\lib\net20\OpenTK.dll</HintPath>
+    <Reference Include="OpenTK, Version=3.0.1.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>packages\OpenTK.3.0.1\lib\net20\OpenTK.dll</HintPath>
     </Reference>
     <Reference Include="OpenTK.GLControl, Version=3.0.1.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>packages\OpenTK.GLControl.3.0.1\lib\net20\OpenTK.GLControl.dll</HintPath>
@@ -102,6 +102,12 @@
     <Compile Include="Forms\LanguageViewer.Designer.cs">
       <DependentUpon>LanguageViewer.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\LightConfigViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\LightConfigViewer.Designer.cs">
+      <DependentUpon>LightConfigViewer.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\SpriteViewer.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -124,6 +130,7 @@
     <Compile Include="Headers\GameplayHeader.cs" />
     <Compile Include="Headers\Headers.cs" />
     <Compile Include="Level Objects\Engine\Light.cs" />
+    <Compile Include="Level Objects\Engine\LightConfig.cs" />
     <Compile Include="Level Objects\Engine\Shrub.cs" />
     <Compile Include="Level Objects\Engine\TerrainFragment.cs" />
     <Compile Include="Level Objects\Engine\UiElement.cs" />
@@ -205,6 +212,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\LanguageViewer.resx">
       <DependentUpon>LanguageViewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\LightConfigViewer.resx">
+      <DependentUpon>LightConfigViewer.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\Main.resx">
       <DependentUpon>Main.cs</DependentUpon>

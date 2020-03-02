@@ -39,6 +39,7 @@ namespace RatchetEdit
         public SpriteViewer spriteViewer;
         public UIViewer uiViewer;
         public LanguageViewer languageViewer;
+        public LightConfigViewer lightConfigViewer;
 
         //Process process;
         //IntPtr processHandle;
@@ -189,6 +190,20 @@ namespace RatchetEdit
                 languageViewer.BringToFront();
             }
         }
+
+
+        private void OpenLightConfigViewer()
+        {
+            if (lightConfigViewer == null || lightConfigViewer.IsDisposed)
+            {
+                lightConfigViewer = new LightConfigViewer(this);
+                lightConfigViewer.Show();
+            }
+            else
+            {
+                lightConfigViewer.BringToFront();
+            }
+        }
         #endregion
 
         #region MenuButtons
@@ -221,6 +236,12 @@ namespace RatchetEdit
         private void exitToolBtn_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+
+        private void lightConfigurationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenLightConfigViewer();
         }
         #endregion MenuButtons
 

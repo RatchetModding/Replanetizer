@@ -25,7 +25,7 @@ namespace RatchetEdit.Headers
         public int shrubModelCount;
         public int shrubPointer;
         public int shrubCount;
-        public int terrainPointer;              // TODO
+        public int terrainPointer;
 
         public int type40Pointer;               // TODO     xx
         public int type44Pointer;               // TODO     xx

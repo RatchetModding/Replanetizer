@@ -29,7 +29,6 @@ namespace RatchetEdit
         public List<Texture> textures;
         public SkyboxModel skybox;
 
-        public byte[] terrainBytes;
         public byte[] renderDefBytes;
         public byte[] collBytes;
         public byte[] billboardBytes;
@@ -111,7 +110,6 @@ namespace RatchetEdit
                 game = engineParser.DetectGame();
 
                 //REMOVE THESE ASAP!!!!!111
-                terrainBytes = engineParser.GetTerrainBytes();
                 renderDefBytes = engineParser.GetRenderDefBytes();
                 collBytes = engineParser.GetCollisionBytes();
                 billboardBytes = engineParser.GetBillboardBytes();

@@ -91,21 +91,6 @@ namespace RatchetEdit.Parsers
             return GetCollisionModel(engineHead.collisionPointer);
         }
 
-
-        // TODO: Arbitrary bytes, parse properly
-        public byte[] GetTerrainBytes()
-        {
-            if(engineHead.renderDefPointer > 0)
-            {
-                return GetTerrainBytes(engineHead.terrainPointer, engineHead.renderDefPointer - engineHead.terrainPointer);
-            }
-            else
-            {
-                return GetTerrainBytes(engineHead.terrainPointer, engineHead.skyboxPointer - engineHead.terrainPointer);
-            }
-            
-        }
-
         public byte[] GetRenderDefBytes()
         {
             if(engineHead.renderDefPointer > 0)

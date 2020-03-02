@@ -144,27 +144,6 @@ namespace RatchetEdit.Parsers
                 tFrags.Add(new TerrainFragment(fileStream, head, tfragBlock, i));
             }
 
-            /*
-            List<TerrainHeader> pointerList = new List<TerrainHeader>(terrainHeadCount);
-
-            byte[] terrainHeadBlock = ReadBlock(fileStream, terrainHeadPointer, terrainHeadCount * 0x30);
-            for (int i = 0; i < terrainHeadCount; i++)
-            {
-                TerrainFragHeader head = new TerrainFragHeader(fileStream, terrainHeadBlock, i);
-                if (pointerList.Count < head.slotNum + 1)
-                {
-                    pointerList.Add(new TerrainHeader(terrainBlock, (head.slotNum * 4)));
-                }
-                pointerList[head.slotNum].vertexCount += head.vertexCount;
-                pointerList[head.slotNum].heads.Add(head);
-            }
-
-            List<TerrainModel> terrainModels = new List<TerrainModel>(pointerList.Count);
-            foreach (TerrainHeader hd in pointerList)
-            {
-                terrainModels.Add(new TerrainModel(fileStream, hd));
-            }*/
-
             return tFrags;
         }
 
@@ -258,63 +237,6 @@ namespace RatchetEdit.Parsers
                 textureConfigMenuList.Add(ReadInt(textureConfigMenuBlock, i * 4));
             }
             return textureConfigMenuList;
-        }
-
-        protected byte[] GetTerrainBytes(int terrainPointer, int terrainLength)
-        {
-
-            return new byte[]
-            {
-                0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00,
-            };
-
-            byte[] terrainBlock = ReadBlock(fileStream, terrainPointer, terrainLength);
-
-            int headOffset = ReadInt(terrainBlock, 0x00) - 0x60;
-            int off_08 = ReadInt(terrainBlock, 0x08);
-            int off_18 = ReadInt(terrainBlock, 0x18);
-            int off_28 = ReadInt(terrainBlock, 0x28);
-            int off_38 = ReadInt(terrainBlock, 0x38);
-
-            WriteInt(terrainBlock, 0x00, 0x60);
-            WriteInt(terrainBlock, 0x08, off_08 - headOffset);
-            WriteInt(terrainBlock, 0x18, off_18 - headOffset);
-            WriteInt(terrainBlock, 0x28, off_28 - headOffset);
-            WriteInt(terrainBlock, 0x38, off_38 - headOffset);
-
-            short headCount = ReadShort(terrainBlock, 0x06);
-
-            int texCount = 0;
-            for (int i = 0; i < headCount; i++)
-            {
-                int texOffset = ReadInt(terrainBlock, 0x70 + i * 0x30);
-                WriteInt(terrainBlock, 0x70 + i * 0x30, texOffset - headOffset);
-                texCount += ReadShort(terrainBlock, 0x76 + i * 0x30);
-            }
-
-            int texOffset0 = ReadInt(terrainBlock, 0x70);
-
-            int lowestOffset = 0xffff;
-            for (int i = 0; i < texCount; i++)
-            {
-                int texId = ReadInt(terrainBlock, texOffset0 + i * 0x10);
-                if (texId < lowestOffset) lowestOffset = texId;
-            }
-
-            for (int i = 0; i < texCount; i++)
-            {
-                int texId = ReadInt(terrainBlock, texOffset0 + i * 0x10);
-                WriteInt(terrainBlock, texOffset0 + i * 0x10, texId - lowestOffset);
-            }
-
-            Console.WriteLine("Lowest offset: " + lowestOffset);
-            Console.WriteLine("Texture cout: " + texCount);
-            Console.WriteLine("tex0offset: " + texOffset0);
-
-            return terrainBlock;
         }
 
         protected Model GetCollisionModel(int collisionOffset)

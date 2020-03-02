@@ -187,39 +187,6 @@ namespace RatchetEdit.Serializers
 
             return outByteArr;
         }
-        private byte[] WriteTerrainBytes(byte[] terrainBlock, int fileOffset, int textureCount)
-        {
-            int texOffset0 = ReadInt(terrainBlock, 0x70);
-            int off_00 = ReadInt(terrainBlock, 0x00);
-            int off_08 = ReadInt(terrainBlock, 0x08);
-            int off_18 = ReadInt(terrainBlock, 0x18);
-            int off_28 = ReadInt(terrainBlock, 0x28);
-            int off_38 = ReadInt(terrainBlock, 0x38);
-
-            WriteInt(terrainBlock, 0x00, off_00 + fileOffset);
-            WriteInt(terrainBlock, 0x08, off_08 + fileOffset);
-            WriteInt(terrainBlock, 0x18, off_18 + fileOffset);
-            WriteInt(terrainBlock, 0x28, off_28 + fileOffset);
-            WriteInt(terrainBlock, 0x38, off_38 + fileOffset);
-
-            short headCount = ReadShort(terrainBlock, 0x06);
-
-            int texCount = 0;
-            for (int i = 0; i < headCount; i++)
-            {
-                int texOffset = ReadInt(terrainBlock, 0x70 + i * 0x30);
-                WriteInt(terrainBlock, 0x70 + i * 0x30, texOffset + fileOffset);
-                texCount += ReadShort(terrainBlock, 0x76 + i * 0x30);
-            }
-
-            for (int i = 0; i < texCount; i++)
-            {
-                int texId = ReadInt(terrainBlock, texOffset0 + i * 0x10);
-                WriteInt(terrainBlock, texOffset0 + i * 0x10, texId + textureCount);
-            }
-
-            return terrainBlock;
-        }
 
         private byte[] WriteUiElements(List<UiElement> uiElements, int fileOffset)
         {

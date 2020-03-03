@@ -40,6 +40,7 @@ namespace RatchetEdit
         public UIViewer uiViewer;
         public LanguageViewer languageViewer;
         public LightConfigViewer lightConfigViewer;
+        public LevelVariableViewer levelVariableViewer;
 
         //Process process;
         //IntPtr processHandle;
@@ -204,6 +205,19 @@ namespace RatchetEdit
                 lightConfigViewer.BringToFront();
             }
         }
+
+        private void OpenLevelVariableViewer()
+        {
+            if (levelVariableViewer == null || levelVariableViewer.IsDisposed)
+            {
+                levelVariableViewer = new LevelVariableViewer(this);
+                levelVariableViewer.Show();
+            }
+            else
+            {
+                levelVariableViewer.BringToFront();
+            }
+        }
         #endregion
 
         #region MenuButtons
@@ -242,6 +256,11 @@ namespace RatchetEdit
         private void lightConfigurationToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenLightConfigViewer();
+        }
+
+        private void levelVariablesToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            OpenLevelVariableViewer();
         }
         #endregion MenuButtons
 

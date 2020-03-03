@@ -19,10 +19,10 @@ namespace RatchetEdit.LevelObjects
         public Color fogColor { get; set; }
 
         [Category("Unknown"), DisplayName("Unknown 04")]
-        public uint unk4 { get; set; }
+        public float unk4 { get; set; }
 
         [Category("Unknown"), DisplayName("Unknown 05")]
-        public uint unk5 { get; set; }
+        public float unk5 { get; set; }
 
         [Category("Attributes"), DisplayName("Fog Distance")]
         public float fogDistance { get; set; }
@@ -43,7 +43,7 @@ namespace RatchetEdit.LevelObjects
         public float unk9 { get; set; }
 
         [Category("Unknown"), DisplayName("Unknown 10")]
-        public uint unk10 { get; set; }
+        public float unk10 { get; set; }
 
         [Category("Unknown"), DisplayName("Unknown 11")]
         public int unk11 { get; set; }
@@ -69,8 +69,8 @@ namespace RatchetEdit.LevelObjects
 
             int g = ReadInt(levelVarBlock, 0x10);
             int b = ReadInt(levelVarBlock, 0x14);
-            unk4 = ReadUint(levelVarBlock, 0x18);
-            unk5 = ReadUint(levelVarBlock, 0x1C);
+            unk4 = ReadFloat(levelVarBlock, 0x18);
+            unk5 = ReadFloat(levelVarBlock, 0x1C);
 
             fogDistance = ReadFloat(levelVarBlock, 0x20);
             unk6 = ReadFloat(levelVarBlock, 0x24);
@@ -79,7 +79,7 @@ namespace RatchetEdit.LevelObjects
 
             unk8 = ReadFloat(levelVarBlock, 0x30);
             unk9 = ReadFloat(levelVarBlock, 0x34);
-            unk10 = ReadUint(levelVarBlock, 0x38);
+            unk10 = ReadFloat(levelVarBlock, 0x38);
             unk11 = ReadInt(levelVarBlock, 0x3C);
 
             unk12 = ReadUint(levelVarBlock, 0x40);
@@ -101,8 +101,8 @@ namespace RatchetEdit.LevelObjects
 
             WriteUint(bytes, 0x10, fogColor.G);
             WriteUint(bytes, 0x14, fogColor.B);
-            WriteUint(bytes, 0x18, unk4);
-            WriteUint(bytes, 0x1C, unk5);
+            WriteFloat(bytes, 0x18, unk4);
+            WriteFloat(bytes, 0x1C, unk5);
 
             WriteFloat(bytes, 0x20, fogDistance);
             WriteFloat(bytes, 0x24, unk6);
@@ -111,7 +111,7 @@ namespace RatchetEdit.LevelObjects
 
             WriteFloat(bytes, 0x30, unk8);
             WriteFloat(bytes, 0x34, unk9);
-            WriteUint(bytes, 0x38, unk10);
+            WriteFloat(bytes, 0x38, unk10);
             WriteUint(bytes, 0x3C, (uint)unk11);
 
             WriteUint(bytes, 0x40, unk12);

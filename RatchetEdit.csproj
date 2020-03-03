@@ -102,6 +102,12 @@
     <Compile Include="Forms\LanguageViewer.Designer.cs">
       <DependentUpon>LanguageViewer.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\LevelVariableViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\LevelVariableViewer.Designer.cs">
+      <DependentUpon>LevelVariableViewer.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\LightConfigViewer.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -212,6 +218,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\LanguageViewer.resx">
       <DependentUpon>LanguageViewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\LevelVariableViewer.resx">
+      <DependentUpon>LevelVariableViewer.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\LightConfigViewer.resx">
       <DependentUpon>LightConfigViewer.cs</DependentUpon>

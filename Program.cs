@@ -1,5 +1,6 @@
 using System;
 using System.Windows.Forms;
+using System.Globalization;
 
 namespace RatchetEdit
 {
@@ -11,6 +12,10 @@ namespace RatchetEdit
         [STAThread]
         static void Main()
         {
+            // Fixes a bug where exported models would use comma as decimal seperator
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Main());

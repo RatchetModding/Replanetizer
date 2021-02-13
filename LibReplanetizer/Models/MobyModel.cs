@@ -1,5 +1,4 @@
 ﻿using LibReplanetizer.Models.Animations;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using static LibReplanetizer.DataFunctions;
@@ -8,6 +7,8 @@ namespace LibReplanetizer.Models
 {
     public class MobyModel : Model
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         const int VERTELEMENTSIZE = 0x28;
         const int TEXTUREELEMENTSIZE = 0x10;
         const int MESHHEADERSIZE = 0x20;
@@ -97,7 +98,7 @@ namespace LibReplanetizer.Models
             int soundPointer = ReadInt(headBlock, 0x28);
             null3 = ReadInt(headBlock, 0x2C);
 
-            if (null1 != 0 || null2 != 0 || null3 != 0) { Console.WriteLine("Warning: null in model header wan't null"); }
+            if (null1 != 0 || null2 != 0 || null3 != 0) { Logger.Warn("Warning: null in model header wan't null"); }
 
             unk1 = ReadFloat(headBlock, 0x30);
             unk2 = ReadFloat(headBlock, 0x34);

@@ -10,9 +10,11 @@ namespace LibReplanetizer
 {
     public static class ModelWriter
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         public static void WriteIqe(string fileName, Level level, Model model)
         {
-            Console.WriteLine(fileName);
+            Logger.Trace(fileName);
 
             string filePath = Path.GetDirectoryName(fileName);
 

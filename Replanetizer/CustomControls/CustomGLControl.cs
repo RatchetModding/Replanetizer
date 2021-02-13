@@ -18,6 +18,7 @@ namespace RatchetEdit
 {
     public class CustomGLControl : GLControl
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         public Level level { get; set; }
 
         public Matrix4 worldView { get; set; }
@@ -483,7 +484,7 @@ namespace RatchetEdit
             }
             GL.CompileShader(address);
             GL.AttachShader(program, address);
-            Console.WriteLine(GL.GetShaderInfoLog(address));
+            Logger.Debug("Compiled shader from {0}, log: {1}", filename, GL.GetShaderInfoLog(address));
         }
 
         protected override void OnResize(EventArgs e)
@@ -600,7 +601,7 @@ namespace RatchetEdit
             Pixel pixel = new Pixel();
             GL.ReadPixels(x, Height - y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixel);
 
-            //Console.WriteLine("R: {0}, G: {1}, B: {2}, A: {3}", pixel.R, pixel.G, pixel.B, pixel.A);
+            Logger.Trace("R: {0}, G: {1}, B: {2}, A: {3}", pixel.R, pixel.G, pixel.B, pixel.A);
 
             GL.ClearColor(Color.SkyBlue);
 
@@ -705,7 +706,7 @@ namespace RatchetEdit
         {
             base.OnPaint(e);
             if (DesignMode) { return; }
-            //Console.WriteLine("Painting");
+            Logger.Trace("Painting");
 
             worldView = view * projection;
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);

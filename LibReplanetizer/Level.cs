@@ -11,6 +11,8 @@ namespace LibReplanetizer
 {
     public class Level
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         public bool valid;
 
         public string path;
@@ -91,7 +93,7 @@ namespace LibReplanetizer
 
         ~Level()
         {
-            Console.WriteLine("Level destroyed");
+            Logger.Trace("Level destroyed");
         }
 
         //New file constructor
@@ -114,52 +116,52 @@ namespace LibReplanetizer
                 billboardBytes = engineParser.GetBillboardBytes();
                 soundConfigBytes = engineParser.GetSoundConfigBytes();
 
-                Console.WriteLine("Parsing skybox...");
+                Logger.Debug("Parsing skybox...");
                 skybox = engineParser.GetSkyboxModel();
-                Console.WriteLine("Success");
+                Logger.Debug("Success");
 
-                Console.WriteLine("Parsing moby models...");
+                Logger.Debug("Parsing moby models...");
                 mobyModels = engineParser.GetMobyModels();
-                Console.WriteLine("Added " + mobyModels.Count + " moby models");
+                Logger.Debug("Added {0} moby models", mobyModels.Count);
 
-                Console.WriteLine("Parsing tie models...");
+                Logger.Debug("Parsing tie models...");
                 tieModels = engineParser.GetTieModels();
-                Console.WriteLine("Added " + tieModels.Count + " tie models");
+                Logger.Debug("Added {0} tie models", tieModels.Count);
 
-                Console.WriteLine("Parsing shrub models...");
+                Logger.Debug("Parsing shrub models...");
                 shrubModels = engineParser.GetShrubModels();
-                Console.WriteLine("Added " + shrubModels.Count + " shrub models");
+                Logger.Debug("Added {0} shrub models", shrubModels.Count);
 
-                Console.WriteLine("Parsing weapons...");
+                Logger.Debug("Parsing weapons...");
                 weaponModels = engineParser.GetWeapons();
-                Console.WriteLine("Added " + weaponModels.Count + " weapons");
+                Logger.Debug("Added {0} weapons", weaponModels.Count);
 
-                Console.WriteLine("Parsing textures...");
+                Logger.Debug("Parsing textures...");
                 textures = engineParser.GetTextures();
-                Console.WriteLine("Added " + textures.Count + " textures");
+                Logger.Debug("Added {0} textures", textures.Count);
 
-                Console.WriteLine("Parsing ties...");
+                Logger.Debug("Parsing ties...");
                 ties = engineParser.GetTies(tieModels);
-                Console.WriteLine("Added " + ties.Count + " ties");
+                Logger.Debug("Added {0} ties", ties.Count);
 
-                Console.WriteLine("Parsing Shrubs...");
+                Logger.Debug("Parsing Shrubs...");
                 shrubs = engineParser.GetShrubs(shrubModels);
-                Console.WriteLine("Added " + shrubs.Count + " Shrubs");
+                Logger.Debug("Added {0} shrubs", shrubs.Count);
 
-                Console.WriteLine("Parsing Lights...");
+                Logger.Debug("Parsing Lights...");
                 lights = engineParser.GetLights();
-                Console.WriteLine("Added " + lights.Count + " lights");
+                Logger.Debug("Added {0} lights", lights.Count);
 
-                Console.WriteLine("Parsing terrain elements...");
+                Logger.Debug("Parsing terrain elements...");
                 terrains = engineParser.GetTerrainModels();
-                Console.WriteLine("Added " + terrains?.Count + " terrain elements");
+                Logger.Debug("Added {0} terrain elements" + terrains?.Count);
 
-                Console.WriteLine("Parsing player animations...");
+                Logger.Debug("Parsing player animations...");
                 playerAnimations = engineParser.GetPlayerAnimations((MobyModel)mobyModels[0]);
-                Console.WriteLine("Added " + playerAnimations?.Count + " player animations");
+                Logger.Debug("Added {0} player animations", playerAnimations?.Count);
 
                 uiElements = engineParser.GetUiElements();
-                Console.WriteLine("Added " + uiElements?.Count + " ui elements");
+                Logger.Debug("Added {0} ui elements", uiElements?.Count);
 
                 lightConfig = engineParser.GetLightConfig();
                 textureConfigMenus = engineParser.GetTextureConfigMenu();
@@ -170,18 +172,18 @@ namespace LibReplanetizer
             // Gameplay elements
             using (GameplayParser gameplayParser = new GameplayParser(game, path + @"/gameplay_ntsc"))
             {
-                Console.WriteLine("Parsing Level variables...");
+                Logger.Debug("Parsing Level variables...");
                 levelVariables = gameplayParser.GetLevelVariables();
 
-                Console.WriteLine("Parsing mobs...");
+                Logger.Debug("Parsing mobs...");
                 mobs = gameplayParser.GetMobies(game, mobyModels);
-                Console.WriteLine("Added " + mobs?.Count + " mobs");
+                Logger.Debug("Added {0} mobs", mobs?.Count);
 
-                Console.WriteLine("Parsing splines...");
+                Logger.Debug("Parsing splines...");
                 splines = gameplayParser.GetSplines();
-                //Console.WriteLine("Added " + splines.Count + " splines");
+                Logger.Debug("Added {0} splines", splines?.Count);
 
-                Console.WriteLine("Parsing languages...");
+                Logger.Debug("Parsing languages...");
                 english = gameplayParser.GetEnglish();
                 lang2 = gameplayParser.GetLang2();
                 french = gameplayParser.GetFrench();
@@ -191,7 +193,7 @@ namespace LibReplanetizer
                 lang7 = gameplayParser.GetLang7();
                 lang8 = gameplayParser.GetLang8();
 
-                Console.WriteLine("Parsing other gameplay assets...");
+                Logger.Debug("Parsing other gameplay assets...");
                 unk6 = gameplayParser.GetUnk6();
                 unk7 = gameplayParser.GetUnk7();
                 unk13 = gameplayParser.GetUnk13();
@@ -233,7 +235,7 @@ namespace LibReplanetizer
             vramParser.Close();
 
 
-            Console.WriteLine("Level parsing done");
+            Logger.Info("Level parsing done");
             valid = true;
         }
 

@@ -15,6 +15,7 @@ namespace RatchetEdit
 {
     public partial class Main : Form
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         // Read and write acceess
         const int PROCESS_WM_READ = 0x38;
 
@@ -98,7 +99,7 @@ namespace RatchetEdit
             }
             catch (FileNotFoundException)
             {
-                Console.WriteLine("Model list file not found! No names for you!");
+                Logger.Warn("Model list file not found! No names for you!");
             }
 
             return modelNames;

@@ -12,6 +12,8 @@ namespace RatchetEdit
 {
     public partial class TextureViewer : Form
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         public Main main;
         public TextureConfig conf;
         public ModelViewer mod;
@@ -113,7 +115,7 @@ namespace RatchetEdit
                 case ".bmp":
                 case ".png":
                 case ".jpg":
-                    Console.WriteLine("Adding new image texture");
+                    Logger.Info("Adding new image texture");
                     using (MagickImage image = new MagickImage(fileName))
                     {
                         image.Format = MagickFormat.Dxt5;
@@ -122,7 +124,7 @@ namespace RatchetEdit
                     }
                     break;
                 case ".dds":
-                    Console.WriteLine("Adding new DDS texture");
+                    Logger.Info("Adding new DDS texture");
                     byte[] img = File.ReadAllBytes(fileName);
                     short width = ReadShort(img, 0x10);
                     short height = ReadShort(img, 0x0C);

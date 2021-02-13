@@ -1,6 +1,10 @@
-/.vs/RatchetEdit
-/packages
-/.vs
-/[Oo]bj
-/[Bb]in
+packages
+.vs
+.vscode
+[Oo]bj
+[Bb]in
 RatchetEdit.csproj.user
+Replanetizer.csproj.user
+RatchetEdit.sln.DotSettings.user
+Replanetizer.sln.DotSettings.user
+mono_crash*.json

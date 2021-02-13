@@ -8,6 +8,17 @@ The project is a WinForms project written in C#. Visual Studio is used for devel
 All commits pushed to the master branch should be working builds of the application.
 Any ongoing work MUST be pushed to a separate branch. e.g. While you're developing new features.
 
+# Usage guide
+
+Extract a .psarc file from a game using seperate tools (PSArcTool.exe for example).
+Use File -> Open, and select a `engine.ps3` file inside a level folder.
+
+You can move around the world with keyboard and mouse:
+
+ - WASD to move camera inside the world. Hold shift to speed up movement
+ - Left click items to select them
+ - Rotate the camera by holding the right mouse button down and moving your mouse
+
 # Task management
 
 All tasks are available at asana. Contact simenfjellstad or stiantoften to be added to the board.

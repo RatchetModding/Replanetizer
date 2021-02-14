@@ -53,15 +53,13 @@ All branch merges should be done in their respective branches and **NOT master**
 
 Not all parts of Replanetizer work on non-Windows platform, notably some of the UI functions do not.
 
-To build and run Replanetizer, you need both mono, msbuild and dotnet core installed.
+To build and run Replanetizer, you need both Mono and .NET core installed.
 
 To get started, clone this repository, and execute the following commands:
 
- - `dotnet restore`
- - `dotnet build LibReplanetizer`
- - `msbuild Replanetizer`
+ - `dotnet build`
  - `cd Replanetizer`
- - `mono bin/Debug/RatchetEdit.exe`
+ - `mono bin/Debug/net472/RatchetEdit.exe`
 
 When we get all dependencies and WinForms running on .NET core, the dependency on Mono can hopefully be dropped.
 

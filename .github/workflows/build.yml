@@ -1,0 +1,61 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-20.04
+    
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.103' # SDK Version to use.
+      - run: dotnet --list-runtimes && dotnet --list-sdks
+      - run: git submodule update --init
+      - run: mkdir -p /tmp/zips
+
+      - run: dotnet publish -c Release -o /tmp/out-linux/replanetizer --self-contained --runtime linux-x64 Replanetizer
+      - run: cd /tmp/out-linux/ && zip -r /tmp/zips/replanetizer-linux-x64.zip replanetizer
+
+      - run: dotnet publish -c Release -o /tmp/out-win/replanetizer --self-contained --runtime win-x86 Replanetizer
+      - run: cd /tmp/out-win/ && zip -r /tmp/zips/replanetizer-win-x86.zip replanetizer
+
+      - uses: actions/upload-artifact@v1
+        with:
+            name: zips
+            path: /tmp/zips
+      - name: Create Release
+        id: create_release
+        if: github.ref == 'refs/heads/master'
+        uses: actions/create-release@master
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+            tag_name: build-${{ github.sha }}
+            release_name: Build ${{ github.sha }}
+            draft: false
+            prerelease: true
+
+      - name: Upload Release Asset Linux
+        if: github.ref == 'refs/heads/master'
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }} 
+            asset_name: replanetizer-linux-x64.zip
+            asset_path: /tmp/zips/replanetizer-linux-x64.zip
+            asset_content_type: application/zip
+
+      - name: Upload Release Asset Windows
+        if: github.ref == 'refs/heads/master'
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }} 
+            asset_name: replanetizer-win-x86.zip
+            asset_path: /tmp/zips/replanetizer-win-x86.zip
+            asset_content_type: application/zip

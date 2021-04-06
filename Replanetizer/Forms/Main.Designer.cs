@@ -343,18 +343,21 @@ namespace RatchetEdit
             this.modelViewerToolBtn.Name = "modelViewerToolBtn";
             this.modelViewerToolBtn.Size = new System.Drawing.Size(180, 22);
             this.modelViewerToolBtn.Text = "Model Viewer";
+            this.modelViewerToolBtn.Enabled = false;
             this.modelViewerToolBtn.Click += new System.EventHandler(this.modelViewerToolBtn_Click);
             // 
             // toolStripMenuItem10
             // 
             this.toolStripMenuItem10.Name = "toolStripMenuItem10";
             this.toolStripMenuItem10.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItem10.Enabled = false;
             this.toolStripMenuItem10.Text = "Level object viewer";
             // 
             // toolStripMenuItem11
             // 
             this.toolStripMenuItem11.Name = "toolStripMenuItem11";
             this.toolStripMenuItem11.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItem11.Enabled = false;
             this.toolStripMenuItem11.Text = "Textures";
             this.toolStripMenuItem11.Click += new System.EventHandler(this.toolStripMenuItem11_Click);
             // 
@@ -362,6 +365,7 @@ namespace RatchetEdit
             // 
             this.spriteViewerToolBtn.Name = "spriteViewerToolBtn";
             this.spriteViewerToolBtn.Size = new System.Drawing.Size(180, 22);
+            this.spriteViewerToolBtn.Enabled = false;
             this.spriteViewerToolBtn.Text = "Sprites";
             this.spriteViewerToolBtn.Click += new System.EventHandler(this.spriteViewerToolBtn_Click);
             // 
@@ -369,6 +373,7 @@ namespace RatchetEdit
             // 
             this.UISpriteToolBtn.Name = "UISpriteToolBtn";
             this.UISpriteToolBtn.Size = new System.Drawing.Size(180, 22);
+            this.UISpriteToolBtn.Enabled = false;
             this.UISpriteToolBtn.Text = "UI Sprites";
             this.UISpriteToolBtn.Click += new System.EventHandler(this.UISpriteToolBtn_Click);
             // 
@@ -376,18 +381,21 @@ namespace RatchetEdit
             // 
             this.toolStripMenuItem14.Name = "toolStripMenuItem14";
             this.toolStripMenuItem14.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItem14.Enabled = false;
             this.toolStripMenuItem14.Text = "Console";
             // 
             // levelVariablesToolStripMenuItem
             // 
             this.levelVariablesToolStripMenuItem.Name = "levelVariablesToolStripMenuItem";
             this.levelVariablesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.levelVariablesToolStripMenuItem.Enabled = false;
             this.levelVariablesToolStripMenuItem.Text = "Level Variables";
             // 
             // languageDataToolStripMenuItem
             // 
             this.languageDataToolStripMenuItem.Name = "languageDataToolStripMenuItem";
             this.languageDataToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.languageDataToolStripMenuItem.Enabled = false;
             this.languageDataToolStripMenuItem.Text = "Language Data";
             this.languageDataToolStripMenuItem.Click += new System.EventHandler(this.languageDataToolStripMenuItem_Click);
             // 
@@ -395,6 +403,7 @@ namespace RatchetEdit
             // 
             this.lightConfigurationToolStripMenuItem.Name = "lightConfigurationToolStripMenuItem";
             this.lightConfigurationToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.lightConfigurationToolStripMenuItem.Enabled = false;
             this.lightConfigurationToolStripMenuItem.Text = "Light Configuration";
             this.lightConfigurationToolStripMenuItem.Click += new System.EventHandler(this.lightConfigurationToolStripMenuItem_Click);
             // 
@@ -403,6 +412,7 @@ namespace RatchetEdit
             this.toolStripMenuItem3.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.settingsToolStripMenuItem});
             this.toolStripMenuItem3.Name = "toolStripMenuItem3";
+            this.toolStripMenuItem3.Enabled = false;
             this.toolStripMenuItem3.Size = new System.Drawing.Size(80, 20);
             this.toolStripMenuItem3.Text = "Preferences";
             // 
@@ -664,6 +674,7 @@ namespace RatchetEdit
             // 
             this.levelVariablesToolStripMenuItem1.Name = "levelVariablesToolStripMenuItem1";
             this.levelVariablesToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
+            this.levelVariablesToolStripMenuItem1.Enabled = false;
             this.levelVariablesToolStripMenuItem1.Text = "Level Variables";
             this.levelVariablesToolStripMenuItem1.Click += new System.EventHandler(this.levelVariablesToolStripMenuItem1_Click);
             // 

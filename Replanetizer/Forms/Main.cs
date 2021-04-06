@@ -76,6 +76,12 @@ namespace RatchetEdit
                 menuButton.Enabled = true;
             }
 
+            //Enable all the buttons in the model tab
+            foreach (ToolStripMenuItem menuButton in toolStripMenuItem2.DropDownItems)
+            {
+                menuButton.Enabled = true;
+            }
+
             objectTree.UpdateEntries(level);
             UpdateProperties(null);
         }

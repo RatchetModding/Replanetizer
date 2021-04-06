@@ -1,4 +1,5 @@
 ﻿using OpenTK;
+using System.ComponentModel;
 
 namespace LibReplanetizer.LevelObjects
 {
@@ -9,10 +10,12 @@ namespace LibReplanetizer.LevelObjects
 
         public Matrix4 modelMatrix;
 
-
-        public Vector3 position = new Vector3();
-        public Vector3 scale = new Vector3();
-        public Quaternion rotation = new Quaternion();
+        [Category("Attributes"), DisplayName("Position")]
+        public Vector3 position { get; set; } = new Vector3();
+        [Category("Attributes"), DisplayName("Scale")]
+        public Vector3 scale { get; set; } = new Vector3();
+        [Category("Attributes"), DisplayName("Rotation"), TypeConverter(typeof(Level_Objects.QuaternionTypeConverter))]
+        public Quaternion rotation { get; set; } = new Quaternion();
 
 
         public abstract byte[] ToByteArray();

@@ -332,8 +332,7 @@ namespace RatchetEdit
             this.toolStripMenuItem14,
             this.levelVariablesToolStripMenuItem,
             this.languageDataToolStripMenuItem,
-            this.lightConfigurationToolStripMenuItem,
-            this.levelVariablesToolStripMenuItem1});
+            this.lightConfigurationToolStripMenuItem});
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
             this.toolStripMenuItem2.Size = new System.Drawing.Size(63, 20);
             this.toolStripMenuItem2.Text = "Window";
@@ -390,6 +389,7 @@ namespace RatchetEdit
             this.levelVariablesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.levelVariablesToolStripMenuItem.Enabled = false;
             this.levelVariablesToolStripMenuItem.Text = "Level Variables";
+            this.levelVariablesToolStripMenuItem.Click += new System.EventHandler(this.levelVariablesToolStripMenuItem_Click);
             // 
             // languageDataToolStripMenuItem
             // 
@@ -669,14 +669,6 @@ namespace RatchetEdit
             // 
             this.collisionOpenDialog.FileName = "collisionOpenDialog";
             this.collisionOpenDialog.Filter = "Collision file|*.rcc";
-            // 
-            // levelVariablesToolStripMenuItem1
-            // 
-            this.levelVariablesToolStripMenuItem1.Name = "levelVariablesToolStripMenuItem1";
-            this.levelVariablesToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
-            this.levelVariablesToolStripMenuItem1.Enabled = false;
-            this.levelVariablesToolStripMenuItem1.Text = "Level Variables";
-            this.levelVariablesToolStripMenuItem1.Click += new System.EventHandler(this.levelVariablesToolStripMenuItem1_Click);
             // 
             // glControl
             // 

@@ -257,7 +257,7 @@ namespace RatchetEdit
             OpenLightConfigViewer();
         }
 
-        private void levelVariablesToolStripMenuItem1_Click(object sender, EventArgs e)
+        private void levelVariablesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenLevelVariableViewer();
         }

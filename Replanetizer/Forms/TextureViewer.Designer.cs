@@ -61,7 +61,7 @@
             // 
             // openTextureDialog
             // 
-            this.openTextureDialog.FileName = "openFileDialog1";
+            this.openTextureDialog.Filter = "All supported image files|*.bmp;*.png;*.jpg;*.jpeg;*.dds|Bitmap Image File|*.bmp|Portable Network Graphics|*.png|JPEG Image File|*.jpg;*.jpeg|DirectDraw Surface|*.dds";
             // 
             // texAmountLabel
             // 

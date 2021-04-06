@@ -319,26 +319,46 @@ namespace RatchetEdit
         private void translateToolBtn_Click(object sender, EventArgs e)
         {
             glControl.SelectTool(glControl.translateTool);
+            HandleToolStrip1ItemsChecked(sender);
         }
 
         private void rotateToolBtn_Click(object sender, EventArgs e)
         {
             glControl.SelectTool(glControl.rotationTool);
+            HandleToolStrip1ItemsChecked(sender);
         }
 
         private void scaleToolBtn_Click(object sender, EventArgs e)
         {
             glControl.SelectTool(glControl.scalingTool);
+            HandleToolStrip1ItemsChecked(sender);
         }
 
         private void splineToolBtn_Click(object sender, EventArgs e)
         {
             glControl.SelectTool(glControl.vertexTranslator);
+            HandleToolStrip1ItemsChecked(sender);
         }
 
         private void deleteBtn_Click(object sender, EventArgs e)
         {
             glControl.DeleteObject(GetSelectedObject());
+        }
+
+        private void HandleToolStrip1ItemsChecked(object item)
+        {
+            foreach (ToolStripItem t in toolstrip1.Items)
+            {
+                if (t is ToolStripButton)
+                {
+                    ((ToolStripButton)t).Checked = false;
+                }
+            }
+
+            if (item is ToolStripButton)
+            {
+                ((ToolStripButton)item).Checked = true;
+            }
         }
 
 

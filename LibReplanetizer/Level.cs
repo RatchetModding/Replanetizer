@@ -223,6 +223,17 @@ namespace LibReplanetizer
                 occlusionData = gameplayParser.GetOcclusionData();
             }
 
+            for (int i = 0; i < 5; i++)
+            {
+                if (!File.Exists(path + @"/chunk" + i + ".ps3")) continue;
+
+                using (ChunkParser chunkParser = new ChunkParser(path + @"/chunk"+i+".ps3"))
+                {
+                    terrains.AddRange(chunkParser.GetTerrainModels());
+                }
+            }
+
+
 
             VramParser vramParser = new VramParser(path + @"/vram.ps3");
             if (!vramParser.valid)

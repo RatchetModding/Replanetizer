@@ -172,8 +172,12 @@ namespace RatchetEdit
 
         private void exportBtn_Click(object sender, EventArgs e)
         {
-            Bitmap image = main.level.textures[textureView.SelectedIndices[0]].getTextureImage();
-            image.Save(textureView.SelectedIndices[0].ToString() + ".png");
+            if (textureView.SelectedIndices.Count == 0) return;
+
+            int index = textureView.SelectedIndices[0];
+
+            Bitmap image = main.level.textures[index].getTextureImage();
+            image.Save(index.ToString() + ".png");
         }
     }
 }

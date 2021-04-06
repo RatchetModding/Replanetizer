@@ -76,6 +76,12 @@ namespace RatchetEdit
                 menuButton.Enabled = true;
             }
 
+            //Enable all the buttons in the model tab
+            foreach (ToolStripMenuItem menuButton in toolStripMenuItem2.DropDownItems)
+            {
+                menuButton.Enabled = true;
+            }
+
             objectTree.UpdateEntries(level);
             UpdateProperties(null);
         }
@@ -251,7 +257,7 @@ namespace RatchetEdit
             OpenLightConfigViewer();
         }
 
-        private void levelVariablesToolStripMenuItem1_Click(object sender, EventArgs e)
+        private void levelVariablesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenLevelVariableViewer();
         }
@@ -313,26 +319,46 @@ namespace RatchetEdit
         private void translateToolBtn_Click(object sender, EventArgs e)
         {
             glControl.SelectTool(glControl.translateTool);
+            HandleToolStrip1ItemsChecked(sender);
         }
 
         private void rotateToolBtn_Click(object sender, EventArgs e)
         {
             glControl.SelectTool(glControl.rotationTool);
+            HandleToolStrip1ItemsChecked(sender);
         }
 
         private void scaleToolBtn_Click(object sender, EventArgs e)
         {
             glControl.SelectTool(glControl.scalingTool);
+            HandleToolStrip1ItemsChecked(sender);
         }
 
         private void splineToolBtn_Click(object sender, EventArgs e)
         {
             glControl.SelectTool(glControl.vertexTranslator);
+            HandleToolStrip1ItemsChecked(sender);
         }
 
         private void deleteBtn_Click(object sender, EventArgs e)
         {
             glControl.DeleteObject(GetSelectedObject());
+        }
+
+        private void HandleToolStrip1ItemsChecked(object item)
+        {
+            foreach (ToolStripItem t in toolstrip1.Items)
+            {
+                if (t is ToolStripButton)
+                {
+                    ((ToolStripButton)t).Checked = false;
+                }
+            }
+
+            if (item is ToolStripButton)
+            {
+                ((ToolStripButton)item).Checked = true;
+            }
         }
 
 

@@ -91,6 +91,12 @@ namespace RatchetEdit
                 ((ToolStripMenuItem)(chunksToolStripMenuItem.DropDownItems[i])).Checked = true;
             }
 
+            for (int i = level.terrainChunks.Count; i < 5; i++)
+            {
+                chunksToolStripMenuItem.DropDownItems[i].Enabled = false;
+                ((ToolStripMenuItem)(chunksToolStripMenuItem.DropDownItems[i])).Checked = false;
+            }
+
             level.selectChunks(chunksSelected);
 
             objectTree.UpdateEntries(level);

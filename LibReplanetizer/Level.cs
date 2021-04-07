@@ -239,7 +239,9 @@ namespace LibReplanetizer
             // chunk 0 is always part of the engine but levels without a chunk 1 don't contain a chunk 0 file
             if (terrainChunks.Count == 0)
             {
-                terrainChunks.Add(terrains);
+                List<TerrainFragment> temp = new List<TerrainFragment>();
+                temp.AddRange(terrains);
+                terrainChunks.Add(temp);
             }
 
             terrains.Clear();

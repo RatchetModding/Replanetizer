@@ -60,6 +60,8 @@ namespace RatchetEdit
 
             Thread thread = new Thread(tstart);
             thread.Start();
+
+            texImages.Disposed += (object sender, EventArgs args) => { thread.Abort(); };
         }
 
         public void LoadForGrid(Image image, int index, int test)

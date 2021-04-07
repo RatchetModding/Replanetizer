@@ -39,6 +39,7 @@ namespace RatchetEdit
         public LanguageViewer languageViewer;
         public LightConfigViewer lightConfigViewer;
         public LevelVariableViewer levelVariableViewer;
+        public LevelExportWindow levelExportWindow;
 
         private bool[] chunksSelected = new bool[5];
 
@@ -234,6 +235,19 @@ namespace RatchetEdit
                 levelVariableViewer.BringToFront();
             }
         }
+
+        private void OpenExportLevelWindow()
+        {
+            if (levelExportWindow == null || levelExportWindow.IsDisposed)
+            {
+                levelExportWindow = new LevelExportWindow(this);
+                levelExportWindow.Show();
+            }
+            else
+            {
+                levelExportWindow.BringToFront();
+            }
+        }
         #endregion
 
         #region MenuButtons
@@ -277,6 +291,11 @@ namespace RatchetEdit
         private void levelVariablesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenLevelVariableViewer();
+        }
+
+        private void levelExportToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenExportLevelWindow();
         }
         #endregion MenuButtons
 

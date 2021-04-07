@@ -55,6 +55,9 @@
     <Compile Update="CustomControls\CustomGLControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Update="Forms\LevelExportWindow.cs" >
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="Forms\AboutBox1.cs">
       <SubType>Form</SubType>
     </Compile>

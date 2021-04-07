@@ -1,4 +1,5 @@
-﻿using LibReplanetizer.Models;
+﻿using LibReplanetizer.LevelObjects;
+using LibReplanetizer.Models;
 using LibReplanetizer.Models.Animations;
 using OpenTK;
 using System;
@@ -209,6 +210,96 @@ namespace LibReplanetizer
                 }
             }
 
+        }
+
+        private static int writeObjectData(StreamWriter OBJfs, Model model, int faceOffset)
+        {
+            int vertexCount = model.vertexBuffer.Length / 8;
+            for (int x = 0; x < vertexCount; x++)
+            {
+                float px = model.vertexBuffer[(x * 0x08) + 0x0];
+                float py = model.vertexBuffer[(x * 0x08) + 0x1];
+                float pz = model.vertexBuffer[(x * 0x08) + 0x2];
+                float nx = model.vertexBuffer[(x * 0x08) + 0x3];
+                float ny = model.vertexBuffer[(x * 0x08) + 0x4];
+                float nz = model.vertexBuffer[(x * 0x08) + 0x5];
+                float tu = model.vertexBuffer[(x * 0x08) + 0x6];
+                float tv = 1f - model.vertexBuffer[(x * 0x08) + 0x7];
+                OBJfs.WriteLine("v " + px.ToString("G") + " " + py.ToString("G") + " " + pz.ToString("G"));
+                OBJfs.WriteLine("vn " + nx.ToString("G") + " " + ny.ToString("G") + " " + nz.ToString("G"));
+                OBJfs.WriteLine("vt " + tu.ToString("G") + " " + tv.ToString("G"));
+            }
+
+            int textureNum = 0;
+            for (int i = 0; i < model.indexBuffer.Length / 3; i++)
+            {
+                int triIndex = i * 3;
+                if ((model.textureConfig != null) && (textureNum < model.textureConfig.Count) && (triIndex >= model.textureConfig[textureNum].start))
+                {
+                    string modelId = model.textureConfig[textureNum].ID.ToString();
+                    OBJfs.WriteLine("usemtl mtl_" + modelId);
+                    OBJfs.WriteLine("g Texture_" + modelId);
+                    textureNum++;
+                }
+
+                int f1 = model.indexBuffer[triIndex + 0] + 1 + faceOffset;
+                int f2 = model.indexBuffer[triIndex + 1] + 1 + faceOffset;
+                int f3 = model.indexBuffer[triIndex + 2] + 1 + faceOffset;
+                OBJfs.WriteLine("f " + (f1 + "/" + f1 + "/" + f1) + " " + (f2 + "/" + f2 + "/" + f2) + " " + (f3 + "/" + f3 + "/" + f3));
+            }
+
+            return vertexCount;
+        }
+
+        public static void WriteObj(string fileName, Level level, WriterLevelSettings settings)
+        {
+            string pathName = Path.GetDirectoryName(fileName);
+            string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
+
+            List<TerrainFragment> terrain = new List<TerrainFragment>();
+
+            for (int i = 0; i < level.terrainChunks.Count; i++)
+            {
+                if (settings.chunksSelected[i])
+                {
+                    terrain.AddRange(level.terrainChunks[i]);
+                }
+                
+            }
+
+            using (StreamWriter OBJfs = new StreamWriter(fileName))
+            {
+                int faceOffset = 0;
+                if (settings.combineMeshes)
+                {
+                    OBJfs.WriteLine("o Object_CombinedLevel");
+                    foreach (TerrainFragment t in terrain)
+                    {
+                        faceOffset += writeObjectData(OBJfs, t.model, faceOffset);
+                    }
+                } 
+                else
+                {
+                    foreach (TerrainFragment t in terrain)
+                    {
+                        OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
+                        if (t.model.textureConfig != null)
+                            OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
+                        faceOffset += writeObjectData(OBJfs, t.model, faceOffset);
+                    }
+                }
+
+                
+            }
+        }
+
+        public class WriterLevelSettings
+        {
+            public bool writeTerrain = true;
+            public bool writeTies = true;
+            public bool writeShrubs = true;
+            public bool[] chunksSelected = new bool[5];
+            public bool combineMeshes = true;
         }
     }
 }

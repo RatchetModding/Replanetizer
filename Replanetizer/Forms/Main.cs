@@ -247,6 +247,8 @@ namespace RatchetEdit
             {
                 levelExportWindow.BringToFront();
             }
+
+            Enabled = false;
         }
         #endregion
 

@@ -212,6 +212,26 @@ namespace LibReplanetizer
 
         }
 
+        private static void writeObjectMaterial(StreamWriter MTLfs, Model model, List<int> usedMtls)
+        {
+            for (int i = 0; i < model.textureConfig.Count; i++)
+            {
+                int modelTextureID = model.textureConfig[0].ID;
+                if (!usedMtls.Contains(modelTextureID))
+                {
+                    MTLfs.WriteLine("newmtl mtl_" + modelTextureID);
+                    MTLfs.WriteLine("Ns 1000");
+                    MTLfs.WriteLine("Ka 1.000000 1.000000 1.000000");
+                    MTLfs.WriteLine("Kd 1.000000 1.000000 1.000000");
+                    MTLfs.WriteLine("Ni 1.000000");
+                    MTLfs.WriteLine("d 1.000000");
+                    MTLfs.WriteLine("illum 1");
+                    MTLfs.WriteLine("map_Kd tex_" + model.textureConfig[i].ID + ".png");
+                    usedMtls.Add(modelTextureID);
+                }
+            }
+        }
+
         private static Vector3 rotate(Quaternion rotation, Vector3 v)
         {
             float s = rotation.W;
@@ -272,7 +292,7 @@ namespace LibReplanetizer
             return vertexCount;
         }
 
-        public static void WriteObj(string fileName, Level level, WriterLevelSettings settings)
+        private static void WriteObjSeparate(string fileName, Level level, WriterLevelSettings settings)
         {
             string pathName = Path.GetDirectoryName(fileName);
             string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
@@ -285,98 +305,206 @@ namespace LibReplanetizer
                 {
                     terrain.AddRange(level.terrainChunks[i]);
                 }
-                
             }
+
+            StreamWriter MTLfs = null; 
+
+            if (settings.exportMTLFile) MTLfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl");
 
             using (StreamWriter OBJfs = new StreamWriter(fileName))
             {
                 int faceOffset = 0;
-                if (settings.combineMeshes)
+                List<int> usedMtls = new List<int>();
+
+                foreach (TerrainFragment t in terrain)
                 {
-                    OBJfs.WriteLine("o Object_CombinedLevel");
-                    foreach (TerrainFragment t in terrain)
-                    {
-                        faceOffset += writeObjectData(OBJfs, t.model, faceOffset, Vector3.Zero, Vector3.One, Quaternion.Identity);
-                    }
+                    OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
+                    if (t.model.textureConfig != null)
+                        OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
+                    faceOffset += writeObjectData(OBJfs, t.model, faceOffset, Vector3.Zero, Vector3.One, Quaternion.Identity);
+                    if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
+                }
 
-                    if (settings.writeTies)
-                    {
-                        foreach (Tie t in level.ties)
-                        {
-                            faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
-                        }
-                    }
-
-                    if (settings.writeShrubs)
-                    {
-                        foreach (Shrub t in level.shrubs)
-                        {
-                            faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
-                        }
-                    }
-
-                    if (settings.writeMobies)
-                    {
-                        foreach (Moby t in level.mobs)
-                        {
-                            faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
-                        }
-                    }
-
-                } 
-                else
+                if (settings.writeTies)
                 {
-                    foreach (TerrainFragment t in terrain)
+                    foreach (Tie t in level.ties)
                     {
                         OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
                         if (t.model.textureConfig != null)
                             OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
-                        faceOffset += writeObjectData(OBJfs, t.model, faceOffset, Vector3.Zero, Vector3.One, Quaternion.Identity);
+                        faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
+                        if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                     }
+                }
 
-                    if (settings.writeTies)
+                if (settings.writeShrubs)
+                {
+                    foreach (Shrub t in level.shrubs)
                     {
-                        foreach (Tie t in level.ties)
-                        {
-                            OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
-                            if (t.model.textureConfig != null)
-                                OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
-                            faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
-                        }
+                        OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
+                        if (t.model.textureConfig != null)
+                            OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
+                        faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
+                        if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                     }
+                }
 
-                    if (settings.writeShrubs)
+                if (settings.writeMobies)
+                {
+                    foreach (Moby t in level.mobs)
                     {
-                        foreach (Shrub t in level.shrubs)
-                        {
-                            OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
-                            if (t.model.textureConfig != null)
-                                OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
-                            faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
-                        }
+                        OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
+                        if (t.model.textureConfig != null)
+                            OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
+                        faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
+                        if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                     }
+                }
+            }
 
-                    if (settings.writeMobies)
+            if (settings.exportMTLFile) MTLfs.Dispose();
+        }
+
+        private static void WriteObjCombined(string fileName, Level level, WriterLevelSettings settings)
+        {
+            string pathName = Path.GetDirectoryName(fileName);
+            string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
+
+            List<TerrainFragment> terrain = new List<TerrainFragment>();
+
+            for (int i = 0; i < level.terrainChunks.Count; i++)
+            {
+                if (settings.chunksSelected[i])
+                {
+                    terrain.AddRange(level.terrainChunks[i]);
+                }
+            }
+
+            StreamWriter MTLfs = null;
+
+            if (settings.exportMTLFile) MTLfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl");
+
+            using (StreamWriter OBJfs = new StreamWriter(fileName))
+            {
+                int faceOffset = 0;
+                List<int> usedMtls = new List<int>();
+
+                OBJfs.WriteLine("o Object_CombinedLevel");
+                foreach (TerrainFragment t in terrain)
+                {
+                    faceOffset += writeObjectData(OBJfs, t.model, faceOffset, Vector3.Zero, Vector3.One, Quaternion.Identity);
+                    if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
+                }
+
+                if (settings.writeTies)
+                {
+                    foreach (Tie t in level.ties)
                     {
-                        foreach (Moby t in level.mobs)
-                        {
-                            OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
-                            if (t.model.textureConfig != null)
-                                OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
-                            faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
-                        }
+                        faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
+                        if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                     }
+                }
+
+                if (settings.writeShrubs)
+                {
+                    foreach (Shrub t in level.shrubs)
+                    {
+                        faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
+                        if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
+                    }
+                }
+
+                if (settings.writeMobies)
+                {
+                    foreach (Moby t in level.mobs)
+                    {
+                        faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
+                        if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
+                    }
+                }
+            }
+
+            if (settings.exportMTLFile) MTLfs.Dispose();
+        }
+
+        private static void WriteObjTypewise(string fileName, Level level, WriterLevelSettings settings)
+        {
+            throw new NotImplementedException();
+
+            string pathName = Path.GetDirectoryName(fileName);
+            string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
+
+            List<TerrainFragment> terrain = new List<TerrainFragment>();
+
+            for (int i = 0; i < level.terrainChunks.Count; i++)
+            {
+                if (settings.chunksSelected[i])
+                {
+                    terrain.AddRange(level.terrainChunks[i]);
                 }
             }
         }
 
+        private static void WriteObjMaterialwise(string fileName, Level level, WriterLevelSettings settings)
+        {
+            throw new NotImplementedException();
+
+            string pathName = Path.GetDirectoryName(fileName);
+            string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
+
+            List<TerrainFragment> terrain = new List<TerrainFragment>();
+
+            for (int i = 0; i < level.terrainChunks.Count; i++)
+            {
+                if (settings.chunksSelected[i])
+                {
+                    terrain.AddRange(level.terrainChunks[i]);
+                }
+            }
+        }
+
+        public static void WriteObj(string fileName, Level level, WriterLevelSettings settings)
+        {
+            switch(settings.mode)
+            {
+                case WriterLevelMode.Separate: 
+                    WriteObjSeparate(fileName, level, settings);
+                    return;
+                case WriterLevelMode.Combined:
+                    WriteObjCombined(fileName, level, settings);
+                    return;
+                case WriterLevelMode.Typewise:
+                    WriteObjTypewise(fileName, level, settings);
+                    return;
+                case WriterLevelMode.Materialwise:
+                    WriteObjMaterialwise(fileName, level, settings);
+                    return;
+            }
+        }
+
+        public enum WriterLevelMode{
+            Separate,
+            Combined,
+            Typewise,
+            Materialwise
+        };
+
         public class WriterLevelSettings
         {
+            public WriterLevelMode mode = WriterLevelMode.Combined;
             public bool writeTies = true;
             public bool writeShrubs = true;
             public bool writeMobies = true;
             public bool[] chunksSelected = new bool[5];
-            public bool combineMeshes = true;
+            public bool exportMTLFile = true;
+
+            public WriterLevelSettings()
+            {
+                for (int i = 0; i < 5; i++)
+                {
+                    chunksSelected[i] = true;
+                }
+            }
         }
     }
 }

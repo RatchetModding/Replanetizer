@@ -48,6 +48,9 @@ namespace LibReplanetizer.LevelObjects
             off_2C = ReadUint(tfragBlock, offset + 0x2C);
 
             model = new TerrainModel(fs, head, tfragBlock, num);
+
+            modelID = model.id;
+
             modelMatrix = Matrix4.Identity;
         }
 

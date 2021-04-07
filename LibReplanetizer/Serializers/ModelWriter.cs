@@ -212,20 +212,41 @@ namespace LibReplanetizer
 
         }
 
-        private static int writeObjectData(StreamWriter OBJfs, Model model, int faceOffset)
+        private static Vector3 rotate(Quaternion rotation, Vector3 v)
+        {
+            float s = rotation.W;
+            Vector3 u = rotation.Xyz;
+
+            float dotUV = Vector3.Dot(u, v);
+            float dotUU = Vector3.Dot(u, u);
+
+            Vector3 cross = Vector3.Cross(u, v);
+
+
+            return new Vector3(
+                2.0f * dotUV * u.X + ((s * s) - dotUU) * v.X + 2.0f * s * cross.X,
+                2.0f * dotUV * u.Y + ((s * s) - dotUU) * v.Y + 2.0f * s * cross.Y,
+                2.0f * dotUV * u.Z + ((s * s) - dotUU) * v.Z + 2.0f * s * cross.Z);
+        }
+
+        private static int writeObjectData(StreamWriter OBJfs, Model model, int faceOffset, Vector3 position, Vector3 scale, Quaternion rotation)
         {
             int vertexCount = model.vertexBuffer.Length / 8;
             for (int x = 0; x < vertexCount; x++)
             {
-                float px = model.vertexBuffer[(x * 0x08) + 0x0];
-                float py = model.vertexBuffer[(x * 0x08) + 0x1];
-                float pz = model.vertexBuffer[(x * 0x08) + 0x2];
+                Vector3 v = new Vector3(
+                    model.size * scale.X * model.vertexBuffer[(x * 0x08) + 0x0],
+                    model.size * scale.Y * model.vertexBuffer[(x * 0x08) + 0x1],
+                    model.size * scale.Z * model.vertexBuffer[(x * 0x08) + 0x2]);
+                v = rotate(rotation, v);
+                v += position;
+
                 float nx = model.vertexBuffer[(x * 0x08) + 0x3];
                 float ny = model.vertexBuffer[(x * 0x08) + 0x4];
                 float nz = model.vertexBuffer[(x * 0x08) + 0x5];
                 float tu = model.vertexBuffer[(x * 0x08) + 0x6];
                 float tv = 1f - model.vertexBuffer[(x * 0x08) + 0x7];
-                OBJfs.WriteLine("v " + px.ToString("G") + " " + py.ToString("G") + " " + pz.ToString("G"));
+                OBJfs.WriteLine("v " + v.X.ToString("G") + " " + v.Y.ToString("G") + " " + v.Z.ToString("G"));
                 OBJfs.WriteLine("vn " + nx.ToString("G") + " " + ny.ToString("G") + " " + nz.ToString("G"));
                 OBJfs.WriteLine("vt " + tu.ToString("G") + " " + tv.ToString("G"));
             }
@@ -275,8 +296,33 @@ namespace LibReplanetizer
                     OBJfs.WriteLine("o Object_CombinedLevel");
                     foreach (TerrainFragment t in terrain)
                     {
-                        faceOffset += writeObjectData(OBJfs, t.model, faceOffset);
+                        faceOffset += writeObjectData(OBJfs, t.model, faceOffset, Vector3.Zero, Vector3.One, Quaternion.Identity);
                     }
+
+                    if (settings.writeTies)
+                    {
+                        foreach (Tie t in level.ties)
+                        {
+                            faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
+                        }
+                    }
+
+                    if (settings.writeShrubs)
+                    {
+                        foreach (Shrub t in level.shrubs)
+                        {
+                            faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
+                        }
+                    }
+
+                    if (settings.writeMobies)
+                    {
+                        foreach (Moby t in level.mobs)
+                        {
+                            faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
+                        }
+                    }
+
                 } 
                 else
                 {
@@ -285,19 +331,50 @@ namespace LibReplanetizer
                         OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
                         if (t.model.textureConfig != null)
                             OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
-                        faceOffset += writeObjectData(OBJfs, t.model, faceOffset);
+                        faceOffset += writeObjectData(OBJfs, t.model, faceOffset, Vector3.Zero, Vector3.One, Quaternion.Identity);
+                    }
+
+                    if (settings.writeTies)
+                    {
+                        foreach (Tie t in level.ties)
+                        {
+                            OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
+                            if (t.model.textureConfig != null)
+                                OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
+                            faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
+                        }
+                    }
+
+                    if (settings.writeShrubs)
+                    {
+                        foreach (Shrub t in level.shrubs)
+                        {
+                            OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
+                            if (t.model.textureConfig != null)
+                                OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
+                            faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
+                        }
+                    }
+
+                    if (settings.writeMobies)
+                    {
+                        foreach (Moby t in level.mobs)
+                        {
+                            OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
+                            if (t.model.textureConfig != null)
+                                OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
+                            faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.position, t.scale, t.rotation);
+                        }
                     }
                 }
-
-                
             }
         }
 
         public class WriterLevelSettings
         {
-            public bool writeTerrain = true;
             public bool writeTies = true;
             public bool writeShrubs = true;
+            public bool writeMobies = true;
             public bool[] chunksSelected = new bool[5];
             public bool combineMeshes = true;
         }

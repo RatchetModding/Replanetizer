@@ -16,6 +16,7 @@ namespace LibReplanetizer.Models
         public TerrainModel(FileStream fs, TerrainHead head, byte[] tfragBlock, int num)
         {
             id = getIDAssigned();
+            size = 1.0f;
 
             int offset = num * 0x30;
             int texturePointer = ReadInt(tfragBlock, offset + 0x10);

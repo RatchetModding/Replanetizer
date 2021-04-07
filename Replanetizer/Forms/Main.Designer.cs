@@ -53,6 +53,12 @@ namespace RatchetEdit
             this.skyboxCheck = new System.Windows.Forms.ToolStripMenuItem();
             this.cuboidCheck = new System.Windows.Forms.ToolStripMenuItem();
             this.type0CCheck = new System.Windows.Forms.ToolStripMenuItem();
+            this.chunksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.chunk0ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.chunk1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.chunk2ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.chunk3ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.chunk4ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.modelViewerToolBtn = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem10 = new System.Windows.Forms.ToolStripMenuItem();
@@ -109,6 +115,7 @@ namespace RatchetEdit
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem1,
             this.ViewToolStipItem,
+            this.chunksToolStripMenuItem,
             this.toolStripMenuItem2,
             this.toolStripMenuItem3});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
@@ -320,6 +327,63 @@ namespace RatchetEdit
             this.type0CCheck.Size = new System.Drawing.Size(120, 22);
             this.type0CCheck.Text = "Type0Cs";
             this.type0CCheck.CheckedChanged += new System.EventHandler(this.type0CCheck_CheckedChanged);
+            // 
+            // chunksToolStripMenuItem
+            // 
+            this.chunksToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.chunk0ToolStripMenuItem,
+            this.chunk1ToolStripMenuItem,
+            this.chunk2ToolStripMenuItem,
+            this.chunk3ToolStripMenuItem,
+            this.chunk4ToolStripMenuItem});
+            this.chunksToolStripMenuItem.Name = "chunksToolStripMenuItem";
+            this.chunksToolStripMenuItem.Size = new System.Drawing.Size(59, 20);
+            this.chunksToolStripMenuItem.Text = "Chunks";
+            // 
+            // chunk0ToolStripMenuItem
+            // 
+            this.chunk0ToolStripMenuItem.CheckOnClick = true;
+            this.chunk0ToolStripMenuItem.Enabled = false;
+            this.chunk0ToolStripMenuItem.Name = "chunk0ToolStripMenuItem";
+            this.chunk0ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.chunk0ToolStripMenuItem.Text = "Chunk0";
+            this.chunk0ToolStripMenuItem.Click += (sender, EventArgs) => { changeChunkSelection(sender, EventArgs, 0); };
+            // 
+            // chunk1ToolStripMenuItem
+            // 
+            this.chunk1ToolStripMenuItem.CheckOnClick = true;
+            this.chunk1ToolStripMenuItem.Enabled = false;
+            this.chunk1ToolStripMenuItem.Name = "chunk1ToolStripMenuItem";
+            this.chunk1ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.chunk1ToolStripMenuItem.Text = "Chunk1";
+            this.chunk1ToolStripMenuItem.Click += (sender, EventArgs) => { changeChunkSelection(sender, EventArgs, 1); };
+            // 
+            // chunk2ToolStripMenuItem
+            // 
+            this.chunk2ToolStripMenuItem.CheckOnClick = true;
+            this.chunk2ToolStripMenuItem.Enabled = false;
+            this.chunk2ToolStripMenuItem.Name = "chunk2ToolStripMenuItem";
+            this.chunk2ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.chunk2ToolStripMenuItem.Text = "Chunk2";
+            this.chunk2ToolStripMenuItem.Click += (sender, EventArgs) => { changeChunkSelection(sender, EventArgs, 2); };
+            // 
+            // chunk3ToolStripMenuItem
+            // 
+            this.chunk3ToolStripMenuItem.CheckOnClick = true;
+            this.chunk3ToolStripMenuItem.Enabled = false;
+            this.chunk3ToolStripMenuItem.Name = "chunk3ToolStripMenuItem";
+            this.chunk3ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.chunk3ToolStripMenuItem.Text = "Chunk3";
+            this.chunk3ToolStripMenuItem.Click += (sender, EventArgs) => { changeChunkSelection(sender, EventArgs, 3); };
+            // 
+            // chunk4ToolStripMenuItem
+            // 
+            this.chunk4ToolStripMenuItem.CheckOnClick = true;
+            this.chunk4ToolStripMenuItem.Enabled = false;
+            this.chunk4ToolStripMenuItem.Name = "chunk4ToolStripMenuItem";
+            this.chunk4ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.chunk4ToolStripMenuItem.Text = "Chunk4";
+            this.chunk4ToolStripMenuItem.Click += (sender, EventArgs) => { changeChunkSelection(sender, EventArgs, 4); };
             // 
             // toolStripMenuItem2
             // 
@@ -789,6 +853,12 @@ namespace RatchetEdit
         private System.Windows.Forms.ToolStripMenuItem lightConfigurationToolStripMenuItem;
         private CustomGLControl glControl;
         private System.Windows.Forms.ToolStripMenuItem levelVariablesToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem chunksToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem chunk0ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem chunk1ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem chunk2ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem chunk3ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem chunk4ToolStripMenuItem;
     }
 }
 

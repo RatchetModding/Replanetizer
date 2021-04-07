@@ -46,6 +46,7 @@ namespace LibReplanetizer
         public List<Light> lights;
         public List<Spline> splines;
         public List<TerrainFragment> terrains;
+        public List<List<TerrainFragment>> terrainChunks;
         public List<int> textureConfigMenus;
 
         public LevelVariables levelVariables;
@@ -223,6 +224,27 @@ namespace LibReplanetizer
                 occlusionData = gameplayParser.GetOcclusionData();
             }
 
+            terrainChunks = new List<List<TerrainFragment>>();
+
+            for (int i = 0; i < 5; i++)
+            {
+                if (!File.Exists(path + @"/chunk" + i + ".ps3")) continue;
+
+                using (ChunkParser chunkParser = new ChunkParser(path + @"/chunk"+i+".ps3"))
+                {
+                    terrainChunks.Add(chunkParser.GetTerrainModels());
+                }
+            }
+
+            // chunk 0 is always part of the engine but levels without a chunk 1 don't contain a chunk 0 file
+            if (terrainChunks.Count == 0)
+            {
+                List<TerrainFragment> temp = new List<TerrainFragment>();
+                temp.AddRange(terrains);
+                terrainChunks.Add(temp);
+            }
+
+            terrains.Clear();
 
             VramParser vramParser = new VramParser(path + @"/vram.ps3");
             if (!vramParser.valid)
@@ -237,6 +259,25 @@ namespace LibReplanetizer
 
             Logger.Info("Level parsing done");
             valid = true;
+        }
+
+        public void selectChunks(bool[] selection)
+        {
+            if (selection.Length < terrainChunks.Count)
+            {
+                Logger.Error("Selection of chunks smaller than chunk count!");
+                return;
+            }
+
+            terrains.Clear();
+
+            for (int i = 0; i < terrainChunks.Count; i++)
+            {
+                if (selection[i])
+                {
+                    terrains.AddRange(terrainChunks[i]);
+                }
+            }
         }
 
     }

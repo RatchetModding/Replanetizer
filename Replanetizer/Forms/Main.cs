@@ -40,6 +40,8 @@ namespace RatchetEdit
         public LightConfigViewer lightConfigViewer;
         public LevelVariableViewer levelVariableViewer;
 
+        private bool[] chunksSelected = new bool[5];
+
         bool suppressTreeViewSelectEvent = false;
 
         public Main()
@@ -81,6 +83,15 @@ namespace RatchetEdit
             {
                 menuButton.Enabled = true;
             }
+
+            for (int i = 0; i < level.terrainChunks.Count; i++)
+            {
+                chunksSelected[i] = true;
+                chunksToolStripMenuItem.DropDownItems[i].Enabled = true;
+                ((ToolStripMenuItem)(chunksToolStripMenuItem.DropDownItems[i])).Checked = true;
+            }
+
+            level.selectChunks(chunksSelected);
 
             objectTree.UpdateEntries(level);
             UpdateProperties(null);
@@ -466,6 +477,13 @@ namespace RatchetEdit
         {
             glControl.enableType0C = type0CCheck.Checked;
             InvalidateView();
+        }
+
+        private void changeChunkSelection(object sender, EventArgs e, int index)
+        {
+            chunksSelected[index] = !chunksSelected[index];
+
+            level.selectChunks(chunksSelected);
         }
 
         private void glControl_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)

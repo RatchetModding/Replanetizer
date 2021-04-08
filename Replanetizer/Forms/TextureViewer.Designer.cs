@@ -39,6 +39,9 @@
             this.okBtn = new System.Windows.Forms.Button();
             this.cancelBtn = new System.Windows.Forms.Button();
             this.exportBtn = new System.Windows.Forms.Button();
+            this.exportAllButton = new System.Windows.Forms.Button();
+            this.exportFolderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
+            this.saveTextureFileDialog = new System.Windows.Forms.SaveFileDialog();
             ((System.ComponentModel.ISupportInitialize)(this.textureImage)).BeginInit();
             this.SuspendLayout();
             // 
@@ -61,7 +64,9 @@
             // 
             // openTextureDialog
             // 
-            this.openTextureDialog.Filter = "All supported image files|*.bmp;*.png;*.jpg;*.jpeg;*.dds|Bitmap Image File|*.bmp|Portable Network Graphics|*.png|JPEG Image File|*.jpg;*.jpeg|DirectDraw Surface|*.dds";
+            this.openTextureDialog.Filter = "All supported image files|*.bmp;*.png;*.jpg;*.jpeg;*.dds|Bitmap Image File|*.bmp|" +
+    "Portable Network Graphics|*.png|JPEG Image File|*.jpg;*.jpeg|DirectDraw Surface|" +
+    "*.dds";
             // 
             // texAmountLabel
             // 
@@ -96,6 +101,7 @@
             this.textureView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.textureView.HideSelection = false;
             this.textureView.LargeImageList = this.texImages;
             this.textureView.Location = new System.Drawing.Point(12, 287);
             this.textureView.Name = "textureView";
@@ -140,11 +146,27 @@
             this.exportBtn.UseVisualStyleBackColor = true;
             this.exportBtn.Click += new System.EventHandler(this.exportBtn_Click);
             // 
+            // exportAllButton
+            // 
+            this.exportAllButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.exportAllButton.Location = new System.Drawing.Point(258, 597);
+            this.exportAllButton.Name = "exportAllButton";
+            this.exportAllButton.Size = new System.Drawing.Size(117, 32);
+            this.exportAllButton.TabIndex = 17;
+            this.exportAllButton.Text = "Export All";
+            this.exportAllButton.UseVisualStyleBackColor = true;
+            this.exportAllButton.Click += new System.EventHandler(this.exportAllButton_Click);
+            // 
+            // saveTextureFileDialog
+            // 
+            this.saveTextureFileDialog.Filter = "Portable Network Graphics|*.png";
+            // 
             // TextureViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(584, 641);
+            this.Controls.Add(this.exportAllButton);
             this.Controls.Add(this.exportBtn);
             this.Controls.Add(this.cancelBtn);
             this.Controls.Add(this.okBtn);
@@ -173,5 +195,8 @@
         private System.Windows.Forms.Button okBtn;
         private System.Windows.Forms.Button cancelBtn;
         private System.Windows.Forms.Button exportBtn;
+        private System.Windows.Forms.Button exportAllButton;
+        private System.Windows.Forms.FolderBrowserDialog exportFolderBrowserDialog;
+        private System.Windows.Forms.SaveFileDialog saveTextureFileDialog;
     }
 }

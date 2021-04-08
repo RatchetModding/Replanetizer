@@ -176,10 +176,39 @@ namespace RatchetEdit
         {
             if (textureView.SelectedIndices.Count == 0) return;
 
+            if (saveTextureFileDialog.ShowDialog() != DialogResult.OK) return;
+
+            string fileName = saveTextureFileDialog.FileName;
+
             int index = textureView.SelectedIndices[0];
 
             Bitmap image = main.level.textures[index].getTextureImage();
-            image.Save(index.ToString() + ".png");
+            image.Save(fileName);
+        }
+
+        private void exportAllButton_Click(object sender, EventArgs e)
+        {
+            if (exportFolderBrowserDialog.ShowDialog() != DialogResult.OK) return;
+
+            Enabled = false;
+            Application.DoEvents();
+
+            try
+            {
+                string path = exportFolderBrowserDialog.SelectedPath;
+
+                for (int i = 0; i < main.level.textures.Count; i++)
+                {
+                    Bitmap image = main.level.textures[i].getTextureImage();
+                    image.Save(path + "/" + i.ToString() + ".png");
+                }
+            }
+            finally
+            {
+                Enabled = true;
+            }
+
+
         }
     }
 }

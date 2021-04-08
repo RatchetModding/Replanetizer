@@ -38,7 +38,6 @@ namespace RatchetEdit.Forms
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
-            this.exportProgressBar = new System.Windows.Forms.ProgressBar();
             this.tiesCheckbox = new System.Windows.Forms.CheckBox();
             this.shrubsCheckbox = new System.Windows.Forms.CheckBox();
             this.mobiesCheckbox = new System.Windows.Forms.CheckBox();
@@ -49,6 +48,7 @@ namespace RatchetEdit.Forms
             this.chunk3Checkbox = new System.Windows.Forms.CheckBox();
             this.chunk4Checkbox = new System.Windows.Forms.CheckBox();
             this.mtlCheckbox = new System.Windows.Forms.CheckBox();
+            this.exportProgressStatus = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // exportButton
@@ -151,17 +151,6 @@ namespace RatchetEdit.Forms
             this.label5.TabIndex = 8;
             this.label5.Text = "Include Terrain Chunks";
             this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // exportProgressBar
-            // 
-            this.exportProgressBar.BackColor = System.Drawing.SystemColors.Control;
-            this.exportProgressBar.Location = new System.Drawing.Point(25, 365);
-            this.exportProgressBar.MaximumSize = new System.Drawing.Size(150, 28);
-            this.exportProgressBar.MinimumSize = new System.Drawing.Size(150, 28);
-            this.exportProgressBar.Name = "exportProgressBar";
-            this.exportProgressBar.Size = new System.Drawing.Size(150, 28);
-            this.exportProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-            this.exportProgressBar.TabIndex = 9;
             // 
             // tiesCheckbox
             // 
@@ -334,11 +323,23 @@ namespace RatchetEdit.Forms
             this.mtlCheckbox.TextAlign = System.Drawing.ContentAlignment.TopLeft;
             this.mtlCheckbox.UseVisualStyleBackColor = false;
             // 
+            // exportProgressStatus
+            // 
+            this.exportProgressStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(0)));
+            this.exportProgressStatus.Location = new System.Drawing.Point(25, 365);
+            this.exportProgressStatus.MaximumSize = new System.Drawing.Size(150, 28);
+            this.exportProgressStatus.MinimumSize = new System.Drawing.Size(150, 28);
+            this.exportProgressStatus.Name = "exportProgressStatus";
+            this.exportProgressStatus.Size = new System.Drawing.Size(150, 28);
+            this.exportProgressStatus.TabIndex = 24;
+            this.exportProgressStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // LevelExportWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(384, 411);
+            this.Controls.Add(this.exportProgressStatus);
             this.Controls.Add(this.mtlCheckbox);
             this.Controls.Add(this.chunk4Checkbox);
             this.Controls.Add(this.chunk3Checkbox);
@@ -349,7 +350,6 @@ namespace RatchetEdit.Forms
             this.Controls.Add(this.mobiesCheckbox);
             this.Controls.Add(this.shrubsCheckbox);
             this.Controls.Add(this.tiesCheckbox);
-            this.Controls.Add(this.exportProgressBar);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
@@ -382,7 +382,6 @@ namespace RatchetEdit.Forms
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.ProgressBar exportProgressBar;
         private System.Windows.Forms.CheckBox tiesCheckbox;
         private System.Windows.Forms.CheckBox shrubsCheckbox;
         private System.Windows.Forms.CheckBox mobiesCheckbox;
@@ -393,5 +392,6 @@ namespace RatchetEdit.Forms
         private System.Windows.Forms.CheckBox chunk3Checkbox;
         private System.Windows.Forms.CheckBox chunk4Checkbox;
         private System.Windows.Forms.CheckBox mtlCheckbox;
+        private Label exportProgressStatus;
     }
 }

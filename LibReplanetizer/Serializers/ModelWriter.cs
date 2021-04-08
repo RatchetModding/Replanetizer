@@ -751,6 +751,13 @@ namespace LibReplanetizer
             }
         }
 
+        /*
+         * Different Modes for Level Export:
+         * - Separate: Exports every ModelObject as is
+         * - Combined: Combines all ModelObjects into one mesh
+         * - Typewise: Combines all ModelObjects of the same type (Tie, Shrubs etc.) into one mesh
+         * - Materialwise: Combines all faces using the same material/texture into one mesh
+         */
         public enum WriterLevelMode{
             Separate,
             Combined,

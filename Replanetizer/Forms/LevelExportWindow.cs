@@ -84,7 +84,22 @@ namespace RatchetEdit.Forms
 
         private void exportButton_Click(object sender, EventArgs e)
         {
-            exportLevel();
+            Application.UseWaitCursor = true;
+            exportProgressStatus.Text = "Export in Progress...";
+            Enabled = false;
+            Application.DoEvents();
+
+            try
+            {
+                exportLevel();
+            }
+            finally
+            {
+                Application.UseWaitCursor = false;
+                exportProgressStatus.Text = "";
+                Enabled = true;
+            }
+            
         }
 
         private void enableMain(object sender, FormClosingEventArgs e)

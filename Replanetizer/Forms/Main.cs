@@ -39,6 +39,7 @@ namespace RatchetEdit
         public LanguageViewer languageViewer;
         public LightConfigViewer lightConfigViewer;
         public LevelVariableViewer levelVariableViewer;
+        public LevelExportWindow levelExportWindow;
 
         private bool[] chunksSelected = new bool[5];
 
@@ -72,6 +73,11 @@ namespace RatchetEdit
 
             glControl.LoadLevel(level);
 
+            mobiesVisible(true);
+            tiesVisible(true);
+            shrubsVisible(true);
+            terrainVisible(true);
+
             //Enable all the buttons in the view tab
             foreach (ToolStripMenuItem menuButton in ViewToolStipItem.DropDownItems)
             {
@@ -101,6 +107,30 @@ namespace RatchetEdit
 
             objectTree.UpdateEntries(level);
             UpdateProperties(null);
+        }
+
+        public void mobiesVisible(bool value)
+        {
+            mobyCheck.Checked = value;
+            glControl.enableMoby = value;
+        }
+
+        public void tiesVisible(bool value)
+        {
+            tieCheck.Checked = value;
+            glControl.enableTie = value;
+        }
+
+        public void shrubsVisible(bool value)
+        {
+            shrubCheck.Checked = value;
+            glControl.enableShrub = value;
+        }
+
+        public void terrainVisible(bool value)
+        {
+            terrainCheck.Checked = value;
+            glControl.enableTerrain = value;
         }
 
         private Dictionary<int, string> GetModelNames(string fileName)
@@ -234,6 +264,21 @@ namespace RatchetEdit
                 levelVariableViewer.BringToFront();
             }
         }
+
+        private void OpenExportLevelWindow()
+        {
+            if (levelExportWindow == null || levelExportWindow.IsDisposed)
+            {
+                levelExportWindow = new LevelExportWindow(this);
+                levelExportWindow.Show();
+            }
+            else
+            {
+                levelExportWindow.BringToFront();
+            }
+
+            Enabled = false;
+        }
         #endregion
 
         #region MenuButtons
@@ -277,6 +322,11 @@ namespace RatchetEdit
         private void levelVariablesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenLevelVariableViewer();
+        }
+
+        private void levelExportToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenExportLevelWindow();
         }
         #endregion MenuButtons
 

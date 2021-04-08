@@ -8,10 +8,16 @@ namespace LibReplanetizer.Models
 {
     public class TerrainModel : Model
     {
+        // Don't use this directly, call getIDAssigned() instead to retrieve an ID
+        private static short STATIC_ID = 0;
+
         public List<uint> off_0C = new List<uint>();    // Something to do with lighting
         int faceCount;
         public TerrainModel(FileStream fs, TerrainHead head, byte[] tfragBlock, int num)
         {
+            id = getIDAssigned();
+            size = 1.0f;
+
             int offset = num * 0x30;
             int texturePointer = ReadInt(tfragBlock, offset + 0x10);
             int textureCount = ReadInt(tfragBlock, offset + 0x14);
@@ -57,6 +63,11 @@ namespace LibReplanetizer.Models
             }
 
             return outBytes;
+        }
+
+        private static short getIDAssigned()
+        {
+            return STATIC_ID++;
         }
 
     }

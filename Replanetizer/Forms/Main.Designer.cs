@@ -69,6 +69,7 @@ namespace RatchetEdit
             this.levelVariablesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.languageDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lightConfigurationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.levelExportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mapOpenDialog = new System.Windows.Forms.OpenFileDialog();
@@ -396,7 +397,8 @@ namespace RatchetEdit
             this.toolStripMenuItem14,
             this.levelVariablesToolStripMenuItem,
             this.languageDataToolStripMenuItem,
-            this.lightConfigurationToolStripMenuItem});
+            this.lightConfigurationToolStripMenuItem,
+            this.levelExportToolStripMenuItem});
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
             this.toolStripMenuItem2.Size = new System.Drawing.Size(63, 20);
             this.toolStripMenuItem2.Text = "Window";
@@ -470,6 +472,14 @@ namespace RatchetEdit
             this.lightConfigurationToolStripMenuItem.Enabled = false;
             this.lightConfigurationToolStripMenuItem.Text = "Light Configuration";
             this.lightConfigurationToolStripMenuItem.Click += new System.EventHandler(this.lightConfigurationToolStripMenuItem_Click);
+            // 
+            // levelExportToolStripMenuItem
+            // 
+            this.levelExportToolStripMenuItem.Name = "levelExportToolStripMenuItem";
+            this.levelExportToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.levelExportToolStripMenuItem.Enabled = false;
+            this.levelExportToolStripMenuItem.Text = "Level Export Window";
+            this.levelExportToolStripMenuItem.Click += new System.EventHandler(this.levelExportToolStripMenuItem_Click);
             // 
             // toolStripMenuItem3
             // 
@@ -851,6 +861,7 @@ namespace RatchetEdit
         private System.Windows.Forms.ToolStripMenuItem collisionToolStripMenuItem1;
         private System.Windows.Forms.OpenFileDialog collisionOpenDialog;
         private System.Windows.Forms.ToolStripMenuItem lightConfigurationToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem levelExportToolStripMenuItem;
         private CustomGLControl glControl;
         private System.Windows.Forms.ToolStripMenuItem levelVariablesToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem chunksToolStripMenuItem;
@@ -858,7 +869,7 @@ namespace RatchetEdit
         private System.Windows.Forms.ToolStripMenuItem chunk1ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem chunk2ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem chunk3ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem chunk4ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem chunk4ToolStripMenuItem;    
     }
 }
 

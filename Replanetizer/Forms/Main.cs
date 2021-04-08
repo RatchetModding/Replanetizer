@@ -73,6 +73,11 @@ namespace RatchetEdit
 
             glControl.LoadLevel(level);
 
+            mobiesVisible(true);
+            tiesVisible(true);
+            shrubsVisible(true);
+            terrainVisible(true);
+
             //Enable all the buttons in the view tab
             foreach (ToolStripMenuItem menuButton in ViewToolStipItem.DropDownItems)
             {
@@ -102,6 +107,30 @@ namespace RatchetEdit
 
             objectTree.UpdateEntries(level);
             UpdateProperties(null);
+        }
+
+        public void mobiesVisible(bool value)
+        {
+            mobyCheck.Checked = value;
+            glControl.enableMoby = value;
+        }
+
+        public void tiesVisible(bool value)
+        {
+            tieCheck.Checked = value;
+            glControl.enableTie = value;
+        }
+
+        public void shrubsVisible(bool value)
+        {
+            shrubCheck.Checked = value;
+            glControl.enableShrub = value;
+        }
+
+        public void terrainVisible(bool value)
+        {
+            terrainCheck.Checked = value;
+            glControl.enableTerrain = value;
         }
 
         private Dictionary<int, string> GetModelNames(string fileName)

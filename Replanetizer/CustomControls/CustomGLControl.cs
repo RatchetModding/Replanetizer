@@ -168,10 +168,6 @@ namespace RatchetEdit
             this.level = level;
             LoadLevelTextures();
             LoadCollisionBOs();
-            enableMoby = true;
-            enableTie = true;
-            enableShrub = true;
-            enableTerrain = true;
 
             Moby ratchet = level.mobs[0];
 

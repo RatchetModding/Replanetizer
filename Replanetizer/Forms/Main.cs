@@ -71,7 +71,7 @@ namespace RatchetEdit
             level = new Level(fileName);
             if (!level.valid) return;
 
-            glControl.LoadLevel(level);
+            glControl.LoadLevel(level);    
 
             mobiesVisible(true);
             tiesVisible(true);
@@ -103,7 +103,7 @@ namespace RatchetEdit
                 ((ToolStripMenuItem)(chunksToolStripMenuItem.DropDownItems[i])).Checked = false;
             }
 
-            level.selectChunks(chunksSelected);
+            glControl.setSelectedChunks(chunksSelected);
 
             objectTree.UpdateEntries(level);
             UpdateProperties(null);
@@ -539,7 +539,7 @@ namespace RatchetEdit
         {
             chunksSelected[index] = !chunksSelected[index];
 
-            level.selectChunks(chunksSelected);
+            glControl.setSelectedChunks(chunksSelected);
         }
 
         private void glControl_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -580,7 +580,10 @@ namespace RatchetEdit
                     //level.shrubModels.RemoveRange(5, level.shrubModels.Count - 5);
                     break;
                 case TerrainFragment tFrag:
-                    level.terrains.Remove(tFrag);
+                    foreach (List<TerrainFragment> list in level.terrainChunks)
+                    {
+                        list.Remove(tFrag);
+                    }
                     break;
                 case Spline spline:
                     level.splines.Remove(spline);

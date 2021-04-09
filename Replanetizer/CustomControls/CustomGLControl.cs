@@ -20,6 +20,7 @@ namespace RatchetEdit
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         public Level level { get; set; }
+        private List<TerrainFragment> terrains = new List<TerrainFragment>();
 
         public Matrix4 worldView { get; set; }
 
@@ -55,7 +56,9 @@ namespace RatchetEdit
 
         MemoryHook hook;
 
-        private int collisionVbo, collisionIbo = 0;
+        private List<int> collisionVbo = new List<int>();
+        private List<int> collisionIbo = new List<int>();
+        private bool[] selectedChunks;
 
         public CustomGLControl()
         {
@@ -153,14 +156,26 @@ namespace RatchetEdit
 
         void LoadCollisionBOs()
         {
-            Collision col = (Collision) level.collisionModel;
-            GL.GenBuffers(1, out collisionVbo);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, collisionVbo);
-            GL.BufferData(BufferTarget.ArrayBuffer, col.vertexBuffer.Length * sizeof(float), col.vertexBuffer, BufferUsageHint.StaticDraw);
+            collisionVbo.Clear();
+            collisionIbo.Clear();
 
-            GL.GenBuffers(1, out collisionIbo);
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, collisionIbo);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, col.indBuff.Length * sizeof(int), col.indBuff, BufferUsageHint.StaticDraw);
+            foreach (Model collisionModel in level.collisionChunks)
+            {
+                Collision col = (Collision)collisionModel;
+                int id;
+                GL.GenBuffers(1, out id);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, id);
+                GL.BufferData(BufferTarget.ArrayBuffer, col.vertexBuffer.Length * sizeof(float), col.vertexBuffer, BufferUsageHint.StaticDraw);
+
+                collisionVbo.Add(id);
+
+                GL.GenBuffers(1, out id);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, id);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, col.indBuff.Length * sizeof(int), col.indBuff, BufferUsageHint.StaticDraw);
+
+                collisionIbo.Add(id);
+            }
+
         }
 
         public void LoadLevel(Level level)
@@ -175,6 +190,19 @@ namespace RatchetEdit
 
             SelectObject(null);
             hook = new MemoryHook(level.game.num);
+        }
+
+        public void setSelectedChunks(bool[] selection)
+        {
+            selectedChunks = selection;
+
+            terrains.Clear();
+
+            for (int i = 0; i < level.terrainChunks.Count; i++)
+            {
+                if (selectedChunks[i])
+                    terrains.AddRange(level.terrainChunks[i]);
+            }
         }
 
         public void SelectObject(LevelObject newObject = null)
@@ -588,7 +616,7 @@ namespace RatchetEdit
             if (enableTerrain)
             {
                 tfragOffset = offset;
-                FakeDrawObjects(level.terrains.Cast<ModelObject>().ToList(), tfragOffset);
+                FakeDrawObjects(terrains.Cast<ModelObject>().ToList(), tfragOffset);
                 offset += level.cuboids.Count;
             }
 
@@ -653,9 +681,9 @@ namespace RatchetEdit
                 {
                     returnObject = level.cuboids[id - cuboidOffset];
                 }
-                else if (enableTerrain && id - tfragOffset < level.terrains.Count)
+                else if (enableTerrain && id - tfragOffset < terrains.Count)
                 {
-                    returnObject = level.terrains[id - tfragOffset];
+                    returnObject = terrains[id - tfragOffset];
                 }
             }
 
@@ -735,7 +763,7 @@ namespace RatchetEdit
                     RenderModelObject(shrub, shrub == selectedObject);
 
             if (enableTerrain)
-                foreach (TerrainFragment tFrag in level.terrains)
+                foreach (TerrainFragment tFrag in terrains)
                     RenderModelObject(tFrag, tFrag == selectedObject);
 
             if (enableSkybox)
@@ -790,23 +818,29 @@ namespace RatchetEdit
 
             if (enableCollision)
             {
-                Collision col = (Collision)level.collisionModel;
+                for (int i = 0; i < level.collisionChunks.Count; i++)
+                {
+                    if (!selectedChunks[i]) continue;
 
-                Matrix4 worldView = this.worldView;
-                GL.UniformMatrix4(matrixID, false, ref worldView);
-                GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
+                    Collision col = (Collision)level.collisionChunks[i];
 
-                GL.BindBuffer(BufferTarget.ArrayBuffer, collisionVbo);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
-                GL.VertexAttribPointer(1, 4, VertexAttribPointerType.UnsignedByte, false, sizeof(float) * 4, sizeof(float) * 3);
-                GL.BindBuffer(BufferTarget.ElementArrayBuffer, collisionIbo);
+                    GL.UseProgram(colorShaderID);
+                    Matrix4 worldView = this.worldView;
+                    GL.UniformMatrix4(matrixID, false, ref worldView);
+                    GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
 
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                GL.DrawElements(PrimitiveType.Triangles, col.indBuff.Length, DrawElementsType.UnsignedInt, 0);
-                GL.UseProgram(collisionShaderID);
-                GL.UniformMatrix4(matrixID, false, ref worldView);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                GL.DrawElements(PrimitiveType.Triangles, col.indBuff.Length, DrawElementsType.UnsignedInt, 0);
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, collisionVbo[i]);
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
+                    GL.VertexAttribPointer(1, 4, VertexAttribPointerType.UnsignedByte, false, sizeof(float) * 4, sizeof(float) * 3);
+                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, collisionIbo[i]);
+
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                    GL.DrawElements(PrimitiveType.Triangles, col.indBuff.Length, DrawElementsType.UnsignedInt, 0);
+                    GL.UseProgram(collisionShaderID);
+                    GL.UniformMatrix4(matrixID, false, ref worldView);
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                    GL.DrawElements(PrimitiveType.Triangles, col.indBuff.Length, DrawElementsType.UnsignedInt, 0);
+                }
             }
 
             RenderTool();

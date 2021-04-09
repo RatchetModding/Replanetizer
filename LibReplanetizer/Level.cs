@@ -25,7 +25,7 @@ namespace LibReplanetizer
         public List<Model> tieModels;
         public List<Model> shrubModels;
         public List<Model> weaponModels;
-        public Model collisionModel;
+        public List<Model> collisionChunks;
         public List<Model> chunks;
         public List<Texture> textures;
         public SkyboxModel skybox;
@@ -45,7 +45,6 @@ namespace LibReplanetizer
         public List<Shrub> shrubs;
         public List<Light> lights;
         public List<Spline> splines;
-        public List<TerrainFragment> terrains;
         public List<List<TerrainFragment>> terrainChunks;
         public List<int> textureConfigMenus;
 
@@ -106,6 +105,9 @@ namespace LibReplanetizer
 
             path = Path.GetDirectoryName(enginePath);
 
+            terrainChunks = new List<List<TerrainFragment>>();
+            collisionChunks = new List<Model>();
+
             // Engine elements
             using (EngineParser engineParser = new EngineParser(enginePath))
             {
@@ -154,8 +156,8 @@ namespace LibReplanetizer
                 Logger.Debug("Added {0} lights", lights.Count);
 
                 Logger.Debug("Parsing terrain elements...");
-                terrains = engineParser.GetTerrainModels();
-                Logger.Debug("Added {0} terrain elements" + terrains?.Count);
+                terrainChunks.Add(engineParser.GetTerrainModels());
+                Logger.Debug("Added {0} terrain elements" + terrainChunks[0]?.Count);
 
                 Logger.Debug("Parsing player animations...");
                 playerAnimations = engineParser.GetPlayerAnimations((MobyModel)mobyModels[0]);
@@ -166,7 +168,8 @@ namespace LibReplanetizer
 
                 lightConfig = engineParser.GetLightConfig();
                 textureConfigMenus = engineParser.GetTextureConfigMenu();
-                collisionModel = engineParser.GetCollisionModel();
+
+                collisionChunks.Add(engineParser.GetCollisionModel());
             }
 
 
@@ -222,9 +225,7 @@ namespace LibReplanetizer
                 tieIds = gameplayParser.GetTieIds();
                 shrubIds = gameplayParser.GetShrubIds();
                 occlusionData = gameplayParser.GetOcclusionData();
-            }
-
-            terrainChunks = new List<List<TerrainFragment>>();
+            }  
 
             for (int i = 0; i < 5; i++)
             {
@@ -232,19 +233,17 @@ namespace LibReplanetizer
 
                 using (ChunkParser chunkParser = new ChunkParser(path + @"/chunk"+i+".ps3"))
                 {
+                    // chunk 0 is always part of the engine but levels without a chunk 1 don't contain a chunk 0 file
+                    if (i == 0)
+                    {
+                        terrainChunks.RemoveAt(0);
+                        collisionChunks.RemoveAt(0);
+                    }
+
                     terrainChunks.Add(chunkParser.GetTerrainModels());
+                    collisionChunks.Add(chunkParser.GetCollisionModel());
                 }
             }
-
-            // chunk 0 is always part of the engine but levels without a chunk 1 don't contain a chunk 0 file
-            if (terrainChunks.Count == 0)
-            {
-                List<TerrainFragment> temp = new List<TerrainFragment>();
-                temp.AddRange(terrains);
-                terrainChunks.Add(temp);
-            }
-
-            terrains.Clear();
 
             VramParser vramParser = new VramParser(path + @"/vram.ps3");
             if (!vramParser.valid)
@@ -260,25 +259,5 @@ namespace LibReplanetizer
             Logger.Info("Level parsing done");
             valid = true;
         }
-
-        public void selectChunks(bool[] selection)
-        {
-            if (selection.Length < terrainChunks.Count)
-            {
-                Logger.Error("Selection of chunks smaller than chunk count!");
-                return;
-            }
-
-            terrains.Clear();
-
-            for (int i = 0; i < terrainChunks.Count; i++)
-            {
-                if (selection[i])
-                {
-                    terrains.AddRange(terrainChunks[i]);
-                }
-            }
-        }
-
     }
 }

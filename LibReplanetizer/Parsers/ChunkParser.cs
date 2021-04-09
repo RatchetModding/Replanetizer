@@ -1,5 +1,6 @@
 ﻿using LibReplanetizer.Headers;
 using LibReplanetizer.LevelObjects;
+using LibReplanetizer.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -19,6 +20,11 @@ namespace LibReplanetizer.Parsers
         public List<TerrainFragment> GetTerrainModels()
         {
             return GetTerrainModels(chunkHeader.terrainPointer);
+        }
+
+        public Model GetCollisionModel()
+        {
+            return GetCollisionModel(chunkHeader.collisionPointer);
         }
 
         public void Dispose()

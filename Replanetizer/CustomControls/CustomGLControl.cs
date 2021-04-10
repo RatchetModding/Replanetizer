@@ -619,7 +619,6 @@ namespace RatchetEdit
             {
                 tfragOffset = offset;
                 FakeDrawObjects(terrains.Cast<ModelObject>().ToList(), tfragOffset);
-                offset += level.cuboids.Count;
             }
 
             RenderTool();
@@ -717,6 +716,11 @@ namespace RatchetEdit
 
             if (selected)
             {
+                bool switchBlends = allowTransparency && (modelObject is Moby);
+
+                if (switchBlends)
+                    GL.Disable(EnableCap.Blend);
+
                 GL.UseProgram(colorShaderID);
                 GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
                 GL.UniformMatrix4(matrixID, false, ref mvp);
@@ -724,6 +728,9 @@ namespace RatchetEdit
                 GL.DrawElements(PrimitiveType.Triangles, modelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 GL.UseProgram(shaderID);
+
+                if (switchBlends)
+                    GL.Enable(EnableCap.Blend);
             }
         }
 

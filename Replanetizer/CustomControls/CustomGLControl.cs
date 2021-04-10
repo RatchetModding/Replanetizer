@@ -853,6 +853,8 @@ namespace RatchetEdit
 
                     Collision col = (Collision)level.collisionChunks[i];
 
+                    if (col.indBuff.Length == 0) continue;
+
                     GL.UseProgram(colorShaderID);
                     Matrix4 worldView = this.worldView;
                     GL.UniformMatrix4(matrixID, false, ref worldView);

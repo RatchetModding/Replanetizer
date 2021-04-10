@@ -36,7 +36,7 @@ namespace LibReplanetizer.Serializers
                 cameraPointer = SeekWrite(fs, SerializeLevelObjects(level.gameCameras, GameCamera.ELEMENTSIZE)),
                 type0CPointer = SeekWrite(fs, SerializeLevelObjects(level.type0Cs, Type0C.ELEMENTSIZE)),
                 mobyIdPointer = SeekWrite(fs, GetIdBytes(level.mobyIds)),
-                mobyPointer = SeekWrite(fs, GetMobyBytes(level.mobs)),
+                mobyPointer = SeekWrite(fs, GetMobyBytes(level.mobs, level.game)),
                 pvarSizePointer = SeekWrite(fs, GetPvarSizeBytes(level.pVars)),
                 pvarPointer = SeekWrite(fs, GetPvarBytes(level.pVars)),
                 type50Pointer = SeekWrite(fs, GetKeyValueBytes(level.type50s)),
@@ -60,7 +60,17 @@ namespace LibReplanetizer.Serializers
             };
 
             //Seek to the beginning of the file to append the updated header
-            byte[] head = gameplayHeader.Serialize();
+            byte[] head = null;
+            switch (level.game.num)
+            {
+                case 1:
+                    head = gameplayHeader.SerializeRC1();
+                    break;
+                case 2:
+                case 3:
+                    head = gameplayHeader.SerializeRC23();
+                    break;
+            }
             fs.Seek(0, SeekOrigin.Begin);
             fs.Write(head, 0, head.Length);
 
@@ -131,20 +141,33 @@ namespace LibReplanetizer.Serializers
             return bytes;
         }
 
-        public byte[] GetMobyBytes(List<Moby> mobs)
+        public byte[] GetMobyBytes(List<Moby> mobs, GameType game)
         {
             if (mobs == null) return new byte[0x10];
 
-            byte[] bytes = new byte[0x10 + mobs.Count * MOBYLENGTH];
+            byte[] bytes = new byte[0x10 + mobs.Count * game.mobyElemSize];
 
             //Header
             WriteUint(bytes, 0, (uint)mobs.Count);
             WriteUint(bytes, 4, 0x100);
 
-            for (int i = 0; i < mobs.Count; i++)
+            switch (game.num)
             {
-                mobs[i].ToByteArray().CopyTo(bytes, 0x10 + i * MOBYLENGTH);
+                case 1:
+                    for (int i = 0; i < mobs.Count; i++)
+                    {
+                        mobs[i].ToByteArrayRC1().CopyTo(bytes, 0x10 + i * game.mobyElemSize);
+                    }
+                    break;
+                case 2:
+                case 3:
+                    for (int i = 0; i < mobs.Count; i++)
+                    {
+                        mobs[i].ToByteArrayRC23().CopyTo(bytes, 0x10 + i * game.mobyElemSize);
+                    }
+                    break;
             }
+
             return bytes;
         }
 

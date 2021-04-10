@@ -169,7 +169,7 @@ namespace LibReplanetizer.Headers
             occlusionPointer = ReadInt(gameplayHeadBlock, 0x90);
         }
 
-        public byte[] Serialize()
+        public byte[] SerializeRC1()
         {
             byte[] bytes = new byte[GAMEPLAYSIZE];
 
@@ -217,6 +217,60 @@ namespace LibReplanetizer.Headers
             WriteInt(bytes, 0x84, unkPointer17);
             WriteInt(bytes, 0x88, type88Pointer);
             WriteInt(bytes, 0x8C, occlusionPointer);
+
+            return bytes;
+        }
+
+        public byte[] SerializeRC23()
+        {
+            byte[] bytes = new byte[GAMEPLAYSIZE];
+
+            WriteInt(bytes, 0x00, levelVarPointer);
+            WriteInt(bytes, 0x04, type04Pointer);
+            WriteInt(bytes, 0x08, cameraPointer);
+            WriteInt(bytes, 0x0C, type0CPointer);
+
+            WriteInt(bytes, 0x10, englishPointer);
+            WriteInt(bytes, 0x14, lang2Pointer);
+            WriteInt(bytes, 0x18, frenchPointer);
+            WriteInt(bytes, 0x1C, germanPointer);
+
+            WriteInt(bytes, 0x20, spanishPointer);
+            WriteInt(bytes, 0x24, italianPointer);
+            WriteInt(bytes, 0x28, lang7Pointer);
+            WriteInt(bytes, 0x2C, lang8Pointer);
+
+            WriteInt(bytes, 0x30, tieIdPointer);
+            //0x34
+            //0x38
+            WriteInt(bytes, 0x3C, shrubIdPointer);
+
+            WriteInt(bytes, 0x40, shrubPointer);
+            //0x44
+            WriteInt(bytes, 0x48, mobyIdPointer);
+            WriteInt(bytes, 0x4C, mobyPointer);
+
+            WriteInt(bytes, 0x50, unkPointer6);
+            WriteInt(bytes, 0x54, unkPointer7);
+            WriteInt(bytes, 0x58, type50Pointer);
+            WriteInt(bytes, 0x5C, pvarSizePointer);
+
+            WriteInt(bytes, 0x60, pvarPointer);
+            WriteInt(bytes, 0x64, type5CPointer);
+            WriteInt(bytes, 0x68, cuboidPointer);
+            WriteInt(bytes, 0x6C, type64Pointer);
+
+            WriteInt(bytes, 0x70, type68Pointer);
+            WriteInt(bytes, 0x74, unkPointer12);
+            WriteInt(bytes, 0x78, splinePointer);
+            WriteInt(bytes, 0x7C, unkPointer13);
+
+            //0x80
+            WriteInt(bytes, 0x84, type80Pointer);
+            WriteInt(bytes, 0x88, unkPointer17);
+            //0x8C
+
+            WriteInt(bytes, 0x90, occlusionPointer);
 
             return bytes;
         }

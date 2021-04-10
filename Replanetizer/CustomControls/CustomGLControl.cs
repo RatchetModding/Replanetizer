@@ -60,6 +60,8 @@ namespace RatchetEdit
         private List<int> collisionIbo = new List<int>();
         private bool[] selectedChunks;
 
+        private bool allowTransparency = false;
+
         public CustomGLControl()
         {
             bufferTable = new ConditionalWeakTable<IRenderable, BufferContainer>();
@@ -617,7 +619,6 @@ namespace RatchetEdit
             {
                 tfragOffset = offset;
                 FakeDrawObjects(terrains.Cast<ModelObject>().ToList(), tfragOffset);
-                offset += level.cuboids.Count;
             }
 
             RenderTool();
@@ -715,6 +716,11 @@ namespace RatchetEdit
 
             if (selected)
             {
+                bool switchBlends = allowTransparency && (modelObject is Moby);
+
+                if (switchBlends)
+                    GL.Disable(EnableCap.Blend);
+
                 GL.UseProgram(colorShaderID);
                 GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
                 GL.UniformMatrix4(matrixID, false, ref mvp);
@@ -722,8 +728,15 @@ namespace RatchetEdit
                 GL.DrawElements(PrimitiveType.Triangles, modelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 GL.UseProgram(shaderID);
-            }
 
+                if (switchBlends)
+                    GL.Enable(EnableCap.Blend);
+            }
+        }
+
+        public void setTransparency(bool value)
+        {
+            allowTransparency = value;
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -735,7 +748,6 @@ namespace RatchetEdit
             worldView = view * projection;
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-
             GL.EnableVertexAttribArray(0);
             GL.EnableVertexAttribArray(1);
 
@@ -743,35 +755,52 @@ namespace RatchetEdit
 
             GL.UseProgram(shaderID);
 
-            if (enableMoby)
-            {
-                hook.UpdateMobys(level.mobs, level.mobyModels);
-
-                foreach (Moby mob in level.mobs)
-                {
-                    RenderModelObject(mob, mob == selectedObject);
-                }
-            }
-
-
-            if (enableTie)
-                foreach (Tie tie in level.ties)
-                    RenderModelObject(tie, tie == selectedObject);
-
-            if (enableShrub)
-                foreach (Shrub shrub in level.shrubs)
-                    RenderModelObject(shrub, shrub == selectedObject);
-
-            if (enableTerrain)
-                foreach (TerrainFragment tFrag in terrains)
-                    RenderModelObject(tFrag, tFrag == selectedObject);
-
             if (enableSkybox)
+            {
+                GL.Disable(EnableCap.DepthTest);
+                Matrix4 mvp = view.ClearTranslation() * projection;
+                GL.UniformMatrix4(matrixID, false, ref mvp);
+                ActivateBuffersForModel(level.skybox);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
                 foreach (TextureConfig conf in level.skybox.textureConfig)
                 {
                     GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? textureIds[level.textures[conf.ID]] : 0);
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
+                GL.Enable(EnableCap.DepthTest);
+            }
+
+            if (enableTerrain)
+                foreach (TerrainFragment tFrag in terrains)
+                    RenderModelObject(tFrag, tFrag == selectedObject);
+
+            if (enableShrub)
+                foreach (Shrub shrub in level.shrubs)
+                    RenderModelObject(shrub, shrub == selectedObject);
+
+            if (enableTie)
+                foreach (Tie tie in level.ties)
+                    RenderModelObject(tie, tie == selectedObject);
+
+
+            if (enableMoby)
+            {
+                hook.UpdateMobys(level.mobs, level.mobyModels);
+
+                if (allowTransparency)
+                {
+                    GL.Enable(EnableCap.Blend);
+                    GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+                }
+
+                foreach (Moby mob in level.mobs)
+                {
+                    RenderModelObject(mob, mob == selectedObject);
+                }
+
+                GL.Disable(EnableCap.Blend);
+            }
 
             GL.UseProgram(colorShaderID);
 

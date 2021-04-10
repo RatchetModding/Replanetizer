@@ -535,6 +535,12 @@ namespace RatchetEdit
             InvalidateView();
         }
 
+        private void transparencyPreference_CheckedChanged(object sender, EventArgs e)
+        {
+            glControl.setTransparency(transparencyToolStripMenuItem.Checked);
+            InvalidateView();
+        }
+
         private void changeChunkSelection(object sender, EventArgs e, int index)
         {
             chunksSelected[index] = !chunksSelected[index];

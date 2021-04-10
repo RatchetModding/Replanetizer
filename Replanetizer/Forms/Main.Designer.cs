@@ -71,6 +71,7 @@ namespace RatchetEdit
             this.lightConfigurationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.levelExportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
+            this.transparencyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mapOpenDialog = new System.Windows.Forms.OpenFileDialog();
             this.tickTimer = new System.Windows.Forms.Timer(this.components);
@@ -484,16 +485,25 @@ namespace RatchetEdit
             // toolStripMenuItem3
             // 
             this.toolStripMenuItem3.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.transparencyToolStripMenuItem,
             this.settingsToolStripMenuItem});
             this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-            this.toolStripMenuItem3.Enabled = false;
             this.toolStripMenuItem3.Size = new System.Drawing.Size(80, 20);
             this.toolStripMenuItem3.Text = "Preferences";
+            // 
+            // transparencyToolStripMenuItem
+            // 
+            this.transparencyToolStripMenuItem.Name = "transparencyToolStripMenuItem";
+            this.transparencyToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.transparencyToolStripMenuItem.Text = "Transparent Mobies";
+            this.transparencyToolStripMenuItem.CheckOnClick = true;
+            this.transparencyToolStripMenuItem.CheckedChanged += new System.EventHandler(this.transparencyPreference_CheckedChanged);
             // 
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             this.settingsToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.settingsToolStripMenuItem.Enabled = false;
             this.settingsToolStripMenuItem.Text = "Settings";
             // 
             // mapOpenDialog
@@ -820,6 +830,7 @@ namespace RatchetEdit
         private System.Windows.Forms.Label camXLabel;
         private System.Windows.Forms.Label camYLabel;
         private System.Windows.Forms.Label camZLabel;
+        private System.Windows.Forms.ToolStripMenuItem transparencyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
         private System.Windows.Forms.OpenFileDialog mapOpenDialog;
         private System.Windows.Forms.Timer tickTimer;

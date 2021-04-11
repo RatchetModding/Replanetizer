@@ -1,5 +1,6 @@
 ﻿using LibReplanetizer.Models;
 using OpenTK;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -213,11 +214,17 @@ namespace LibReplanetizer.LevelObjects
 
         public override byte[] ToByteArray()
         {
+            //Mobies differ for each game, there is no universal method
+            throw new NotImplementedException();
+        }
+
+        public byte[] ToByteArrayRC1()
+        {
             Vector3 eulerAngles = ToEulerAngles(modelMatrix.ExtractRotation());
 
-            byte[] buffer = new byte[ELEMENTSIZE];
+            byte[] buffer = new byte[GameType.mobySizes[0]];
 
-            WriteInt(buffer, 0x00, ELEMENTSIZE);
+            WriteInt(buffer, 0x00, GameType.mobySizes[0]);
             WriteInt(buffer, 0x04, missionID);
             WriteInt(buffer, 0x08, unk1);
             WriteInt(buffer, 0x0C, dataval);
@@ -254,6 +261,58 @@ namespace LibReplanetizer.LevelObjects
 
             WriteInt(buffer, 0x70, light);
             WriteInt(buffer, 0x74, cutscene);
+
+            return buffer;
+        }
+
+        public byte[] ToByteArrayRC23()
+        {
+            Vector3 eulerAngles = ToEulerAngles(modelMatrix.ExtractRotation());
+
+            byte[] buffer = new byte[GameType.mobySizes[1]];
+
+            WriteInt(buffer, 0x00, GameType.mobySizes[1]);
+            WriteInt(buffer, 0x04, missionID);
+            WriteInt(buffer, 0x08, unk1);
+            WriteInt(buffer, 0x0C, dataval);
+
+            WriteInt(buffer, 0x10, unk2);
+            WriteInt(buffer, 0x14, drop);
+            WriteInt(buffer, 0x18, unk3);
+            WriteInt(buffer, 0x1C, unk4);
+
+            WriteInt(buffer, 0x20, unk5);
+            WriteInt(buffer, 0x24, unk6);
+            WriteInt(buffer, 0x28, modelID);
+            WriteFloat(buffer, 0x2C, scale.X);
+
+            WriteInt(buffer, 0x30, rend1);
+            WriteInt(buffer, 0x34, rend2);
+            WriteInt(buffer, 0x38, unk7);
+            WriteInt(buffer, 0x3C, unk8);
+
+            WriteFloat(buffer, 0x40, position.X);
+            WriteFloat(buffer, 0x44, position.Y);
+            WriteFloat(buffer, 0x48, position.Z);
+            WriteFloat(buffer, 0x4C, eulerAngles.X);
+
+            WriteFloat(buffer, 0x50, eulerAngles.Y);
+            WriteFloat(buffer, 0x54, eulerAngles.Z);
+            WriteInt(buffer, 0x58, unk9);
+            WriteInt(buffer, 0x5C, unk10);
+
+            WriteInt(buffer, 0x60, unk11);
+            WriteInt(buffer, 0x64, unk12);
+            WriteInt(buffer, 0x68, pvarIndex);
+            WriteInt(buffer, 0x6C, unk13);
+
+            WriteInt(buffer, 0x70, unk14);
+            WriteUint(buffer, 0x74, color.R);
+            WriteUint(buffer, 0x78, color.G);
+            WriteUint(buffer, 0x7C, color.B);
+
+            WriteInt(buffer, 0x80, light);
+            WriteInt(buffer, 0x84, cutscene);
 
             return buffer;
         }

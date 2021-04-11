@@ -4,6 +4,7 @@ using LibReplanetizer.Models;
 using LibReplanetizer.Models.Animations;
 using System;
 using System.Collections.Generic;
+using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Parsers
 {
@@ -107,7 +108,12 @@ namespace LibReplanetizer.Parsers
         {
             if (engineHead.collisionPointer > 0)
             {
-                return ReadArbBytes(engineHead.collisionPointer, engineHead.mobyModelPointer - engineHead.collisionPointer);
+                byte[] headBlock = ReadBlock(fileStream, engineHead.collisionPointer, 8);
+                int collisionStart = engineHead.collisionPointer + ReadInt(headBlock, 0);
+                int collisionLength = ReadInt(headBlock, 4);
+                int totalLength = collisionStart + collisionLength - engineHead.collisionPointer;
+
+                return ReadArbBytes(engineHead.collisionPointer, totalLength);
             }
             else
             {

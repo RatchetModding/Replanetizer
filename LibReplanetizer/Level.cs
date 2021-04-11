@@ -32,6 +32,7 @@ namespace LibReplanetizer
 
         public byte[] renderDefBytes;
         public byte[] collBytes;
+        public List<byte[]> collBytesChunks;
         public byte[] billboardBytes;
         public byte[] soundConfigBytes;
 
@@ -107,6 +108,7 @@ namespace LibReplanetizer
 
             terrainChunks = new List<List<TerrainFragment>>();
             collisionChunks = new List<Model>();
+            collBytesChunks = new List<byte[]>();
 
             // Engine elements
             using (EngineParser engineParser = new EngineParser(enginePath))
@@ -242,6 +244,7 @@ namespace LibReplanetizer
 
                     terrainChunks.Add(chunkParser.GetTerrainModels());
                     collisionChunks.Add(chunkParser.GetCollisionModel());
+                    collBytesChunks.Add(chunkParser.GetCollBytes());
                 }
             }
 

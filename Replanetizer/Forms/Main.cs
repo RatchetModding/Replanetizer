@@ -641,6 +641,12 @@ namespace RatchetEdit
                 gameplaySerializer.Save(level, mapSaveDialog.FileName);
                 EngineSerializer engineSerializer = new EngineSerializer();
                 engineSerializer.Save(level, pathName);
+
+                for (int i = 0; i < level.terrainChunks.Count; i++)
+                {      
+                    ChunkSerializer chunkSerializer = new ChunkSerializer();
+                    chunkSerializer.Save(level, pathName, i);
+                }
             }
             InvalidateView();
         }

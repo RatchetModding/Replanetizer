@@ -57,6 +57,22 @@ namespace LibReplanetizer.LevelObjects
             rotation = modelMatrix.ExtractRotation();
             position = modelMatrix.ExtractTranslation();
             scale = modelMatrix.ExtractScale();
+
+            Matrix4 rot = Matrix4.CreateFromQuaternion(rotation);
+            Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
+            Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
+            Matrix4 attributes = scaleMatrix * rot * translationMatrix;
+            try
+            {
+                attributes.Invert();
+            }
+            catch
+            {
+                attributes = Matrix4.Identity;
+            }
+            
+
+            reflection = modelMatrix * attributes;
         }
 
         public override byte[] ToByteArray()

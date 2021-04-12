@@ -16,6 +16,8 @@ namespace LibReplanetizer.LevelObjects
         public Vector3 scale { get; set; } = new Vector3();
         [Category("Attributes"), DisplayName("Rotation"), TypeConverter(typeof(Level_Objects.QuaternionTypeConverter))]
         public Quaternion rotation { get; set; } = new Quaternion();
+        [Category("Attributes"), DisplayName("Reflection")]
+        public Matrix4 reflection { get; set; } = Matrix4.Identity;
 
 
         public abstract byte[] ToByteArray();
@@ -28,7 +30,7 @@ namespace LibReplanetizer.LevelObjects
             Matrix4 rot = Matrix4.CreateFromQuaternion(rotation);
             Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
             Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
-            modelMatrix = scaleMatrix * rot * translationMatrix;
+            modelMatrix = reflection * scaleMatrix * rot * translationMatrix;
         }
 
         public void Translate(Vector3 vector)

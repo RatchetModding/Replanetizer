@@ -31,7 +31,7 @@ namespace LibReplanetizer.LevelObjects
         {
             int offset = num * ELEMENTSIZE;
 
-            Matrix4 mat1 = ReadMatrix4(levelBlock, offset + 0x00);
+            modelMatrix = ReadMatrix4(levelBlock, offset + 0x00);
 
             /* These offsets are just placeholders for the render distance quaternion which is set in-game
             off_40 =    BAToUInt32(levelBlock, offset + 0x40);
@@ -54,13 +54,24 @@ namespace LibReplanetizer.LevelObjects
             model = tieModels.Find(tieModel => tieModel.id == modelID);
             colorBytes = ReadBlock(fs, colorOffset, (model.vertexBuffer.Length / 8) * 4);
 
+            rotation = modelMatrix.ExtractRotation();
+            position = modelMatrix.ExtractTranslation();
+            scale = modelMatrix.ExtractScale();
 
-            //modelMatrix = mat1;
-            rotation = mat1.ExtractRotation();
-            position = mat1.ExtractTranslation();
-            scale = mat1.ExtractScale();
+            Matrix4 rot = Matrix4.CreateFromQuaternion(rotation);
+            Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
+            Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
+            Matrix4 attributes = scaleMatrix * rot * translationMatrix;
+            try
+            {
+                attributes.Invert();
+            }
+            catch
+            {
+                attributes = Matrix4.Identity;
+            }
 
-            UpdateTransformMatrix();
+            reflection = modelMatrix * attributes;
         }
 
         public byte[] ToByteArray(int colorOffset)

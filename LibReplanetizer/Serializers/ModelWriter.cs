@@ -152,7 +152,7 @@ namespace LibReplanetizer
 
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
-                    int modelTextureID = model.textureConfig[0].ID;
+                    int modelTextureID = model.textureConfig[i].ID;
                     if (!usedMtls.Contains(modelTextureID))
                     {
                         MTLfs.WriteLine("newmtl mtl_" + modelTextureID);
@@ -162,7 +162,7 @@ namespace LibReplanetizer
                         MTLfs.WriteLine("Ni 1.000000");
                         MTLfs.WriteLine("d 1.000000");
                         MTLfs.WriteLine("illum 1");
-                        MTLfs.WriteLine("map_Kd tex_" + model.textureConfig[i].ID + ".png");
+                        MTLfs.WriteLine("map_Kd " + modelTextureID + ".png");
                         usedMtls.Add(modelTextureID);
                     }
                 }
@@ -226,27 +226,10 @@ namespace LibReplanetizer
                     MTLfs.WriteLine("Ni 1.000000");
                     MTLfs.WriteLine("d 1.000000");
                     MTLfs.WriteLine("illum 1");
-                    MTLfs.WriteLine("map_Kd tex_" + model.textureConfig[i].ID + ".png");
+                    MTLfs.WriteLine("map_Kd " + modelTextureID + ".png");
                     usedMtls.Add(modelTextureID);
                 }
             }
-        }
-
-        private static Vector3 rotate(Quaternion rotation, Vector3 v)
-        {
-            float s = rotation.W;
-            Vector3 u = rotation.Xyz;
-
-            float dotUV = Vector3.Dot(u, v);
-            float dotUU = Vector3.Dot(u, u);
-
-            Vector3 cross = Vector3.Cross(u, v);
-
-
-            return new Vector3(
-                2.0f * dotUV * u.X + ((s * s) - dotUU) * v.X + 2.0f * s * cross.X,
-                2.0f * dotUV * u.Y + ((s * s) - dotUU) * v.Y + 2.0f * s * cross.Y,
-                2.0f * dotUV * u.Z + ((s * s) - dotUU) * v.Z + 2.0f * s * cross.Z);
         }
 
         private static int writeObjectData(StreamWriter OBJfs, Model model, int faceOffset, Matrix4 modelMatrix)
@@ -317,11 +300,12 @@ namespace LibReplanetizer
                 int faceOffset = 0;
                 List<int> usedMtls = new List<int>();
 
+                if (settings.exportMTLFile)
+                    OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
+
                 foreach (TerrainFragment t in terrain)
                 {
                     OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
-                    if (t.model.textureConfig != null && settings.exportMTLFile)
-                        OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
                     faceOffset += writeObjectData(OBJfs, t.model, faceOffset, Matrix4.Identity);
                     if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                 }
@@ -331,8 +315,6 @@ namespace LibReplanetizer
                     foreach (Tie t in level.ties)
                     {
                         OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
-                        if (t.model.textureConfig != null && settings.exportMTLFile)
-                            OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
                         faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.modelMatrix);
                         if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                     }
@@ -343,8 +325,6 @@ namespace LibReplanetizer
                     foreach (Shrub t in level.shrubs)
                     {
                         OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
-                        if (t.model.textureConfig != null && settings.exportMTLFile)
-                            OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
                         faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.modelMatrix);
                         if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                     }
@@ -355,8 +335,6 @@ namespace LibReplanetizer
                     foreach (Moby t in level.mobs)
                     {
                         OBJfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
-                        if (t.model.textureConfig != null && settings.exportMTLFile)
-                            OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
                         faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.modelMatrix);
                         if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                     }
@@ -387,14 +365,15 @@ namespace LibReplanetizer
 
             using (StreamWriter OBJfs = new StreamWriter(fileName))
             {
+                if (settings.exportMTLFile)
+                    OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
+
                 int faceOffset = 0;
                 List<int> usedMtls = new List<int>();
 
                 OBJfs.WriteLine("o Object_CombinedLevel");
                 foreach (TerrainFragment t in terrain)
                 {
-                    if (t.model.textureConfig != null && settings.exportMTLFile)
-                        OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
                     faceOffset += writeObjectData(OBJfs, t.model, faceOffset, Matrix4.Identity);
                     if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                 }
@@ -403,8 +382,6 @@ namespace LibReplanetizer
                 {
                     foreach (Tie t in level.ties)
                     {
-                        if (t.model.textureConfig != null && settings.exportMTLFile)
-                            OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
                         faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.modelMatrix);
                         if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                     }
@@ -414,8 +391,6 @@ namespace LibReplanetizer
                 {
                     foreach (Shrub t in level.shrubs)
                     {
-                        if (t.model.textureConfig != null && settings.exportMTLFile)
-                            OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
                         faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.modelMatrix);
                         if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                     }
@@ -425,8 +400,6 @@ namespace LibReplanetizer
                 {
                     foreach (Moby t in level.mobs)
                     {
-                        if (t.model.textureConfig != null && settings.exportMTLFile)
-                            OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
                         faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.modelMatrix);
                         if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                     }
@@ -457,6 +430,9 @@ namespace LibReplanetizer
 
             using (StreamWriter OBJfs = new StreamWriter(fileName))
             {
+                if (settings.exportMTLFile)
+                    OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
+
                 int faceOffset = 0;
                 List<int> usedMtls = new List<int>();
 
@@ -467,8 +443,6 @@ namespace LibReplanetizer
 
                 foreach (TerrainFragment t in terrain)
                 {
-                    if (t.model.textureConfig != null && settings.exportMTLFile)
-                        OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
                     faceOffset += writeObjectData(OBJfs, t.model, faceOffset, Matrix4.Identity);
                     if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                 }
@@ -479,8 +453,6 @@ namespace LibReplanetizer
 
                     foreach (Tie t in level.ties)
                     {
-                        if (t.model.textureConfig != null && settings.exportMTLFile)
-                            OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
                         faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.modelMatrix);
                         if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                     }
@@ -492,8 +464,6 @@ namespace LibReplanetizer
 
                     foreach (Shrub t in level.shrubs)
                     {
-                        if (t.model.textureConfig != null && settings.exportMTLFile)
-                            OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
                         faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.modelMatrix);
                         if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                     }
@@ -505,8 +475,6 @@ namespace LibReplanetizer
 
                     foreach (Moby t in level.mobs)
                     {
-                        if (t.model.textureConfig != null && settings.exportMTLFile)
-                            OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
                         faceOffset += writeObjectData(OBJfs, t.model, faceOffset, t.modelMatrix);
                         if (settings.exportMTLFile) writeObjectMaterial(MTLfs, t.model, usedMtls);
                     }
@@ -643,6 +611,11 @@ namespace LibReplanetizer
                         materialID = model.textureConfig[textureNum].ID;
                     }
 
+                    if (materialID >= faces.Length || materialID < 0)
+                    {
+                        materialID = 0;
+                    }
+
                     faces[materialID].Add(new Tuple<int, int, int>(
                         model.indexBuffer[triIndex + 0] + 1 + faceOffset,
                         model.indexBuffer[triIndex + 1] + 1 + faceOffset,
@@ -691,7 +664,7 @@ namespace LibReplanetizer
                             MTLfs.WriteLine("Ni 1.000000");
                             MTLfs.WriteLine("d 1.000000");
                             MTLfs.WriteLine("illum 1");
-                            MTLfs.WriteLine("map_Kd tex_" + i + ".png");
+                            MTLfs.WriteLine("map_Kd " + i + ".png");
                         }
                     }
                 }
@@ -700,6 +673,9 @@ namespace LibReplanetizer
 
             using (StreamWriter OBJfs = new StreamWriter(fileName))
             {
+                if (settings.exportMTLFile)
+                    OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
+
                 foreach (Vector3 v in vertices)
                 {
                     OBJfs.WriteLine("v " + v.X.ToString("G") + " " + v.Y.ToString("G") + " " + v.Z.ToString("G"));
@@ -724,7 +700,10 @@ namespace LibReplanetizer
                     OBJfs.WriteLine("o Object_Material_" + i);
 
                     if (settings.exportMTLFile)
-                        OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
+                    {
+                        OBJfs.WriteLine("usemtl mtl_" + i);
+                        OBJfs.WriteLine("g Texture_" + i);
+                    }
 
                     foreach (Tuple<int,int,int> t in list)
                     {

@@ -24,7 +24,7 @@ namespace LibReplanetizer.Parsers
 
         public List<Model> GetMobyModels()
         {
-            return GetMobyModels(engineHead.mobyModelPointer);
+            return GetMobyModels(engineHead.game, engineHead.mobyModelPointer);
         }
 
         public List<Model> GetTieModels()
@@ -74,12 +74,14 @@ namespace LibReplanetizer.Parsers
 
         public List<Animation> GetPlayerAnimations(MobyModel ratchet)
         {
+            if (engineHead.game.num == 4) return new List<Animation>();
+
             return GetPlayerAnimations(engineHead.playerAnimationPointer, ratchet);
         }
 
         public List<Model> GetWeapons()
         {
-            return GetWeapons(engineHead.weaponPointer, engineHead.weaponCount);
+            return GetWeapons(engineHead.game, engineHead.weaponPointer, engineHead.weaponCount);
         }
 
         public LightConfig GetLightConfig()

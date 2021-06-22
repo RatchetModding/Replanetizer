@@ -59,7 +59,7 @@ namespace LibReplanetizer.Models
 
         public MobyModel() { }
 
-        public MobyModel(FileStream fs, short modelID, int offset)
+        public MobyModel(FileStream fs, GameType game, short modelID, int offset)
         {
             id = modelID;
             if (offset == 0x00)
@@ -107,13 +107,15 @@ namespace LibReplanetizer.Models
             unk6 = ReadUint(headBlock, 0x44);
 
             // Animation block
-            byte[] animationPointerBlock = ReadBlock(fs, offset + 0x48, animationCount * 0x04);
-
-            /*for (int i = 0; i < animationCount; i++)
+            if (game.num != 4)
             {
-                //animations.Add(new Animation());
-                animations.Add(new Animation(fs, offset, ReadInt(animationPointerBlock, i * 0x04), boneCount));
-            }*/
+                byte[] animationPointerBlock = ReadBlock(fs, offset + 0x48, animationCount * 0x04);
+
+                for (int i = 0; i < animationCount; i++)
+                {
+                    animations.Add(new Animation(fs, offset, ReadInt(animationPointerBlock, i * 0x04), boneCount));
+                }
+            }    
 
             // Type 10 ( has something to do with collision )
             if (type10Pointer > 0)

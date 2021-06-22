@@ -17,7 +17,7 @@ namespace LibReplanetizer.Parsers
             fileStream = File.OpenRead(filePath);
         }
 
-        protected List<Model> GetMobyModels(int mobyModelPointer)
+        protected List<Model> GetMobyModels(GameType game, int mobyModelPointer)
         {
             //Get the moby count from the start of the section
             int mobyModelCount = ReadInt(ReadBlock(fileStream, mobyModelPointer, 4), 0);
@@ -30,7 +30,7 @@ namespace LibReplanetizer.Parsers
             {
                 short modelID = ReadShort(mobyIDBlock, (i * 8) + 2);
                 int offset = ReadInt(mobyIDBlock, (i * 8) + 4);
-                mobyModels.Add(new MobyModel(fileStream, modelID, offset));
+                mobyModels.Add(new MobyModel(fileStream, game, modelID, offset));
             }
             return mobyModels;
         }
@@ -178,7 +178,7 @@ namespace LibReplanetizer.Parsers
             return animations;
         }
 
-        protected List<Model> GetWeapons(int weaponPointer, int count)
+        protected List<Model> GetWeapons(GameType game, int weaponPointer, int count)
         {
             List<Model> weaponModels = new List<Model>(count);
 
@@ -188,7 +188,7 @@ namespace LibReplanetizer.Parsers
             {
                 short modelID = ReadShort(mobyIDBlock, (i * 0x10) + 2);
                 int offset = ReadInt(mobyIDBlock, (i * 0x10) + 4);
-                weaponModels.Add(new MobyModel(fileStream, modelID, offset));
+                weaponModels.Add(new MobyModel(fileStream, game, modelID, offset));
             }
             return weaponModels;
         }

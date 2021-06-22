@@ -42,7 +42,8 @@ namespace RatchetEdit
 
         public bool initialized, invalidate;
         public bool enableMoby, enableTie, enableShrub, enableSpline,
-            enableCuboid, enableType0C, enableSkybox, enableTerrain, enableCollision;
+            enableCuboid, enableType0C, enableSkybox, enableTerrain, enableCollision, 
+            enableTransparency, enableFog;
 
         public Camera camera;
         private Tool currentTool;
@@ -59,8 +60,6 @@ namespace RatchetEdit
         private List<int> collisionVbo = new List<int>();
         private List<int> collisionIbo = new List<int>();
         private bool[] selectedChunks;
-
-        private bool allowTransparency = false;
 
         public CustomGLControl()
         {
@@ -183,12 +182,18 @@ namespace RatchetEdit
         public void LoadLevel(Level level)
         {
             this.level = level;
+
+            GL.ClearColor(level.levelVariables.fogColor);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            level.skybox.textureConfig.Sort((emp1, emp2) => emp1.start.CompareTo(emp2.start));
+
             LoadLevelTextures();
             LoadCollisionBOs();
 
             Moby ratchet = level.mobs[0];
 
-            camera.MoveBehind(ratchet);
+            camera.MoveBehind(ratchet);     
 
             SelectObject(null);
             hook = new MemoryHook(level.game.num);
@@ -573,7 +578,7 @@ namespace RatchetEdit
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.UseProgram(colorShaderID);
             GL.EnableVertexAttribArray(0);
-            GL.ClearColor(0, 0, 0, 0);
+            GL.ClearColor(level.levelVariables.fogColor);
 
             worldView = view * projection;
 
@@ -628,7 +633,7 @@ namespace RatchetEdit
 
             Logger.Trace("R: {0}, G: {1}, B: {2}, A: {3}", pixel.R, pixel.G, pixel.B, pixel.A);
 
-            GL.ClearColor(Color.SkyBlue);
+            GL.ClearColor(level.levelVariables.fogColor);
 
             // Some GPU's put the alpha at 0, others at 255
             if (pixel.A == 255 || pixel.A == 0)
@@ -716,7 +721,7 @@ namespace RatchetEdit
 
             if (selected)
             {
-                bool switchBlends = allowTransparency && (modelObject is Moby);
+                bool switchBlends = enableTransparency && (modelObject is Moby);
 
                 if (switchBlends)
                     GL.Disable(EnableCap.Blend);
@@ -734,11 +739,6 @@ namespace RatchetEdit
             }
         }
 
-        public void setTransparency(bool value)
-        {
-            allowTransparency = value;
-        }
-
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -746,6 +746,10 @@ namespace RatchetEdit
             Logger.Trace("Painting");
 
             worldView = view * projection;
+
+            if (level != null && level.levelVariables != null)
+                GL.ClearColor(level.levelVariables.fogColor);
+
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.EnableVertexAttribArray(0);
@@ -754,9 +758,20 @@ namespace RatchetEdit
             MakeCurrent();
 
             GL.UseProgram(shaderID);
+            if (level != null && level.levelVariables != null)
+            {
+                int uniformFog = GL.GetUniformLocation(shaderID, "fogColor");
+                GL.Uniform4(uniformFog, level.levelVariables.fogColor);
+                int uniformDist = GL.GetUniformLocation(shaderID, "fogDistance");
+                GL.Uniform1(uniformDist, level.levelVariables.fogDistance);
+                int uniformUseFog = GL.GetUniformLocation(shaderID, "useFog");
+                GL.Uniform1(uniformUseFog, (enableFog) ? 1 : 0); 
+            }
 
             if (enableSkybox)
             {
+                GL.Enable(EnableCap.Blend);
+                GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 GL.Disable(EnableCap.DepthTest);
                 Matrix4 mvp = view.ClearTranslation() * projection;
                 GL.UniformMatrix4(matrixID, false, ref mvp);
@@ -769,6 +784,7 @@ namespace RatchetEdit
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
                 GL.Enable(EnableCap.DepthTest);
+                GL.Disable(EnableCap.Blend);
             }
 
             if (enableTerrain)
@@ -788,7 +804,7 @@ namespace RatchetEdit
             {
                 hook.UpdateMobys(level.mobs, level.mobyModels);
 
-                if (allowTransparency)
+                if (enableTransparency)
                 {
                     GL.Enable(EnableCap.Blend);
                     GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);

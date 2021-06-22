@@ -537,7 +537,13 @@ namespace RatchetEdit
 
         private void transparencyPreference_CheckedChanged(object sender, EventArgs e)
         {
-            glControl.setTransparency(transparencyToolStripMenuItem.Checked);
+            glControl.enableTransparency = transparencyToolStripMenuItem.Checked;
+            InvalidateView();
+        }
+
+        private void fogPreference_CheckedChanged(object sender, EventArgs e)
+        {
+            glControl.enableFog = fogToolStripMenuItem.Checked;
             InvalidateView();
         }
 

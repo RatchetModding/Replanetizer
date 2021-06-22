@@ -17,6 +17,11 @@ namespace LibReplanetizer.Parsers
             engineHead = new EngineHeader(fileStream);
         }
 
+        public GameType GetGameType()
+        {
+            return engineHead.game;
+        }
+
         public List<Model> GetMobyModels()
         {
             return GetMobyModels(engineHead.mobyModelPointer);
@@ -59,7 +64,7 @@ namespace LibReplanetizer.Parsers
 
         public SkyboxModel GetSkyboxModel()
         {
-            return GetSkyboxModel(engineHead.skyboxPointer);
+            return GetSkyboxModel(engineHead.game, engineHead.skyboxPointer);
         }
 
         public List<UiElement> GetUiElements()
@@ -129,11 +134,6 @@ namespace LibReplanetizer.Parsers
         public byte[] GetSoundConfigBytes()
         {
             return ReadArbBytes(engineHead.soundConfigPointer, engineHead.lightPointer - engineHead.soundConfigPointer);
-        }
-
-        public GameType DetectGame()
-        {
-            return DetectGame(0xA0);
         }
 
         public void Dispose()

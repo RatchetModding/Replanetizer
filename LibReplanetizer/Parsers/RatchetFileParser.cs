@@ -125,7 +125,7 @@ namespace LibReplanetizer.Parsers
             byte[] terrainBlock = ReadBlock(fileStream, terrainModelPointer, 0x60);
             TerrainHead head = new TerrainHead(terrainBlock);
 
-            byte[] tfragBlock = ReadBlock(fileStream, terrainModelPointer + 0x60, head.headCount * 0x30);
+            byte[] tfragBlock = ReadBlock(fileStream, head.headPointer, head.headCount * 0x30);
 
             for (int i = 0; i < head.headCount; i++)
             {
@@ -135,25 +135,9 @@ namespace LibReplanetizer.Parsers
             return tFrags;
         }
 
-        protected SkyboxModel GetSkyboxModel(int skyboxPointer)
+        protected SkyboxModel GetSkyboxModel(GameType game, int skyboxPointer)
         {
-            return new SkyboxModel(fileStream, skyboxPointer);
-        }
-
-        protected GameType DetectGame(int offset)
-        {
-            uint magic = ReadUint(ReadBlock(fileStream, offset, 4), 0);
-            switch (magic)
-            {
-                case 0x00000001:
-                    return new GameType(1);
-                case 0xEAA90001:
-                    return new GameType(2);
-                case 0xEAA60001:
-                    return new GameType(3);
-                default:
-                    return new GameType(3);
-            }
+            return new SkyboxModel(fileStream, game, skyboxPointer);
         }
 
         protected List<UiElement> GetUiElements(int offset)

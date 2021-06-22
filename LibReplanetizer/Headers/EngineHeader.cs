@@ -5,7 +5,10 @@ namespace LibReplanetizer.Headers
 {
     public class EngineHeader
     {
-        const int RAC1ENGINESIZE = 0x90;
+        const int RAC123ENGINESIZE = 0x78;
+        const int DLENGINESIZE = 0x90;
+
+        public GameType game;
 
         public int mobyModelPointer;
         public int renderDefPointer;            // TODO
@@ -50,8 +53,45 @@ namespace LibReplanetizer.Headers
 
         public EngineHeader(FileStream engineFile)
         {
-            byte[] engineHeadBlock = new byte[RAC1ENGINESIZE];
-            engineFile.Read(engineHeadBlock, 0, RAC1ENGINESIZE);
+            game = DetectGame(engineFile, 0xA0);
+
+            switch (game.num)
+            {
+                case 1:
+                case 2:
+                case 3:
+                    GetRC123Vals(engineFile);
+                    break;
+                case 4:
+                    GetDLVals(engineFile);
+                    break;
+                default:
+                    GetRC123Vals(engineFile);
+                    break;
+            }
+        }
+
+        private GameType DetectGame(FileStream fileStream, int offset)
+        {
+            uint magic = ReadUint(ReadBlock(fileStream, offset, 4), 0);
+            switch (magic)
+            {
+                case 0x00000001:
+                    return new GameType(1);
+                case 0xEAA90001:
+                    return new GameType(2);
+                case 0xEAA60001:
+                    return new GameType(3);
+                case 0x008E008D:
+                    return new GameType(4);
+                default:
+                    return new GameType(3);
+            }
+        }
+
+        private void GetRC123Vals(FileStream engineFile)
+        {
+            byte[] engineHeadBlock = ReadBlock(engineFile, 0, RAC123ENGINESIZE);
 
             mobyModelPointer = ReadInt(engineHeadBlock, 0x00);
             renderDefPointer = ReadInt(engineHeadBlock, 0x04);
@@ -90,6 +130,56 @@ namespace LibReplanetizer.Headers
 
             texture2dPointer = ReadInt(engineHeadBlock, 0x70);
             uiElementPointer = ReadInt(engineHeadBlock, 0x74);
+        }
+
+        private void GetDLVals(FileStream engineFile)
+        {
+            byte[] engineHeadBlock = ReadBlock(engineFile, 0, DLENGINESIZE);
+
+            mobyModelPointer = ReadInt(engineHeadBlock, 0x00);
+            renderDefPointer = ReadInt(engineHeadBlock, 0x04);
+            type08Pointer = ReadInt(engineHeadBlock, 0x08);
+            type0CPointer = ReadInt(engineHeadBlock, 0x0C);
+
+            // 0x10
+            skyboxPointer = ReadInt(engineHeadBlock, 0x14);
+            collisionPointer = ReadInt(engineHeadBlock, 0x18);
+            playerAnimationPointer = ReadInt(engineHeadBlock, 0x1C);
+
+            tieModelPointer = ReadInt(engineHeadBlock, 0x20);
+            tieModelCount = ReadInt(engineHeadBlock, 0x24);
+            tiePointer = ReadInt(engineHeadBlock, 0x28);
+            tieCount = ReadInt(engineHeadBlock, 0x2C);
+
+            // 0x30
+            shrubModelPointer = ReadInt(engineHeadBlock, 0x34);
+            shrubModelCount = ReadInt(engineHeadBlock, 0x38);
+            shrubPointer = ReadInt(engineHeadBlock, 0x3C);
+
+            shrubCount = ReadInt(engineHeadBlock, 0x40);
+            // 0x44
+            terrainPointer = ReadInt(engineHeadBlock, 0x48);
+            // 0x4C
+
+            // 0x50
+            soundConfigPointer = ReadInt(engineHeadBlock, 0x54);
+            weaponPointer = ReadInt(engineHeadBlock, 0x58);
+            weaponCount = ReadInt(engineHeadBlock, 0x5C);
+
+            texturePointer = ReadInt(engineHeadBlock, 0x60);
+            textureCount = ReadInt(engineHeadBlock, 0x64);
+            lightPointer = ReadInt(engineHeadBlock, 0x68);
+            lightCount = ReadInt(engineHeadBlock, 0x6C);
+
+            lightConfigPointer = ReadInt(engineHeadBlock, 0x70);
+            textureConfigMenuPointer = ReadInt(engineHeadBlock, 0x74);
+            textureConfigMenuCount = ReadInt(engineHeadBlock, 0x78);
+            texture2dPointer = ReadInt(engineHeadBlock, 0x7C);
+
+            uiElementPointer = ReadInt(engineHeadBlock, 0x80);
+            // 0x84
+            // 0x88
+            // 0x8C
         }
 
         public byte[] Serialize()

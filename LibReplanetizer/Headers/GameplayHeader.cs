@@ -66,7 +66,13 @@ namespace LibReplanetizer.Headers
                     break;
                 case 2:
                 case 3:
-                    GetRC2Vals(gameplayHeadBlock);
+                    GetRC23Vals(gameplayHeadBlock);
+                    break;
+                case 4:
+                    GetDLVals(gameplayHeadBlock);
+                    break;
+                default:
+                    GetRC23Vals(gameplayHeadBlock);
                     break;
             }
         }
@@ -119,7 +125,7 @@ namespace LibReplanetizer.Headers
             occlusionPointer = ReadInt(gameplayHeadBlock, 0x8C);
         }
 
-        private void GetRC2Vals(byte[] gameplayHeadBlock)
+        private void GetRC23Vals(byte[] gameplayHeadBlock)
         {
             levelVarPointer = ReadInt(gameplayHeadBlock, 0x00);
             type04Pointer = ReadInt(gameplayHeadBlock, 0x04);
@@ -167,6 +173,61 @@ namespace LibReplanetizer.Headers
             // = ReadInt(gameplayHeadBlock, 0x8C);
 
             occlusionPointer = ReadInt(gameplayHeadBlock, 0x90);
+        }
+
+        private void GetDLVals(byte[] gameplayHeadBlock)
+        {
+            levelVarPointer = ReadInt(gameplayHeadBlock, 0x00);
+
+            mobyIdPointer = ReadInt(gameplayHeadBlock, 0x2C);
+
+            mobyPointer = ReadInt(gameplayHeadBlock, 0x30);
+            
+            pvarSizePointer = ReadInt(gameplayHeadBlock, 0x40);
+            pvarPointer = ReadInt(gameplayHeadBlock, 0x44);
+
+            splinePointer = ReadInt(gameplayHeadBlock, 0x5C);
+            /*
+            type04Pointer = ReadInt(gameplayHeadBlock, 0x04);
+            cameraPointer = ReadInt(gameplayHeadBlock, 0x08);
+            type0CPointer = ReadInt(gameplayHeadBlock, 0x0C);
+
+            englishPointer = ReadInt(gameplayHeadBlock, 0x10);
+            lang2Pointer = ReadInt(gameplayHeadBlock, 0x14);
+            frenchPointer = ReadInt(gameplayHeadBlock, 0x18);
+            germanPointer = ReadInt(gameplayHeadBlock, 0x1C);
+
+            spanishPointer = ReadInt(gameplayHeadBlock, 0x20);
+            italianPointer = ReadInt(gameplayHeadBlock, 0x24);
+            lang7Pointer = ReadInt(gameplayHeadBlock, 0x28);
+            lang8Pointer = ReadInt(gameplayHeadBlock, 0x2C);
+
+            tieIdPointer = ReadInt(gameplayHeadBlock, 0x30);
+            // = ReadInt(gameplayHeadBlock, 0x34);
+            // = ReadInt(gameplayHeadBlock, 0x38);
+            shrubIdPointer = ReadInt(gameplayHeadBlock, 0x3C);
+
+            shrubPointer = ReadInt(gameplayHeadBlock, 0x40);
+            // = ReadInt(gameplayHeadBlock, 0x44);
+
+            unkPointer6 = ReadInt(gameplayHeadBlock, 0x50);
+            unkPointer7 = ReadInt(gameplayHeadBlock, 0x54);
+            type50Pointer = ReadInt(gameplayHeadBlock, 0x58);
+
+            type5CPointer = ReadInt(gameplayHeadBlock, 0x64);
+            cuboidPointer = ReadInt(gameplayHeadBlock, 0x68);
+            type64Pointer = ReadInt(gameplayHeadBlock, 0x6C);
+
+            type68Pointer = ReadInt(gameplayHeadBlock, 0x70);
+            unkPointer12 = ReadInt(gameplayHeadBlock, 0x74);
+            unkPointer13 = ReadInt(gameplayHeadBlock, 0x7C);
+
+            // = ReadInt(gameplayHeadBlock, 0x80);
+            type80Pointer = ReadInt(gameplayHeadBlock, 0x84);
+            unkPointer17 = ReadInt(gameplayHeadBlock, 0x88);
+            // = ReadInt(gameplayHeadBlock, 0x8C);
+
+            occlusionPointer = ReadInt(gameplayHeadBlock, 0x90);*/
         }
 
         public byte[] SerializeRC1()

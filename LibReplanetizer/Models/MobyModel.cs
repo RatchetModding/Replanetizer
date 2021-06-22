@@ -68,8 +68,6 @@ namespace LibReplanetizer.Models
                 return;
             }
 
-
-
             // Header
             byte[] headBlock = ReadBlock(fs, offset, HEADERSIZE);
 
@@ -111,11 +109,11 @@ namespace LibReplanetizer.Models
             // Animation block
             byte[] animationPointerBlock = ReadBlock(fs, offset + 0x48, animationCount * 0x04);
 
-            for (int i = 0; i < animationCount; i++)
+            /*for (int i = 0; i < animationCount; i++)
             {
                 //animations.Add(new Animation());
                 animations.Add(new Animation(fs, offset, ReadInt(animationPointerBlock, i * 0x04), boneCount));
-            }
+            }*/
 
             // Type 10 ( has something to do with collision )
             if (type10Pointer > 0)

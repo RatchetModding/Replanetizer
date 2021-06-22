@@ -104,6 +104,12 @@ namespace LibReplanetizer.LevelObjects
                 case 3:
                     GetRC23Vals(game, mobyBlock, num, mobyModels);
                     break;
+                case 4:
+                    GetDLVals(game, mobyBlock, num, mobyModels);
+                    break;
+                default:
+                    GetRC23Vals(game, mobyBlock, num, mobyModels);
+                    break;
             }
         }
 
@@ -202,6 +208,56 @@ namespace LibReplanetizer.LevelObjects
 
             light = ReadInt(mobyBlock, offset + 0x80);
             cutscene = ReadInt(mobyBlock, offset + 0x84);
+
+            color = Color.FromArgb(r, g, b);
+            position = new Vector3(x, y, z);
+            rotation = new Quaternion(rotx, roty, rotz);
+            scale = new Vector3(scaleHolder); //Mobys only use the X axis of scale
+
+            model = mobyModels.Find(mobyModel => mobyModel.id == modelID);
+            UpdateTransformMatrix();
+        }
+
+        private void GetDLVals(GameType game, byte[] mobyBlock, int num, List<Model> mobyModels)
+        {
+            int offset = num * game.mobyElemSize;
+
+            missionID = ReadInt(mobyBlock, offset + 0x04);
+            dataval = ReadInt(mobyBlock, offset + 0x08);
+            unk1 = ReadInt(mobyBlock, offset + 0x0C);
+
+            modelID = ReadInt(mobyBlock, offset + 0x10);
+            float scaleHolder = ReadFloat(mobyBlock, offset + 0x14);
+            rend1 = ReadInt(mobyBlock, offset + 0x18);
+            rend2 = ReadInt(mobyBlock, offset + 0x1C);
+
+            unk2 = ReadInt(mobyBlock, offset + 0x20);
+            unk3 = ReadInt(mobyBlock, offset + 0x24);
+            float x = ReadFloat(mobyBlock, offset + 0x28);
+            float y = ReadFloat(mobyBlock, offset + 0x2C);
+
+            float z = ReadFloat(mobyBlock, offset + 0x30);
+            float rotx = ReadFloat(mobyBlock, offset + 0x34);
+            float roty = ReadFloat(mobyBlock, offset + 0x38);
+            float rotz = ReadFloat(mobyBlock, offset + 0x3C);
+
+            unk4 = ReadInt(mobyBlock, offset + 0x40);
+            unk5 = ReadInt(mobyBlock, offset + 0x44); //Group index?
+            unk6 = ReadInt(mobyBlock, offset + 0x48); //Enables Z2
+            unk7 = ReadInt(mobyBlock, offset + 0x4C);
+
+            pvarIndex = ReadInt(mobyBlock, offset + 0x50);
+            unk8 = ReadInt(mobyBlock, offset + 0x54);
+            unk9 = ReadInt(mobyBlock, offset + 0x58);  //Breakability?
+            int r = ReadInt(mobyBlock, offset + 0x5C);
+
+            int g = ReadInt(mobyBlock, offset + 0x60);
+            int b = ReadInt(mobyBlock, offset + 0x64);
+            light = ReadInt(mobyBlock, offset + 0x68);
+            unk14 = ReadInt(mobyBlock, offset + 0x6C);
+
+            z2 = 0;
+            cutscene = 0;
 
             color = Color.FromArgb(r, g, b);
             position = new Vector3(x, y, z);

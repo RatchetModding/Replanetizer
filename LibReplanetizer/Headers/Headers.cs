@@ -8,6 +8,7 @@ namespace LibReplanetizer.Headers
     }
     public class TerrainHead
     {
+        public uint headPointer;
         public ushort headCount;
         public List<int> vertexPointers = new List<int>();
         public List<int> rgbaPointers = new List<int>();
@@ -16,6 +17,7 @@ namespace LibReplanetizer.Headers
 
         public TerrainHead(byte[] terrainBlock)
         {
+            headPointer = ReadUint(terrainBlock, 0x00);
             headCount = ReadUshort(terrainBlock, 0x06);
 
             for (int i = 0; i < 4; i++)

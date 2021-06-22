@@ -113,7 +113,7 @@ namespace LibReplanetizer
             // Engine elements
             using (EngineParser engineParser = new EngineParser(enginePath))
             {
-                game = engineParser.DetectGame();
+                game = engineParser.GetGameType();
 
                 //REMOVE THESE ASAP!!!!!111
                 renderDefBytes = engineParser.GetRenderDefBytes();
@@ -126,7 +126,7 @@ namespace LibReplanetizer
                 Logger.Debug("Success");
 
                 Logger.Debug("Parsing moby models...");
-                mobyModels = engineParser.GetMobyModels();
+                mobyModels = engineParser.GetMobyModels();  
                 Logger.Debug("Added {0} moby models", mobyModels.Count);
 
                 Logger.Debug("Parsing tie models...");
@@ -162,7 +162,15 @@ namespace LibReplanetizer
                 Logger.Debug("Added {0} terrain elements" + terrainChunks[0]?.Count);
 
                 Logger.Debug("Parsing player animations...");
-                playerAnimations = engineParser.GetPlayerAnimations((MobyModel)mobyModels[0]);
+                if (game.num != 4)
+                {
+                    playerAnimations = engineParser.GetPlayerAnimations((MobyModel)mobyModels[0]);
+                }
+                else
+                {
+                    playerAnimations = new List<Animation>();
+                }
+                
                 Logger.Debug("Added {0} player animations", playerAnimations?.Count);
 
                 uiElements = engineParser.GetUiElements();

@@ -179,6 +179,7 @@ namespace LibReplanetizer.Headers
         {
             levelVarPointer = ReadInt(gameplayHeadBlock, 0x00);
             cameraPointer = ReadInt(gameplayHeadBlock, 0x04);
+            type0CPointer = ReadInt(gameplayHeadBlock, 0x08);
 
             englishPointer = ReadInt(gameplayHeadBlock, 0x10);  
             frenchPointer = ReadInt(gameplayHeadBlock, 0x14);
@@ -194,12 +195,13 @@ namespace LibReplanetizer.Headers
             
             pvarSizePointer = ReadInt(gameplayHeadBlock, 0x40);
             pvarPointer = ReadInt(gameplayHeadBlock, 0x44);
+            cuboidPointer = ReadInt(gameplayHeadBlock, 0x4C);
 
             splinePointer = ReadInt(gameplayHeadBlock, 0x5C);
             /*
             type04Pointer = ReadInt(gameplayHeadBlock, 0x04);
             
-            type0CPointer = ReadInt(gameplayHeadBlock, 0x0C);
+            
 
             lang2Pointer = ReadInt(gameplayHeadBlock, 0x14);
 
@@ -216,7 +218,6 @@ namespace LibReplanetizer.Headers
             type50Pointer = ReadInt(gameplayHeadBlock, 0x58);
 
             type5CPointer = ReadInt(gameplayHeadBlock, 0x64);
-            cuboidPointer = ReadInt(gameplayHeadBlock, 0x68);
             type64Pointer = ReadInt(gameplayHeadBlock, 0x6C);
 
             type68Pointer = ReadInt(gameplayHeadBlock, 0x70);
@@ -333,6 +334,35 @@ namespace LibReplanetizer.Headers
             //0x8C
 
             WriteInt(bytes, 0x90, occlusionPointer);
+
+            return bytes;
+        }
+
+        public byte[] SerializeDL()
+        {
+            byte[] bytes = new byte[GAMEPLAYSIZE];
+
+            WriteInt(bytes, 0x00, levelVarPointer);
+            WriteInt(bytes, 0x04, cameraPointer);
+            WriteInt(bytes, 0x08, type0CPointer);
+
+            WriteInt(bytes, 0x10, englishPointer);
+            WriteInt(bytes, 0x14, frenchPointer);
+            WriteInt(bytes, 0x18, germanPointer);
+            WriteInt(bytes, 0x1C, spanishPointer);
+
+            WriteInt(bytes, 0x20, italianPointer);
+            WriteInt(bytes, 0x24, lang7Pointer);
+            WriteInt(bytes, 0x28, lang8Pointer);
+            WriteInt(bytes, 0x2C, mobyIdPointer);
+
+            WriteInt(bytes, 0x30, mobyPointer);
+
+            WriteInt(bytes, 0x40, pvarSizePointer);
+            WriteInt(bytes, 0x44, pvarPointer);
+            WriteInt(bytes, 0x48, cuboidPointer);
+
+            WriteInt(bytes, 0x5C, splinePointer);
 
             return bytes;
         }

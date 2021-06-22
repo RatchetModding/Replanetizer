@@ -70,6 +70,12 @@ namespace LibReplanetizer.Serializers
                 case 3:
                     head = gameplayHeader.SerializeRC23();
                     break;
+                case 4:
+                    head = gameplayHeader.SerializeDL();
+                    break;
+                default:
+                    head = gameplayHeader.SerializeRC23();
+                    break;
             }
             fs.Seek(0, SeekOrigin.Begin);
             fs.Write(head, 0, head.Length);

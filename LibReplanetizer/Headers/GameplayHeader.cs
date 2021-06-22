@@ -178,7 +178,16 @@ namespace LibReplanetizer.Headers
         private void GetDLVals(byte[] gameplayHeadBlock)
         {
             levelVarPointer = ReadInt(gameplayHeadBlock, 0x00);
+            cameraPointer = ReadInt(gameplayHeadBlock, 0x04);
 
+            englishPointer = ReadInt(gameplayHeadBlock, 0x10);  
+            frenchPointer = ReadInt(gameplayHeadBlock, 0x14);
+            germanPointer = ReadInt(gameplayHeadBlock, 0x18);
+            spanishPointer = ReadInt(gameplayHeadBlock, 0x1C);
+
+            italianPointer = ReadInt(gameplayHeadBlock, 0x20);
+            lang7Pointer = ReadInt(gameplayHeadBlock, 0x24);
+            lang8Pointer = ReadInt(gameplayHeadBlock, 0x28);
             mobyIdPointer = ReadInt(gameplayHeadBlock, 0x2C);
 
             mobyPointer = ReadInt(gameplayHeadBlock, 0x30);
@@ -189,18 +198,10 @@ namespace LibReplanetizer.Headers
             splinePointer = ReadInt(gameplayHeadBlock, 0x5C);
             /*
             type04Pointer = ReadInt(gameplayHeadBlock, 0x04);
-            cameraPointer = ReadInt(gameplayHeadBlock, 0x08);
+            
             type0CPointer = ReadInt(gameplayHeadBlock, 0x0C);
 
-            englishPointer = ReadInt(gameplayHeadBlock, 0x10);
             lang2Pointer = ReadInt(gameplayHeadBlock, 0x14);
-            frenchPointer = ReadInt(gameplayHeadBlock, 0x18);
-            germanPointer = ReadInt(gameplayHeadBlock, 0x1C);
-
-            spanishPointer = ReadInt(gameplayHeadBlock, 0x20);
-            italianPointer = ReadInt(gameplayHeadBlock, 0x24);
-            lang7Pointer = ReadInt(gameplayHeadBlock, 0x28);
-            lang8Pointer = ReadInt(gameplayHeadBlock, 0x2C);
 
             tieIdPointer = ReadInt(gameplayHeadBlock, 0x30);
             // = ReadInt(gameplayHeadBlock, 0x34);

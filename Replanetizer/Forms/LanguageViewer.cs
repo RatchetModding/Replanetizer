@@ -15,6 +15,8 @@ namespace RatchetEdit
 
         private void ShowLanguageText(Dictionary<int, String> languageData)
         {
+            if (languageData == null) return;
+
             var items = new List<ListViewItem>(languageData.Count);
 
             foreach (KeyValuePair<int, String> entry in languageData)

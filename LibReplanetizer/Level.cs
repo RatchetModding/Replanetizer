@@ -248,16 +248,37 @@ namespace LibReplanetizer
                 }
             }
 
-            VramParser vramParser = new VramParser(path + @"/vram.ps3");
-            if (!vramParser.valid)
+            List<string> armors = ArmorHeader.FindArmorFiles(enginePath);
+            List<List<Texture>> armorTextures = new List<List<Texture>>();  
+
+            foreach (string armor in armors)
             {
-                valid = false;
-                return;
+                List<Texture> armorData;
+                using (ArmorParser parser = new ArmorParser(game, armor))
+                {
+                    armorData = parser.GetTextures();
+                    
+                }
+
+                string vram = armor.Replace(".ps3", ".vram");
+
+                using (VramParser parser = new VramParser(vram))
+                {
+                    parser.GetTextures(armorData);
+                }
+
+                armorTextures.Add(armorData);
             }
 
-            vramParser.GetTextures(textures);
-            vramParser.Close();
+            using (VramParser vramParser = new VramParser(path + @"/vram.ps3"))
+            {
+                vramParser.GetTextures(textures);
+            }
 
+            foreach (List<Texture> list in armorTextures)
+            {
+                textures.AddRange(list);
+            }
 
             Logger.Info("Level parsing done");
             valid = true;

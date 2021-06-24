@@ -29,7 +29,7 @@ namespace LibReplanetizer.Parsers
         }
 
         /*
-         * To point of this is so that we can save the collision data
+         * The point of this is so that we can save the collision data
          * reconstructing this block of data from a collision model is tedious
          * and at the moment since you cannot modify the collision anyway it is unnecessary
          * This here costs a few megabytes of RAM at best so it is fine

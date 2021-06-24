@@ -54,18 +54,22 @@ namespace LibReplanetizer.Parsers
         public Dictionary<int, String> GetLang(int offset)
         {
             if (offset == 0) { return null; }
-            int numItems = ReadInt(ReadBlock(fileStream, offset, 4), 0);
-            int langLength = ReadInt(ReadBlock(fileStream, offset + 4, 4), 0);
+
+            byte[] langHeader = ReadBlock(fileStream, offset, 0x08);
+            int numItems = ReadInt(langHeader, 0x00);
+            int langLength = ReadInt(langHeader, 0x04);
 
             Dictionary<int, String> languageData = new Dictionary<int, String>();
 
             for (int i = 0; i < numItems; i++)
             {
                 int pointerOffset = offset + 8 + (i * 16);
-                int textPointer = ReadInt(ReadBlock(fileStream, pointerOffset, 4), 0);
-                int textId = ReadInt(ReadBlock(fileStream, pointerOffset + 4, 4), 0);
+                byte[] block = ReadBlock(fileStream, pointerOffset, 0x08);
 
-                String textData = ReadString(fileStream, textPointer + offset);
+                int textPointer = ReadInt(block, 0x00);
+                int textId = ReadInt(block, 0x04);
+
+                String textData = ReadString(fileStream, offset + textPointer);
                 languageData.Add(textId, textData);
             }
 

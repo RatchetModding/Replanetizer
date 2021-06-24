@@ -254,6 +254,10 @@ namespace RatchetEdit
             invalidate = true;
         }
 
+        /*
+         * Opens TextureViewer and allows to switch out textures
+         * Does not allow to switch textures between texture sources
+         */
         private void textureView_DoubleClick(object sender, EventArgs e)
         {
             using (TextureViewer textureViewer = new TextureViewer(mainForm))
@@ -261,8 +265,12 @@ namespace RatchetEdit
                 if (textureViewer.ShowDialog() == DialogResult.OK)
                 {
                     int val = textureViewer.returnVal;
-                    selectedModel.textureConfig[textureView.SelectedIndices[0]].ID = val;
-                    UpdateModel();
+
+                    if (val < selectedTextureSet.Count)
+                    {
+                        selectedModel.textureConfig[textureView.SelectedIndices[0]].ID = val;
+                        UpdateModel();
+                    }
                 }
             }
         }

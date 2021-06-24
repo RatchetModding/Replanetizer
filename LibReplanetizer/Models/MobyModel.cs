@@ -240,6 +240,66 @@ namespace LibReplanetizer.Models
             }
         }
 
+        /*
+         * RaC 2 and 3 armor files contain only the mesh
+         */
+        public static MobyModel GetArmorMobyModel(FileStream fileStream, int modelPointer)
+        {
+            MobyModel model = new MobyModel();
+
+            model.size = 1.0f;
+
+            byte[] meshHeader = ReadBlock(fileStream, modelPointer, 0x20);
+
+            int texCount = ReadInt(meshHeader, 0x00);
+            int otherCount = ReadInt(meshHeader, 0x04);
+            int texBlockPointer = ReadInt(meshHeader, 0x08);
+            int otherBlockPointer = ReadInt(meshHeader, 0x0C);
+            int vertPointer = ReadInt(meshHeader, 0x10);
+            int indexPointer = ReadInt(meshHeader, 0x14);
+            ushort vertexCount = ReadUshort(meshHeader, 0x18);
+            ushort otherVertCount = ReadUshort(meshHeader, 0x1a);
+
+            int otherPointer = vertPointer + vertexCount * 0x28;
+
+            model.vertexCount2 = ReadUshort(meshHeader, 0x1C);     //These vertices are not affected by color2
+
+            int faceCount = 0;
+
+            //Texture configuration
+            if (texBlockPointer > 0)
+            {
+                model.textureConfig = GetTextureConfigs(fileStream, texBlockPointer, texCount, TEXTUREELEMENTSIZE);
+                faceCount = model.GetFaceCount();
+            }
+
+            if (vertPointer > 0 && vertexCount > 0)
+            {
+                //Get vertex buffer float[vertX, vertY, vertZ, normX, normY, normZ, U, V, reserved, reserved]
+                model.vertexBuffer = model.GetVertices(fileStream, vertPointer, vertexCount, VERTELEMENTSIZE);
+            }
+
+            if (indexPointer > 0 && faceCount > 0)
+            {
+                //Index buffer
+                model.indexBuffer = GetIndices(fileStream, indexPointer, faceCount);
+            }
+
+            if (otherPointer > 0)
+            {
+                model.otherBuffer.AddRange(ReadBlockNopad(fileStream, otherPointer, otherVertCount * 0x20));
+                model.otherTextureConfigs = GetTextureConfigs(fileStream, otherBlockPointer, otherCount, 0x10);
+                int otherfaceCount = 0;
+                foreach (TextureConfig tex in model.otherTextureConfigs)
+                {
+                    otherfaceCount += tex.size;
+                }
+                model.otherIndexBuffer.AddRange(GetIndices(fileStream, indexPointer + faceCount * sizeof(ushort), otherfaceCount));
+            }
+
+            return model;
+        }
+
 
 
 

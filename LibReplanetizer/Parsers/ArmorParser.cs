@@ -24,9 +24,16 @@ namespace LibReplanetizer.Parsers
             return GetTextures(armorHead.texturePointer, armorHead.textureCount);
         }
 
-        public List<Model> GetArmor()
+        public MobyModel GetArmor()
         {
-            return GetMobyModels(game, armorHead.modelPointer);
+            if (game.num == 4)
+            {
+                return new MobyModel(fileStream, game, 0, armorHead.modelPointer);
+            }
+            else
+            {
+                return MobyModel.GetArmorMobyModel(fileStream, armorHead.modelPointer);
+            }
         }
 
         public void Dispose()

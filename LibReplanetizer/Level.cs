@@ -25,9 +25,11 @@ namespace LibReplanetizer
         public List<Model> tieModels;
         public List<Model> shrubModels;
         public List<Model> weaponModels;
+        public List<Model> armorModels;
         public List<Model> collisionChunks;
         public List<Model> chunks;
         public List<Texture> textures;
+        public List<List<Texture>> armorTextures;
         public SkyboxModel skybox;
 
         public byte[] renderDefBytes;
@@ -248,36 +250,34 @@ namespace LibReplanetizer
                 }
             }
 
-            List<string> armors = ArmorHeader.FindArmorFiles(enginePath);
-            List<List<Texture>> armorTextures = new List<List<Texture>>();  
+            List<string> armorPaths = ArmorHeader.FindArmorFiles(enginePath);
+            armorModels = new List<Model>();
+            armorTextures = new List<List<Texture>>();
 
-            foreach (string armor in armors)
+            foreach (string armor in armorPaths)
             {
-                List<Texture> armorData;
+                List<Texture> tex;
+                MobyModel model;
                 using (ArmorParser parser = new ArmorParser(game, armor))
                 {
-                    armorData = parser.GetTextures();
-                    
+                    tex = parser.GetTextures();
+                    model = parser.GetArmor();
                 }
 
                 string vram = armor.Replace(".ps3", ".vram");
 
                 using (VramParser parser = new VramParser(vram))
                 {
-                    parser.GetTextures(armorData);
+                    parser.GetTextures(tex);
                 }
 
-                armorTextures.Add(armorData);
+                armorModels.Add(model);
+                armorTextures.Add(tex);
             }
 
             using (VramParser vramParser = new VramParser(path + @"/vram.ps3"))
             {
                 vramParser.GetTextures(textures);
-            }
-
-            foreach (List<Texture> list in armorTextures)
-            {
-                textures.AddRange(list);
             }
 
             Logger.Info("Level parsing done");

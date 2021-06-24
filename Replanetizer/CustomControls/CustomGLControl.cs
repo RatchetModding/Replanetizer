@@ -115,43 +115,56 @@ namespace RatchetEdit
             initialized = true;
         }
 
+        private void loadTexture(Texture t)
+        {
+            int texId;
+            GL.GenTextures(1, out texId);
+            GL.BindTexture(TextureTarget.Texture2D, texId);
+            int offset = 0;
+
+            if (t.mipMapCount > 1)
+            {
+                int mipWidth = t.width;
+                int mipHeight = t.height;
+
+                for (int mipLevel = 0; mipLevel < t.mipMapCount; mipLevel++)
+                {
+                    if (mipWidth > 0 && mipHeight > 0)
+                    {
+                        int size = ((mipWidth + 3) / 4) * ((mipHeight + 3) / 4) * 16;
+                        byte[] texPart = new byte[size];
+                        Array.Copy(t.data, offset, texPart, 0, size);
+                        GL.CompressedTexImage2D(TextureTarget.Texture2D, mipLevel, InternalFormat.CompressedRgbaS3tcDxt5Ext, mipWidth, mipHeight, 0, size, texPart);
+                        offset += size;
+                        mipWidth /= 2;
+                        mipHeight /= 2;
+                    }
+                }
+            }
+            else
+            {
+                int size = ((t.width + 3) / 4) * ((t.height + 3) / 4) * 16;
+                GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, InternalFormat.CompressedRgbaS3tcDxt5Ext, t.width, t.height, 0, size, t.data);
+                GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+            }
+
+            textureIds.Add(t, texId);
+        }
+
         void LoadLevelTextures()
         {
             textureIds = new Dictionary<Texture, int>();
             foreach (Texture t in level.textures)
             {
-                int texId = 0;
-                GL.GenTextures(1, out texId);
-                GL.BindTexture(TextureTarget.Texture2D, texId);
-                int offset = 0;
+                loadTexture(t);
+            }
 
-                if (t.mipMapCount > 1)
+            foreach (List<Texture> list in level.armorTextures)
+            {
+                foreach (Texture t in list)
                 {
-                    int mipWidth = t.width;
-                    int mipHeight = t.height;
-
-                    for (int mipLevel = 0; mipLevel < t.mipMapCount; mipLevel++)
-                    {
-                        if (mipWidth > 0 && mipHeight > 0)
-                        {
-                            int size = ((mipWidth + 3) / 4) * ((mipHeight + 3) / 4) * 16;
-                            byte[] texPart = new byte[size];
-                            Array.Copy(t.data, offset, texPart, 0, size);
-                            GL.CompressedTexImage2D(TextureTarget.Texture2D, mipLevel, InternalFormat.CompressedRgbaS3tcDxt5Ext, mipWidth, mipHeight, 0, size, texPart);
-                            offset += size;
-                            mipWidth /= 2;
-                            mipHeight /= 2;
-                        }
-                    }
+                    loadTexture(t);
                 }
-                else
-                {
-                    int size = ((t.width + 3) / 4) * ((t.height + 3) / 4) * 16;
-                    GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, InternalFormat.CompressedRgbaS3tcDxt5Ext, t.width, t.height, 0, size, t.data);
-                    GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-                }
-
-                textureIds.Add(t, texId);
             }
         }
 

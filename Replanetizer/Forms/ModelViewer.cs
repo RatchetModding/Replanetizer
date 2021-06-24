@@ -15,6 +15,7 @@ namespace RatchetEdit
         private Main mainForm;
         private Level level;
         private Model selectedModel;
+        private List<Texture> selectedTextureSet;
 
         private int shaderID, matrixID;
 
@@ -27,7 +28,7 @@ namespace RatchetEdit
 
         private Matrix4 trans, scale, worldView, rot = Matrix4.Identity;
 
-        private TreeNode mobyNode, tieNode, shrubNode, weaponNode;
+        private TreeNode mobyNode, tieNode, shrubNode, weaponNode, armorNode;
 
         private BufferContainer container;
 
@@ -45,7 +46,8 @@ namespace RatchetEdit
                 tieNode = GetModelNodes("Tie", level.tieModels);
                 shrubNode = GetModelNodes("Shrub", level.shrubModels);
                 weaponNode = GetModelNodes("Weapon", level.weaponModels);
-                modelView.Nodes.AddRange(new TreeNode[] { mobyNode, tieNode, shrubNode, weaponNode });
+                armorNode = GetModelNodes("Armor", level.armorModels);
+                modelView.Nodes.AddRange(new TreeNode[] { mobyNode, tieNode, shrubNode, weaponNode, armorNode });
             }
 
             SelectModel(model);
@@ -104,9 +106,9 @@ namespace RatchetEdit
             for (int i = 0; i < selectedModel.textureConfig.Count; i++)
             {
                 int textureId = selectedModel.textureConfig[i].ID;
-                if (textureId == -1) continue;
+                if (textureId < 0) continue;
 
-                textureList.Images.Add(mainForm.level.textures[textureId].getTextureImage());
+                textureList.Images.Add(selectedTextureSet[textureId].getTextureImage());
                 textureView.Items.Add(new ListViewItem
                 {
                     ImageIndex = i,
@@ -123,15 +125,23 @@ namespace RatchetEdit
                 {
                     case "Moby":
                         selectedModel = level.mobyModels[modelView.SelectedNode.Index];
+                        selectedTextureSet = level.textures;
                         break;
                     case "Tie":
                         selectedModel = level.tieModels[modelView.SelectedNode.Index];
+                        selectedTextureSet = level.textures;
                         break;
                     case "Shrub":
                         selectedModel = level.shrubModels[modelView.SelectedNode.Index];
+                        selectedTextureSet = level.textures;
                         break;
                     case "Weapon":
                         selectedModel = level.weaponModels[modelView.SelectedNode.Index];
+                        selectedTextureSet = level.textures;
+                        break;
+                    case "Armor":
+                        selectedModel = level.armorModels[modelView.SelectedNode.Index];
+                        selectedTextureSet = level.armorTextures[modelView.SelectedNode.Index];
                         break;
                 }
                 UpdateModel();
@@ -143,6 +153,7 @@ namespace RatchetEdit
             if (model == null) return;
 
             selectedModel = model;
+            selectedTextureSet = level.textures;
 
             switch (model)
             {
@@ -155,7 +166,7 @@ namespace RatchetEdit
                 case ShrubModel shrubModel:
                     modelView.SelectedNode = shrubNode.Nodes[level.shrubModels.IndexOf(shrubModel)];
                     break;
-            }
+            }       
 
             UpdateModel();
         }
@@ -172,6 +183,7 @@ namespace RatchetEdit
             if (selectedModel == null) return;
 
             glControl.MakeCurrent();
+            GL.ClearColor(Color.SkyBlue);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             // Has to be done in this order to work correctly
@@ -190,7 +202,7 @@ namespace RatchetEdit
             //Bind textures one by one, applying it to the relevant vertices based on the index array
             foreach (TextureConfig conf in selectedModel.textureConfig)
             {
-                GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? mainForm.GetTextureIds()[level.textures[conf.ID]] : 0);
+                GL.BindTexture(TextureTarget.Texture2D, (conf.ID >= 0) ? mainForm.GetTextureIds()[selectedTextureSet[conf.ID]] : 0);
                 GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
             }
 

@@ -52,6 +52,10 @@ namespace LibReplanetizer.Headers
         {
             byte[] bytes = new byte[0x10];
 
+            WriteInt(bytes, 0x00, modelPointer);
+            WriteInt(bytes, 0x04, texturePointer);
+            WriteInt(bytes, 0x08, textureCount);
+
             return bytes;
         }
     }

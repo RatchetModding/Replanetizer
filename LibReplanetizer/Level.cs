@@ -51,6 +51,7 @@ namespace LibReplanetizer
         public List<Spline> splines;
         public List<List<TerrainFragment>> terrainChunks;
         public List<int> textureConfigMenus;
+        public List<Mission> missions;
 
         public LevelVariables levelVariables;
         public OcclusionData occlusionData;
@@ -293,6 +294,31 @@ namespace LibReplanetizer
                 {
                     parser.GetTextures(gadgetTextures);
                 }
+            }
+
+            List<string> missionPaths = MissionHeader.FindMissionFiles(game, enginePath);
+            missions = new List<Mission>();
+
+            for (int i = 0; i < missionPaths.Count; i++)
+            {
+                string missionPath = missionPaths[i];
+
+                Mission mission = new Mission(i);
+
+                using (MissionParser parser = new MissionParser(game, missionPath))
+                {
+                    mission.models = parser.GetModels();
+                    mission.textures = parser.GetTextures();
+                }
+
+                string vram = missionPath.Replace(".ps3", ".vram");
+
+                using (VramParser parser = new VramParser(vram))
+                {
+                    parser.GetTextures(mission.textures);
+                }
+
+                missions.Add(mission);
             }
 
             using (VramParser vramParser = new VramParser(path + @"/vram.ps3"))

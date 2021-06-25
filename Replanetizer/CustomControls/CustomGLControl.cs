@@ -171,6 +171,14 @@ namespace RatchetEdit
             {
                 loadTexture(t);
             }
+
+            foreach (Mission mission in level.missions)
+            {
+                foreach (Texture t in mission.textures)
+                {
+                    loadTexture(t);
+                }
+            }
         }
 
         void LoadCollisionBOs()

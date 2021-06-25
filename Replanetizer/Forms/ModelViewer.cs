@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace RatchetEdit
@@ -28,7 +29,7 @@ namespace RatchetEdit
 
         private Matrix4 trans, scale, worldView, rot = Matrix4.Identity;
 
-        private TreeNode mobyNode, tieNode, shrubNode, gadgetNode, armorNode;
+        private TreeNode mobyNode, tieNode, shrubNode, gadgetNode, armorNode, missionsNode;
 
         private BufferContainer container;
 
@@ -47,7 +48,8 @@ namespace RatchetEdit
                 shrubNode = GetModelNodes("Shrub", level.shrubModels);
                 gadgetNode = GetModelNodes("Gadget", level.gadgetModels);
                 armorNode = GetModelNodes("Armor", level.armorModels);
-                modelView.Nodes.AddRange(new TreeNode[] { mobyNode, tieNode, shrubNode, gadgetNode, armorNode });
+                missionsNode = GetMissionsNodes("Mission", level.missions);
+                modelView.Nodes.AddRange(new TreeNode[] { mobyNode, tieNode, shrubNode, gadgetNode, armorNode, missionsNode });
             }
 
             SelectModel(model);
@@ -84,6 +86,18 @@ namespace RatchetEdit
                     ForeColor = mod.vertexBuffer.Length == 0 ? Color.Red : Color.Black
                 });
             }
+            return newNode;
+        }
+
+        public TreeNode GetMissionsNodes(string name, List<Mission> missions)
+        {
+            TreeNode newNode = new TreeNode(name);
+
+            foreach (Mission mission in missions)
+            {
+                newNode.Nodes.Add(GetModelNodes("mission_" + mission.missionID, mission.models));
+            }
+
             return newNode;
         }
 
@@ -144,6 +158,14 @@ namespace RatchetEdit
                         selectedTextureSet = level.armorTextures[modelView.SelectedNode.Index];
                         break;
                 }
+                UpdateModel();
+            } else if (e.Node.Level == 2)
+            {
+                int mission = int.Parse(Regex.Match(e.Node.Parent.Text,@"\d+$").Value);
+
+                selectedModel = level.missions[mission].models[modelView.SelectedNode.Index];
+                selectedTextureSet = level.missions[mission].textures;
+
                 UpdateModel();
             }
         }

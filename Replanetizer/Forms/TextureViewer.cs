@@ -17,9 +17,16 @@ namespace RatchetEdit
          * If other files are parsed, their textures need to be handled separately aswell
          * Since this tool is supposed to be able to mod the game, merging the textures into one is probably out of reach
          * (Though we could keep a separate list containing all textures but that is probably also a mess to maintain)
+         * 
+         * Loading the textures may take a few seconds, if the user closes the window in the meantime we have to delay it
+         * (or find some other way to stop the grid loading)
+         * Here it is done through a status variable indicating whether we still load and an event which fires after loading
+         * and to which we subscribe on close
          */
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
+        private delegate void loadingGridCloseHandler(object source, EventArgs e);
 
         public Main main;
         public TextureConfig conf;
@@ -27,6 +34,8 @@ namespace RatchetEdit
         public UIViewer uiView;
 
         public int returnVal;
+        private bool loadingGrid = false;
+        private event loadingGridCloseHandler OnCloseDuringLoad;
 
         public List<ListViewItem> virtualCache = new List<ListViewItem>();
 
@@ -46,6 +55,11 @@ namespace RatchetEdit
             }
 
             count += main.level.gadgetTextures.Count;
+
+            foreach (Mission mission in main.level.missions)
+            {
+                count += mission.textures.Count;
+            }
 
             return count;
         }
@@ -90,6 +104,15 @@ namespace RatchetEdit
                 virtualCache.Add(new ListViewItem("tex_gadget_" + i, index++));
             }
 
+            for (int i = 0; i < main.level.missions.Count; i++)
+            {
+                List<Texture> textures = main.level.missions[i].textures;
+                for (int j = 0; j < textures.Count; j++)
+                {
+                    virtualCache.Add(new ListViewItem("tex_mission" + i + "_" + j, index++));
+                }
+            }
+
             ThreadStart tstart = new ThreadStart(delegate ()
             {
                 LoadForGrid();
@@ -110,11 +133,12 @@ namespace RatchetEdit
             {
                 texImages.Images.Add("tex_" + infix + index, image);
             }
-            
         }
 
         public void LoadForGrid()
         {
+            loadingGrid = true;
+
             for (int i = 0; i < main.level.textures.Count; i++)
             {
                 Image image = main.level.textures[i].getTextureImage();
@@ -138,6 +162,17 @@ namespace RatchetEdit
                 AddImage(image, i, "gadget_");
             }
 
+            for (int i = 0; i < main.level.missions.Count; i++)
+            {
+                List<Texture> textures = main.level.missions[i].textures;
+                string infix = "mission" + i + "_";
+                for (int j = 0; j < textures.Count; j++)
+                {
+                    Image image = textures[j].getTextureImage();
+                    AddImage(image, j, infix);
+                }
+            }
+
             if (InvokeRequired)
             {
                 this?.Invoke(new MethodInvoker(delegate { textureView.Refresh(); }));
@@ -146,6 +181,11 @@ namespace RatchetEdit
             {
                 textureView.Refresh();
             }
+
+            loadingGrid = false;
+
+            if (OnCloseDuringLoad != null)
+                OnCloseDuringLoad(this, new EventArgs());
         }
 
         //Removes DDS header
@@ -163,35 +203,73 @@ namespace RatchetEdit
             UpdateTextureList();
         }
 
+        private int GlobalIndexToLocalIndex(int index)
+        {
+            if (index >= main.level.textures.Count)
+            {
+                index -= main.level.textures.Count;
+
+                foreach (List<Texture> list in main.level.armorTextures)
+                {
+                    if (index >= list.Count)
+                    {
+                        index -= list.Count;
+                    }
+                    else
+                    {
+                        return index;
+                    }
+                }
+
+                if (index >= main.level.gadgetTextures.Count)
+                {
+                    foreach (Mission mission in main.level.missions)
+                    {
+                        if (index >= mission.textures.Count)
+                        {
+                            index -= mission.textures.Count;
+                        }
+                        else
+                        {
+                            return index;
+                        }
+                    }
+                }
+            }
+
+            return index;
+        }
+
         private void CloseForm()
         {
             ListView.SelectedIndexCollection col = textureView.SelectedIndices;
             if (col.Count > 0)
-            {           
+            {
                 int index = textureView.Items[col[0]].ImageIndex;
 
-                if (index >= main.level.textures.Count)
-                {
-                    index -= main.level.textures.Count;
-
-                    foreach (List<Texture> list in main.level.armorTextures)
-                    {
-                        if (index >= list.Count)
-                        {
-                            index -= list.Count;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                returnVal = index;
+                returnVal = GlobalIndexToLocalIndex(index);
             }      
-
-            DialogResult = DialogResult.OK;
-            Close();
+        
+            if (loadingGrid)
+            {
+                OnCloseDuringLoad += new loadingGridCloseHandler((o, e) => 
+                { 
+                    if (InvokeRequired)
+                    {
+                        this?.Invoke(new MethodInvoker(delegate 
+                        {
+                            DialogResult = DialogResult.OK;
+                            Close();
+                        }));
+                    }
+                    
+                });
+            }
+            else
+            {
+                DialogResult = DialogResult.OK;
+                Close();
+            }
         }
 
         private void ImportBtn_Click(object sender, EventArgs e)
@@ -263,7 +341,24 @@ namespace RatchetEdit
                     }
                 }
 
-                action(main.level.gadgetTextures[index]);
+                if (index >= main.level.gadgetTextures.Count)
+                {
+                    foreach (Mission mission in main.level.missions)
+                    {
+                        if (index >= mission.textures.Count)
+                        {
+                            index -= mission.textures.Count;
+                        }
+                        else
+                        {
+                            action(mission.textures[index]);
+                            return;
+                        }
+                    }
+                } else
+                {
+                    action(main.level.gadgetTextures[index]);
+                } 
             }
             else
             {
@@ -285,9 +380,27 @@ namespace RatchetEdit
         }
 
         private void button2_Click(object sender, EventArgs e)
-        {
-            DialogResult = DialogResult.Cancel;
-            Close();
+        {   
+            if (loadingGrid)
+            {
+                OnCloseDuringLoad += new loadingGridCloseHandler((o, a) =>
+                {
+                    if (InvokeRequired)
+                    {
+                        this?.Invoke(new MethodInvoker(delegate
+                        {
+                            DialogResult = DialogResult.Cancel;
+                            Close();
+                        }));
+                    }
+
+                });
+            }
+            else
+            {
+                DialogResult = DialogResult.Cancel;
+                Close();
+            }
         }
 
         private void exportBtn_Click(object sender, EventArgs e)
@@ -332,6 +445,16 @@ namespace RatchetEdit
                 {
                     Bitmap image = main.level.gadgetTextures[i].getTextureImage();
                     image.Save(path + "/gadget_" + i.ToString() + ".png");
+                }
+
+                for (int i = 0; i < main.level.missions.Count; i++)
+                {
+                    List<Texture> textures = main.level.missions[i].textures;
+                    for (int j = 0; j < textures.Count; j++)
+                    {
+                        Bitmap image = textures[j].getTextureImage();
+                        image.Save(path + "/mission" + i + "_" + j.ToString() + ".png");
+                    }
                 }
             }
             finally

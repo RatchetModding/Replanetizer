@@ -302,6 +302,7 @@ namespace LibReplanetizer.Models
 
         /*
          * RaC 2 and 3 gadgets files contain only the mesh
+         * Same Format is also used for DL missions
          */
         public static MobyModel GetGadgetMobyModel(FileStream fileStream, int modelPointer)
         {

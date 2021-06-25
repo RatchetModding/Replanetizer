@@ -33,9 +33,9 @@ namespace LibReplanetizer.Headers
         public int unk3Pointer;               // TODO     xx
         public int unk4Pointer;               // TODO     xx
         public int soundConfigPointer;          // TODO
-        public int weaponPointer;
+        public int gadgetPointer;
 
-        public int weaponCount;
+        public int gadgetCount;
         public int texturePointer;
         public int textureCount;
         public int lightPointer;
@@ -122,9 +122,9 @@ namespace LibReplanetizer.Headers
             unk3Pointer = ReadInt(engineHeadBlock, 0x40);
             unk4Pointer = ReadInt(engineHeadBlock, 0x44);
             soundConfigPointer = ReadInt(engineHeadBlock, 0x48);
-            weaponPointer = ReadInt(engineHeadBlock, 0x4C);
+            gadgetPointer = ReadInt(engineHeadBlock, 0x4C);
 
-            weaponCount = ReadInt(engineHeadBlock, 0x50);
+            gadgetCount = ReadInt(engineHeadBlock, 0x50);
             texturePointer = ReadInt(engineHeadBlock, 0x54);
             textureCount = ReadInt(engineHeadBlock, 0x58);
             lightPointer = ReadInt(engineHeadBlock, 0x5C);
@@ -169,8 +169,8 @@ namespace LibReplanetizer.Headers
 
             unk7Pointer = ReadInt(engineHeadBlock, 0x50);
             soundConfigPointer = ReadInt(engineHeadBlock, 0x54);
-            weaponPointer = ReadInt(engineHeadBlock, 0x58);
-            weaponCount = ReadInt(engineHeadBlock, 0x5C);
+            gadgetPointer = ReadInt(engineHeadBlock, 0x58);
+            gadgetCount = ReadInt(engineHeadBlock, 0x5C);
 
             texturePointer = ReadInt(engineHeadBlock, 0x60);
             textureCount = ReadInt(engineHeadBlock, 0x64);
@@ -230,9 +230,9 @@ namespace LibReplanetizer.Headers
             WriteInt(bytes, 0x40, unk3Pointer);
             WriteInt(bytes, 0x44, unk4Pointer);
             WriteInt(bytes, 0x48, soundConfigPointer);
-            WriteInt(bytes, 0x4C, weaponPointer);
+            WriteInt(bytes, 0x4C, gadgetPointer);
 
-            WriteInt(bytes, 0x50, weaponCount);
+            WriteInt(bytes, 0x50, gadgetCount);
             WriteInt(bytes, 0x54, texturePointer);
             WriteInt(bytes, 0x58, textureCount);
             WriteInt(bytes, 0x5C, lightPointer);
@@ -279,8 +279,8 @@ namespace LibReplanetizer.Headers
 
             WriteInt(bytes, 0x50, unk7Pointer);
             WriteInt(bytes, 0x54, soundConfigPointer);
-            WriteInt(bytes, 0x58, weaponPointer);
-            WriteInt(bytes, 0x5C, weaponCount);
+            WriteInt(bytes, 0x58, gadgetPointer);
+            WriteInt(bytes, 0x5C, gadgetCount);
 
             WriteInt(bytes, 0x60, texturePointer);
             WriteInt(bytes, 0x64, textureCount);

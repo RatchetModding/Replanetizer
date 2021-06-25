@@ -79,9 +79,9 @@ namespace LibReplanetizer.Parsers
             return GetPlayerAnimations(engineHead.playerAnimationPointer, ratchet);
         }
 
-        public List<Model> GetWeapons()
+        public List<Model> GetGadgets()
         {
-            return GetWeapons(engineHead.game, engineHead.weaponPointer, engineHead.weaponCount);
+            return GetGadgets(engineHead.game, engineHead.gadgetPointer, engineHead.gadgetCount);
         }
 
         public LightConfig GetLightConfig()

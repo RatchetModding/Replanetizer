@@ -14,8 +14,8 @@ namespace RatchetEdit
     {
         /*
          * Be aware that textures may come from different sources like from the engine or armor files
-         * If other files like gadgets etc. are parsed, their textures need to be handled separately aswell
-         * Since this tool is supposed to be able for modding the game, merging the textures into one is probably out of reach
+         * If other files are parsed, their textures need to be handled separately aswell
+         * Since this tool is supposed to be able to mod the game, merging the textures into one is probably out of reach
          * (Though we could keep a separate list containing all textures but that is probably also a mess to maintain)
          */
 
@@ -44,6 +44,8 @@ namespace RatchetEdit
             {
                 count += list.Count;
             }
+
+            count += main.level.gadgetTextures.Count;
 
             return count;
         }
@@ -81,6 +83,11 @@ namespace RatchetEdit
                 {
                     virtualCache.Add(new ListViewItem("tex_armor" + i + "_" + j, index++));
                 }
+            }
+
+            for (int i = 0; i < main.level.gadgetTextures.Count; i++)
+            {
+                virtualCache.Add(new ListViewItem("tex_gadget_" + i, index++));
             }
 
             ThreadStart tstart = new ThreadStart(delegate ()
@@ -123,6 +130,12 @@ namespace RatchetEdit
                     Image image = textures[j].getTextureImage();
                     AddImage(image, j, infix);
                 }
+            }
+
+            for (int i = 0; i < main.level.gadgetTextures.Count; i++)
+            {
+                Image image = main.level.gadgetTextures[i].getTextureImage();
+                AddImage(image, i, "gadget_");
             }
 
             if (InvokeRequired)
@@ -249,6 +262,8 @@ namespace RatchetEdit
                         return;
                     }
                 }
+
+                action(main.level.gadgetTextures[index]);
             }
             else
             {
@@ -311,6 +326,12 @@ namespace RatchetEdit
                         Bitmap image = textures[j].getTextureImage();
                         image.Save(path + "/armor" + i + "_" + j.ToString() + ".png");
                     }
+                }
+
+                for (int i = 0; i < main.level.gadgetTextures.Count; i++)
+                {
+                    Bitmap image = main.level.gadgetTextures[i].getTextureImage();
+                    image.Save(path + "/gadget_" + i.ToString() + ".png");
                 }
             }
             finally

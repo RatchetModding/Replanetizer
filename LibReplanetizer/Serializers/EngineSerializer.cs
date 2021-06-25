@@ -30,7 +30,7 @@ namespace LibReplanetizer.Serializers
                 collisionPointer = SeekWrite(fs, level.collBytes),                 // 0x14 - collision
                 mobyModelPointer = SeekWrite(fs, WriteMobies(level.mobyModels, (int)fs.Position)),
                 playerAnimationPointer = SeekWrite(fs, WritePlayerAnimations(level.playerAnimations, (int)fs.Position)),
-                weaponPointer = SeekWrite(fs, WriteWeapons(level.weaponModels, (int)fs.Position)),
+                gadgetPointer = SeekWrite(fs, WriteWeapons(level.gadgetModels, (int)fs.Position)),
                 tieModelPointer = SeekWrite(fs, WriteTieModels(level.tieModels, (int)fs.Position)),
                 tiePointer = SeekWrite(fs, WriteTies(level.ties, (int)fs.Position)),
                 shrubModelPointer = SeekWrite(fs, WriteShrubModels(level.shrubModels, (int)fs.Position)),
@@ -46,7 +46,7 @@ namespace LibReplanetizer.Serializers
                 tieCount = level.ties.Count,
                 shrubModelCount = level.shrubModels.Count,
                 shrubCount = level.shrubs.Count,
-                weaponCount = level.weaponModels.Count,
+                gadgetCount = level.gadgetModels.Count,
                 textureCount = level.textures.Count,
                 lightCount = level.lights.Count,
                 textureConfigMenuCount = level.textureConfigMenus.Count

@@ -28,7 +28,7 @@ namespace RatchetEdit
 
         private Matrix4 trans, scale, worldView, rot = Matrix4.Identity;
 
-        private TreeNode mobyNode, tieNode, shrubNode, weaponNode, armorNode;
+        private TreeNode mobyNode, tieNode, shrubNode, gadgetNode, armorNode;
 
         private BufferContainer container;
 
@@ -45,9 +45,9 @@ namespace RatchetEdit
                 mobyNode = GetModelNodes("Moby", level.mobyModels);
                 tieNode = GetModelNodes("Tie", level.tieModels);
                 shrubNode = GetModelNodes("Shrub", level.shrubModels);
-                weaponNode = GetModelNodes("Weapon", level.weaponModels);
+                gadgetNode = GetModelNodes("Gadget", level.gadgetModels);
                 armorNode = GetModelNodes("Armor", level.armorModels);
-                modelView.Nodes.AddRange(new TreeNode[] { mobyNode, tieNode, shrubNode, weaponNode, armorNode });
+                modelView.Nodes.AddRange(new TreeNode[] { mobyNode, tieNode, shrubNode, gadgetNode, armorNode });
             }
 
             SelectModel(model);
@@ -135,9 +135,9 @@ namespace RatchetEdit
                         selectedModel = level.shrubModels[modelView.SelectedNode.Index];
                         selectedTextureSet = level.textures;
                         break;
-                    case "Weapon":
-                        selectedModel = level.weaponModels[modelView.SelectedNode.Index];
-                        selectedTextureSet = level.textures;
+                    case "Gadget":
+                        selectedModel = level.gadgetModels[modelView.SelectedNode.Index];
+                        selectedTextureSet = (level.game.num == 1) ? level.textures : level.gadgetTextures;
                         break;
                     case "Armor":
                         selectedModel = level.armorModels[modelView.SelectedNode.Index];

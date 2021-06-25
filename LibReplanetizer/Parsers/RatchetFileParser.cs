@@ -178,19 +178,19 @@ namespace LibReplanetizer.Parsers
             return animations;
         }
 
-        protected List<Model> GetWeapons(GameType game, int weaponPointer, int count)
+        protected List<Model> GetGadgets(GameType game, int gadgetPointer, int count)
         {
-            List<Model> weaponModels = new List<Model>(count);
+            List<Model> gadgetModels = new List<Model>(count);
 
             //Each moby is stored as a [MobyID, offset] pair
-            byte[] mobyIDBlock = ReadBlock(fileStream, weaponPointer, count * 0x10);
+            byte[] mobyIDBlock = ReadBlock(fileStream, gadgetPointer, count * 0x10);
             for (int i = 0; i < count; i++)
             {
                 short modelID = ReadShort(mobyIDBlock, (i * 0x10) + 2);
                 int offset = ReadInt(mobyIDBlock, (i * 0x10) + 4);
-                weaponModels.Add(new MobyModel(fileStream, game, modelID, offset));
+                gadgetModels.Add(new MobyModel(fileStream, game, modelID, offset));
             }
-            return weaponModels;
+            return gadgetModels;
         }
 
         protected LightConfig GetLightConfig(int lightConfigOffset)

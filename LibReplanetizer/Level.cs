@@ -24,12 +24,13 @@ namespace LibReplanetizer
         public List<Model> mobyModels;
         public List<Model> tieModels;
         public List<Model> shrubModels;
-        public List<Model> weaponModels;
+        public List<Model> gadgetModels;
         public List<Model> armorModels;
         public List<Model> collisionChunks;
         public List<Model> chunks;
         public List<Texture> textures;
         public List<List<Texture>> armorTextures;
+        public List<Texture> gadgetTextures;
         public SkyboxModel skybox;
 
         public byte[] renderDefBytes;
@@ -140,8 +141,8 @@ namespace LibReplanetizer
                 Logger.Debug("Added {0} shrub models", shrubModels.Count);
 
                 Logger.Debug("Parsing weapons...");
-                weaponModels = engineParser.GetWeapons();
-                Logger.Debug("Added {0} weapons", weaponModels.Count);
+                gadgetModels = engineParser.GetGadgets();
+                Logger.Debug("Added {0} weapons", gadgetModels.Count);
 
                 Logger.Debug("Parsing textures...");
                 textures = engineParser.GetTextures();
@@ -273,6 +274,23 @@ namespace LibReplanetizer
 
                 armorModels.Add(model);
                 armorTextures.Add(tex);
+            }
+
+            string gadgetPath = GadgetHeader.FindGadgetFile(game, enginePath);
+            gadgetTextures = new List<Texture>();
+
+            if (gadgetPath != "")
+            {
+                using (GadgetParser parser = new GadgetParser(game, gadgetPath))
+                {
+                    gadgetModels.AddRange(parser.GetModels());
+                    gadgetTextures.AddRange(parser.GetTextures());
+                }
+
+                using (VramParser parser = new VramParser(gadgetPath.Replace(".ps3", ".vram")))
+                {
+                    parser.GetTextures(gadgetTextures);
+                }
             }
 
             using (VramParser vramParser = new VramParser(path + @"/vram.ps3"))

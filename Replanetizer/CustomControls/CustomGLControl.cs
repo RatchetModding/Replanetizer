@@ -166,6 +166,11 @@ namespace RatchetEdit
                     loadTexture(t);
                 }
             }
+
+            foreach (Texture t in level.gadgetTextures)
+            {
+                loadTexture(t);
+            }
         }
 
         void LoadCollisionBOs()

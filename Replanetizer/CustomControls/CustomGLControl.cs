@@ -402,6 +402,26 @@ namespace RatchetEdit
                         break;
                 }
 
+                if (Cursor.Position.Y < 10)
+                {
+                    Mouse.SetPosition(Cursor.Position.X, DisplayDevice.Default.Height - 10);
+                    mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), new Vector2(Cursor.Position.X, DisplayDevice.Default.Height - 10));
+                } else if (Cursor.Position.Y > DisplayDevice.Default.Height - 10)
+                {
+                    Mouse.SetPosition(Cursor.Position.X, 10);
+                    mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), new Vector2(Cursor.Position.X, 10));
+                }
+
+                if (Cursor.Position.X < 10)
+                {
+                    Mouse.SetPosition(DisplayDevice.Default.Width - 10, Cursor.Position.Y);
+                    mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), new Vector2(DisplayDevice.Default.Width - 10, Cursor.Position.Y));
+                } else if (Cursor.Position.X > DisplayDevice.Default.Width - 10)
+                {
+                    Mouse.SetPosition(10, Cursor.Position.Y);
+                    mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), new Vector2(10, Cursor.Position.Y));
+                }
+
                 InvalidateView();
             }
 
@@ -412,7 +432,6 @@ namespace RatchetEdit
             if (invalidate)
             {
                 Invalidate();
-                //invalidate = false;
             }
         }
 

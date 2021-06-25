@@ -251,7 +251,7 @@ namespace LibReplanetizer
                 }
             }
 
-            List<string> armorPaths = ArmorHeader.FindArmorFiles(enginePath);
+            List<string> armorPaths = ArmorHeader.FindArmorFiles(game, enginePath);
             armorModels = new List<Model>();
             armorTextures = new List<List<Texture>>();
 
@@ -272,7 +272,9 @@ namespace LibReplanetizer
                     parser.GetTextures(tex);
                 }
 
-                armorModels.Add(model);
+                if (model != null)
+                    armorModels.Add(model);
+
                 armorTextures.Add(tex);
             }
 

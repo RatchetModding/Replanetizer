@@ -26,6 +26,8 @@ namespace LibReplanetizer.Parsers
 
         public MobyModel GetArmor()
         {
+            if (armorHead.modelPointer == 0) return null;
+
             if (game.num == 4)
             {
                 return new MobyModel(fileStream, game, 0, armorHead.modelPointer);

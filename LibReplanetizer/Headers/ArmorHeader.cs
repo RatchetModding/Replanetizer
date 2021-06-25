@@ -23,6 +23,13 @@ namespace LibReplanetizer.Headers
             texturePointer = ReadInt(armorHeaderBytes, 0x04);
             textureCount = ReadInt(armorHeaderBytes, 0x08);
             // 0x0C always 0
+
+            // if modelPointer is zero, this is a DL texture file
+            if (modelPointer == 0)
+            {
+                texturePointer = 0;
+                textureCount = (int)(armorFile.Length / 0x24);
+            }
         }
 
         /*
@@ -35,7 +42,7 @@ namespace LibReplanetizer.Headers
          * levelK
          *      engine.ps3
          */
-        public static List<string> FindArmorFiles(string enginePath)
+        public static List<string> FindArmorFiles(GameType game, string enginePath)
         {
             string superFolder = Directory.GetParent(enginePath).Parent.FullName;
             List<string> files = new List<string>();
@@ -43,6 +50,13 @@ namespace LibReplanetizer.Headers
             if (Directory.Exists(superFolder + @"\global") && Directory.Exists(superFolder + @"\global\armor"))
             {
                 files.AddRange(Directory.GetFiles(superFolder + @"\global\armor", "armor*.ps3"));
+
+                if (game.num == 4)
+                {
+                    files.AddRange(Directory.GetFiles(superFolder + @"\global\armor", "bot_tex*.ps3"));
+                    files.AddRange(Directory.GetFiles(superFolder + @"\global\armor", "dropship*.ps3"));
+                    files.AddRange(Directory.GetFiles(superFolder + @"\global\armor", "landstalker*.ps3"));
+                }
             }
 
             return files;

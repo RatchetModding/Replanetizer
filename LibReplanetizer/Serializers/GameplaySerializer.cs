@@ -60,23 +60,7 @@ namespace LibReplanetizer.Serializers
             };
 
             //Seek to the beginning of the file to append the updated header
-            byte[] head = null;
-            switch (level.game.num)
-            {
-                case 1:
-                    head = gameplayHeader.SerializeRC1();
-                    break;
-                case 2:
-                case 3:
-                    head = gameplayHeader.SerializeRC23();
-                    break;
-                case 4:
-                    head = gameplayHeader.SerializeDL();
-                    break;
-                default:
-                    head = gameplayHeader.SerializeRC23();
-                    break;
-            }
+            byte[] head = gameplayHeader.Serialize(level.game);
             fs.Seek(0, SeekOrigin.Begin);
             fs.Write(head, 0, head.Length);
 
@@ -157,21 +141,9 @@ namespace LibReplanetizer.Serializers
             WriteUint(bytes, 0, (uint)mobs.Count);
             WriteUint(bytes, 4, 0x100);
 
-            switch (game.num)
+            for (int i = 0; i < mobs.Count; i++)
             {
-                case 1:
-                    for (int i = 0; i < mobs.Count; i++)
-                    {
-                        mobs[i].ToByteArrayRC1().CopyTo(bytes, 0x10 + i * game.mobyElemSize);
-                    }
-                    break;
-                case 2:
-                case 3:
-                    for (int i = 0; i < mobs.Count; i++)
-                    {
-                        mobs[i].ToByteArrayRC23().CopyTo(bytes, 0x10 + i * game.mobyElemSize);
-                    }
-                    break;
+                mobs[i].ToByteArray().CopyTo(bytes, 0x10 + i * game.mobyElemSize);
             }
 
             return bytes;

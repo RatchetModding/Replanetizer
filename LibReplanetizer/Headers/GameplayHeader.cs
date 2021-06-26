@@ -232,7 +232,23 @@ namespace LibReplanetizer.Headers
             occlusionPointer = ReadInt(gameplayHeadBlock, 0x90);*/
         }
 
-        public byte[] SerializeRC1()
+        public byte[] Serialize(GameType game)
+        {
+            switch (game.num)
+            {
+                case 1:
+                    return SerializeRC1();
+                case 2:
+                case 3:
+                    return SerializeRC23();
+                case 4:
+                    return SerializeDL();
+                default:
+                    return SerializeRC23();
+            }
+        }
+
+        private byte[] SerializeRC1()
         {
             byte[] bytes = new byte[GAMEPLAYSIZE];
 
@@ -284,7 +300,7 @@ namespace LibReplanetizer.Headers
             return bytes;
         }
 
-        public byte[] SerializeRC23()
+        private byte[] SerializeRC23()
         {
             byte[] bytes = new byte[GAMEPLAYSIZE];
 
@@ -338,7 +354,7 @@ namespace LibReplanetizer.Headers
             return bytes;
         }
 
-        public byte[] SerializeDL()
+        private byte[] SerializeDL()
         {
             byte[] bytes = new byte[GAMEPLAYSIZE];
 

@@ -30,6 +30,10 @@ namespace RatchetEdit
         public int matrixID { get; set; }
         public int colorID { get; set; }
 
+        private int uniformFogColorID;
+        private int uniformFogDistID;
+        private int uniformUseFogID;
+
         private Matrix4 projection { get; set; }
         private Matrix4 view { get; set; }
 
@@ -103,7 +107,11 @@ namespace RatchetEdit
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
             colorID = GL.GetUniformLocation(colorShaderID, "incolor");
 
-            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 800.0f);
+            uniformFogColorID = GL.GetUniformLocation(shaderID, "fogColor");
+            uniformFogDistID = GL.GetUniformLocation(shaderID, "fogDistance");
+            uniformUseFogID = GL.GetUniformLocation(shaderID, "useFog");
+
+            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 10000.0f);
 
             camera = new Camera();
 
@@ -183,6 +191,16 @@ namespace RatchetEdit
 
         void LoadCollisionBOs()
         {
+            foreach (int id in collisionIbo)
+            {
+                GL.DeleteBuffer(id);
+            }
+
+            foreach (int id in collisionVbo)
+            {
+                GL.DeleteBuffer(id);
+            }
+
             collisionVbo.Clear();
             collisionIbo.Clear();
 
@@ -570,8 +588,7 @@ namespace RatchetEdit
             base.OnResize(e);
             if (!initialized) return;
             GL.Viewport(0, 0, Width, Height);
-            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 800.0f);
-
+            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 10000.0f);
         }
 
         private void InitializeComponent()
@@ -805,12 +822,9 @@ namespace RatchetEdit
             GL.UseProgram(shaderID);
             if (level != null && level.levelVariables != null)
             {
-                int uniformFog = GL.GetUniformLocation(shaderID, "fogColor");
-                GL.Uniform4(uniformFog, level.levelVariables.fogColor);
-                int uniformDist = GL.GetUniformLocation(shaderID, "fogDistance");
-                GL.Uniform1(uniformDist, level.levelVariables.fogDistance);
-                int uniformUseFog = GL.GetUniformLocation(shaderID, "useFog");
-                GL.Uniform1(uniformUseFog, (enableFog) ? 1 : 0); 
+                GL.Uniform4(uniformFogColorID, level.levelVariables.fogColor);
+                GL.Uniform1(uniformFogDistID, level.levelVariables.fogDistance);
+                GL.Uniform1(uniformUseFogID, (enableFog) ? 1 : 0); 
             }
 
             if (enableSkybox)

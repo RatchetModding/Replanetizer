@@ -49,6 +49,7 @@
             this.Controls.Add(this.properties);
             this.Name = "LightConfigViewer";
             this.Text = "LightConfigViewer";
+            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 10, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.Load += new System.EventHandler(this.LightConfigViewer_Load);
             this.ResumeLayout(false);
 

@@ -63,6 +63,7 @@
             this.Controls.Add(this.listBox1);
             this.Name = "SpriteViewer";
             this.Text = "SpriteViewer";
+            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 10, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.Load += new System.EventHandler(this.SpriteViewer_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);

@@ -49,6 +49,7 @@
             this.Controls.Add(this.properties);
             this.Name = "LevelVariableViewer";
             this.Text = "Level Variables";
+            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 10, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.Load += new System.EventHandler(this.LevelVariableViewer_Load);
             this.ResumeLayout(false);
 

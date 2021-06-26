@@ -77,6 +77,7 @@ namespace RatchetEdit
             tiesVisible(true);
             shrubsVisible(true);
             terrainVisible(true);
+            skyboxVisible(true);
 
             //Enable all the buttons in the view tab
             foreach (ToolStripMenuItem menuButton in ViewToolStipItem.DropDownItems)
@@ -86,6 +87,18 @@ namespace RatchetEdit
 
             //Enable all the buttons in the model tab
             foreach (ToolStripMenuItem menuButton in toolStripMenuItem2.DropDownItems)
+            {
+                menuButton.Enabled = true;
+            }
+
+            //Enable all the buttons in the export tab
+            foreach (ToolStripMenuItem menuButton in exportToolStripMenuItem.DropDownItems)
+            {
+                menuButton.Enabled = true;
+            }
+
+            //Enable all the buttons in the import tab
+            foreach (ToolStripMenuItem menuButton in importToolStripMenuItem.DropDownItems)
             {
                 menuButton.Enabled = true;
             }
@@ -133,6 +146,12 @@ namespace RatchetEdit
             glControl.enableTerrain = value;
         }
 
+        public void skyboxVisible(bool value)
+        {
+            skyboxCheck.Checked = value;
+            glControl.enableSkybox = value;
+        }
+
         private Dictionary<int, string> GetModelNames(string fileName)
         {
             var modelNames = new Dictionary<int, string>();
@@ -177,6 +196,10 @@ namespace RatchetEdit
                 if ((GetSelectedObject() is ModelObject modelObj))
                 {
                     modelViewer = new ModelViewer(this, modelObj.model);
+                    modelViewer.Show();
+                } else
+                {
+                    modelViewer = new ModelViewer(this, null);
                     modelViewer.Show();
                 }
             }
@@ -414,7 +437,7 @@ namespace RatchetEdit
 
         private void HandleToolStrip1ItemsChecked(object item)
         {
-            foreach (ToolStripItem t in toolstrip1.Items)
+            foreach (ToolStripItem t in objectToolStrip.Items)
             {
                 if (t is ToolStripButton)
                 {

@@ -58,7 +58,7 @@ namespace RatchetEdit
         private void ModelViewer_Load(object sender, EventArgs e)
         {
             glControl.MakeCurrent();
-            GL.ClearColor(Color.CornflowerBlue);
+            GL.ClearColor(Color.SkyBlue);
             shaderID = mainForm.GetShaderID();
 
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
@@ -120,7 +120,7 @@ namespace RatchetEdit
             for (int i = 0; i < selectedModel.textureConfig.Count; i++)
             {
                 int textureId = selectedModel.textureConfig[i].ID;
-                if (textureId < 0) continue;
+                if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
 
                 textureList.Images.Add(selectedTextureSet[textureId].getTextureImage());
                 textureView.Items.Add(new ListViewItem
@@ -140,25 +140,29 @@ namespace RatchetEdit
                     case "Moby":
                         selectedModel = level.mobyModels[modelView.SelectedNode.Index];
                         selectedTextureSet = level.textures;
+                        UpdateModel();
                         break;
                     case "Tie":
                         selectedModel = level.tieModels[modelView.SelectedNode.Index];
                         selectedTextureSet = level.textures;
+                        UpdateModel();
                         break;
                     case "Shrub":
                         selectedModel = level.shrubModels[modelView.SelectedNode.Index];
                         selectedTextureSet = level.textures;
+                        UpdateModel();
                         break;
                     case "Gadget":
                         selectedModel = level.gadgetModels[modelView.SelectedNode.Index];
                         selectedTextureSet = (level.game.num == 1) ? level.textures : level.gadgetTextures;
+                        UpdateModel();
                         break;
                     case "Armor":
                         selectedModel = level.armorModels[modelView.SelectedNode.Index];
                         selectedTextureSet = level.armorTextures[modelView.SelectedNode.Index];
+                        UpdateModel();
                         break;
-                }
-                UpdateModel();
+                }       
             } else if (e.Node.Level == 2)
             {
                 int mission = int.Parse(Regex.Match(e.Node.Parent.Text,@"\d+$").Value);
@@ -202,34 +206,36 @@ namespace RatchetEdit
 
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
-            if (selectedModel == null) return;
-
             glControl.MakeCurrent();
             GL.ClearColor(Color.SkyBlue);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            // Has to be done in this order to work correctly
-            Matrix4 mvp = trans * scale * rot * worldView;
-
-            GL.UseProgram(shaderID);
-            GL.UniformMatrix4(matrixID, false, ref mvp);
-
-            GL.EnableVertexAttribArray(0);
-            GL.EnableVertexAttribArray(1);
-
-            container.Bind();
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
-
-            //Bind textures one by one, applying it to the relevant vertices based on the index array
-            foreach (TextureConfig conf in selectedModel.textureConfig)
+            if (selectedModel != null)
             {
-                GL.BindTexture(TextureTarget.Texture2D, (conf.ID >= 0) ? mainForm.GetTextureIds()[selectedTextureSet[conf.ID]] : 0);
-                GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+                // Has to be done in this order to work correctly
+                Matrix4 mvp = trans * scale * rot * worldView;
+
+                GL.UseProgram(shaderID);
+                GL.UniformMatrix4(matrixID, false, ref mvp);
+
+                GL.EnableVertexAttribArray(0);
+                GL.EnableVertexAttribArray(1);
+
+                container.Bind();
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
+
+                //Bind textures one by one, applying it to the relevant vertices based on the index array
+                foreach (TextureConfig conf in selectedModel.textureConfig)
+                {
+                    GL.BindTexture(TextureTarget.Texture2D, (conf.ID >= 0 && conf.ID < selectedTextureSet.Count) ? mainForm.GetTextureIds()[selectedTextureSet[conf.ID]] : 0);
+                    GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+                }
+
+                GL.DisableVertexAttribArray(1);
+                GL.DisableVertexAttribArray(0);
             }
 
-            GL.DisableVertexAttribArray(1);
-            GL.DisableVertexAttribArray(0);
             glControl.SwapBuffers();
 
             invalidate = false;

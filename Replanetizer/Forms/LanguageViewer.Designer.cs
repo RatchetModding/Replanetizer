@@ -87,6 +87,7 @@
             this.Controls.Add(this.languageList);
             this.Name = "LanguageViewer";
             this.Text = "Language Data";
+            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 10, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.Load += new System.EventHandler(this.LanguageViewer_Load);
             this.ResumeLayout(false);
 

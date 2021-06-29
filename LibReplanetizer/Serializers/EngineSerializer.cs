@@ -19,7 +19,14 @@ namespace LibReplanetizer.Serializers
             FileStream fs = File.Open(pathName + "/engine.ps3", FileMode.Create);
 
             // Seek past the header, as we don't have the data ready for it yet
-            fs.Seek(0x90, SeekOrigin.Begin);
+            if (level.game.num == 4)
+            {
+                fs.Seek(0xA0, SeekOrigin.Begin);
+            } else
+            {
+                fs.Seek(0x90, SeekOrigin.Begin);
+            }
+            
 
             EngineHeader engineHeader = new EngineHeader
             {

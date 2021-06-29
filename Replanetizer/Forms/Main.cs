@@ -644,7 +644,7 @@ namespace RatchetEdit
             if (collisionSaveDialog.ShowDialog() == DialogResult.OK)
             {
                 FileStream fs = File.Open(collisionSaveDialog.FileName, FileMode.Create);
-                fs.Write(level.collBytes, 0, level.collBytes.Length);
+                fs.Write(level.collBytesEngine, 0, level.collBytesEngine.Length);
                 fs.Close();
             }
         }
@@ -654,7 +654,7 @@ namespace RatchetEdit
             if (collisionOpenDialog.ShowDialog() == DialogResult.OK)
             {
                 FileStream fs = File.Open(collisionOpenDialog.FileName, FileMode.Open);
-                level.collBytes = ReadBlock(fs, 0, (int)fs.Length);
+                level.collBytesEngine = ReadBlock(fs, 0, (int)fs.Length);
                 fs.Close();
             }
             InvalidateView();

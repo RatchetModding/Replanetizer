@@ -20,7 +20,9 @@ namespace RatchetEdit
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         public Level level { get; set; }
+
         private List<TerrainFragment> terrains = new List<TerrainFragment>();
+        private List<Tuple<Model,int,int>> collisions = new List<Tuple<Model, int, int>>();
 
         public Matrix4 worldView { get; set; }
 
@@ -63,7 +65,6 @@ namespace RatchetEdit
 
         private List<int> collisionVbo = new List<int>();
         private List<int> collisionIbo = new List<int>();
-        private bool[] selectedChunks;
 
         public CustomGLControl()
         {
@@ -189,6 +190,22 @@ namespace RatchetEdit
             }
         }
 
+        private void LoadSingleCollisionBO(Collision col)
+        {
+            int id;
+            GL.GenBuffers(1, out id);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, id);
+            GL.BufferData(BufferTarget.ArrayBuffer, col.vertexBuffer.Length * sizeof(float), col.vertexBuffer, BufferUsageHint.StaticDraw);
+
+            collisionVbo.Add(id);
+
+            GL.GenBuffers(1, out id);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, id);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, col.indBuff.Length * sizeof(int), col.indBuff, BufferUsageHint.StaticDraw);
+
+            collisionIbo.Add(id);
+        }
+
         void LoadCollisionBOs()
         {
             foreach (int id in collisionIbo)
@@ -204,23 +221,16 @@ namespace RatchetEdit
             collisionVbo.Clear();
             collisionIbo.Clear();
 
-            foreach (Model collisionModel in level.collisionChunks)
+            if (level.collisionChunks.Count == 0)
             {
-                Collision col = (Collision)collisionModel;
-                int id;
-                GL.GenBuffers(1, out id);
-                GL.BindBuffer(BufferTarget.ArrayBuffer, id);
-                GL.BufferData(BufferTarget.ArrayBuffer, col.vertexBuffer.Length * sizeof(float), col.vertexBuffer, BufferUsageHint.StaticDraw);
-
-                collisionVbo.Add(id);
-
-                GL.GenBuffers(1, out id);
-                GL.BindBuffer(BufferTarget.ElementArrayBuffer, id);
-                GL.BufferData(BufferTarget.ElementArrayBuffer, col.indBuff.Length * sizeof(int), col.indBuff, BufferUsageHint.StaticDraw);
-
-                collisionIbo.Add(id);
+                LoadSingleCollisionBO((Collision)level.collisionEngine);
+            } else
+            {
+                foreach (Model collisionModel in level.collisionChunks)
+                {
+                    LoadSingleCollisionBO((Collision)collisionModel);
+                }
             }
-
         }
 
         public void LoadLevel(Level level)
@@ -243,16 +253,30 @@ namespace RatchetEdit
             hook = new MemoryHook(level.game.num);
         }
 
-        public void setSelectedChunks(bool[] selection)
+        public void setSelectedChunks(bool[] selectedChunks)
         {
-            selectedChunks = selection;
-
-            terrains.Clear();
-
-            for (int i = 0; i < level.terrainChunks.Count; i++)
+            if (level.terrainChunks.Count == 0)
             {
-                if (selectedChunks[i])
-                    terrains.AddRange(level.terrainChunks[i]);
+                terrains.Clear();
+                terrains.AddRange(level.terrainEngine);
+                collisions.Clear();
+                collisions.Add(new Tuple<Model,int,int>(level.collisionEngine, collisionVbo[0], collisionIbo[0]));
+            } else
+            {
+                terrains.Clear();
+                collisions.Clear();
+
+                for (int i = 0; i < level.terrainChunks.Count; i++)
+                {
+                    if (selectedChunks[i])
+                        terrains.AddRange(level.terrainChunks[i]);
+                }
+
+                for (int i = 0; i < level.collisionChunks.Count; i++)
+                {
+                    if (selectedChunks[i])
+                        collisions.Add(new Tuple<Model, int, int>(level.collisionChunks[i], collisionVbo[i], collisionIbo[i]));
+                }
             }
         }
 
@@ -922,11 +946,11 @@ namespace RatchetEdit
 
             if (enableCollision)
             {
-                for (int i = 0; i < level.collisionChunks.Count; i++)
+                for (int i = 0; i < collisions.Count; i++)
                 {
-                    if (!selectedChunks[i]) continue;
-
-                    Collision col = (Collision)level.collisionChunks[i];
+                    Collision col = (Collision)collisions[i].Item1;
+                    int vbo = collisions[i].Item2;
+                    int ibo = collisions[i].Item3;
 
                     if (col.indBuff.Length == 0) continue;
 
@@ -935,10 +959,10 @@ namespace RatchetEdit
                     GL.UniformMatrix4(matrixID, false, ref worldView);
                     GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
 
-                    GL.BindBuffer(BufferTarget.ArrayBuffer, collisionVbo[i]);
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
                     GL.VertexAttribPointer(1, 4, VertexAttribPointerType.UnsignedByte, false, sizeof(float) * 4, sizeof(float) * 3);
-                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, collisionIbo[i]);
+                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
 
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.DrawElements(PrimitiveType.Triangles, col.indBuff.Length, DrawElementsType.UnsignedInt, 0);

@@ -53,7 +53,7 @@ namespace LibReplanetizer.Parsers
 
         public Dictionary<int, String> GetLang(int offset)
         {
-            if (offset == 0) { return null; }
+            if (offset == 0) { return new Dictionary<int, string>(); }
 
             byte[] langHeader = ReadBlock(fileStream, offset, 0x08);
             int numItems = ReadInt(langHeader, 0x00);

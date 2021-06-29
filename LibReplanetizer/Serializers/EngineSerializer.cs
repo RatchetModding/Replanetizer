@@ -23,11 +23,12 @@ namespace LibReplanetizer.Serializers
 
             EngineHeader engineHeader = new EngineHeader
             {
+                game = level.game,
                 uiElementPointer = SeekWrite(fs, WriteUiElements(level.uiElements, (int)fs.Position)),
                 skyboxPointer = SeekWrite(fs, level.skybox.Serialize((int)fs.Position)),
-                terrainPointer = SeekWrite(fs, WriteTfrags(level.terrainChunks[0], (int)fs.Position)),              // 0x3c - terrain
+                terrainPointer = SeekWrite(fs, WriteTfrags(level.terrainEngine, (int)fs.Position)),              // 0x3c - terrain
                 renderDefPointer = SeekWrite(fs, level.renderDefBytes),            // 0x04 - renderdef
-                collisionPointer = SeekWrite(fs, level.collBytes),                 // 0x14 - collision
+                collisionPointer = SeekWrite(fs, level.collBytesEngine),                 // 0x14 - collision
                 mobyModelPointer = SeekWrite(fs, WriteMobies(level.mobyModels, (int)fs.Position)),
                 playerAnimationPointer = SeekWrite(fs, WritePlayerAnimations(level.playerAnimations, (int)fs.Position)),
                 gadgetPointer = SeekWrite(fs, WriteWeapons(level.gadgetModels, (int)fs.Position)),

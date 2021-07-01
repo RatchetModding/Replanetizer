@@ -33,7 +33,10 @@ namespace RatchetEdit
         public int colorID { get; set; }
 
         private int uniformFogColorID;
-        private int uniformFogDistID;
+        private int uniformFogNearDistID;
+        private int uniformFogFarDistID;
+        private int uniformFogNearIntensityID;
+        private int uniformFogFarIntensityID;
         private int uniformUseFogID;
 
         private Matrix4 projection { get; set; }
@@ -109,7 +112,10 @@ namespace RatchetEdit
             colorID = GL.GetUniformLocation(colorShaderID, "incolor");
 
             uniformFogColorID = GL.GetUniformLocation(shaderID, "fogColor");
-            uniformFogDistID = GL.GetUniformLocation(shaderID, "fogDistance");
+            uniformFogNearDistID = GL.GetUniformLocation(shaderID, "fogNearDistance");
+            uniformFogFarDistID = GL.GetUniformLocation(shaderID, "fogFarDistance");
+            uniformFogNearIntensityID = GL.GetUniformLocation(shaderID, "fogNearIntensity");
+            uniformFogFarIntensityID = GL.GetUniformLocation(shaderID, "fogFarIntensity");
             uniformUseFogID = GL.GetUniformLocation(shaderID, "useFog");
 
             projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 10000.0f);
@@ -847,7 +853,10 @@ namespace RatchetEdit
             if (level != null && level.levelVariables != null)
             {
                 GL.Uniform4(uniformFogColorID, level.levelVariables.fogColor);
-                GL.Uniform1(uniformFogDistID, level.levelVariables.fogNearIntensity);
+                GL.Uniform1(uniformFogNearDistID, level.levelVariables.fogNearDistance);
+                GL.Uniform1(uniformFogFarDistID, level.levelVariables.fogFarDistance);
+                GL.Uniform1(uniformFogNearIntensityID, level.levelVariables.fogNearIntensity / 255.0f);
+                GL.Uniform1(uniformFogFarIntensityID, level.levelVariables.fogFarIntensity / 255.0f);
                 GL.Uniform1(uniformUseFogID, (enableFog) ? 1 : 0); 
             }
 

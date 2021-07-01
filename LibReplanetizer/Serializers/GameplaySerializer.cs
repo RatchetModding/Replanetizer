@@ -22,7 +22,7 @@ namespace LibReplanetizer.Serializers
             GameplayHeader gameplayHeader = new GameplayHeader
             {
                 type88Pointer = SeekWrite(fs, SerializeLevelObjects(level.type88s, Type88.ELEMENTSIZE)),
-                levelVarPointer = SeekWrite(fs, level.levelVariables.serialize()),
+                levelVarPointer = SeekWrite(fs, level.levelVariables.Serialize(level.game)),
                 englishPointer = SeekWrite(fs, GetLangBytes(level.english)),
                 lang2Pointer = SeekWrite(fs, GetLangBytes(level.lang2)),
                 frenchPointer = SeekWrite(fs, GetLangBytes(level.french)),

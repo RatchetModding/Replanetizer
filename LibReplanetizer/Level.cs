@@ -184,7 +184,7 @@ namespace LibReplanetizer
                 levelVariables = gameplayParser.GetLevelVariables();
 
                 Logger.Debug("Parsing mobs...");
-                mobs = gameplayParser.GetMobies(game, mobyModels);
+                mobs = gameplayParser.GetMobies(mobyModels);
                 Logger.Debug("Added {0} mobs", mobs?.Count);
 
                 Logger.Debug("Parsing splines...");

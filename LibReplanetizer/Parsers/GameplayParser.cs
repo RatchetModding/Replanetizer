@@ -10,11 +10,13 @@ namespace LibReplanetizer.Parsers
 {
     class GameplayParser : IDisposable
     {
+        GameType game;
         FileStream fileStream;
         GameplayHeader gameplayHeader;
 
         public GameplayParser(GameType game, string gameplayFilepath)
         {
+            this.game = game;
             fileStream = File.OpenRead(gameplayFilepath);
             gameplayHeader = new GameplayHeader(game, fileStream);
         }
@@ -41,15 +43,8 @@ namespace LibReplanetizer.Parsers
 
         public LevelVariables GetLevelVariables()
         {
-            if (gameplayHeader.levelVarPointer == 0) { return null; }
-
-            byte[] levelVarBlock = ReadBlock(fileStream, gameplayHeader.levelVarPointer, 0x50);
-
-            var levelVariables = new LevelVariables(levelVarBlock);
-            return levelVariables;
+            return new LevelVariables(game, fileStream, gameplayHeader.levelVarPointer);
         }
-
-
 
         public Dictionary<int, String> GetLang(int offset)
         {
@@ -118,7 +113,7 @@ namespace LibReplanetizer.Parsers
 
 
         // TODO consolidate all these into a single function, as they work pretty much the same
-        public List<Moby> GetMobies(GameType game, List<Model> mobyModels)
+        public List<Moby> GetMobies(List<Model> mobyModels)
         {
             var mobs = new List<Moby>();
 

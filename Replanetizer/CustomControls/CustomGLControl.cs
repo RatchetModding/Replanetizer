@@ -847,7 +847,7 @@ namespace RatchetEdit
             if (level != null && level.levelVariables != null)
             {
                 GL.Uniform4(uniformFogColorID, level.levelVariables.fogColor);
-                GL.Uniform1(uniformFogDistID, level.levelVariables.fogDistance);
+                GL.Uniform1(uniformFogDistID, level.levelVariables.fogNearIntensity);
                 GL.Uniform1(uniformUseFogID, (enableFog) ? 1 : 0); 
             }
 

@@ -664,6 +664,7 @@ namespace RatchetEdit
         {
             if (mapSaveDialog.ShowDialog() == DialogResult.OK)
             {
+                Enabled = false;
                 string pathName = Path.GetDirectoryName(mapSaveDialog.FileName);
 
                 GameplaySerializer gameplaySerializer = new GameplaySerializer();
@@ -676,6 +677,7 @@ namespace RatchetEdit
                     ChunkSerializer chunkSerializer = new ChunkSerializer();
                     chunkSerializer.Save(level, pathName, i);
                 }
+                Enabled = true;
             }
             InvalidateView();
         }

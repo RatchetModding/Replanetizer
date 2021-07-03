@@ -41,23 +41,17 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Ship Rotation")]
         public float shipRotation { get; set; }
 
-        [Category("Unknown")]
+        [Category("Attributes"), DisplayName("Ship Lighting")]
+        public Color shipColor { get; set; }
+
+        [Category("Unknown"), DisplayName("OFF_48: Always 0")]
         public int off_48 { get; set; }
 
-        [Category("Unknown")]
+        [Category("Unknown"), DisplayName("OFF_4C: Always 0")]
         public int off_4c { get; set; }
 
-        [Category("Unknown")]
-        public int off_50 { get; set; }
-
-        [Category("Unknown")]
-        public int off_54 { get; set; }
-
-        [Category("Unknown")]
+        [Category("Unknown"), DisplayName("OFF_58: Always 0")]
         public int off_58 { get; set; }
-
-        [Category("Unknown")]
-        public Color unkColor { get; set; }
 
         public LevelVariables(GameType game, FileStream fileStream, int levelVarPointer)
         {
@@ -70,13 +64,9 @@ namespace LibReplanetizer.LevelObjects
                     break;
                 case 2:
                 case 3:
-                    GetRC23Vals(fileStream, levelVarPointer);
-                    break;
                 case 4:
-                    GetDLVals(fileStream, levelVarPointer);
-                    break;
                 default:
-                    GetRC23Vals(fileStream, levelVarPointer);
+                    GetRC23DLVals(fileStream, levelVarPointer);
                     break;
             }
         }
@@ -103,22 +93,29 @@ namespace LibReplanetizer.LevelObjects
             float shipPositionY = ReadFloat(levelVarBlock, 0x30);
             float shipPositionZ = ReadFloat(levelVarBlock, 0x34);
             shipRotation = ReadFloat(levelVarBlock, 0x38);
-            int unkColorR = ReadInt(levelVarBlock, 0x3C);
+            int shipColorR = ReadInt(levelVarBlock, 0x3C);
 
-            int unkColorG = ReadInt(levelVarBlock, 0x40);
-            int unkColorB = ReadInt(levelVarBlock, 0x44);
+            int shipColorG = ReadInt(levelVarBlock, 0x40);
+            int shipColorB = ReadInt(levelVarBlock, 0x44);
             off_48 = ReadInt(levelVarBlock, 0x48);
             off_4c = ReadInt(levelVarBlock, 0x4C);
 
             backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
             fogColor = Color.FromArgb(r, g, b);
-            unkColor = Color.FromArgb(unkColorR, unkColorG, unkColorB);
+            if (shipColorR != -1)
+            {
+                shipColor = Color.FromArgb(shipColorR, shipColorG, shipColorB);
+            }
+            else
+            {
+                shipColor = Color.Empty;
+            }
 
             sphereCentre = Vector3.Zero;
             shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
         }
 
-        private void GetRC23Vals(FileStream fileStream, int levelVarPointer)
+        private void GetRC23DLVals(FileStream fileStream, int levelVarPointer)
         {
             byte[] levelVarBlock = ReadBlock(fileStream, levelVarPointer, 0x5C);
 
@@ -145,56 +142,22 @@ namespace LibReplanetizer.LevelObjects
             float shipPositionY = ReadFloat(levelVarBlock, 0x40);
             float shipPositionZ = ReadFloat(levelVarBlock, 0x44);
             shipRotation = ReadFloat(levelVarBlock, 0x48);
-            int unkColorR = ReadInt(levelVarBlock, 0x4C);
+            int shipColorR = ReadInt(levelVarBlock, 0x4C);
 
-            int unkColorG = ReadInt(levelVarBlock, 0x50);
-            int unkColorB = ReadInt(levelVarBlock, 0x54);
+            int shipColorG = ReadInt(levelVarBlock, 0x50);
+            int shipColorB = ReadInt(levelVarBlock, 0x54);
             off_58 = ReadInt(levelVarBlock, 0x58);
 
             backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
             fogColor = Color.FromArgb(r, g, b);
-            unkColor = Color.FromArgb(unkColorR, unkColorG, unkColorB);
-
-            sphereCentre = new Vector3(sphereCentreX, sphereCentreY, sphereCentreZ);
-            shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
-        }
-
-        private void GetDLVals(FileStream fileStream, int levelVarPointer)
-        {
-            byte[] levelVarBlock = ReadBlock(fileStream, levelVarPointer, 0x5C);
-
-            int bgRed = ReadInt(levelVarBlock, 0x00);
-            int bgGreen = ReadInt(levelVarBlock, 0x04);
-            int bgBlue = ReadInt(levelVarBlock, 0x08);
-            int r = ReadInt(levelVarBlock, 0x0c);
-
-            int g = ReadInt(levelVarBlock, 0x10);
-            int b = ReadInt(levelVarBlock, 0x14);
-            fogNearDistance = ReadFloat(levelVarBlock, 0x18);
-            fogFarDistance = ReadFloat(levelVarBlock, 0x1C);
-
-            fogNearIntensity = ReadFloat(levelVarBlock, 0x20);
-            fogFarIntensity = ReadFloat(levelVarBlock, 0x24);
-            deathPlaneZ = ReadFloat(levelVarBlock, 0x28);
-            isSphericalWorld = ReadInt(levelVarBlock, 0x2C);
-
-            float sphereCentreX = ReadFloat(levelVarBlock, 0x30);
-            float sphereCentreY = ReadFloat(levelVarBlock, 0x34);
-            float sphereCentreZ = ReadFloat(levelVarBlock, 0x38);
-            float shipPositionX = ReadFloat(levelVarBlock, 0x3C);
-
-            float shipPositionY = ReadFloat(levelVarBlock, 0x40);
-            float shipPositionZ = ReadFloat(levelVarBlock, 0x44);
-            shipRotation = ReadFloat(levelVarBlock, 0x48);
-            off_4c = ReadInt(levelVarBlock, 0x4C);
-
-            off_50 = ReadInt(levelVarBlock, 0x50);
-            off_50 = ReadInt(levelVarBlock, 0x54);
-            off_58 = ReadInt(levelVarBlock, 0x58);
-
-            backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
-            fogColor = Color.FromArgb(r, g, b);
-            unkColor = Color.Black;
+            if (shipColorR != -1)
+            {
+                shipColor = Color.FromArgb(shipColorR, shipColorG, shipColorB);
+            } else
+            {
+                shipColor = Color.Empty;
+            }
+            
 
             sphereCentre = new Vector3(sphereCentreX, sphereCentreY, sphereCentreZ);
             shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
@@ -208,11 +171,9 @@ namespace LibReplanetizer.LevelObjects
                     return SerializeRC1();
                 case 2:
                 case 3:
-                    return SerializeRC23();
                 case 4:
-                    return SerializeDL();
                 default:
-                    return SerializeRC23();
+                    return SerializeRC23DL();
             }
         }
 
@@ -238,17 +199,27 @@ namespace LibReplanetizer.LevelObjects
             WriteFloat(bytes, 0x30, shipPosition.Y);
             WriteFloat(bytes, 0x34, shipPosition.Z);
             WriteFloat(bytes, 0x38, shipRotation);
-            WriteInt(bytes, 0x3C, unkColor.R);
 
-            WriteInt(bytes, 0x40, unkColor.G);
-            WriteInt(bytes, 0x44, unkColor.B);
+            if (shipColor.IsEmpty)
+            {
+                WriteInt(bytes, 0x3C, -1);
+                WriteInt(bytes, 0x40, 0);
+                WriteInt(bytes, 0x44, 0);
+            }
+            else
+            {
+                WriteInt(bytes, 0x3C, shipColor.R);
+                WriteInt(bytes, 0x40, shipColor.G);
+                WriteInt(bytes, 0x44, shipColor.B);
+            }
+
             WriteInt(bytes, 0x48, off_48);
             WriteInt(bytes, 0x4C, off_4c);
 
             return bytes;
         }
 
-        private byte[] SerializeRC23()
+        private byte[] SerializeRC23DL()
         {
             byte[] bytes = new byte[0x5C];
 
@@ -275,46 +246,19 @@ namespace LibReplanetizer.LevelObjects
             WriteFloat(bytes, 0x40, shipPosition.Y);
             WriteFloat(bytes, 0x44, shipPosition.Z);
             WriteFloat(bytes, 0x48, shipRotation);
-            WriteInt(bytes, 0x4C, unkColor.R);
 
-            WriteInt(bytes, 0x50, unkColor.G);
-            WriteInt(bytes, 0x54, unkColor.B);
-            WriteInt(bytes, 0x58, off_58);
+            if (shipColor.IsEmpty)
+            {
+                WriteInt(bytes, 0x4C, -1);
+                WriteInt(bytes, 0x50, 0);
+                WriteInt(bytes, 0x54, 0);
+            } else
+            {
+                WriteInt(bytes, 0x4C, shipColor.R);
+                WriteInt(bytes, 0x50, shipColor.G);
+                WriteInt(bytes, 0x54, shipColor.B);
+            }
 
-            return bytes;
-        }
-
-        private byte[] SerializeDL()
-        {
-            byte[] bytes = new byte[0x5C];
-
-            WriteUint(bytes, 0x00, backgroundColor.R);
-            WriteUint(bytes, 0x04, backgroundColor.G);
-            WriteUint(bytes, 0x08, backgroundColor.B);
-            WriteUint(bytes, 0x0C, fogColor.R);
-
-            WriteUint(bytes, 0x10, fogColor.G);
-            WriteUint(bytes, 0x14, fogColor.B);
-            WriteFloat(bytes, 0x18, fogNearDistance);
-            WriteFloat(bytes, 0x1C, fogFarDistance);
-
-            WriteFloat(bytes, 0x20, fogNearIntensity);
-            WriteFloat(bytes, 0x24, fogFarIntensity);
-            WriteFloat(bytes, 0x28, deathPlaneZ);
-            WriteInt(bytes, 0x2C, isSphericalWorld);
-
-            WriteFloat(bytes, 0x30, sphereCentre.X);
-            WriteFloat(bytes, 0x34, sphereCentre.Y);
-            WriteFloat(bytes, 0x38, sphereCentre.Z);
-            WriteFloat(bytes, 0x3C, shipPosition.X);
-
-            WriteFloat(bytes, 0x40, shipPosition.Y);
-            WriteFloat(bytes, 0x44, shipPosition.Z);
-            WriteFloat(bytes, 0x48, shipRotation);
-            WriteInt(bytes, 0x4C, unkColor.R);
-
-            WriteInt(bytes, 0x50, off_50);
-            WriteInt(bytes, 0x54, off_54);
             WriteInt(bytes, 0x58, off_58);
 
             return bytes;

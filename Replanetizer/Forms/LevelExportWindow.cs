@@ -53,13 +53,6 @@ namespace RatchetEdit.Forms
                 chunk1Checkbox.Enabled = false;
                 chunk1Checkbox.Checked = false;
             }
-
-            if (level.terrainChunks.Count < 1)
-            {
-                chunk0Checkbox.Enabled = false;
-                chunk0Checkbox.Checked = false;
-            }
-
         }
 
         private void exportLevel()

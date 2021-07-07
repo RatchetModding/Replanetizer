@@ -34,9 +34,13 @@ namespace LibReplanetizer.Models
 
             uint totalVertexCount = 0;
 
-            byte[] headBlock = ReadBlock(fs, collisionPointer, 8);
-            int collisionStart = collisionPointer + ReadInt(headBlock, 0);
-            int collisionLength = ReadInt(headBlock, 4);
+            byte[] headBlock = ReadBlock(fs, collisionPointer, 0x08);
+            int collisionStart = collisionPointer + ReadInt(headBlock, 0x00);
+            int collisionLength = ReadInt(headBlock, 0x04);
+            if (collisionLength == 0)
+            {
+                collisionLength = (int)fs.Length - collisionStart;
+            }
             byte[] collision = ReadBlock(fs, collisionStart, collisionLength);
 
             var vertexList = new List<float>();

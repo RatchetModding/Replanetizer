@@ -1,5 +1,6 @@
 ﻿using OpenTK;
 using System;
+using System.ComponentModel;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects
@@ -9,12 +10,17 @@ namespace LibReplanetizer.LevelObjects
         //Looks like 0C can be some sort of trigger that is tripped off when you go near them. They're generally placed in rivers with current and in front of unlockable doors.
         public const int ELEMENTSIZE = 0x90;
 
-        public int off_00;
-        public int off_04;
-        public int off_08;
-        public int off_0C;
+        [Category("Attributes"), DisplayName("ID")]
+        public ushort ID { get; set; }
+        [Category("Attributes"), DisplayName("ID2")]
+        public ushort ID2 { get; set; }
+        [Category("Attributes"), DisplayName("Function Pointer")]
+        public int functionPointer { get; set; }
+        [Category("Attributes"), DisplayName("Pvar Index")]
+        public int pvarIndex { get; set; }
+        [Category("Attributes"), DisplayName("Update Distance")]
+        public float updateDistance { get; set; }
 
-        private readonly float originalM44;
         static readonly float[] cube = new float[]
 {
             -1.0f, -1.0f,  1.0f,
@@ -35,19 +41,19 @@ namespace LibReplanetizer.LevelObjects
         public Type0C(byte[] block, int num)
         {
             int offset = num * ELEMENTSIZE;
-            off_00 = ReadInt(block, offset + 0x00);
-            off_04 = ReadInt(block, offset + 0x04);
-            off_08 = ReadInt(block, offset + 0x08);
-            off_0C = ReadInt(block, offset + 0x0C);
+            ID = ReadUshort(block, offset + 0x00);
+            ID2 = ReadUshort(block, offset + 0x02);
+            functionPointer = ReadInt(block, offset + 0x04);
+            pvarIndex = ReadInt(block, offset + 0x08);
+            updateDistance = ReadFloat(block, offset + 0x0C);
 
             mat1 = ReadMatrix4(block, offset + 0x10);
             mat2 = ReadMatrix4(block, offset + 0x50);
 
-            originalM44 = mat1.M44;
-
-            rotation = mat1.ExtractRotation();
-            position = mat1.ExtractTranslation();
-            scale = mat1.ExtractScale();
+            modelMatrix = mat1 + mat2;
+            rotation = modelMatrix.ExtractRotation();
+            position = modelMatrix.ExtractTranslation();
+            scale = modelMatrix.ExtractScale();
             UpdateTransformMatrix();
         }
 
@@ -55,12 +61,12 @@ namespace LibReplanetizer.LevelObjects
         {
             byte[] bytes = new byte[ELEMENTSIZE];
 
-            WriteInt(bytes, 0x00, off_00);
-            WriteInt(bytes, 0x04, off_04);
-            WriteInt(bytes, 0x08, off_08);
-            WriteInt(bytes, 0x0C, off_0C);
+            WriteUshort(bytes, 0x00, ID);
+            WriteUshort(bytes, 0x02, ID2);
+            WriteInt(bytes, 0x04, functionPointer);
+            WriteInt(bytes, 0x08, pvarIndex);
+            WriteFloat(bytes, 0x0C, updateDistance);
 
-            mat1.M44 = originalM44;
             WriteMatrix4(bytes, 0x10, mat1);
             WriteMatrix4(bytes, 0x50, mat2);
 

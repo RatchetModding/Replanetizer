@@ -30,7 +30,7 @@ namespace LibReplanetizer.Headers
         public int mobyIdPointer;
         public int mobyPointer;
         public int mobyGroupsPointer;
-        public int unkPointer7;
+        public int type4CPointer;
 
         public int type50Pointer;
         public int pvarSizePointer;
@@ -102,7 +102,7 @@ namespace LibReplanetizer.Headers
             mobyIdPointer = ReadInt(gameplayHeadBlock, 0x40);
             mobyPointer = ReadInt(gameplayHeadBlock, 0x44);
             mobyGroupsPointer = ReadInt(gameplayHeadBlock, 0x48);
-            unkPointer7 = ReadInt(gameplayHeadBlock, 0x4C);
+            type4CPointer = ReadInt(gameplayHeadBlock, 0x4C);
 
             type50Pointer = ReadInt(gameplayHeadBlock, 0x50);
             pvarSizePointer = ReadInt(gameplayHeadBlock, 0x54);
@@ -153,7 +153,7 @@ namespace LibReplanetizer.Headers
             mobyPointer = ReadInt(gameplayHeadBlock, 0x4C);
 
             mobyGroupsPointer = ReadInt(gameplayHeadBlock, 0x50);
-            unkPointer7 = ReadInt(gameplayHeadBlock, 0x54);
+            type4CPointer = ReadInt(gameplayHeadBlock, 0x54);
             type50Pointer = ReadInt(gameplayHeadBlock, 0x58);
             pvarSizePointer = ReadInt(gameplayHeadBlock, 0x5C);
 
@@ -280,7 +280,7 @@ namespace LibReplanetizer.Headers
             WriteInt(bytes, 0x40, mobyIdPointer);
             WriteInt(bytes, 0x44, mobyPointer);
             WriteInt(bytes, 0x48, mobyGroupsPointer);
-            WriteInt(bytes, 0x4C, unkPointer7);
+            WriteInt(bytes, 0x4C, type4CPointer);
 
             WriteInt(bytes, 0x50, type50Pointer);
             WriteInt(bytes, 0x54, pvarSizePointer);
@@ -335,7 +335,7 @@ namespace LibReplanetizer.Headers
             WriteInt(bytes, 0x4C, mobyPointer);
 
             WriteInt(bytes, 0x50, mobyGroupsPointer);
-            WriteInt(bytes, 0x54, unkPointer7);
+            WriteInt(bytes, 0x54, type4CPointer);
             WriteInt(bytes, 0x58, type50Pointer);
             WriteInt(bytes, 0x5C, pvarSizePointer);
 

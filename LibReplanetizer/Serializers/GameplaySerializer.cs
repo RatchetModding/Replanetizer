@@ -42,7 +42,7 @@ namespace LibReplanetizer.Serializers
                 type50Pointer = SeekWrite(fs, GetKeyValueBytes(level.type50s)),
                 type5CPointer = SeekWrite(fs, GetKeyValueBytes(level.type5Cs)),
                 mobyGroupsPointer = SeekWrite(fs, level.unk6),
-                unkPointer7 = SeekWrite(fs, level.unk7),
+                type4CPointer = SeekWrite(fs, level.unk7),
                 tieIdPointer = SeekWrite(fs, GetIdBytes(level.tieIds)),
                 tiePointer = SeekWrite(fs, level.tieData),
                 shrubIdPointer = SeekWrite(fs, GetIdBytes(level.shrubIds)),

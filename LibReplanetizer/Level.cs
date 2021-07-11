@@ -70,6 +70,7 @@ namespace LibReplanetizer
         public byte[] unk6;
         public byte[] unk7;
         public byte[] unk9;
+        public byte[] unk12;
         public byte[] unk13;
         public byte[] unk17;
         public byte[] unk14;
@@ -84,6 +85,7 @@ namespace LibReplanetizer
 
         public List<DirectionalLight> directionalLights;
         public List<Type0C> type0Cs;
+        public List<Type4C> type4Cs;
         public List<Type7C> type7Cs;
         public List<Type80> type80s;
         public List<Type88> type88s;
@@ -204,6 +206,7 @@ namespace LibReplanetizer
                 Logger.Debug("Parsing other gameplay assets...");
                 unk6 = gameplayParser.GetUnk6();
                 unk7 = gameplayParser.GetUnk7();
+                unk12 = gameplayParser.GetUnk12();
                 unk13 = gameplayParser.GetUnk13();
                 unk17 = gameplayParser.GetUnk17();
                 unk14 = gameplayParser.GetUnk14();
@@ -215,6 +218,7 @@ namespace LibReplanetizer
                 type0Cs = gameplayParser.GetType0Cs();
                 spheres = gameplayParser.GetSpheres();
                 cylinders = gameplayParser.GetCylinders();
+                type4Cs = gameplayParser.GetType4Cs();
                 type7Cs = gameplayParser.GetType7Cs();
                 type80s = gameplayParser.GetType80();
                 type88s = gameplayParser.GetType88s();

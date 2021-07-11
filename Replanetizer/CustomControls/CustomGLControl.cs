@@ -601,6 +601,29 @@ namespace RatchetEdit
             }
         }
 
+        public void FakeDrawType0Cs(List<Type0C> type0Cs, int offset)
+        {
+            for (int i = 0; i < type0Cs.Count; i++)
+            {
+                Type0C type0C = type0Cs[i];
+
+                GL.UseProgram(colorShaderID);
+                GL.EnableVertexAttribArray(0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                Matrix4 mvp = type0C.modelMatrix * worldView;
+                GL.UniformMatrix4(matrixID, false, ref mvp);
+
+                byte[] cols = BitConverter.GetBytes(i + offset);
+                GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
+
+                ActivateBuffersForModel(type0C);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+
+                GL.DrawElements(PrimitiveType.Triangles, Cuboid.cubeElements.Length, DrawElementsType.UnsignedShort, 0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            }
+        }
+
         public void FakeDrawObjects(List<ModelObject> levelObjects, int offset)
         {
             for (int i = 0; i < levelObjects.Count; i++)
@@ -714,7 +737,7 @@ namespace RatchetEdit
         public LevelObject GetObjectAtScreenPosition(int x, int y, out bool hitTool)
         {
             LevelObject returnObject = null;
-            int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0, cuboidOffset = 0, sphereOffset = 0, cylinderOffset = 0, tfragOffset = 0;
+            int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0, cuboidOffset = 0, sphereOffset = 0, cylinderOffset = 0, type0COffset = 0, tfragOffset = 0;
             MakeCurrent();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.UseProgram(colorShaderID);
@@ -773,6 +796,13 @@ namespace RatchetEdit
                 cylinderOffset = offset;
                 FakeDrawCylinders(level.cylinders, cylinderOffset);
                 offset += level.cylinders.Count;
+            }
+
+            if (enableType0C)
+            {
+                type0COffset = offset;
+                FakeDrawType0Cs(level.type0Cs, type0COffset);
+                offset += level.type0Cs.Count;
             }
 
             if (enableTerrain)
@@ -849,6 +879,10 @@ namespace RatchetEdit
                 else if (enableCylinders && id - cylinderOffset < level.cylinders.Count)
                 {
                     returnObject = level.cylinders[id - cylinderOffset];
+                }
+                else if (enableType0C && id - type0COffset < level.type0Cs.Count)
+                {
+                    returnObject = level.type0Cs[id - type0COffset];
                 }
                 else if (enableTerrain && id - tfragOffset < terrains.Count)
                 {

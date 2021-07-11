@@ -233,6 +233,21 @@ namespace LibReplanetizer.Parsers
             return type88s;
         }
 
+        public List<Type4C> GetType4Cs()
+        {
+            List<Type4C> type4Cs = new List<Type4C>();
+            if (gameplayHeader.type4CPointer == 0) { return type4Cs; }
+
+            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.type4CPointer, 4), 0);
+            byte[] type4CBlock = ReadBlock(fileStream, gameplayHeader.type4CPointer + 0x10, Type4C.ELEMENTSIZE * count);
+            for (int i = 0; i < count; i++)
+            {
+                type4Cs.Add(new Type4C(type4CBlock, i));
+            }
+
+            return type4Cs;
+        }
+
         public List<Type7C> GetType7Cs()
         {
             var type7Cs = new List<Type7C>();
@@ -275,14 +290,22 @@ namespace LibReplanetizer.Parsers
 
         public byte[] GetUnk7()
         {
-            if (gameplayHeader.unkPointer7 == 0) { return null; }
-            int count1 = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer7, 4), 0);
-            int count2 = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer7 + 4, 4), 0);
-            return ReadBlock(fileStream, gameplayHeader.unkPointer7, count1 + count2 * 8 + 0x10);
+            if (gameplayHeader.type4CPointer == 0) { return null; }
+            int count1 = ReadInt(ReadBlock(fileStream, gameplayHeader.type4CPointer, 4), 0);
+            int count2 = ReadInt(ReadBlock(fileStream, gameplayHeader.type4CPointer + 4, 4), 0);
+            return ReadBlock(fileStream, gameplayHeader.type4CPointer, count1 + count2 * 8 + 0x10);
+        }
+
+        public byte[] GetUnk12()
+        {
+            if (gameplayHeader.unkPointer12 == 0) { return null; }
+            int count1 = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer12, 4), 0);
+            int count2 = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer12 + 4, 4), 0);
+            return ReadBlock(fileStream, gameplayHeader.unkPointer12, count1 + count2 * 8 + 0x10);
         }
 
         public List<KeyValuePair<int, int>> GetType5Cs()
-        {
+        { 
             var keyValuePairs = new List<KeyValuePair<int, int>>();
             byte[] bytes;
             for (int i = 0; (bytes = ReadBlock(fileStream, gameplayHeader.type5CPointer + i * 8, 8))[0] != 0xFF; i++)

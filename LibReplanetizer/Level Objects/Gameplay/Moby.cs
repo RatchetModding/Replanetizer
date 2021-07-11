@@ -15,19 +15,15 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Mission ID")]
         public int missionID { get; set; }
 
-        /*
-         * Unknown 1 may have something to do with difficulty tuning/existence on revisit
-         * Crates often have 4 (0b0100), 5(0b0101), 7 (0b0111) or 12 (0b1100)
-         * Enemies have 1 (0b0001), 2 (0b0010) or 3 (0b0011)
-         * Hypothesis:
-         * Enemies without the 1st bit set seem to not spawn at all (see the plenty of dogs on RAC1 Kerwan which have 0b10 and dont spawn)
-         * Enemies with 2nd bit set are act tuned (Clunk is 3 and act tuned)
-         * Mobies with the 3rd bit set correspond to crates
-         * On the other hand, we dont see bitmasks anyway else so these numbers could
-         * also correspond to some enum value
-         */
-        [Category("Unknowns"), DisplayName("SpawnRelated")]
-        public int unk1 { get; set; }
+        public enum SpawnType
+        {
+            NoRespawn, NoRespawnAtRevisitAfterInteraction, OnlySpawnAtRevisit, AlwaysRespawn, CrateNoRespawnAfterBreaking,
+            CrateAlwaysRespawnAfterBreaking, UnknownType6, UnknownCrateType7, UnknownType8, UnknownType9,
+            UnknownType10, UnknownType11, CrateAlwaysRespawnAtRevisit
+        }
+
+        [Category("Unknowns"), DisplayName("Spawn Type")]
+        public SpawnType spawnType { get; set; }
 
         [Category("Unknowns"), DisplayName("Data Value")]
         public int dataval { get; set; }
@@ -197,7 +193,7 @@ namespace LibReplanetizer.LevelObjects
         {
             int offset = num * game.mobyElemSize;
             missionID = ReadInt(mobyBlock, offset + 0x04);
-            unk1 = ReadInt(mobyBlock, offset + 0x08);
+            spawnType = (SpawnType)ReadInt(mobyBlock, offset + 0x08);
             mobyID = ReadInt(mobyBlock, offset + 0x0C);
 
             bolts = ReadInt(mobyBlock, offset + 0x10);
@@ -251,7 +247,7 @@ namespace LibReplanetizer.LevelObjects
 
             missionID = ReadInt(mobyBlock, offset + 0x04);
             dataval = ReadInt(mobyBlock, offset + 0x08);
-            unk1 = ReadInt(mobyBlock, offset + 0x0C);
+            spawnType = (SpawnType)ReadInt(mobyBlock, offset + 0x0C);
 
             mobyID = ReadInt(mobyBlock, offset + 0x10);
             bolts = ReadInt(mobyBlock, offset + 0x14);
@@ -382,7 +378,7 @@ namespace LibReplanetizer.LevelObjects
 
             WriteInt(buffer, 0x00, game.mobyElemSize);
             WriteInt(buffer, 0x04, missionID);
-            WriteInt(buffer, 0x08, unk1);
+            WriteInt(buffer, 0x08, (int)spawnType);
             WriteInt(buffer, 0x0C, mobyID);
 
             WriteInt(buffer, 0x10, bolts);
@@ -433,7 +429,7 @@ namespace LibReplanetizer.LevelObjects
             WriteInt(buffer, 0x00, game.mobyElemSize);
             WriteInt(buffer, 0x04, missionID);
             WriteInt(buffer, 0x08, dataval);
-            WriteInt(buffer, 0x0C, unk1);
+            WriteInt(buffer, 0x0C, (int)spawnType);
 
             WriteInt(buffer, 0x10, mobyID);
             WriteInt(buffer, 0x14, bolts);

@@ -53,6 +53,8 @@ namespace RatchetEdit
             this.splineCheck = new System.Windows.Forms.ToolStripMenuItem();
             this.skyboxCheck = new System.Windows.Forms.ToolStripMenuItem();
             this.cuboidCheck = new System.Windows.Forms.ToolStripMenuItem();
+            this.sphereCheck = new System.Windows.Forms.ToolStripMenuItem();
+            this.cylinderCheck = new System.Windows.Forms.ToolStripMenuItem();
             this.type0CCheck = new System.Windows.Forms.ToolStripMenuItem();
             this.chunksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chunk0ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -249,6 +251,8 @@ namespace RatchetEdit
             this.splineCheck,
             this.skyboxCheck,
             this.cuboidCheck,
+            this.sphereCheck,
+            this.cylinderCheck,
             this.type0CCheck});
             this.ViewToolStipItem.Name = "ViewToolStipItem";
             this.ViewToolStipItem.Size = new System.Drawing.Size(44, 20);
@@ -334,6 +338,24 @@ namespace RatchetEdit
             this.cuboidCheck.Size = new System.Drawing.Size(120, 22);
             this.cuboidCheck.Text = "Cuboids";
             this.cuboidCheck.CheckedChanged += new System.EventHandler(this.cuboidCheck_CheckedChanged);
+            // 
+            // sphereCheck
+            // 
+            this.sphereCheck.CheckOnClick = true;
+            this.sphereCheck.Enabled = false;
+            this.sphereCheck.Name = "sphereCheck";
+            this.sphereCheck.Size = new System.Drawing.Size(120, 22);
+            this.sphereCheck.Text = "Spheres";
+            this.sphereCheck.CheckedChanged += new System.EventHandler(this.sphereCheck_CheckedChanged);
+            // 
+            // cylinderCheck
+            // 
+            this.cylinderCheck.CheckOnClick = true;
+            this.cylinderCheck.Enabled = false;
+            this.cylinderCheck.Name = "cylinderCheck";
+            this.cylinderCheck.Size = new System.Drawing.Size(120, 22);
+            this.cylinderCheck.Text = "Cylinders";
+            this.cylinderCheck.CheckedChanged += new System.EventHandler(this.cylinderCheck_CheckedChanged);
             // 
             // type0CCheck
             // 
@@ -860,6 +882,9 @@ namespace RatchetEdit
         private System.Windows.Forms.ToolStripMenuItem collCheck;
         private System.Windows.Forms.ToolStripMenuItem terrainCheck;
         private System.Windows.Forms.ToolStripMenuItem splineCheck;
+        private System.Windows.Forms.ToolStripMenuItem cuboidCheck;
+        private System.Windows.Forms.ToolStripMenuItem sphereCheck;
+        private System.Windows.Forms.ToolStripMenuItem cylinderCheck;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.PropertyGrid properties;
         private System.Windows.Forms.ToolStripMenuItem levelVariablesToolStripMenuItem;
@@ -873,8 +898,7 @@ namespace RatchetEdit
         private System.Windows.Forms.ToolStripButton translateToolBtn;
         private System.Windows.Forms.ToolStripButton rotateToolBtn;
         private System.Windows.Forms.ToolStripButton scaleToolBtn;
-        private System.Windows.Forms.ToolStripButton splineToolBtn;
-        private System.Windows.Forms.ToolStripMenuItem cuboidCheck;
+        private System.Windows.Forms.ToolStripButton splineToolBtn;   
         private System.Windows.Forms.ToolStripMenuItem type0CCheck;
         private ObjectTreeView objectTree;
         private System.Windows.Forms.ToolStripMenuItem languageDataToolStripMenuItem;

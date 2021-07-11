@@ -51,7 +51,7 @@ namespace RatchetEdit
 
         public bool initialized, invalidate;
         public bool enableMoby, enableTie, enableShrub, enableSpline,
-            enableCuboid, enableType0C, enableSkybox, enableTerrain, enableCollision, 
+            enableCuboid, enableSpheres, enableCylinders, enableType0C, enableSkybox, enableTerrain, enableCollision, 
             enableTransparency, enableFog;
 
         public Camera camera;
@@ -530,6 +530,8 @@ namespace RatchetEdit
                 GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
             }
         }
+
+
         public void FakeDrawCuboids(List<Cuboid> cuboids, int offset)
         {
             for (int i = 0; i < cuboids.Count; i++)
@@ -552,6 +554,53 @@ namespace RatchetEdit
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             }
         }
+
+        public void FakeDrawSpheres(List<Sphere> spheres, int offset)
+        {
+            for (int i = 0; i < spheres.Count; i++)
+            {
+                Sphere sphere = spheres[i];
+
+                GL.UseProgram(colorShaderID);
+                GL.EnableVertexAttribArray(0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                Matrix4 mvp = sphere.modelMatrix * worldView;
+                GL.UniformMatrix4(matrixID, false, ref mvp);
+
+                byte[] cols = BitConverter.GetBytes(i + offset);
+                GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
+
+                ActivateBuffersForModel(sphere);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+
+                GL.DrawElements(PrimitiveType.Triangles, Sphere.sphereTris.Length, DrawElementsType.UnsignedShort, 0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            }
+        }
+
+        public void FakeDrawCylinders(List<Cylinder> cylinders, int offset)
+        {
+            for (int i = 0; i < cylinders.Count; i++)
+            {
+                Cylinder cylinder = cylinders[i];
+
+                GL.UseProgram(colorShaderID);
+                GL.EnableVertexAttribArray(0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                Matrix4 mvp = cylinder.modelMatrix * worldView;
+                GL.UniformMatrix4(matrixID, false, ref mvp);
+
+                byte[] cols = BitConverter.GetBytes(i + offset);
+                GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
+
+                ActivateBuffersForModel(cylinder);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+
+                GL.DrawElements(PrimitiveType.Triangles, Cylinder.cylinderTris.Length, DrawElementsType.UnsignedShort, 0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            }
+        }
+
         public void FakeDrawObjects(List<ModelObject> levelObjects, int offset)
         {
             for (int i = 0; i < levelObjects.Count; i++)
@@ -665,7 +714,7 @@ namespace RatchetEdit
         public LevelObject GetObjectAtScreenPosition(int x, int y, out bool hitTool)
         {
             LevelObject returnObject = null;
-            int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0, cuboidOffset = 0, tfragOffset = 0;
+            int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0, cuboidOffset = 0, sphereOffset = 0, cylinderOffset = 0, tfragOffset = 0;
             MakeCurrent();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.UseProgram(colorShaderID);
@@ -710,6 +759,20 @@ namespace RatchetEdit
                 cuboidOffset = offset;
                 FakeDrawCuboids(level.cuboids, cuboidOffset);
                 offset += level.cuboids.Count;
+            }
+
+            if (enableSpheres)
+            {
+                sphereOffset = offset;
+                FakeDrawSpheres(level.spheres, sphereOffset);
+                offset += level.spheres.Count;
+            }
+
+            if (enableCylinders)
+            {
+                cylinderOffset = offset;
+                FakeDrawCylinders(level.cylinders, cylinderOffset);
+                offset += level.cylinders.Count;
             }
 
             if (enableTerrain)
@@ -778,6 +841,14 @@ namespace RatchetEdit
                 else if (enableCuboid && id - cuboidOffset < level.cuboids.Count)
                 {
                     returnObject = level.cuboids[id - cuboidOffset];
+                }
+                else if (enableSpheres && id - sphereOffset < level.spheres.Count)
+                {
+                    returnObject = level.spheres[id - sphereOffset];
+                }
+                else if (enableCylinders && id - cylinderOffset < level.cylinders.Count)
+                {
+                    returnObject = level.cylinders[id - cylinderOffset];
                 }
                 else if (enableTerrain && id - tfragOffset < terrains.Count)
                 {
@@ -933,6 +1004,32 @@ namespace RatchetEdit
                     ActivateBuffersForModel(cuboid);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
                     GL.DrawElements(PrimitiveType.Triangles, Cuboid.cubeElements.Length, DrawElementsType.UnsignedShort, 0);
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                }
+
+            if (enableSpheres)
+                foreach (Sphere sphere in level.spheres)
+                {
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                    Matrix4 mvp = sphere.modelMatrix * worldView;
+                    GL.UniformMatrix4(matrixID, false, ref mvp);
+                    GL.Uniform4(colorID, selectedObject == sphere ? LevelObject.selectedColor : LevelObject.normalColor);
+                    ActivateBuffersForModel(sphere);
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+                    GL.DrawElements(PrimitiveType.Triangles, Sphere.sphereTris.Length, DrawElementsType.UnsignedShort, 0);
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                }
+
+            if (enableCylinders)
+                foreach (Cylinder cylinder in level.cylinders)
+                {
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                    Matrix4 mvp = cylinder.modelMatrix * worldView;
+                    GL.UniformMatrix4(matrixID, false, ref mvp);
+                    GL.Uniform4(colorID, selectedObject == cylinder ? LevelObject.selectedColor : LevelObject.normalColor);
+                    ActivateBuffersForModel(cylinder);
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+                    GL.DrawElements(PrimitiveType.Triangles, Cylinder.cylinderTris.Length, DrawElementsType.UnsignedShort, 0);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 }
 

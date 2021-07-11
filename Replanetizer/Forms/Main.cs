@@ -475,6 +475,14 @@ namespace RatchetEdit
             {
                 glControl.SelectObject(level.cuboids[e.Node.Index]);
             }
+            else if (e.Node.Parent == objectTree.sphereNode)
+            {
+                glControl.SelectObject(level.spheres[e.Node.Index]);
+            }
+            else if (e.Node.Parent == objectTree.cylinderNode)
+            {
+                glControl.SelectObject(level.cylinders[e.Node.Index]);
+            }
             else if (e.Node.Parent == objectTree.type0CNode)
             {
                 glControl.SelectObject(level.type0Cs[e.Node.Index]);
@@ -549,6 +557,18 @@ namespace RatchetEdit
         private void cuboidCheck_CheckedChanged(object sender, EventArgs e)
         {
             glControl.enableCuboid = cuboidCheck.Checked;
+            InvalidateView();
+        }
+
+        private void sphereCheck_CheckedChanged(object sender, EventArgs e)
+        {
+            glControl.enableSpheres = sphereCheck.Checked;
+            InvalidateView();
+        }
+
+        private void cylinderCheck_CheckedChanged(object sender, EventArgs e)
+        {
+            glControl.enableCylinders = cylinderCheck.Checked;
             InvalidateView();
         }
 

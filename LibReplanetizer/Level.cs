@@ -59,13 +59,13 @@ namespace LibReplanetizer
         public OcclusionData occlusionData;
 
         public Dictionary<int, String> english;
-        public Dictionary<int, String> lang2;
+        public Dictionary<int, String> ukenglish;
         public Dictionary<int, String> french;
         public Dictionary<int, String> german;
         public Dictionary<int, String> spanish;
         public Dictionary<int, String> italian;
-        public Dictionary<int, String> lang7;
-        public Dictionary<int, String> lang8;
+        public Dictionary<int, String> japanese;
+        public Dictionary<int, String> korean;
 
         public byte[] unk6;
         public byte[] unk7;
@@ -82,16 +82,16 @@ namespace LibReplanetizer
         public byte[] tieData;
         public byte[] shrubData;
 
-        public List<Type04> type04s;
+        public List<DirectionalLight> directionalLights;
         public List<Type0C> type0Cs;
-        public List<Type64> type64s;
-        public List<Type68> type68s;
         public List<Type7C> type7Cs;
         public List<Type80> type80s;
         public List<Type88> type88s;
 
         public List<byte[]> pVars;
         public List<Cuboid> cuboids;
+        public List<Sphere> spheres;
+        public List<Cylinder> cylinders;
         public List<GameCamera> gameCameras;
 
         public List<int> mobyIds;
@@ -193,13 +193,13 @@ namespace LibReplanetizer
 
                 Logger.Debug("Parsing languages...");
                 english = gameplayParser.GetEnglish();
-                lang2 = gameplayParser.GetLang2();
+                ukenglish = gameplayParser.GetUKEnglish();
                 french = gameplayParser.GetFrench();
                 german = gameplayParser.GetGerman();
                 spanish = gameplayParser.GetSpanish();
                 italian = gameplayParser.GetItalian();
-                lang7 = gameplayParser.GetLang7();
-                lang8 = gameplayParser.GetLang8();
+                japanese = gameplayParser.GetJapanese();
+                korean = gameplayParser.GetKorean();
 
                 Logger.Debug("Parsing other gameplay assets...");
                 unk6 = gameplayParser.GetUnk6();
@@ -211,10 +211,10 @@ namespace LibReplanetizer
                 tieData = gameplayParser.GetTieData(ties.Count);
                 shrubData = gameplayParser.getShrubData(shrubs.Count);
 
-                type04s = gameplayParser.GetType04s();
+                directionalLights = gameplayParser.GetDirectionalLights();
                 type0Cs = gameplayParser.GetType0Cs();
-                type64s = gameplayParser.GetType64s();
-                type68s = gameplayParser.GetType68s();
+                spheres = gameplayParser.GetSpheres();
+                cylinders = gameplayParser.GetCylinders();
                 type7Cs = gameplayParser.GetType7Cs();
                 type80s = gameplayParser.GetType80();
                 type88s = gameplayParser.GetType88s();

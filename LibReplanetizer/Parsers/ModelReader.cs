@@ -131,9 +131,6 @@ namespace LibReplanetizer
                 model.indexBuffer = indBuff.ToArray();
 
                 model.textureConfig = conf;
-
-                model.VBO = 0;
-                model.IBO = 0;
             }
         }
     }

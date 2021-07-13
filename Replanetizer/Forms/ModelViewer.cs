@@ -305,6 +305,8 @@ namespace RatchetEdit
 
         private void importFromobjToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (selectedModel == null) return;
+
             if (objOpen.ShowDialog() == DialogResult.OK)
             {
                 ModelReader.ReadObj(objOpen.FileName, selectedModel);
@@ -314,6 +316,8 @@ namespace RatchetEdit
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (selectedModel == null) return;
+
             if (modelSave.ShowDialog() == DialogResult.OK)
             {
                 string fileName = modelSave.FileName;

@@ -944,6 +944,13 @@ namespace RatchetEdit
             return hook.hookWorking;
         }
 
+        public bool RPCS3HookStatus()
+        {
+            if (hook != null && hook.hookWorking) return true;
+
+            return false;
+        }
+
         public void RemoveRPCS3Hook()
         {
             hook = null;

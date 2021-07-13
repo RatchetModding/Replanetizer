@@ -22,8 +22,6 @@ namespace LibReplanetizer.Models
 
 
         public List<TextureConfig> textureConfig { get; set; } = new List<TextureConfig>();
-        public int VBO = 0;
-        public int IBO = 0;
 
         public ushort[] GetIndices()
         {

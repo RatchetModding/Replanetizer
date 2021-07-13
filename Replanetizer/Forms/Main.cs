@@ -369,7 +369,11 @@ namespace RatchetEdit
         private void tickTimer_Tick(object sender, EventArgs e)
         {
             glControl.Tick();
-            properties.Refresh();
+
+            if (glControl.RPCS3HookStatus())
+            {
+                properties.Refresh();
+            }
 
             /*if (GetSelectedObject() is Moby moby)
             {

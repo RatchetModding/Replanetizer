@@ -590,6 +590,20 @@ namespace RatchetEdit
             InvalidateView();
         }
 
+        private void hookPreference_Change(object sender, EventArgs e)
+        {
+            if (!hookToolStripMenuItem.Checked)
+            {
+                hookToolStripMenuItem.Checked = glControl.TryRPCS3Hook();
+            } else
+            {
+                glControl.RemoveRPCS3Hook();
+                hookToolStripMenuItem.Checked = false;
+            }
+            
+            InvalidateView();
+        }
+
         private void changeChunkSelection(object sender, EventArgs e, int index)
         {
             chunksSelected[index] = !chunksSelected[index];

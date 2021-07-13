@@ -256,7 +256,6 @@ namespace RatchetEdit
             camera.MoveBehind(ratchet);     
 
             SelectObject(null);
-            hook = new MemoryHook(level.game.num);
         }
 
         public void setSelectedChunks(bool[] selectedChunks)
@@ -936,6 +935,20 @@ namespace RatchetEdit
             }
         }
 
+        public bool TryRPCS3Hook()
+        {
+            if (level == null || level.game == null) return false;
+
+            hook = new MemoryHook(level.game.num);
+
+            return hook.hookWorking;
+        }
+
+        public void RemoveRPCS3Hook()
+        {
+            hook = null;
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -999,7 +1012,7 @@ namespace RatchetEdit
 
             if (enableMoby)
             {
-                hook.UpdateMobys(level.mobs, level.mobyModels);
+                if (hook != null) hook.UpdateMobys(level.mobs, level.mobyModels);
 
                 if (enableTransparency)
                 {

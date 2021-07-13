@@ -75,6 +75,7 @@ namespace RatchetEdit
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
             this.transparencyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.hookToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mapOpenDialog = new System.Windows.Forms.OpenFileDialog();
             this.tickTimer = new System.Windows.Forms.Timer(this.components);
@@ -515,6 +516,7 @@ namespace RatchetEdit
             this.toolStripMenuItem3.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.transparencyToolStripMenuItem,
             this.fogToolStripMenuItem,
+            this.hookToolStripMenuItem,
             this.settingsToolStripMenuItem});
             this.toolStripMenuItem3.Name = "toolStripMenuItem3";
             this.toolStripMenuItem3.Size = new System.Drawing.Size(80, 20);
@@ -535,6 +537,13 @@ namespace RatchetEdit
             this.fogToolStripMenuItem.Text = "Fog";
             this.fogToolStripMenuItem.CheckOnClick = true;
             this.fogToolStripMenuItem.CheckedChanged += new System.EventHandler(this.fogPreference_CheckedChanged);
+            // 
+            // hookToolStripMenuItem
+            // 
+            this.hookToolStripMenuItem.Name = "hookToolStripMenuItem";
+            this.hookToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.hookToolStripMenuItem.Text = "RPCS3 Hook";
+            this.hookToolStripMenuItem.Click += new System.EventHandler(this.hookPreference_Change);
             // 
             // settingsToolStripMenuItem
             // 
@@ -869,6 +878,7 @@ namespace RatchetEdit
         private System.Windows.Forms.Label camZLabel;
         private System.Windows.Forms.ToolStripMenuItem transparencyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fogToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem hookToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
         private System.Windows.Forms.OpenFileDialog mapOpenDialog;
         private System.Windows.Forms.Timer tickTimer;

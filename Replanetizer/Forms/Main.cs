@@ -77,6 +77,7 @@ namespace RatchetEdit
             tiesVisible(true);
             shrubsVisible(true);
             terrainVisible(true);
+            skyboxVisible(true);
 
             //Enable all the buttons in the view tab
             foreach (ToolStripMenuItem menuButton in ViewToolStipItem.DropDownItems)
@@ -86,6 +87,18 @@ namespace RatchetEdit
 
             //Enable all the buttons in the model tab
             foreach (ToolStripMenuItem menuButton in toolStripMenuItem2.DropDownItems)
+            {
+                menuButton.Enabled = true;
+            }
+
+            //Enable all the buttons in the export tab
+            foreach (ToolStripMenuItem menuButton in exportToolStripMenuItem.DropDownItems)
+            {
+                menuButton.Enabled = true;
+            }
+
+            //Enable all the buttons in the import tab
+            foreach (ToolStripMenuItem menuButton in importToolStripMenuItem.DropDownItems)
             {
                 menuButton.Enabled = true;
             }
@@ -133,6 +146,12 @@ namespace RatchetEdit
             glControl.enableTerrain = value;
         }
 
+        public void skyboxVisible(bool value)
+        {
+            skyboxCheck.Checked = value;
+            glControl.enableSkybox = value;
+        }
+
         private Dictionary<int, string> GetModelNames(string fileName)
         {
             var modelNames = new Dictionary<int, string>();
@@ -177,6 +196,10 @@ namespace RatchetEdit
                 if ((GetSelectedObject() is ModelObject modelObj))
                 {
                     modelViewer = new ModelViewer(this, modelObj.model);
+                    modelViewer.Show();
+                } else
+                {
+                    modelViewer = new ModelViewer(this, null);
                     modelViewer.Show();
                 }
             }
@@ -346,7 +369,11 @@ namespace RatchetEdit
         private void tickTimer_Tick(object sender, EventArgs e)
         {
             glControl.Tick();
-            properties.Refresh();
+
+            if (glControl.RPCS3HookStatus())
+            {
+                properties.Refresh();
+            }
 
             /*if (GetSelectedObject() is Moby moby)
             {
@@ -414,7 +441,7 @@ namespace RatchetEdit
 
         private void HandleToolStrip1ItemsChecked(object item)
         {
-            foreach (ToolStripItem t in toolstrip1.Items)
+            foreach (ToolStripItem t in objectToolStrip.Items)
             {
                 if (t is ToolStripButton)
                 {
@@ -451,6 +478,14 @@ namespace RatchetEdit
             else if (e.Node.Parent == objectTree.cuboidNode)
             {
                 glControl.SelectObject(level.cuboids[e.Node.Index]);
+            }
+            else if (e.Node.Parent == objectTree.sphereNode)
+            {
+                glControl.SelectObject(level.spheres[e.Node.Index]);
+            }
+            else if (e.Node.Parent == objectTree.cylinderNode)
+            {
+                glControl.SelectObject(level.cylinders[e.Node.Index]);
             }
             else if (e.Node.Parent == objectTree.type0CNode)
             {
@@ -529,6 +564,18 @@ namespace RatchetEdit
             InvalidateView();
         }
 
+        private void sphereCheck_CheckedChanged(object sender, EventArgs e)
+        {
+            glControl.enableSpheres = sphereCheck.Checked;
+            InvalidateView();
+        }
+
+        private void cylinderCheck_CheckedChanged(object sender, EventArgs e)
+        {
+            glControl.enableCylinders = cylinderCheck.Checked;
+            InvalidateView();
+        }
+
         private void type0CCheck_CheckedChanged(object sender, EventArgs e)
         {
             glControl.enableType0C = type0CCheck.Checked;
@@ -537,7 +584,27 @@ namespace RatchetEdit
 
         private void transparencyPreference_CheckedChanged(object sender, EventArgs e)
         {
-            glControl.setTransparency(transparencyToolStripMenuItem.Checked);
+            glControl.enableTransparency = transparencyToolStripMenuItem.Checked;
+            InvalidateView();
+        }
+
+        private void fogPreference_CheckedChanged(object sender, EventArgs e)
+        {
+            glControl.enableFog = fogToolStripMenuItem.Checked;
+            InvalidateView();
+        }
+
+        private void hookPreference_Change(object sender, EventArgs e)
+        {
+            if (!hookToolStripMenuItem.Checked)
+            {
+                hookToolStripMenuItem.Checked = glControl.TryRPCS3Hook();
+            } else
+            {
+                glControl.RemoveRPCS3Hook();
+                hookToolStripMenuItem.Checked = false;
+            }
+            
             InvalidateView();
         }
 
@@ -615,7 +682,7 @@ namespace RatchetEdit
             if (collisionSaveDialog.ShowDialog() == DialogResult.OK)
             {
                 FileStream fs = File.Open(collisionSaveDialog.FileName, FileMode.Create);
-                fs.Write(level.collBytes, 0, level.collBytes.Length);
+                fs.Write(level.collBytesEngine, 0, level.collBytesEngine.Length);
                 fs.Close();
             }
         }
@@ -625,7 +692,7 @@ namespace RatchetEdit
             if (collisionOpenDialog.ShowDialog() == DialogResult.OK)
             {
                 FileStream fs = File.Open(collisionOpenDialog.FileName, FileMode.Open);
-                level.collBytes = ReadBlock(fs, 0, (int)fs.Length);
+                level.collBytesEngine = ReadBlock(fs, 0, (int)fs.Length);
                 fs.Close();
             }
             InvalidateView();
@@ -635,6 +702,7 @@ namespace RatchetEdit
         {
             if (mapSaveDialog.ShowDialog() == DialogResult.OK)
             {
+                Enabled = false;
                 string pathName = Path.GetDirectoryName(mapSaveDialog.FileName);
 
                 GameplaySerializer gameplaySerializer = new GameplaySerializer();
@@ -647,6 +715,7 @@ namespace RatchetEdit
                     ChunkSerializer chunkSerializer = new ChunkSerializer();
                     chunkSerializer.Save(level, pathName, i);
                 }
+                Enabled = true;
             }
             InvalidateView();
         }

@@ -46,7 +46,8 @@ namespace RatchetEdit
                     };
                     break;
                 default:
-                    break;
+                    hookWorking = false;
+                    return;
             }
 
             Process[] processList = Process.GetProcessesByName("rpcs3");

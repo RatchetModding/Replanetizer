@@ -276,20 +276,36 @@ namespace LibReplanetizer
             return vertexCount;
         }
 
+        private static List<TerrainFragment> collectTerrainFragments(Level level, WriterLevelSettings settings)
+        {
+            List<TerrainFragment> terrain = new List<TerrainFragment>();
+
+            if (level.terrainChunks.Count == 0)
+            {
+                if (settings.chunksSelected[0])
+                {
+                    terrain.AddRange(level.terrainEngine);
+                }     
+            } else
+            {
+                for (int i = 0; i < level.terrainChunks.Count; i++)
+                {
+                    if (settings.chunksSelected[i])
+                    {
+                        terrain.AddRange(level.terrainChunks[i]);
+                    }
+                }
+            }
+
+            return terrain;
+        }
+
         private static void WriteObjSeparate(string fileName, Level level, WriterLevelSettings settings)
         {
             string pathName = Path.GetDirectoryName(fileName);
             string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
 
-            List<TerrainFragment> terrain = new List<TerrainFragment>();
-
-            for (int i = 0; i < level.terrainChunks.Count; i++)
-            {
-                if (settings.chunksSelected[i])
-                {
-                    terrain.AddRange(level.terrainChunks[i]);
-                }
-            }
+            List<TerrainFragment> terrain = collectTerrainFragments(level, settings);
 
             StreamWriter MTLfs = null; 
 
@@ -349,15 +365,7 @@ namespace LibReplanetizer
             string pathName = Path.GetDirectoryName(fileName);
             string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
 
-            List<TerrainFragment> terrain = new List<TerrainFragment>();
-
-            for (int i = 0; i < level.terrainChunks.Count; i++)
-            {
-                if (settings.chunksSelected[i])
-                {
-                    terrain.AddRange(level.terrainChunks[i]);
-                }
-            }
+            List<TerrainFragment> terrain = collectTerrainFragments(level, settings);
 
             StreamWriter MTLfs = null;
 
@@ -414,15 +422,7 @@ namespace LibReplanetizer
             string pathName = Path.GetDirectoryName(fileName);
             string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
 
-            List<TerrainFragment> terrain = new List<TerrainFragment>();
-
-            for (int i = 0; i < level.terrainChunks.Count; i++)
-            {
-                if (settings.chunksSelected[i])
-                {
-                    terrain.AddRange(level.terrainChunks[i]);
-                }
-            }
+            List<TerrainFragment> terrain = collectTerrainFragments(level, settings);
 
             StreamWriter MTLfs = null;
 
@@ -547,15 +547,7 @@ namespace LibReplanetizer
             string pathName = Path.GetDirectoryName(fileName);
             string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
 
-            List<TerrainFragment> terrain = new List<TerrainFragment>();
-
-            for (int i = 0; i < level.terrainChunks.Count; i++)
-            {
-                if (settings.chunksSelected[i])
-                {
-                    terrain.AddRange(level.terrainChunks[i]);
-                }
-            }
+            List<TerrainFragment> terrain = collectTerrainFragments(level, settings);
 
             int materialCount = level.textures.Count;
 

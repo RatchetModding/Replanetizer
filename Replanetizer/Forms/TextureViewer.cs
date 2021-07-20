@@ -12,7 +12,21 @@ namespace RatchetEdit
 {
     public partial class TextureViewer : Form
     {
+        /*
+         * Be aware that textures may come from different sources like from the engine or armor files
+         * If other files are parsed, their textures need to be handled separately aswell
+         * Since this tool is supposed to be able to mod the game, merging the textures into one is probably out of reach
+         * (Though we could keep a separate list containing all textures but that is probably also a mess to maintain)
+         * 
+         * Loading the textures may take a few seconds, if the user closes the window in the meantime we have to delay it
+         * (or find some other way to stop the grid loading)
+         * Here it is done through a status variable indicating whether we still load and an event which fires after loading
+         * and to which we subscribe on close
+         */
+
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
+        private delegate void loadingGridCloseHandler(object source, EventArgs e);
 
         public Main main;
         public TextureConfig conf;
@@ -20,6 +34,8 @@ namespace RatchetEdit
         public UIViewer uiView;
 
         public int returnVal;
+        private bool loadingGrid = false;
+        private event loadingGridCloseHandler OnCloseDuringLoad;
 
         public List<ListViewItem> virtualCache = new List<ListViewItem>();
 
@@ -29,9 +45,28 @@ namespace RatchetEdit
             this.main = main;
         }
 
+        private int GetTotalTextureCount()
+        {
+            int count = main.level.textures.Count;
+
+            foreach (List<Texture> list in main.level.armorTextures)
+            {
+                count += list.Count;
+            }
+
+            count += main.level.gadgetTextures.Count;
+
+            foreach (Mission mission in main.level.missions)
+            {
+                count += mission.textures.Count;
+            }
+
+            return count;
+        }
+
         public void UpdateTextureList()
         {
-            texAmountLabel.Text = "Texture Count: " + main.level.textures.Count;
+            texAmountLabel.Text = "Texture Count: " + GetTotalTextureCount();
             UpdateTextureGrid();
         }
 
@@ -46,16 +81,41 @@ namespace RatchetEdit
             texImages.Images.Clear();
             virtualCache.Clear();
 
-            textureView.VirtualListSize = main.level.textures.Count;
+            textureView.VirtualListSize = GetTotalTextureCount();
+
+            int index = 0;
 
             for (int i = 0; i < main.level.textures.Count; i++)
             {
-                virtualCache.Add(new ListViewItem("tex_" + i, i));
+                virtualCache.Add(new ListViewItem("tex_" + i, index++));
+            }
+
+            for (int i = 0; i < main.level.armorTextures.Count; i++)
+            {
+                List<Texture> textures = main.level.armorTextures[i];
+                for (int j = 0; j < textures.Count; j++)
+                {
+                    virtualCache.Add(new ListViewItem("tex_armor" + i + "_" + j, index++));
+                }
+            }
+
+            for (int i = 0; i < main.level.gadgetTextures.Count; i++)
+            {
+                virtualCache.Add(new ListViewItem("tex_gadget_" + i, index++));
+            }
+
+            for (int i = 0; i < main.level.missions.Count; i++)
+            {
+                List<Texture> textures = main.level.missions[i].textures;
+                for (int j = 0; j < textures.Count; j++)
+                {
+                    virtualCache.Add(new ListViewItem("tex_mission" + i + "_" + j, index++));
+                }
             }
 
             ThreadStart tstart = new ThreadStart(delegate ()
             {
-                LoadForGrid(null, -1, main.level.textures.Count);
+                LoadForGrid();
             });
 
             Thread thread = new Thread(tstart);
@@ -64,20 +124,68 @@ namespace RatchetEdit
             texImages.Disposed += (object sender, EventArgs args) => { thread.Abort(); };
         }
 
-        public void LoadForGrid(Image image, int index, int test)
+        private void AddImage(Image image, int index, string infix)
         {
             if (InvokeRequired)
             {
-                for (int i = 0; i < test; i++)
-                {
-                    Image images = main.level.textures[i].getTextureImage();
-                    this?.Invoke(new MethodInvoker(delegate { LoadForGrid(images, i, -1); }));
-                }
-                return;
+                this?.Invoke(new MethodInvoker(delegate { texImages.Images.Add("tex_" + infix + index, image); }));
+            } else
+            {
+                texImages.Images.Add("tex_" + infix + index, image);
             }
-            texImages.Images.Add("tex_" + index, image);
-            if (index >= main.level.textures.Count - 1)
+        }
+
+        public void LoadForGrid()
+        {
+            loadingGrid = true;
+
+            for (int i = 0; i < main.level.textures.Count; i++)
+            {
+                Image image = main.level.textures[i].getTextureImage();
+                AddImage(image, i, "");
+            }
+
+            for (int i = 0; i < main.level.armorTextures.Count; i++)
+            {
+                List<Texture> textures = main.level.armorTextures[i];
+                string infix = "armor" + i + "_";
+                for (int j = 0; j < textures.Count; j++)
+                {
+                    Image image = textures[j].getTextureImage();
+                    AddImage(image, j, infix);
+                }
+            }
+
+            for (int i = 0; i < main.level.gadgetTextures.Count; i++)
+            {
+                Image image = main.level.gadgetTextures[i].getTextureImage();
+                AddImage(image, i, "gadget_");
+            }
+
+            for (int i = 0; i < main.level.missions.Count; i++)
+            {
+                List<Texture> textures = main.level.missions[i].textures;
+                string infix = "mission" + i + "_";
+                for (int j = 0; j < textures.Count; j++)
+                {
+                    Image image = textures[j].getTextureImage();
+                    AddImage(image, j, infix);
+                }
+            }
+
+            if (InvokeRequired)
+            {
+                this?.Invoke(new MethodInvoker(delegate { textureView.Refresh(); }));
+            }
+            else
+            {
                 textureView.Refresh();
+            }
+
+            loadingGrid = false;
+
+            if (OnCloseDuringLoad != null)
+                OnCloseDuringLoad(this, new EventArgs());
         }
 
         //Removes DDS header
@@ -95,14 +203,73 @@ namespace RatchetEdit
             UpdateTextureList();
         }
 
+        private int GlobalIndexToLocalIndex(int index)
+        {
+            if (index >= main.level.textures.Count)
+            {
+                index -= main.level.textures.Count;
+
+                foreach (List<Texture> list in main.level.armorTextures)
+                {
+                    if (index >= list.Count)
+                    {
+                        index -= list.Count;
+                    }
+                    else
+                    {
+                        return index;
+                    }
+                }
+
+                if (index >= main.level.gadgetTextures.Count)
+                {
+                    foreach (Mission mission in main.level.missions)
+                    {
+                        if (index >= mission.textures.Count)
+                        {
+                            index -= mission.textures.Count;
+                        }
+                        else
+                        {
+                            return index;
+                        }
+                    }
+                }
+            }
+
+            return index;
+        }
+
         private void CloseForm()
         {
             ListView.SelectedIndexCollection col = textureView.SelectedIndices;
             if (col.Count > 0)
-                returnVal = textureView.Items[col[0]].ImageIndex;
+            {
+                int index = textureView.Items[col[0]].ImageIndex;
 
-            DialogResult = DialogResult.OK;
-            Close();
+                returnVal = GlobalIndexToLocalIndex(index);
+            }      
+        
+            if (loadingGrid)
+            {
+                OnCloseDuringLoad += new loadingGridCloseHandler((o, e) => 
+                { 
+                    if (InvokeRequired)
+                    {
+                        this?.Invoke(new MethodInvoker(delegate 
+                        {
+                            DialogResult = DialogResult.OK;
+                            Close();
+                        }));
+                    }
+                    
+                });
+            }
+            else
+            {
+                DialogResult = DialogResult.OK;
+                Close();
+            }
         }
 
         private void ImportBtn_Click(object sender, EventArgs e)
@@ -155,10 +322,56 @@ namespace RatchetEdit
             UpdateTextureList();
         }
 
+        private void ActionOnTextureByIndex(int index, Action<Texture> action)
+        {
+            if (index >= main.level.textures.Count)
+            {
+                index -= main.level.textures.Count;
+
+                foreach (List<Texture> list in main.level.armorTextures)
+                {
+                    if (index >= list.Count)
+                    {
+                        index -= list.Count;
+                    }
+                    else
+                    {
+                        action(list[index]);
+                        return;
+                    }
+                }
+
+                if (index >= main.level.gadgetTextures.Count)
+                {
+                    foreach (Mission mission in main.level.missions)
+                    {
+                        if (index >= mission.textures.Count)
+                        {
+                            index -= mission.textures.Count;
+                        }
+                        else
+                        {
+                            action(mission.textures[index]);
+                            return;
+                        }
+                    }
+                } else
+                {
+                    action(main.level.gadgetTextures[index]);
+                } 
+            }
+            else
+            {
+                action(main.level.textures[index]);
+            }
+        }
+
         private void TexListView_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (textureView.SelectedIndices.Count != 0)
-                UpdateTextureImage(main.level.textures[textureView.SelectedIndices[0]]);
+            {
+                ActionOnTextureByIndex(textureView.SelectedIndices[0], (t) => { UpdateTextureImage(t); });
+            }              
         }
 
         private void CloseButtonClick(object sender, EventArgs e)
@@ -167,9 +380,27 @@ namespace RatchetEdit
         }
 
         private void button2_Click(object sender, EventArgs e)
-        {
-            DialogResult = DialogResult.Cancel;
-            Close();
+        {   
+            if (loadingGrid)
+            {
+                OnCloseDuringLoad += new loadingGridCloseHandler((o, a) =>
+                {
+                    if (InvokeRequired)
+                    {
+                        this?.Invoke(new MethodInvoker(delegate
+                        {
+                            DialogResult = DialogResult.Cancel;
+                            Close();
+                        }));
+                    }
+
+                });
+            }
+            else
+            {
+                DialogResult = DialogResult.Cancel;
+                Close();
+            }
         }
 
         private void exportBtn_Click(object sender, EventArgs e)
@@ -180,10 +411,7 @@ namespace RatchetEdit
 
             string fileName = saveTextureFileDialog.FileName;
 
-            int index = textureView.SelectedIndices[0];
-
-            Bitmap image = main.level.textures[index].getTextureImage();
-            image.Save(fileName);
+            ActionOnTextureByIndex(textureView.SelectedIndices[0], (t) => { t.getTextureImage().Save(fileName); });
         }
 
         private void exportAllButton_Click(object sender, EventArgs e)
@@ -201,6 +429,32 @@ namespace RatchetEdit
                 {
                     Bitmap image = main.level.textures[i].getTextureImage();
                     image.Save(path + "/" + i.ToString() + ".png");
+                }
+
+                for (int i = 0; i < main.level.armorTextures.Count; i++)
+                {
+                    List<Texture> textures = main.level.armorTextures[i];
+                    for (int j = 0; j < textures.Count; j++)
+                    {
+                        Bitmap image = textures[j].getTextureImage();
+                        image.Save(path + "/armor" + i + "_" + j.ToString() + ".png");
+                    }
+                }
+
+                for (int i = 0; i < main.level.gadgetTextures.Count; i++)
+                {
+                    Bitmap image = main.level.gadgetTextures[i].getTextureImage();
+                    image.Save(path + "/gadget_" + i.ToString() + ".png");
+                }
+
+                for (int i = 0; i < main.level.missions.Count; i++)
+                {
+                    List<Texture> textures = main.level.missions[i].textures;
+                    for (int j = 0; j < textures.Count; j++)
+                    {
+                        Bitmap image = textures[j].getTextureImage();
+                        image.Save(path + "/mission" + i + "_" + j.ToString() + ".png");
+                    }
                 }
             }
             finally

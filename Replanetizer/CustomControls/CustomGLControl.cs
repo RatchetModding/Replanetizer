@@ -20,7 +20,9 @@ namespace RatchetEdit
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         public Level level { get; set; }
+
         private List<TerrainFragment> terrains = new List<TerrainFragment>();
+        private List<Tuple<Model,int,int>> collisions = new List<Tuple<Model, int, int>>();
 
         public Matrix4 worldView { get; set; }
 
@@ -29,6 +31,13 @@ namespace RatchetEdit
         public int collisionShaderID { get; set; }
         public int matrixID { get; set; }
         public int colorID { get; set; }
+
+        private int uniformFogColorID;
+        private int uniformFogNearDistID;
+        private int uniformFogFarDistID;
+        private int uniformFogNearIntensityID;
+        private int uniformFogFarIntensityID;
+        private int uniformUseFogID;
 
         private Matrix4 projection { get; set; }
         private Matrix4 view { get; set; }
@@ -42,7 +51,8 @@ namespace RatchetEdit
 
         public bool initialized, invalidate;
         public bool enableMoby, enableTie, enableShrub, enableSpline,
-            enableCuboid, enableType0C, enableSkybox, enableTerrain, enableCollision;
+            enableCuboid, enableSpheres, enableCylinders, enableType0C, enableSkybox, enableTerrain, enableCollision, 
+            enableTransparency, enableFog;
 
         public Camera camera;
         private Tool currentTool;
@@ -58,9 +68,6 @@ namespace RatchetEdit
 
         private List<int> collisionVbo = new List<int>();
         private List<int> collisionIbo = new List<int>();
-        private bool[] selectedChunks;
-
-        private bool allowTransparency = false;
 
         public CustomGLControl()
         {
@@ -104,7 +111,14 @@ namespace RatchetEdit
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
             colorID = GL.GetUniformLocation(colorShaderID, "incolor");
 
-            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 800.0f);
+            uniformFogColorID = GL.GetUniformLocation(shaderID, "fogColor");
+            uniformFogNearDistID = GL.GetUniformLocation(shaderID, "fogNearDistance");
+            uniformFogFarDistID = GL.GetUniformLocation(shaderID, "fogFarDistance");
+            uniformFogNearIntensityID = GL.GetUniformLocation(shaderID, "fogNearIntensity");
+            uniformFogFarIntensityID = GL.GetUniformLocation(shaderID, "fogFarIntensity");
+            uniformUseFogID = GL.GetUniformLocation(shaderID, "useFog");
+
+            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 10000.0f);
 
             camera = new Camera();
 
@@ -116,94 +130,158 @@ namespace RatchetEdit
             initialized = true;
         }
 
+        private void loadTexture(Texture t)
+        {
+            int texId;
+            GL.GenTextures(1, out texId);
+            GL.BindTexture(TextureTarget.Texture2D, texId);
+            int offset = 0;
+
+            if (t.mipMapCount > 1)
+            {
+                int mipWidth = t.width;
+                int mipHeight = t.height;
+
+                for (int mipLevel = 0; mipLevel < t.mipMapCount; mipLevel++)
+                {
+                    if (mipWidth > 0 && mipHeight > 0)
+                    {
+                        int size = ((mipWidth + 3) / 4) * ((mipHeight + 3) / 4) * 16;
+                        byte[] texPart = new byte[size];
+                        Array.Copy(t.data, offset, texPart, 0, size);
+                        GL.CompressedTexImage2D(TextureTarget.Texture2D, mipLevel, InternalFormat.CompressedRgbaS3tcDxt5Ext, mipWidth, mipHeight, 0, size, texPart);
+                        offset += size;
+                        mipWidth /= 2;
+                        mipHeight /= 2;
+                    }
+                }
+            }
+            else
+            {
+                int size = ((t.width + 3) / 4) * ((t.height + 3) / 4) * 16;
+                GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, InternalFormat.CompressedRgbaS3tcDxt5Ext, t.width, t.height, 0, size, t.data);
+                GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+            }
+
+            textureIds.Add(t, texId);
+        }
+
         void LoadLevelTextures()
         {
             textureIds = new Dictionary<Texture, int>();
             foreach (Texture t in level.textures)
             {
-                int texId = 0;
-                GL.GenTextures(1, out texId);
-                GL.BindTexture(TextureTarget.Texture2D, texId);
-                int offset = 0;
-
-                if (t.mipMapCount > 1)
-                {
-                    int mipWidth = t.width;
-                    int mipHeight = t.height;
-
-                    for (int mipLevel = 0; mipLevel < t.mipMapCount; mipLevel++)
-                    {
-                        if (mipWidth > 0 && mipHeight > 0)
-                        {
-                            int size = ((mipWidth + 3) / 4) * ((mipHeight + 3) / 4) * 16;
-                            byte[] texPart = new byte[size];
-                            Array.Copy(t.data, offset, texPart, 0, size);
-                            GL.CompressedTexImage2D(TextureTarget.Texture2D, mipLevel, InternalFormat.CompressedRgbaS3tcDxt5Ext, mipWidth, mipHeight, 0, size, texPart);
-                            offset += size;
-                            mipWidth /= 2;
-                            mipHeight /= 2;
-                        }
-                    }
-                }
-                else
-                {
-                    int size = ((t.width + 3) / 4) * ((t.height + 3) / 4) * 16;
-                    GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, InternalFormat.CompressedRgbaS3tcDxt5Ext, t.width, t.height, 0, size, t.data);
-                    GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-                }
-
-                textureIds.Add(t, texId);
+                loadTexture(t);
             }
+
+            foreach (List<Texture> list in level.armorTextures)
+            {
+                foreach (Texture t in list)
+                {
+                    loadTexture(t);
+                }
+            }
+
+            foreach (Texture t in level.gadgetTextures)
+            {
+                loadTexture(t);
+            }
+
+            foreach (Mission mission in level.missions)
+            {
+                foreach (Texture t in mission.textures)
+                {
+                    loadTexture(t);
+                }
+            }
+        }
+
+        private void LoadSingleCollisionBO(Collision col)
+        {
+            int id;
+            GL.GenBuffers(1, out id);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, id);
+            GL.BufferData(BufferTarget.ArrayBuffer, col.vertexBuffer.Length * sizeof(float), col.vertexBuffer, BufferUsageHint.StaticDraw);
+
+            collisionVbo.Add(id);
+
+            GL.GenBuffers(1, out id);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, id);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, col.indBuff.Length * sizeof(int), col.indBuff, BufferUsageHint.StaticDraw);
+
+            collisionIbo.Add(id);
         }
 
         void LoadCollisionBOs()
         {
+            foreach (int id in collisionIbo)
+            {
+                GL.DeleteBuffer(id);
+            }
+
+            foreach (int id in collisionVbo)
+            {
+                GL.DeleteBuffer(id);
+            }
+
             collisionVbo.Clear();
             collisionIbo.Clear();
 
-            foreach (Model collisionModel in level.collisionChunks)
+            if (level.collisionChunks.Count == 0)
             {
-                Collision col = (Collision)collisionModel;
-                int id;
-                GL.GenBuffers(1, out id);
-                GL.BindBuffer(BufferTarget.ArrayBuffer, id);
-                GL.BufferData(BufferTarget.ArrayBuffer, col.vertexBuffer.Length * sizeof(float), col.vertexBuffer, BufferUsageHint.StaticDraw);
-
-                collisionVbo.Add(id);
-
-                GL.GenBuffers(1, out id);
-                GL.BindBuffer(BufferTarget.ElementArrayBuffer, id);
-                GL.BufferData(BufferTarget.ElementArrayBuffer, col.indBuff.Length * sizeof(int), col.indBuff, BufferUsageHint.StaticDraw);
-
-                collisionIbo.Add(id);
+                LoadSingleCollisionBO((Collision)level.collisionEngine);
+            } else
+            {
+                foreach (Model collisionModel in level.collisionChunks)
+                {
+                    LoadSingleCollisionBO((Collision)collisionModel);
+                }
             }
-
         }
 
         public void LoadLevel(Level level)
         {
             this.level = level;
+
+            GL.ClearColor(level.levelVariables.fogColor);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            level.skybox.textureConfig.Sort((emp1, emp2) => emp1.start.CompareTo(emp2.start));
+
             LoadLevelTextures();
             LoadCollisionBOs();
 
             Moby ratchet = level.mobs[0];
 
-            camera.MoveBehind(ratchet);
+            camera.MoveBehind(ratchet);     
 
             SelectObject(null);
-            hook = new MemoryHook(level.game.num);
         }
 
-        public void setSelectedChunks(bool[] selection)
+        public void setSelectedChunks(bool[] selectedChunks)
         {
-            selectedChunks = selection;
-
-            terrains.Clear();
-
-            for (int i = 0; i < level.terrainChunks.Count; i++)
+            if (level.terrainChunks.Count == 0)
             {
-                if (selectedChunks[i])
-                    terrains.AddRange(level.terrainChunks[i]);
+                terrains.Clear();
+                terrains.AddRange(level.terrainEngine);
+                collisions.Clear();
+                collisions.Add(new Tuple<Model,int,int>(level.collisionEngine, collisionVbo[0], collisionIbo[0]));
+            } else
+            {
+                terrains.Clear();
+                collisions.Clear();
+
+                for (int i = 0; i < level.terrainChunks.Count; i++)
+                {
+                    if (selectedChunks[i])
+                        terrains.AddRange(level.terrainChunks[i]);
+                }
+
+                for (int i = 0; i < level.collisionChunks.Count; i++)
+                {
+                    if (selectedChunks[i])
+                        collisions.Add(new Tuple<Model, int, int>(level.collisionChunks[i], collisionVbo[i], collisionIbo[i]));
+                }
             }
         }
 
@@ -379,6 +457,26 @@ namespace RatchetEdit
                         break;
                 }
 
+                if (Cursor.Position.Y < 10)
+                {
+                    Mouse.SetPosition(Cursor.Position.X, DisplayDevice.Default.Height - 10);
+                    mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), new Vector2(Cursor.Position.X, DisplayDevice.Default.Height - 10));
+                } else if (Cursor.Position.Y > DisplayDevice.Default.Height - 10)
+                {
+                    Mouse.SetPosition(Cursor.Position.X, 10);
+                    mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), new Vector2(Cursor.Position.X, 10));
+                }
+
+                if (Cursor.Position.X < 10)
+                {
+                    Mouse.SetPosition(DisplayDevice.Default.Width - 10, Cursor.Position.Y);
+                    mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), new Vector2(DisplayDevice.Default.Width - 10, Cursor.Position.Y));
+                } else if (Cursor.Position.X > DisplayDevice.Default.Width - 10)
+                {
+                    Mouse.SetPosition(10, Cursor.Position.Y);
+                    mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), new Vector2(10, Cursor.Position.Y));
+                }
+
                 InvalidateView();
             }
 
@@ -389,7 +487,6 @@ namespace RatchetEdit
             if (invalidate)
             {
                 Invalidate();
-                //invalidate = false;
             }
         }
 
@@ -432,6 +529,8 @@ namespace RatchetEdit
                 GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
             }
         }
+
+
         public void FakeDrawCuboids(List<Cuboid> cuboids, int offset)
         {
             for (int i = 0; i < cuboids.Count; i++)
@@ -454,6 +553,76 @@ namespace RatchetEdit
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             }
         }
+
+        public void FakeDrawSpheres(List<Sphere> spheres, int offset)
+        {
+            for (int i = 0; i < spheres.Count; i++)
+            {
+                Sphere sphere = spheres[i];
+
+                GL.UseProgram(colorShaderID);
+                GL.EnableVertexAttribArray(0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                Matrix4 mvp = sphere.modelMatrix * worldView;
+                GL.UniformMatrix4(matrixID, false, ref mvp);
+
+                byte[] cols = BitConverter.GetBytes(i + offset);
+                GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
+
+                ActivateBuffersForModel(sphere);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+
+                GL.DrawElements(PrimitiveType.Triangles, Sphere.sphereTris.Length, DrawElementsType.UnsignedShort, 0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            }
+        }
+
+        public void FakeDrawCylinders(List<Cylinder> cylinders, int offset)
+        {
+            for (int i = 0; i < cylinders.Count; i++)
+            {
+                Cylinder cylinder = cylinders[i];
+
+                GL.UseProgram(colorShaderID);
+                GL.EnableVertexAttribArray(0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                Matrix4 mvp = cylinder.modelMatrix * worldView;
+                GL.UniformMatrix4(matrixID, false, ref mvp);
+
+                byte[] cols = BitConverter.GetBytes(i + offset);
+                GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
+
+                ActivateBuffersForModel(cylinder);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+
+                GL.DrawElements(PrimitiveType.Triangles, Cylinder.cylinderTris.Length, DrawElementsType.UnsignedShort, 0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            }
+        }
+
+        public void FakeDrawType0Cs(List<Type0C> type0Cs, int offset)
+        {
+            for (int i = 0; i < type0Cs.Count; i++)
+            {
+                Type0C type0C = type0Cs[i];
+
+                GL.UseProgram(colorShaderID);
+                GL.EnableVertexAttribArray(0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                Matrix4 mvp = type0C.modelMatrix * worldView;
+                GL.UniformMatrix4(matrixID, false, ref mvp);
+
+                byte[] cols = BitConverter.GetBytes(i + offset);
+                GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
+
+                ActivateBuffersForModel(type0C);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+
+                GL.DrawElements(PrimitiveType.Triangles, Cuboid.cubeElements.Length, DrawElementsType.UnsignedShort, 0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            }
+        }
+
         public void FakeDrawObjects(List<ModelObject> levelObjects, int offset)
         {
             for (int i = 0; i < levelObjects.Count; i++)
@@ -520,8 +689,7 @@ namespace RatchetEdit
             base.OnResize(e);
             if (!initialized) return;
             GL.Viewport(0, 0, Width, Height);
-            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 800.0f);
-
+            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 10000.0f);
         }
 
         private void InitializeComponent()
@@ -568,12 +736,12 @@ namespace RatchetEdit
         public LevelObject GetObjectAtScreenPosition(int x, int y, out bool hitTool)
         {
             LevelObject returnObject = null;
-            int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0, cuboidOffset = 0, tfragOffset = 0;
+            int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0, cuboidOffset = 0, sphereOffset = 0, cylinderOffset = 0, type0COffset = 0, tfragOffset = 0;
             MakeCurrent();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.UseProgram(colorShaderID);
             GL.EnableVertexAttribArray(0);
-            GL.ClearColor(0, 0, 0, 0);
+            GL.ClearColor(level.levelVariables.fogColor);
 
             worldView = view * projection;
 
@@ -615,6 +783,27 @@ namespace RatchetEdit
                 offset += level.cuboids.Count;
             }
 
+            if (enableSpheres)
+            {
+                sphereOffset = offset;
+                FakeDrawSpheres(level.spheres, sphereOffset);
+                offset += level.spheres.Count;
+            }
+
+            if (enableCylinders)
+            {
+                cylinderOffset = offset;
+                FakeDrawCylinders(level.cylinders, cylinderOffset);
+                offset += level.cylinders.Count;
+            }
+
+            if (enableType0C)
+            {
+                type0COffset = offset;
+                FakeDrawType0Cs(level.type0Cs, type0COffset);
+                offset += level.type0Cs.Count;
+            }
+
             if (enableTerrain)
             {
                 tfragOffset = offset;
@@ -628,7 +817,7 @@ namespace RatchetEdit
 
             Logger.Trace("R: {0}, G: {1}, B: {2}, A: {3}", pixel.R, pixel.G, pixel.B, pixel.A);
 
-            GL.ClearColor(Color.SkyBlue);
+            GL.ClearColor(level.levelVariables.fogColor);
 
             // Some GPU's put the alpha at 0, others at 255
             if (pixel.A == 255 || pixel.A == 0)
@@ -682,6 +871,18 @@ namespace RatchetEdit
                 {
                     returnObject = level.cuboids[id - cuboidOffset];
                 }
+                else if (enableSpheres && id - sphereOffset < level.spheres.Count)
+                {
+                    returnObject = level.spheres[id - sphereOffset];
+                }
+                else if (enableCylinders && id - cylinderOffset < level.cylinders.Count)
+                {
+                    returnObject = level.cylinders[id - cylinderOffset];
+                }
+                else if (enableType0C && id - type0COffset < level.type0Cs.Count)
+                {
+                    returnObject = level.type0Cs[id - type0COffset];
+                }
                 else if (enableTerrain && id - tfragOffset < terrains.Count)
                 {
                     returnObject = terrains[id - tfragOffset];
@@ -716,7 +917,7 @@ namespace RatchetEdit
 
             if (selected)
             {
-                bool switchBlends = allowTransparency && (modelObject is Moby);
+                bool switchBlends = enableTransparency && (modelObject is Moby);
 
                 if (switchBlends)
                     GL.Disable(EnableCap.Blend);
@@ -734,9 +935,25 @@ namespace RatchetEdit
             }
         }
 
-        public void setTransparency(bool value)
+        public bool TryRPCS3Hook()
         {
-            allowTransparency = value;
+            if (level == null || level.game == null) return false;
+
+            hook = new MemoryHook(level.game.num);
+
+            return hook.hookWorking;
+        }
+
+        public bool RPCS3HookStatus()
+        {
+            if (hook != null && hook.hookWorking) return true;
+
+            return false;
+        }
+
+        public void RemoveRPCS3Hook()
+        {
+            hook = null;
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -746,6 +963,10 @@ namespace RatchetEdit
             Logger.Trace("Painting");
 
             worldView = view * projection;
+
+            if (level != null && level.levelVariables != null)
+                GL.ClearColor(level.levelVariables.fogColor);
+
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.EnableVertexAttribArray(0);
@@ -754,9 +975,20 @@ namespace RatchetEdit
             MakeCurrent();
 
             GL.UseProgram(shaderID);
+            if (level != null && level.levelVariables != null)
+            {
+                GL.Uniform4(uniformFogColorID, level.levelVariables.fogColor);
+                GL.Uniform1(uniformFogNearDistID, level.levelVariables.fogNearDistance);
+                GL.Uniform1(uniformFogFarDistID, level.levelVariables.fogFarDistance);
+                GL.Uniform1(uniformFogNearIntensityID, level.levelVariables.fogNearIntensity / 255.0f);
+                GL.Uniform1(uniformFogFarIntensityID, level.levelVariables.fogFarIntensity / 255.0f);
+                GL.Uniform1(uniformUseFogID, (enableFog) ? 1 : 0); 
+            }
 
             if (enableSkybox)
             {
+                GL.Enable(EnableCap.Blend);
+                GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 GL.Disable(EnableCap.DepthTest);
                 Matrix4 mvp = view.ClearTranslation() * projection;
                 GL.UniformMatrix4(matrixID, false, ref mvp);
@@ -769,6 +1001,7 @@ namespace RatchetEdit
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
                 GL.Enable(EnableCap.DepthTest);
+                GL.Disable(EnableCap.Blend);
             }
 
             if (enableTerrain)
@@ -786,9 +1019,9 @@ namespace RatchetEdit
 
             if (enableMoby)
             {
-                hook.UpdateMobys(level.mobs, level.mobyModels);
+                if (hook != null) hook.UpdateMobys(level.mobs, level.mobyModels);
 
-                if (allowTransparency)
+                if (enableTransparency)
                 {
                     GL.Enable(EnableCap.Blend);
                     GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
@@ -828,6 +1061,32 @@ namespace RatchetEdit
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 }
 
+            if (enableSpheres)
+                foreach (Sphere sphere in level.spheres)
+                {
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                    Matrix4 mvp = sphere.modelMatrix * worldView;
+                    GL.UniformMatrix4(matrixID, false, ref mvp);
+                    GL.Uniform4(colorID, selectedObject == sphere ? LevelObject.selectedColor : LevelObject.normalColor);
+                    ActivateBuffersForModel(sphere);
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+                    GL.DrawElements(PrimitiveType.Triangles, Sphere.sphereTris.Length, DrawElementsType.UnsignedShort, 0);
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                }
+
+            if (enableCylinders)
+                foreach (Cylinder cylinder in level.cylinders)
+                {
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                    Matrix4 mvp = cylinder.modelMatrix * worldView;
+                    GL.UniformMatrix4(matrixID, false, ref mvp);
+                    GL.Uniform4(colorID, selectedObject == cylinder ? LevelObject.selectedColor : LevelObject.normalColor);
+                    ActivateBuffersForModel(cylinder);
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+                    GL.DrawElements(PrimitiveType.Triangles, Cylinder.cylinderTris.Length, DrawElementsType.UnsignedShort, 0);
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                }
+
             if (enableType0C)
                 foreach (Type0C type0c in level.type0Cs)
                 {
@@ -847,11 +1106,11 @@ namespace RatchetEdit
 
             if (enableCollision)
             {
-                for (int i = 0; i < level.collisionChunks.Count; i++)
+                for (int i = 0; i < collisions.Count; i++)
                 {
-                    if (!selectedChunks[i]) continue;
-
-                    Collision col = (Collision)level.collisionChunks[i];
+                    Collision col = (Collision)collisions[i].Item1;
+                    int vbo = collisions[i].Item2;
+                    int ibo = collisions[i].Item3;
 
                     if (col.indBuff.Length == 0) continue;
 
@@ -860,10 +1119,10 @@ namespace RatchetEdit
                     GL.UniformMatrix4(matrixID, false, ref worldView);
                     GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
 
-                    GL.BindBuffer(BufferTarget.ArrayBuffer, collisionVbo[i]);
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
                     GL.VertexAttribPointer(1, 4, VertexAttribPointerType.UnsignedByte, false, sizeof(float) * 4, sizeof(float) * 3);
-                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, collisionIbo[i]);
+                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
 
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.DrawElements(PrimitiveType.Triangles, col.indBuff.Length, DrawElementsType.UnsignedInt, 0);

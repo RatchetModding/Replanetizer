@@ -15,6 +15,8 @@ namespace RatchetEdit
 
         private void ShowLanguageText(Dictionary<int, String> languageData)
         {
+            if (languageData == null) return;
+
             var items = new List<ListViewItem>(languageData.Count);
 
             foreach (KeyValuePair<int, String> entry in languageData)
@@ -37,7 +39,7 @@ namespace RatchetEdit
                     ShowLanguageText(main.level.english);
                     break;
                 case 1:
-                    ShowLanguageText(main.level.lang2);
+                    ShowLanguageText(main.level.ukenglish);
                     break;
                 case 2:
                     ShowLanguageText(main.level.french);
@@ -52,10 +54,10 @@ namespace RatchetEdit
                     ShowLanguageText(main.level.italian);
                     break;
                 case 6:
-                    ShowLanguageText(main.level.lang7);
+                    ShowLanguageText(main.level.japanese);
                     break;
                 case 7:
-                    ShowLanguageText(main.level.lang8);
+                    ShowLanguageText(main.level.korean);
                     break;
             }
         }

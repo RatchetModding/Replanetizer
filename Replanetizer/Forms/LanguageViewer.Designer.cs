@@ -41,13 +41,13 @@
             this.languageList.FormattingEnabled = true;
             this.languageList.Items.AddRange(new object[] {
             "English",
-            "Language 02",
+            "UK English",
             "French",
             "German",
             "Spanish",
             "Italian",
-            "Language 07",
-            "Language 08"});
+            "Japanese",
+            "Korean"});
             this.languageList.Location = new System.Drawing.Point(0, 0);
             this.languageList.Name = "languageList";
             this.languageList.Size = new System.Drawing.Size(119, 507);
@@ -87,6 +87,7 @@
             this.Controls.Add(this.languageList);
             this.Name = "LanguageViewer";
             this.Text = "Language Data";
+            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 10, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.Load += new System.EventHandler(this.LanguageViewer_Load);
             this.ResumeLayout(false);
 

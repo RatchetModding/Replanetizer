@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace RatchetEdit
@@ -15,6 +16,7 @@ namespace RatchetEdit
         private Main mainForm;
         private Level level;
         private Model selectedModel;
+        private List<Texture> selectedTextureSet;
 
         private int shaderID, matrixID;
 
@@ -27,7 +29,7 @@ namespace RatchetEdit
 
         private Matrix4 trans, scale, worldView, rot = Matrix4.Identity;
 
-        private TreeNode mobyNode, tieNode, shrubNode, weaponNode;
+        private TreeNode mobyNode, tieNode, shrubNode, gadgetNode, armorNode, missionsNode;
 
         private BufferContainer container;
 
@@ -44,8 +46,10 @@ namespace RatchetEdit
                 mobyNode = GetModelNodes("Moby", level.mobyModels);
                 tieNode = GetModelNodes("Tie", level.tieModels);
                 shrubNode = GetModelNodes("Shrub", level.shrubModels);
-                weaponNode = GetModelNodes("Weapon", level.weaponModels);
-                modelView.Nodes.AddRange(new TreeNode[] { mobyNode, tieNode, shrubNode, weaponNode });
+                gadgetNode = GetModelNodes("Gadget", level.gadgetModels);
+                armorNode = GetModelNodes("Armor", level.armorModels);
+                missionsNode = GetMissionsNodes("Mission", level.missions);
+                modelView.Nodes.AddRange(new TreeNode[] { mobyNode, tieNode, shrubNode, gadgetNode, armorNode, missionsNode });
             }
 
             SelectModel(model);
@@ -54,7 +58,7 @@ namespace RatchetEdit
         private void ModelViewer_Load(object sender, EventArgs e)
         {
             glControl.MakeCurrent();
-            GL.ClearColor(Color.CornflowerBlue);
+            GL.ClearColor(Color.SkyBlue);
             shaderID = mainForm.GetShaderID();
 
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
@@ -85,6 +89,18 @@ namespace RatchetEdit
             return newNode;
         }
 
+        public TreeNode GetMissionsNodes(string name, List<Mission> missions)
+        {
+            TreeNode newNode = new TreeNode(name);
+
+            foreach (Mission mission in missions)
+            {
+                newNode.Nodes.Add(GetModelNodes("mission_" + mission.missionID, mission.models));
+            }
+
+            return newNode;
+        }
+
         public void UpdateModel()
         {
             scale = Matrix4.CreateScale(selectedModel.size);
@@ -104,9 +120,9 @@ namespace RatchetEdit
             for (int i = 0; i < selectedModel.textureConfig.Count; i++)
             {
                 int textureId = selectedModel.textureConfig[i].ID;
-                if (textureId == -1) continue;
+                if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
 
-                textureList.Images.Add(mainForm.level.textures[textureId].getTextureImage());
+                textureList.Images.Add(selectedTextureSet[textureId].getTextureImage());
                 textureView.Items.Add(new ListViewItem
                 {
                     ImageIndex = i,
@@ -123,17 +139,37 @@ namespace RatchetEdit
                 {
                     case "Moby":
                         selectedModel = level.mobyModels[modelView.SelectedNode.Index];
+                        selectedTextureSet = level.textures;
+                        UpdateModel();
                         break;
                     case "Tie":
                         selectedModel = level.tieModels[modelView.SelectedNode.Index];
+                        selectedTextureSet = level.textures;
+                        UpdateModel();
                         break;
                     case "Shrub":
                         selectedModel = level.shrubModels[modelView.SelectedNode.Index];
+                        selectedTextureSet = level.textures;
+                        UpdateModel();
                         break;
-                    case "Weapon":
-                        selectedModel = level.weaponModels[modelView.SelectedNode.Index];
+                    case "Gadget":
+                        selectedModel = level.gadgetModels[modelView.SelectedNode.Index];
+                        selectedTextureSet = (level.game.num == 1) ? level.textures : level.gadgetTextures;
+                        UpdateModel();
                         break;
-                }
+                    case "Armor":
+                        selectedModel = level.armorModels[modelView.SelectedNode.Index];
+                        selectedTextureSet = level.armorTextures[modelView.SelectedNode.Index];
+                        UpdateModel();
+                        break;
+                }       
+            } else if (e.Node.Level == 2)
+            {
+                int mission = int.Parse(Regex.Match(e.Node.Parent.Text,@"\d+$").Value);
+
+                selectedModel = level.missions[mission].models[modelView.SelectedNode.Index];
+                selectedTextureSet = level.missions[mission].textures;
+
                 UpdateModel();
             }
         }
@@ -143,6 +179,7 @@ namespace RatchetEdit
             if (model == null) return;
 
             selectedModel = model;
+            selectedTextureSet = level.textures;
 
             switch (model)
             {
@@ -155,7 +192,7 @@ namespace RatchetEdit
                 case ShrubModel shrubModel:
                     modelView.SelectedNode = shrubNode.Nodes[level.shrubModels.IndexOf(shrubModel)];
                     break;
-            }
+            }       
 
             UpdateModel();
         }
@@ -169,33 +206,36 @@ namespace RatchetEdit
 
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
-            if (selectedModel == null) return;
-
             glControl.MakeCurrent();
+            GL.ClearColor(Color.SkyBlue);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            // Has to be done in this order to work correctly
-            Matrix4 mvp = trans * scale * rot * worldView;
-
-            GL.UseProgram(shaderID);
-            GL.UniformMatrix4(matrixID, false, ref mvp);
-
-            GL.EnableVertexAttribArray(0);
-            GL.EnableVertexAttribArray(1);
-
-            container.Bind();
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
-
-            //Bind textures one by one, applying it to the relevant vertices based on the index array
-            foreach (TextureConfig conf in selectedModel.textureConfig)
+            if (selectedModel != null)
             {
-                GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? mainForm.GetTextureIds()[level.textures[conf.ID]] : 0);
-                GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+                // Has to be done in this order to work correctly
+                Matrix4 mvp = trans * scale * rot * worldView;
+
+                GL.UseProgram(shaderID);
+                GL.UniformMatrix4(matrixID, false, ref mvp);
+
+                GL.EnableVertexAttribArray(0);
+                GL.EnableVertexAttribArray(1);
+
+                container.Bind();
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
+
+                //Bind textures one by one, applying it to the relevant vertices based on the index array
+                foreach (TextureConfig conf in selectedModel.textureConfig)
+                {
+                    GL.BindTexture(TextureTarget.Texture2D, (conf.ID >= 0 && conf.ID < selectedTextureSet.Count) ? mainForm.GetTextureIds()[selectedTextureSet[conf.ID]] : 0);
+                    GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+                }
+
+                GL.DisableVertexAttribArray(1);
+                GL.DisableVertexAttribArray(0);
             }
 
-            GL.DisableVertexAttribArray(1);
-            GL.DisableVertexAttribArray(0);
             glControl.SwapBuffers();
 
             invalidate = false;
@@ -242,6 +282,10 @@ namespace RatchetEdit
             invalidate = true;
         }
 
+        /*
+         * Opens TextureViewer and allows to switch out textures
+         * Does not allow to switch textures between texture sources
+         */
         private void textureView_DoubleClick(object sender, EventArgs e)
         {
             using (TextureViewer textureViewer = new TextureViewer(mainForm))
@@ -249,14 +293,20 @@ namespace RatchetEdit
                 if (textureViewer.ShowDialog() == DialogResult.OK)
                 {
                     int val = textureViewer.returnVal;
-                    selectedModel.textureConfig[textureView.SelectedIndices[0]].ID = val;
-                    UpdateModel();
+
+                    if (val < selectedTextureSet.Count)
+                    {
+                        selectedModel.textureConfig[textureView.SelectedIndices[0]].ID = val;
+                        UpdateModel();
+                    }
                 }
             }
         }
 
         private void importFromobjToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (selectedModel == null) return;
+
             if (objOpen.ShowDialog() == DialogResult.OK)
             {
                 ModelReader.ReadObj(objOpen.FileName, selectedModel);
@@ -266,6 +316,8 @@ namespace RatchetEdit
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (selectedModel == null) return;
+
             if (modelSave.ShowDialog() == DialogResult.OK)
             {
                 string fileName = modelSave.FileName;

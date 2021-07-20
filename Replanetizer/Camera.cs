@@ -53,6 +53,8 @@ namespace RatchetEdit
                 yaw = moby.rotation.Z;
             }
 
+            if (double.IsNaN(yaw)) yaw = 0;
+
             yaw = yaw - (float)Math.PI / 2;
             SetRotation(-(float)Math.PI / 10, yaw);
 

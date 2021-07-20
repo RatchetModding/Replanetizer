@@ -13,6 +13,8 @@ namespace RatchetEdit
         public TreeNode splineNode = new TreeNode("Splines");
         public TreeNode cameraNode = new TreeNode("Cameras");
         public TreeNode cuboidNode = new TreeNode("Cuboids");
+        public TreeNode sphereNode = new TreeNode("Spheres");
+        public TreeNode cylinderNode = new TreeNode("Cylinders");
         public TreeNode type0CNode = new TreeNode("Type 0C's");
 
         Dictionary<int, string> mobNames, tieNames;
@@ -35,6 +37,8 @@ namespace RatchetEdit
             Nodes.Add(splineNode);
             Nodes.Add(cameraNode);
             Nodes.Add(cuboidNode);
+            Nodes.Add(sphereNode);
+            Nodes.Add(cylinderNode);
             Nodes.Add(type0CNode);
         }
 
@@ -81,10 +85,20 @@ namespace RatchetEdit
                 string name = gameCamera.id.ToString("X");
                 cameraNode.Nodes.Add(name);
             }
-            foreach (Cuboid spawnPoints in level.cuboids)
+            foreach (Cuboid cuboid in level.cuboids)
             {
-                string name = level.cuboids.IndexOf(spawnPoints).ToString("X");
+                string name = level.cuboids.IndexOf(cuboid).ToString("X");
                 cuboidNode.Nodes.Add(name);
+            }
+            foreach (Sphere sphere in level.spheres)
+            {
+                string name = level.spheres.IndexOf(sphere).ToString("X");
+                sphereNode.Nodes.Add(name);
+            }
+            foreach (Cylinder cylinder in level.cylinders)
+            {
+                string name = level.cylinders.IndexOf(cylinder).ToString("X");
+                cylinderNode.Nodes.Add(name);
             }
             foreach (Type0C objs in level.type0Cs)
             {

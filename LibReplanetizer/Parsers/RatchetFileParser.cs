@@ -17,7 +17,7 @@ namespace LibReplanetizer.Parsers
             fileStream = File.OpenRead(filePath);
         }
 
-        protected List<Model> GetMobyModels(int mobyModelPointer)
+        protected List<Model> GetMobyModels(GameType game, int mobyModelPointer)
         {
             //Get the moby count from the start of the section
             int mobyModelCount = ReadInt(ReadBlock(fileStream, mobyModelPointer, 4), 0);
@@ -30,7 +30,7 @@ namespace LibReplanetizer.Parsers
             {
                 short modelID = ReadShort(mobyIDBlock, (i * 8) + 2);
                 int offset = ReadInt(mobyIDBlock, (i * 8) + 4);
-                mobyModels.Add(new MobyModel(fileStream, modelID, offset));
+                mobyModels.Add(new MobyModel(fileStream, game, modelID, offset));
             }
             return mobyModels;
         }
@@ -125,7 +125,7 @@ namespace LibReplanetizer.Parsers
             byte[] terrainBlock = ReadBlock(fileStream, terrainModelPointer, 0x60);
             TerrainHead head = new TerrainHead(terrainBlock);
 
-            byte[] tfragBlock = ReadBlock(fileStream, terrainModelPointer + 0x60, head.headCount * 0x30);
+            byte[] tfragBlock = ReadBlock(fileStream, head.headPointer, head.headCount * 0x30);
 
             for (int i = 0; i < head.headCount; i++)
             {
@@ -135,25 +135,9 @@ namespace LibReplanetizer.Parsers
             return tFrags;
         }
 
-        protected SkyboxModel GetSkyboxModel(int skyboxPointer)
+        protected SkyboxModel GetSkyboxModel(GameType game, int skyboxPointer)
         {
-            return new SkyboxModel(fileStream, skyboxPointer);
-        }
-
-        protected GameType DetectGame(int offset)
-        {
-            uint magic = ReadUint(ReadBlock(fileStream, offset, 4), 0);
-            switch (magic)
-            {
-                case 0x00000001:
-                    return new GameType(1);
-                case 0xEAA90001:
-                    return new GameType(2);
-                case 0xEAA60001:
-                    return new GameType(3);
-                default:
-                    return new GameType(3);
-            }
+            return new SkyboxModel(fileStream, game, skyboxPointer);
         }
 
         protected List<UiElement> GetUiElements(int offset)
@@ -194,19 +178,19 @@ namespace LibReplanetizer.Parsers
             return animations;
         }
 
-        protected List<Model> GetWeapons(int weaponPointer, int count)
+        protected List<Model> GetGadgets(GameType game, int gadgetPointer, int count)
         {
-            List<Model> weaponModels = new List<Model>(count);
+            List<Model> gadgetModels = new List<Model>(count);
 
             //Each moby is stored as a [MobyID, offset] pair
-            byte[] mobyIDBlock = ReadBlock(fileStream, weaponPointer, count * 0x10);
+            byte[] mobyIDBlock = ReadBlock(fileStream, gadgetPointer, count * 0x10);
             for (int i = 0; i < count; i++)
             {
                 short modelID = ReadShort(mobyIDBlock, (i * 0x10) + 2);
                 int offset = ReadInt(mobyIDBlock, (i * 0x10) + 4);
-                weaponModels.Add(new MobyModel(fileStream, modelID, offset));
+                gadgetModels.Add(new MobyModel(fileStream, game, modelID, offset));
             }
-            return weaponModels;
+            return gadgetModels;
         }
 
         protected LightConfig GetLightConfig(int lightConfigOffset)

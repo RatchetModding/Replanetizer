@@ -53,7 +53,6 @@ namespace RatchetEdit.Forms
             // 
             // exportButton
             // 
-            this.exportButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(0)));
             this.exportButton.Location = new System.Drawing.Point(214, 365);
             this.exportButton.MaximumSize = new System.Drawing.Size(150, 28);
             this.exportButton.MinimumSize = new System.Drawing.Size(150, 28);
@@ -72,7 +71,6 @@ namespace RatchetEdit.Forms
             // meshModeCombobox
             // 
             this.meshModeCombobox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.meshModeCombobox.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(0)));
             this.meshModeCombobox.FormattingEnabled = true;
             this.meshModeCombobox.Items.AddRange(new object[] {
             "Separated",
@@ -90,7 +88,6 @@ namespace RatchetEdit.Forms
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(0)));
             this.label1.Location = new System.Drawing.Point(25, 25);
             this.label1.MaximumSize = new System.Drawing.Size(150, 28);
             this.label1.MinimumSize = new System.Drawing.Size(150, 28);
@@ -103,7 +100,6 @@ namespace RatchetEdit.Forms
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(0)));
             this.label2.Location = new System.Drawing.Point(25, 73);
             this.label2.MaximumSize = new System.Drawing.Size(150, 28);
             this.label2.MinimumSize = new System.Drawing.Size(150, 28);
@@ -116,7 +112,6 @@ namespace RatchetEdit.Forms
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(0)));
             this.label3.Location = new System.Drawing.Point(25, 121);
             this.label3.MaximumSize = new System.Drawing.Size(150, 28);
             this.label3.MinimumSize = new System.Drawing.Size(150, 28);
@@ -129,7 +124,6 @@ namespace RatchetEdit.Forms
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(0)));
             this.label4.Location = new System.Drawing.Point(25, 169);
             this.label4.MaximumSize = new System.Drawing.Size(150, 28);
             this.label4.MinimumSize = new System.Drawing.Size(150, 28);
@@ -142,7 +136,6 @@ namespace RatchetEdit.Forms
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(0)));
             this.label5.Location = new System.Drawing.Point(25, 217);
             this.label5.MaximumSize = new System.Drawing.Size(200, 28);
             this.label5.MinimumSize = new System.Drawing.Size(200, 28);
@@ -206,7 +199,6 @@ namespace RatchetEdit.Forms
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(0)));
             this.label6.Location = new System.Drawing.Point(25, 313);
             this.label6.MaximumSize = new System.Drawing.Size(150, 28);
             this.label6.MinimumSize = new System.Drawing.Size(150, 28);
@@ -221,7 +213,6 @@ namespace RatchetEdit.Forms
             this.chunk0Checkbox.Appearance = System.Windows.Forms.Appearance.Button;
             this.chunk0Checkbox.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.chunk0Checkbox.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.chunk0Checkbox.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(0)));
             this.chunk0Checkbox.ForeColor = System.Drawing.SystemColors.HighlightText;
             this.chunk0Checkbox.Location = new System.Drawing.Point(28, 265);
             this.chunk0Checkbox.Margin = new System.Windows.Forms.Padding(0);
@@ -239,7 +230,6 @@ namespace RatchetEdit.Forms
             this.chunk1Checkbox.Appearance = System.Windows.Forms.Appearance.Button;
             this.chunk1Checkbox.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.chunk1Checkbox.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.chunk1Checkbox.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(0)));
             this.chunk1Checkbox.ForeColor = System.Drawing.SystemColors.HighlightText;
             this.chunk1Checkbox.Location = new System.Drawing.Point(105, 265);
             this.chunk1Checkbox.Margin = new System.Windows.Forms.Padding(0);
@@ -257,7 +247,6 @@ namespace RatchetEdit.Forms
             this.chunk2Checkbox.Appearance = System.Windows.Forms.Appearance.Button;
             this.chunk2Checkbox.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.chunk2Checkbox.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.chunk2Checkbox.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(0)));
             this.chunk2Checkbox.ForeColor = System.Drawing.SystemColors.HighlightText;
             this.chunk2Checkbox.Location = new System.Drawing.Point(182, 265);
             this.chunk2Checkbox.Margin = new System.Windows.Forms.Padding(0);
@@ -275,7 +264,6 @@ namespace RatchetEdit.Forms
             this.chunk3Checkbox.Appearance = System.Windows.Forms.Appearance.Button;
             this.chunk3Checkbox.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.chunk3Checkbox.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.chunk3Checkbox.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(0)));
             this.chunk3Checkbox.ForeColor = System.Drawing.SystemColors.HighlightText;
             this.chunk3Checkbox.Location = new System.Drawing.Point(259, 265);
             this.chunk3Checkbox.Margin = new System.Windows.Forms.Padding(0);
@@ -293,7 +281,6 @@ namespace RatchetEdit.Forms
             this.chunk4Checkbox.Appearance = System.Windows.Forms.Appearance.Button;
             this.chunk4Checkbox.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.chunk4Checkbox.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.chunk4Checkbox.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(0)));
             this.chunk4Checkbox.ForeColor = System.Drawing.SystemColors.HighlightText;
             this.chunk4Checkbox.Location = new System.Drawing.Point(336, 265);
             this.chunk4Checkbox.Margin = new System.Windows.Forms.Padding(0);
@@ -325,7 +312,6 @@ namespace RatchetEdit.Forms
             // 
             // exportProgressStatus
             // 
-            this.exportProgressStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(0)));
             this.exportProgressStatus.Location = new System.Drawing.Point(25, 365);
             this.exportProgressStatus.MaximumSize = new System.Drawing.Size(150, 28);
             this.exportProgressStatus.MinimumSize = new System.Drawing.Size(150, 28);
@@ -363,6 +349,7 @@ namespace RatchetEdit.Forms
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(400, 450);
             this.Name = "LevelExportWindow";
+            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 12, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.Padding = new System.Windows.Forms.Padding(9);
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;

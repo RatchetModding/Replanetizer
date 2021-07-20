@@ -1,25 +1,26 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Parsers
 {
-    class VramParser
+    class VramParser : RatchetFileParser, IDisposable
     {
-        FileStream fileStream;
         public bool valid = false;
 
-        public VramParser(string filepath)
+        public VramParser(string filePath) : base(filePath)
         {
-            fileStream = File.OpenRead(filepath);
-            valid = true;
+            valid = File.Exists(filePath);
         }
 
         public void GetTextures(List<Texture> textures)
         {
+            if (!valid) return;
+
             for (int i = 0; i < textures.Count; i++)
             {
-                int length = 0;
+                int length;
                 if (i < textures.Count - 1)
                 {
                     length = (int)(textures[i + 1].vramPointer - textures[i].vramPointer);
@@ -32,7 +33,7 @@ namespace LibReplanetizer.Parsers
             }
         }
 
-        public void Close()
+        public void Dispose()
         {
             fileStream.Close();
         }

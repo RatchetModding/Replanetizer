@@ -12,8 +12,6 @@ namespace LibReplanetizer.LevelObjects
         public Matrix4 mat1;
         public Matrix4 mat2;
 
-        // Try to refactor this away at some point
-        private readonly float originalM44;
 
         static readonly float[] cube = {
             -1.0f, -1.0f,  1.0f,
@@ -50,11 +48,10 @@ namespace LibReplanetizer.LevelObjects
             mat1 = ReadMatrix4(block, offset + 0x00);
             mat2 = ReadMatrix4(block, offset + 0x40);
 
-            originalM44 = mat1.M44;
-
-            rotation = mat1.ExtractRotation();
-            position = mat1.ExtractTranslation();
-            scale = mat1.ExtractScale();
+            modelMatrix = mat1 + mat2;
+            rotation = modelMatrix.ExtractRotation();
+            position = modelMatrix.ExtractTranslation();
+            scale = modelMatrix.ExtractScale();
 
             UpdateTransformMatrix();
         }
@@ -68,8 +65,7 @@ namespace LibReplanetizer.LevelObjects
         {
             byte[] bytes = new byte[0x80];
 
-            modelMatrix.M44 = originalM44;
-            WriteMatrix4(bytes, 0x00, modelMatrix);
+            WriteMatrix4(bytes, 0x00, mat1);
             WriteMatrix4(bytes, 0x40, mat2);
 
             return bytes;

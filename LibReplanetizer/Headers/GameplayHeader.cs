@@ -8,19 +8,19 @@ namespace LibReplanetizer.Headers
         public const int GAMEPLAYSIZE = 0xA0;
 
         public int levelVarPointer;
-        public int type04Pointer;
+        public int lightsPointer;
         public int cameraPointer;
-        public int type0CPointer;
+        public int soundPointer;
 
         public int englishPointer;
-        public int lang2Pointer;
+        public int ukenglishPointer;
         public int frenchPointer;
         public int germanPointer;
 
         public int spanishPointer;
         public int italianPointer;
-        public int lang7Pointer;
-        public int lang8Pointer;
+        public int japanesePointer;
+        public int koreanPointer;
 
         public int tieIdPointer;
         public int tiePointer;
@@ -29,8 +29,8 @@ namespace LibReplanetizer.Headers
 
         public int mobyIdPointer;
         public int mobyPointer;
-        public int unkPointer6;
-        public int unkPointer7;
+        public int mobyGroupsPointer;
+        public int type4CPointer;
 
         public int type50Pointer;
         public int pvarSizePointer;
@@ -38,12 +38,12 @@ namespace LibReplanetizer.Headers
         public int type5CPointer;
 
         public int cuboidPointer;
-        public int type64Pointer;
-        public int type68Pointer;
+        public int spherePointer;
+        public int cylinderPointer;
         public int unkPointer12;
 
         public int splinePointer;
-        public int unkPointer13;
+        public int grindPathsPointer;
         public int unkPointer14;
         public int type7CPointer;
 
@@ -66,7 +66,13 @@ namespace LibReplanetizer.Headers
                     break;
                 case 2:
                 case 3:
-                    GetRC2Vals(gameplayHeadBlock);
+                    GetRC23Vals(gameplayHeadBlock);
+                    break;
+                case 4:
+                    GetDLVals(gameplayHeadBlock);
+                    break;
+                default:
+                    GetRC23Vals(gameplayHeadBlock);
                     break;
             }
         }
@@ -74,19 +80,19 @@ namespace LibReplanetizer.Headers
         private void GetRC1Vals(byte[] gameplayHeadBlock)
         {
             levelVarPointer = ReadInt(gameplayHeadBlock, 0x00);
-            type04Pointer = ReadInt(gameplayHeadBlock, 0x04);
+            lightsPointer = ReadInt(gameplayHeadBlock, 0x04);
             cameraPointer = ReadInt(gameplayHeadBlock, 0x08);
-            type0CPointer = ReadInt(gameplayHeadBlock, 0x0C);
+            soundPointer = ReadInt(gameplayHeadBlock, 0x0C);
 
             englishPointer = ReadInt(gameplayHeadBlock, 0x10);
-            lang2Pointer = ReadInt(gameplayHeadBlock, 0x14);
+            ukenglishPointer = ReadInt(gameplayHeadBlock, 0x14);
             frenchPointer = ReadInt(gameplayHeadBlock, 0x18);
             germanPointer = ReadInt(gameplayHeadBlock, 0x1C);
 
             spanishPointer = ReadInt(gameplayHeadBlock, 0x20);
             italianPointer = ReadInt(gameplayHeadBlock, 0x24);
-            lang7Pointer = ReadInt(gameplayHeadBlock, 0x28);
-            lang8Pointer = ReadInt(gameplayHeadBlock, 0x2C);
+            japanesePointer = ReadInt(gameplayHeadBlock, 0x28);
+            koreanPointer = ReadInt(gameplayHeadBlock, 0x2C);
 
             tieIdPointer = ReadInt(gameplayHeadBlock, 0x30);
             tiePointer = ReadInt(gameplayHeadBlock, 0x34);
@@ -95,8 +101,8 @@ namespace LibReplanetizer.Headers
 
             mobyIdPointer = ReadInt(gameplayHeadBlock, 0x40);
             mobyPointer = ReadInt(gameplayHeadBlock, 0x44);
-            unkPointer6 = ReadInt(gameplayHeadBlock, 0x48);
-            unkPointer7 = ReadInt(gameplayHeadBlock, 0x4C);
+            mobyGroupsPointer = ReadInt(gameplayHeadBlock, 0x48);
+            type4CPointer = ReadInt(gameplayHeadBlock, 0x4C);
 
             type50Pointer = ReadInt(gameplayHeadBlock, 0x50);
             pvarSizePointer = ReadInt(gameplayHeadBlock, 0x54);
@@ -104,12 +110,12 @@ namespace LibReplanetizer.Headers
             type5CPointer = ReadInt(gameplayHeadBlock, 0x5C);
 
             cuboidPointer = ReadInt(gameplayHeadBlock, 0x60);
-            type64Pointer = ReadInt(gameplayHeadBlock, 0x64);
-            type68Pointer = ReadInt(gameplayHeadBlock, 0x68);
+            spherePointer = ReadInt(gameplayHeadBlock, 0x64);
+            cylinderPointer = ReadInt(gameplayHeadBlock, 0x68);
             unkPointer12 = ReadInt(gameplayHeadBlock, 0x6C);
 
             splinePointer = ReadInt(gameplayHeadBlock, 0x70);
-            unkPointer13 = ReadInt(gameplayHeadBlock, 0x74);
+            grindPathsPointer = ReadInt(gameplayHeadBlock, 0x74);
             unkPointer14 = ReadInt(gameplayHeadBlock, 0x78);
             type7CPointer = ReadInt(gameplayHeadBlock, 0x7C);
 
@@ -119,22 +125,90 @@ namespace LibReplanetizer.Headers
             occlusionPointer = ReadInt(gameplayHeadBlock, 0x8C);
         }
 
-        private void GetRC2Vals(byte[] gameplayHeadBlock)
+        private void GetRC23Vals(byte[] gameplayHeadBlock)
         {
             levelVarPointer = ReadInt(gameplayHeadBlock, 0x00);
-            type04Pointer = ReadInt(gameplayHeadBlock, 0x04);
+            lightsPointer = ReadInt(gameplayHeadBlock, 0x04);
             cameraPointer = ReadInt(gameplayHeadBlock, 0x08);
-            type0CPointer = ReadInt(gameplayHeadBlock, 0x0C);
+            soundPointer = ReadInt(gameplayHeadBlock, 0x0C);
 
             englishPointer = ReadInt(gameplayHeadBlock, 0x10);
-            lang2Pointer = ReadInt(gameplayHeadBlock, 0x14);
+            ukenglishPointer = ReadInt(gameplayHeadBlock, 0x14);
             frenchPointer = ReadInt(gameplayHeadBlock, 0x18);
             germanPointer = ReadInt(gameplayHeadBlock, 0x1C);
 
             spanishPointer = ReadInt(gameplayHeadBlock, 0x20);
             italianPointer = ReadInt(gameplayHeadBlock, 0x24);
-            lang7Pointer = ReadInt(gameplayHeadBlock, 0x28);
-            lang8Pointer = ReadInt(gameplayHeadBlock, 0x2C);
+            japanesePointer = ReadInt(gameplayHeadBlock, 0x28);
+            koreanPointer = ReadInt(gameplayHeadBlock, 0x2C);
+
+            tieIdPointer = ReadInt(gameplayHeadBlock, 0x30);
+            //tiePointer = ReadInt(gameplayHeadBlock, 0x34);
+            //tieGroupsPointer = ReadInt(gameplayHeadBlock, 0x38);
+            shrubIdPointer = ReadInt(gameplayHeadBlock, 0x3C);
+
+            shrubPointer = ReadInt(gameplayHeadBlock, 0x40);
+            //shrubGroupsPointer = ReadInt(gameplayHeadBlock, 0x44);
+            mobyIdPointer = ReadInt(gameplayHeadBlock, 0x48);
+            mobyPointer = ReadInt(gameplayHeadBlock, 0x4C);
+
+            mobyGroupsPointer = ReadInt(gameplayHeadBlock, 0x50);
+            type4CPointer = ReadInt(gameplayHeadBlock, 0x54);
+            type50Pointer = ReadInt(gameplayHeadBlock, 0x58);
+            pvarSizePointer = ReadInt(gameplayHeadBlock, 0x5C);
+
+            pvarPointer = ReadInt(gameplayHeadBlock, 0x60);
+            type5CPointer = ReadInt(gameplayHeadBlock, 0x64);
+            cuboidPointer = ReadInt(gameplayHeadBlock, 0x68);
+            spherePointer = ReadInt(gameplayHeadBlock, 0x6C);
+
+            cylinderPointer = ReadInt(gameplayHeadBlock, 0x70);
+            unkPointer12 = ReadInt(gameplayHeadBlock, 0x74);
+            splinePointer = ReadInt(gameplayHeadBlock, 0x78);
+            grindPathsPointer = ReadInt(gameplayHeadBlock, 0x7C);
+
+            // = ReadInt(gameplayHeadBlock, 0x80);
+            type80Pointer = ReadInt(gameplayHeadBlock, 0x84);
+            unkPointer17 = ReadInt(gameplayHeadBlock, 0x88);
+            // = ReadInt(gameplayHeadBlock, 0x8C);
+
+            occlusionPointer = ReadInt(gameplayHeadBlock, 0x90);
+            // tieAmbientPointer = ReadInt(gameplayHeadBlock, 0x94);
+            // areasPointer = ReadInt(gameplayHeadBlock, 0x98);
+        }
+
+        private void GetDLVals(byte[] gameplayHeadBlock)
+        {
+            levelVarPointer = ReadInt(gameplayHeadBlock, 0x00);
+            cameraPointer = ReadInt(gameplayHeadBlock, 0x04);
+            soundPointer = ReadInt(gameplayHeadBlock, 0x08);
+            englishPointer = ReadInt(gameplayHeadBlock, 0x0C);
+
+            ukenglishPointer = ReadInt(gameplayHeadBlock, 0x10); 
+            frenchPointer = ReadInt(gameplayHeadBlock, 0x14);
+            germanPointer = ReadInt(gameplayHeadBlock, 0x18);
+            spanishPointer = ReadInt(gameplayHeadBlock, 0x1C);
+
+            italianPointer = ReadInt(gameplayHeadBlock, 0x20);
+            japanesePointer = ReadInt(gameplayHeadBlock, 0x24);
+            koreanPointer = ReadInt(gameplayHeadBlock, 0x28);
+            mobyIdPointer = ReadInt(gameplayHeadBlock, 0x2C);
+
+            mobyPointer = ReadInt(gameplayHeadBlock, 0x30);
+            
+            pvarSizePointer = ReadInt(gameplayHeadBlock, 0x40);
+            pvarPointer = ReadInt(gameplayHeadBlock, 0x44);
+            cuboidPointer = ReadInt(gameplayHeadBlock, 0x4C);
+
+            spherePointer = ReadInt(gameplayHeadBlock, 0x50);
+            cylinderPointer = ReadInt(gameplayHeadBlock, 0x54);
+            splinePointer = ReadInt(gameplayHeadBlock, 0x5C);
+            /*
+            type04Pointer = ReadInt(gameplayHeadBlock, 0x04);
+            
+            
+
+            lang2Pointer = ReadInt(gameplayHeadBlock, 0x14);
 
             tieIdPointer = ReadInt(gameplayHeadBlock, 0x30);
             // = ReadInt(gameplayHeadBlock, 0x34);
@@ -143,22 +217,16 @@ namespace LibReplanetizer.Headers
 
             shrubPointer = ReadInt(gameplayHeadBlock, 0x40);
             // = ReadInt(gameplayHeadBlock, 0x44);
-            mobyIdPointer = ReadInt(gameplayHeadBlock, 0x48);
-            mobyPointer = ReadInt(gameplayHeadBlock, 0x4C);
 
             unkPointer6 = ReadInt(gameplayHeadBlock, 0x50);
             unkPointer7 = ReadInt(gameplayHeadBlock, 0x54);
             type50Pointer = ReadInt(gameplayHeadBlock, 0x58);
-            pvarSizePointer = ReadInt(gameplayHeadBlock, 0x5C);
 
-            pvarPointer = ReadInt(gameplayHeadBlock, 0x60);
             type5CPointer = ReadInt(gameplayHeadBlock, 0x64);
-            cuboidPointer = ReadInt(gameplayHeadBlock, 0x68);
             type64Pointer = ReadInt(gameplayHeadBlock, 0x6C);
 
             type68Pointer = ReadInt(gameplayHeadBlock, 0x70);
             unkPointer12 = ReadInt(gameplayHeadBlock, 0x74);
-            splinePointer = ReadInt(gameplayHeadBlock, 0x78);
             unkPointer13 = ReadInt(gameplayHeadBlock, 0x7C);
 
             // = ReadInt(gameplayHeadBlock, 0x80);
@@ -166,27 +234,43 @@ namespace LibReplanetizer.Headers
             unkPointer17 = ReadInt(gameplayHeadBlock, 0x88);
             // = ReadInt(gameplayHeadBlock, 0x8C);
 
-            occlusionPointer = ReadInt(gameplayHeadBlock, 0x90);
+            occlusionPointer = ReadInt(gameplayHeadBlock, 0x90);*/
         }
 
-        public byte[] SerializeRC1()
+        public byte[] Serialize(GameType game)
+        {
+            switch (game.num)
+            {
+                case 1:
+                    return SerializeRC1();
+                case 2:
+                case 3:
+                    return SerializeRC23();
+                case 4:
+                    return SerializeDL();
+                default:
+                    return SerializeRC23();
+            }
+        }
+
+        private byte[] SerializeRC1()
         {
             byte[] bytes = new byte[GAMEPLAYSIZE];
 
             WriteInt(bytes, 0x00, levelVarPointer);
-            WriteInt(bytes, 0x04, type04Pointer);
+            WriteInt(bytes, 0x04, lightsPointer);
             WriteInt(bytes, 0x08, cameraPointer);
-            WriteInt(bytes, 0x0C, type0CPointer);
+            WriteInt(bytes, 0x0C, soundPointer);
 
             WriteInt(bytes, 0x10, englishPointer);
-            WriteInt(bytes, 0x14, lang2Pointer);
+            WriteInt(bytes, 0x14, ukenglishPointer);
             WriteInt(bytes, 0x18, frenchPointer);
             WriteInt(bytes, 0x1C, germanPointer);
 
             WriteInt(bytes, 0x20, spanishPointer);
             WriteInt(bytes, 0x24, italianPointer);
-            WriteInt(bytes, 0x28, lang7Pointer);
-            WriteInt(bytes, 0x2C, lang8Pointer);
+            WriteInt(bytes, 0x28, japanesePointer);
+            WriteInt(bytes, 0x2C, koreanPointer);
 
             WriteInt(bytes, 0x30, tieIdPointer);
             WriteInt(bytes, 0x34, tiePointer);
@@ -195,8 +279,8 @@ namespace LibReplanetizer.Headers
 
             WriteInt(bytes, 0x40, mobyIdPointer);
             WriteInt(bytes, 0x44, mobyPointer);
-            WriteInt(bytes, 0x48, unkPointer6);
-            WriteInt(bytes, 0x4C, unkPointer7);
+            WriteInt(bytes, 0x48, mobyGroupsPointer);
+            WriteInt(bytes, 0x4C, type4CPointer);
 
             WriteInt(bytes, 0x50, type50Pointer);
             WriteInt(bytes, 0x54, pvarSizePointer);
@@ -204,12 +288,12 @@ namespace LibReplanetizer.Headers
             WriteInt(bytes, 0x5C, type5CPointer);
 
             WriteInt(bytes, 0x60, cuboidPointer);
-            WriteInt(bytes, 0x64, type64Pointer);
-            WriteInt(bytes, 0x68, type68Pointer);
+            WriteInt(bytes, 0x64, spherePointer);
+            WriteInt(bytes, 0x68, cylinderPointer);
             WriteInt(bytes, 0x6C, unkPointer12);
 
             WriteInt(bytes, 0x70, splinePointer);
-            WriteInt(bytes, 0x74, unkPointer13);
+            WriteInt(bytes, 0x74, grindPathsPointer);
             WriteInt(bytes, 0x78, unkPointer14);
             WriteInt(bytes, 0x7C, type7CPointer);
 
@@ -221,24 +305,24 @@ namespace LibReplanetizer.Headers
             return bytes;
         }
 
-        public byte[] SerializeRC23()
+        private byte[] SerializeRC23()
         {
             byte[] bytes = new byte[GAMEPLAYSIZE];
 
             WriteInt(bytes, 0x00, levelVarPointer);
-            WriteInt(bytes, 0x04, type04Pointer);
+            WriteInt(bytes, 0x04, lightsPointer);
             WriteInt(bytes, 0x08, cameraPointer);
-            WriteInt(bytes, 0x0C, type0CPointer);
+            WriteInt(bytes, 0x0C, soundPointer);
 
             WriteInt(bytes, 0x10, englishPointer);
-            WriteInt(bytes, 0x14, lang2Pointer);
+            WriteInt(bytes, 0x14, ukenglishPointer);
             WriteInt(bytes, 0x18, frenchPointer);
             WriteInt(bytes, 0x1C, germanPointer);
 
             WriteInt(bytes, 0x20, spanishPointer);
             WriteInt(bytes, 0x24, italianPointer);
-            WriteInt(bytes, 0x28, lang7Pointer);
-            WriteInt(bytes, 0x2C, lang8Pointer);
+            WriteInt(bytes, 0x28, japanesePointer);
+            WriteInt(bytes, 0x2C, koreanPointer);
 
             WriteInt(bytes, 0x30, tieIdPointer);
             //0x34
@@ -250,20 +334,20 @@ namespace LibReplanetizer.Headers
             WriteInt(bytes, 0x48, mobyIdPointer);
             WriteInt(bytes, 0x4C, mobyPointer);
 
-            WriteInt(bytes, 0x50, unkPointer6);
-            WriteInt(bytes, 0x54, unkPointer7);
+            WriteInt(bytes, 0x50, mobyGroupsPointer);
+            WriteInt(bytes, 0x54, type4CPointer);
             WriteInt(bytes, 0x58, type50Pointer);
             WriteInt(bytes, 0x5C, pvarSizePointer);
 
             WriteInt(bytes, 0x60, pvarPointer);
             WriteInt(bytes, 0x64, type5CPointer);
             WriteInt(bytes, 0x68, cuboidPointer);
-            WriteInt(bytes, 0x6C, type64Pointer);
+            WriteInt(bytes, 0x6C, spherePointer);
 
-            WriteInt(bytes, 0x70, type68Pointer);
+            WriteInt(bytes, 0x70, cylinderPointer);
             WriteInt(bytes, 0x74, unkPointer12);
             WriteInt(bytes, 0x78, splinePointer);
-            WriteInt(bytes, 0x7C, unkPointer13);
+            WriteInt(bytes, 0x7C, grindPathsPointer);
 
             //0x80
             WriteInt(bytes, 0x84, type80Pointer);
@@ -271,6 +355,39 @@ namespace LibReplanetizer.Headers
             //0x8C
 
             WriteInt(bytes, 0x90, occlusionPointer);
+
+            return bytes;
+        }
+
+        private byte[] SerializeDL()
+        {
+            byte[] bytes = new byte[GAMEPLAYSIZE];
+
+            WriteInt(bytes, 0x00, levelVarPointer);
+            WriteInt(bytes, 0x04, cameraPointer);
+            WriteInt(bytes, 0x08, soundPointer);
+            WriteInt(bytes, 0x0C, englishPointer);
+
+            WriteInt(bytes, 0x10, ukenglishPointer);
+            WriteInt(bytes, 0x14, frenchPointer);
+            WriteInt(bytes, 0x18, germanPointer);
+            WriteInt(bytes, 0x1C, spanishPointer);
+
+            WriteInt(bytes, 0x20, italianPointer);
+            WriteInt(bytes, 0x24, japanesePointer);
+            WriteInt(bytes, 0x28, koreanPointer);
+            WriteInt(bytes, 0x2C, mobyIdPointer);
+
+            WriteInt(bytes, 0x30, mobyPointer);
+
+            WriteInt(bytes, 0x40, pvarSizePointer);
+            WriteInt(bytes, 0x44, pvarPointer);
+            //
+            WriteInt(bytes, 0x4C, cuboidPointer);
+
+            WriteInt(bytes, 0x50, spherePointer);
+            WriteInt(bytes, 0x54, cylinderPointer);
+            WriteInt(bytes, 0x5C, splinePointer);
 
             return bytes;
         }

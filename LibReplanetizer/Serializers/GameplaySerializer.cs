@@ -22,55 +22,45 @@ namespace LibReplanetizer.Serializers
             GameplayHeader gameplayHeader = new GameplayHeader
             {
                 type88Pointer = SeekWrite(fs, SerializeLevelObjects(level.type88s, Type88.ELEMENTSIZE)),
-                levelVarPointer = SeekWrite(fs, level.levelVariables.serialize()),
+                levelVarPointer = SeekWrite(fs, level.levelVariables.Serialize(level.game)),
                 englishPointer = SeekWrite(fs, GetLangBytes(level.english)),
-                lang2Pointer = SeekWrite(fs, GetLangBytes(level.lang2)),
+                ukenglishPointer = SeekWrite(fs, GetLangBytes(level.ukenglish)),
                 frenchPointer = SeekWrite(fs, GetLangBytes(level.french)),
                 germanPointer = SeekWrite(fs, GetLangBytes(level.german)),
                 spanishPointer = SeekWrite(fs, GetLangBytes(level.spanish)),
                 italianPointer = SeekWrite(fs, GetLangBytes(level.italian)),
-                lang7Pointer = SeekWrite(fs, GetLangBytes(level.lang7)),
-                lang8Pointer = SeekWrite(fs, GetLangBytes(level.lang8)),
-                type04Pointer = SeekWrite(fs, SerializeLevelObjects(level.type04s, Type04.ELEMENTSIZE)),
+                japanesePointer = SeekWrite(fs, GetLangBytes(level.japanese)),
+                koreanPointer = SeekWrite(fs, GetLangBytes(level.korean)),
+                lightsPointer = SeekWrite(fs, SerializeLevelObjects(level.directionalLights, DirectionalLight.ELEMENTSIZE)),
                 type80Pointer = SeekWrite(fs, GetType80Bytes(level.type80s)),
                 cameraPointer = SeekWrite(fs, SerializeLevelObjects(level.gameCameras, GameCamera.ELEMENTSIZE)),
-                type0CPointer = SeekWrite(fs, SerializeLevelObjects(level.type0Cs, Type0C.ELEMENTSIZE)),
+                soundPointer = SeekWrite(fs, SerializeLevelObjects(level.type0Cs, Type0C.ELEMENTSIZE)),
                 mobyIdPointer = SeekWrite(fs, GetIdBytes(level.mobyIds)),
                 mobyPointer = SeekWrite(fs, GetMobyBytes(level.mobs, level.game)),
                 pvarSizePointer = SeekWrite(fs, GetPvarSizeBytes(level.pVars)),
                 pvarPointer = SeekWrite(fs, GetPvarBytes(level.pVars)),
                 type50Pointer = SeekWrite(fs, GetKeyValueBytes(level.type50s)),
                 type5CPointer = SeekWrite(fs, GetKeyValueBytes(level.type5Cs)),
-                unkPointer6 = SeekWrite(fs, level.unk6),
-                unkPointer7 = SeekWrite(fs, level.unk7),
+                mobyGroupsPointer = SeekWrite(fs, level.unk6),
+                type4CPointer = SeekWrite(fs, level.unk7),
                 tieIdPointer = SeekWrite(fs, GetIdBytes(level.tieIds)),
                 tiePointer = SeekWrite(fs, level.tieData),
                 shrubIdPointer = SeekWrite(fs, GetIdBytes(level.shrubIds)),
                 shrubPointer = SeekWrite(fs, level.shrubData),
                 splinePointer = SeekWrite(fs, GetSplineBytes(level.splines)),
                 cuboidPointer = SeekWrite(fs, SerializeLevelObjects(level.cuboids, Cuboid.ELEMENTSIZE)),
-                type64Pointer = SeekWrite(fs, SerializeLevelObjects(level.type64s, Type64.ELEMENTSIZE)),
-                type68Pointer = SeekWrite(fs, SerializeLevelObjects(level.type68s, Type68.ELEMENTSIZE)),
+                spherePointer = SeekWrite(fs, SerializeLevelObjects(level.spheres, Sphere.ELEMENTSIZE)),
+                cylinderPointer = SeekWrite(fs, SerializeLevelObjects(level.cylinders, Cylinder.ELEMENTSIZE)),
                 unkPointer12 = SeekWrite(fs, new byte[0x10]),
                 unkPointer17 = SeekWrite(fs, level.unk17),
                 type7CPointer = SeekWrite(fs, GetType7CBytes(level.type7Cs)),
                 unkPointer14 = SeekWrite(fs, level.unk14),
-                unkPointer13 = SeekWrite(fs, level.unk13),
+                grindPathsPointer = SeekWrite(fs, level.unk13),
                 occlusionPointer = SeekWrite(fs, GetOcclusionBytes(level.occlusionData))
             };
 
             //Seek to the beginning of the file to append the updated header
-            byte[] head = null;
-            switch (level.game.num)
-            {
-                case 1:
-                    head = gameplayHeader.SerializeRC1();
-                    break;
-                case 2:
-                case 3:
-                    head = gameplayHeader.SerializeRC23();
-                    break;
-            }
+            byte[] head = gameplayHeader.Serialize(level.game);
             fs.Seek(0, SeekOrigin.Begin);
             fs.Write(head, 0, head.Length);
 
@@ -151,21 +141,9 @@ namespace LibReplanetizer.Serializers
             WriteUint(bytes, 0, (uint)mobs.Count);
             WriteUint(bytes, 4, 0x100);
 
-            switch (game.num)
+            for (int i = 0; i < mobs.Count; i++)
             {
-                case 1:
-                    for (int i = 0; i < mobs.Count; i++)
-                    {
-                        mobs[i].ToByteArrayRC1().CopyTo(bytes, 0x10 + i * game.mobyElemSize);
-                    }
-                    break;
-                case 2:
-                case 3:
-                    for (int i = 0; i < mobs.Count; i++)
-                    {
-                        mobs[i].ToByteArrayRC23().CopyTo(bytes, 0x10 + i * game.mobyElemSize);
-                    }
-                    break;
+                mobs[i].ToByteArray().CopyTo(bytes, 0x10 + i * game.mobyElemSize);
             }
 
             return bytes;

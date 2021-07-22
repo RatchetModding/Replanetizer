@@ -19,36 +19,6 @@ You can move around the world with keyboard and mouse:
  - Left click items to select them
  - Rotate the camera by holding the right mouse button down and moving your mouse
 
-# Task management
-
-All tasks are available at asana. Contact simenfjellstad or stiantoften to be added to the board.
-
-# Git...
-No commits should be pushed directly to master.
-
-You should create your own branch for any new feature you create.
-
-## CLI commands for creating a branch:
-(Assuming remote = origin)
-
-1. git branch `branch-name`
-2. git checkout `branch-name`
-3. git add -A
-4. git commit -am "My commit message"
-5. git push origin `branch-name`
-
-## Merging branches:
-All branch merges should be done in their respective branches and **NOT master**  
-(Assuming remote = origin)
-
-1. git pull origin master
-2. Using a text editor, resolve the conflicts marked by a "<<<<<<<" line
-3. Add and commit fixed files.
-4. Push merge commit to `branch-name`
-5. git checkout master
-6. git merge `branch-name`
-
-
 ## Running on non-Windows platforms
 
 Not all parts of Replanetizer work on non-Windows platform, notably some of the UI functions do not.

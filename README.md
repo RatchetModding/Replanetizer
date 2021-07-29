@@ -27,7 +27,7 @@ Dependencies:
 
  - .NET 5 tooling (dotnet host, runtime, sdk and targeting pack)
  - Zenity (or KDialog if you prefer KDE dialogs)
- - Basic OpenGL dependencies (most of these will be installed if you run any form of GUI) 
+ - Basic OpenGL dependencies (most of these will be installed if you run any form of GUI).
    Refer to the READMEs of our NuGet dependencies for more information if you get stuck.
 
 

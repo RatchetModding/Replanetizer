@@ -1,10 +1,12 @@
 # Replanetizer
 
-This project is a Level Editor for Ratchet &amp; Clank games on the PS3.
+Replanetizer is a Level Editor for Ratchet &amp; Clank games on the PS3.
 
 # Technology
 
-The project is a WinForms project written in C#. Visual Studio is used for development.
+The project is written in C#, and uses OpenTK4 for rendering. C# bindings for Dear ImGui are used for the UI.
+We currently target .NET 5 (net5.0-windows for the Windows builds, net5.0 on anything else)
+
 All commits pushed to the master branch should be working builds of the application.
 Any ongoing work MUST be pushed to a separate branch. e.g. While you're developing new features.
 
@@ -19,19 +21,19 @@ You can move around the world with keyboard and mouse:
  - Left click items to select them
  - Rotate the camera by holding the right mouse button down and moving your mouse
 
-## Running on non-Windows platforms
+## Running the project from code instead of pre-builts.
 
-Not all parts of Replanetizer work on non-Windows platform, notably some of the UI functions do not.
+Dependencies:
 
-To build and run Replanetizer, you need both Mono and .NET core installed.
+ - .NET 5 tooling (dotnet host, runtime, sdk and targeting pack)
+ - Zenity (or KDialog if you prefer KDE dialogs)
+ - Basic OpenGL dependencies (most of these will be installed if you run any form of GUI) 
+   Refer to the READMEs of our NuGet dependencies for more information if you get stuck.
 
-To get started, clone this repository, and execute the following commands:
 
- - `dotnet build`
- - `cd Replanetizer`
- - `mono bin/Debug/net472/RatchetEdit.exe`
+To get started, clone this repository, and execute the following command:
 
-When we get all dependencies and WinForms running on .NET core, the dependency on Mono can hopefully be dropped.
+ - `dotnet run -p Replanzetier`
 
 
 # Legal stuff

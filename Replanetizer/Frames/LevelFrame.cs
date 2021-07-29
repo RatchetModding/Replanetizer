@@ -81,10 +81,12 @@ namespace Replanetizer.Frames
         private int targetTexture, bufferTexture, framebufferId;
 
         private List<LevelSubFrame> subFrames;
+        private List<Action<LevelObject>> selectionCallbacks;
 
         public LevelFrame(Window wnd) : base(wnd)
         {
             subFrames = new List<LevelSubFrame>();
+            selectionCallbacks = new List<Action<LevelObject>>();
             bufferTable = new ConditionalWeakTable<IRenderable, BufferContainer>();
             CustomGLControl_Load();
         }
@@ -161,7 +163,7 @@ namespace Replanetizer.Frames
                         }
                         if (ImGui.MenuItem("Level Model"))
                         {
-                            subFrames.Add(new LevelExportWindow(this.wnd, this));
+                            subFrames.Add(new LevelExportFrame(this.wnd, this));
                         }
                         ImGui.EndMenu();
                     }
@@ -181,6 +183,15 @@ namespace Replanetizer.Frames
                         ImGui.EndMenu();
                     }
 
+                    ImGui.EndMenu();
+                }
+
+                if (ImGui.BeginMenu("Windows"))
+                {
+                    if (ImGui.MenuItem("Object properties"))
+                    {
+                        subFrames.Add(new PropertyFrame(this.wnd, this));
+                    }
                     ImGui.EndMenu();
                 }
 
@@ -474,6 +485,7 @@ namespace Replanetizer.Frames
             Moby ratchet = level.mobs[0];
             camera.MoveBehind(ratchet);     
             SelectObject(null);
+            InvalidateView();
         }
 
         public void setSelectedChunks()
@@ -503,12 +515,26 @@ namespace Replanetizer.Frames
             }
         }
 
+        private void TriggerSelectionCallbacks()
+        {
+            foreach (Delegate callback in selectionCallbacks)
+            {
+                callback.DynamicInvoke(selectedObject);
+            }
+        }
+
+        public void RegisterCallback(Action<LevelObject> callback)
+        {
+            selectionCallbacks.Add(callback);
+        }
+
         public void SelectObject(LevelObject newObject = null)
         {
             if (newObject == null)
             {
                 selectedObject = null;
                 InvalidateView();
+                TriggerSelectionCallbacks();
                 return;
             }
 
@@ -524,7 +550,8 @@ namespace Replanetizer.Frames
             {
                 Object = newObject
             });
-
+            
+            TriggerSelectionCallbacks();
             InvalidateView();
         }
 
@@ -610,7 +637,7 @@ namespace Replanetizer.Frames
 
         public void Tick(float deltaTime)
         {
-            if (!ImGui.IsWindowFocused())
+            if (!ImGui.IsWindowHovered())
             {
                 return;
             }
@@ -1357,11 +1384,17 @@ namespace Replanetizer.Frames
             GL.DisableVertexAttribArray(0);
             GL.DisableVertexAttribArray(1);
         }
+        
+        public void AddSubFrame(LevelSubFrame frame)
+        {
+            if (!subFrames.Contains(frame)) subFrames.Add(frame);
+        }
+
     }
 
     public class RatchetEventArgs : EventArgs
     {
         public LevelObject Object { get; set; }
     }
-
+    
 }

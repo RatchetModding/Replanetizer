@@ -4,7 +4,7 @@ using LibReplanetizer;
 
 namespace Replanetizer.Frames
 {
-    public class LevelExportWindow : LevelSubFrame
+    public class LevelExportFrame : LevelSubFrame
     {
         protected override string frameName { get; set; } = "Level Export";
         private Level level => levelFrame.level;
@@ -12,7 +12,7 @@ namespace Replanetizer.Frames
         private ModelWriter.WriterLevelSettings settings;
         private string[] enumNameMap;
 
-        public LevelExportWindow(Window wnd, LevelFrame levelFrame) : base(wnd, levelFrame)
+        public LevelExportFrame(Window wnd, LevelFrame levelFrame) : base(wnd, levelFrame)
         {
             settings = new ModelWriter.WriterLevelSettings();
             enumNameMap = Enum.GetNames(typeof(ModelWriter.WriterLevelMode));

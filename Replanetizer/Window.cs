@@ -133,7 +133,7 @@ namespace Replanetizer
                     {
                         openFrames.Add(new AboutFrame(this));
                     }
-                    if (ImGui.MenuItem("Open ImGui debug window"))
+                    if (ImGui.MenuItem("Open ImGui demo window"))
                     {
                         openFrames.Add(new DemoWindowFrame(this));
                     }

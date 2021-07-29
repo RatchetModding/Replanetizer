@@ -152,31 +152,6 @@ namespace RatchetEdit
             glControl.enableSkybox = value;
         }
 
-        private Dictionary<int, string> GetModelNames(string fileName)
-        {
-            var modelNames = new Dictionary<int, string>();
-
-            try
-            {
-                using (StreamReader stream = new StreamReader(Application.StartupPath + fileName))
-                {
-                    string line;
-                    while ((line = stream.ReadLine()) != null)
-                    {
-                        string[] stringPart = line.Split('=');
-                        int modelId = int.Parse(stringPart[0], NumberStyles.HexNumber);
-                        modelNames.Add(modelId, stringPart[1]);
-                    }
-                }
-            }
-            catch (FileNotFoundException)
-            {
-                Logger.Warn("Model list file not found! No names for you!");
-            }
-
-            return modelNames;
-        }
-
         public LevelObject GetSelectedObject()
         {
             return glControl.selectedObject;

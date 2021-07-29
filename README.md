@@ -26,14 +26,17 @@ You can move around the world with keyboard and mouse:
 Dependencies:
 
  - .NET 5 tooling (dotnet host, runtime, sdk and targeting pack)
- - Zenity (or KDialog if you prefer KDE dialogs)
- - Basic OpenGL dependencies (most of these will be installed if you run any form of GUI).
-   Refer to the READMEs of our NuGet dependencies for more information if you get stuck.
+ - For Linux (and maybe other Unixes):
+   - Zenity (or KDialog if you prefer KDE dialogs)
+   - Basic OpenGL dependencies (most of these will be installed if you run any form of GUI).
+     Refer to the READMEs of our NuGet dependencies for more information if you get stuck.
 
 
 To get started, clone this repository, and execute the following command:
 
  - `dotnet run -p Replanzetier`
+
+Alternatively, open Replanetizer.sln in your favourite IDE, and use its tooling instead.
 
 
 # Legal stuff

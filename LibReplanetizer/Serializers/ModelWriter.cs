@@ -751,7 +751,7 @@ namespace LibReplanetizer
             {
                 for (int i = 0; i < 5; i++)
                 {
-                    chunksSelected[i] = true;
+                    chunksSelected[i] = false;
                 }
             }
         }

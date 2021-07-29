@@ -12,6 +12,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Replanetizer.Tools;
+using static LibReplanetizer.DataFunctions;
 using static LibReplanetizer.Utilities;
 
 namespace Replanetizer.Frames
@@ -79,8 +80,11 @@ namespace Replanetizer.Frames
         private int Width, Height;
         private int targetTexture, bufferTexture, framebufferId;
 
+        private List<LevelSubFrame> subFrames;
+
         public LevelFrame(Window wnd) : base(wnd)
         {
+            subFrames = new List<LevelSubFrame>();
             bufferTable = new ConditionalWeakTable<IRenderable, BufferContainer>();
             CustomGLControl_Load();
         }
@@ -117,6 +121,11 @@ namespace Replanetizer.Frames
             GL.DeleteTexture(bufferTexture);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         }
+        
+        public static bool FrameMustClose(LevelSubFrame frame)
+        {
+            return !frame.isOpen;
+        }
 
         private void RenderMenuBar()
         {
@@ -136,6 +145,40 @@ namespace Replanetizer.Frames
                         {
                             level.Save(res);
                         }
+                    }
+
+                    if (ImGui.BeginMenu("Export"))
+                    {
+                        if (ImGui.MenuItem("Collision"))
+                        {
+                            var res = CrossFileDialog.SaveFile();
+                            if (res.Length > 0)
+                            {
+                                FileStream fs = File.Open(res, FileMode.Create);
+                                fs.Write(level.collBytesEngine, 0, level.collBytesEngine.Length);
+                                fs.Close();
+                            }
+                        }
+                        if (ImGui.MenuItem("Level Model"))
+                        {
+                            subFrames.Add(new LevelExportWindow(this.wnd, this));
+                        }
+                        ImGui.EndMenu();
+                    }
+                    if (ImGui.BeginMenu("Import"))
+                    {
+                        if (ImGui.MenuItem("Collision"))
+                        {
+                            var res = CrossFileDialog.OpenFile(filter: ".rcc");
+                            if (res.Length > 0)
+                            {
+                                FileStream fs = File.Open(res, FileMode.Open);
+                                level.collBytesEngine = ReadBlock(fs, 0, (int)fs.Length);
+                                fs.Close();
+                            }
+                            InvalidateView();
+                        }
+                        ImGui.EndMenu();
                     }
 
                     ImGui.EndMenu();
@@ -242,6 +285,12 @@ namespace Replanetizer.Frames
             }
 
             ImGui.End();
+
+            subFrames.RemoveAll(FrameMustClose);
+            foreach (LevelSubFrame levelSubFrame in subFrames)
+            {
+                levelSubFrame.Render(deltaTime);
+            }
         }
 
         private void CustomGLControl_Load()

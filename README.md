@@ -38,7 +38,7 @@ To get started, clone this repository, and execute the following command:
 
 # Legal stuff
 
-Replanetizer is Copyright (C) 2018-2020, The Replanetizer Contributors.
+Replanetizer is Copyright (C) 2018-2021, The Replanetizer Contributors.
 
 Replanetizer is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

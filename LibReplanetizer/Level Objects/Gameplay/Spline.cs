@@ -1,4 +1,4 @@
-﻿using OpenTK;
+﻿using OpenTK.Mathematics;
 using System.ComponentModel;
 using static LibReplanetizer.DataFunctions;
 

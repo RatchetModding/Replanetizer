@@ -1,7 +1,8 @@
-﻿using OpenTK;
-using OpenTK.Graphics.OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
+using Replanetizer.Frames;
 
-namespace RatchetEdit.Tools
+namespace Replanetizer.Tools
 {
     class RotationTool : Tool
     {
@@ -19,21 +20,21 @@ namespace RatchetEdit.Tools
             };
         }
 
-        public override void Render(Vector3 position, CustomGLControl control)
+        public override void Render(Vector3 position, LevelFrame frame)
         {
             GetVBO();
 
             Matrix4 modelMatrix = Matrix4.CreateTranslation(position);
-            var mvp = modelMatrix * control.worldView;
-            GL.UniformMatrix4(control.matrixID, false, ref mvp);
+            var mvp = modelMatrix * frame.worldView;
+            GL.UniformMatrix4(frame.matrixID, false, ref mvp);
 
-            GL.Uniform4(control.colorID, new Vector4(1, 0, 0, 1));
+            GL.Uniform4(frame.colorID, new Vector4(1, 0, 0, 1));
             GL.DrawArrays(PrimitiveType.LineStrip, 0, 2);
 
-            GL.Uniform4(control.colorID, new Vector4(0, 1, 0, 1));
+            GL.Uniform4(frame.colorID, new Vector4(0, 1, 0, 1));
             GL.DrawArrays(PrimitiveType.LineStrip, 2, 2);
 
-            GL.Uniform4(control.colorID, new Vector4(0, 0, 1, 1));
+            GL.Uniform4(frame.colorID, new Vector4(0, 0, 1, 1));
             GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
         }
         public override ToolType GetToolType()

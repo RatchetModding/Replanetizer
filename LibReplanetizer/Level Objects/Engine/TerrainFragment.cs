@@ -1,6 +1,6 @@
 ﻿using LibReplanetizer.Headers;
 using LibReplanetizer.Models;
-using OpenTK;
+using OpenTK.Mathematics;
 using System;
 using System.IO;
 using static LibReplanetizer.DataFunctions;

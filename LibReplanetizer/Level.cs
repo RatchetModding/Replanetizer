@@ -6,6 +6,7 @@ using LibReplanetizer.Parsers;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using LibReplanetizer.Serializers;
 
 namespace LibReplanetizer
 {
@@ -163,7 +164,7 @@ namespace LibReplanetizer
 
                 Logger.Debug("Parsing terrain elements...");
                 terrainEngine = engineParser.GetTerrainModels();
-                Logger.Debug("Added {0} terrain elements" + terrainEngine?.Count);
+                Logger.Debug("Added {0} terrain elements", terrainEngine?.Count);
 
                 Logger.Debug("Parsing player animations...");
                 playerAnimations = engineParser.GetPlayerAnimations((MobyModel)mobyModels[0]);
@@ -327,6 +328,36 @@ namespace LibReplanetizer
 
             Logger.Info("Level parsing done");
             valid = true;
+        }
+
+        public void Save()
+        {
+            Save(path);
+        }
+
+        public void Save(string outputFile)
+        {
+            string directory;
+            var fileAttrs = File.GetAttributes(outputFile);
+            if (fileAttrs.HasFlag(FileAttributes.Directory))
+            {
+                directory = outputFile;
+                outputFile = Path.Join(outputFile, "engine.ps3");
+            }
+            else
+            {
+                directory = Path.GetDirectoryName(outputFile);
+            }
+            GameplaySerializer gameplaySerializer = new GameplaySerializer();
+            gameplaySerializer.Save(this, outputFile);
+            EngineSerializer engineSerializer = new EngineSerializer();
+            engineSerializer.Save(this, directory);
+
+            for (int i = 0; i < terrainChunks.Count; i++)
+            {      
+                ChunkSerializer chunkSerializer = new ChunkSerializer();
+                chunkSerializer.Save(this, directory, i);
+            }
         }
     }
 }

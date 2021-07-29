@@ -1,8 +1,9 @@
 ﻿using LibReplanetizer.LevelObjects;
-using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
+using Replanetizer.Frames;
 
-namespace RatchetEdit
+namespace Replanetizer.Tools
 {
     class Cube
     {
@@ -40,13 +41,13 @@ namespace RatchetEdit
             GL.BufferData(BufferTarget.ElementArrayBuffer, cubeElements.Length * sizeof(ushort), cubeElements, BufferUsageHint.StaticDraw);
         }
 
-        public void Render(Cuboid sp, CustomGLControl glControl)
+        public void Render(Cuboid sp, LevelFrame frame)
         {
-            GL.UseProgram(glControl.colorShaderID);
+            GL.UseProgram(frame.colorShaderID);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-            Matrix4 mvp = sp.modelMatrix * glControl.worldView;
-            GL.UniformMatrix4(glControl.matrixID, false, ref mvp);
-            GL.Uniform4(glControl.colorID, new Vector4(1, 1, 1, 1));
+            Matrix4 mvp = sp.modelMatrix * frame.worldView;
+            GL.UniformMatrix4(frame.matrixID, false, ref mvp);
+            GL.Uniform4(frame.colorID, new Vector4(1, 1, 1, 1));
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, IBO);

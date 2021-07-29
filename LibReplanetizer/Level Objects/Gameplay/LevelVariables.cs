@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Drawing;
 using System.IO;
-using OpenTK;
+using OpenTK.Mathematics;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects

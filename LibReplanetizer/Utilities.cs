@@ -1,4 +1,4 @@
-﻿using OpenTK;
+﻿using OpenTK.Mathematics;
 using System;
 using System.ComponentModel;
 using System.Drawing;
@@ -48,8 +48,9 @@ namespace LibReplanetizer
             Matrix4 viewInv = Matrix4.Invert(view);
             Matrix4 projInv = Matrix4.Invert(projection);
 
-            Vector4.Transform(ref vec, ref projInv, out vec);
-            Vector4.Transform(ref vec, ref viewInv, out vec);
+            // TODO: validate this works
+            Vector4.TransformRow(in vec, in projInv, out vec);
+            Vector4.TransformRow(in vec, in viewInv, out vec);
 
             if (vec.W > float.Epsilon || vec.W < -float.Epsilon)
             {

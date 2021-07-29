@@ -1,217 +1,97 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <ProjectGuid>{64C85D02-C923-458C-A67E-7B29D5147A4F}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <StartupObject>Replanetizer.Program</StartupObject>
+    <LangVersion>9</LangVersion>
+    <NeutralLanguage>en</NeutralLanguage>
+    <Title>Replanetizer</Title>
+    <Authors>The Replanetizer Contributors</Authors>
+    <Description>Replanetizer is a Level Editor for the Ratchet &amp; Clank HD collection.</Description>
+    <Copyright>2018-2021, The Replanetizer Contributors</Copyright>
+    <PackageProjectUrl>https://github.com/RatchetModding/Replanetizer</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/RatchetModding/Replanetizer/blob/master/LICENSE.md</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/RatchetModding/Replanetizer</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <OutputType>WinExe</OutputType>
-    <RootNamespace>RatchetEdit</RootNamespace>
-    <AssemblyName>RatchetEdit</AssemblyName>
-    <TargetFramework>net472</TargetFramework>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
-    <AssemblyTitle>Replanetizer</AssemblyTitle>
-    <Product>Replanetizer</Product>
-    <Description>A level editor for the Ratchet and Clank games on the PS3</Description>
-    <Copyright>Copyright ©  2018-2020, The Replanetizer Contributors</Copyright>
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <DefineConstants>_WINDOWS</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="System.ComponentModel.Composition" Version="4.*" />
-    <PackageReference Include="System.DirectoryServices" Version="4.*" />
-    <PackageReference Include="System.IO.Compression" Version="4.*" />
-    <PackageReference Include="System.Data.DataSetExtensions" Version="4.*" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.*" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Magick.NET.Core" Version="6.1.1" />
-    <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="7.23.2" />
-    <PackageReference Include="NLog" Version="4.7.7" />
-    <PackageReference Include="OpenTK" Version="3.3.1" />
-    <PackageReference Include="OpenTK.GLControl" Version="3.1.0" />
+    <PackageReference Include="ImGui.NET" Version="1.78.0" />
+    <PackageReference Include="NLog" Version="4.7.10" />
+    <PackageReference Include="OpenTK" Version="4.6.4" />
+    <PackageReference Include="OpenTK.Windowing.GraphicsLibraryFramework" Version="4.6.4" />
     <PackageReference Include="System.Drawing.Common" Version="5.0.1" />
-    <PackageReference Include="System.Resources.Extensions" Version="5.0.0" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Transactions" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Windows.Forms" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="CustomControls\ObjectTreeView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="CustomControls\ObjectTreeView.Designer.cs">
-      <DependentUpon>ObjectTreeView.cs</DependentUpon>
-    </Compile>
-    <Compile Update="CustomControls\CustomGLControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Forms\LevelExportWindow.cs" >
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Forms\AboutBox1.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Forms\AboutBox1.Designer.cs">
-      <DependentUpon>AboutBox1.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Forms\LanguageViewer.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Forms\LanguageViewer.Designer.cs">
-      <DependentUpon>LanguageViewer.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Forms\LevelVariableViewer.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Forms\LevelVariableViewer.Designer.cs">
-      <DependentUpon>LevelVariableViewer.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Forms\LightConfigViewer.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Forms\LightConfigViewer.Designer.cs">
-      <DependentUpon>LightConfigViewer.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Forms\SpriteViewer.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Forms\SpriteViewer.Designer.cs">
-      <DependentUpon>SpriteViewer.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Forms\TextureViewer.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Forms\TextureViewer.Designer.cs">
-      <DependentUpon>TextureViewer.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Forms\UIViewer.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Forms\UIViewer.Designer.cs">
-      <DependentUpon>UIViewer.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Forms\Main.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Forms\Main.Designer.cs">
-      <DependentUpon>Main.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Forms\ModelViewer.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Forms\ModelViewer.Designer.cs">
-      <DependentUpon>ModelViewer.cs</DependentUpon>
-    </Compile>
-    <EmbeddedResource Update="CustomControls\ObjectTreeView.resx">
-      <DependentUpon>ObjectTreeView.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="CustomControls\CustomGLControl.resx">
-      <DependentUpon>CustomGLControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Forms\AboutBox1.resx">
-      <DependentUpon>AboutBox1.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Forms\LanguageViewer.resx">
-      <DependentUpon>LanguageViewer.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Forms\LevelVariableViewer.resx">
-      <DependentUpon>LevelVariableViewer.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Forms\LightConfigViewer.resx">
-      <DependentUpon>LightConfigViewer.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Forms\Main.resx">
-      <DependentUpon>Main.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Forms\ModelViewer.resx">
-      <DependentUpon>ModelViewer.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Forms\SpriteViewer.resx">
-      <DependentUpon>SpriteViewer.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Forms\TextureViewer.resx">
-      <DependentUpon>TextureViewer.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Forms\UIViewer.resx">
-      <DependentUpon>UIViewer.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <Compile Update="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-    <None Include="Shaders\collisionshaderfs.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Shaders\colorshaderfs.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Shaders\collisionshadervs.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Shaders\colorshadervs.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Shaders\fs.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Shaders\vs.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="ModelLists\ModelListRC1.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="ModelLists\TieModelsRC1.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\add_button.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\delete_button.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\translate_tool.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\rotate_tool.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\scale_tool.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\spline_tool.png" />
-  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\LibReplanetizer\LibReplanetizer.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="CustomGLControl.cs" />
-  </ItemGroup>
-</Project>
 
+  <ItemGroup>
+    <None Update="Shaders\collisionshaderfs.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Shaders\collisionshadervs.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Shaders\colorshaderfs.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Shaders\colorshadervs.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Shaders\fs.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Shaders\vs.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="NLog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="ModelLists\ModelListRC1.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="ModelLists\TieModelsRC1.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Remove="Forms\**" />
+    <None Remove="CustomControls\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Frames\LevelFrame">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Remove="Forms\**" />
+    <Compile Remove="CustomControls\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="Forms\**" />
+    <EmbeddedResource Remove="CustomControls\**" />
+  </ItemGroup>
+
+  <Target Name="SetSourceRevisionId" BeforeTargets="InitializeSourceControlInformation">
+    <Exec Command="git describe --long --always --dirty --exclude=* --abbrev=8" ConsoleToMSBuild="True" IgnoreExitCode="False">
+      <Output PropertyName="SourceRevisionId" TaskParameter="ConsoleOutput" />
+    </Exec>
+  </Target>
+
+</Project>

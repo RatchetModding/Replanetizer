@@ -1,4 +1,4 @@
-﻿using OpenTK;
+﻿using OpenTK.Mathematics;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Models.Animations

@@ -1,8 +1,8 @@
-﻿using LibReplanetizer.LevelObjects;
-using OpenTK;
-using System;
+﻿using System;
+using LibReplanetizer.LevelObjects;
+using OpenTK.Mathematics;
 
-namespace RatchetEdit
+namespace Replanetizer
 {
     public class Camera : ITransformable
     {
@@ -15,10 +15,19 @@ namespace RatchetEdit
         {
             return Matrix3.CreateRotationX(rotation.X) * Matrix3.CreateRotationY(rotation.Y) * Matrix3.CreateRotationZ(rotation.Z);
         }
+        
+        private static Vector3 LegacyTransform(Vector3 vec, Matrix3 mat)
+        {
+            Vector3 result = new Vector3();
+            result.X = vec.X * mat.Row0.X + vec.Y * mat.Row1.X + vec.Z * mat.Row2.X;
+            result.Y = vec.X * mat.Row0.Y + vec.Y * mat.Row1.Y + vec.Z * mat.Row2.Y;
+            result.Z = vec.X * mat.Row0.Z + vec.Y * mat.Row1.Z + vec.Z * mat.Row2.Z;
+            return result;
+        }
 
         public Matrix4 GetViewMatrix()
         {
-            Vector3 forward = Vector3.Transform(Vector3.UnitY, GetRotationMatrix());
+            Vector3 forward = LegacyTransform(Vector3.UnitY, GetRotationMatrix());
             return Matrix4.LookAt(position, position + forward, Vector3.UnitZ);
         }
 
@@ -51,9 +60,8 @@ namespace RatchetEdit
             if (levelObject is Moby moby)
             {
                 yaw = moby.rotation.Z;
+                if (double.IsNaN(yaw)) yaw = 0;
             }
-
-            if (double.IsNaN(yaw)) yaw = 0;
 
             yaw = yaw - (float)Math.PI / 2;
             SetRotation(-(float)Math.PI / 10, yaw);
@@ -76,6 +84,11 @@ namespace RatchetEdit
         public void Translate(Vector3 vector)
         {
             position += vector;
+        }
+
+        public void TransformedTranslate(Vector3 vector)
+        {
+            position += LegacyTransform(vector, GetRotationMatrix());
         }
 
         public void Rotate(float x, float y, float z)

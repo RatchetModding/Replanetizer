@@ -338,8 +338,7 @@ namespace LibReplanetizer
         public void Save(string outputFile)
         {
             string directory;
-            var fileAttrs = File.GetAttributes(outputFile);
-            if (fileAttrs.HasFlag(FileAttributes.Directory))
+            if (!outputFile.EndsWith(".ps3") && File.GetAttributes(outputFile).HasFlag(FileAttributes.Directory))
             {
                 directory = outputFile;
                 outputFile = Path.Join(outputFile, "engine.ps3");
@@ -348,10 +347,10 @@ namespace LibReplanetizer
             {
                 directory = Path.GetDirectoryName(outputFile);
             }
-            GameplaySerializer gameplaySerializer = new GameplaySerializer();
-            gameplaySerializer.Save(this, outputFile);
             EngineSerializer engineSerializer = new EngineSerializer();
-            engineSerializer.Save(this, directory);
+            engineSerializer.Save(this, outputFile);
+            GameplaySerializer gameplaySerializer = new GameplaySerializer();
+            gameplaySerializer.Save(this, directory);
 
             for (int i = 0; i < terrainChunks.Count; i++)
             {      

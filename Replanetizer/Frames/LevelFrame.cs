@@ -88,7 +88,7 @@ namespace Replanetizer.Frames
             subFrames = new List<LevelSubFrame>();
             selectionCallbacks = new List<Action<LevelObject>>();
             bufferTable = new ConditionalWeakTable<IRenderable, BufferContainer>();
-            CustomGLControl_Load();
+            camera = new Camera();
         }
 
         public void RenderToFrameBuffer(Action renderFunction)
@@ -192,6 +192,16 @@ namespace Replanetizer.Frames
                     {
                         subFrames.Add(new PropertyFrame(this.wnd, this));
                     }
+                    if (ImGui.MenuItem("Light config"))
+                    {
+                        subFrames.Add(new PropertyFrame(this.wnd, this, 
+                            followObject: false, overrideFrameName: "Light config", selectedObject: level.lightConfig));
+                    }
+                    if (ImGui.MenuItem("Level variables"))
+                    {
+                        subFrames.Add(new PropertyFrame(this.wnd, this, 
+                            followObject: false, overrideFrameName: "Level variables", selectedObject: level.levelVariables));
+                    }
                     ImGui.EndMenu();
                 }
 
@@ -230,9 +240,33 @@ namespace Replanetizer.Frames
                 ImGui.EndMenuBar();
             }
         }
-        
+
+        private void UpdateWindowSize()
+        {
+            int prevWidth = Width, prevHeight = Height;
+
+            System.Numerics.Vector2 vMin = ImGui.GetWindowContentRegionMin();
+            System.Numerics.Vector2 vMax = ImGui.GetWindowContentRegionMax();
+
+            Width = (int) (vMax.X - vMin.X);
+            Height = (int) (vMax.Y - vMin.Y);
+
+            if (Width <= 0 || Height <= 0) return; 
+
+            if (Width != prevWidth || Height != prevHeight)
+            {
+                invalidate = true;
+            }
+
+            System.Numerics.Vector2 windowPos = ImGui.GetWindowPos();
+            Vector2 windowZero = new Vector2(windowPos.X + vMin.X, windowPos.Y + vMin.Y);
+            mousePos = wnd.MousePosition - windowZero;
+        }
+
         public override void Render(float deltaTime)
         {
+            if (!initialized) CustomGLControl_Load();
+                
             var viewport = ImGui.GetMainViewport();
             var pos = viewport.Pos;
             var size = viewport.Size;
@@ -255,26 +289,7 @@ namespace Replanetizer.Frames
             if (level != null)
             {
                 RenderMenuBar();
-                
-                int prevWidth = Width, prevHeight = Height;
-
-                System.Numerics.Vector2 vMin = ImGui.GetWindowContentRegionMin();
-                System.Numerics.Vector2 vMax = ImGui.GetWindowContentRegionMax();
-
-                Width = (int) (vMax.X - vMin.X);
-                Height = (int) (vMax.Y - vMin.Y);
-
-                if (Width <= 0 || Height <= 0) return; 
-
-                if (Width != prevWidth || Height != prevHeight)
-                {
-                    invalidate = true;
-                }
-
-                System.Numerics.Vector2 windowPos = ImGui.GetWindowPos();
-                Vector2 windowZero = new Vector2(windowPos.X + vMin.X, windowPos.Y + vMin.Y);
-                mousePos = wnd.MousePosition - windowZero;
-
+                UpdateWindowSize();
                 Tick(deltaTime);
 
                 if (invalidate)
@@ -343,14 +358,13 @@ namespace Replanetizer.Frames
             uniformUseFogID = GL.GetUniformLocation(shaderID, "useFog");
 
             projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 10000.0f);
-
-            camera = new Camera();
+            view = camera.GetViewMatrix();
 
             translateTool = new TranslationTool();
             rotationTool = new RotationTool();
             scalingTool = new ScalingTool();
             vertexTranslator = new VertexTranslationTool();
-
+            
             initialized = true;
         }
 

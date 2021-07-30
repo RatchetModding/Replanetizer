@@ -1,31 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
-using System.Numerics;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks.Dataflow;
 using ImGuiNET;
 using LibReplanetizer;
 using LibReplanetizer.LevelObjects;
-using LibReplanetizer.Models;
 
 namespace Replanetizer.Frames
 {
     public class PropertyFrame : LevelSubFrame
     {
-        protected override string frameName { get; set; } = "Properties";
+        protected sealed override string frameName { get; set; } = "Properties";
         private Level level => levelFrame.level;
-        private bool followObject = true;
 
-        private LevelObject selectedObject;
+        private object selectedObject;
 
         private Dictionary<string, Dictionary<string, PropertyInfo>> properties;
         
-        public PropertyFrame(Window wnd, LevelFrame levelFrame, bool followObject = true, LevelObject selectedObject = null) : base(wnd, levelFrame)
+        public PropertyFrame(Window wnd, LevelFrame levelFrame, bool followObject = true, object selectedObject = null, string overrideFrameName = null) : base(wnd, levelFrame)
         {
-            this.followObject = followObject;
+            if (overrideFrameName != null && overrideFrameName.Length > 0)
+            {
+                frameName = overrideFrameName;
+            }
+            
             if (followObject) levelFrame.RegisterCallback(this.SelectionCallback);
 
             if (selectedObject == null) this.selectedObject = levelFrame.selectedObject;
@@ -33,19 +32,7 @@ namespace Replanetizer.Frames
             RecomputeProperties();
         }
 
-        private class PropertyDetails
-        {
-            public Type Type;
-            public object Object;
-            
-            public PropertyDetails(Type type, object _object)
-            {
-                Type = type;
-                Object = _object;
-            }
-        }
-        
-        private void SelectionCallback(LevelObject o)
+        private void SelectionCallback(object o)
         {
             selectedObject = o;
             RecomputeProperties();
@@ -58,10 +45,10 @@ namespace Replanetizer.Frames
             foreach (var prop in objProps)
             {
                 string category = prop.GetCustomAttribute<CategoryAttribute>()?.Category;
-                if (category == null) continue;
+                if (category == null) category = "Unknowns";
                 
                 string displayName = prop.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
-                if (displayName == null) continue;
+                if (displayName == null) displayName = prop.Name;
                 
                 if (!properties.ContainsKey(category))
                 {
@@ -90,6 +77,7 @@ namespace Replanetizer.Frames
                         {
                             var val = value.GetValue(selectedObject);
                             var type = value.PropertyType;
+                            if (value.GetSetMethod() == null) type = null;
                             if (type == typeof(string))
                             {
                                 var v = Encoding.ASCII.GetBytes((string)val ?? string.Empty);

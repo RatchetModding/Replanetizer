@@ -7,7 +7,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace Replanetizer.ImGuiTools
+namespace Replanetizer.Utils
 {
     /// <summary>
     /// A modified version of Veldrid.ImGui's ImGuiRenderer.

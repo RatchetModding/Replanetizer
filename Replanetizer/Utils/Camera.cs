@@ -2,7 +2,7 @@
 using LibReplanetizer.LevelObjects;
 using OpenTK.Mathematics;
 
-namespace Replanetizer
+namespace Replanetizer.Utils
 {
     public class Camera : ITransformable
     {

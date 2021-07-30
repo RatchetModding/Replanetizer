@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using LibReplanetizer;
 using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
 using OpenTK.Mathematics;
+using Replanetizer.Utils;
 using static LibReplanetizer.DataFunctions;
 
 namespace Replanetizer.MemoryHook
@@ -102,6 +104,30 @@ namespace Replanetizer.MemoryHook
             // The memory hook functions depend on reading 64 bit addresses, 
             // thus we need to check that the pointer size is 8 (ie 64 bits)
             return IntPtr.Size == 8;
+        }
+
+        public void HandleSplineTranslation(Level level, Spline spline, int currentSplineVertex)
+        {
+            /*
+             * This code was already commented out before I moved it here.
+             * TODO: Uncomment and test this at some point. Contributions welcomed.
+             * 
+            //write at 0x346BA1180 + 0xC0 + spline.offset + currentSplineVertex * 0x10;
+            // List of splines 0x300A51BE0
+
+            byte[] ptrBuff = new byte[0x04];
+            int bytesRead = 0;
+            ReadProcessMemory(processHandle, 0x300A51BE0 + level.splines.IndexOf(spline) * 0x04, ptrBuff, ptrBuff.Length, ref bytesRead);
+            long splinePtr = ReadUint(ptrBuff, 0) + 0x300000010;
+
+            byte[] buff = new byte[0x0C];
+            Vector3 vec = spline.GetVertex(currentSplineVertex);
+            WriteFloat(buff, 0x00, vec.X);
+            WriteFloat(buff, 0x04, vec.Y);
+            WriteFloat(buff, 0x08, vec.Z);
+
+            WriteProcessMemory(processHandle, splinePtr + currentSplineVertex * 0x10, buff, buff.Length, ref bytesRead);
+            */
         }
     }
 }

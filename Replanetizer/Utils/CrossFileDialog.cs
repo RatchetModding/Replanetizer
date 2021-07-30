@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace Replanetizer
+namespace Replanetizer.Utils
 {
     public static class CrossFileDialog
     {

@@ -1,7 +1,7 @@
 ﻿using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
 
-namespace Replanetizer
+namespace Replanetizer.Utils
 {
     /*
      * A container to store IBO and VBO references for a Model

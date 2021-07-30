@@ -12,8 +12,10 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Replanetizer.Tools;
+using Replanetizer.Utils;
 using static LibReplanetizer.DataFunctions;
 using static LibReplanetizer.Utilities;
+using Texture = LibReplanetizer.Texture;
 
 namespace Replanetizer.Frames
 {
@@ -53,7 +55,6 @@ namespace Replanetizer.Frames
         private Vector2 mousePos;
         private Vector3 prevMouseRay;
         private int lastMouseX, lastMouseY;
-        private bool xLock, yLock, zLock;
 
         public bool initialized, invalidate;
         public bool[] selectedChunks;
@@ -65,9 +66,6 @@ namespace Replanetizer.Frames
         public Camera camera;
         private Tool currentTool;
         public Tool translateTool, rotationTool, scalingTool, vertexTranslator;
-
-        public event EventHandler<RatchetEventArgs> ObjectClick;
-        public event EventHandler<RatchetEventArgs> ObjectDeleted;
 
         private ConditionalWeakTable<IRenderable, BufferContainer> bufferTable;
         public Dictionary<Texture, int> textureIds;
@@ -91,39 +89,6 @@ namespace Replanetizer.Frames
             camera = new Camera();
         }
 
-        public void RenderToFrameBuffer(Action renderFunction)
-        {
-            GL.DeleteTexture(targetTexture);
-            targetTexture = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, targetTexture);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, Width, Height, 0, PixelFormat.Rgb, PixelType.UnsignedByte, (IntPtr) 0);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int) TextureMagFilter.Nearest);
-
-            bufferTexture = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, bufferTexture);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent, Width, Height, 0, PixelFormat.DepthComponent, PixelType.Float, (IntPtr) 0);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int) TextureMagFilter.Nearest);
-
-            framebufferId = GL.GenFramebuffer();
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebufferId);
-            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, targetTexture, 0);
-            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2D, bufferTexture, 0);
-
-            GL.Enable(EnableCap.DepthTest);
-            GL.DepthFunc(DepthFunction.Less);
-
-            GL.GenVertexArrays(1, out int VAO);
-            GL.BindVertexArray(VAO);
-
-            renderFunction();
-
-            GL.DeleteFramebuffer(framebufferId);
-            GL.DeleteTexture(bufferTexture);
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        }
-        
         public static bool FrameMustClose(LevelSubFrame frame)
         {
             return !frame.isOpen;
@@ -256,6 +221,7 @@ namespace Replanetizer.Frames
             if (Width != prevWidth || Height != prevHeight)
             {
                 invalidate = true;
+                OnResize();
             }
 
             System.Numerics.Vector2 windowPos = ImGui.GetWindowPos();
@@ -294,7 +260,7 @@ namespace Replanetizer.Frames
 
                 if (invalidate)
                 {
-                    RenderToFrameBuffer(() => {
+                    FramebufferRenderer.ToTexture(Width, Height, ref targetTexture, () => {
                         //Setup openGL variables
                         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
                         GL.Enable(EnableCap.DepthTest);
@@ -544,39 +510,23 @@ namespace Replanetizer.Frames
 
         public void SelectObject(LevelObject newObject = null)
         {
-            if (newObject == null)
+            if (newObject != null)
             {
-                selectedObject = null;
-                InvalidateView();
-                TriggerSelectionCallbacks();
-                return;
-            }
-
-            if ((selectedObject is Spline) && !(newObject is Spline))
-            {
-                //Previous object was spline, new isn't
-                if (currentTool is VertexTranslationTool) SelectTool(null);
+                if ((selectedObject is Spline) && !(newObject is Spline))
+                {
+                    //Previous object was spline, new isn't
+                    if (currentTool is VertexTranslationTool) SelectTool(null);
+                }
             }
 
             selectedObject = newObject;
-
-            ObjectClick?.Invoke(this, new RatchetEventArgs
-            {
-                Object = newObject
-            });
-            
-            TriggerSelectionCallbacks();
             InvalidateView();
+            TriggerSelectionCallbacks();
         }
 
         public void DeleteObject(LevelObject levelObject)
         {
             SelectObject(null);
-            ObjectDeleted?.Invoke(this, new RatchetEventArgs
-            {
-                Object = levelObject
-            });
-            InvalidateView();
         }
 
         private void HandleMouseWheelChanges()
@@ -608,44 +558,77 @@ namespace Replanetizer.Frames
             InvalidateView();
         }
 
-        private void CustomGLControl_KeyDown()
+        private void HandleKeyboardShortcuts()
         {
-            /*
-            switch (e.KeyCode)
-            {
-                case Keys.D1:
-                    SelectTool(translateTool);
-                    break;
-                case Keys.D2:
-                    SelectTool(rotationTool);
-                    break;
-                case Keys.D3:
-                    SelectTool(scalingTool);
-                    break;
-                case Keys.D4:
-                    SelectTool(vertexTranslator);
-                    break;
-                case Keys.D5:
-                    SelectTool();
-                    break;
-                case Keys.Delete:
-                    DeleteObject(selectedObject);
-                    break;
-            }
-            */
+            if (wnd.IsKeyPressed(Keys.D1)) SelectTool(translateTool);
+            if (wnd.IsKeyPressed(Keys.D2)) SelectTool(rotationTool);
+            if (wnd.IsKeyPressed(Keys.D3)) SelectTool(scalingTool);
+            if (wnd.IsKeyPressed(Keys.D4)) SelectTool(vertexTranslator);
+            if (wnd.IsKeyPressed(Keys.D5)) SelectTool();
+            if (wnd.IsKeyPressed(Keys.Delete)) DeleteObject(selectedObject);
         }
-
 
         public void SelectTool(Tool tool = null)
         {
-            //enableTranslateTool = (tool is TranslationTool);
-            //enableRotateTool = (tool is RotationTool);
-            //enableScaleTool = (tool is ScalingTool);
-            //enableSplineTool = (tool is VertexTranslationTool);
-
             currentTool = tool;
-
             currentSplineVertex = 0;
+            InvalidateView();
+        }
+
+        private void CheckForRotationInput(float deltaTime)
+        {
+            if (wnd.MouseState.IsButtonDown(MouseButton.Right))
+            {
+                camera.rotation.Z -= (wnd.MousePosition.X - lastMouseX) * camera.speed * deltaTime;
+                camera.rotation.X -= (wnd.MousePosition.Y - lastMouseY) * camera.speed * deltaTime;
+                camera.rotation.X = MathHelper.Clamp(camera.rotation.X, 
+                    MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
+
+                InvalidateView();
+            }
+        }
+
+        private void CheckForMovementInput(float deltaTime)
+        {
+            float moveSpeed = wnd.IsKeyDown(Keys.LeftShift) ? 40 : 10;
+            Vector3 moveDir = GetInputAxes();
+            if (moveDir.Length > 0)
+            {
+                moveDir *= moveSpeed * deltaTime;
+                camera.TransformedTranslate(moveDir);
+                
+                InvalidateView();
+            }
+        }
+
+        private void HandleToolUpdates(Vector3 mouseRay, Vector3 direction)
+        {
+            float magnitudeMultiplier = 50;
+            Vector3 magnitude = (mouseRay - prevMouseRay) * magnitudeMultiplier;
+
+            switch (currentTool)
+            {
+                case TranslationTool t:
+                    selectedObject.Translate(direction * magnitude);
+                    break;
+                case RotationTool t:
+                    selectedObject.Rotate(direction * magnitude);
+                    break;
+                case ScalingTool t:
+                    selectedObject.Scale(direction * magnitude + Vector3.One);
+                    break;
+                case VertexTranslationTool t:
+                    if (selectedObject is Spline spline)
+                    {
+                        spline.TranslateVertex(currentSplineVertex, direction * magnitude);
+                        if (hook != null && hook.hookWorking)
+                        {
+                            hook.HandleSplineTranslation(level, spline, currentSplineVertex);
+                        }
+                    }
+                    break;
+            }
+
             InvalidateView();
         }
 
@@ -657,121 +640,39 @@ namespace Replanetizer.Frames
             }
             
             HandleMouseWheelChanges();
-
-            float moveSpeed = wnd.IsKeyDown(Keys.LeftShift) ? 40 : 10;
-            if (wnd.MouseState.IsButtonDown(MouseButton.Right))
-            {
-                camera.rotation.Z -= (wnd.MousePosition.X - lastMouseX) * camera.speed * deltaTime;
-                camera.rotation.X -= (wnd.MousePosition.Y - lastMouseY) * camera.speed * deltaTime;
-                camera.rotation.X = MathHelper.Clamp(camera.rotation.X, 
-                    MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
-
-                Logger.Trace("Rotation, X: {0}, Y: {1}, Z: {2}", 
-                    camera.rotation.X, camera.rotation.Y, camera.rotation.Z);
-                InvalidateView();
-            }
-            
-            if (wnd.MouseState.IsButtonDown(MouseButton.Left))
-            {
-                RenderToFrameBuffer(() =>
-                {
-                    LevelObject obj = GetObjectAtScreenPosition(mousePos, out bool cancelSelection);
-                    if (cancelSelection) return;
-                    SelectObject(obj);
-                });
-            }
-            
-            Vector3 moveDir = GetInputAxes();
-            if (moveDir.Length > 0)
-            {
-                moveDir *= moveSpeed * deltaTime;
-                InvalidateView();
-                
-            }
-
-            lastMouseX = (int) wnd.MousePosition.X;
-            lastMouseY = (int) wnd.MousePosition.Y;
-            
-            if (!invalidate) return;
-            
-            camera.TransformedTranslate(moveDir);
-            Logger.Trace("Position, X: {0}, Y: {1}, Z: {2}", 
-                camera.position.X, camera.position.Y, camera.position.Z);
+            HandleKeyboardShortcuts();
+            CheckForRotationInput(deltaTime);
+            CheckForMovementInput(deltaTime);
 
             view = camera.GetViewMatrix();
-
+            
             Vector3 mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), mousePos);
-            prevMouseRay = mouseRay;
-
-            if (xLock || yLock || zLock)
+            
+            if (wnd.IsMouseButtonDown(MouseButton.Button1))
             {
+                LevelObject obj = null;
+                bool hitTool = false;
                 Vector3 direction = Vector3.Zero;
-                if (xLock) direction = Vector3.UnitX;
-                else if (yLock) direction = Vector3.UnitY;
-                else if (zLock) direction = Vector3.UnitZ;
-                float magnitudeMultiplier = 20;
-                Vector3 magnitude = (mouseRay - prevMouseRay) * magnitudeMultiplier;
-
-
-                switch (currentTool)
+                int tempTextureId = 0;
+                
+                FramebufferRenderer.ToTexture(Width, Height, ref tempTextureId, () =>
                 {
-                    case TranslationTool t:
-                        selectedObject.Translate(direction * magnitude);
-                        break;
-                    case RotationTool t:
-                        selectedObject.Rotate(direction * magnitude);
-                        break;
-                    case ScalingTool t:
-                        selectedObject.Scale(direction * magnitude + Vector3.One);
-                        break;
-                    case VertexTranslationTool t:
-                        if (selectedObject is Spline spline)
-                        {
-                            /*spline.TranslateVertex(currentSplineVertex, direction * magnitude);
-                            //write at 0x346BA1180 + 0xC0 + spline.offset + currentSplineVertex * 0x10;
-                            // List of splines 0x300A51BE0
+                    obj = GetObjectAtScreenPosition(mousePos, ref hitTool, ref direction);
+                });
 
-                            byte[] ptrBuff = new byte[0x04];
-                            int bytesRead = 0;
-                            ReadProcessMemory(processHandle, 0x300A51BE0 + level.splines.IndexOf(spline) * 0x04, ptrBuff, ptrBuff.Length, ref bytesRead);
-                            long splinePtr = ReadUint(ptrBuff, 0) + 0x300000010;
-
-                            byte[] buff = new byte[0x0C];
-                            Vector3 vec = spline.GetVertex(currentSplineVertex);
-                            WriteFloat(buff, 0x00, vec.X);
-                            WriteFloat(buff, 0x04, vec.Y);
-                            WriteFloat(buff, 0x08, vec.Z);
-
-                            WriteProcessMemory(processHandle, splinePtr + currentSplineVertex * 0x10, buff, buff.Length, ref bytesRead);*/
-                        }
-                        break;
+                if (hitTool) 
+                {
+                    HandleToolUpdates(mouseRay, direction);
                 }
-
-                /*
-                if (wnd.MousePosition.Y < 10)
+                else if (!wnd.MouseState.WasButtonDown(MouseButton.Button1))
                 {
-                    wnd.MousePosition = new Vector2(wnd.MousePosition.X, Height - 10);
-                    mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), new Vector2(wnd.MousePosition.X, Height - 10));
-                } else if (wnd.MousePosition.Y > Height - 10)
-                {
-                    wnd.MousePosition = new Vector2(wnd.MousePosition.X, 10);
-                    mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), new Vector2(wnd.MousePosition.X, 10));
+                    SelectObject(obj);
                 }
-
-                if (wnd.MousePosition.X < 10)
-                {
-                    wnd.MousePosition = new Vector2(Width - 10, wnd.MousePosition.Y);
-                    mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), new Vector2(Width - 10, wnd.MousePosition.Y));
-                } else if (wnd.MousePosition.X > Width - 10)
-                {
-                    wnd.MousePosition = new Vector2(10, wnd.MousePosition.Y);
-                    mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), new Vector2(10, wnd.MousePosition.Y));
-                }
-                */
-
-                InvalidateView();
-            }
-
+            } 
+            
+            lastMouseX = (int) wnd.MousePosition.X;
+            lastMouseY = (int) wnd.MousePosition.Y;
+            prevMouseRay = mouseRay;
         }
 
         private Vector3 GetInputAxes()
@@ -965,37 +866,15 @@ namespace Replanetizer.Frames
             if (!initialized) return;
             GL.Viewport(0, 0, Width, Height);
             projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 10000.0f);
+            view = camera.GetViewMatrix();
         }
 
-        /*
-        private void CustomGLControl_MouseDown()
-        {
-            rMouse = e.Button == MouseButtons.Right;
-            lMouse = e.Button == MouseButtons.Left;
-
-            if (e.Button == MouseButtons.Left && level != null)
-            {
-                LevelObject obj = GetObjectAtScreenPosition(e.Location.X, e.Location.Y, out bool cancelSelection);
-
-                if (cancelSelection) return;
-
-                SelectObject(obj);
-            }
-        }
-
-        private void CustomGLControl_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
-        {
-            rMouse = false;
-            lMouse = false;
-            xLock = false;
-            yLock = false;
-            zLock = false;
-        }
-        */
-
-        public LevelObject GetObjectAtScreenPosition(Vector2 pos, out bool hitTool)
+        public LevelObject GetObjectAtScreenPosition(Vector2 pos, ref bool hitTool, ref Vector3 direction)
         {
             LevelObject returnObject = null;
+            hitTool = false;
+            direction = Vector3.Zero;
+            
             int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0, cuboidOffset = 0, sphereOffset = 0, cylinderOffset = 0, type0COffset = 0, tfragOffset = 0;
             
             GL.Viewport(0, 0, Width, Height);
@@ -1078,8 +957,6 @@ namespace Replanetizer.Frames
             Pixel pixel = new Pixel();
             GL.ReadPixels((int) pos.X, Height - (int) pos.Y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixel);
 
-            Logger.Trace("R: {0}, G: {1}, B: {2}, A: {3}", pixel.R, pixel.G, pixel.B, pixel.A);
-
             if (level != null && level.levelVariables != null)
                 GL.ClearColor(level.levelVariables.fogColor);
 
@@ -1088,31 +965,27 @@ namespace Replanetizer.Frames
             {
                 pixel.A = 0;
 
-                bool didHitTool = false;
                 if (pixel.R == 255 && pixel.G == 0 && pixel.B == 0)
                 {
-                    didHitTool = true;
-                    xLock = true;
+                    hitTool = true;
+                    direction = Vector3.UnitX;
                 }
                 else if (pixel.R == 0 && pixel.G == 255 && pixel.B == 0)
                 {
-                    didHitTool = true;
-                    yLock = true;
+                    hitTool = true;
+                    direction = Vector3.UnitY;
                 }
                 else if (pixel.R == 0 && pixel.G == 0 && pixel.B == 255)
                 {
-                    didHitTool = true;
-                    zLock = true;
+                    hitTool = true;
+                    direction = Vector3.UnitZ;
                 }
-
-                if (didHitTool)
+                
+                if (hitTool)
                 {
                     InvalidateView();
-                    hitTool = true;
                     return null;
                 }
-
-
 
                 int id = (int)pixel.ToUInt32();
                 if (enableMoby && id < level.mobs?.Count)
@@ -1222,8 +1095,6 @@ namespace Replanetizer.Frames
 
         protected void OnPaint()
         {
-            OnResize();
-
             worldView = view * projection;
             
             if (level != null && level.levelVariables != null)
@@ -1406,9 +1277,4 @@ namespace Replanetizer.Frames
 
     }
 
-    public class RatchetEventArgs : EventArgs
-    {
-        public LevelObject Object { get; set; }
-    }
-    
 }

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using OpenTK.Graphics.OpenGL4;
 
-namespace Replanetizer.ImGuiTools
+namespace Replanetizer.Utils
 {
     struct UniformFieldInfo
     {

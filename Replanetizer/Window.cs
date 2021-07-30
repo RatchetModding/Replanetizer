@@ -7,7 +7,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using Replanetizer.Frames;
-using Replanetizer.ImGuiTools;
+using Replanetizer.Utils;
 
 namespace Replanetizer
 {

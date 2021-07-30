@@ -4,7 +4,7 @@ using System.Drawing.Imaging;
 using OpenTK.Graphics.OpenGL4;
 using PixelFormat = OpenTK.Graphics.OpenGL4.PixelFormat;
 
-namespace Replanetizer.ImGuiTools
+namespace Replanetizer.Utils
 {
     public enum TextureCoordinate
     {

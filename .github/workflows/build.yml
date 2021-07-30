@@ -22,6 +22,11 @@ jobs:
       - run: dotnet publish -c Release -o /tmp/out-win/replanetizer --self-contained --runtime win-x86 Replanetizer
       - run: cd /tmp/out-win/ && zip -r /tmp/zips/replanetizer-win-x86.zip replanetizer
 
+      - uses: naminodarie/get-net-sdk-project-versions-action@v1
+        id: get-version
+        with:
+            proj-path: Replanetizer/Replanetizer.csproj
+
       - uses: actions/upload-artifact@v1
         with:
             name: zips
@@ -33,10 +38,10 @@ jobs:
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-            tag_name: build-${{ github.sha }}
-            release_name: Build ${{ github.sha }}
+            tag_name: ${{steps.get-version.outputs.informational-version}}
+            release_name: v${{steps.get-version.outputs.informational-version}}
             draft: false
-            prerelease: true
+            prerelease: false
 
       - name: Upload Release Asset Linux
         if: github.ref == 'refs/heads/master'

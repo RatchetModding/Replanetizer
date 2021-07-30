@@ -12,23 +12,38 @@ jobs:
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '5.0.103' # SDK Version to use.
+
       - run: dotnet --list-runtimes && dotnet --list-sdks
+        name: Output dotnet versions for debugging
+
       - run: git submodule update --init
+        name: Ensure submodules are present and up to date
+
       - run: mkdir -p /tmp/zips
+        name: Create output directory
 
       - run: dotnet publish -c Release -o /tmp/out-linux/replanetizer --self-contained --runtime linux-x64 Replanetizer
+        name: Build Replanetizer for Linux
+
       - run: echo ::set-output name=release_name::$(grep -m 1 'InformationalVersionAttribute' Replanetizer/obj/Release/*/*/Replanetizer.AssemblyInfo.cs | cut -d '"' -f 2)
         id: get-version
         name: Get Informational Version Attribute
+
       - run: cd /tmp/out-linux/ && zip -r /tmp/zips/replanetizer-${{steps.get-version.outputs.release_name}}-linux-x64.zip replanetizer
+        name: Zip up Replanetizer for Linux
 
       - run: dotnet publish -c Release -o /tmp/out-win/replanetizer --self-contained --runtime win-x86 Replanetizer
+        name: Build Replanetizer for Windows
+
       - run: cd /tmp/out-win/ && zip -r /tmp/zips/replanetizer-${{steps.get-version.outputs.release_name}}-win-x86.zip replanetizer
+        name: Zip up Replanetizer for Windows
 
       - uses: actions/upload-artifact@v1
+        name: Upload zips to GitHub actions artifact storage
         with:
             name: zips
             path: /tmp/zips
+
       - name: Create Release
         id: create_release
         if: github.ref == 'refs/heads/master'
@@ -48,8 +63,8 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
             upload_url: ${{ steps.create_release.outputs.upload_url }} 
-            asset_name: replanetizer-linux-x64.zip
-            asset_path: /tmp/zips/replanetizer-linux-x64.zip
+            asset_name: replanetizer-${{steps.get-version.outputs.release_name}}-linux-x64.zip
+            asset_path: /tmp/zips/replanetizer-${{steps.get-version.outputs.release_name}}-linux-x64.zip
             asset_content_type: application/zip
 
       - name: Upload Release Asset Windows
@@ -59,6 +74,6 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
             upload_url: ${{ steps.create_release.outputs.upload_url }} 
-            asset_name: replanetizer-win-x86.zip
-            asset_path: /tmp/zips/replanetizer-win-x86.zip
+            asset_name: replanetizer-${{steps.get-version.outputs.release_name}}-win-x86.zip
+            asset_path: /tmp/zips/replanetizer-${{steps.get-version.outputs.release_name}}-win-x86.zip
             asset_content_type: application/zip

@@ -34,6 +34,11 @@ namespace Replanetizer.Frames
 
         private void SelectionCallback(object o)
         {
+            if (o == null)
+            {
+                isOpen = false;
+                return;
+            }
             selectedObject = o;
             RecomputeProperties();
         }

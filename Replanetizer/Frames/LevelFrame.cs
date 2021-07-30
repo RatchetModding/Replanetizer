@@ -54,6 +54,7 @@ namespace Replanetizer.Frames
 
         private Vector2 mousePos;
         private Vector3 prevMouseRay;
+        private Rectangle contentRegion;
         private int lastMouseX, lastMouseY;
 
         public bool initialized, invalidate;
@@ -76,8 +77,8 @@ namespace Replanetizer.Frames
         private List<int> collisionIbo = new List<int>();
 
         private int Width, Height;
-        private int targetTexture, bufferTexture, framebufferId;
-
+        private int targetTexture;
+        
         private List<LevelSubFrame> subFrames;
         private List<Action<LevelObject>> selectionCallbacks;
 
@@ -189,6 +190,19 @@ namespace Replanetizer.Frames
                     ImGui.EndMenu();
                 }
 
+                if (ImGui.BeginMenu("Tools"))
+                {
+                    if (ImGui.MenuItem("Translate        [1]")) SelectTool(translateTool);
+                    if (ImGui.MenuItem("Rotate           [2]")) SelectTool(rotationTool);
+                    if (ImGui.MenuItem("Scale            [3]")) SelectTool(scalingTool);
+                    if (ImGui.MenuItem("Vertex translate [4]")) SelectTool(vertexTranslator);
+                    if (ImGui.MenuItem("No tool          [5]")) SelectTool(null);
+                    if (ImGui.MenuItem("Delete object  [Del]")) DeleteObject(selectedObject);
+                    if (ImGui.MenuItem("Deselect object")) SelectObject(null);
+                    
+                    ImGui.EndMenu();
+                }
+                    
                 if (selectedChunks.Length > 0)
                 {
                     if (ImGui.BeginMenu("Chunks"))
@@ -227,6 +241,7 @@ namespace Replanetizer.Frames
             System.Numerics.Vector2 windowPos = ImGui.GetWindowPos();
             Vector2 windowZero = new Vector2(windowPos.X + vMin.X, windowPos.Y + vMin.Y);
             mousePos = wnd.MousePosition - windowZero;
+            contentRegion = new Rectangle((int)windowZero.X, (int)windowZero.Y, Width, Height);
         }
 
         public override void Render(float deltaTime)
@@ -526,7 +541,43 @@ namespace Replanetizer.Frames
 
         public void DeleteObject(LevelObject levelObject)
         {
+            if (levelObject == null) return;
             SelectObject(null);
+            switch (levelObject)
+            {
+                case Moby moby:
+                    //objectTree.mobyNode.Nodes[level.mobs.IndexOf(moby)].Remove();
+                    level.mobs.Remove(moby);
+                    break;
+                case Tie tie:
+                    //objectTree.tieNode.Nodes[level.ties.IndexOf(tie)].Remove();
+                    level.ties.Remove(tie);
+                    //level.ties.RemoveRange(1, level.ties.Count - 1);
+                    //level.tieModels.RemoveRange(1, level.tieModels.Count - 1);
+                    //level.ties.Clear();
+                    break;
+                case Shrub shrub:
+                    level.shrubs.Remove(shrub);
+                    //level.shrubs.Clear();
+                    //level.shrubModels.RemoveAt(level.shrubModels.Count -1);
+                    //level.shrubModels.RemoveRange(5, level.shrubModels.Count - 5);
+                    break;
+                case TerrainFragment tFrag:
+                    foreach (List<TerrainFragment> list in level.terrainChunks)
+                    {
+                        list.Remove(tFrag);
+                    }
+                    break;
+                case Spline spline:
+                    level.splines.Remove(spline);
+                    break;
+                case Cuboid cuboid:
+                    level.cuboids.Remove(cuboid);
+                    break;
+                case Type0C type0C:
+                    level.type0Cs.Remove(type0C);
+                    break;
+            }
         }
 
         private void HandleMouseWheelChanges()
@@ -634,10 +685,8 @@ namespace Replanetizer.Frames
 
         public void Tick(float deltaTime)
         {
-            if (!ImGui.IsWindowHovered())
-            {
-                return;
-            }
+            Point absoluteMousePos = new Point((int)wnd.MousePosition.X, (int)wnd.MousePosition.Y);
+            if (!ImGui.IsWindowHovered() || !contentRegion.Contains(absoluteMousePos)) return;
             
             HandleMouseWheelChanges();
             HandleKeyboardShortcuts();

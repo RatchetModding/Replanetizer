@@ -18,9 +18,9 @@ namespace Replanetizer.Frames
             itemSizeX = listSize.X + ImGui.GetStyle().ItemSpacing.X;
         }
 
-        private void RenderTextureList(List<Texture> textures)
+        private void RenderTextureList(List<Texture> textures, int additionalOffset = 0)
         {
-            var width = ImGui.GetWindowContentRegionWidth();
+            var width = ImGui.GetWindowContentRegionWidth() - additionalOffset;
             var itemsPerRow = (int) Math.Floor(width / itemSizeX);
 
             int i = 0;
@@ -66,7 +66,7 @@ namespace Replanetizer.Frames
                         var textureList = level.armorTextures[i];
                         if (ImGui.TreeNode("Armor " + i))
                         {
-                            //var offset = (int) ImGui.GetTreeNodeToLabelSpacing();
+                            var offset = (int) ImGui.GetTreeNodeToLabelSpacing();
                             RenderTextureList(textureList);
                             ImGui.TreePop();
                         }
@@ -78,7 +78,7 @@ namespace Replanetizer.Frames
                     {
                         if (ImGui.TreeNode("Mission " + mission.missionID))
                         {
-                            //var offset = (int) ImGui.GetTreeNodeToLabelSpacing();
+                            var offset = (int) ImGui.GetTreeNodeToLabelSpacing();
                             RenderTextureList(mission.textures);
                             ImGui.TreePop();
                         }

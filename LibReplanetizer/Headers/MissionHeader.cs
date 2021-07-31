@@ -30,25 +30,14 @@ namespace LibReplanetizer.Headers
          */
         public static List<string> FindMissionFiles(GameType game, string enginePath)
         {
-            string dir = Directory.GetParent(enginePath).FullName;
+            string dir = Path.GetDirectoryName(enginePath);
+            
             List<string> files = new List<string>();
 
             switch (game.num)
             {
-                case 1:
-                case 2:
-                case 3:
-                    break;
                 case 4:
-                    for (int i = 0; i < 50; i++)
-                    {
-                        if (File.Exists(dir + @"\gameplay_mission_classes[" + i + "].ps3"))
-                        {
-                            files.Add(dir + @"\gameplay_mission_classes[" + i + "].ps3");
-                        }
-                    }
-                    break;
-                default:
+                    files.AddRange(Directory.GetFiles(dir, "gameplay_mission_classes[*].ps3"));
                     break;
             }
 

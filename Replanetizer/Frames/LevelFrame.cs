@@ -168,6 +168,10 @@ namespace Replanetizer.Frames
                         subFrames.Add(new PropertyFrame(this.wnd, this, 
                             followObject: false, overrideFrameName: "Level variables", selectedObject: level.levelVariables));
                     }
+                    if (ImGui.MenuItem("Texture viewer"))
+                    {
+                        subFrames.Add(new TextureFrame(this.wnd, this));
+                    }
                     ImGui.EndMenu();
                 }
 

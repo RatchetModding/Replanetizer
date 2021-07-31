@@ -156,7 +156,7 @@ namespace Replanetizer.Frames
                 {
                     if (ImGui.MenuItem("Object properties"))
                     {
-                        subFrames.Add(new PropertyFrame(this.wnd, this));
+                        if (selectedObject != null) subFrames.Add(new PropertyFrame(this.wnd, this));
                     }
                     if (ImGui.MenuItem("Light config"))
                     {

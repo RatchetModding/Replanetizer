@@ -32,7 +32,7 @@ jobs:
       - run: cd /tmp/out-linux/ && zip -r /tmp/zips/replanetizer-${{steps.get-version.outputs.release_name}}-linux-x64.zip replanetizer
         name: Zip up Replanetizer for Linux
 
-      - run: dotnet publish -c Release -o /tmp/out-win/replanetizer --runtime win-x64 Replanetizer
+      - run: dotnet publish -c Release -o /tmp/out-win/replanetizer --self-contained --runtime win-x64 --framework net5.0-windows Replanetizer
         name: Build Replanetizer for Windows
 
       - run: cd /tmp/out-win/ && zip -r /tmp/zips/replanetizer-${{steps.get-version.outputs.release_name}}-win-x64.zip replanetizer

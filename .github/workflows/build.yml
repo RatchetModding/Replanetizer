@@ -65,8 +65,8 @@ jobs:
       - uses: actions/upload-artifact@v2
         name: Upload zips to GitHub actions artifact storage
         with:
-            name: replanetizer-${{needs.build_linux.outputs.release_name}}-windows-x64.zip
-            path: /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-windows-x64.zip
+            name: replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
+            path: /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
 
   release:
     runs-on: ubuntu-20.04

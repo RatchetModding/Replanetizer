@@ -59,7 +59,7 @@ jobs:
       - run: dotnet publish -c Release -o /tmp/out-win/replanetizer --self-contained --runtime win-x64 --framework net5.0-windows Replanetizer
         name: Build Replanetizer for Windows
 
-      - run: cd /tmp/out-win/ && zip -r /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip replanetizer
+      - run: Compress-Archive -Path /tmp/out-win/replanetizer -DestinationPath /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
         name: Zip up Replanetizer for Windows
 
       - uses: actions/upload-artifact@v2

@@ -32,10 +32,10 @@ jobs:
       - run: cd /tmp/out-linux/ && zip -r /tmp/zips/replanetizer-${{steps.get-version.outputs.release_name}}-linux-x64.zip replanetizer
         name: Zip up Replanetizer for Linux
 
-      - run: dotnet publish -c Release -o /tmp/out-win/replanetizer --self-contained --runtime win-x86 Replanetizer
+      - run: dotnet publish -c Release -o /tmp/out-win/replanetizer --self-contained --runtime win-x64 Replanetizer
         name: Build Replanetizer for Windows
 
-      - run: cd /tmp/out-win/ && zip -r /tmp/zips/replanetizer-${{steps.get-version.outputs.release_name}}-win-x86.zip replanetizer
+      - run: cd /tmp/out-win/ && zip -r /tmp/zips/replanetizer-${{steps.get-version.outputs.release_name}}-win-x64.zip replanetizer
         name: Zip up Replanetizer for Windows
 
       - uses: actions/upload-artifact@v1
@@ -74,6 +74,6 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
             upload_url: ${{ steps.create_release.outputs.upload_url }} 
-            asset_name: replanetizer-${{steps.get-version.outputs.release_name}}-win-x86.zip
-            asset_path: /tmp/zips/replanetizer-${{steps.get-version.outputs.release_name}}-win-x86.zip
+            asset_name: replanetizer-${{steps.get-version.outputs.release_name}}-win-x64.zip
+            asset_path: /tmp/zips/replanetizer-${{steps.get-version.outputs.release_name}}-win-x64.zip
             asset_content_type: application/zip

@@ -1,20 +1,27 @@
 ﻿using LibReplanetizer;
 using LibReplanetizer.Models;
-using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
+using ImGuiNET;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using Replanetizer.Frames;
+using Replanetizer.Utils;
+using Texture = LibReplanetizer.Texture;
 
-namespace RatchetEdit
+
+namespace Replanetizer
 {
-    public partial class ModelViewer : Form
+    public class ModelFrame : LevelSubFrame
     {
-        private Main mainForm;
-        private Level level;
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        protected override string frameName { get; set; } = "Models";
+        
+        private Level level => levelFrame.level;
         private Model selectedModel;
         private List<Texture> selectedTextureSet;
 
@@ -24,23 +31,22 @@ namespace RatchetEdit
         private float xDelta;
         private float zoom;
 
-        private bool invalidate;
-        private bool rMouse;
+        private bool invalidate = true, initialized = false;
 
         private Matrix4 trans, scale, worldView, rot = Matrix4.Identity;
 
-        private TreeNode mobyNode, tieNode, shrubNode, gadgetNode, armorNode, missionsNode;
+        //private TreeNode mobyNode, tieNode, shrubNode, gadgetNode, armorNode, missionsNode;
 
         private BufferContainer container;
+        private Rectangle contentRegion;
+        private Vector2 mousePos;
+        private int Width, Height;
+        private int targetTexture;
 
-        public ModelViewer(Main main, Model model)
+        public ModelFrame(Window wnd, LevelFrame levelFrame, Model model = null) : base(wnd, levelFrame)
         {
-            InitializeComponent();
-
-            mainForm = main;
-            level = main.level;
-
             //Setup model tree
+            /*
             if (level != null)
             {
                 mobyNode = GetModelNodes("Moby", level.mobyModels);
@@ -51,15 +57,67 @@ namespace RatchetEdit
                 missionsNode = GetMissionsNodes("Mission", level.missions);
                 modelView.Nodes.AddRange(new TreeNode[] { mobyNode, tieNode, shrubNode, gadgetNode, armorNode, missionsNode });
             }
+            */
 
             SelectModel(model);
         }
-
-        private void ModelViewer_Load(object sender, EventArgs e)
+        
+        public override void Render(float deltaTime)
         {
-            glControl.MakeCurrent();
+            if (!initialized) ModelViewer_Load();
+            if (!ImGui.Begin(frameName, ref isOpen)) return;
+            
+            UpdateWindowSize();
+            Tick(deltaTime);
+
+            if (invalidate)
+            {
+                FramebufferRenderer.ToTexture(Width, Height, ref targetTexture, () => {
+                    //Setup openGL variables
+                    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+                    GL.Enable(EnableCap.DepthTest);
+                    GL.LineWidth(5.0f);
+                    GL.Viewport(0, 0, Width, Height);
+                    
+                    OnPaint();
+                });
+
+                invalidate = false;
+            }
+            ImGui.Image((IntPtr) targetTexture, new System.Numerics.Vector2(Width, Height), 
+                System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
+
+            ImGui.End();
+        }
+
+        private void UpdateWindowSize()
+        {
+            int prevWidth = Width, prevHeight = Height;
+
+            System.Numerics.Vector2 vMin = ImGui.GetWindowContentRegionMin();
+            System.Numerics.Vector2 vMax = ImGui.GetWindowContentRegionMax();
+
+            Width = (int) (vMax.X - vMin.X);
+            Height = (int) (vMax.Y - vMin.Y);
+
+            if (Width <= 0 || Height <= 0) return; 
+
+            if (Width != prevWidth || Height != prevHeight)
+            {
+                invalidate = true;
+                OnResize();
+            }
+
+            System.Numerics.Vector2 windowPos = ImGui.GetWindowPos();
+            Vector2 windowZero = new Vector2(windowPos.X + vMin.X, windowPos.Y + vMin.Y);
+            mousePos = wnd.MousePosition - windowZero;
+            contentRegion = new Rectangle((int)windowZero.X, (int)windowZero.Y, Width, Height);
+        }
+        
+        private void ModelViewer_Load()
+        {
             GL.ClearColor(Color.SkyBlue);
-            shaderID = mainForm.GetShaderID();
+            shaderID = levelFrame.shaderID;
 
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
 
@@ -75,6 +133,7 @@ namespace RatchetEdit
             GL.BindVertexArray(VAO);
         }
 
+        /*
         public TreeNode GetModelNodes(string name, List<Model> models)
         {
             TreeNode newNode = new TreeNode(name);
@@ -100,12 +159,13 @@ namespace RatchetEdit
 
             return newNode;
         }
+        */
 
         public void UpdateModel()
         {
             scale = Matrix4.CreateScale(selectedModel.size);
             invalidate = true;
-            modelProperties.SelectedObject = selectedModel;
+            //modelProperties.SelectedObject = selectedModel;
             UpdateTextures();
 
             container = BufferContainer.FromRenderable(selectedModel);
@@ -114,6 +174,7 @@ namespace RatchetEdit
 
         private void UpdateTextures()
         {
+            /*
             textureList.Images.Clear();
             textureView.Items.Clear();
 
@@ -129,8 +190,10 @@ namespace RatchetEdit
                     Text = textureId.ToString()
                 });
             }
+            */
         }
 
+        /*
         private void modelView_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (e.Node.Level == 1)
@@ -173,6 +236,7 @@ namespace RatchetEdit
                 UpdateModel();
             }
         }
+        */
 
         private void SelectModel(Model model)
         {
@@ -181,6 +245,7 @@ namespace RatchetEdit
             selectedModel = model;
             selectedTextureSet = level.textures;
 
+            /*
             switch (model)
             {
                 case MobyModel mobyModel:
@@ -193,20 +258,20 @@ namespace RatchetEdit
                     modelView.SelectedNode = shrubNode.Nodes[level.shrubModels.IndexOf(shrubModel)];
                     break;
             }       
+            */
 
             UpdateModel();
         }
 
         private Matrix4 CreateWorldView()
         {
-            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)glControl.Width / glControl.Height, 0.1f, 100.0f);
+            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 100.0f);
             Matrix4 view = Matrix4.LookAt(new Vector3(10 + zoom, 10 + zoom, 10 + zoom), Vector3.Zero, Vector3.UnitZ);
             return view * projection;
         }
 
-        private void glControl1_Paint(object sender, PaintEventArgs e)
+        private void OnPaint()
         {
-            glControl.MakeCurrent();
             GL.ClearColor(Color.SkyBlue);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
@@ -228,7 +293,7 @@ namespace RatchetEdit
                 //Bind textures one by one, applying it to the relevant vertices based on the index array
                 foreach (TextureConfig conf in selectedModel.textureConfig)
                 {
-                    GL.BindTexture(TextureTarget.Texture2D, (conf.ID >= 0 && conf.ID < selectedTextureSet.Count) ? mainForm.GetTextureIds()[selectedTextureSet[conf.ID]] : 0);
+                    GL.BindTexture(TextureTarget.Texture2D, (conf.ID >= 0 && conf.ID < selectedTextureSet.Count) ? levelFrame.textureIds[selectedTextureSet[conf.ID]] : 0);
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
 
@@ -236,47 +301,36 @@ namespace RatchetEdit
                 GL.DisableVertexAttribArray(0);
             }
 
-            glControl.SwapBuffers();
-
             invalidate = false;
         }
 
-        private void glControl1_MouseWheel(object sender, MouseEventArgs e)
+        private void glControl1_MouseWheel(float deltaTime)
         {
-            zoom += (e.Delta > 0) ? -0.1f : 0.1f;
+            zoom += (deltaTime > 0) ? -0.1f : 0.1f;
             worldView = CreateWorldView();
             invalidate = true;
         }
 
 
-        private void tickTimer_Tick(object sender, EventArgs e)
+        private void Tick(float deltaTime)
         {
-            if (rMouse)
+            Point absoluteMousePos = new Point((int)wnd.MousePosition.X, (int)wnd.MousePosition.Y);
+            if (!ImGui.IsWindowHovered() || !contentRegion.Contains(absoluteMousePos)) return;
+            
+            if (wnd.IsMouseButtonDown(MouseButton.Right))
             {
-                xDelta += (Cursor.Position.X - lastMouseX) * 0.02f;
+                xDelta += (wnd.MousePosition.X - lastMouseX) * deltaTime;
                 rot = Matrix4.CreateRotationZ(xDelta);
-                lastMouseX = Cursor.Position.X;
+                lastMouseX = (int) wnd.MousePosition.X;
                 invalidate = true;
             }
             if (invalidate)
             {
-                glControl.Invalidate();
+                invalidate = true;
             }
         }
 
-
-        private void glControl1_MouseDown(object sender, MouseEventArgs e)
-        {
-            lastMouseX = Cursor.Position.X;
-            rMouse = true;
-        }
-
-        private void glControl1_MouseUp(object sender, MouseEventArgs e)
-        {
-            rMouse = false;
-        }
-
-        private void glControl1_Resize(object sender, EventArgs e)
+        private void OnResize()
         {
             worldView = CreateWorldView();
             invalidate = true;
@@ -286,6 +340,7 @@ namespace RatchetEdit
          * Opens TextureViewer and allows to switch out textures
          * Does not allow to switch textures between texture sources
          */
+        /*
         private void textureView_DoubleClick(object sender, EventArgs e)
         {
             using (TextureViewer textureViewer = new TextureViewer(mainForm))
@@ -334,5 +389,6 @@ namespace RatchetEdit
                 }
             }
         }
+        */
     }
 }

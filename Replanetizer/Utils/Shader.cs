@@ -15,6 +15,8 @@ namespace Replanetizer.Utils
 
     class Shader
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        
         public readonly string Name;
         public int Program { get; private set; }
         private readonly Dictionary<string, int> UniformToLocation = new Dictionary<string, int>();
@@ -103,7 +105,7 @@ namespace Replanetizer.Utils
             if (Success == 0)
             {
                 string Info = GL.GetProgramInfoLog(Program);
-                Debug.WriteLine($"GL.LinkProgram had info log [{name}]:\n{Info}");
+                Logger.Debug("GL.LinkProgram had info log [{0}]:\n{1}", name, Info);
             }
 
             foreach (var Shader in Shaders)
@@ -127,7 +129,7 @@ namespace Replanetizer.Utils
             if (success == 0)
             {
                 string Info = GL.GetShaderInfoLog(Shader);
-                Debug.WriteLine($"GL.CompileShader for shader '{Name}' [{type}] had info log:\n{Info}");
+                Logger.Debug("GL.CompileShader for shader '{0}' [{1}] had info log:\n{2}", name, type, Info);
             }
             
             return Shader;

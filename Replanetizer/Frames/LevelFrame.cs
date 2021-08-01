@@ -158,6 +158,14 @@ namespace Replanetizer.Frames
                     {
                         if (selectedObject != null) subFrames.Add(new PropertyFrame(this.wnd, this));
                     }
+                    if (ImGui.MenuItem("Model viewer"))
+                    {
+                        subFrames.Add(new ModelFrame(this.wnd, this));
+                    }
+                    if (ImGui.MenuItem("Texture viewer"))
+                    {
+                        subFrames.Add(new TextureFrame(this.wnd, this));
+                    }
                     if (ImGui.MenuItem("Light config"))
                     {
                         subFrames.Add(new PropertyFrame(this.wnd, this, 
@@ -167,10 +175,6 @@ namespace Replanetizer.Frames
                     {
                         subFrames.Add(new PropertyFrame(this.wnd, this, 
                             followObject: false, overrideFrameName: "Level variables", selectedObject: level.levelVariables));
-                    }
-                    if (ImGui.MenuItem("Texture viewer"))
-                    {
-                        subFrames.Add(new TextureFrame(this.wnd, this));
                     }
                     ImGui.EndMenu();
                 }
@@ -701,7 +705,7 @@ namespace Replanetizer.Frames
             
             Vector3 mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), mousePos);
             
-            if (wnd.IsMouseButtonDown(MouseButton.Button1))
+            if (wnd.IsMouseButtonDown(MouseButton.Left))
             {
                 LevelObject obj = null;
                 bool hitTool = false;
@@ -717,7 +721,7 @@ namespace Replanetizer.Frames
                 {
                     HandleToolUpdates(mouseRay, direction);
                 }
-                else if (!wnd.MouseState.WasButtonDown(MouseButton.Button1))
+                else if (!wnd.MouseState.WasButtonDown(MouseButton.Left))
                 {
                     SelectObject(obj);
                 }

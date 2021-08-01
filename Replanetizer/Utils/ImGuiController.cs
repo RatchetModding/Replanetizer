@@ -15,6 +15,8 @@ namespace Replanetizer.Utils
     /// </summary>
     public class ImGuiController : IDisposable
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        
         private bool _frameBegun;
 
         private int _vertexArray;
@@ -23,7 +25,7 @@ namespace Replanetizer.Utils
         private int _indexBuffer;
         private int _indexBufferSize;
 
-        private Texture _fontTexture;
+        private GLTexture _fontGlTexture;
         private Shader _shader;
         
         private int _windowWidth;
@@ -140,12 +142,11 @@ void main()
             ImGuiIOPtr io = ImGui.GetIO();
             io.Fonts.GetTexDataAsRGBA32(out IntPtr pixels, out int width, out int height, out int bytesPerPixel);
 
-            _fontTexture = new Texture("ImGui Text Atlas", width, height, pixels);
-            _fontTexture.SetMagFilter(TextureMagFilter.Linear);
-            _fontTexture.SetMinFilter(TextureMinFilter.Linear);
+            _fontGlTexture = new GLTexture("ImGui Text Atlas", width, height, pixels);
+            _fontGlTexture.SetMagFilter(TextureMagFilter.Linear);
+            _fontGlTexture.SetMinFilter(TextureMinFilter.Linear);
             
-            io.Fonts.SetTexID((IntPtr)_fontTexture.GLTexture);
-
+            io.Fonts.SetTexID((IntPtr)_fontGlTexture.Texture);
             io.Fonts.ClearTexData();
         }
 
@@ -305,7 +306,7 @@ void main()
                     GL.NamedBufferData(_vertexBuffer, newSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
                     _vertexBufferSize = newSize;
 
-                    Console.WriteLine($"Resized dear imgui vertex buffer to new size {_vertexBufferSize}");
+                    Logger.Info("Resized dear imgui vertex buffer to new size {0}", _vertexBufferSize);
                 }
 
                 int indexSize = cmd_list.IdxBuffer.Size * sizeof(ushort);
@@ -315,7 +316,7 @@ void main()
                     GL.NamedBufferData(_indexBuffer, newSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
                     _indexBufferSize = newSize;
 
-                    Console.WriteLine($"Resized dear imgui index buffer to new size {_indexBufferSize}");
+                    Logger.Info("Resized dear imgui vertex buffer to new size {0}", _indexBufferSize);
                 }
             }
 
@@ -403,7 +404,7 @@ void main()
         /// </summary>
         public void Dispose()
         {
-            _fontTexture.Dispose();
+            _fontGlTexture.Dispose();
             _shader.Dispose();
         }
     }

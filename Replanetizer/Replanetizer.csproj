@@ -72,21 +72,12 @@
     <None Update="ModelLists\TieModelsRC1.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Remove="Forms\**" />
-    <None Remove="CustomControls\**" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Update="Frames\LevelFrame">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Remove="Forms\**" />
-    <Compile Remove="CustomControls\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Remove="Forms\**" />
-    <EmbeddedResource Remove="CustomControls\**" />
   </ItemGroup>
 
   <Target Name="SetSourceRevisionId" BeforeTargets="InitializeSourceControlInformation">

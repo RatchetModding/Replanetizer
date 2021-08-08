@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using ImGuiNET;
 using LibReplanetizer;
 using LibReplanetizer.Models;
@@ -48,10 +49,9 @@ namespace Replanetizer.Frames
             SelectModel(model);
         }
 
-        private void RenderModelEntry(Model mod, List<Texture> textureSet)
+        private void RenderModelEntry(Model mod, List<Texture> textureSet, string name)
         {
-            var text = mod?.id.ToString("X");
-            if (ImGui.Selectable(text, selectedModel == mod))
+            if (ImGui.Selectable(name, selectedModel == mod))
             {
                 selectedModel = mod;
                 selectedTextureSet = textureSet;
@@ -63,9 +63,11 @@ namespace Replanetizer.Frames
         {
             if (ImGui.TreeNode(name))
             {
-                foreach (Model mod in models)
+                for (int i = 0; i < models.Count; i++)
                 {
-                    RenderModelEntry(mod, textureSet);
+                    Model mod = models[i];
+                    name = $"{mod.id:X}## {i}";
+                    RenderModelEntry(mod, textureSet, name);
                 }
                 ImGui.TreePop();
             }
@@ -86,18 +88,18 @@ namespace Replanetizer.Frames
                     for (int i = 0; i < level.armorModels.Count; i++)
                     {
                         Model armor = level.armorModels[i];
-                        RenderModelEntry(armor, level.armorTextures[i]);
+                        RenderModelEntry(armor, level.armorTextures[i], i.ToString("X"));
                     }
                     ImGui.TreePop();
                 }
-                for (int i = 0; i < level.missions.Count; i++)
+                if (ImGui.TreeNode("Missions"))
                 {
-                    var mission = level.missions[i];
-                    if (ImGui.TreeNode("Missions"))
+                    for (int i = 0; i < level.missions.Count; i++)
                     {
+                        var mission = level.missions[i];
                         RenderSubTree("Mission " + i, mission.models, mission.textures);
-                        ImGui.TreePop();
                     }
+                    ImGui.TreePop();
                 }
                 ImGui.EndChild();
             }
@@ -290,7 +292,7 @@ namespace Replanetizer.Frames
 
             if (wnd.MouseState.ScrollDelta.Y != 0)
             {
-                zoom += wnd.MouseState.ScrollDelta.Y * 0.1f;
+                zoom -= wnd.MouseState.ScrollDelta.Y * 0.1f;
                 worldView = CreateWorldView();
                 invalidate = true;
             }

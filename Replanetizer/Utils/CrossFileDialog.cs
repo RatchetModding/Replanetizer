@@ -132,24 +132,47 @@ namespace Replanetizer.Utils
 
         private static class KDialog
         {
+            private static string RunKDialog(List<string> args = null, Dictionary<string, string> kwargs = null)
+            {
+                List<string> zArgs = new List<string>();
+                if (args != null)
+                    foreach (string arg in args)
+                        zArgs.Add("--" + arg);
+
+                if (kwargs != null)
+                    foreach (var entry in kwargs)
+                    {
+                        zArgs.Add("--" + entry.Key);
+                        zArgs.Add(entry.Value);
+                    }
+                
+                return RunProcess("kdialog", zArgs);
+            }
+            
             public static string OpenFile(string title, string filter = "")
             {
-                throw new NoImplementationException();
+                return RunKDialog(new List<string>() { "getopenfilename" },
+                    new Dictionary<string, string>() { { "title", title } });
             }
             
             public static List<string> OpenMultipleFiles(string title)
             {
-                throw new NoImplementationException();
+                var result = RunKDialog(new List<string>() { "getopenfilename", "multiple" },
+                    new Dictionary<string, string>() { { "title", title } });
+                
+                return result.Split(' ').ToList();
             }
             
             public static string SaveFile(string title)
             {
-                throw new NoImplementationException();
+                return RunKDialog(new List<string>() { "getsavefilename" },
+                    new Dictionary<string, string>() { { "title", title } });
             }
             
             public static string OpenFolder(string title)
             {
-                throw new NoImplementationException();
+                return RunKDialog(new List<string>() { "getexistingdirectory" },
+                    new Dictionary<string, string>() { { "title", title } });
             }
         }
         

@@ -4,8 +4,6 @@ using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.Text.RegularExpressions;
 using ImGuiNET;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -24,6 +22,7 @@ namespace Replanetizer
         private Level level => levelFrame.level;
         private Model selectedModel;
         private List<Texture> selectedTextureSet;
+        private List<Texture> modelTextureList;
 
         private int shaderID, matrixID;
 
@@ -35,38 +34,86 @@ namespace Replanetizer
 
         private Matrix4 trans, scale, worldView, rot = Matrix4.Identity;
 
-        //private TreeNode mobyNode, tieNode, shrubNode, gadgetNode, armorNode, missionsNode;
-
         private BufferContainer container;
         private Rectangle contentRegion;
         private Vector2 mousePos;
         private int Width, Height;
         private int targetTexture;
+        private PropertyFrame propertyFrame;
 
         public ModelFrame(Window wnd, LevelFrame levelFrame, Model model = null) : base(wnd, levelFrame)
         {
-            //Setup model tree
-            /*
-            if (level != null)
-            {
-                mobyNode = GetModelNodes("Moby", level.mobyModels);
-                tieNode = GetModelNodes("Tie", level.tieModels);
-                shrubNode = GetModelNodes("Shrub", level.shrubModels);
-                gadgetNode = GetModelNodes("Gadget", level.gadgetModels);
-                armorNode = GetModelNodes("Armor", level.armorModels);
-                missionsNode = GetMissionsNodes("Mission", level.missions);
-                modelView.Nodes.AddRange(new TreeNode[] { mobyNode, tieNode, shrubNode, gadgetNode, armorNode, missionsNode });
-            }
-            */
-
+            modelTextureList = new List<Texture>();
+            propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
             SelectModel(model);
+        }
+
+        private void RenderModelEntry(Model mod, List<Texture> textureSet)
+        {
+            var text = mod?.id.ToString("X");
+            if (ImGui.Selectable(text, selectedModel == mod))
+            {
+                selectedModel = mod;
+                selectedTextureSet = textureSet;
+                UpdateModel();
+            }
+        }
+
+        private void RenderSubTree(string name, List<Model> models, List<Texture> textureSet)
+        {
+            if (ImGui.TreeNode(name))
+            {
+                foreach (Model mod in models)
+                {
+                    RenderModelEntry(mod, textureSet);
+                }
+                ImGui.TreePop();
+            }
+        }
+
+        private void RenderTree()
+        {
+            var colW = ImGui.GetColumnWidth() - 10;
+            var childSize = new System.Numerics.Vector2(colW, Height);
+            if (ImGui.BeginChild("TreeView",  childSize, false, ImGuiWindowFlags.AlwaysVerticalScrollbar))
+            {
+                RenderSubTree("Moby", level.mobyModels, level.textures);
+                RenderSubTree("Tie", level.tieModels, level.textures);
+                RenderSubTree("Shrub", level.shrubModels, level.textures);
+                RenderSubTree("Gadget", level.gadgetModels, level.gadgetTextures);
+                if (ImGui.TreeNode("Armor"))
+                {
+                    for (int i = 0; i < level.armorModels.Count; i++)
+                    {
+                        Model armor = level.armorModels[i];
+                        RenderModelEntry(armor, level.armorTextures[i]);
+                    }
+                    ImGui.TreePop();
+                }
+                for (int i = 0; i < level.missions.Count; i++)
+                {
+                    var mission = level.missions[i];
+                    if (ImGui.TreeNode("Missions"))
+                    {
+                        RenderSubTree("Mission " + i, mission.models, mission.textures);
+                        ImGui.TreePop();
+                    }
+                }
+                ImGui.EndChild();
+            }
         }
         
         public override void Render(float deltaTime)
         {
+            UpdateWindowSize();
             if (!initialized) ModelViewer_Load();
             
-            UpdateWindowSize();
+            ImGui.Columns(3);
+            ImGui.SetColumnWidth(0, 200);
+            ImGui.SetColumnWidth(1, (float) Width);
+            RenderTree();
+            ImGui.NextColumn();
+            
             Tick(deltaTime);
 
             if (invalidate)
@@ -85,6 +132,23 @@ namespace Replanetizer
             }
             ImGui.Image((IntPtr) targetTexture, new System.Numerics.Vector2(Width, Height), 
                 System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
+            
+            ImGui.NextColumn();
+            var colW = ImGui.GetColumnWidth() - 10;
+            var colSize = new System.Numerics.Vector2(colW, Height);
+
+            if (ImGui.BeginChild("TextureAndPropertyView", colSize, false, ImGuiWindowFlags.AlwaysVerticalScrollbar))
+            {
+                ImGui.Columns(1);
+                if (selectedModel != null && modelTextureList.Count > 0)
+                {
+                    TextureFrame.RenderTextureList(modelTextureList, 64, levelFrame.textureIds);
+                }
+                ImGui.NextColumn();
+                propertyFrame.Render(deltaTime);
+            }
+
+            ImGui.Columns(1);
         }
 
         private void UpdateWindowSize()
@@ -94,10 +158,18 @@ namespace Replanetizer
             System.Numerics.Vector2 vMin = ImGui.GetWindowContentRegionMin();
             System.Numerics.Vector2 vMax = ImGui.GetWindowContentRegionMax();
 
+            vMin.X += 220;
+            vMax.X -= 300;
+
             Width = (int) (vMax.X - vMin.X);
             Height = (int) (vMax.Y - vMin.Y);
 
-            if (Width <= 0 || Height <= 0) return; 
+            if (Width <= 0 || Height <= 0)
+            {
+                Width = 0;
+                Height = 0;
+                return;
+            } 
 
             if (Width != prevWidth || Height != prevHeight)
             {
@@ -121,8 +193,6 @@ namespace Replanetizer
             GL.Enable(EnableCap.DepthTest);
             GL.EnableClientState(ArrayCap.VertexArray);
 
-
-
             worldView = CreateWorldView();
             trans = Matrix4.CreateTranslation(0.0f, 0.0f, -5.0f);
 
@@ -130,39 +200,11 @@ namespace Replanetizer
             GL.BindVertexArray(VAO);
         }
 
-        /*
-        public TreeNode GetModelNodes(string name, List<Model> models)
-        {
-            TreeNode newNode = new TreeNode(name);
-            foreach (Model mod in models)
-            {
-                newNode.Nodes.Add(new TreeNode()
-                {
-                    Text = mod?.id.ToString("X"),
-                    ForeColor = mod.vertexBuffer.Length == 0 ? Color.Red : Color.Black
-                });
-            }
-            return newNode;
-        }
-
-        public TreeNode GetMissionsNodes(string name, List<Mission> missions)
-        {
-            TreeNode newNode = new TreeNode(name);
-
-            foreach (Mission mission in missions)
-            {
-                newNode.Nodes.Add(GetModelNodes("mission_" + mission.missionID, mission.models));
-            }
-
-            return newNode;
-        }
-        */
-
         public void UpdateModel()
         {
             scale = Matrix4.CreateScale(selectedModel.size);
             invalidate = true;
-            //modelProperties.SelectedObject = selectedModel;
+            propertyFrame.SelectionCallback(selectedModel);
             UpdateTextures();
 
             container = BufferContainer.FromRenderable(selectedModel);
@@ -171,69 +213,16 @@ namespace Replanetizer
 
         private void UpdateTextures()
         {
-            /*
-            textureList.Images.Clear();
-            textureView.Items.Clear();
-
+            modelTextureList.Clear();
+            
             for (int i = 0; i < selectedModel.textureConfig.Count; i++)
             {
                 int textureId = selectedModel.textureConfig[i].ID;
                 if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
-
-                textureList.Images.Add(selectedTextureSet[textureId].getTextureImage());
-                textureView.Items.Add(new ListViewItem
-                {
-                    ImageIndex = i,
-                    Text = textureId.ToString()
-                });
-            }
-            */
-        }
-
-        /*
-        private void modelView_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            if (e.Node.Level == 1)
-            {
-                switch (e.Node.Parent.Text)
-                {
-                    case "Moby":
-                        selectedModel = level.mobyModels[modelView.SelectedNode.Index];
-                        selectedTextureSet = level.textures;
-                        UpdateModel();
-                        break;
-                    case "Tie":
-                        selectedModel = level.tieModels[modelView.SelectedNode.Index];
-                        selectedTextureSet = level.textures;
-                        UpdateModel();
-                        break;
-                    case "Shrub":
-                        selectedModel = level.shrubModels[modelView.SelectedNode.Index];
-                        selectedTextureSet = level.textures;
-                        UpdateModel();
-                        break;
-                    case "Gadget":
-                        selectedModel = level.gadgetModels[modelView.SelectedNode.Index];
-                        selectedTextureSet = (level.game.num == 1) ? level.textures : level.gadgetTextures;
-                        UpdateModel();
-                        break;
-                    case "Armor":
-                        selectedModel = level.armorModels[modelView.SelectedNode.Index];
-                        selectedTextureSet = level.armorTextures[modelView.SelectedNode.Index];
-                        UpdateModel();
-                        break;
-                }       
-            } else if (e.Node.Level == 2)
-            {
-                int mission = int.Parse(Regex.Match(e.Node.Parent.Text,@"\d+$").Value);
-
-                selectedModel = level.missions[mission].models[modelView.SelectedNode.Index];
-                selectedTextureSet = level.missions[mission].textures;
-
-                UpdateModel();
+                
+                modelTextureList.Add(selectedTextureSet[textureId]);
             }
         }
-        */
 
         private void SelectModel(Model model)
         {
@@ -241,21 +230,6 @@ namespace Replanetizer
 
             selectedModel = model;
             selectedTextureSet = level.textures;
-
-            /*
-            switch (model)
-            {
-                case MobyModel mobyModel:
-                    modelView.SelectedNode = mobyNode.Nodes[level.mobyModels.IndexOf(mobyModel)];
-                    break;
-                case TieModel tieModel:
-                    modelView.SelectedNode = tieNode.Nodes[level.tieModels.IndexOf(tieModel)];
-                    break;
-                case ShrubModel shrubModel:
-                    modelView.SelectedNode = shrubNode.Nodes[level.shrubModels.IndexOf(shrubModel)];
-                    break;
-            }       
-            */
 
             UpdateModel();
         }
@@ -301,18 +275,17 @@ namespace Replanetizer
             invalidate = false;
         }
 
-        private void glControl1_MouseWheel(float deltaTime)
-        {
-            zoom += (deltaTime > 0) ? -0.1f : 0.1f;
-            worldView = CreateWorldView();
-            invalidate = true;
-        }
-
-
         private void Tick(float deltaTime)
         {
             Point absoluteMousePos = new Point((int)wnd.MousePosition.X, (int)wnd.MousePosition.Y);
             if (!ImGui.IsWindowHovered() || !contentRegion.Contains(absoluteMousePos)) return;
+
+            if (wnd.MouseState.ScrollDelta.Y != 0)
+            {
+                zoom += wnd.MouseState.ScrollDelta.Y * 0.1f;
+                worldView = CreateWorldView();
+                invalidate = true;
+            }
             
             if (wnd.IsMouseButtonDown(MouseButton.Right))
             {

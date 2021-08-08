@@ -4,36 +4,35 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Text;
 using ImGuiNET;
-using LibReplanetizer;
 
 
 namespace Replanetizer.Frames
 {
-    public class PropertyFrame : LevelSubFrame
+    public class PropertyFrame : Frame
     {
         protected sealed override string frameName { get; set; } = "Properties";
-        private Level level => levelFrame.level;
-
         private object selectedObject;
+        private bool listenToCallbacks;
+        private bool hideCallbackButton = false;
 
         private Dictionary<string, Dictionary<string, PropertyInfo>> properties;
         
-        public PropertyFrame(Window wnd, LevelFrame levelFrame, bool followObject = true, object selectedObject = null, string overrideFrameName = null) : base(wnd, levelFrame)
+        public PropertyFrame(Window wnd, object selectedObject = null, string overrideFrameName = null, bool listenToCallbacks = false, bool hideCallbackButton = false) : base(wnd)
         {
             if (overrideFrameName != null && overrideFrameName.Length > 0)
             {
                 frameName = overrideFrameName;
             }
             
-            if (followObject) levelFrame.RegisterCallback(this.SelectionCallback);
-
-            if (selectedObject == null) this.selectedObject = levelFrame.selectedObject;
-            else this.selectedObject = selectedObject;
-            RecomputeProperties();
+            this.selectedObject = selectedObject;
+            this.listenToCallbacks = listenToCallbacks;
+            this.hideCallbackButton = hideCallbackButton;
+            if (selectedObject != null) RecomputeProperties();
         }
 
-        private void SelectionCallback(object o)
+        public void SelectionCallback(object o)
         {
+            if (!listenToCallbacks) return;
             if (o == null)
             {
                 isOpen = false;
@@ -79,6 +78,14 @@ namespace Replanetizer.Frames
             {
                 ImGui.Text("Select an object");
                 return;
+            }
+
+            if (!hideCallbackButton && listenToCallbacks)
+            {
+                if (ImGui.Button("Stop following object selection"))
+                {
+                    listenToCallbacks = false;
+                }
             }
             foreach (var categoryPair in properties)
             {

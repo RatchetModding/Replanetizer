@@ -79,18 +79,18 @@ namespace Replanetizer.Frames
         private int Width, Height;
         private int targetTexture;
         
-        private List<LevelSubFrame> subFrames;
+        private List<Frame> subFrames;
         private List<Action<LevelObject>> selectionCallbacks;
 
         public LevelFrame(Window wnd) : base(wnd)
         {
-            subFrames = new List<LevelSubFrame>();
+            subFrames = new List<Frame>();
             selectionCallbacks = new List<Action<LevelObject>>();
             bufferTable = new ConditionalWeakTable<IRenderable, BufferContainer>();
             camera = new Camera();
         }
 
-        public static bool FrameMustClose(LevelSubFrame frame)
+        public static bool FrameMustClose(Frame frame)
         {
             return !frame.isOpen;
         }
@@ -156,7 +156,9 @@ namespace Replanetizer.Frames
                 {
                     if (ImGui.MenuItem("Object properties"))
                     {
-                        if (selectedObject != null) subFrames.Add(new PropertyFrame(this.wnd, this));
+                        var newFrame = new PropertyFrame(this.wnd, selectedObject, listenToCallbacks: true);
+                        RegisterCallback(newFrame.SelectionCallback);
+                        subFrames.Add(newFrame);
                     }
                     if (ImGui.MenuItem("Model viewer"))
                     {
@@ -168,13 +170,11 @@ namespace Replanetizer.Frames
                     }
                     if (ImGui.MenuItem("Light config"))
                     {
-                        subFrames.Add(new PropertyFrame(this.wnd, this, 
-                            followObject: false, overrideFrameName: "Light config", selectedObject: level.lightConfig));
+                        subFrames.Add(new PropertyFrame(this.wnd, level.lightConfig, "Light config"));
                     }
                     if (ImGui.MenuItem("Level variables"))
                     {
-                        subFrames.Add(new PropertyFrame(this.wnd, this, 
-                            followObject: false, overrideFrameName: "Level variables", selectedObject: level.levelVariables));
+                        subFrames.Add(new PropertyFrame(this.wnd, level.levelVariables, "Level variables"));
                     }
                     ImGui.EndMenu();
                 }
@@ -310,7 +310,7 @@ namespace Replanetizer.Frames
         private void RenderSubFrames(float deltaTime)
         {
             subFrames.RemoveAll(FrameMustClose);
-            foreach (LevelSubFrame levelSubFrame in subFrames)
+            foreach (Frame levelSubFrame in subFrames)
             {
                 levelSubFrame.RenderAsWindow(deltaTime);
             }
@@ -1335,7 +1335,7 @@ namespace Replanetizer.Frames
             GL.DisableVertexAttribArray(1);
         }
         
-        public void AddSubFrame(LevelSubFrame frame)
+        public void AddSubFrame(Frame frame)
         {
             if (!subFrames.Contains(frame)) subFrames.Add(frame);
         }

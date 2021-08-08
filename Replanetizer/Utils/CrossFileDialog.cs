@@ -10,7 +10,12 @@ namespace Replanetizer.Utils
     public static class CrossFileDialog
     {
         public class NoImplementationException : Exception { }
-        
+
+        /// <summary>
+        /// Shows a Open File dialog to pick a filename.
+        /// </summary>
+        /// <param name="title">Title of the dialog</param>
+        /// <param name="filter">File extension filter, eg: .bmp;.jpg|.dds</param>
         public static string OpenFile(string title = "Choose a file", string filter = "")
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -41,7 +46,7 @@ namespace Replanetizer.Utils
             throw new NoImplementationException();
         }
         
-        public static string SaveFile(string title = "Enter the name of the file to save to")
+        public static string SaveFile(string title = "Enter the name of the file to save to", string filter = "")
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
@@ -51,7 +56,7 @@ namespace Replanetizer.Utils
                 return Zenity.SaveFile(title);
             } 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return Win32Dialog.SaveFile(title);
+                return Win32Dialog.SaveFile(title, filter);
             
             throw new NoImplementationException();
         }
@@ -193,18 +198,35 @@ namespace Replanetizer.Utils
         
         private static class Win32Dialog
         {
+            private static string BuildFilterList(string filter)
+            {
+                var wildcardFound = false;
+                var filters = new List<string>();
+                foreach (string group in filter.Split('|'))
+                {
+                    var extensions = new List<string>();
+                    foreach (string f in group.Split(';'))
+                    {
+                        if (f == ".*") wildcardFound = true;
+                        extensions.Add($"*{f}");
+                    }
+                    var extString = String.Join(';', extensions);
+                    filters.Add($"Supported files ({extString})|{extString}");
+                }
+
+                if (!wildcardFound)
+                {
+                    filters.Add("All files (*.*)|*.*");
+                }
+                return String.Join('|', filters);
+            }
 
             public static string OpenFile(string title, string filter = "")
             {
 #if _WINDOWS
-                var filters = new List<string>();
-                foreach (string f in filter.Split(';'))
-                {
-                    filters.Add(f + " files (*" + f + ")|*" + f);
-                }
                 var dialog = new System.Windows.Forms.OpenFileDialog();
                 dialog.Title = title;
-                dialog.Filter = String.Join(';', filters);
+                dialog.Filter = BuildFilterList(filter);
                 dialog.ShowDialog();
                 return dialog.FileName;
 #else
@@ -221,11 +243,12 @@ namespace Replanetizer.Utils
 #endif
             }
             
-            public static string SaveFile(string title)
+            public static string SaveFile(string title, string filter = "")
             {
 #if _WINDOWS
                 var dialog = new System.Windows.Forms.SaveFileDialog();
                 dialog.Title = title;
+                dialog.Filter = BuildFilterList(filter);
                 dialog.ShowDialog();
                 return dialog.FileName;
 #else

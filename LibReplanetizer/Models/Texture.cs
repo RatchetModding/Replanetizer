@@ -94,7 +94,7 @@ namespace LibReplanetizer
             byte[] imgData = DecompressDxt5(data, width, height);
             if (imgData != null)
             {
-                img = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                img = new Bitmap(width, height, PixelFormat.Format32bppArgb);
                 BitmapData bmData = img.LockBits(new Rectangle(0, 0, img.Width, img.Height), ImageLockMode.ReadWrite, img.PixelFormat);
                 IntPtr pNative = bmData.Scan0;
                 Marshal.Copy(imgData, 0, pNative, width * height * 4);
@@ -104,7 +104,7 @@ namespace LibReplanetizer
         }
 
 
-        internal static byte[] DecompressDxt5(byte[] imageData, int width, int height)
+        public static byte[] DecompressDxt5(byte[] imageData, int width, int height)
         {
             if (imageData != null)
             {

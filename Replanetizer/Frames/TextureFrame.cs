@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using ImGuiNET;
 using LibReplanetizer;
+using Replanetizer.Utils;
 
 
 namespace Replanetizer.Frames
@@ -28,10 +29,22 @@ namespace Replanetizer.Frames
             {
                 Texture t = textures[i];
                 ImGui.Image((IntPtr)textureIds[t], listSize);
-                
-                if (ImGui.IsItemHovered())
+                if (ImGui.BeginPopupContextItem($"context-menu for {i}"))
+                {
+                    if (ImGui.Button("Export"))
+                    {
+                        var targetFile = CrossFileDialog.SaveFile(filter: ".bmp;.jpg;.jpeg;.png");
+                        if (targetFile.Length > 0)
+                        {
+                            TextureIO.ExportTexture(t, targetFile);
+                        }
+                    }
+                    ImGui.EndPopup();
+                }
+                else if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
+                    ImGui.Text($"{t.width}x{t.height}");
                     ImGui.Image((IntPtr)textureIds[t], new System.Numerics.Vector2(t.width, t.height));
                     ImGui.EndTooltip();
                 }

@@ -1,18 +1,18 @@
-﻿using LibReplanetizer;
-using LibReplanetizer.Models;
-using OpenTK.Graphics.OpenGL;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using ImGuiNET;
+using LibReplanetizer;
+using LibReplanetizer.Models;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using Replanetizer.Frames;
 using Replanetizer.Utils;
 using Texture = LibReplanetizer.Texture;
 
 
-namespace Replanetizer
+namespace Replanetizer.Frames
 {
     public class ModelFrame : LevelSubFrame
     {
@@ -139,12 +139,20 @@ namespace Replanetizer
 
             if (ImGui.BeginChild("TextureAndPropertyView", colSize, false, ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {
-                ImGui.Columns(1);
-                if (selectedModel != null && modelTextureList.Count > 0)
+                if (selectedModel != null)
                 {
-                    TextureFrame.RenderTextureList(modelTextureList, 64, levelFrame.textureIds);
+                    if (modelTextureList.Count > 0)
+                    {
+                        TextureFrame.RenderTextureList(modelTextureList, 64, levelFrame.textureIds);
+                        ImGui.Separator();
+                    }
+                    if (ImGui.Button("Export model"))
+                    {
+                        ExportModel(selectedModel);
+                    }
                 }
-                ImGui.NextColumn();
+                
+                ImGui.Separator();
                 propertyFrame.Render(deltaTime);
             }
 
@@ -306,46 +314,13 @@ namespace Replanetizer
             invalidate = true;
         }
 
-        /*
-         * Opens TextureViewer and allows to switch out textures
-         * Does not allow to switch textures between texture sources
-         */
-        /*
-        private void textureView_DoubleClick(object sender, EventArgs e)
-        {
-            using (TextureViewer textureViewer = new TextureViewer(mainForm))
-            {
-                if (textureViewer.ShowDialog() == DialogResult.OK)
-                {
-                    int val = textureViewer.returnVal;
-
-                    if (val < selectedTextureSet.Count)
-                    {
-                        selectedModel.textureConfig[textureView.SelectedIndices[0]].ID = val;
-                        UpdateModel();
-                    }
-                }
-            }
-        }
-
-        private void importFromobjToolStripMenuItem_Click(object sender, EventArgs e)
+        private void ExportModel(Model model)
         {
             if (selectedModel == null) return;
 
-            if (objOpen.ShowDialog() == DialogResult.OK)
+            var fileName = CrossFileDialog.SaveFile(filter: ".obj;.iqe");
+            if (fileName.Length > 0)
             {
-                ModelReader.ReadObj(objOpen.FileName, selectedModel);
-                UpdateModel();
-            }
-        }
-
-        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (selectedModel == null) return;
-
-            if (modelSave.ShowDialog() == DialogResult.OK)
-            {
-                string fileName = modelSave.FileName;
                 string extension = Path.GetExtension(fileName);
 
                 switch (extension)
@@ -359,6 +334,5 @@ namespace Replanetizer
                 }
             }
         }
-        */
     }
 }

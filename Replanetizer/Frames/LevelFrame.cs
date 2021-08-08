@@ -131,6 +131,14 @@ namespace Replanetizer.Frames
                         {
                             subFrames.Add(new LevelExportFrame(this.wnd, this));
                         }
+                        if (ImGui.MenuItem("All textures"))
+                        {
+                            var res = CrossFileDialog.OpenFolder();
+                            if (res.Length > 0)
+                            {
+                                TextureIO.ExportAllTextures(level, res);
+                            }
+                        }
                         ImGui.EndMenu();
                     }
                     if (ImGui.BeginMenu("Import"))

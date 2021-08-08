@@ -1,3 +1,5 @@
+using ImGuiNET;
+
 namespace Replanetizer.Frames
 {
     public abstract class Frame
@@ -13,5 +15,14 @@ namespace Replanetizer.Frames
         }
 
         public abstract void Render(float deltaTime);
+
+        public virtual void RenderAsWindow(float deltaTime)
+        {
+            if (ImGui.Begin(frameName, ref isOpen))
+            {
+                Render(deltaTime);
+                ImGui.End();
+            }
+        }
     }
 }

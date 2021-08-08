@@ -65,7 +65,6 @@ namespace Replanetizer
         public override void Render(float deltaTime)
         {
             if (!initialized) ModelViewer_Load();
-            if (!ImGui.Begin(frameName, ref isOpen)) return;
             
             UpdateWindowSize();
             Tick(deltaTime);
@@ -86,8 +85,6 @@ namespace Replanetizer
             }
             ImGui.Image((IntPtr) targetTexture, new System.Numerics.Vector2(Width, Height), 
                 System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
-
-            ImGui.End();
         }
 
         private void UpdateWindowSize()

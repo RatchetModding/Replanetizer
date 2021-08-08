@@ -64,58 +64,61 @@ namespace Replanetizer.Frames
             }
         }
 
-        public override void Render(float deltaTime)
+        public override void RenderAsWindow(float deltaTime)
         {
             if (ImGui.Begin(frameName, ref isOpen, ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {
-                if (properties == null)
+                Render(deltaTime);
+                ImGui.End();
+            }
+        }
+
+        public override void Render(float deltaTime)
+        {
+            if (properties == null)
+            {
+                ImGui.Text("Select an object");
+                return;
+            }
+            foreach (var categoryPair in properties)
+            {
+                if (ImGui.CollapsingHeader(categoryPair.Key, ImGuiTreeNodeFlags.DefaultOpen))
                 {
-                    ImGui.Text("Select an object");
-                    ImGui.End();
-                    return;
-                }
-                foreach (var categoryPair in properties)
-                {
-                    if (ImGui.CollapsingHeader(categoryPair.Key, ImGuiTreeNodeFlags.DefaultOpen))
+                    foreach (var (key, value) in categoryPair.Value)
                     {
-                        foreach (var (key, value) in categoryPair.Value)
+                        var val = value.GetValue(selectedObject);
+                        var type = value.PropertyType;
+                        if (value.GetSetMethod() == null) type = null;
+                        if (type == typeof(string))
                         {
-                            var val = value.GetValue(selectedObject);
-                            var type = value.PropertyType;
-                            if (value.GetSetMethod() == null) type = null;
-                            if (type == typeof(string))
+                            var v = Encoding.ASCII.GetBytes((string)val ?? string.Empty);
+                            if (ImGui.InputText(key, v, (uint)v.Length))
                             {
-                                var v = Encoding.ASCII.GetBytes((string)val ?? string.Empty);
-                                if (ImGui.InputText(key, v, (uint)v.Length))
-                                {
-                                    value.SetValue(selectedObject, Encoding.ASCII.GetString(v));
-                                }
+                                value.SetValue(selectedObject, Encoding.ASCII.GetString(v));
                             }
-                            else if (type == typeof(int))
+                        }
+                        else if (type == typeof(int))
+                        {
+                            var v = (int) val;
+                            if (ImGui.InputInt(key, ref v))
                             {
-                                var v = (int) val;
-                                if (ImGui.InputInt(key, ref v))
-                                {
-                                    value.SetValue(selectedObject, v);
-                                }
+                                value.SetValue(selectedObject, v);
                             }
-                            else if (type == typeof(float))
+                        }
+                        else if (type == typeof(float))
+                        {
+                            var v = (float) val;
+                            if (ImGui.InputFloat(key, ref v))
                             {
-                                var v = (float) val;
-                                if (ImGui.InputFloat(key, ref v))
-                                {
-                                    value.SetValue(selectedObject, v);
-                                }
+                                value.SetValue(selectedObject, v);
                             }
-                            else
-                            {
-                                ImGui.LabelText(key, Convert.ToString(val));
-                            }
+                        }
+                        else
+                        {
+                            ImGui.LabelText(key, Convert.ToString(val));
                         }
                     }
                 }
-
-                ImGui.End();
             }
         }
     }

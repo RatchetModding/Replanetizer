@@ -150,7 +150,7 @@ namespace Replanetizer
 
             foreach (Frame frame in openFrames)
             {
-                frame.Render(deltaTime);
+                frame.RenderAsWindow(deltaTime);
             }
         }
     }

@@ -14,5 +14,10 @@ namespace Replanetizer.Frames
         {
             ImGui.ShowDemoWindow(ref isOpen);
         }
+
+        public override void RenderAsWindow(float deltaTime)
+        {
+            ImGui.ShowDemoWindow(ref isOpen);
+        }
     }
 }

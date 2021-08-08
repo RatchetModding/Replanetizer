@@ -38,11 +38,7 @@ https://www.apache.org/licenses/LICENSE-2.0.html
 
         public override void Render(float deltaTime)
         {
-            if (ImGui.Begin(frameName, ref isOpen))
-            {
-                ImGui.Text(aboutText);
-                ImGui.End();
-            }
+            ImGui.Text(aboutText);
         }
     }
 }

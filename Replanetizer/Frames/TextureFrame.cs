@@ -47,41 +47,47 @@ namespace Replanetizer.Frames
             ImGui.NewLine();
         }
 
-        public override void Render(float deltaTime)
+        public override void RenderAsWindow(float deltaTime)
         {
             if (ImGui.Begin(frameName, ref isOpen, ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {
-                if (ImGui.CollapsingHeader("Level textures"))
+                Render(deltaTime);
+                ImGui.End();
+            }
+        }
+
+        public override void Render(float deltaTime)
+        {
+            if (ImGui.CollapsingHeader("Level textures"))
+            {
+                RenderTextureList(level.textures);
+            }
+            if (ImGui.CollapsingHeader("Gadget textures"))
+            {
+                RenderTextureList(level.gadgetTextures);
+            }
+            if (ImGui.CollapsingHeader("Armor textures"))
+            {
+                for (int i = 0; i < level.armorTextures.Count; i++)
                 {
-                    RenderTextureList(level.textures);
-                }
-                if (ImGui.CollapsingHeader("Gadget textures"))
-                {
-                    RenderTextureList(level.gadgetTextures);
-                }
-                if (ImGui.CollapsingHeader("Armor textures"))
-                {
-                    for (int i = 0; i < level.armorTextures.Count; i++)
+                    var textureList = level.armorTextures[i];
+                    if (ImGui.TreeNode("Armor " + i))
                     {
-                        var textureList = level.armorTextures[i];
-                        if (ImGui.TreeNode("Armor " + i))
-                        {
-                            var offset = (int) ImGui.GetTreeNodeToLabelSpacing();
-                            RenderTextureList(textureList);
-                            ImGui.TreePop();
-                        }
+                        var offset = (int) ImGui.GetTreeNodeToLabelSpacing();
+                        RenderTextureList(textureList);
+                        ImGui.TreePop();
                     }
                 }
-                if (ImGui.CollapsingHeader("Mission textures"))
+            }
+            if (ImGui.CollapsingHeader("Mission textures"))
+            {
+                foreach (var mission in level.missions)
                 {
-                    foreach (var mission in level.missions)
+                    if (ImGui.TreeNode("Mission " + mission.missionID))
                     {
-                        if (ImGui.TreeNode("Mission " + mission.missionID))
-                        {
-                            var offset = (int) ImGui.GetTreeNodeToLabelSpacing();
-                            RenderTextureList(mission.textures);
-                            ImGui.TreePop();
-                        }
+                        var offset = (int) ImGui.GetTreeNodeToLabelSpacing();
+                        RenderTextureList(mission.textures);
+                        ImGui.TreePop();
                     }
                 }
             }

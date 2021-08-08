@@ -252,7 +252,7 @@ namespace Replanetizer.Frames
             contentRegion = new Rectangle((int)windowZero.X, (int)windowZero.Y, Width, Height);
         }
 
-        public override void Render(float deltaTime)
+        public override void RenderAsWindow(float deltaTime)
         {
             if (!initialized) CustomGLControl_Load();
                 
@@ -274,7 +274,14 @@ namespace Replanetizer.Frames
             
             ImGui.PopStyleVar(2);
 
+            Render(deltaTime);
+            ImGui.End();
             
+            RenderSubFrames(deltaTime);
+        }
+
+        public override void Render(float deltaTime)
+        {
             if (level != null)
             {
                 RenderMenuBar();
@@ -298,13 +305,14 @@ namespace Replanetizer.Frames
                 ImGui.Image((IntPtr) targetTexture, new System.Numerics.Vector2(Width, Height), 
                     System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
             }
+        }
 
-            ImGui.End();
-
+        private void RenderSubFrames(float deltaTime)
+        {
             subFrames.RemoveAll(FrameMustClose);
             foreach (LevelSubFrame levelSubFrame in subFrames)
             {
-                levelSubFrame.Render(deltaTime);
+                levelSubFrame.RenderAsWindow(deltaTime);
             }
         }
 

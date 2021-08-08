@@ -316,7 +316,7 @@ void main()
                     GL.NamedBufferData(_indexBuffer, newSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
                     _indexBufferSize = newSize;
 
-                    Logger.Info("Resized dear imgui vertex buffer to new size {0}", _indexBufferSize);
+                    Logger.Info("Resized dear imgui index buffer to new size {0}", _indexBufferSize);
                 }
             }
 

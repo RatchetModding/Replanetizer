@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using ImGuiNET;
 using LibReplanetizer;
@@ -334,22 +335,25 @@ namespace Replanetizer.Frames
             GL.Enable(EnableCap.DepthTest);
             GL.LineWidth(5.0f);
 
+            string applicationFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string shaderFolder = Path.Join(applicationFolder, "Shaders");
+
             //Setup general shader
             shaderID = GL.CreateProgram();
-            LoadShader("Shaders/vs.glsl", ShaderType.VertexShader, shaderID);
-            LoadShader("Shaders/fs.glsl", ShaderType.FragmentShader, shaderID);
+            LoadShader(Path.Join(shaderFolder, "vs.glsl"), ShaderType.VertexShader, shaderID);
+            LoadShader(Path.Join(shaderFolder, "fs.glsl"), ShaderType.FragmentShader, shaderID);
             GL.LinkProgram(shaderID);
 
             //Setup color shader
             colorShaderID = GL.CreateProgram();
-            LoadShader("Shaders/colorshadervs.glsl", ShaderType.VertexShader, colorShaderID);
-            LoadShader("Shaders/colorshaderfs.glsl", ShaderType.FragmentShader, colorShaderID);
+            LoadShader(Path.Join(shaderFolder, "colorshadervs.glsl"), ShaderType.VertexShader, colorShaderID);
+            LoadShader(Path.Join(shaderFolder, "colorshaderfs.glsl"), ShaderType.FragmentShader, colorShaderID);
             GL.LinkProgram(colorShaderID);
 
             //Setup color shader
             collisionShaderID = GL.CreateProgram();
-            LoadShader("Shaders/collisionshadervs.glsl", ShaderType.VertexShader, collisionShaderID);
-            LoadShader("Shaders/collisionshaderfs.glsl", ShaderType.FragmentShader, collisionShaderID);
+            LoadShader(Path.Join(shaderFolder, "collisionshadervs.glsl"), ShaderType.VertexShader, collisionShaderID);
+            LoadShader(Path.Join(shaderFolder, "collisionshaderfs.glsl"), ShaderType.FragmentShader, collisionShaderID);
             GL.LinkProgram(collisionShaderID);
 
             matrixID = GL.GetUniformLocation(shaderID, "MVP");

@@ -12,12 +12,12 @@ namespace Replanetizer.ModelLists
         
         public static Lazy<Dictionary<int, string>> mobNames = new(() =>
         {
-            return GetModelNames("ModelLists/ModelListRC1.txt");
+            return GetModelNames("ModelListRC1.txt");
         });
         
         public static Lazy<Dictionary<int, string>> tieNames = new(() =>
         {
-            return GetModelNames("ModelLists/TieModelsRC1.txt");
+            return GetModelNames("TieModelsRC1.txt");
         });
 
         private static Dictionary<int, string> GetModelNames(string fileName)
@@ -26,7 +26,10 @@ namespace Replanetizer.ModelLists
 
             try
             {
-                var fullPath = Path.Join(Assembly.GetExecutingAssembly().Location, fileName);
+                string applicationFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                string listFolder = Path.Join(applicationFolder, "ModelLists");
+                var fullPath = Path.Join(listFolder, fileName);
+                
                 using (StreamReader stream = new StreamReader(fullPath))
                 {
                     string line;

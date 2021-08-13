@@ -1,5 +1,4 @@
 ﻿using LibReplanetizer.LevelObjects;
-using OpenTK.Graphics.OpenGL;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;

@@ -1,10 +1,7 @@
 ﻿using LibReplanetizer.Headers;
-using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Parsers
 {

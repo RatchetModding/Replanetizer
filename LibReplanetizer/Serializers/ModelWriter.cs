@@ -1,7 +1,7 @@
 ﻿using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
 using LibReplanetizer.Models.Animations;
-using OpenTK;
+using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -751,7 +751,7 @@ namespace LibReplanetizer
             {
                 for (int i = 0; i < 5; i++)
                 {
-                    chunksSelected[i] = true;
+                    chunksSelected[i] = false;
                 }
             }
         }

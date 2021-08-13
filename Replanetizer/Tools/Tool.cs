@@ -1,7 +1,8 @@
-﻿using OpenTK;
-using OpenTK.Graphics.OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
+using Replanetizer.Frames;
 
-namespace RatchetEdit.Tools
+namespace Replanetizer.Tools
 {
     public abstract class Tool
     {
@@ -34,6 +35,6 @@ namespace RatchetEdit.Tools
         }
 
         public abstract ToolType GetToolType();
-        public abstract void Render(Vector3 position, CustomGLControl control);
+        public abstract void Render(Vector3 position, LevelFrame frame);
     }
 }

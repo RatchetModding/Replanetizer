@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Headers
@@ -44,18 +42,19 @@ namespace LibReplanetizer.Headers
          */
         public static List<string> FindArmorFiles(GameType game, string enginePath)
         {
-            string superFolder = Directory.GetParent(enginePath).Parent.FullName;
+            string superFolder = Path.GetDirectoryName(Path.GetDirectoryName(enginePath));
+            string armorFolder = Path.Join(superFolder, "global", "armor");
             List<string> files = new List<string>();
 
-            if (Directory.Exists(superFolder + @"\global") && Directory.Exists(superFolder + @"\global\armor"))
+            if (Directory.Exists(armorFolder))
             {
-                files.AddRange(Directory.GetFiles(superFolder + @"\global\armor", "armor*.ps3"));
+                files.AddRange(Directory.GetFiles(armorFolder, "armor*.ps3"));
 
                 if (game.num == 4)
                 {
-                    files.AddRange(Directory.GetFiles(superFolder + @"\global\armor", "bot_tex*.ps3"));
-                    files.AddRange(Directory.GetFiles(superFolder + @"\global\armor", "dropship*.ps3"));
-                    files.AddRange(Directory.GetFiles(superFolder + @"\global\armor", "landstalker*.ps3"));
+                    files.AddRange(Directory.GetFiles(armorFolder, "bot_tex*.ps3"));
+                    files.AddRange(Directory.GetFiles(armorFolder, "dropship*.ps3"));
+                    files.AddRange(Directory.GetFiles(armorFolder, "landstalker*.ps3"));
                 }
             }
 

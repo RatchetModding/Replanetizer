@@ -1,7 +1,8 @@
-﻿using OpenTK;
-using OpenTK.Graphics.OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
+using Replanetizer.Frames;
 
-namespace RatchetEdit.Tools
+namespace Replanetizer.Tools
 {
     class TranslationTool : Tool
     {
@@ -63,50 +64,50 @@ namespace RatchetEdit.Tools
             };
         }
 
-        public override void Render(Vector3 position, CustomGLControl control)
+        public override void Render(Vector3 position, LevelFrame frame)
         {
             GetVBO();
 
             Matrix4 modelMatrix = Matrix4.CreateTranslation(position);
-            var mvp = modelMatrix * control.worldView;
-            GL.UniformMatrix4(control.matrixID, false, ref mvp);
+            var mvp = modelMatrix * frame.worldView;
+            GL.UniformMatrix4(frame.matrixID, false, ref mvp);
 
-            GL.Uniform4(control.colorID, new Vector4(1, 0, 0, 1));
+            GL.Uniform4(frame.colorID, new Vector4(1, 0, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
 
-            GL.Uniform4(control.colorID, new Vector4(1, 0, 0, 1));
+            GL.Uniform4(frame.colorID, new Vector4(1, 0, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 3, 3);
 
-            GL.Uniform4(control.colorID, new Vector4(1, 0, 0, 1));
+            GL.Uniform4(frame.colorID, new Vector4(1, 0, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 6, 3);
 
-            GL.Uniform4(control.colorID, new Vector4(1, 0, 0, 1));
+            GL.Uniform4(frame.colorID, new Vector4(1, 0, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 9, 3);
 
 
-            GL.Uniform4(control.colorID, new Vector4(0, 1, 0, 1));
+            GL.Uniform4(frame.colorID, new Vector4(0, 1, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 12, 3);
 
-            GL.Uniform4(control.colorID, new Vector4(0, 1, 0, 1));
+            GL.Uniform4(frame.colorID, new Vector4(0, 1, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 15, 3);
 
-            GL.Uniform4(control.colorID, new Vector4(0, 1, 0, 1));
+            GL.Uniform4(frame.colorID, new Vector4(0, 1, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 18, 3);
 
-            GL.Uniform4(control.colorID, new Vector4(0, 1, 0, 1));
+            GL.Uniform4(frame.colorID, new Vector4(0, 1, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 21, 3);
 
 
-            GL.Uniform4(control.colorID, new Vector4(0, 0, 1, 1));
+            GL.Uniform4(frame.colorID, new Vector4(0, 0, 1, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 24, 3);
 
-            GL.Uniform4(control.colorID, new Vector4(0, 0, 1, 1));
+            GL.Uniform4(frame.colorID, new Vector4(0, 0, 1, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 27, 3);
 
-            GL.Uniform4(control.colorID, new Vector4(0, 0, 1, 1));
+            GL.Uniform4(frame.colorID, new Vector4(0, 0, 1, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 30, 3);
 
-            GL.Uniform4(control.colorID, new Vector4(0, 0, 1, 1));
+            GL.Uniform4(frame.colorID, new Vector4(0, 0, 1, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 33, 3);
         }
 

@@ -12,9 +12,13 @@ namespace LibReplanetizer.Serializers
     {
         public const int MOBYLENGTH = 0x78;
 
-        public void Save(Level level, string fileName)
+        public void Save(Level level, string pathName)
         {
-            FileStream fs = File.Open(fileName, FileMode.Create);
+            if (Path.GetFileName(pathName) != "gameplay_ntsc")
+            {
+                pathName = Path.Join(pathName, "gameplay_ntsc");
+            }
+            FileStream fs = File.Open(pathName, FileMode.Create);
 
             //Seek past the header
             fs.Seek(0xA0, SeekOrigin.Begin);

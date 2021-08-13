@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Headers
@@ -48,34 +46,21 @@ namespace LibReplanetizer.Headers
          */
         public static string FindGadgetFile(GameType game, string enginePath)
         {
-            string superFolder = Directory.GetParent(enginePath).Parent.FullName;
-
+            string superFolder = Path.GetDirectoryName(Path.GetDirectoryName(enginePath));
+            
             switch (game.num)
             {
-                case 1:
-                    return "";
                 case 2:
-                    if (Directory.Exists(superFolder + @"\global") && Directory.Exists(superFolder + @"\global\gadgets") && File.Exists(superFolder + @"\global\gadgets\gadgets.ps3"))
-                    {
-                        return superFolder + @"\global\gadgets\gadgets.ps3";
-                    } else
-                    {
-                        return "";
-                    }
+                    var rac2Path = Path.Join(superFolder, "global", "gadgets", "gadgets.ps3");
+                    if (File.Exists(rac2Path)) return rac2Path;
+                    break;
                 case 3:
-                    if (Directory.Exists(superFolder + @"\global") && File.Exists(superFolder + @"\global\gadgets.ps3"))
-                    {
-                        return superFolder + @"\global\gadgets.ps3";
-                    }
-                    else
-                    {
-                        return "";
-                    }
-                case 4:
-                    return "";
-                default:
-                    return "";
+                    var rac3Path = Path.Join(superFolder, "global", "gadgets.ps3");
+                    if (File.Exists(rac3Path)) return rac3Path;
+                    break;
             }
+            
+            return "";
         }
 
         public byte[] Serialize()

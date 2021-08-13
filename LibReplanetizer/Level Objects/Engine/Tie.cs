@@ -1,5 +1,5 @@
 using LibReplanetizer.Models;
-using OpenTK;
+using OpenTK.Mathematics;
 using System.Collections.Generic;
 using System.IO;
 using static LibReplanetizer.DataFunctions;

@@ -6,6 +6,7 @@ using LibReplanetizer.Parsers;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using LibReplanetizer.Serializers;
 
 namespace LibReplanetizer
 {
@@ -163,7 +164,7 @@ namespace LibReplanetizer
 
                 Logger.Debug("Parsing terrain elements...");
                 terrainEngine = engineParser.GetTerrainModels();
-                Logger.Debug("Added {0} terrain elements" + terrainEngine?.Count);
+                Logger.Debug("Added {0} terrain elements", terrainEngine?.Count);
 
                 Logger.Debug("Parsing player animations...");
                 playerAnimations = engineParser.GetPlayerAnimations((MobyModel)mobyModels[0]);
@@ -241,9 +242,10 @@ namespace LibReplanetizer
 
             for (int i = 0; i < 5; i++)
             {
-                if (!File.Exists(path + @"/chunk" + i + ".ps3")) continue;
+                var chunkPath = Path.Join(path, @"chunk"+i+".ps3");
+                if (!File.Exists(chunkPath)) continue;
 
-                using (ChunkParser chunkParser = new ChunkParser(path + @"/chunk"+i+".ps3"))
+                using (ChunkParser chunkParser = new ChunkParser(chunkPath))
                 {
                     terrainChunks.Add(chunkParser.GetTerrainModels());
                     collisionChunks.Add(chunkParser.GetCollisionModel());
@@ -257,6 +259,7 @@ namespace LibReplanetizer
 
             foreach (string armor in armorPaths)
             {
+                Logger.Debug("Looking for armor data in {0}", armor);
                 List<Texture> tex;
                 MobyModel model;
                 using (ArmorParser parser = new ArmorParser(game, armor))
@@ -283,6 +286,7 @@ namespace LibReplanetizer
 
             if (gadgetPath != "")
             {
+                Logger.Debug("Looking for gadget data in {0}", gadgetPath);
                 using (GadgetParser parser = new GadgetParser(game, gadgetPath))
                 {
                     gadgetModels.AddRange(parser.GetModels());
@@ -301,6 +305,15 @@ namespace LibReplanetizer
             for (int i = 0; i < missionPaths.Count; i++)
             {
                 string missionPath = missionPaths[i];
+                string vramPath = missionPath.Replace(".ps3", ".vram");
+
+                if (!File.Exists(vramPath))
+                {
+                    Logger.Warn("Could not find .vram file for {0}", missionPath);
+                    continue;
+                }
+
+                Logger.Debug("Looking for mission data in {0}", missionPath);
 
                 Mission mission = new Mission(i);
 
@@ -310,9 +323,7 @@ namespace LibReplanetizer
                     mission.textures = parser.GetTextures();
                 }
 
-                string vram = missionPath.Replace(".ps3", ".vram");
-
-                using (VramParser parser = new VramParser(vram))
+                using (VramParser parser = new VramParser(vramPath))
                 {
                     parser.GetTextures(mission.textures);
                 }
@@ -327,6 +338,35 @@ namespace LibReplanetizer
 
             Logger.Info("Level parsing done");
             valid = true;
+        }
+
+        public void Save()
+        {
+            Save(path);
+        }
+
+        public void Save(string outputFile)
+        {
+            string directory;
+            if (!outputFile.EndsWith(".ps3") && File.GetAttributes(outputFile).HasFlag(FileAttributes.Directory))
+            {
+                directory = outputFile;
+                outputFile = Path.Join(outputFile, "engine.ps3");
+            }
+            else
+            {
+                directory = Path.GetDirectoryName(outputFile);
+            }
+            EngineSerializer engineSerializer = new EngineSerializer();
+            engineSerializer.Save(this, outputFile);
+            GameplaySerializer gameplaySerializer = new GameplaySerializer();
+            gameplaySerializer.Save(this, directory);
+
+            for (int i = 0; i < terrainChunks.Count; i++)
+            {      
+                ChunkSerializer chunkSerializer = new ChunkSerializer();
+                chunkSerializer.Save(this, directory, i);
+            }
         }
     }
 }

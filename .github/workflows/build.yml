@@ -98,7 +98,7 @@ jobs:
         with:
             upload_url: ${{ steps.create_release.outputs.upload_url }} 
             asset_name: replanetizer-${{needs.build_linux.outputs.release_name}}-linux-x64.zip
-            asset_path: replanetizer-${{needs.build_linux.outputs.release_name}}-linux-x64.zip
+            asset_path: replanetizer-${{needs.build_linux.outputs.release_name}}-linux-x64.zip/replanetizer-${{needs.build_linux.outputs.release_name}}-linux-x64.zip
             asset_content_type: application/zip
 
       - name: Upload Release Asset Windows
@@ -109,5 +109,5 @@ jobs:
         with:
             upload_url: ${{ steps.create_release.outputs.upload_url }} 
             asset_name: replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
-            asset_path: replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
+            asset_path: replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip/replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
             asset_content_type: application/zip

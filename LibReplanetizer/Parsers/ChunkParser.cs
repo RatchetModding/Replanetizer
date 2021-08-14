@@ -12,15 +12,17 @@ namespace LibReplanetizer.Parsers
     {
 
         ChunkHeader chunkHeader;
+        GameType game;
 
-        public ChunkParser(string chunkFile) : base(chunkFile)
+        public ChunkParser(string chunkFile, GameType game) : base(chunkFile)
         {
             chunkHeader = new ChunkHeader(fileStream);
+            this.game = game;
         }
 
-        public List<TerrainFragment> GetTerrainModels()
+        public Terrain GetTerrainModels()
         {
-            return GetTerrainModels(chunkHeader.terrainPointer);
+            return GetTerrainModels(chunkHeader.terrainPointer, game);
         }
 
         public Model GetCollisionModel()

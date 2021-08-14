@@ -57,9 +57,9 @@ namespace LibReplanetizer.Parsers
             return GetShrubs(shrubModels, engineHead.shrubPointer, engineHead.shrubCount);
         }
 
-        public List<TerrainFragment> GetTerrainModels()
+        public Terrain GetTerrainModel()
         {
-            return GetTerrainModels(engineHead.terrainPointer);
+            return GetTerrainModels(engineHead.terrainPointer, engineHead.game);
         }
 
         public SkyboxModel GetSkyboxModel()

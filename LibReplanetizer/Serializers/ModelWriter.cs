@@ -284,7 +284,7 @@ namespace LibReplanetizer
             {
                 if (settings.chunksSelected[0])
                 {
-                    terrain.AddRange(level.terrainEngine);
+                    terrain.AddRange(level.terrainEngine.fragments);
                 }     
             } else
             {
@@ -292,7 +292,7 @@ namespace LibReplanetizer
                 {
                     if (settings.chunksSelected[i])
                     {
-                        terrain.AddRange(level.terrainChunks[i]);
+                        terrain.AddRange(level.terrainChunks[i].fragments);
                     }
                 }
             }

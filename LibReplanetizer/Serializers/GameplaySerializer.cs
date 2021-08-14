@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using static LibReplanetizer.DataFunctions;
+using static LibReplanetizer.Serializers.SerializerFunctions;
 
 namespace LibReplanetizer.Serializers
 {
@@ -243,46 +244,6 @@ namespace LibReplanetizer.Serializers
             byte[] head = gameplayHeader.Serialize(level.game);
             fs.Seek(0, SeekOrigin.Begin);
             fs.Write(head, 0, head.Length);
-        }
-
-        private int SeekWrite(FileStream fs, byte[] bytes)
-        {
-            if (bytes != null)
-            {
-                SeekPast(fs);
-                int pos = (int)fs.Position;
-                fs.Write(bytes, 0, bytes.Length);
-                return pos;
-            }
-            else return 0;
-        }
-
-        private int SeekWrite4(FileStream fs, byte[] bytes)
-        {
-            if (bytes != null)
-            {
-                SeekPast4(fs);
-                int pos = (int)fs.Position;
-                fs.Write(bytes, 0, bytes.Length);
-                return pos;
-            }
-            else return 0;
-        }
-
-        private void SeekPast(FileStream fs)
-        {
-            while (fs.Position % 0x10 != 0)
-            {
-                fs.Seek(2, SeekOrigin.Current);
-            }
-        }
-
-        private void SeekPast4(FileStream fs)
-        {
-            while (fs.Position % 0x4 != 0)
-            {
-                fs.Seek(2, SeekOrigin.Current);
-            }
         }
 
         public static byte[] GetLangBytes(Dictionary<int, String> languageData)

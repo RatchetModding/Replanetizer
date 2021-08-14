@@ -117,13 +117,15 @@ namespace LibReplanetizer.Parsers
         }
 
 
-        protected List<TerrainFragment> GetTerrainModels(int terrainModelPointer)
+        protected Terrain GetTerrainModels(int terrainModelPointer, GameType game)
         {
             List<TerrainFragment> tFrags = new List<TerrainFragment>();
 
             //Read the whole terrain header
-            byte[] terrainBlock = ReadBlock(fileStream, terrainModelPointer, 0x60);
-            TerrainHead head = new TerrainHead(terrainBlock);
+            int headerSize = (game.num == 4) ? 0x70 : 0x60;
+            byte[] terrainBlock = ReadBlock(fileStream, terrainModelPointer, headerSize);
+            
+            TerrainHead head = new TerrainHead(terrainBlock, game);
 
             byte[] tfragBlock = ReadBlock(fileStream, head.headPointer, head.headCount * 0x30);
 
@@ -132,7 +134,9 @@ namespace LibReplanetizer.Parsers
                 tFrags.Add(new TerrainFragment(fileStream, head, tfragBlock, i));
             }
 
-            return tFrags;
+            Terrain terrain = new Terrain(tFrags, head.levelNumber);
+
+            return terrain;
         }
 
         protected SkyboxModel GetSkyboxModel(GameType game, int skyboxPointer)

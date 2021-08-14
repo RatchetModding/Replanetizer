@@ -51,8 +51,8 @@ namespace LibReplanetizer
         public List<Shrub> shrubs;
         public List<Light> lights;
         public List<Spline> splines;
-        public List<TerrainFragment> terrainEngine;
-        public List<List<TerrainFragment>> terrainChunks;
+        public Terrain terrainEngine;
+        public List<Terrain> terrainChunks;
         public List<int> textureConfigMenus;
         public List<Mission> missions;
 
@@ -174,8 +174,8 @@ namespace LibReplanetizer
                 Logger.Debug("Added {0} lights", lights.Count);
 
                 Logger.Debug("Parsing terrain elements...");
-                terrainEngine = engineParser.GetTerrainModels();
-                Logger.Debug("Added {0} terrain elements", terrainEngine?.Count);
+                terrainEngine = engineParser.GetTerrainModel();
+                Logger.Debug("Added {0} terrain elements", terrainEngine?.fragments.Count);
 
                 Logger.Debug("Parsing player animations...");
                 playerAnimations = engineParser.GetPlayerAnimations((MobyModel)mobyModels[0]);
@@ -260,7 +260,7 @@ namespace LibReplanetizer
                 occlusionData = gameplayParser.GetOcclusionData();
             }
 
-            terrainChunks = new List<List<TerrainFragment>>();
+            terrainChunks = new List<Terrain>();
             collisionChunks = new List<Model>();
             collBytesChunks = new List<byte[]>();
 
@@ -269,7 +269,7 @@ namespace LibReplanetizer
                 var chunkPath = Path.Join(path, @"chunk"+i+".ps3");
                 if (!File.Exists(chunkPath)) continue;
 
-                using (ChunkParser chunkParser = new ChunkParser(chunkPath))
+                using (ChunkParser chunkParser = new ChunkParser(chunkPath, game))
                 {
                     terrainChunks.Add(chunkParser.GetTerrainModels());
                     collisionChunks.Add(chunkParser.GetCollisionModel());

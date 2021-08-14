@@ -68,8 +68,12 @@ namespace LibReplanetizer
         public Dictionary<int, String> japanese;
         public Dictionary<int, String> korean;
 
+        public byte[] unk3;
+        public byte[] unk4;
+        public byte[] unk5;
         public byte[] unk6;
         public byte[] unk7;
+        public byte[] unk8;
         public byte[] unk9;
         public byte[] unk12;
         public byte[] unk13;
@@ -184,6 +188,12 @@ namespace LibReplanetizer
                 textureConfigMenus = engineParser.GetTextureConfigMenu();
 
                 collisionEngine = engineParser.GetCollisionModel();
+
+                unk3 = engineParser.GetUnk3Bytes();
+                unk4 = engineParser.GetUnk4Bytes();
+                unk5 = engineParser.GetUnk5Bytes();
+                unk8 = engineParser.GetUnk8Bytes();
+                unk9 = engineParser.GetUnk9Bytes();
             }
 
 

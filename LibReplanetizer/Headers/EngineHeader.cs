@@ -5,8 +5,8 @@ namespace LibReplanetizer.Headers
 {
     public class EngineHeader
     {
-        const int RAC123ENGINESIZE = 0x78;
-        const int DLENGINESIZE = 0x90;
+        const int RAC123ENGINESIZE = 0x84;
+        const int DLENGINESIZE = 0x98;
 
         public GameType game;
 
@@ -53,7 +53,6 @@ namespace LibReplanetizer.Headers
         public int unk7Pointer;
         public int unk8Pointer;
         public int unk9Pointer;
-        public int unk10Pointer;
 
         public EngineHeader() { }
 
@@ -185,7 +184,6 @@ namespace LibReplanetizer.Headers
             uiElementPointer = ReadInt(engineHeadBlock, 0x80);
             unk8Pointer = ReadInt(engineHeadBlock, 0x84);
             unk9Pointer = ReadInt(engineHeadBlock, 0x88);
-            unk10Pointer = ReadInt(engineHeadBlock, 0x8C);
         }
 
         public byte[] Serialize()
@@ -244,6 +242,10 @@ namespace LibReplanetizer.Headers
 
             WriteInt(bytes, 0x70, texture2dPointer);
             WriteInt(bytes, 0x74, uiElementPointer);
+            WriteInt(bytes, 0x78, 0);
+            WriteInt(bytes, 0x7C, 1);
+
+            WriteInt(bytes, 0x80, 2);
 
             return bytes;
         }
@@ -295,7 +297,10 @@ namespace LibReplanetizer.Headers
             WriteInt(bytes, 0x80, uiElementPointer);
             WriteInt(bytes, 0x84, unk8Pointer);
             WriteInt(bytes, 0x88, unk9Pointer);
-            WriteInt(bytes, 0x8C, unk10Pointer);
+            WriteInt(bytes, 0x8C, 0);
+
+            WriteInt(bytes, 0x90, 1);
+            WriteInt(bytes, 0x94, 2);
 
             return bytes;
         }

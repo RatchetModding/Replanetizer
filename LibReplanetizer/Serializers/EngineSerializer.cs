@@ -18,24 +18,35 @@ namespace LibReplanetizer.Serializers
             enginePath = Path.Join(directory, "engine.ps3");
             FileStream fs = File.Open(enginePath, FileMode.Create);
 
-            // Seek past the header, as we don't have the data ready for it yet
-            if (level.game.num == 4)
+            switch (level.game.num)
             {
-                fs.Seek(0xA0, SeekOrigin.Begin);
-            } else
-            {
-                fs.Seek(0x90, SeekOrigin.Begin);
+                case 1:
+                    SaveRC1(level, fs);
+                    break;
+                case 2:
+                case 3:
+                    SaveRC23(level, fs);
+                    break;
+                case 4:
+                    SaveRC4(level, fs);
+                    break;
             }
-            
+
+            fs.Close();   
+        }
+
+        private void SaveRC1(Level level, FileStream fs)
+        {
+            fs.Seek(0x90, SeekOrigin.Begin);
 
             EngineHeader engineHeader = new EngineHeader
             {
                 game = level.game,
                 uiElementPointer = SeekWrite(fs, WriteUiElements(level.uiElements, (int)fs.Position)),
                 skyboxPointer = SeekWrite(fs, level.skybox.Serialize((int)fs.Position)),
-                terrainPointer = SeekWrite(fs, WriteTfrags(level.terrainEngine, (int)fs.Position)),              // 0x3c - terrain
-                renderDefPointer = SeekWrite(fs, level.renderDefBytes),            // 0x04 - renderdef
-                collisionPointer = SeekWrite(fs, level.collBytesEngine),                 // 0x14 - collision
+                terrainPointer = SeekWrite(fs, WriteTfrags(level.terrainEngine, (int)fs.Position)),
+                renderDefPointer = SeekWrite(fs, level.renderDefBytes),
+                collisionPointer = SeekWrite(fs, level.collBytesEngine),
                 mobyModelPointer = SeekWrite(fs, WriteMobies(level.mobyModels, (int)fs.Position)),
                 playerAnimationPointer = SeekWrite(fs, WritePlayerAnimations(level.playerAnimations, (int)fs.Position)),
                 gadgetPointer = SeekWrite(fs, WriteWeapons(level.gadgetModels, (int)fs.Position)),
@@ -44,8 +55,8 @@ namespace LibReplanetizer.Serializers
                 shrubModelPointer = SeekWrite(fs, WriteShrubModels(level.shrubModels, (int)fs.Position)),
                 shrubPointer = SeekWrite(fs, WriteShrubs(level.shrubs)),
                 textureConfigMenuPointer = SeekWrite(fs, WriteTextureConfigMenus(level.textureConfigMenus)),
-                texture2dPointer = SeekWrite(fs, level.billboardBytes),            // 0x70 2dtexturestuff
-                soundConfigPointer = SeekWrite(fs, level.soundConfigBytes),          // 0x48 soundconfigs
+                texture2dPointer = SeekWrite(fs, level.billboardBytes),
+                soundConfigPointer = SeekWrite(fs, level.soundConfigBytes),
                 lightPointer = SeekWrite(fs, WriteLights(level.lights)),
                 lightConfigPointer = SeekWrite(fs, WriteLightConfig(level.lightConfig)),
                 texturePointer = SeekWrite(fs, WriteTextures(level.textures)),
@@ -57,23 +68,109 @@ namespace LibReplanetizer.Serializers
                 gadgetCount = level.gadgetModels.Count,
                 textureCount = level.textures.Count,
                 lightCount = level.lights.Count,
-                textureConfigMenuCount = level.textureConfigMenus.Count
+                textureConfigMenuCount = level.textureConfigMenus.Count,
             };
 
             // Seek to the beginning and write the header now that we have all the pointers
             byte[] head = engineHeader.Serialize();
             fs.Seek(0, SeekOrigin.Begin);
             fs.Write(head, 0, head.Length);
+        }
 
-            fs.Close();
+        private void SaveRC23(Level level, FileStream fs)
+        {
+            fs.Seek(0x90, SeekOrigin.Begin);
+
+            EngineHeader engineHeader = new EngineHeader
+            {
+                game = level.game,
+                uiElementPointer = SeekWrite(fs, WriteUiElements(level.uiElements, (int)fs.Position)),
+                terrainPointer = SeekWrite(fs, WriteTfrags(level.terrainEngine, (int)fs.Position)),
+                renderDefPointer = SeekWrite(fs, level.renderDefBytes),
+                collisionPointer = SeekWrite(fs, level.collBytesEngine),
+                tieModelPointer = SeekWrite(fs, WriteTieModels(level.tieModels, (int)fs.Position)),
+                tiePointer = SeekWrite(fs, WriteTies(level.ties, (int)fs.Position)),
+                shrubModelPointer = SeekWrite(fs, WriteShrubModels(level.shrubModels, (int)fs.Position)),
+                shrubPointer = SeekWrite(fs, WriteShrubs(level.shrubs)),
+                textureConfigMenuPointer = SeekWrite(fs, WriteTextureConfigMenus(level.textureConfigMenus)),
+                texture2dPointer = SeekWrite(fs, level.billboardBytes),
+                mobyModelPointer = SeekWrite(fs, WriteMobies(level.mobyModels, (int)fs.Position)),
+                soundConfigPointer = SeekWrite(fs, level.soundConfigBytes),
+                playerAnimationPointer = SeekWrite(fs, WritePlayerAnimations(level.playerAnimations, (int)fs.Position)),
+                skyboxPointer = SeekWrite(fs, level.skybox.Serialize((int)fs.Position)),
+                lightPointer = SeekWrite(fs, WriteLights(level.lights)),
+                lightConfigPointer = SeekWrite(fs, WriteLightConfig(level.lightConfig)),
+                texturePointer = SeekWrite(fs, WriteTextures(level.textures)),
+                // Counts
+                tieModelCount = level.tieModels.Count,
+                tieCount = level.ties.Count,
+                shrubModelCount = level.shrubModels.Count,
+                shrubCount = level.shrubs.Count,
+                textureCount = level.textures.Count,
+                lightCount = level.lights.Count,
+                textureConfigMenuCount = level.textureConfigMenus.Count,
+            };
+
+            // Seek to the beginning and write the header now that we have all the pointers
+            byte[] head = engineHeader.Serialize();
+            fs.Seek(0, SeekOrigin.Begin);
+            fs.Write(head, 0, head.Length);
+        }
+
+        private void SaveRC4(Level level, FileStream fs)
+        {
+            fs.Seek(0xA0, SeekOrigin.Begin);
+
+            EngineHeader engineHeader = new EngineHeader
+            {
+                game = level.game,
+                uiElementPointer = SeekWrite(fs, WriteUiElements(level.uiElements, (int)fs.Position)),
+                unk8Pointer = SeekWrite(fs, level.unk8),
+                mobyModelPointer = SeekWrite(fs, WriteMobies(level.mobyModels, (int)fs.Position)),
+                soundConfigPointer = SeekWrite(fs, level.soundConfigBytes),
+                unk9Pointer = SeekWrite(fs, level.unk9),
+                terrainPointer = SeekWrite(fs, WriteTfrags(level.terrainEngine, (int)fs.Position)),
+                renderDefPointer = SeekWrite(fs, level.renderDefBytes),
+                collisionPointer = SeekWrite(fs, level.collBytesEngine),
+                shrubModelPointer = SeekWrite(fs, WriteShrubModels(level.shrubModels, (int)fs.Position)),
+                shrubPointer = SeekWrite(fs, WriteShrubs(level.shrubs)),
+                unk5Pointer = SeekWrite(fs, level.unk5),
+                tieModelPointer = SeekWrite(fs, WriteTieModels(level.tieModels, (int)fs.Position)),
+                tiePointer = SeekWrite(fs, WriteTies(level.ties, (int)fs.Position)),
+                unk4Pointer = SeekWrite(fs, level.unk4),
+                textureConfigMenuPointer = SeekWrite(fs, WriteTextureConfigMenus(level.textureConfigMenus)),
+                texture2dPointer = SeekWrite(fs, level.billboardBytes),
+                skyboxPointer = SeekWrite(fs, level.skybox.Serialize((int)fs.Position)),
+                lightPointer = SeekWrite(fs, WriteLights(level.lights)),
+                lightConfigPointer = SeekWrite(fs, WriteLightConfig(level.lightConfig)),
+                unk3Pointer = SeekWrite(fs, level.unk3),
+                texturePointer = SeekWrite(fs, WriteTextures(level.textures)),
+                // Counts
+                tieModelCount = level.tieModels.Count,
+                tieCount = level.ties.Count,
+                shrubModelCount = level.shrubModels.Count,
+                shrubCount = level.shrubs.Count,
+                textureCount = level.textures.Count,
+                lightCount = level.lights.Count,
+                textureConfigMenuCount = level.textureConfigMenus.Count,
+            };
+
+            // Seek to the beginning and write the header now that we have all the pointers
+            byte[] head = engineHeader.Serialize();
+            fs.Seek(0, SeekOrigin.Begin);
+            fs.Write(head, 0, head.Length);
         }
 
         private int SeekWrite(FileStream fs, byte[] bytes)
         {
-            int pos = (int)fs.Position;
-            fs.Write(bytes, 0, bytes.Length);
-            SeekPast(fs);
-            return pos;
+            if (bytes != null)
+            {
+                SeekPast(fs);
+                int pos = (int)fs.Position;
+                fs.Write(bytes, 0, bytes.Length);
+                return pos;
+            }
+            else return 0;
         }
 
         private void SeekPast(FileStream fs)

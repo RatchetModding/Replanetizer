@@ -150,7 +150,7 @@ namespace LibReplanetizer.LevelObjects
             mat1 = ReadMatrix4(block, offset + 0x00);
             mat2 = ReadMatrix4(block, offset + 0x40);
 
-            modelMatrix = mat1 + mat2;
+            modelMatrix = mat1;
             rotation = modelMatrix.ExtractRotation();
             position = modelMatrix.ExtractTranslation();
             scale = modelMatrix.ExtractScale();

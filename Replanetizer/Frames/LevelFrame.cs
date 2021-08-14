@@ -57,6 +57,7 @@ namespace Replanetizer.Frames
         private Vector3 prevMouseRay;
         private Rectangle contentRegion;
         private int lastMouseX, lastMouseY;
+        private bool xLock = false, yLock = false, zLock = false;
 
         public bool initialized, invalidate;
         public bool[] selectedChunks;
@@ -544,6 +545,8 @@ namespace Replanetizer.Frames
                         collisions.Add(new Tuple<Model, int, int>(level.collisionChunks[i], collisionVbo[i], collisionIbo[i]));
                 }
             }
+
+            InvalidateView();
         }
 
         private void TriggerSelectionCallbacks()
@@ -762,16 +765,28 @@ namespace Replanetizer.Frames
             if (wnd.IsMouseButtonDown(MouseButton.Left))
             {
                 LevelObject obj = null;
-                bool hitTool = false;
                 Vector3 direction = Vector3.Zero;
                 int tempTextureId = 0;
 
                 FramebufferRenderer.ToTexture(Width, Height, ref tempTextureId, () =>
                 {
-                    obj = GetObjectAtScreenPosition(mousePos, ref hitTool, ref direction);
+                    obj = GetObjectAtScreenPosition(mousePos);
                 });
 
-                if (hitTool)
+                if (xLock)
+                {
+                    direction = Vector3.UnitX;
+                }
+                else if (yLock)
+                {
+                    direction = Vector3.UnitY;
+                }
+                else if (zLock)
+                {
+                    direction = Vector3.UnitZ;
+                }
+
+                if (xLock || yLock || zLock) 
                 {
                     HandleToolUpdates(mouseRay, direction);
                 }
@@ -779,8 +794,14 @@ namespace Replanetizer.Frames
                 {
                     SelectObject(obj);
                 }
+            } 
+            else
+            {
+                xLock = false;
+                yLock = false;
+                zLock = false;
             }
-
+            
             lastMouseX = (int) wnd.MousePosition.X;
             lastMouseY = (int) wnd.MousePosition.Y;
             prevMouseRay = mouseRay;
@@ -980,12 +1001,10 @@ namespace Replanetizer.Frames
             view = camera.GetViewMatrix();
         }
 
-        public LevelObject GetObjectAtScreenPosition(Vector2 pos, ref bool hitTool, ref Vector3 direction)
+        public LevelObject GetObjectAtScreenPosition(Vector2 pos)
         {
             LevelObject returnObject = null;
-            hitTool = false;
-            direction = Vector3.Zero;
-
+            
             int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0, cuboidOffset = 0, sphereOffset = 0, cylinderOffset = 0, type0COffset = 0, tfragOffset = 0;
 
             GL.Viewport(0, 0, Width, Height);
@@ -1076,26 +1095,30 @@ namespace Replanetizer.Frames
             {
                 pixel.A = 0;
 
-                if (pixel.R == 255 && pixel.G == 0 && pixel.B == 0)
+                if (!xLock && !yLock && !zLock)
                 {
-                    hitTool = true;
-                    direction = Vector3.UnitX;
-                }
-                else if (pixel.R == 0 && pixel.G == 255 && pixel.B == 0)
-                {
-                    hitTool = true;
-                    direction = Vector3.UnitY;
-                }
-                else if (pixel.R == 0 && pixel.G == 0 && pixel.B == 255)
-                {
-                    hitTool = true;
-                    direction = Vector3.UnitZ;
-                }
+                    bool hitTool = false;
+                    if (pixel.R == 255 && pixel.G == 0 && pixel.B == 0)
+                    {
+                        hitTool = true;
+                        xLock = true;
+                    }
+                    else if (pixel.R == 0 && pixel.G == 255 && pixel.B == 0)
+                    {
+                        hitTool = true;
+                        yLock = true;
+                    }
+                    else if (pixel.R == 0 && pixel.G == 0 && pixel.B == 255)
+                    {
+                        hitTool = true;
+                        zLock = true;
+                    }
 
-                if (hitTool)
-                {
-                    InvalidateView();
-                    return null;
+                    if (hitTool)
+                    {
+                        InvalidateView();
+                        return null;
+                    }
                 }
 
                 int id = (int)pixel.ToUInt32();
@@ -1137,7 +1160,6 @@ namespace Replanetizer.Frames
                 }
             }
 
-            hitTool = false;
             return returnObject;
         }
 

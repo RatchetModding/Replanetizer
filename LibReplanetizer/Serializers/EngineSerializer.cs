@@ -11,16 +11,12 @@ namespace LibReplanetizer.Serializers
 {
     public class EngineSerializer
     {
-        public string pathName;
+        private string enginePath;
 
-        public void Save(Level level, string pathName)
+        public void Save(Level level, string directory)
         {
-            if (Path.GetFileName(pathName) != "engine.ps3")
-            {
-                pathName = Path.Join(pathName, "engine.ps3");
-            }
-            this.pathName = pathName;
-            FileStream fs = File.Open(this.pathName, FileMode.Create);
+            enginePath = Path.Join(directory, "engine.ps3");
+            FileStream fs = File.Open(enginePath, FileMode.Create);
 
             // Seek past the header, as we don't have the data ready for it yet
             if (level.game.num == 4)
@@ -421,6 +417,8 @@ namespace LibReplanetizer.Serializers
 
         private byte[] WriteTextures(List<Texture> textures)
         {
+            if (enginePath == null) return null;
+
             var vramBytes = new List<byte>();
             var outBytes = new byte[textures.Count * 0x24];
 
@@ -433,7 +431,7 @@ namespace LibReplanetizer.Serializers
                 vramBytes.AddRange(textures[i].data);
             }
 
-            FileStream fs = File.Open(Path.Join(Path.GetDirectoryName(pathName), "vram.ps3"), FileMode.Create);
+            FileStream fs = File.Open(Path.Join(Path.GetDirectoryName(enginePath), "vram.ps3"), FileMode.Create);
             fs.Write(vramBytes.ToArray(), 0, vramBytes.Count);
             fs.Close();
 

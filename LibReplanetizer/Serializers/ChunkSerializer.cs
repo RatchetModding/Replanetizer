@@ -11,15 +11,15 @@ namespace LibReplanetizer.Serializers
 {
     public class ChunkSerializer
     {
-        public string pathName;
 
-        public void Save(Level level, string pathName, int chunk)
+        public void Save(Level level, string directory, int chunk)
         {
             if (chunk >= level.terrainChunks.Count)
                 throw new IndexOutOfRangeException("Chunk does not exist!");
 
-            this.pathName = pathName;
-            FileStream fs = File.Open(pathName + "/chunk" + chunk +".ps3", FileMode.Create);
+            directory = Path.Join(directory, "chunk" + chunk + ".ps3");
+
+            FileStream fs = File.Open(directory, FileMode.Create);
 
             // Seek past the header
             fs.Seek(0x10, SeekOrigin.Begin);

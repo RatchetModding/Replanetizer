@@ -83,34 +83,34 @@ namespace LibReplanetizer.LevelObjects
         [Category("Unknown"), DisplayName("OFF_80")]
         public int off_80 { get; set; }
 
-        [Category("Unknown"), DisplayName("OFF_84")]
-        public int[] DL_off_84 { get; set; }
+        [Category("Unknown"), DisplayName("UnknownBytes")]
+        public byte[] unknownBytes { get; set; }
 
-        public LevelVariables(GameType game, FileStream fileStream, int levelVarPointer)
+        public LevelVariables(GameType game, FileStream fileStream, int levelVarPointer, int length)
         {
-            if (levelVarPointer == 0) return;
+            if (levelVarPointer == 0 || length == 0) return;
+
+            byte[] levelVarBlock = ReadBlock(fileStream, levelVarPointer, length);
 
             switch (game.num)
             {
                 case 1:
-                    GetRC1Vals(fileStream, levelVarPointer);
+                    GetRC1Vals(levelVarBlock);
                     break;
                 case 2:
-                    GetRC2Vals(fileStream, levelVarPointer);
+                    GetRC2Vals(levelVarBlock);
                     break;
                 case 3:
-                    GetRC3Vals(fileStream, levelVarPointer);
+                    GetRC3Vals(levelVarBlock);
                     break;
                 case 4:
-                    GetDLVals(fileStream, levelVarPointer);
+                    GetDLVals(levelVarBlock);
                     break;
             }
         }
 
-        private void GetRC1Vals(FileStream fileStream, int levelVarPointer)
+        private void GetRC1Vals(byte[] levelVarBlock)
         {
-            byte[] levelVarBlock = ReadBlock(fileStream, levelVarPointer, 0x50);
-
             int bgRed = ReadInt(levelVarBlock, 0x00);
             int bgGreen = ReadInt(levelVarBlock, 0x04);
             int bgBlue = ReadInt(levelVarBlock, 0x08);
@@ -136,6 +136,13 @@ namespace LibReplanetizer.LevelObjects
             off_48 = ReadInt(levelVarBlock, 0x48);
             off_4c = ReadInt(levelVarBlock, 0x4C);
 
+            unknownBytes = new byte[levelVarBlock.Length - 0x50];
+
+            for (int i = 0; i < levelVarBlock.Length - 0x50; i++)
+            {
+                unknownBytes[i] = levelVarBlock[0x50 + i];
+            }
+
             backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
             fogColor = Color.FromArgb(r, g, b);
             if (shipColorR != -1)
@@ -151,10 +158,8 @@ namespace LibReplanetizer.LevelObjects
             shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
         }
 
-        private void GetRC2Vals(FileStream fileStream, int levelVarPointer)
+        private void GetRC2Vals(byte[] levelVarBlock)
         {
-            byte[] levelVarBlock = ReadBlock(fileStream, levelVarPointer, 0x80);
-
             int bgRed = ReadInt(levelVarBlock, 0x00);
             int bgGreen = ReadInt(levelVarBlock, 0x04);
             int bgBlue = ReadInt(levelVarBlock, 0x08);
@@ -195,6 +200,13 @@ namespace LibReplanetizer.LevelObjects
             off_78 = ReadInt(levelVarBlock, 0x78);
             off_7C = ReadInt(levelVarBlock, 0x7C);
 
+            unknownBytes = new byte[levelVarBlock.Length - 0x80];
+
+            for (int i = 0; i < levelVarBlock.Length - 0x80; i++)
+            {
+                unknownBytes[i] = levelVarBlock[0x80 + i];
+            }
+
             backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
             fogColor = Color.FromArgb(r, g, b);
             if (shipColorR != -1)
@@ -211,10 +223,8 @@ namespace LibReplanetizer.LevelObjects
             shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
         }
 
-        private void GetRC3Vals(FileStream fileStream, int levelVarPointer)
+        private void GetRC3Vals(byte[] levelVarBlock)
         {
-            byte[] levelVarBlock = ReadBlock(fileStream, levelVarPointer, 0x84);
-
             int bgRed = ReadInt(levelVarBlock, 0x00);
             int bgGreen = ReadInt(levelVarBlock, 0x04);
             int bgBlue = ReadInt(levelVarBlock, 0x08);
@@ -257,6 +267,13 @@ namespace LibReplanetizer.LevelObjects
 
             off_80 = ReadInt(levelVarBlock, 0x80);
 
+            unknownBytes = new byte[levelVarBlock.Length - 0x84];
+
+            for (int i = 0; i < levelVarBlock.Length - 0x84; i++)
+            {
+                unknownBytes[i] = levelVarBlock[0x84 + i];
+            }
+
             backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
             fogColor = Color.FromArgb(r, g, b);
             if (shipColorR != -1)
@@ -273,10 +290,8 @@ namespace LibReplanetizer.LevelObjects
             shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
         }
 
-        private void GetDLVals(FileStream fileStream, int levelVarPointer)
+        private void GetDLVals(byte[] levelVarBlock)
         {
-            byte[] levelVarBlock = ReadBlock(fileStream, levelVarPointer, 0x34C);
-
             int bgRed = ReadInt(levelVarBlock, 0x00);
             int bgGreen = ReadInt(levelVarBlock, 0x04);
             int bgBlue = ReadInt(levelVarBlock, 0x08);
@@ -319,11 +334,11 @@ namespace LibReplanetizer.LevelObjects
 
             off_80 = ReadInt(levelVarBlock, 0x80);
 
-            DL_off_84 = new int[211 - 33];
-
-            for (int i = 0; i < DL_off_84.Length; i++)
+            unknownBytes = new byte[levelVarBlock.Length - 0x84];
+            
+            for (int i = 0; i < levelVarBlock.Length - 0x84; i++)
             {
-                DL_off_84[i] = ReadInt(levelVarBlock, 0x84 + i * 0x4);
+                unknownBytes[i] = levelVarBlock[0x84 + i];
             }
 
             backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
@@ -361,7 +376,7 @@ namespace LibReplanetizer.LevelObjects
 
         private byte[] SerializeRC1()
         {
-            byte[] bytes = new byte[0x50];
+            byte[] bytes = new byte[0x50 + unknownBytes.Length];
 
             WriteUint(bytes, 0x00, backgroundColor.R);
             WriteUint(bytes, 0x04, backgroundColor.G);
@@ -398,12 +413,14 @@ namespace LibReplanetizer.LevelObjects
             WriteInt(bytes, 0x48, off_48);
             WriteInt(bytes, 0x4C, off_4c);
 
+            unknownBytes.CopyTo(bytes, 0x50);
+
             return bytes;
         }
 
         private byte[] SerializeRC2()
         {
-            byte[] bytes = new byte[0x80];
+            byte[] bytes = new byte[0x80 + unknownBytes.Length];
 
             WriteUint(bytes, 0x00, backgroundColor.R);
             WriteUint(bytes, 0x04, backgroundColor.G);
@@ -454,13 +471,15 @@ namespace LibReplanetizer.LevelObjects
             WriteFloat(bytes, 0x74, off_74);
             WriteInt(bytes, 0x78, off_78);
             WriteInt(bytes, 0x7C, off_7C);
+
+            unknownBytes.CopyTo(bytes, 0x80);
 
             return bytes;
         }
 
         private byte[] SerializeRC3()
         {
-            byte[] bytes = new byte[0x84];
+            byte[] bytes = new byte[0x84 + unknownBytes.Length];
 
             WriteUint(bytes, 0x00, backgroundColor.R);
             WriteUint(bytes, 0x04, backgroundColor.G);
@@ -513,13 +532,15 @@ namespace LibReplanetizer.LevelObjects
             WriteInt(bytes, 0x7C, off_7C);
 
             WriteInt(bytes, 0x80, off_80);
+
+            unknownBytes.CopyTo(bytes, 0x84);
 
             return bytes;
         }
 
         private byte[] SerializeDL()
         {
-            byte[] bytes = new byte[0x34C];
+            byte[] bytes = new byte[0x84 + unknownBytes.Length];
 
             WriteUint(bytes, 0x00, backgroundColor.R);
             WriteUint(bytes, 0x04, backgroundColor.G);
@@ -573,10 +594,7 @@ namespace LibReplanetizer.LevelObjects
 
             WriteInt(bytes, 0x80, off_80);
 
-            for (int i = 0; i < DL_off_84.Length; i++)
-            {
-                WriteInt(bytes, 0x84 + i * 0x4, DL_off_84[i]);
-            }
+            unknownBytes.CopyTo(bytes, 0x84);
 
             return bytes;
         }

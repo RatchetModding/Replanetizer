@@ -43,7 +43,7 @@ namespace LibReplanetizer.Parsers
 
         public LevelVariables GetLevelVariables()
         {
-            return new LevelVariables(game, fileStream, gameplayHeader.levelVarPointer);
+            return new LevelVariables(game, fileStream, gameplayHeader.levelVarPointer, gameplayHeader.englishPointer - gameplayHeader.levelVarPointer);
         }
 
         public Dictionary<int, String> GetLang(int offset)

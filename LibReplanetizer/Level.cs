@@ -51,8 +51,8 @@ namespace LibReplanetizer
         public List<Shrub> shrubs;
         public List<Light> lights;
         public List<Spline> splines;
-        public List<TerrainFragment> terrainEngine;
-        public List<List<TerrainFragment>> terrainChunks;
+        public Terrain terrainEngine;
+        public List<Terrain> terrainChunks;
         public List<int> textureConfigMenus;
         public List<Mission> missions;
 
@@ -68,13 +68,19 @@ namespace LibReplanetizer
         public Dictionary<int, String> japanese;
         public Dictionary<int, String> korean;
 
+        public byte[] unk3;
+        public byte[] unk4;
+        public byte[] unk5;
         public byte[] unk6;
         public byte[] unk7;
+        public byte[] unk8;
         public byte[] unk9;
         public byte[] unk12;
         public byte[] unk13;
-        public byte[] unk17;
         public byte[] unk14;
+        public byte[] unk16;
+        public byte[] unk17;
+        public byte[] unk18;
 
         public LightConfig lightConfig;
 
@@ -83,6 +89,11 @@ namespace LibReplanetizer
 
         public byte[] tieData;
         public byte[] shrubData;
+
+        public byte[] tieGroupData;
+        public byte[] shrubGroupData;
+
+        public byte[] areasData;
 
         public List<DirectionalLight> directionalLights;
         public List<Type0C> type0Cs;
@@ -163,8 +174,8 @@ namespace LibReplanetizer
                 Logger.Debug("Added {0} lights", lights.Count);
 
                 Logger.Debug("Parsing terrain elements...");
-                terrainEngine = engineParser.GetTerrainModels();
-                Logger.Debug("Added {0} terrain elements", terrainEngine?.Count);
+                terrainEngine = engineParser.GetTerrainModel();
+                Logger.Debug("Added {0} terrain elements", terrainEngine?.fragments.Count);
 
                 Logger.Debug("Parsing player animations...");
                 playerAnimations = engineParser.GetPlayerAnimations((MobyModel)mobyModels[0]);
@@ -177,6 +188,12 @@ namespace LibReplanetizer
                 textureConfigMenus = engineParser.GetTextureConfigMenu();
 
                 collisionEngine = engineParser.GetCollisionModel();
+
+                unk3 = engineParser.GetUnk3Bytes();
+                unk4 = engineParser.GetUnk4Bytes();
+                unk5 = engineParser.GetUnk5Bytes();
+                unk8 = engineParser.GetUnk8Bytes();
+                unk9 = engineParser.GetUnk9Bytes();
             }
 
 
@@ -209,11 +226,18 @@ namespace LibReplanetizer
                 unk7 = gameplayParser.GetUnk7();
                 unk12 = gameplayParser.GetUnk12();
                 unk13 = gameplayParser.GetUnk13();
-                unk17 = gameplayParser.GetUnk17();
                 unk14 = gameplayParser.GetUnk14();
+                unk16 = gameplayParser.GetUnk16();
+                unk17 = gameplayParser.GetUnk17();
+                unk18 = gameplayParser.GetUnk18();
 
                 tieData = gameplayParser.GetTieData(ties.Count);
                 shrubData = gameplayParser.getShrubData(shrubs.Count);
+
+                tieGroupData = gameplayParser.getTieGroups();
+                shrubGroupData = gameplayParser.getShrubGroups();
+
+                areasData = gameplayParser.getAreasData();
 
                 directionalLights = gameplayParser.GetDirectionalLights();
                 type0Cs = gameplayParser.GetType0Cs();
@@ -236,7 +260,7 @@ namespace LibReplanetizer
                 occlusionData = gameplayParser.GetOcclusionData();
             }
 
-            terrainChunks = new List<List<TerrainFragment>>();
+            terrainChunks = new List<Terrain>();
             collisionChunks = new List<Model>();
             collBytesChunks = new List<byte[]>();
 
@@ -245,7 +269,7 @@ namespace LibReplanetizer
                 var chunkPath = Path.Join(path, @"chunk"+i+".ps3");
                 if (!File.Exists(chunkPath)) continue;
 
-                using (ChunkParser chunkParser = new ChunkParser(chunkPath))
+                using (ChunkParser chunkParser = new ChunkParser(chunkPath, game))
                 {
                     terrainChunks.Add(chunkParser.GetTerrainModels());
                     collisionChunks.Add(chunkParser.GetCollisionModel());
@@ -348,17 +372,16 @@ namespace LibReplanetizer
         public void Save(string outputFile)
         {
             string directory;
-            if (!outputFile.EndsWith(".ps3") && File.GetAttributes(outputFile).HasFlag(FileAttributes.Directory))
+            if (File.GetAttributes(outputFile).HasFlag(FileAttributes.Directory))
             {
                 directory = outputFile;
-                outputFile = Path.Join(outputFile, "engine.ps3");
             }
             else
             {
                 directory = Path.GetDirectoryName(outputFile);
             }
             EngineSerializer engineSerializer = new EngineSerializer();
-            engineSerializer.Save(this, outputFile);
+            engineSerializer.Save(this, directory);
             GameplaySerializer gameplaySerializer = new GameplaySerializer();
             gameplaySerializer.Save(this, directory);
 

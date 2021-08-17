@@ -43,7 +43,7 @@ namespace LibReplanetizer.Parsers
 
         public LevelVariables GetLevelVariables()
         {
-            return new LevelVariables(game, fileStream, gameplayHeader.levelVarPointer);
+            return new LevelVariables(game, fileStream, gameplayHeader.levelVarPointer, gameplayHeader.englishPointer - gameplayHeader.levelVarPointer);
         }
 
         public Dictionary<int, String> GetLang(int offset)
@@ -334,23 +334,30 @@ namespace LibReplanetizer.Parsers
 
         public byte[] GetUnk13()
         {
-            int sectionLength = gameplayHeader.occlusionPointer - gameplayHeader.grindPathsPointer;
+            int sectionLength;
+
+            switch (game.num)
+            {
+                case 1:
+                    sectionLength = gameplayHeader.occlusionPointer - gameplayHeader.grindPathsPointer;
+                    break;
+                case 2:
+                case 3:
+                case 4:
+                default:
+                    sectionLength = gameplayHeader.areasPointer - gameplayHeader.grindPathsPointer;
+                    break;
+            }
+
             if (sectionLength > 0)
             {
                 return ReadBlock(fileStream, gameplayHeader.grindPathsPointer, sectionLength);
             }
             else
             {
-                return new byte[0x10];
+                return null;
             }
 
-        }
-
-        public byte[] GetUnk17()
-        {
-            if (gameplayHeader.unkPointer17 == 0) { return null; }
-            int sectionLength = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer17, 4), 0);
-            return ReadBlock(fileStream, gameplayHeader.unkPointer17, sectionLength);
         }
 
         public byte[] GetUnk14()
@@ -360,6 +367,25 @@ namespace LibReplanetizer.Parsers
             return ReadBlock(fileStream, gameplayHeader.unkPointer14, sectionLength);
         }
 
+        public byte[] GetUnk16()
+        {
+            if (gameplayHeader.unkPointer16 == 0) { return null; }
+            return ReadBlock(fileStream, gameplayHeader.unkPointer16, gameplayHeader.grindPathsPointer - gameplayHeader.unkPointer16);
+        }
+
+        public byte[] GetUnk17()
+        {
+            if (gameplayHeader.unkPointer17 == 0) { return null; }
+            int sectionLength = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer17, 4), 0);
+            return ReadBlock(fileStream, gameplayHeader.unkPointer17, sectionLength);
+        }
+
+        public byte[] GetUnk18()
+        {
+            if (gameplayHeader.unkPointer18 == 0) { return null; }
+            int amount = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer18, 4), 0);
+            return ReadBlock(fileStream, gameplayHeader.unkPointer18, 0x10 + amount * 0x20);
+        }
 
         public List<int> GetMobyIds()
         {
@@ -426,17 +452,54 @@ namespace LibReplanetizer.Parsers
             return data;
         }
 
+        //In RaC 2/3 each element should be of size 0x60 but the block is much larger and not a multiple of that
+        //Hence we just load the block based on pointers
         public byte[] GetTieData(int tieCount)
         {
-            return ReadBlock(fileStream, gameplayHeader.tiePointer, 0x10 + 0xE0 * tieCount);
+            if (gameplayHeader.tiePointer == 0) { return null; }
+
+            switch (game.num)
+            {
+                case 1:
+                    return ReadBlock(fileStream, gameplayHeader.tiePointer, 0x10 + 0xE0 * tieCount);
+                case 2:
+                case 3:
+                case 4:
+                default:
+                    return ReadBlock(fileStream, gameplayHeader.tiePointer, gameplayHeader.tieGroupsPointer - gameplayHeader.tiePointer);
+            }
         }
+
 
         public byte[] getShrubData(int shrubCount)
         {
+            if (gameplayHeader.shrubPointer == 0) { return null; }
             return ReadBlock(fileStream, gameplayHeader.shrubPointer, 0x10 + 0x70 * shrubCount);
         }
 
+        public byte[] getTieGroups()
+        {
+            if (gameplayHeader.tieGroupsPointer == 0) { return null; }
+            byte[] header = ReadBlock(fileStream, gameplayHeader.tieGroupsPointer, 16);
+            int count = ReadInt(header, 0);
+            int length = ReadInt(header, 4);
+            return ReadBlock(fileStream, gameplayHeader.tieGroupsPointer, 0x10 + length + count * 0x4);
+        }
 
+        public byte[] getShrubGroups()
+        {
+            if (gameplayHeader.shrubGroupsPointer == 0) { return null; }
+            byte[] header = ReadBlock(fileStream, gameplayHeader.shrubGroupsPointer, 16);
+            int count = ReadInt(header, 0);
+            int length = ReadInt(header, 4);
+            return ReadBlock(fileStream, gameplayHeader.shrubGroupsPointer, 0x10 + length + count * 0x4);
+        }
+
+        public byte[] getAreasData()
+        {
+            if (gameplayHeader.areasPointer == 0) { return null; }
+            return ReadBlock(fileStream, gameplayHeader.areasPointer, gameplayHeader.occlusionPointer - gameplayHeader.areasPointer);
+        }
 
         public List<byte[]> GetPvars(List<Moby> mobs)
         {

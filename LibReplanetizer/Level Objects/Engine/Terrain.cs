@@ -2,12 +2,23 @@
 using LibReplanetizer.Models;
 using OpenTK.Mathematics;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects
 {
+    public class Terrain
+    {
+        public ushort levelNumber;
+        public List<TerrainFragment> fragments;
 
+        public Terrain(List<TerrainFragment> fragments, ushort levelNumber)
+        {
+            this.fragments = fragments;
+            this.levelNumber = levelNumber;
+        }
+    }
 
     public class TerrainFragment : ModelObject
     {

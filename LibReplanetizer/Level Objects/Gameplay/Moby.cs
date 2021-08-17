@@ -372,7 +372,7 @@ namespace LibReplanetizer.LevelObjects
 
         private byte[] ToByteArrayRC1()
         {
-            Vector3 eulerAngles = ToEulerAngles(modelMatrix.ExtractRotation());
+            Vector3 eulerAngles = rotation.ToEulerAngles();
 
             byte[] buffer = new byte[game.mobyElemSize];
 
@@ -422,7 +422,7 @@ namespace LibReplanetizer.LevelObjects
 
         private byte[] ToByteArrayRC23()
         {
-            Vector3 eulerAngles = ToEulerAngles(modelMatrix.ExtractRotation());
+            Vector3 eulerAngles = rotation.ToEulerAngles();
 
             byte[] buffer = new byte[game.mobyElemSize];
 
@@ -478,7 +478,7 @@ namespace LibReplanetizer.LevelObjects
 
         private byte[] ToByteArrayDL()
         {
-            Vector3 eulerAngles = ToEulerAngles(modelMatrix.ExtractRotation());
+            Vector3 eulerAngles = rotation.ToEulerAngles();
 
             byte[] buffer = new byte[game.mobyElemSize];
 
@@ -532,10 +532,13 @@ namespace LibReplanetizer.LevelObjects
 
         public override void UpdateTransformMatrix()
         {
-            Matrix4 rot = Matrix4.CreateFromQuaternion(rotation);
+            Vector3 euler = rotation.ToEulerAngles();
+            Matrix4 rot_z = Matrix4.CreateFromAxisAngle(Vector3.UnitZ, euler.Z);
+            Matrix4 rot_y = Matrix4.CreateFromAxisAngle(Vector3.UnitY, euler.Y);
+            Matrix4 rot_x = Matrix4.CreateFromAxisAngle(Vector3.UnitX, euler.X);
             Matrix4 scaleMatrix = Matrix4.CreateScale(scale * model.size);
             Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
-            modelMatrix = scaleMatrix * rot * translationMatrix;
+            modelMatrix = scaleMatrix * rot_x * rot_y * rot_z * translationMatrix;
         }
 
         public void UpdateFromMemory(byte[] mobyMemory, int offset, List<Model> models)

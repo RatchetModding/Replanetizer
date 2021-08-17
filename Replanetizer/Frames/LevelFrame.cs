@@ -516,7 +516,7 @@ namespace Replanetizer.Frames
             if (level.terrainChunks.Count == 0)
             {
                 terrains.Clear();
-                terrains.AddRange(level.terrainEngine);
+                terrains.AddRange(level.terrainEngine.fragments);
                 collisions.Clear();
                 collisions.Add(new Tuple<Model,int,int>(level.collisionEngine, collisionVbo[0], collisionIbo[0]));
             } else
@@ -527,7 +527,7 @@ namespace Replanetizer.Frames
                 for (int i = 0; i < level.terrainChunks.Count; i++)
                 {
                     if (selectedChunks[i])
-                        terrains.AddRange(level.terrainChunks[i]);
+                        terrains.AddRange(level.terrainChunks[i].fragments);
                 }
 
                 for (int i = 0; i < level.collisionChunks.Count; i++)
@@ -591,9 +591,9 @@ namespace Replanetizer.Frames
                     //level.shrubModels.RemoveRange(5, level.shrubModels.Count - 5);
                     break;
                 case TerrainFragment tFrag:
-                    foreach (List<TerrainFragment> list in level.terrainChunks)
+                    foreach (Terrain terrain in level.terrainChunks)
                     {
-                        list.Remove(tFrag);
+                        terrain.fragments.Remove(tFrag);
                     }
                     break;
                 case Spline spline:

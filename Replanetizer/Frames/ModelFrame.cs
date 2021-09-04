@@ -29,7 +29,20 @@ namespace Replanetizer.Frames
 
         private int lastMouseX;
         private float xDelta;
-        private float zoom;
+
+        // We use an exponential function to convert zoomRaw to zoom:
+        //   e^(zoomExpCoeff * zoomRaw)
+        // This should feel more natural compared to a linear approach where
+        // it takes forever to zoom in from far away. Higher values for
+        // zoomExpCoeff make it zoom in more rapidly and vice-versa.
+        //
+        // zoom is then multiplied by zoomScale to give us the distance from
+        // the model to position the camera, so at default zoom we will be
+        // viewing from 10 units away.
+        private float zoomRaw;
+        private float zoom = 1;
+        private const float zoomScale = 10;
+        private const float zoomExpCoeff = 0.4f;
 
         private bool invalidate = true, initialized = false;
 
@@ -247,7 +260,7 @@ namespace Replanetizer.Frames
         private Matrix4 CreateWorldView()
         {
             Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 100.0f);
-            Matrix4 view = Matrix4.LookAt(new Vector3(10 + zoom, 10 + zoom, 10 + zoom), Vector3.Zero, Vector3.UnitZ);
+            Matrix4 view = Matrix4.LookAt(new Vector3(zoomScale * zoom), Vector3.Zero, Vector3.UnitZ);
             return view * projection;
         }
 
@@ -292,7 +305,8 @@ namespace Replanetizer.Frames
 
             if (wnd.MouseState.ScrollDelta.Y != 0)
             {
-                zoom -= wnd.MouseState.ScrollDelta.Y * 0.1f;
+                zoomRaw -= wnd.MouseState.ScrollDelta.Y;
+                zoom = (float)Math.Exp(zoomExpCoeff * zoomRaw);
                 worldView = CreateWorldView();
                 invalidate = true;
             }

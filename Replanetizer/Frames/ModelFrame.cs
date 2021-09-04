@@ -43,6 +43,11 @@ namespace Replanetizer.Frames
         private const float zoomScale = 4;
         private const float zoomExpCoeff = 0.4f;
 
+        // Projection matrix settings
+        private const float clipNear = 0.1f;
+        private const float clipFar = 100f;
+        private const float fieldOfView = MathF.PI / 3;
+
         private bool invalidate = true, initialized = false;
 
         private Matrix4 trans, scale, worldView, rot = Matrix4.Identity;
@@ -258,8 +263,11 @@ namespace Replanetizer.Frames
 
         private Matrix4 CreateWorldView()
         {
-            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 100.0f);
-            Matrix4 view = Matrix4.LookAt(new Vector3(zoomScale * zoom), Vector3.Zero, Vector3.UnitZ);
+            // To scale the zoom value to make a vector of that magnitude
+            // magnitude == sqrt(3*zoom^2)
+            const float invSqrt3 = 0.57735f;
+            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(fieldOfView, (float)Width / Height, clipNear, clipFar);
+            Matrix4 view = Matrix4.LookAt(new Vector3(invSqrt3 * zoomScale * zoom), Vector3.Zero, Vector3.UnitZ);
             return view * projection;
         }
 
@@ -304,8 +312,16 @@ namespace Replanetizer.Frames
 
             if (wnd.MouseState.ScrollDelta.Y != 0)
             {
+                var prevZoomRaw = zoomRaw;
+                var prevZoom = zoom;
                 zoomRaw -= wnd.MouseState.ScrollDelta.Y;
-                zoom = (float)Math.Exp(zoomExpCoeff * zoomRaw);
+                zoom = MathF.Exp(zoomExpCoeff * zoomRaw);
+                if (zoom * zoomScale is < clipNear or > clipFar)
+                {
+                    // Don't zoom beyond our clipping distances
+                    zoomRaw = prevZoomRaw;
+                    zoom = prevZoom;
+                }
                 worldView = CreateWorldView();
                 invalidate = true;
             }

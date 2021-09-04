@@ -16,16 +16,18 @@ namespace Replanetizer.Frames
         private object selectedObject;
         private bool listenToCallbacks;
         private bool hideCallbackButton = false;
+        private LevelFrame levelFrame;
 
         private Dictionary<string, Dictionary<string, PropertyInfo>> properties;
         
-        public PropertyFrame(Window wnd, object selectedObject = null, string overrideFrameName = null, bool listenToCallbacks = false, bool hideCallbackButton = false) : base(wnd)
+        public PropertyFrame(Window wnd, LevelFrame levelFrame = null, object selectedObject = null, string overrideFrameName = null, bool listenToCallbacks = false, bool hideCallbackButton = false) : base(wnd)
         {
             if (overrideFrameName != null && overrideFrameName.Length > 0)
             {
                 frameName = overrideFrameName;
             }
-            
+
+            this.levelFrame = levelFrame;
             this.selectedObject = selectedObject;
             this.listenToCallbacks = listenToCallbacks;
             this.hideCallbackButton = hideCallbackButton;
@@ -42,6 +44,11 @@ namespace Replanetizer.Frames
             }
             selectedObject = o;
             RecomputeProperties();
+        }
+
+        private void UpdateLevelFrame()
+        {
+            if (levelFrame != null) levelFrame.InvalidateView();
         }
 
         private void RecomputeProperties()
@@ -104,6 +111,7 @@ namespace Replanetizer.Frames
                             if (ImGui.InputText(key, v, (uint)v.Length))
                             {
                                 value.SetValue(selectedObject, Encoding.ASCII.GetString(v));
+                                UpdateLevelFrame();
                             }
                         }
                         else if (type == typeof(int))
@@ -112,6 +120,7 @@ namespace Replanetizer.Frames
                             if (ImGui.InputInt(key, ref v))
                             {
                                 value.SetValue(selectedObject, v);
+                                UpdateLevelFrame();
                             }
                         }
                         else if (type == typeof(uint))
@@ -120,6 +129,7 @@ namespace Replanetizer.Frames
                             if (ImGui.InputInt(key, ref v))
                             {
                                 value.SetValue(selectedObject, unchecked((uint)v));
+                                UpdateLevelFrame();
                             }
                         }
                         else if (type == typeof(short))
@@ -128,6 +138,7 @@ namespace Replanetizer.Frames
                             if (ImGui.InputInt(key, ref v))
                             {
                                 value.SetValue(selectedObject, (short)(v & 0xffff));
+                                UpdateLevelFrame();
                             }
                         }
                         else if (type == typeof(ushort))
@@ -136,6 +147,7 @@ namespace Replanetizer.Frames
                             if (ImGui.InputInt(key, ref v))
                             {
                                 value.SetValue(selectedObject, unchecked((ushort)(v & 0xffff)));
+                                UpdateLevelFrame();
                             }
                         }
                         else if (type == typeof(float))
@@ -144,6 +156,7 @@ namespace Replanetizer.Frames
                             if (ImGui.InputFloat(key, ref v))
                             {
                                 value.SetValue(selectedObject, v);
+                                UpdateLevelFrame();
                             }
                         }
                         else if (type == typeof(Color))
@@ -154,6 +167,7 @@ namespace Replanetizer.Frames
                             {
                                 Color newColor = Color.FromArgb((int)(v.X * 255.0f), (int)(v.Y * 255.0f), (int)(v.Z * 255.0f));
                                 value.SetValue(selectedObject, newColor);
+                                UpdateLevelFrame();
                             }
                         }
                         else if (type == typeof(OpenTK.Mathematics.Vector3))
@@ -171,6 +185,8 @@ namespace Replanetizer.Frames
                                 {
                                     ((LevelObject)selectedObject).UpdateTransformMatrix();
                                 }
+
+                                UpdateLevelFrame();
                             }
                         }
                         else if (type == typeof(OpenTK.Mathematics.Quaternion))
@@ -188,6 +204,8 @@ namespace Replanetizer.Frames
                                 {
                                     ((LevelObject)selectedObject).UpdateTransformMatrix();
                                 }
+
+                                UpdateLevelFrame();
                             }
                         }
                         else if (type == typeof(OpenTK.Mathematics.Matrix4))
@@ -244,6 +262,8 @@ namespace Replanetizer.Frames
                                 {
                                     ((LevelObject)selectedObject).UpdateTransformMatrix();
                                 }
+
+                                UpdateLevelFrame();
                             }
                         }
                         else if (type.IsArray)
@@ -276,6 +296,7 @@ namespace Replanetizer.Frames
                                 if (ImGui.Combo(key, ref index, strings, values.Length))
                                 {
                                     value.SetValue(selectedObject, index);
+                                    UpdateLevelFrame();
                                 }
                             } else
                             {

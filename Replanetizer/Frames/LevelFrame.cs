@@ -166,7 +166,7 @@ namespace Replanetizer.Frames
                 {
                     if (ImGui.MenuItem("Object properties"))
                     {
-                        var newFrame = new PropertyFrame(this.wnd, selectedObject, listenToCallbacks: true);
+                        var newFrame = new PropertyFrame(this.wnd, this, selectedObject, listenToCallbacks: true);
                         RegisterCallback(newFrame.SelectionCallback);
                         subFrames.Add(newFrame);
                     }
@@ -180,11 +180,11 @@ namespace Replanetizer.Frames
                     }
                     if (ImGui.MenuItem("Light config"))
                     {
-                        subFrames.Add(new PropertyFrame(this.wnd, level.lightConfig, "Light config"));
+                        subFrames.Add(new PropertyFrame(this.wnd, this, level.lightConfig, "Light config"));
                     }
                     if (ImGui.MenuItem("Level variables"))
                     {
-                        subFrames.Add(new PropertyFrame(this.wnd, level.levelVariables, "Level variables"));
+                        subFrames.Add(new PropertyFrame(this.wnd, this, level.levelVariables, "Level variables"));
                     }
                     ImGui.EndMenu();
                 }
@@ -252,7 +252,7 @@ namespace Replanetizer.Frames
 
             if (Width != prevWidth || Height != prevHeight)
             {
-                invalidate = true;
+                InvalidateView();
                 OnResize();
             }
 
@@ -1164,7 +1164,7 @@ namespace Replanetizer.Frames
         }
 
 
-        void InvalidateView()
+        public void InvalidateView()
         {
             invalidate = true;
         }

@@ -1,6 +1,7 @@
 using LibReplanetizer.Models;
 using OpenTK.Mathematics;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using static LibReplanetizer.DataFunctions;
 
@@ -11,13 +12,18 @@ namespace LibReplanetizer.LevelObjects
     {
         const int ELEMENTSIZE = 0x70;
 
-        public short off_50 { get; set; }
+        [Category("Unknowns"), DisplayName("OFF_54: Always 4000 in RaC 2/3")]
         public uint off_54 { get; set; }
+        [Category("Unknowns"), DisplayName("OFF_58: Tie ID")]
         public uint off_58 { get; set; }
+        [Category("Unknowns"), DisplayName("OFF_5C: Always 0")]
         public uint off_5C { get; set; }
 
+        [Category("Unknowns"), DisplayName("OFF_64: Always 0")]
         public uint off_64 { get; set; }
+        [Category("Unknowns"), DisplayName("OFF_68: Power of 2 minus 1")]
         public uint off_68 { get; set; }
+        [Category("Unknowns"), DisplayName("OFF_6C: Always 0")]
         public uint off_6C { get; set; }
 
         public byte[] colorBytes;
@@ -40,8 +46,7 @@ namespace LibReplanetizer.LevelObjects
             off_4C =    BAToUInt32(levelBlock, offset + 0x4C);
             */
 
-            off_50 = ReadShort(levelBlock, offset + 0x50);
-            modelID = ReadUshort(levelBlock, offset + 0x52);
+            modelID = ReadInt(levelBlock, offset + 0x50);
             off_54 = ReadUint(levelBlock, offset + 0x54);
             off_58 = ReadUint(levelBlock, offset + 0x58);
             off_5C = ReadUint(levelBlock, offset + 0x5C);
@@ -80,8 +85,7 @@ namespace LibReplanetizer.LevelObjects
 
             WriteMatrix4(bytes, 0x00, modelMatrix);
 
-            WriteShort(bytes, 0x50, off_50);
-            WriteShort(bytes, 0x52, (short)modelID);
+            WriteInt(bytes, 0x50, modelID);
             WriteUint(bytes, 0x54, off_54);
             WriteUint(bytes, 0x58, off_58);
             WriteUint(bytes, 0x5C, off_5C);
@@ -94,9 +98,22 @@ namespace LibReplanetizer.LevelObjects
             return bytes;
         }
 
+        // this may cause issues since the colorOffset is not given
         public override byte[] ToByteArray()
         {
             var bytes = new byte[ELEMENTSIZE];
+
+            WriteMatrix4(bytes, 0x00, modelMatrix);
+
+            WriteInt(bytes, 0x50, modelID);
+            WriteUint(bytes, 0x54, off_54);
+            WriteUint(bytes, 0x58, off_58);
+            WriteUint(bytes, 0x5C, off_5C);
+
+            WriteInt(bytes, 0x60, 0);
+            WriteUint(bytes, 0x64, off_64);
+            WriteUint(bytes, 0x68, off_68);
+            WriteUint(bytes, 0x6C, off_6C);
 
             return bytes;
         }

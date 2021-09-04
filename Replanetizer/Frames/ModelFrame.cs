@@ -19,7 +19,7 @@ namespace Replanetizer.Frames
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Models";
-        
+
         private Level level => levelFrame.level;
         private Model selectedModel;
         private List<Texture> selectedTextureSet;
@@ -104,18 +104,18 @@ namespace Replanetizer.Frames
                 ImGui.EndChild();
             }
         }
-        
+
         public override void Render(float deltaTime)
         {
             UpdateWindowSize();
             if (!initialized) ModelViewer_Load();
-            
+
             ImGui.Columns(3);
             ImGui.SetColumnWidth(0, 200);
             ImGui.SetColumnWidth(1, (float) Width);
             RenderTree();
             ImGui.NextColumn();
-            
+
             Tick(deltaTime);
 
             if (invalidate)
@@ -126,15 +126,15 @@ namespace Replanetizer.Frames
                     GL.Enable(EnableCap.DepthTest);
                     GL.LineWidth(5.0f);
                     GL.Viewport(0, 0, Width, Height);
-                    
+
                     OnPaint();
                 });
 
                 invalidate = false;
             }
-            ImGui.Image((IntPtr) targetTexture, new System.Numerics.Vector2(Width, Height), 
+            ImGui.Image((IntPtr) targetTexture, new System.Numerics.Vector2(Width, Height),
                 System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
-            
+
             ImGui.NextColumn();
             var colW = ImGui.GetColumnWidth() - 10;
             var colSize = new System.Numerics.Vector2(colW, Height);
@@ -153,7 +153,7 @@ namespace Replanetizer.Frames
                         ExportModel(selectedModel);
                     }
                 }
-                
+
                 ImGui.Separator();
                 propertyFrame.Render(deltaTime);
             }
@@ -179,7 +179,7 @@ namespace Replanetizer.Frames
                 Width = 0;
                 Height = 0;
                 return;
-            } 
+            }
 
             if (Width != prevWidth || Height != prevHeight)
             {
@@ -192,7 +192,7 @@ namespace Replanetizer.Frames
             mousePos = wnd.MousePosition - windowZero;
             contentRegion = new Rectangle((int)windowZero.X, (int)windowZero.Y, Width, Height);
         }
-        
+
         private void ModelViewer_Load()
         {
             GL.ClearColor(Color.SkyBlue);
@@ -224,12 +224,12 @@ namespace Replanetizer.Frames
         private void UpdateTextures()
         {
             modelTextureList.Clear();
-            
+
             for (int i = 0; i < selectedModel.textureConfig.Count; i++)
             {
                 int textureId = selectedModel.textureConfig[i].ID;
                 if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
-                
+
                 modelTextureList.Add(selectedTextureSet[textureId]);
             }
         }
@@ -296,7 +296,7 @@ namespace Replanetizer.Frames
                 worldView = CreateWorldView();
                 invalidate = true;
             }
-            
+
             if (wnd.IsMouseButtonDown(MouseButton.Right))
             {
                 xDelta += (wnd.MousePosition.X - lastMouseX) * deltaTime;

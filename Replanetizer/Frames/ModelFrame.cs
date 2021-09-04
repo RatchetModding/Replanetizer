@@ -37,11 +37,10 @@ namespace Replanetizer.Frames
         // zoomExpCoeff make it zoom in more rapidly and vice-versa.
         //
         // zoom is then multiplied by zoomScale to give us the distance from
-        // the model to position the camera, so at default zoom we will be
-        // viewing from 10 units away.
+        // the model to position the camera
         private float zoomRaw;
         private float zoom = 1;
-        private const float zoomScale = 10;
+        private const float zoomScale = 4;
         private const float zoomExpCoeff = 0.4f;
 
         private bool invalidate = true, initialized = false;

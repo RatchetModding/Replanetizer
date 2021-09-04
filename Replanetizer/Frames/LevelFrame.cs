@@ -61,8 +61,8 @@ namespace Replanetizer.Frames
         public bool initialized, invalidate;
         public bool[] selectedChunks;
         public bool enableMoby = true, enableTie = true, enableShrub = true, enableSpline = false,
-            enableCuboid = false, enableSpheres = false, enableCylinders = false, enableType0C = false, 
-            enableSkybox = true, enableTerrain = true, enableCollision = false, enableTransparency = true, 
+            enableCuboid = false, enableSpheres = false, enableCylinders = false, enableType0C = false,
+            enableSkybox = true, enableTerrain = true, enableCollision = false, enableTransparency = true,
             enableFog = true;
 
         public Camera camera;
@@ -79,7 +79,7 @@ namespace Replanetizer.Frames
 
         private int Width, Height;
         private int targetTexture;
-        
+
         private List<Frame> subFrames;
         private List<Action<LevelObject>> selectionCallbacks;
 
@@ -203,7 +203,7 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Collision", ref enableCollision)) InvalidateView();
                     if (ImGui.Checkbox("Transparency", ref enableTransparency)) InvalidateView();
                     if (ImGui.Checkbox("Fog", ref enableFog)) InvalidateView();
-                    
+
                     ImGui.EndMenu();
                 }
 
@@ -216,10 +216,10 @@ namespace Replanetizer.Frames
                     if (ImGui.MenuItem("No tool          [5]")) SelectTool(null);
                     if (ImGui.MenuItem("Delete object  [Del]")) DeleteObject(selectedObject);
                     if (ImGui.MenuItem("Deselect object")) SelectObject(null);
-                    
+
                     ImGui.EndMenu();
                 }
-                    
+
                 if (selectedChunks.Length > 0)
                 {
                     if (ImGui.BeginMenu("Chunks"))
@@ -228,11 +228,11 @@ namespace Replanetizer.Frames
                         {
                             if (ImGui.Checkbox("Chunk " + i, ref selectedChunks[i])) setSelectedChunks();
                         }
-                        
+
                         ImGui.EndMenu();
                     }
                 }
-                
+
                 ImGui.EndMenuBar();
             }
         }
@@ -247,7 +247,7 @@ namespace Replanetizer.Frames
             Width = (int) (vMax.X - vMin.X);
             Height = (int) (vMax.Y - vMin.Y);
 
-            if (Width <= 0 || Height <= 0) return; 
+            if (Width <= 0 || Height <= 0) return;
 
             if (Width != prevWidth || Height != prevHeight)
             {
@@ -264,28 +264,28 @@ namespace Replanetizer.Frames
         public override void RenderAsWindow(float deltaTime)
         {
             if (!initialized) CustomGLControl_Load();
-                
+
             var viewport = ImGui.GetMainViewport();
             var pos = viewport.Pos;
             var size = viewport.Size;
-            
+
             ImGui.SetNextWindowPos(pos);
             ImGui.SetNextWindowSize(size);
             ImGui.SetNextWindowViewport(viewport.ID);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, 0);
-            
-            ImGui.Begin(frameName, 
-                ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | 
-                ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus | 
+
+            ImGui.Begin(frameName,
+                ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize |
+                ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus |
                 ImGuiWindowFlags.MenuBar | ImGuiWindowFlags.NoDocking);
-            
+
             ImGui.PopStyleVar(2);
 
             Render(deltaTime);
             ImGui.End();
-            
+
             RenderSubFrames(deltaTime);
         }
 
@@ -305,13 +305,13 @@ namespace Replanetizer.Frames
                         GL.Enable(EnableCap.DepthTest);
                         GL.LineWidth(5.0f);
                         GL.Viewport(0, 0, Width, Height);
-                        
+
                         OnPaint();
                     });
 
                     invalidate = false;
                 }
-                ImGui.Image((IntPtr) targetTexture, new System.Numerics.Vector2(Width, Height), 
+                ImGui.Image((IntPtr) targetTexture, new System.Numerics.Vector2(Width, Height),
                     System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
             }
         }
@@ -373,7 +373,7 @@ namespace Replanetizer.Frames
             rotationTool = new RotationTool();
             scalingTool = new ScalingTool();
             vertexTranslator = new VertexTranslationTool();
-            
+
             initialized = true;
         }
 
@@ -612,7 +612,7 @@ namespace Replanetizer.Frames
         {
             if (!(selectedObject is Spline spline)) return;
             if (!(currentTool is VertexTranslationTool)) return;
-            
+
             int delta = (int) wnd.MouseState.ScrollDelta.Length / 120;
             if (delta > 0)
             {
@@ -660,7 +660,7 @@ namespace Replanetizer.Frames
             {
                 camera.rotation.Z -= (wnd.MousePosition.X - lastMouseX) * camera.speed * deltaTime;
                 camera.rotation.X -= (wnd.MousePosition.Y - lastMouseY) * camera.speed * deltaTime;
-                camera.rotation.X = MathHelper.Clamp(camera.rotation.X, 
+                camera.rotation.X = MathHelper.Clamp(camera.rotation.X,
                     MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
 
                 InvalidateView();
@@ -675,7 +675,7 @@ namespace Replanetizer.Frames
             {
                 moveDir *= moveSpeed * deltaTime;
                 camera.TransformedTranslate(moveDir);
-                
+
                 InvalidateView();
             }
         }
@@ -715,29 +715,29 @@ namespace Replanetizer.Frames
         {
             Point absoluteMousePos = new Point((int)wnd.MousePosition.X, (int)wnd.MousePosition.Y);
             if (!ImGui.IsWindowHovered() || !contentRegion.Contains(absoluteMousePos)) return;
-            
+
             HandleMouseWheelChanges();
             HandleKeyboardShortcuts();
             CheckForRotationInput(deltaTime);
             CheckForMovementInput(deltaTime);
 
             view = camera.GetViewMatrix();
-            
+
             Vector3 mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), mousePos);
-            
+
             if (wnd.IsMouseButtonDown(MouseButton.Left))
             {
                 LevelObject obj = null;
                 bool hitTool = false;
                 Vector3 direction = Vector3.Zero;
                 int tempTextureId = 0;
-                
+
                 FramebufferRenderer.ToTexture(Width, Height, ref tempTextureId, () =>
                 {
                     obj = GetObjectAtScreenPosition(mousePos, ref hitTool, ref direction);
                 });
 
-                if (hitTool) 
+                if (hitTool)
                 {
                     HandleToolUpdates(mouseRay, direction);
                 }
@@ -745,8 +745,8 @@ namespace Replanetizer.Frames
                 {
                     SelectObject(obj);
                 }
-            } 
-            
+            }
+
             lastMouseX = (int) wnd.MousePosition.X;
             lastMouseY = (int) wnd.MousePosition.Y;
             prevMouseRay = mouseRay;
@@ -951,9 +951,9 @@ namespace Replanetizer.Frames
             LevelObject returnObject = null;
             hitTool = false;
             direction = Vector3.Zero;
-            
+
             int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0, cuboidOffset = 0, sphereOffset = 0, cylinderOffset = 0, type0COffset = 0, tfragOffset = 0;
-            
+
             GL.Viewport(0, 0, Width, Height);
             GL.Enable(EnableCap.DepthTest);
             GL.LineWidth(5.0f);
@@ -1057,7 +1057,7 @@ namespace Replanetizer.Frames
                     hitTool = true;
                     direction = Vector3.UnitZ;
                 }
-                
+
                 if (hitTool)
                 {
                     InvalidateView();
@@ -1173,7 +1173,7 @@ namespace Replanetizer.Frames
         protected void OnPaint()
         {
             worldView = view * projection;
-            
+
             if (level != null && level.levelVariables != null)
                 GL.ClearColor(level.levelVariables.fogColor);
 
@@ -1181,7 +1181,7 @@ namespace Replanetizer.Frames
 
             GL.EnableVertexAttribArray(0);
             GL.EnableVertexAttribArray(1);
-            
+
             GL.UseProgram(shaderID);
             if (level != null && level.levelVariables != null)
             {
@@ -1190,7 +1190,7 @@ namespace Replanetizer.Frames
                 GL.Uniform1(uniformFogFarDistID, level.levelVariables.fogFarDistance);
                 GL.Uniform1(uniformFogNearIntensityID, level.levelVariables.fogNearIntensity / 255.0f);
                 GL.Uniform1(uniformFogFarIntensityID, level.levelVariables.fogFarIntensity / 255.0f);
-                GL.Uniform1(uniformUseFogID, (enableFog) ? 1 : 0); 
+                GL.Uniform1(uniformUseFogID, (enableFog) ? 1 : 0);
             }
 
             if (enableSkybox)
@@ -1346,7 +1346,7 @@ namespace Replanetizer.Frames
             GL.DisableVertexAttribArray(0);
             GL.DisableVertexAttribArray(1);
         }
-        
+
         public void AddSubFrame(Frame frame)
         {
             if (!subFrames.Contains(frame)) subFrames.Add(frame);

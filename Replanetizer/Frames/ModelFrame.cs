@@ -315,9 +315,10 @@ namespace Replanetizer.Frames
             {
                 xDelta += (wnd.MousePosition.X - lastMouseX) * deltaTime;
                 rot = Matrix4.CreateRotationZ(xDelta);
-                lastMouseX = (int) wnd.MousePosition.X;
                 invalidate = true;
             }
+            lastMouseX = (int) wnd.MousePosition.X;
+
             if (invalidate)
             {
                 invalidate = true;

@@ -70,10 +70,7 @@ namespace LibReplanetizer.Serializers
                 TerrainModel mod = (TerrainModel)(tFrags[i].model);
 
                 int offset = i * 0x30;
-                WriteFloat(tfragHeads, offset + 0x00, tFrags[i].off_00);
-                WriteFloat(tfragHeads, offset + 0x04, tFrags[i].off_04);
-                WriteFloat(tfragHeads, offset + 0x08, tFrags[i].off_08);
-                WriteFloat(tfragHeads, offset + 0x0C, tFrags[i].off_0C);
+                tFrags[i].ToByteArray().CopyTo(tfragHeads, offset);
 
                 WriteInt(tfragHeads, offset + 0x10, fileOffset + headerSize + tfragHeads.Length + textureBytes.Count);
                 WriteInt(tfragHeads, offset + 0x14, tFrags[i].model.textureConfig.Count);
@@ -87,13 +84,7 @@ namespace LibReplanetizer.Serializers
                 WriteUshort(tfragHeads, offset + 0x18, (ushort)(vertBytes[chunk].Count / 0x1c));
                 WriteUshort(tfragHeads, offset + 0x1a, (ushort)(tFrags[i].model.vertexBuffer.Length / 8));
 
-                WriteUshort(tfragHeads, offset + 0x1C, tFrags[i].off_1C);
-                WriteUshort(tfragHeads, offset + 0x1E, tFrags[i].off_1E);
-                WriteUshort(tfragHeads, offset + 0x20, tFrags[i].off_20);
                 WriteUshort(tfragHeads, offset + 0x22, chunk);
-                WriteUint(tfragHeads, offset + 0x24, tFrags[i].off_24);
-                WriteUint(tfragHeads, offset + 0x28, tFrags[i].off_28);
-                WriteUint(tfragHeads, offset + 0x2C, tFrags[i].off_2C);
 
                 foreach (var texConf in tFrags[i].model.textureConfig)
                 {

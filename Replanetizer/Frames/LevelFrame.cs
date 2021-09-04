@@ -504,9 +504,17 @@ namespace Replanetizer.Frames
                 selectedChunks[i] = true;
             }
             setSelectedChunks();
-            
-            Moby ratchet = level.mobs[0];
-            camera.MoveBehind(ratchet);     
+
+            if (level.mobs.Count > 0)
+            {
+                Moby ratchet = level.mobs[0];
+                camera.MoveBehind(ratchet);
+            }
+            else
+            {
+                camera.SetPosition(0, 0, 0);
+                camera.SetRotation(0, 0);
+            }
             SelectObject(null);
             InvalidateView();
         }

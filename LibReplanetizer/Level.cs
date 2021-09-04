@@ -372,7 +372,7 @@ namespace LibReplanetizer
         public void Save(string outputFile)
         {
             string directory;
-            if (File.GetAttributes(outputFile).HasFlag(FileAttributes.Directory))
+            if (File.Exists(outputFile) && File.GetAttributes(outputFile).HasFlag(FileAttributes.Directory))
             {
                 directory = outputFile;
             }

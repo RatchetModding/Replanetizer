@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using ImGuiNET;
 using LibReplanetizer;
 using LibReplanetizer.Models;
@@ -22,6 +21,8 @@ namespace Replanetizer.Frames
 
         private Level level => levelFrame.level;
         private Model selectedModel;
+        private int selectedModelIndex;
+        private List<Model> selectedModelList;
         private List<Texture> selectedTextureSet;
         private List<Texture> modelTextureList;
 
@@ -71,6 +72,9 @@ namespace Replanetizer.Frames
             if (ImGui.Selectable(name, selectedModel == mod))
             {
                 SelectModel(mod, textureSet);
+                // TODO Some models like gadgets can't load their textures with
+                //   this method
+                PrepareForArrowInput();
             }
         }
 
@@ -249,6 +253,26 @@ namespace Replanetizer.Frames
             }
         }
 
+        /// <summary>
+        /// Use selectedModel to prepare selectedModelIndex and
+        /// selectedModelList for using arrows to navigate through models.
+        /// </summary>
+        private void PrepareForArrowInput()
+        {
+            List<Model>[] modelLists = {
+                level.mobyModels, level.tieModels, level.shrubModels,
+                level.gadgetModels, level.armorModels
+            };
+            foreach (var list in modelLists)
+            {
+                var idx = list.FindIndex(m => ReferenceEquals(m, selectedModel));
+                if (idx == -1) continue;
+                selectedModelIndex = idx;
+                selectedModelList = list;
+                return;
+            }
+        }
+
         private void SelectModel(Model model)
         {
             SelectModel(model, level.textures);
@@ -261,6 +285,17 @@ namespace Replanetizer.Frames
             selectedModel = model;
             selectedTextureSet = textures;
             UpdateModel();
+        }
+
+        private void CycleModels(int delta)
+        {
+            if (selectedModelList == null) return;
+            var idx = selectedModelIndex + delta;
+            var count = selectedModelList.Count;
+            // Wrap the new index around the count (modulus can give negatives)
+            selectedModelIndex = (idx % count + count) % count;
+            var model = selectedModelList[selectedModelIndex];
+            SelectModel(model);
         }
 
         private Matrix4 CreateWorldView()
@@ -335,6 +370,15 @@ namespace Replanetizer.Frames
                 invalidate = true;
             }
             lastMouseX = (int) wnd.MousePosition.X;
+
+            if (wnd.IsKeyPressed(Keys.Down))
+            {
+                CycleModels(1);
+            }
+            else if (wnd.IsKeyPressed(Keys.Up))
+            {
+                CycleModels(-1);
+            }
 
             if (invalidate)
             {

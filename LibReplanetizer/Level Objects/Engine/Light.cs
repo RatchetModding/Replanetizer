@@ -1,4 +1,5 @@
 ﻿using OpenTK.Mathematics;
+using System.ComponentModel;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects
@@ -12,10 +13,17 @@ namespace LibReplanetizer.LevelObjects
      */
     public class Light
     {
-        public Vector4 color1;
-        public Vector4 direction1;
-        public Vector4 color2;
-        public Vector4 direction2;
+        [Category("Attributes"), DisplayName("Color 1")]
+        public Vector4 color1 { get; set; }
+
+        [Category("Attributes"), DisplayName("Direction 1")]
+        public Vector4 direction1 { get; set; }
+
+        [Category("Attributes"), DisplayName("Color 2")]
+        public Vector4 color2 { get; set; }
+
+        [Category("Attributes"), DisplayName("Direction 2")]
+        public Vector4 direction2 { get; set; }
 
         public Light(byte[] block, int num)
         {

@@ -70,9 +70,7 @@ namespace Replanetizer.Frames
         {
             if (ImGui.Selectable(name, selectedModel == mod))
             {
-                selectedModel = mod;
-                selectedTextureSet = textureSet;
-                UpdateModel();
+                SelectModel(mod, textureSet);
             }
         }
 
@@ -253,11 +251,15 @@ namespace Replanetizer.Frames
 
         private void SelectModel(Model model)
         {
+            SelectModel(model, level.textures);
+        }
+
+        private void SelectModel(Model model, List<Texture> textures)
+        {
             if (model == null) return;
 
             selectedModel = model;
-            selectedTextureSet = level.textures;
-
+            selectedTextureSet = textures;
             UpdateModel();
         }
 

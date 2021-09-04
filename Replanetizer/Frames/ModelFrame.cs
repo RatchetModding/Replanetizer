@@ -23,6 +23,8 @@ namespace Replanetizer.Frames
         private Model selectedModel;
         private int selectedModelIndex;
         private List<Model> selectedModelList;
+        private List<Texture> selectedModelTexturesSet;
+        private List<List<Texture>> selectedModelArmorTexturesSet;
         private List<Texture> selectedTextureSet;
         private List<Texture> modelTextureList;
 
@@ -72,8 +74,6 @@ namespace Replanetizer.Frames
             if (ImGui.Selectable(name, selectedModel == mod))
             {
                 SelectModel(mod, textureSet);
-                // TODO Some models like gadgets can't load their textures with
-                //   this method
                 PrepareForArrowInput();
             }
         }
@@ -263,12 +263,25 @@ namespace Replanetizer.Frames
                 level.mobyModels, level.tieModels, level.shrubModels,
                 level.gadgetModels, level.armorModels
             };
-            foreach (var list in modelLists)
+            foreach (var models in modelLists)
             {
-                var idx = list.FindIndex(m => ReferenceEquals(m, selectedModel));
+                var idx = models.FindIndex(m => ReferenceEquals(m, selectedModel));
                 if (idx == -1) continue;
+
                 selectedModelIndex = idx;
-                selectedModelList = list;
+                selectedModelList = models;
+
+                // This is a little weird because armorTextures is a list
+                // of a list of textures -- one list per armor set.
+                selectedModelTexturesSet = null;
+                selectedModelArmorTexturesSet = null;
+                if (ReferenceEquals(models, level.gadgetModels))
+                    selectedModelTexturesSet = level.gadgetTextures;
+                else if (ReferenceEquals(models, level.armorModels))
+                    selectedModelArmorTexturesSet = level.armorTextures;
+                else
+                    selectedModelTexturesSet = level.textures;
+
                 return;
             }
         }
@@ -287,15 +300,39 @@ namespace Replanetizer.Frames
             UpdateModel();
         }
 
-        private void CycleModels(int delta)
+        /// <summary>
+        /// Cycle through the currently selected list of models (useful for
+        /// using arrow keys to navigate)
+        /// </summary>
+        /// <param name="offset">offset from the current model to select</param>
+        private void CycleModels(int offset)
         {
             if (selectedModelList == null) return;
-            var idx = selectedModelIndex + delta;
+            var idx = selectedModelIndex + offset;
             var count = selectedModelList.Count;
             // Wrap the new index around the count (modulus can give negatives)
+            idx = (idx % count + count) % count;
             selectedModelIndex = (idx % count + count) % count;
-            var model = selectedModelList[selectedModelIndex];
-            SelectModel(model);
+            var model = selectedModelList[idx];
+
+            List<Texture> textureSet;
+            if (selectedModelArmorTexturesSet != null)
+                // This model is armor, so get its texture set from the list
+                // of armor texture sets
+                textureSet = selectedModelArmorTexturesSet[idx];
+            else if (selectedModelTexturesSet != null)
+                textureSet = selectedModelTexturesSet;
+            else
+            {
+                Logger.Warn(
+                    $"Either {nameof(selectedModelTexturesSet)} or " +
+                    $"{nameof(selectedModelArmorTexturesSet)} should be " +
+                    "non-null. We'll default to level.textures."
+                    );
+                textureSet = level.textures;
+            }
+
+            SelectModel(model, textureSet);
         }
 
         private Matrix4 CreateWorldView()

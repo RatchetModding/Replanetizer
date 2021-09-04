@@ -31,22 +31,22 @@ namespace Replanetizer.Frames
         private float xDelta;
 
         // We use an exponential function to convert zoomRaw to zoom:
-        //   e^(zoomExpCoeff * zoomRaw)
+        //   e^(ZOOM_EXP_COEFF * zoomRaw)
         // This should feel more natural compared to a linear approach where
         // it takes forever to zoom in from far away. Higher values for
-        // zoomExpCoeff make it zoom in more rapidly and vice-versa.
+        // ZOOM_EXP_COEFF make it zoom in more rapidly and vice-versa.
         //
-        // zoom is then multiplied by zoomScale to give us the distance from
+        // zoom is then multiplied by ZOOM_SCALE to give us the distance from
         // the model to position the camera
+        private const float ZOOM_SCALE = 4;
+        private const float ZOOM_EXP_COEFF = 0.4f;
         private float zoomRaw;
         private float zoom = 1;
-        private const float zoomScale = 4;
-        private const float zoomExpCoeff = 0.4f;
 
         // Projection matrix settings
-        private const float clipNear = 0.1f;
-        private const float clipFar = 100f;
-        private const float fieldOfView = MathF.PI / 3;
+        private const float CLIP_NEAR = 0.1f;
+        private const float CLIP_FAR = 100f;
+        private const float FIELD_OF_VIEW = MathF.PI / 3;  // 60 degrees
 
         private bool invalidate = true, initialized = false;
 
@@ -266,8 +266,8 @@ namespace Replanetizer.Frames
             // To scale the zoom value to make a vector of that magnitude
             // magnitude == sqrt(3*zoom^2)
             const float invSqrt3 = 0.57735f;
-            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(fieldOfView, (float)Width / Height, clipNear, clipFar);
-            Matrix4 view = Matrix4.LookAt(new Vector3(invSqrt3 * zoomScale * zoom), Vector3.Zero, Vector3.UnitZ);
+            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(FIELD_OF_VIEW, (float)Width / Height, CLIP_NEAR, CLIP_FAR);
+            Matrix4 view = Matrix4.LookAt(new Vector3(invSqrt3 * ZOOM_SCALE * zoom), Vector3.Zero, Vector3.UnitZ);
             return view * projection;
         }
 
@@ -315,8 +315,8 @@ namespace Replanetizer.Frames
                 var prevZoomRaw = zoomRaw;
                 var prevZoom = zoom;
                 zoomRaw -= wnd.MouseState.ScrollDelta.Y;
-                zoom = MathF.Exp(zoomExpCoeff * zoomRaw);
-                if (zoom * zoomScale is < clipNear or > clipFar)
+                zoom = MathF.Exp(ZOOM_EXP_COEFF * zoomRaw);
+                if (zoom * ZOOM_SCALE is < CLIP_NEAR or > CLIP_FAR)
                 {
                     // Don't zoom beyond our clipping distances
                     zoomRaw = prevZoomRaw;

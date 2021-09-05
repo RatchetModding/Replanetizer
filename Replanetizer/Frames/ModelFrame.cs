@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using ImGuiNET;
 using LibReplanetizer;
 using LibReplanetizer.Models;
@@ -19,17 +18,45 @@ namespace Replanetizer.Frames
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Models";
-        
+
         private Level level => levelFrame.level;
         private Model selectedModel;
+        private int selectedModelIndex;
+        private List<Model> selectedModelList;
+        private List<Texture> selectedModelTexturesSet;
+        private List<List<Texture>> selectedModelArmorTexturesSet;
         private List<Texture> selectedTextureSet;
         private List<Texture> modelTextureList;
+
+        private readonly ImGuiKeyHeldHandler keyHeldHandler = new()
+        {
+            WatchedKeys = { Keys.Up, Keys.Down },
+            HoldDelay = 0.45f,
+            RepeatDelay = 0.06f
+        };
 
         private int shaderID, matrixID;
 
         private int lastMouseX;
         private float xDelta;
-        private float zoom;
+
+        // We use an exponential function to convert zoomRaw to zoom:
+        //   e^(ZOOM_EXP_COEFF * zoomRaw)
+        // This should feel more natural compared to a linear approach where
+        // it takes forever to zoom in from far away. Higher values for
+        // ZOOM_EXP_COEFF make it zoom in more rapidly and vice-versa.
+        //
+        // zoom is then multiplied by ZOOM_SCALE to give us the distance from
+        // the model to position the camera
+        private const float ZOOM_SCALE = 4;
+        private const float ZOOM_EXP_COEFF = 0.4f;
+        private float zoomRaw;
+        private float zoom = 1;
+
+        // Projection matrix settings
+        private const float CLIP_NEAR = 0.1f;
+        private const float CLIP_FAR = 100f;
+        private const float FIELD_OF_VIEW = MathF.PI / 3;  // 60 degrees
 
         private bool invalidate = true, initialized = false;
 
@@ -53,9 +80,8 @@ namespace Replanetizer.Frames
         {
             if (ImGui.Selectable(name, selectedModel == mod))
             {
-                selectedModel = mod;
-                selectedTextureSet = textureSet;
-                UpdateModel();
+                SelectModel(mod, textureSet);
+                PrepareForArrowInput();
             }
         }
 
@@ -104,18 +130,18 @@ namespace Replanetizer.Frames
                 ImGui.EndChild();
             }
         }
-        
+
         public override void Render(float deltaTime)
         {
             UpdateWindowSize();
             if (!initialized) ModelViewer_Load();
-            
+
             ImGui.Columns(3);
             ImGui.SetColumnWidth(0, 200);
             ImGui.SetColumnWidth(1, (float) Width);
             RenderTree();
             ImGui.NextColumn();
-            
+
             Tick(deltaTime);
 
             if (invalidate)
@@ -126,15 +152,15 @@ namespace Replanetizer.Frames
                     GL.Enable(EnableCap.DepthTest);
                     GL.LineWidth(5.0f);
                     GL.Viewport(0, 0, Width, Height);
-                    
+
                     OnPaint();
                 });
 
                 invalidate = false;
             }
-            ImGui.Image((IntPtr) targetTexture, new System.Numerics.Vector2(Width, Height), 
+            ImGui.Image((IntPtr) targetTexture, new System.Numerics.Vector2(Width, Height),
                 System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
-            
+
             ImGui.NextColumn();
             var colW = ImGui.GetColumnWidth() - 10;
             var colSize = new System.Numerics.Vector2(colW, Height);
@@ -153,7 +179,7 @@ namespace Replanetizer.Frames
                         ExportModel(selectedModel);
                     }
                 }
-                
+
                 ImGui.Separator();
                 propertyFrame.Render(deltaTime);
             }
@@ -179,7 +205,7 @@ namespace Replanetizer.Frames
                 Width = 0;
                 Height = 0;
                 return;
-            } 
+            }
 
             if (Width != prevWidth || Height != prevHeight)
             {
@@ -192,7 +218,7 @@ namespace Replanetizer.Frames
             mousePos = wnd.MousePosition - windowZero;
             contentRegion = new Rectangle((int)windowZero.X, (int)windowZero.Y, Width, Height);
         }
-        
+
         private void ModelViewer_Load()
         {
             GL.ClearColor(Color.SkyBlue);
@@ -224,30 +250,105 @@ namespace Replanetizer.Frames
         private void UpdateTextures()
         {
             modelTextureList.Clear();
-            
+
             for (int i = 0; i < selectedModel.textureConfig.Count; i++)
             {
                 int textureId = selectedModel.textureConfig[i].ID;
                 if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
-                
+
                 modelTextureList.Add(selectedTextureSet[textureId]);
+            }
+        }
+
+        /// <summary>
+        /// Use selectedModel to prepare selectedModelIndex and
+        /// selectedModelList for using arrows to navigate through models.
+        /// </summary>
+        private void PrepareForArrowInput()
+        {
+            List<Model>[] modelLists = {
+                level.mobyModels, level.tieModels, level.shrubModels,
+                level.gadgetModels, level.armorModels
+            };
+            foreach (var models in modelLists)
+            {
+                var idx = models.FindIndex(m => ReferenceEquals(m, selectedModel));
+                if (idx == -1) continue;
+
+                selectedModelIndex = idx;
+                selectedModelList = models;
+
+                // This is a little weird because armorTextures is a list
+                // of a list of textures -- one list per armor set.
+                selectedModelTexturesSet = null;
+                selectedModelArmorTexturesSet = null;
+                if (ReferenceEquals(models, level.gadgetModels))
+                    selectedModelTexturesSet = level.gadgetTextures;
+                else if (ReferenceEquals(models, level.armorModels))
+                    selectedModelArmorTexturesSet = level.armorTextures;
+                else
+                    selectedModelTexturesSet = level.textures;
+
+                return;
             }
         }
 
         private void SelectModel(Model model)
         {
+            SelectModel(model, level.textures);
+        }
+
+        private void SelectModel(Model model, List<Texture> textures)
+        {
             if (model == null) return;
 
             selectedModel = model;
-            selectedTextureSet = level.textures;
-
+            selectedTextureSet = textures;
             UpdateModel();
+        }
+
+        /// <summary>
+        /// Cycle through the currently selected list of models (useful for
+        /// using arrow keys to navigate)
+        /// </summary>
+        /// <param name="offset">offset from the current model to select</param>
+        private void CycleModels(int offset)
+        {
+            if (selectedModelList == null) return;
+            var idx = selectedModelIndex + offset;
+            var count = selectedModelList.Count;
+            // Wrap the new index around the count (modulus can give negatives)
+            idx = (idx % count + count) % count;
+            selectedModelIndex = (idx % count + count) % count;
+            var model = selectedModelList[idx];
+
+            List<Texture> textureSet;
+            if (selectedModelArmorTexturesSet != null)
+                // This model is armor, so get its texture set from the list
+                // of armor texture sets
+                textureSet = selectedModelArmorTexturesSet[idx];
+            else if (selectedModelTexturesSet != null)
+                textureSet = selectedModelTexturesSet;
+            else
+            {
+                Logger.Warn(
+                    $"Either {nameof(selectedModelTexturesSet)} or " +
+                    $"{nameof(selectedModelArmorTexturesSet)} should be " +
+                    "non-null. We'll default to level.textures."
+                    );
+                textureSet = level.textures;
+            }
+
+            SelectModel(model, textureSet);
         }
 
         private Matrix4 CreateWorldView()
         {
-            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 100.0f);
-            Matrix4 view = Matrix4.LookAt(new Vector3(10 + zoom, 10 + zoom, 10 + zoom), Vector3.Zero, Vector3.UnitZ);
+            // To scale the zoom value to make a vector of that magnitude
+            // magnitude == sqrt(3*zoom^2)
+            const float invSqrt3 = 0.57735f;
+            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(FIELD_OF_VIEW, (float)Width / Height, CLIP_NEAR, CLIP_FAR);
+            Matrix4 view = Matrix4.LookAt(new Vector3(invSqrt3 * ZOOM_SCALE * zoom), Vector3.Zero, Vector3.UnitZ);
             return view * projection;
         }
 
@@ -290,24 +391,36 @@ namespace Replanetizer.Frames
             Point absoluteMousePos = new Point((int)wnd.MousePosition.X, (int)wnd.MousePosition.Y);
             if (!ImGui.IsWindowHovered() || !contentRegion.Contains(absoluteMousePos)) return;
 
+            keyHeldHandler.Update(wnd.KeyboardState, deltaTime);
+
             if (wnd.MouseState.ScrollDelta.Y != 0)
             {
-                zoom -= wnd.MouseState.ScrollDelta.Y * 0.1f;
+                var prevZoomRaw = zoomRaw;
+                var prevZoom = zoom;
+                zoomRaw -= wnd.MouseState.ScrollDelta.Y;
+                zoom = MathF.Exp(ZOOM_EXP_COEFF * zoomRaw);
+                if (zoom * ZOOM_SCALE is < CLIP_NEAR or > CLIP_FAR)
+                {
+                    // Don't zoom beyond our clipping distances
+                    zoomRaw = prevZoomRaw;
+                    zoom = prevZoom;
+                }
                 worldView = CreateWorldView();
                 invalidate = true;
             }
-            
+
             if (wnd.IsMouseButtonDown(MouseButton.Right))
             {
                 xDelta += (wnd.MousePosition.X - lastMouseX) * deltaTime;
                 rot = Matrix4.CreateRotationZ(xDelta);
-                lastMouseX = (int) wnd.MousePosition.X;
                 invalidate = true;
             }
-            if (invalidate)
-            {
-                invalidate = true;
-            }
+            lastMouseX = (int) wnd.MousePosition.X;
+
+            if (keyHeldHandler.IsKeyHeld(Keys.Down))
+                CycleModels(1);
+            else if (keyHeldHandler.IsKeyHeld(Keys.Up))
+                CycleModels(-1);
         }
 
         private void OnResize()

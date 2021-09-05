@@ -175,9 +175,9 @@ namespace Replanetizer.Frames
                         ImGui.Separator();
                     }
                     if (ImGui.Button("Export model"))
-                    {
-                        ExportModel(selectedModel);
-                    }
+                        ExportSelectedModel();
+                    if (ImGui.Button("Export textures"))
+                        ExportSelectedModelTextures();
                 }
 
                 ImGui.Separator();
@@ -429,24 +429,49 @@ namespace Replanetizer.Frames
             invalidate = true;
         }
 
-        private void ExportModel(Model model)
+        private void ExportSelectedModel()
         {
-            if (selectedModel == null) return;
+            var model = selectedModel;
+            if (model == null) return;
 
             var fileName = CrossFileDialog.SaveFile(filter: ".obj;.iqe");
-            if (fileName.Length > 0)
-            {
-                string extension = Path.GetExtension(fileName);
+            if (fileName.Length <= 0) return;
 
-                switch (extension)
-                {
-                    case ".obj":
-                        ModelWriter.WriteObj(fileName, selectedModel);
-                        break;
-                    case ".iqe":
-                        ModelWriter.WriteIqe(fileName, level, selectedModel);
-                        break;
-                }
+            var extension = Path.GetExtension(fileName);
+            switch (extension)
+            {
+                case ".obj":
+                    ModelWriter.WriteObj(fileName, model);
+                    break;
+                case ".iqe":
+                    ModelWriter.WriteIqe(fileName, level, model);
+                    break;
+            }
+        }
+
+        private void ExportSelectedModelTextures()
+        {
+            var textures = modelTextureList;
+            var textureConfig = selectedModel?.textureConfig;
+            if (textures == null || textureConfig == null) return;
+
+            if (textures.Count != textureConfig.Count)
+            {
+                Logger.Error(
+                    "textures and textureConfig do not have the same count. " +
+                    "We will use the count of the textures and ignore any " +
+                    "extra textureConfigs."
+                    );
+            }
+
+            var folder = CrossFileDialog.OpenFolder();
+            if (folder.Length <= 0) return;
+
+            for (var i = 0; i<textures.Count; i++)
+            {
+                var texture = textures[i];
+                var textureId = textureConfig[i].ID;
+                TextureIO.ExportTexture(texture, Path.Combine(folder, $"{textureId}.png"));
             }
         }
     }

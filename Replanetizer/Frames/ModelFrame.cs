@@ -28,6 +28,13 @@ namespace Replanetizer.Frames
         private List<Texture> selectedTextureSet;
         private List<Texture> modelTextureList;
 
+        private readonly ImGuiKeyHeldHandler keyHeldHandler = new()
+        {
+            WatchedKeys = { Keys.Up, Keys.Down },
+            HoldDelay = 0.45f,
+            RepeatDelay = 0.06f
+        };
+
         private int shaderID, matrixID;
 
         private int lastMouseX;
@@ -384,6 +391,8 @@ namespace Replanetizer.Frames
             Point absoluteMousePos = new Point((int)wnd.MousePosition.X, (int)wnd.MousePosition.Y);
             if (!ImGui.IsWindowHovered() || !contentRegion.Contains(absoluteMousePos)) return;
 
+            keyHeldHandler.Update(wnd.KeyboardState, deltaTime);
+
             if (wnd.MouseState.ScrollDelta.Y != 0)
             {
                 var prevZoomRaw = zoomRaw;
@@ -408,19 +417,10 @@ namespace Replanetizer.Frames
             }
             lastMouseX = (int) wnd.MousePosition.X;
 
-            if (wnd.IsKeyPressed(Keys.Down))
-            {
+            if (keyHeldHandler.IsKeyHeld(Keys.Down))
                 CycleModels(1);
-            }
-            else if (wnd.IsKeyPressed(Keys.Up))
-            {
+            else if (keyHeldHandler.IsKeyHeld(Keys.Up))
                 CycleModels(-1);
-            }
-
-            if (invalidate)
-            {
-                invalidate = true;
-            }
         }
 
         private void OnResize()

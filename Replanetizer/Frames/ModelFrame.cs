@@ -435,7 +435,7 @@ namespace Replanetizer.Frames
             if (model == null) return;
 
             var fileName = CrossFileDialog.SaveFile(filter: ".obj;.iqe");
-            if (fileName.Length <= 0) return;
+            if (fileName.Length == 0) return;
 
             var extension = Path.GetExtension(fileName);
             switch (extension)
@@ -465,7 +465,7 @@ namespace Replanetizer.Frames
             }
 
             var folder = CrossFileDialog.OpenFolder();
-            if (folder.Length <= 0) return;
+            if (folder.Length == 0) return;
 
             for (var i = 0; i<textures.Count; i++)
             {

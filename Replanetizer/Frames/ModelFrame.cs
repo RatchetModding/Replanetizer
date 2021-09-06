@@ -451,26 +451,18 @@ namespace Replanetizer.Frames
 
         private void ExportSelectedModelTextures()
         {
-            var textures = modelTextureList;
             var textureConfig = selectedModel?.textureConfig;
-            if (textures == null || textureConfig == null) return;
-
-            if (textures.Count != textureConfig.Count)
-            {
-                Logger.Error(
-                    "textures and textureConfig do not have the same count. " +
-                    "We will use the count of the textures and ignore any " +
-                    "extra textureConfigs."
-                    );
-            }
+            if (textureConfig == null) return;
 
             var folder = CrossFileDialog.OpenFolder();
             if (folder.Length == 0) return;
 
-            for (var i = 0; i<textures.Count; i++)
+            foreach (var config in selectedModel.textureConfig)
             {
-                var texture = textures[i];
-                var textureId = textureConfig[i].ID;
+                var textureId = config.ID;
+                if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
+
+                var texture = selectedTextureSet[textureId];
                 TextureIO.ExportTexture(texture, Path.Combine(folder, $"{textureId}.png"));
             }
         }

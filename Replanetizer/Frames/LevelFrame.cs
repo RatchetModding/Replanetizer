@@ -662,17 +662,38 @@ namespace Replanetizer.Frames
             InvalidateView();
         }
 
-        private void CheckForRotationInput(float deltaTime)
+        /// <returns>whether the user is holding right click to rotate</returns>
+        private bool CheckForRotationInput(float deltaTime)
         {
-            if (wnd.MouseState.IsButtonDown(MouseButton.Right))
-            {
-                camera.rotation.Z -= (wnd.MousePosition.X - lastMouseX) * camera.speed * deltaTime;
-                camera.rotation.X -= (wnd.MousePosition.Y - lastMouseY) * camera.speed * deltaTime;
-                camera.rotation.X = MathHelper.Clamp(camera.rotation.X,
-                    MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
+            var isDown = wnd.MouseState.IsButtonDown(MouseButton.Right);
+            var wasDown = wnd.MouseState.WasButtonDown(MouseButton.Right);
 
-                InvalidateView();
+            if (!isDown)
+            {
+                if (wasDown)
+                {
+                    // Released right click; unhide the cursor
+                    wnd.CursorVisible = true;
+                    wnd.CursorGrabbed = false;
+                }
+                return false;
             }
+
+            if (!wasDown)
+            {
+                // Began pressing right click; hide the cursor and allow it to
+                // move without any bounds
+                wnd.CursorVisible = false;
+                wnd.CursorGrabbed = true;
+            }
+
+            camera.rotation.Z -= (wnd.MouseState.Delta.X) * camera.speed * deltaTime;
+            camera.rotation.X -= (wnd.MouseState.Delta.Y) * camera.speed * deltaTime;
+            camera.rotation.X = MathHelper.Clamp(camera.rotation.X,
+                MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
+
+            InvalidateView();
+            return true;
         }
 
         private void CheckForMovementInput(float deltaTime)
@@ -722,11 +743,16 @@ namespace Replanetizer.Frames
         public void Tick(float deltaTime)
         {
             Point absoluteMousePos = new Point((int)wnd.MousePosition.X, (int)wnd.MousePosition.Y);
-            if (!ImGui.IsWindowHovered() || !contentRegion.Contains(absoluteMousePos)) return;
+            // If we're holding right click and rotating, the mouse can
+            // leave the bounds of the window (GLFW CursorDisabled mode
+            // allows the mouse to move freely). We want to keep rendering
+            // in that case
+            var isRotating = CheckForRotationInput(deltaTime);
+            if (!isRotating && !(ImGui.IsWindowHovered() && contentRegion.Contains(absoluteMousePos)))
+                return;
 
             HandleMouseWheelChanges();
             HandleKeyboardShortcuts();
-            CheckForRotationInput(deltaTime);
             CheckForMovementInput(deltaTime);
 
             view = camera.GetViewMatrix();

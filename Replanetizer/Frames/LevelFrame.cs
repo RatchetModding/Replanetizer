@@ -786,7 +786,7 @@ namespace Replanetizer.Frames
                     direction = Vector3.UnitZ;
                 }
 
-                if (xLock || yLock || zLock) 
+                if (xLock || yLock || zLock)
                 {
                     HandleToolUpdates(mouseRay, direction);
                 }
@@ -794,14 +794,14 @@ namespace Replanetizer.Frames
                 {
                     SelectObject(obj);
                 }
-            } 
+            }
             else
             {
                 xLock = false;
                 yLock = false;
                 zLock = false;
             }
-            
+
             lastMouseX = (int) wnd.MousePosition.X;
             lastMouseY = (int) wnd.MousePosition.Y;
             prevMouseRay = mouseRay;
@@ -1004,7 +1004,7 @@ namespace Replanetizer.Frames
         public LevelObject GetObjectAtScreenPosition(Vector2 pos)
         {
             LevelObject returnObject = null;
-            
+
             int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0, cuboidOffset = 0, sphereOffset = 0, cylinderOffset = 0, type0COffset = 0, tfragOffset = 0;
 
             GL.Viewport(0, 0, Width, Height);

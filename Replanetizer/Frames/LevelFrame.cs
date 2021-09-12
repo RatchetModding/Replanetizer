@@ -65,7 +65,7 @@ namespace Replanetizer.Frames
         public bool enableMoby = true, enableTie = true, enableShrub = true, enableSpline = false,
             enableCuboid = false, enableSpheres = false, enableCylinders = false, enableType0C = false,
             enableSkybox = true, enableTerrain = true, enableCollision = false, enableTransparency = true,
-            enableFog = true;
+            enableFog = true, enableCameraInfo = true;
 
         public Camera camera;
         private Tool currentTool;
@@ -205,6 +205,8 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Collision", ref enableCollision)) InvalidateView();
                     if (ImGui.Checkbox("Transparency", ref enableTransparency)) InvalidateView();
                     if (ImGui.Checkbox("Fog", ref enableFog)) InvalidateView();
+                    ImGui.Separator();
+                    ImGui.Checkbox("Camera Info", ref enableCameraInfo);
 
                     ImGui.EndMenu();
                 }
@@ -241,6 +243,8 @@ namespace Replanetizer.Frames
 
         private void RenderTextOverlay()
         {
+            if (!enableCameraInfo) return;
+
             const float pad = 10f;
             const ImGuiWindowFlags windowFlags =
                 ImGuiWindowFlags.NoDecoration

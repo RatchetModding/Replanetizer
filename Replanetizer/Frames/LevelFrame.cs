@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using SysVector2 = System.Numerics.Vector2;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using ImGuiNET;
@@ -238,6 +239,49 @@ namespace Replanetizer.Frames
             }
         }
 
+        private void RenderTextOverlay()
+        {
+            const float pad = 10f;
+            const ImGuiWindowFlags windowFlags =
+                ImGuiWindowFlags.NoDecoration
+                | ImGuiWindowFlags.AlwaysAutoResize
+                | ImGuiWindowFlags.NoSavedSettings
+                | ImGuiWindowFlags.NoFocusOnAppearing
+                | ImGuiWindowFlags.NoNav
+                | ImGuiWindowFlags.NoMove;
+
+            var viewport = ImGui.GetMainViewport();
+            var workPos = viewport.GetWorkPos();
+            var workSize = viewport.GetWorkSize();
+            SysVector2 windowPos = new(
+                workPos.X + pad,
+                workPos.Y + workSize.Y - pad
+            );
+            SysVector2 windowPosPivot = new(0f, 1f);
+            ImGui.SetNextWindowPos(windowPos, ImGuiCond.Always, windowPosPivot);
+
+            ImGui.SetNextWindowBgAlpha(0.35f);
+
+            if (ImGui.Begin("Info overlay", windowFlags))
+            {
+                ImGui.Text("Camera info");
+                ImGui.Separator();
+                ImGui.Text(
+                    "Position: (" +
+                    $"{camera.position.X:F4}, " +
+                    $"{camera.position.Y:F4}, " +
+                    $"{camera.position.Z:F4}" +
+                    ")"
+                );
+                var camRotX = fToDegrees(camera.rotation.X);
+                var camRotZ = fToDegrees(camera.rotation.Z) % 360f;
+                ImGui.Text(
+                    $"Rotation: ({camRotX:F4}, {0:F4}, {camRotZ:F4})"
+                );
+            }
+            ImGui.End();
+        }
+
         private void UpdateWindowSize()
         {
             int prevWidth = Width, prevHeight = Height;
@@ -292,29 +336,29 @@ namespace Replanetizer.Frames
 
         public override void Render(float deltaTime)
         {
-            if (level != null)
+            if (level == null) return;
+
+            RenderMenuBar();
+            RenderTextOverlay();
+            UpdateWindowSize();
+            Tick(deltaTime);
+
+            if (invalidate)
             {
-                RenderMenuBar();
-                UpdateWindowSize();
-                Tick(deltaTime);
+                FramebufferRenderer.ToTexture(Width, Height, ref targetTexture, () => {
+                    //Setup openGL variables
+                    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+                    GL.Enable(EnableCap.DepthTest);
+                    GL.LineWidth(5.0f);
+                    GL.Viewport(0, 0, Width, Height);
 
-                if (invalidate)
-                {
-                    FramebufferRenderer.ToTexture(Width, Height, ref targetTexture, () => {
-                        //Setup openGL variables
-                        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-                        GL.Enable(EnableCap.DepthTest);
-                        GL.LineWidth(5.0f);
-                        GL.Viewport(0, 0, Width, Height);
+                    OnPaint();
+                });
 
-                        OnPaint();
-                    });
-
-                    invalidate = false;
-                }
-                ImGui.Image((IntPtr) targetTexture, new System.Numerics.Vector2(Width, Height),
-                    System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
+                invalidate = false;
             }
+            ImGui.Image((IntPtr) targetTexture, new System.Numerics.Vector2(Width, Height),
+                System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
         }
 
         private void RenderSubFrames(float deltaTime)

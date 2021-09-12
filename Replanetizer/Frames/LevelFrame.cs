@@ -278,7 +278,9 @@ namespace Replanetizer.Frames
                     ")"
                 );
                 var camRotX = fToDegrees(camera.rotation.X);
-                var camRotZ = fToDegrees(camera.rotation.Z) % 360f;
+                var camRotZ = fToDegrees(camera.rotation.Z);
+                // Wrap around [0, 360)
+                camRotZ = (camRotZ % 360f + 360f) % 360f;
                 ImGui.Text(
                     $"Rotation: ({camRotX:F4}, {0:F4}, {camRotZ:F4})"
                 );

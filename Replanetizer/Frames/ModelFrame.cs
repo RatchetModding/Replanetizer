@@ -434,8 +434,13 @@ namespace Replanetizer.Frames
         /// <returns>whether the cursor is being grabbed</returns>
         private bool CheckForRotationInput(float deltaTime, bool allowNewGrab)
         {
-            if (!mouseGrabHandler.TryGrabMouse(wnd, allowNewGrab))
+            if (mouseGrabHandler.TryGrabMouse(wnd, allowNewGrab))
+                ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.NoMouse;
+            else
+            {
+                ImGui.GetIO().ConfigFlags &= ~ImGuiConfigFlags.NoMouse;
                 return false;
+            }
 
             xDelta += wnd.MouseState.Delta.X * deltaTime;
             rot = Matrix4.CreateRotationZ(xDelta);

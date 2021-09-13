@@ -673,8 +673,13 @@ namespace Replanetizer.Frames
         /// <returns>whether the cursor is being grabbed</returns>
         private bool CheckForRotationInput(float deltaTime, bool allowNewGrab)
         {
-            if (!mouseGrabHandler.TryGrabMouse(wnd, allowNewGrab))
+            if (mouseGrabHandler.TryGrabMouse(wnd, allowNewGrab))
+                ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.NoMouse;
+            else
+            {
+                ImGui.GetIO().ConfigFlags &= ~ImGuiConfigFlags.NoMouse;
                 return false;
+            }
 
             camera.rotation.Z -= (wnd.MouseState.Delta.X) * camera.speed * deltaTime;
             camera.rotation.X -= (wnd.MouseState.Delta.Y) * camera.speed * deltaTime;

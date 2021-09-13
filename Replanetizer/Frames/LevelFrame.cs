@@ -58,6 +58,7 @@ namespace Replanetizer.Frames
         private Rectangle contentRegion;
         private int lastMouseX, lastMouseY;
         private bool xLock = false, yLock = false, zLock = false;
+        private MouseGrabHandler mouseGrabHandler = new();
 
         public bool initialized, invalidate;
         public bool[] selectedChunks;
@@ -668,27 +669,8 @@ namespace Replanetizer.Frames
         /// <returns>whether the user is holding right click to rotate</returns>
         private bool CheckForRotationInput(float deltaTime)
         {
-            var isDown = wnd.MouseState.IsButtonDown(MouseButton.Right);
-            var wasDown = wnd.MouseState.WasButtonDown(MouseButton.Right);
-
-            if (!isDown)
-            {
-                if (wasDown)
-                {
-                    // Released right click; unhide the cursor
-                    wnd.CursorVisible = true;
-                    wnd.CursorGrabbed = false;
-                }
+            if (!mouseGrabHandler.TryGrabMouse(wnd, MouseButton.Right))
                 return false;
-            }
-
-            if (!wasDown)
-            {
-                // Began pressing right click; hide the cursor and allow it to
-                // move without any bounds
-                wnd.CursorVisible = false;
-                wnd.CursorGrabbed = true;
-            }
 
             camera.rotation.Z -= (wnd.MouseState.Delta.X) * camera.speed * deltaTime;
             camera.rotation.X -= (wnd.MouseState.Delta.Y) * camera.speed * deltaTime;

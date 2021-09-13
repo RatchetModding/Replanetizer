@@ -6,7 +6,7 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Replanetizer.Utils
 {
-    public class ImGuiKeyHeldHandler
+    public class KeyHeldHandler
     {
         private class KeyHeldInfo
         {
@@ -39,7 +39,7 @@ namespace Replanetizer.Utils
 
         private readonly Dictionary<Keys, KeyHeldInfo> keysHeld = new();
 
-        public ImGuiKeyHeldHandler()
+        public KeyHeldHandler()
         {
             WatchedKeys = new ObservableCollection<Keys>();
             WatchedKeys.CollectionChanged += WatchedKeysOnCollectionChanged;

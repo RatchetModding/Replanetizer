@@ -28,7 +28,7 @@ namespace Replanetizer.Frames
         private List<Texture> selectedTextureSet;
         private List<Texture> modelTextureList;
 
-        private readonly ImGuiKeyHeldHandler keyHeldHandler = new()
+        private readonly KeyHeldHandler keyHeldHandler = new()
         {
             WatchedKeys = { Keys.Up, Keys.Down },
             HoldDelay = 0.45f,

@@ -272,9 +272,9 @@ namespace Replanetizer.Frames
                 ImGui.Separator();
                 ImGui.Text(
                     "Position: (" +
-                    $"{camera.position.X:F4}, " +
-                    $"{camera.position.Y:F4}, " +
-                    $"{camera.position.Z:F4}" +
+                    $"x: {camera.position.X:F4}, " +
+                    $"y: {camera.position.Y:F4}, " +
+                    $"z: {camera.position.Z:F4}" +
                     ")"
                 );
                 var camRotX = fToDegrees(camera.rotation.X);
@@ -282,7 +282,7 @@ namespace Replanetizer.Frames
                 // Wrap around [0, 360)
                 camRotZ = (camRotZ % 360f + 360f) % 360f;
                 ImGui.Text(
-                    $"Rotation: ({camRotX:F4}, {0:F4}, {camRotZ:F4})"
+                    $"Rotation: (yaw: {camRotZ:F4}, pitch: {camRotX:F4})"
                 );
             }
             ImGui.End();

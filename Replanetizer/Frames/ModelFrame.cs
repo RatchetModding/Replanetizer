@@ -35,9 +35,13 @@ namespace Replanetizer.Frames
             RepeatDelay = 0.06f
         };
 
+        private readonly MouseGrabHandler mouseGrabHandler = new()
+        {
+            MouseButton = MouseButton.Right
+        };
+
         private int shaderID, matrixID;
 
-        private int lastMouseX;
         private float xDelta;
 
         // We use an exponential function to convert zoomRaw to zoom:
@@ -389,7 +393,17 @@ namespace Replanetizer.Frames
         private void Tick(float deltaTime)
         {
             Point absoluteMousePos = new Point((int)wnd.MousePosition.X, (int)wnd.MousePosition.Y);
-            if (!ImGui.IsWindowHovered() || !contentRegion.Contains(absoluteMousePos)) return;
+            var isWindowHovered = ImGui.IsWindowHovered();
+            var isMouseInContentRegion = contentRegion.Contains(absoluteMousePos);
+            // Allow rotation if the cursor is directly over the level frame,
+            // otherwise defer handling to any foreground frames
+            var isRotating = CheckForRotationInput(deltaTime, isWindowHovered);
+            // If we're holding right click and rotating, the mouse can
+            // leave the bounds of the window (GLFW CursorDisabled mode
+            // allows the mouse to move freely). We want to keep rendering
+            // in that case
+            if (!isRotating && !(isWindowHovered && isMouseInContentRegion))
+                return;
 
             keyHeldHandler.Update(wnd.KeyboardState, deltaTime);
 
@@ -409,18 +423,24 @@ namespace Replanetizer.Frames
                 invalidate = true;
             }
 
-            if (wnd.IsMouseButtonDown(MouseButton.Right))
-            {
-                xDelta += (wnd.MousePosition.X - lastMouseX) * deltaTime;
-                rot = Matrix4.CreateRotationZ(xDelta);
-                invalidate = true;
-            }
-            lastMouseX = (int) wnd.MousePosition.X;
-
             if (keyHeldHandler.IsKeyHeld(Keys.Down))
                 CycleModels(1);
             else if (keyHeldHandler.IsKeyHeld(Keys.Up))
                 CycleModels(-1);
+        }
+
+        /// <param name="deltaTime">time since last tick</param>
+        /// <param name="allowNewGrab">whether a new click will begin grabbing</param>
+        /// <returns>whether the cursor is being grabbed</returns>
+        private bool CheckForRotationInput(float deltaTime, bool allowNewGrab)
+        {
+            if (!mouseGrabHandler.TryGrabMouse(wnd, allowNewGrab))
+                return false;
+
+            xDelta += wnd.MouseState.Delta.X * deltaTime;
+            rot = Matrix4.CreateRotationZ(xDelta);
+            invalidate = true;
+            return true;
         }
 
         private void OnResize()

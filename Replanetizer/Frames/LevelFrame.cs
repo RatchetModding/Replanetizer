@@ -59,7 +59,10 @@ namespace Replanetizer.Frames
         private Rectangle contentRegion;
         private int lastMouseX, lastMouseY;
         private bool xLock = false, yLock = false, zLock = false;
-        private MouseGrabHandler mouseGrabHandler = new();
+        private MouseGrabHandler mouseGrabHandler = new()
+        {
+            MouseButton = MouseButton.Right
+        };
 
         public bool initialized, invalidate;
         public bool[] selectedChunks;
@@ -716,10 +719,11 @@ namespace Replanetizer.Frames
             InvalidateView();
         }
 
-        /// <returns>whether the user is holding right click to rotate</returns>
-        private bool CheckForRotationInput(float deltaTime)
+        /// <param name="allowNewGrab">whether a new click will begin grabbing</param>
+        /// <returns>whether the cursor is being grabbed</returns>
+        private bool CheckForRotationInput(float deltaTime, bool allowNewGrab)
         {
-            if (!mouseGrabHandler.TryGrabMouse(wnd, MouseButton.Right))
+            if (!mouseGrabHandler.TryGrabMouse(wnd, allowNewGrab))
                 return false;
 
             camera.rotation.Z -= (wnd.MouseState.Delta.X) * camera.speed * deltaTime;
@@ -778,12 +782,16 @@ namespace Replanetizer.Frames
         public void Tick(float deltaTime)
         {
             Point absoluteMousePos = new Point((int)wnd.MousePosition.X, (int)wnd.MousePosition.Y);
+            var isWindowHovered = ImGui.IsWindowHovered();
+            var isMouseInContentRegion = contentRegion.Contains(absoluteMousePos);
+            // Allow rotation if the cursor is directly over the level frame,
+            // otherwise defer handling to any foreground frames
+            var isRotating = CheckForRotationInput(deltaTime, isWindowHovered);
             // If we're holding right click and rotating, the mouse can
             // leave the bounds of the window (GLFW CursorDisabled mode
             // allows the mouse to move freely). We want to keep rendering
             // in that case
-            var isRotating = CheckForRotationInput(deltaTime);
-            if (!isRotating && !(ImGui.IsWindowHovered() && contentRegion.Contains(absoluteMousePos)))
+            if (!isRotating && !(isWindowHovered && isMouseInContentRegion))
                 return;
 
             HandleMouseWheelChanges();

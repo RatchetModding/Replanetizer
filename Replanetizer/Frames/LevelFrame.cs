@@ -134,7 +134,7 @@ namespace Replanetizer.Frames
                                 fs.Close();
                             }
                         }
-                        if (ImGui.MenuItem("Level Model"))
+                        if (ImGui.MenuItem("Level as Model"))
                         {
                             subFrames.Add(new LevelExportFrame(this.wnd, this));
                         }

@@ -146,21 +146,26 @@ namespace Replanetizer.Frames
                                 TextureIO.ExportAllTextures(level, res);
                             }
                         }
-                        if (ImGui.MenuItem("Moby class IDs list"))
+                        if (ImGui.BeginMenu("Class IDs lists"))
                         {
-                            var path = CrossFileDialog.SaveFile("mobyIDs.txt", ".txt");
-                            ExportListOfProperties<Moby>(path, level.mobs, (m) => { return m.modelID.ToString(); });
+                            if (ImGui.MenuItem("Mobies"))
+                            {
+                                var path = CrossFileDialog.SaveFile("mobyIDs.txt", ".txt");
+                                ExportListOfProperties<Moby>(path, level.mobs, (m) => { return m.modelID.ToString(); });
+                            }
+                            if (ImGui.MenuItem("Ties"))
+                            {
+                                var path = CrossFileDialog.SaveFile("tieIDs.txt", ".txt");
+                                ExportListOfProperties<Tie>(path, level.ties, (t) => { return t.modelID.ToString(); });
+                            }
+                            if (ImGui.MenuItem("Shrubs"))
+                            {
+                                var path = CrossFileDialog.SaveFile("shrubIDs.txt", ".txt");
+                                ExportListOfProperties<Shrub>(path, level.shrubs, (s) => { return s.modelID.ToString(); });
+                            }
+                            ImGui.EndMenu();
                         }
-                        if (ImGui.MenuItem("Tie class IDs list"))
-                        {
-                            var path = CrossFileDialog.SaveFile("tieIDs.txt", ".txt");
-                            ExportListOfProperties<Tie>(path, level.ties, (t) => { return t.modelID.ToString(); });
-                        }
-                        if (ImGui.MenuItem("Shrub class IDs list"))
-                        {
-                            var path = CrossFileDialog.SaveFile("shrubIDs.txt", ".txt");
-                            ExportListOfProperties<Shrub>(path, level.shrubs, (s) => { return s.modelID.ToString(); });
-                        }
+
                         ImGui.EndMenu();
                     }
                     if (ImGui.BeginMenu("Import"))

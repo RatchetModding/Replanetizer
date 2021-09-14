@@ -28,7 +28,7 @@ namespace Replanetizer.Frames
         public Level level { get; set; }
 
         private List<TerrainFragment> terrains = new List<TerrainFragment>();
-        private List<Tuple<Model,int,int>> collisions = new List<Tuple<Model, int, int>>();
+        private List<Tuple<Model, int, int>> collisions = new List<Tuple<Model, int, int>>();
 
         private static Vector4 normalColor = new Vector4(1, 1, 1, 1); // White
         private static Vector4 selectedColor = new Vector4(1, 0, 1, 1); // Purple
@@ -146,6 +146,21 @@ namespace Replanetizer.Frames
                                 TextureIO.ExportAllTextures(level, res);
                             }
                         }
+                        if (ImGui.MenuItem("Moby class IDs list"))
+                        {
+                            var path = CrossFileDialog.SaveFile("mobyIDs.txt", ".txt");
+                            ExportListOfProperties<Moby>(path, level.mobs, (m) => { return m.modelID.ToString(); });
+                        }
+                        if (ImGui.MenuItem("Tie class IDs list"))
+                        {
+                            var path = CrossFileDialog.SaveFile("tieIDs.txt", ".txt");
+                            ExportListOfProperties<Tie>(path, level.ties, (t) => { return t.modelID.ToString(); });
+                        }
+                        if (ImGui.MenuItem("Shrub class IDs list"))
+                        {
+                            var path = CrossFileDialog.SaveFile("shrubIDs.txt", ".txt");
+                            ExportListOfProperties<Shrub>(path, level.shrubs, (s) => { return s.modelID.ToString(); });
+                        }
                         ImGui.EndMenu();
                     }
                     if (ImGui.BeginMenu("Import"))
@@ -156,7 +171,7 @@ namespace Replanetizer.Frames
                             if (res.Length > 0)
                             {
                                 FileStream fs = File.Open(res, FileMode.Open);
-                                level.collBytesEngine = ReadBlock(fs, 0, (int)fs.Length);
+                                level.collBytesEngine = ReadBlock(fs, 0, (int) fs.Length);
                                 fs.Close();
                             }
                             InvalidateView();
@@ -313,7 +328,7 @@ namespace Replanetizer.Frames
             System.Numerics.Vector2 windowPos = ImGui.GetWindowPos();
             Vector2 windowZero = new Vector2(windowPos.X + vMin.X, windowPos.Y + vMin.Y);
             mousePos = wnd.MousePosition - windowZero;
-            contentRegion = new Rectangle((int)windowZero.X, (int)windowZero.Y, Width, Height);
+            contentRegion = new Rectangle((int) windowZero.X, (int) windowZero.Y, Width, Height);
         }
 
         public override void RenderAsWindow(float deltaTime)
@@ -355,7 +370,8 @@ namespace Replanetizer.Frames
 
             if (invalidate)
             {
-                FramebufferRenderer.ToTexture(Width, Height, ref targetTexture, () => {
+                FramebufferRenderer.ToTexture(Width, Height, ref targetTexture, () =>
+                {
                     //Setup openGL variables
                     GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
                     GL.Enable(EnableCap.DepthTest);
@@ -421,7 +437,7 @@ namespace Replanetizer.Frames
             uniformFogFarIntensityID = GL.GetUniformLocation(shaderID, "fogFarIntensity");
             uniformUseFogID = GL.GetUniformLocation(shaderID, "useFog");
 
-            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 10000.0f);
+            projection = Matrix4.CreatePerspectiveFieldOfView((float) Math.PI / 3, (float) Width / Height, 0.1f, 10000.0f);
             view = camera.GetViewMatrix();
 
             translateTool = new TranslationTool();
@@ -531,12 +547,13 @@ namespace Replanetizer.Frames
 
             if (level.collisionChunks.Count == 0)
             {
-                LoadSingleCollisionBO((Collision)level.collisionEngine);
-            } else
+                LoadSingleCollisionBO((Collision) level.collisionEngine);
+            }
+            else
             {
                 foreach (Model collisionModel in level.collisionChunks)
                 {
-                    LoadSingleCollisionBO((Collision)collisionModel);
+                    LoadSingleCollisionBO((Collision) collisionModel);
                 }
             }
         }
@@ -581,8 +598,9 @@ namespace Replanetizer.Frames
                 terrains.Clear();
                 terrains.AddRange(level.terrainEngine.fragments);
                 collisions.Clear();
-                collisions.Add(new Tuple<Model,int,int>(level.collisionEngine, collisionVbo[0], collisionIbo[0]));
-            } else
+                collisions.Add(new Tuple<Model, int, int>(level.collisionEngine, collisionVbo[0], collisionIbo[0]));
+            }
+            else
             {
                 terrains.Clear();
                 collisions.Clear();
@@ -786,7 +804,7 @@ namespace Replanetizer.Frames
 
         public void Tick(float deltaTime)
         {
-            Point absoluteMousePos = new Point((int)wnd.MousePosition.X, (int)wnd.MousePosition.Y);
+            Point absoluteMousePos = new Point((int) wnd.MousePosition.X, (int) wnd.MousePosition.Y);
             var isWindowHovered = ImGui.IsWindowHovered();
             var isMouseInContentRegion = contentRegion.Contains(absoluteMousePos);
             // Allow rotation if the cursor is directly over the level frame,
@@ -1042,7 +1060,7 @@ namespace Replanetizer.Frames
         {
             if (!initialized) return;
             GL.Viewport(0, 0, Width, Height);
-            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 3, (float)Width / Height, 0.1f, 10000.0f);
+            projection = Matrix4.CreatePerspectiveFieldOfView((float) Math.PI / 3, (float) Width / Height, 0.1f, 10000.0f);
             view = camera.GetViewMatrix();
         }
 
@@ -1166,7 +1184,7 @@ namespace Replanetizer.Frames
                     }
                 }
 
-                int id = (int)pixel.ToUInt32();
+                int id = (int) pixel.ToUInt32();
                 if (enableMoby && id < level.mobs?.Count)
                 {
                     returnObject = level.mobs[id];
@@ -1269,6 +1287,28 @@ namespace Replanetizer.Frames
         public void RemoveRPCS3Hook()
         {
             hook = null;
+        }
+
+        /// <summary>
+        /// Export all distinct values of a select property found in a list of objects as a text file.
+        /// </summary>
+        private void ExportListOfProperties<T>(string path, IEnumerable<T> list, Func<T, string> selector)
+        {
+            if (path.Length <= 0) return;
+
+            using (StreamWriter sw = File.CreateText(path))
+            {
+                HashSet<string> distinctItems = new HashSet<string>();
+                foreach (T item in list)
+                {
+                    distinctItems.Add(selector(item));
+                }
+
+                foreach (string item in distinctItems)
+                {
+                    sw.WriteLine(item);
+                }
+            }
         }
 
         protected void OnPaint()
@@ -1417,7 +1457,7 @@ namespace Replanetizer.Frames
             {
                 for (int i = 0; i < collisions.Count; i++)
                 {
-                    Collision col = (Collision)collisions[i].Item1;
+                    Collision col = (Collision) collisions[i].Item1;
                     int vbo = collisions[i].Item2;
                     int ibo = collisions[i].Item3;
 

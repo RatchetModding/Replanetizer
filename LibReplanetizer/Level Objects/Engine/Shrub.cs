@@ -27,8 +27,8 @@ namespace LibReplanetizer.LevelObjects
         public Color color { get; set; }
         [Category("Unknowns"), DisplayName("OFF_64: Always 0")]
         public uint off_64 { get; set; }
-        [Category("Unknowns"), DisplayName("OFF_68: Power of 2 minus 1")]
-        public uint off_68 { get; set; }
+        [Category("Attributes"), DisplayName("Light")]
+        public ushort light { get; set; }
         [Category("Unknowns"), DisplayName("OFF_6C: Always 0")]
         public uint off_6C { get; set; }
 
@@ -61,7 +61,7 @@ namespace LibReplanetizer.LevelObjects
             byte b = levelBlock[offset + 0x62];
             byte a = levelBlock[offset + 0x63];
             off_64 = ReadUint(levelBlock, offset + 0x64);
-            off_68 = ReadUint(levelBlock, offset + 0x68);
+            light = ReadUshort(levelBlock, offset + 0x68);
             off_6C = ReadUint(levelBlock, offset + 0x6C);
 
             model = shrubModels.Find(shrubModel => shrubModel.id == modelID);
@@ -83,7 +83,6 @@ namespace LibReplanetizer.LevelObjects
             {
                 attributes = Matrix4.Identity;
             }
-            
 
             reflection = modelMatrix * attributes;
         }
@@ -104,7 +103,7 @@ namespace LibReplanetizer.LevelObjects
             bytes[0x62] = color.B;
             bytes[0x63] = color.A;
             WriteUint(bytes, 0x64, off_64);
-            WriteUint(bytes, 0x68, off_68);
+            WriteUshort(bytes, 0x68, light);
             WriteUint(bytes, 0x6C, off_6C);
 
             return bytes;

@@ -21,8 +21,8 @@ namespace LibReplanetizer.LevelObjects
 
         [Category("Unknowns"), DisplayName("OFF_64: Always 0")]
         public uint off_64 { get; set; }
-        [Category("Unknowns"), DisplayName("OFF_68: Power of 2 minus 1")]
-        public uint off_68 { get; set; }
+        [Category("Attributes"), DisplayName("Light")]
+        public ushort light { get; set; }
         [Category("Unknowns"), DisplayName("OFF_6C: Always 0")]
         public uint off_6C { get; set; }
 
@@ -53,7 +53,7 @@ namespace LibReplanetizer.LevelObjects
 
             int colorOffset = ReadInt(levelBlock, offset + 0x60);
             off_64 = ReadUint(levelBlock, offset + 0x64);
-            off_68 = ReadUint(levelBlock, offset + 0x68);
+            light = ReadUshort(levelBlock, offset + 0x68);
             off_6C = ReadUint(levelBlock, offset + 0x6C);
 
             model = tieModels.Find(tieModel => tieModel.id == modelID);
@@ -92,7 +92,7 @@ namespace LibReplanetizer.LevelObjects
 
             WriteInt(bytes, 0x60, colorOffset);
             WriteUint(bytes, 0x64, off_64);
-            WriteUint(bytes, 0x68, off_68);
+            WriteUshort(bytes, 0x68, light);
             WriteUint(bytes, 0x6C, off_6C);
 
             return bytes;
@@ -112,7 +112,7 @@ namespace LibReplanetizer.LevelObjects
 
             WriteInt(bytes, 0x60, 0);
             WriteUint(bytes, 0x64, off_64);
-            WriteUint(bytes, 0x68, off_68);
+            WriteUshort(bytes, 0x68, light);
             WriteUint(bytes, 0x6C, off_6C);
 
             return bytes;

@@ -265,7 +265,7 @@ namespace Replanetizer.Frames
             }
         }
 
-        private void RenderTextOverlay()
+        private void RenderTextOverlay(float deltaTime)
         {
             if (!enableCameraInfo) return;
 
@@ -308,6 +308,9 @@ namespace Replanetizer.Frames
                 ImGui.Text(
                     $"Rotation: (yaw: {camRotZ:F4}, pitch: {camRotX:F4})"
                 );
+                float fps = (int) (1.0f / deltaTime);
+                float frametime = ((float) ((int) (10000.0f * deltaTime))) / 10;
+                ImGui.Text("FPS: " + fps + " (" + frametime + " ms)");
             }
             ImGui.End();
         }
@@ -369,7 +372,7 @@ namespace Replanetizer.Frames
             if (level == null) return;
 
             RenderMenuBar();
-            RenderTextOverlay();
+            RenderTextOverlay(deltaTime);
             UpdateWindowSize();
             Tick(deltaTime);
 

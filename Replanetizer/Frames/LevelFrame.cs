@@ -25,6 +25,8 @@ namespace Replanetizer.Frames
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Level";
+
+        private FramebufferRenderer renderer, fakeRenderer;
         public Level level { get; set; }
 
         private List<TerrainFragment> terrains = new List<TerrainFragment>();
@@ -84,7 +86,6 @@ namespace Replanetizer.Frames
         private List<int> collisionIbo = new List<int>();
 
         private int Width, Height;
-        private int targetTexture;
 
         private List<Frame> subFrames;
         private List<Action<LevelObject>> selectionCallbacks;
@@ -95,6 +96,8 @@ namespace Replanetizer.Frames
             selectionCallbacks = new List<Action<LevelObject>>();
             bufferTable = new ConditionalWeakTable<IRenderable, BufferContainer>();
             camera = new Camera();
+            UpdateWindowSize();
+            OnResize();
         }
 
         public static bool FrameMustClose(Frame frame)
@@ -265,7 +268,7 @@ namespace Replanetizer.Frames
             }
         }
 
-        private void RenderTextOverlay()
+        private void RenderTextOverlay(float deltaTime)
         {
             if (!enableCameraInfo) return;
 
@@ -308,6 +311,9 @@ namespace Replanetizer.Frames
                 ImGui.Text(
                     $"Rotation: (yaw: {camRotZ:F4}, pitch: {camRotX:F4})"
                 );
+                float fps = (int) (1.0f / deltaTime);
+                float frametime = ((float) ((int) (10000.0f * deltaTime))) / 10;
+                ImGui.Text("FPS: " + fps + " (" + frametime + " ms)");
             }
             ImGui.End();
         }
@@ -369,13 +375,13 @@ namespace Replanetizer.Frames
             if (level == null) return;
 
             RenderMenuBar();
-            RenderTextOverlay();
+            RenderTextOverlay(deltaTime);
             UpdateWindowSize();
             Tick(deltaTime);
 
             if (invalidate)
             {
-                FramebufferRenderer.ToTexture(Width, Height, ref targetTexture, () =>
+                renderer.RenderToTexture(() =>
                 {
                     //Setup openGL variables
                     GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
@@ -385,11 +391,10 @@ namespace Replanetizer.Frames
 
                     OnPaint();
                 });
-
                 invalidate = false;
             }
-            ImGui.Image((IntPtr) targetTexture, new System.Numerics.Vector2(Width, Height),
-                System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
+            ImGui.Image((IntPtr) renderer.targetTexture, new System.Numerics.Vector2(Width, Height),
+                    System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
         }
 
         private void RenderSubFrames(float deltaTime)
@@ -834,9 +839,8 @@ namespace Replanetizer.Frames
             {
                 LevelObject obj = null;
                 Vector3 direction = Vector3.Zero;
-                int tempTextureId = 0;
 
-                FramebufferRenderer.ToTexture(Width, Height, ref tempTextureId, () =>
+                fakeRenderer.RenderToTexture(() =>
                 {
                     obj = GetObjectAtScreenPosition(mousePos);
                 });
@@ -1067,6 +1071,12 @@ namespace Replanetizer.Frames
             GL.Viewport(0, 0, Width, Height);
             projection = Matrix4.CreatePerspectiveFieldOfView((float) Math.PI / 3, (float) Width / Height, 0.1f, 10000.0f);
             view = camera.GetViewMatrix();
+
+            renderer?.Dispose();
+            renderer = new FramebufferRenderer(Width, Height);
+
+            fakeRenderer?.Dispose();
+            fakeRenderer = new FramebufferRenderer(Width, Height);
         }
 
         public LevelObject GetObjectAtScreenPosition(Vector2 pos)

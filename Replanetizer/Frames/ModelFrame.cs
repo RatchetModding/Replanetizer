@@ -19,6 +19,7 @@ namespace Replanetizer.Frames
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Models";
 
+        private FramebufferRenderer renderer;
         private Level level => levelFrame.level;
         private Model selectedModel;
         private int selectedModelIndex;
@@ -70,13 +71,14 @@ namespace Replanetizer.Frames
         private Rectangle contentRegion;
         private Vector2 mousePos;
         private int Width, Height;
-        private int targetTexture;
         private PropertyFrame propertyFrame;
 
         public ModelFrame(Window wnd, LevelFrame levelFrame, Model model = null) : base(wnd, levelFrame)
         {
             modelTextureList = new List<Texture>();
             propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
+            UpdateWindowSize();
+            OnResize();
             SelectModel(model);
         }
 
@@ -107,7 +109,7 @@ namespace Replanetizer.Frames
         {
             var colW = ImGui.GetColumnWidth() - 10;
             var childSize = new System.Numerics.Vector2(colW, Height);
-            if (ImGui.BeginChild("TreeView",  childSize, false, ImGuiWindowFlags.AlwaysVerticalScrollbar))
+            if (ImGui.BeginChild("TreeView", childSize, false, ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {
                 RenderSubTree("Moby", level.mobyModels, level.textures);
                 RenderSubTree("Tie", level.tieModels, level.textures);
@@ -150,7 +152,8 @@ namespace Replanetizer.Frames
 
             if (invalidate)
             {
-                FramebufferRenderer.ToTexture(Width, Height, ref targetTexture, () => {
+                renderer.RenderToTexture(() =>
+                {
                     //Setup openGL variables
                     GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
                     GL.Enable(EnableCap.DepthTest);
@@ -159,10 +162,9 @@ namespace Replanetizer.Frames
 
                     OnPaint();
                 });
-
                 invalidate = false;
             }
-            ImGui.Image((IntPtr) targetTexture, new System.Numerics.Vector2(Width, Height),
+            ImGui.Image((IntPtr) renderer.targetTexture, new System.Numerics.Vector2(Width, Height),
                 System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
 
             ImGui.NextColumn();
@@ -220,7 +222,7 @@ namespace Replanetizer.Frames
             System.Numerics.Vector2 windowPos = ImGui.GetWindowPos();
             Vector2 windowZero = new Vector2(windowPos.X + vMin.X, windowPos.Y + vMin.Y);
             mousePos = wnd.MousePosition - windowZero;
-            contentRegion = new Rectangle((int)windowZero.X, (int)windowZero.Y, Width, Height);
+            contentRegion = new Rectangle((int) windowZero.X, (int) windowZero.Y, Width, Height);
         }
 
         private void ModelViewer_Load()
@@ -351,7 +353,7 @@ namespace Replanetizer.Frames
             // To scale the zoom value to make a vector of that magnitude
             // magnitude == sqrt(3*zoom^2)
             const float invSqrt3 = 0.57735f;
-            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(FIELD_OF_VIEW, (float)Width / Height, CLIP_NEAR, CLIP_FAR);
+            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(FIELD_OF_VIEW, (float) Width / Height, CLIP_NEAR, CLIP_FAR);
             Matrix4 view = Matrix4.LookAt(new Vector3(invSqrt3 * ZOOM_SCALE * zoom), Vector3.Zero, Vector3.UnitZ);
             return view * projection;
         }
@@ -392,7 +394,7 @@ namespace Replanetizer.Frames
 
         private void Tick(float deltaTime)
         {
-            Point absoluteMousePos = new Point((int)wnd.MousePosition.X, (int)wnd.MousePosition.Y);
+            Point absoluteMousePos = new Point((int) wnd.MousePosition.X, (int) wnd.MousePosition.Y);
             var isWindowHovered = ImGui.IsWindowHovered();
             var isMouseInContentRegion = contentRegion.Contains(absoluteMousePos);
             // Allow rotation if the cursor is directly over the level frame,
@@ -452,6 +454,9 @@ namespace Replanetizer.Frames
         {
             worldView = CreateWorldView();
             invalidate = true;
+
+            renderer?.Dispose();
+            renderer = new FramebufferRenderer(Width, Height);
         }
 
         private void ExportSelectedModel()

@@ -19,7 +19,7 @@ namespace Replanetizer.Frames
         private LevelFrame levelFrame;
 
         private Dictionary<string, Dictionary<string, PropertyInfo>> properties;
-        
+
         public PropertyFrame(Window wnd, LevelFrame levelFrame = null, object selectedObject = null, string overrideFrameName = null, bool listenToCallbacks = false, bool hideCallbackButton = false) : base(wnd)
         {
             if (overrideFrameName != null && overrideFrameName.Length > 0)
@@ -59,15 +59,15 @@ namespace Replanetizer.Frames
             {
                 string category = prop.GetCustomAttribute<CategoryAttribute>()?.Category;
                 if (category == null) category = "Unknowns";
-                
+
                 string displayName = prop.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
                 if (displayName == null) displayName = prop.Name;
-                
+
                 if (!properties.ContainsKey(category))
                 {
                     properties[category] = new Dictionary<string, PropertyInfo>();
                 }
-                
+
                 properties[category][displayName] = prop;
             }
         }
@@ -105,10 +105,15 @@ namespace Replanetizer.Frames
                         var val = value.GetValue(selectedObject);
                         var type = value.PropertyType;
                         if (value.GetSetMethod() == null) type = null;
-                        if (type == typeof(string))
+
+                        if (val == null)
                         {
-                            var v = Encoding.ASCII.GetBytes((string)val ?? string.Empty);
-                            if (ImGui.InputText(key, v, (uint)v.Length))
+                            ImGui.LabelText(key, "null");
+                        }
+                        else if (type == typeof(string))
+                        {
+                            var v = Encoding.ASCII.GetBytes((string) val ?? string.Empty);
+                            if (ImGui.InputText(key, v, (uint) v.Length))
                             {
                                 value.SetValue(selectedObject, Encoding.ASCII.GetString(v));
                                 UpdateLevelFrame();
@@ -125,10 +130,10 @@ namespace Replanetizer.Frames
                         }
                         else if (type == typeof(uint))
                         {
-                            int v = unchecked((int)(uint)val);
+                            int v = unchecked((int) (uint) val);
                             if (ImGui.InputInt(key, ref v))
                             {
-                                value.SetValue(selectedObject, unchecked((uint)v));
+                                value.SetValue(selectedObject, unchecked((uint) v));
                                 UpdateLevelFrame();
                             }
                         }
@@ -137,16 +142,16 @@ namespace Replanetizer.Frames
                             int v = Convert.ToInt32(val);
                             if (ImGui.InputInt(key, ref v))
                             {
-                                value.SetValue(selectedObject, (short)(v & 0xffff));
+                                value.SetValue(selectedObject, (short) (v & 0xffff));
                                 UpdateLevelFrame();
                             }
                         }
                         else if (type == typeof(ushort))
                         {
-                            int v = unchecked((ushort)val);
+                            int v = unchecked((ushort) val);
                             if (ImGui.InputInt(key, ref v))
                             {
-                                value.SetValue(selectedObject, unchecked((ushort)(v & 0xffff)));
+                                value.SetValue(selectedObject, unchecked((ushort) (v & 0xffff)));
                                 UpdateLevelFrame();
                             }
                         }
@@ -161,18 +166,18 @@ namespace Replanetizer.Frames
                         }
                         else if (type == typeof(Color))
                         {
-                            Color c = (Color)val;
+                            Color c = (Color) val;
                             Vector3 v = new Vector3(c.R / 255.0f, c.G / 255.0f, c.B / 255.0f);
                             if (ImGui.ColorEdit3(key, ref v))
                             {
-                                Color newColor = Color.FromArgb((int)(v.X * 255.0f), (int)(v.Y * 255.0f), (int)(v.Z * 255.0f));
+                                Color newColor = Color.FromArgb((int) (v.X * 255.0f), (int) (v.Y * 255.0f), (int) (v.Z * 255.0f));
                                 value.SetValue(selectedObject, newColor);
                                 UpdateLevelFrame();
                             }
                         }
                         else if (type == typeof(OpenTK.Mathematics.Vector3))
                         {
-                            OpenTK.Mathematics.Vector3 origV = (OpenTK.Mathematics.Vector3)val;
+                            OpenTK.Mathematics.Vector3 origV = (OpenTK.Mathematics.Vector3) val;
                             Vector3 v = new Vector3(origV.X, origV.Y, origV.Z);
                             if (ImGui.InputFloat3(key, ref v))
                             {
@@ -183,7 +188,7 @@ namespace Replanetizer.Frames
 
                                 if (selectedObject is LevelObject)
                                 {
-                                    ((LevelObject)selectedObject).UpdateTransformMatrix();
+                                    ((LevelObject) selectedObject).UpdateTransformMatrix();
                                 }
 
                                 UpdateLevelFrame();
@@ -191,7 +196,7 @@ namespace Replanetizer.Frames
                         }
                         else if (type == typeof(OpenTK.Mathematics.Quaternion))
                         {
-                            OpenTK.Mathematics.Vector3 origRot = ((OpenTK.Mathematics.Quaternion)val).ToEulerAngles();
+                            OpenTK.Mathematics.Vector3 origRot = ((OpenTK.Mathematics.Quaternion) val).ToEulerAngles();
                             Vector3 v = new Vector3(origRot.X, origRot.Y, origRot.Z);
                             if (ImGui.InputFloat3(key, ref v))
                             {
@@ -202,7 +207,7 @@ namespace Replanetizer.Frames
 
                                 if (selectedObject is LevelObject)
                                 {
-                                    ((LevelObject)selectedObject).UpdateTransformMatrix();
+                                    ((LevelObject) selectedObject).UpdateTransformMatrix();
                                 }
 
                                 UpdateLevelFrame();
@@ -210,7 +215,7 @@ namespace Replanetizer.Frames
                         }
                         else if (type == typeof(OpenTK.Mathematics.Matrix4))
                         {
-                            OpenTK.Mathematics.Matrix4 mat = (OpenTK.Mathematics.Matrix4)val;
+                            OpenTK.Mathematics.Matrix4 mat = (OpenTK.Mathematics.Matrix4) val;
                             Vector4 v1 = new Vector4(mat.M11, mat.M12, mat.M13, mat.M14);
                             Vector4 v2 = new Vector4(mat.M21, mat.M22, mat.M23, mat.M24);
                             Vector4 v3 = new Vector4(mat.M31, mat.M32, mat.M33, mat.M34);
@@ -260,7 +265,7 @@ namespace Replanetizer.Frames
 
                                 if (selectedObject is LevelObject)
                                 {
-                                    ((LevelObject)selectedObject).UpdateTransformMatrix();
+                                    ((LevelObject) selectedObject).UpdateTransformMatrix();
                                 }
 
                                 UpdateLevelFrame();
@@ -270,9 +275,9 @@ namespace Replanetizer.Frames
                         {
                             if (ImGui.CollapsingHeader(key))
                             {
-                                Array array = (Array)val;
+                                Array array = (Array) val;
 
-                                foreach(object o in array)
+                                foreach (object o in array)
                                 {
                                     ImGui.Text(Convert.ToString(o));
                                 }
@@ -289,7 +294,7 @@ namespace Replanetizer.Frames
                                 strings[i] = Convert.ToString(values.GetValue(i));
                             }
 
-                            int index = (int)val;
+                            int index = (int) val;
 
                             if (index < values.Length)
                             {
@@ -298,7 +303,8 @@ namespace Replanetizer.Frames
                                     value.SetValue(selectedObject, index);
                                     UpdateLevelFrame();
                                 }
-                            } else
+                            }
+                            else
                             {
                                 ImGui.LabelText(key, "[Out of Range] " + Convert.ToString(index));
                             }

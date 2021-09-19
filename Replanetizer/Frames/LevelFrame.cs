@@ -206,9 +206,9 @@ namespace Replanetizer.Frames
                     {
                         subFrames.Add(new TextureFrame(this.wnd, this));
                     }
-                    if (ImGui.MenuItem("Light config"))
+                    if (ImGui.MenuItem("Lights"))
                     {
-                        subFrames.Add(new PropertyFrame(this.wnd, this, level.lightConfig, "Light config"));
+                        subFrames.Add(new LightsFrame(this.wnd, this, level.lights, level.lightConfig));
                     }
                     if (ImGui.MenuItem("Level variables"))
                     {

@@ -81,7 +81,7 @@ namespace LibReplanetizer.Models
 
             WriteUint(outBytes, 0x20, off_20);
             WriteInt(outBytes, 0x24, vertexBuffer.Length / 8);
-            WriteShort(outBytes, 0x28, (short)textureConfig.Count);
+            WriteShort(outBytes, 0x28, (short) textureConfig.Count);
             WriteShort(outBytes, 0x2A, off_2A);
             WriteUint(outBytes, 0x2C, off_2C);
 
@@ -96,7 +96,7 @@ namespace LibReplanetizer.Models
         public byte[] SerializeBody(int offStart)
         {
             int texturePointer = 0;
-            int hack = DistToFile80(offStart + texturePointer + textureConfig.Count * SHRUBTEXELEMSIZE);
+            int hack = DistToFile80(GetLength(offStart) + texturePointer + textureConfig.Count * SHRUBTEXELEMSIZE);
             int vertexPointer = GetLength(texturePointer + textureConfig.Count * SHRUBTEXELEMSIZE + hack); //+ 0x70
             int UVPointer = GetLength(vertexPointer + (vertexBuffer.Length / 8) * SHRUBVERTELEMSIZE);
             int indexPointer = GetLength(UVPointer + (vertexBuffer.Length / 8) * SHRUBUVELEMSIZE);

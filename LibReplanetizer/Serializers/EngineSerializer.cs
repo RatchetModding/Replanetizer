@@ -32,7 +32,7 @@ namespace LibReplanetizer.Serializers
                     break;
             }
 
-            fs.Close();   
+            fs.Close();
         }
 
         private void SaveRC1(Level level, FileStream fs)
@@ -42,17 +42,17 @@ namespace LibReplanetizer.Serializers
             EngineHeader engineHeader = new EngineHeader
             {
                 game = level.game,
-                uiElementPointer = SeekWrite(fs, WriteUiElements(level.uiElements, (int)fs.Position)),
-                skyboxPointer = SeekWrite(fs, level.skybox.Serialize((int)fs.Position)),
-                terrainPointer = SeekWrite(fs, WriteTfrags(level.terrainEngine, (int)fs.Position, level.game)),
+                uiElementPointer = SeekWrite(fs, WriteUiElements(level.uiElements, (int) fs.Position)),
+                skyboxPointer = SeekWrite(fs, level.skybox.Serialize((int) fs.Position)),
+                terrainPointer = SeekWrite(fs, WriteTfrags(level.terrainEngine, (int) fs.Position, level.game)),
                 renderDefPointer = SeekWrite(fs, level.renderDefBytes),
                 collisionPointer = SeekWrite(fs, level.collBytesEngine),
-                mobyModelPointer = SeekWrite(fs, WriteMobies(level.mobyModels, (int)fs.Position)),
-                playerAnimationPointer = SeekWrite(fs, WritePlayerAnimations(level.playerAnimations, (int)fs.Position)),
-                gadgetPointer = SeekWrite(fs, WriteWeapons(level.gadgetModels, (int)fs.Position)),
-                tieModelPointer = SeekWrite(fs, WriteTieModels(level.tieModels, (int)fs.Position)),
-                tiePointer = SeekWrite(fs, WriteTies(level.ties, (int)fs.Position)),
-                shrubModelPointer = SeekWrite(fs, WriteShrubModels(level.shrubModels, (int)fs.Position)),
+                mobyModelPointer = SeekWrite(fs, WriteMobies(level.mobyModels, (int) fs.Position)),
+                playerAnimationPointer = SeekWrite(fs, WritePlayerAnimations(level.playerAnimations, (int) fs.Position)),
+                gadgetPointer = SeekWrite(fs, WriteWeapons(level.gadgetModels, (int) fs.Position)),
+                tieModelPointer = SeekWrite(fs, WriteTieModels(level.tieModels, (int) fs.Position)),
+                tiePointer = SeekWrite(fs, WriteTies(level.ties, (int) fs.Position)),
+                shrubModelPointer = SeekWrite(fs, WriteShrubModels(level.shrubModels, (int) fs.Position)),
                 shrubPointer = SeekWrite(fs, WriteShrubs(level.shrubs)),
                 textureConfigMenuPointer = SeekWrite(fs, WriteTextureConfigMenus(level.textureConfigMenus)),
                 texture2dPointer = SeekWrite(fs, level.billboardBytes),
@@ -84,20 +84,20 @@ namespace LibReplanetizer.Serializers
             EngineHeader engineHeader = new EngineHeader
             {
                 game = level.game,
-                uiElementPointer = SeekWrite(fs, WriteUiElements(level.uiElements, (int)fs.Position)),
-                terrainPointer = SeekWrite(fs, WriteTfrags(level.terrainEngine, (int)fs.Position, level.game)),
+                uiElementPointer = SeekWrite(fs, WriteUiElements(level.uiElements, (int) fs.Position)),
+                terrainPointer = SeekWrite(fs, WriteTfrags(level.terrainEngine, (int) fs.Position, level.game)),
                 renderDefPointer = SeekWrite(fs, level.renderDefBytes),
                 collisionPointer = SeekWrite(fs, level.collBytesEngine),
-                tieModelPointer = SeekWrite(fs, WriteTieModels(level.tieModels, (int)fs.Position)),
-                tiePointer = SeekWrite(fs, WriteTies(level.ties, (int)fs.Position)),
-                shrubModelPointer = SeekWrite(fs, WriteShrubModels(level.shrubModels, (int)fs.Position)),
+                tieModelPointer = SeekWrite(fs, WriteTieModels(level.tieModels, (int) fs.Position)),
+                tiePointer = SeekWrite(fs, WriteTies(level.ties, (int) fs.Position)),
+                shrubModelPointer = SeekWrite(fs, WriteShrubModels(level.shrubModels, (int) fs.Position)),
                 shrubPointer = SeekWrite(fs, WriteShrubs(level.shrubs)),
                 textureConfigMenuPointer = SeekWrite(fs, WriteTextureConfigMenus(level.textureConfigMenus)),
                 texture2dPointer = SeekWrite(fs, level.billboardBytes),
-                mobyModelPointer = SeekWrite(fs, WriteMobies(level.mobyModels, (int)fs.Position)),
+                mobyModelPointer = SeekWrite(fs, WriteMobies(level.mobyModels, (int) fs.Position)),
                 soundConfigPointer = SeekWrite(fs, level.soundConfigBytes),
-                playerAnimationPointer = SeekWrite(fs, WritePlayerAnimations(level.playerAnimations, (int)fs.Position)),
-                skyboxPointer = SeekWrite(fs, level.skybox.Serialize((int)fs.Position)),
+                playerAnimationPointer = SeekWrite(fs, WritePlayerAnimations(level.playerAnimations, (int) fs.Position)),
+                skyboxPointer = SeekWrite(fs, level.skybox.Serialize((int) fs.Position)),
                 lightPointer = SeekWrite(fs, WriteLights(level.lights)),
                 lightConfigPointer = SeekWrite(fs, WriteLightConfig(level.lightConfig)),
                 texturePointer = SeekWrite(fs, WriteTextures(level.textures)),
@@ -124,23 +124,23 @@ namespace LibReplanetizer.Serializers
             EngineHeader engineHeader = new EngineHeader
             {
                 game = level.game,
-                uiElementPointer = SeekWrite(fs, WriteUiElements(level.uiElements, (int)fs.Position)),
+                uiElementPointer = SeekWrite(fs, WriteUiElements(level.uiElements, (int) fs.Position)),
                 unk8Pointer = SeekWrite(fs, level.unk8),
-                mobyModelPointer = SeekWrite(fs, WriteMobies(level.mobyModels, (int)fs.Position)),
+                mobyModelPointer = SeekWrite(fs, WriteMobies(level.mobyModels, (int) fs.Position)),
                 soundConfigPointer = SeekWrite(fs, level.soundConfigBytes),
                 unk9Pointer = SeekWrite(fs, level.unk9),
-                terrainPointer = SeekWrite(fs, WriteTfrags(level.terrainEngine, (int)fs.Position, level.game)),
+                terrainPointer = SeekWrite(fs, WriteTfrags(level.terrainEngine, (int) fs.Position, level.game)),
                 renderDefPointer = SeekWrite(fs, level.renderDefBytes),
                 collisionPointer = SeekWrite(fs, level.collBytesEngine),
-                shrubModelPointer = SeekWrite(fs, WriteShrubModels(level.shrubModels, (int)fs.Position)),
+                shrubModelPointer = SeekWrite(fs, WriteShrubModels(level.shrubModels, (int) fs.Position)),
                 shrubPointer = SeekWrite(fs, WriteShrubs(level.shrubs)),
                 unk5Pointer = SeekWrite(fs, level.unk5),
-                tieModelPointer = SeekWrite(fs, WriteTieModels(level.tieModels, (int)fs.Position)),
-                tiePointer = SeekWrite(fs, WriteTies(level.ties, (int)fs.Position)),
+                tieModelPointer = SeekWrite(fs, WriteTieModels(level.tieModels, (int) fs.Position)),
+                tiePointer = SeekWrite(fs, WriteTies(level.ties, (int) fs.Position)),
                 unk4Pointer = SeekWrite(fs, level.unk4),
                 textureConfigMenuPointer = SeekWrite(fs, WriteTextureConfigMenus(level.textureConfigMenus)),
                 texture2dPointer = SeekWrite(fs, level.billboardBytes),
-                skyboxPointer = SeekWrite(fs, level.skybox.Serialize((int)fs.Position)),
+                skyboxPointer = SeekWrite(fs, level.skybox.Serialize((int) fs.Position)),
                 lightPointer = SeekWrite(fs, WriteLights(level.lights)),
                 lightConfigPointer = SeekWrite(fs, WriteLightConfig(level.lightConfig)),
                 unk3Pointer = SeekWrite(fs, level.unk3),
@@ -176,12 +176,12 @@ namespace LibReplanetizer.Serializers
             {
                 WriteShort(elemBytes, i * 8 + 0x00, uiElements[i].id);
                 if (uiElements[i].id == -1) continue;
-                WriteShort(elemBytes, i * 8 + 0x02, (short)uiElements[i].sprites.Count);
+                WriteShort(elemBytes, i * 8 + 0x02, (short) uiElements[i].sprites.Count);
                 WriteShort(elemBytes, i * 8 + 0x04, offset);
 
                 spriteIds.AddRange(uiElements[i].sprites);
 
-                offset += (short)uiElements[i].sprites.Count;
+                offset += (short) uiElements[i].sprites.Count;
             }
 
             var spriteBytes = new byte[spriteIds.Count * 4];
@@ -194,8 +194,8 @@ namespace LibReplanetizer.Serializers
             int spriteStart = GetLength(elemStart + elemBytes.Length);
 
             var headBytes = new byte[0x10];
-            WriteShort(headBytes, 0x00, (short)uiElements.Count);
-            WriteShort(headBytes, 0x02, (short)spriteIds.Count);
+            WriteShort(headBytes, 0x00, (short) uiElements.Count);
+            WriteShort(headBytes, 0x02, (short) spriteIds.Count);
             WriteInt(headBytes, 0x04, elemStart);
             WriteInt(headBytes, 0x08, spriteStart);
 
@@ -219,7 +219,7 @@ namespace LibReplanetizer.Serializers
             {
                 WriteInt(headBytes, 4 + i * 8, mobyModels[i].id);
 
-                MobyModel g = (MobyModel)mobyModels[i];
+                MobyModel g = (MobyModel) mobyModels[i];
                 if (!g.isModel)
                     continue;
 
@@ -249,7 +249,7 @@ namespace LibReplanetizer.Serializers
             {
                 WriteInt(headBytes, i * 0x10, weaponModels[i].id);
 
-                MobyModel g = (MobyModel)weaponModels[i];
+                MobyModel g = (MobyModel) weaponModels[i];
                 if (!g.isModel)
                     continue;
 
@@ -271,13 +271,14 @@ namespace LibReplanetizer.Serializers
         private byte[] WriteTies(List<Tie> ties, int offset)
         {
             offset += ties.Count * 0x70;
+            int hack = DistToFile80(offset);
 
             var headBytes = new byte[ties.Count * 0x70];
             var colorBytes = new List<byte>();
 
             for (int i = 0; i < ties.Count; i++)
             {
-                ties[i].ToByteArray(offset + colorBytes.Count).CopyTo(headBytes, i * 0x70);
+                ties[i].ToByteArray(offset + hack + colorBytes.Count).CopyTo(headBytes, i * 0x70);
                 byte[] colByte = ties[i].colorBytes;
                 colorBytes.AddRange(colByte);
 
@@ -291,7 +292,6 @@ namespace LibReplanetizer.Serializers
 
             }
 
-            int hack = DistToFile80(offset);
             var outBytes = new byte[headBytes.Length + hack + colorBytes.Count];
             headBytes.CopyTo(outBytes, 0);
             colorBytes.CopyTo(outBytes, headBytes.Length + hack);
@@ -341,7 +341,7 @@ namespace LibReplanetizer.Serializers
 
             for (int i = 0; i < tiemodels.Count; i++)
             {
-                TieModel g = (TieModel)tiemodels[i];
+                TieModel g = (TieModel) tiemodels[i];
                 byte[] tieByte = g.SerializeHead(offset);
                 byte[] bodBytes = g.SerializeBody(offset);
                 bodyBytes.AddRange(bodBytes);
@@ -365,7 +365,7 @@ namespace LibReplanetizer.Serializers
 
             for (int i = 0; i < shrubmodels.Count; i++)
             {
-                ShrubModel g = (ShrubModel)shrubmodels[i];
+                ShrubModel g = (ShrubModel) shrubmodels[i];
                 byte[] tieByte = g.SerializeHead(offset);
                 byte[] bodBytes = g.SerializeBody(offset);
                 bodyBytes.AddRange(bodBytes);

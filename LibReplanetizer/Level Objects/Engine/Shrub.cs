@@ -104,6 +104,7 @@ namespace LibReplanetizer.LevelObjects
             bytes[0x63] = color.A;
             WriteUint(bytes, 0x64, off_64);
             WriteUshort(bytes, 0x68, light);
+            WriteUshort(bytes, 0x6A, 0xffff);
             WriteUint(bytes, 0x6C, off_6C);
 
             return bytes;

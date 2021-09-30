@@ -45,7 +45,8 @@ namespace Replanetizer.Frames
 
         public int uniformFogColorID, uniformFogNearDistID, uniformFogFarDistID,
         uniformFogNearIntensityID, uniformFogFarIntensityID, uniformUseFogID,
-        uniformLevelObjectTypeID, uniformLevelObjectNumberID, uniformLevelObjectTypeColorID, uniformLevelObjectNumberColorID;
+        uniformLevelObjectTypeID, uniformLevelObjectNumberID, uniformLevelObjectTypeColorID,
+        uniformLevelObjectNumberColorID, uniformStaticColorID;
 
         private Matrix4 projection { get; set; }
         private Matrix4 view { get; set; }
@@ -434,6 +435,8 @@ namespace Replanetizer.Frames
             uniformLevelObjectNumberID = GL.GetUniformLocation(shaderID, "levelObjectNumber");
             uniformLevelObjectTypeColorID = GL.GetUniformLocation(colorShaderID, "levelObjectType");
             uniformLevelObjectNumberColorID = GL.GetUniformLocation(colorShaderID, "levelObjectNumber");
+
+            uniformStaticColorID = GL.GetUniformLocation(shaderID, "staticColor");
 
             projection = Matrix4.CreatePerspectiveFieldOfView((float) Math.PI / 3, (float) Width / Height, 0.1f, 10000.0f);
             view = camera.GetViewMatrix();
@@ -1134,6 +1137,7 @@ namespace Replanetizer.Frames
                 {
                     Shrub shrub = level.shrubs[i];
                     GL.Uniform1(uniformLevelObjectNumberID, i);
+                    GL.Uniform4(uniformStaticColorID, shrub.color);
                     RenderModelObject(shrub, shrub == selectedObject);
                 }
             }
@@ -1168,6 +1172,7 @@ namespace Replanetizer.Frames
                 {
                     Moby mob = level.mobs[i];
                     GL.Uniform1(uniformLevelObjectNumberID, i);
+                    GL.Uniform4(uniformStaticColorID, mob.color);
                     RenderModelObject(mob, mob == selectedObject);
                 }
 

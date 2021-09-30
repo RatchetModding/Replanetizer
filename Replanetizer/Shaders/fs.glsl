@@ -18,6 +18,7 @@ uniform float fogNearIntensity;
 uniform float fogFarIntensity;
 uniform int levelObjectType;
 uniform int levelObjectNumber;
+uniform vec4 staticColor;
 
 float get_depth() {
     float ndcDepth = (2.0 * gl_FragCoord.z - gl_DepthRange.near - gl_DepthRange.far) /
@@ -50,6 +51,10 @@ void main(){
     }
     else {
         color = textureColor;
+    }
+
+    if (levelObjectType == 2 || levelObjectType == 4) {
+        color = 0.5f * color + 0.5f * staticColor;
     }
 
     id = (levelObjectType << 24) | levelObjectNumber;

@@ -419,23 +419,9 @@ namespace Replanetizer.Frames
             string applicationFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string shaderFolder = Path.Join(applicationFolder, "Shaders");
 
-            //Setup general shader
-            shaderID = GL.CreateProgram();
-            LoadShader(Path.Join(shaderFolder, "vs.glsl"), ShaderType.VertexShader, shaderID);
-            LoadShader(Path.Join(shaderFolder, "fs.glsl"), ShaderType.FragmentShader, shaderID);
-            GL.LinkProgram(shaderID);
-
-            //Setup color shader
-            colorShaderID = GL.CreateProgram();
-            LoadShader(Path.Join(shaderFolder, "colorshadervs.glsl"), ShaderType.VertexShader, colorShaderID);
-            LoadShader(Path.Join(shaderFolder, "colorshaderfs.glsl"), ShaderType.FragmentShader, colorShaderID);
-            GL.LinkProgram(colorShaderID);
-
-            //Setup color shader
-            collisionShaderID = GL.CreateProgram();
-            LoadShader(Path.Join(shaderFolder, "collisionshadervs.glsl"), ShaderType.VertexShader, collisionShaderID);
-            LoadShader(Path.Join(shaderFolder, "collisionshaderfs.glsl"), ShaderType.FragmentShader, collisionShaderID);
-            GL.LinkProgram(collisionShaderID);
+            shaderID = LinkShader(shaderFolder, "vs.glsl", "fs.glsl");
+            colorShaderID = LinkShader(shaderFolder, "colorshadervs.glsl", "colorshaderfs.glsl");
+            collisionShaderID = LinkShader(shaderFolder, "collisionshadervs.glsl", "collisionshaderfs.glsl");
 
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
             colorID = GL.GetUniformLocation(colorShaderID, "incolor");
@@ -1053,7 +1039,17 @@ namespace Replanetizer.Frames
             }
         }
 
-        void LoadShader(string filename, ShaderType type, int program)
+        private int LinkShader(string shaderFolder, string vsname, string fsname)
+        {
+            int shaderID = GL.CreateProgram();
+            LoadShader(Path.Join(shaderFolder, vsname), ShaderType.VertexShader, shaderID);
+            LoadShader(Path.Join(shaderFolder, fsname), ShaderType.FragmentShader, shaderID);
+            GL.LinkProgram(shaderID);
+
+            return shaderID;
+        }
+
+        private void LoadShader(string filename, ShaderType type, int program)
         {
             int address = GL.CreateShader(type);
             using (StreamReader sr = new StreamReader(filename))

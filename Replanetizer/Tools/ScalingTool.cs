@@ -28,12 +28,15 @@ namespace Replanetizer.Tools
             var mvp = modelMatrix * frame.worldView;
             GL.UniformMatrix4(frame.matrixID, false, ref mvp);
 
+            GL.Uniform1(frame.uniformLevelObjectNumberColorID, 0);
             GL.Uniform4(frame.colorID, new Vector4(1, 0, 0, 1));
             GL.DrawArrays(PrimitiveType.LineStrip, 0, 2);
 
+            GL.Uniform1(frame.uniformLevelObjectNumberColorID, 1);
             GL.Uniform4(frame.colorID, new Vector4(0, 1, 0, 1));
             GL.DrawArrays(PrimitiveType.LineStrip, 2, 2);
 
+            GL.Uniform1(frame.uniformLevelObjectNumberColorID, 2);
             GL.Uniform4(frame.colorID, new Vector4(0, 0, 1, 1));
             GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
         }

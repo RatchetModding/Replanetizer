@@ -72,6 +72,8 @@ namespace Replanetizer.Tools
             var mvp = modelMatrix * frame.worldView;
             GL.UniformMatrix4(frame.matrixID, false, ref mvp);
 
+            GL.Uniform1(frame.uniformLevelObjectNumberColorID, 0);
+
             GL.Uniform4(frame.colorID, new Vector4(1, 0, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
 
@@ -84,6 +86,7 @@ namespace Replanetizer.Tools
             GL.Uniform4(frame.colorID, new Vector4(1, 0, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 9, 3);
 
+            GL.Uniform1(frame.uniformLevelObjectNumberColorID, 1);
 
             GL.Uniform4(frame.colorID, new Vector4(0, 1, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 12, 3);
@@ -97,6 +100,7 @@ namespace Replanetizer.Tools
             GL.Uniform4(frame.colorID, new Vector4(0, 1, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 21, 3);
 
+            GL.Uniform1(frame.uniformLevelObjectNumberColorID, 2);
 
             GL.Uniform4(frame.colorID, new Vector4(0, 0, 1, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 24, 3);

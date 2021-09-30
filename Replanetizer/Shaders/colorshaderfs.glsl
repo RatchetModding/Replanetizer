@@ -5,10 +5,13 @@
 in vec4 DiffuseColor;
 
 // Ouput data
-out vec3 color;
+layout (location = 0) out vec3 color;
+layout (location = 1) out int id;
 
 // Values that stay constant for the whole mesh.
 uniform sampler2D myTextureSampler;
+uniform int levelObjectType;
+uniform int levelObjectNumber;
 
 void main(){
 
@@ -16,4 +19,5 @@ void main(){
     //color = texture( myTextureSampler, UV );
 
 	color = DiffuseColor.rgb;
+    id = (levelObjectType << 24) | levelObjectNumber;
 }

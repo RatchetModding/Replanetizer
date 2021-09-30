@@ -26,7 +26,7 @@ namespace Replanetizer.Frames
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Level";
 
-        private FramebufferRenderer renderer, fakeRenderer;
+        private FramebufferRenderer renderer;
         public Level level { get; set; }
 
         private List<TerrainFragment> terrains = new List<TerrainFragment>();
@@ -43,12 +43,9 @@ namespace Replanetizer.Frames
         public int matrixID { get; set; }
         public int colorID { get; set; }
 
-        private int uniformFogColorID;
-        private int uniformFogNearDistID;
-        private int uniformFogFarDistID;
-        private int uniformFogNearIntensityID;
-        private int uniformFogFarIntensityID;
-        private int uniformUseFogID;
+        public int uniformFogColorID, uniformFogNearDistID, uniformFogFarDistID,
+        uniformFogNearIntensityID, uniformFogFarIntensityID, uniformUseFogID,
+        uniformLevelObjectTypeID, uniformLevelObjectNumberID, uniformLevelObjectTypeColorID, uniformLevelObjectNumberColorID;
 
         private Matrix4 projection { get; set; }
         private Matrix4 view { get; set; }
@@ -432,6 +429,11 @@ namespace Replanetizer.Frames
             uniformFogNearIntensityID = GL.GetUniformLocation(shaderID, "fogNearIntensity");
             uniformFogFarIntensityID = GL.GetUniformLocation(shaderID, "fogFarIntensity");
             uniformUseFogID = GL.GetUniformLocation(shaderID, "useFog");
+
+            uniformLevelObjectTypeID = GL.GetUniformLocation(shaderID, "levelObjectType");
+            uniformLevelObjectNumberID = GL.GetUniformLocation(shaderID, "levelObjectNumber");
+            uniformLevelObjectTypeColorID = GL.GetUniformLocation(colorShaderID, "levelObjectType");
+            uniformLevelObjectNumberColorID = GL.GetUniformLocation(colorShaderID, "levelObjectNumber");
 
             projection = Matrix4.CreatePerspectiveFieldOfView((float) Math.PI / 3, (float) Width / Height, 0.1f, 10000.0f);
             view = camera.GetViewMatrix();
@@ -826,7 +828,7 @@ namespace Replanetizer.Frames
                 LevelObject obj = null;
                 Vector3 direction = Vector3.Zero;
 
-                fakeRenderer.RenderToTexture(() =>
+                renderer.ExposeFramebuffer(() =>
                 {
                     obj = GetObjectAtScreenPosition(mousePos);
                 });
@@ -879,142 +881,6 @@ namespace Replanetizer.Frames
             return new Vector3(xAxis, yAxis, zAxis);
         }
 
-        public void FakeDrawSplines(List<Spline> splines, int offset)
-        {
-            for (int i = 0; i < splines.Count; i++)
-            {
-                Spline spline = splines[i];
-                GL.UseProgram(colorShaderID);
-                GL.EnableVertexAttribArray(0);
-                Matrix4 worldView = this.worldView;
-                GL.UniformMatrix4(matrixID, false, ref worldView);
-                this.worldView = worldView;
-
-                byte[] cols = BitConverter.GetBytes(i + offset);
-                GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
-
-                ActivateBuffersForModel(spline);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
-                GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
-            }
-        }
-
-
-        public void FakeDrawCuboids(List<Cuboid> cuboids, int offset)
-        {
-            for (int i = 0; i < cuboids.Count; i++)
-            {
-                Cuboid cuboid = cuboids[i];
-
-                GL.UseProgram(colorShaderID);
-                GL.EnableVertexAttribArray(0);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                Matrix4 mvp = cuboid.modelMatrix * worldView;
-                GL.UniformMatrix4(matrixID, false, ref mvp);
-
-                byte[] cols = BitConverter.GetBytes(i + offset);
-                GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
-
-                ActivateBuffersForModel(cuboid);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-
-                GL.DrawElements(PrimitiveType.Triangles, Cuboid.cubeElements.Length, DrawElementsType.UnsignedShort, 0);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-            }
-        }
-
-        public void FakeDrawSpheres(List<Sphere> spheres, int offset)
-        {
-            for (int i = 0; i < spheres.Count; i++)
-            {
-                Sphere sphere = spheres[i];
-
-                GL.UseProgram(colorShaderID);
-                GL.EnableVertexAttribArray(0);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                Matrix4 mvp = sphere.modelMatrix * worldView;
-                GL.UniformMatrix4(matrixID, false, ref mvp);
-
-                byte[] cols = BitConverter.GetBytes(i + offset);
-                GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
-
-                ActivateBuffersForModel(sphere);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-
-                GL.DrawElements(PrimitiveType.Triangles, Sphere.sphereTris.Length, DrawElementsType.UnsignedShort, 0);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-            }
-        }
-
-        public void FakeDrawCylinders(List<Cylinder> cylinders, int offset)
-        {
-            for (int i = 0; i < cylinders.Count; i++)
-            {
-                Cylinder cylinder = cylinders[i];
-
-                GL.UseProgram(colorShaderID);
-                GL.EnableVertexAttribArray(0);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                Matrix4 mvp = cylinder.modelMatrix * worldView;
-                GL.UniformMatrix4(matrixID, false, ref mvp);
-
-                byte[] cols = BitConverter.GetBytes(i + offset);
-                GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
-
-                ActivateBuffersForModel(cylinder);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-
-                GL.DrawElements(PrimitiveType.Triangles, Cylinder.cylinderTris.Length, DrawElementsType.UnsignedShort, 0);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-            }
-        }
-
-        public void FakeDrawType0Cs(List<Type0C> type0Cs, int offset)
-        {
-            for (int i = 0; i < type0Cs.Count; i++)
-            {
-                Type0C type0C = type0Cs[i];
-
-                GL.UseProgram(colorShaderID);
-                GL.EnableVertexAttribArray(0);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                Matrix4 mvp = type0C.modelMatrix * worldView;
-                GL.UniformMatrix4(matrixID, false, ref mvp);
-
-                byte[] cols = BitConverter.GetBytes(i + offset);
-                GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
-
-                ActivateBuffersForModel(type0C);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-
-                GL.DrawElements(PrimitiveType.Triangles, Cuboid.cubeElements.Length, DrawElementsType.UnsignedShort, 0);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-            }
-        }
-
-        public void FakeDrawObjects(List<ModelObject> levelObjects, int offset)
-        {
-            for (int i = 0; i < levelObjects.Count; i++)
-            {
-                ModelObject levelObject = levelObjects[i];
-
-                if (levelObject.model == null || levelObject.model.vertexBuffer == null)
-                    continue;
-
-                Matrix4 mvp = levelObject.modelMatrix * worldView;  //Has to be done in this order to work correctly
-                GL.UniformMatrix4(matrixID, false, ref mvp);
-
-                ActivateBuffersForModel(levelObject.model);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
-                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
-
-                byte[] cols = BitConverter.GetBytes(i + offset);
-                GL.Uniform4(colorID, new Vector4(cols[0] / 255f, cols[1] / 255f, cols[2] / 255f, 1));
-                GL.DrawElements(PrimitiveType.Triangles, levelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
-
-            }
-        }
-
         public void ActivateBuffersForModel(IRenderable renderable)
         {
             BufferContainer container = bufferTable.GetValue(renderable, BufferContainer.FromRenderable);
@@ -1025,6 +891,7 @@ namespace Replanetizer.Frames
         {
             // Render tool on top of everything
             GL.Clear(ClearBufferMask.DepthBufferBit);
+            GL.Uniform1(uniformLevelObjectTypeColorID, (int) FramebufferRenderer.RenderedObjectType.Tool);
 
             if ((selectedObject != null) && (currentTool != null))
             {
@@ -1070,171 +937,55 @@ namespace Replanetizer.Frames
 
             renderer?.Dispose();
             renderer = new FramebufferRenderer(Width, Height);
-
-            fakeRenderer?.Dispose();
-            fakeRenderer = new FramebufferRenderer(Width, Height);
         }
 
         public LevelObject GetObjectAtScreenPosition(Vector2 pos)
         {
-            LevelObject returnObject = null;
+            if (xLock || yLock || zLock) return null;
 
-            int mobyOffset = 0, tieOffset = 0, shrubOffset = 0, splineOffset = 0, cuboidOffset = 0, sphereOffset = 0, cylinderOffset = 0, type0COffset = 0, tfragOffset = 0;
+            int hit = 0;
+            GL.ReadBuffer(ReadBufferMode.ColorAttachment1);
+            GL.ReadPixels((int) pos.X, Height - (int) pos.Y, 1, 1, PixelFormat.RedInteger, PixelType.Int, ref hit);
 
-            GL.Viewport(0, 0, Width, Height);
-            GL.Enable(EnableCap.DepthTest);
-            GL.LineWidth(5.0f);
-            GL.ClearColor(0, 0, 0, 0);
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            GL.UseProgram(colorShaderID);
-            GL.EnableVertexAttribArray(0);
+            if (hit == 0) return null;
 
-            worldView = view * projection;
+            FramebufferRenderer.RenderedObjectType hitType = (FramebufferRenderer.RenderedObjectType) (hit >> 24);
+            int hitId = hit & 0xffffff;
 
-            int offset = 0;
-
-
-            if (enableMoby)
+            switch (hitType)
             {
-                mobyOffset = offset;
-                FakeDrawObjects(level.mobs.Cast<ModelObject>().ToList(), mobyOffset);
-                offset += level.mobs.Count;
-            }
-
-            if (enableTie)
-            {
-                tieOffset = offset;
-                FakeDrawObjects(level.ties.Cast<ModelObject>().ToList(), tieOffset);
-                offset += level.ties.Count;
-            }
-
-            if (enableShrub)
-            {
-                shrubOffset = offset;
-                FakeDrawObjects(level.shrubs.Cast<ModelObject>().ToList(), shrubOffset);
-                offset += level.shrubs.Count;
-            }
-
-            if (enableSpline)
-            {
-                splineOffset = offset;
-                FakeDrawSplines(level.splines, splineOffset);
-                offset += level.splines.Count;
-            }
-
-            if (enableCuboid)
-            {
-                cuboidOffset = offset;
-                FakeDrawCuboids(level.cuboids, cuboidOffset);
-                offset += level.cuboids.Count;
-            }
-
-            if (enableSpheres)
-            {
-                sphereOffset = offset;
-                FakeDrawSpheres(level.spheres, sphereOffset);
-                offset += level.spheres.Count;
-            }
-
-            if (enableCylinders)
-            {
-                cylinderOffset = offset;
-                FakeDrawCylinders(level.cylinders, cylinderOffset);
-                offset += level.cylinders.Count;
-            }
-
-            if (enableType0C)
-            {
-                type0COffset = offset;
-                FakeDrawType0Cs(level.type0Cs, type0COffset);
-                offset += level.type0Cs.Count;
-            }
-
-            if (enableTerrain)
-            {
-                tfragOffset = offset;
-                FakeDrawObjects(terrains.Cast<ModelObject>().ToList(), tfragOffset);
-            }
-
-            RenderTool();
-
-            Pixel pixel = new Pixel();
-            GL.ReadPixels((int) pos.X, Height - (int) pos.Y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixel);
-
-            if (level != null && level.levelVariables != null)
-                GL.ClearColor(level.levelVariables.fogColor);
-
-            // Some GPU's put the alpha at 0, others at 255
-            if (pixel.A == 255 || pixel.A == 0)
-            {
-                pixel.A = 0;
-
-                if (!xLock && !yLock && !zLock)
-                {
-                    bool hitTool = false;
-                    if (pixel.R == 255 && pixel.G == 0 && pixel.B == 0)
+                case FramebufferRenderer.RenderedObjectType.Null:
+                    return null;
+                case FramebufferRenderer.RenderedObjectType.Terrain:
+                    return terrains[hitId];
+                case FramebufferRenderer.RenderedObjectType.Shrub:
+                    return level.shrubs[hitId];
+                case FramebufferRenderer.RenderedObjectType.Tie:
+                    return level.ties[hitId];
+                case FramebufferRenderer.RenderedObjectType.Moby:
+                    return level.mobs[hitId];
+                case FramebufferRenderer.RenderedObjectType.Spline:
+                    return level.splines[hitId];
+                case FramebufferRenderer.RenderedObjectType.Cuboid:
+                    return level.cuboids[hitId];
+                case FramebufferRenderer.RenderedObjectType.Sphere:
+                    return level.spheres[hitId];
+                case FramebufferRenderer.RenderedObjectType.Cylinder:
+                    return level.cylinders[hitId];
+                case FramebufferRenderer.RenderedObjectType.Type0C:
+                    return level.type0Cs[hitId];
+                case FramebufferRenderer.RenderedObjectType.Tool:
+                    switch (hitId)
                     {
-                        hitTool = true;
-                        xLock = true;
+                        case 0: xLock = true; break;
+                        case 1: yLock = true; break;
+                        case 2: zLock = true; break;
                     }
-                    else if (pixel.R == 0 && pixel.G == 255 && pixel.B == 0)
-                    {
-                        hitTool = true;
-                        yLock = true;
-                    }
-                    else if (pixel.R == 0 && pixel.G == 0 && pixel.B == 255)
-                    {
-                        hitTool = true;
-                        zLock = true;
-                    }
-
-                    if (hitTool)
-                    {
-                        InvalidateView();
-                        return null;
-                    }
-                }
-
-                int id = (int) pixel.ToUInt32();
-                if (enableMoby && id < level.mobs?.Count)
-                {
-                    returnObject = level.mobs[id];
-                }
-                else if (enableTie && id - tieOffset < level.ties.Count)
-                {
-                    returnObject = level.ties[id - tieOffset];
-                }
-                else if (enableShrub && id - shrubOffset < level.shrubs.Count)
-                {
-                    returnObject = level.shrubs[id - shrubOffset];
-                }
-                else if (enableSpline && id - splineOffset < level.splines.Count)
-                {
-                    returnObject = level.splines[id - splineOffset];
-                }
-                else if (enableCuboid && id - cuboidOffset < level.cuboids.Count)
-                {
-                    returnObject = level.cuboids[id - cuboidOffset];
-                }
-                else if (enableSpheres && id - sphereOffset < level.spheres.Count)
-                {
-                    returnObject = level.spheres[id - sphereOffset];
-                }
-                else if (enableCylinders && id - cylinderOffset < level.cylinders.Count)
-                {
-                    returnObject = level.cylinders[id - cylinderOffset];
-                }
-                else if (enableType0C && id - type0COffset < level.type0Cs.Count)
-                {
-                    returnObject = level.type0Cs[id - type0COffset];
-                }
-                else if (enableTerrain && id - tfragOffset < terrains.Count)
-                {
-                    returnObject = terrains[id - tfragOffset];
-                }
+                    InvalidateView();
+                    return null;
             }
 
-            return returnObject;
+            return null;
         }
 
 
@@ -1365,21 +1116,47 @@ namespace Replanetizer.Frames
             }
 
             if (enableTerrain)
-                foreach (TerrainFragment tFrag in terrains)
+            {
+                GL.Uniform1(uniformLevelObjectTypeID, (int) FramebufferRenderer.RenderedObjectType.Terrain);
+                for (int i = 0; i < terrains.Count; i++)
+                {
+                    TerrainFragment tFrag = terrains[i];
+                    GL.Uniform1(uniformLevelObjectNumberID, i);
                     RenderModelObject(tFrag, tFrag == selectedObject);
+                }
+            }
+
 
             if (enableShrub)
-                foreach (Shrub shrub in level.shrubs)
+            {
+                GL.Uniform1(uniformLevelObjectTypeID, (int) FramebufferRenderer.RenderedObjectType.Shrub);
+                for (int i = 0; i < level.shrubs.Count; i++)
+                {
+                    Shrub shrub = level.shrubs[i];
+                    GL.Uniform1(uniformLevelObjectNumberID, i);
                     RenderModelObject(shrub, shrub == selectedObject);
+                }
+            }
+
 
             if (enableTie)
-                foreach (Tie tie in level.ties)
+            {
+                GL.Uniform1(uniformLevelObjectTypeID, (int) FramebufferRenderer.RenderedObjectType.Tie);
+                for (int i = 0; i < level.ties.Count; i++)
+                {
+                    Tie tie = level.ties[i];
+                    GL.Uniform1(uniformLevelObjectNumberID, i);
                     RenderModelObject(tie, tie == selectedObject);
+                }
+            }
+
 
 
             if (enableMoby)
             {
                 if (hook != null) hook.UpdateMobys(level.mobs, level.mobyModels);
+
+                GL.Uniform1(uniformLevelObjectTypeID, (int) FramebufferRenderer.RenderedObjectType.Moby);
 
                 if (enableTransparency)
                 {
@@ -1387,8 +1164,10 @@ namespace Replanetizer.Frames
                     GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 }
 
-                foreach (Moby mob in level.mobs)
+                for (int i = 0; i < level.mobs.Count; i++)
                 {
+                    Moby mob = level.mobs[i];
+                    GL.Uniform1(uniformLevelObjectNumberID, i);
                     RenderModelObject(mob, mob == selectedObject);
                 }
 
@@ -1398,8 +1177,12 @@ namespace Replanetizer.Frames
             GL.UseProgram(colorShaderID);
 
             if (enableSpline)
-                foreach (Spline spline in level.splines)
+            {
+                GL.Uniform1(uniformLevelObjectTypeColorID, (int) FramebufferRenderer.RenderedObjectType.Spline);
+                for (int i = 0; i < level.splines.Count; i++)
                 {
+                    Spline spline = level.splines[i];
+                    GL.Uniform1(uniformLevelObjectNumberColorID, i);
                     var worldView = this.worldView;
                     GL.UniformMatrix4(matrixID, false, ref worldView);
                     GL.Uniform4(colorID, spline == selectedObject ? selectedColor : normalColor);
@@ -1407,10 +1190,16 @@ namespace Replanetizer.Frames
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
                     GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
                 }
+            }
+
 
             if (enableCuboid)
-                foreach (Cuboid cuboid in level.cuboids)
+            {
+                GL.Uniform1(uniformLevelObjectTypeColorID, (int) FramebufferRenderer.RenderedObjectType.Cuboid);
+                for (int i = 0; i < level.cuboids.Count; i++)
                 {
+                    Cuboid cuboid = level.cuboids[i];
+                    GL.Uniform1(uniformLevelObjectNumberColorID, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     Matrix4 mvp = cuboid.modelMatrix * worldView;
                     GL.UniformMatrix4(matrixID, false, ref mvp);
@@ -1420,10 +1209,16 @@ namespace Replanetizer.Frames
                     GL.DrawElements(PrimitiveType.Triangles, Cuboid.cubeElements.Length, DrawElementsType.UnsignedShort, 0);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 }
+            }
+
 
             if (enableSpheres)
-                foreach (Sphere sphere in level.spheres)
+            {
+                GL.Uniform1(uniformLevelObjectTypeColorID, (int) FramebufferRenderer.RenderedObjectType.Sphere);
+                for (int i = 0; i < level.spheres.Count; i++)
                 {
+                    Sphere sphere = level.spheres[i];
+                    GL.Uniform1(uniformLevelObjectNumberColorID, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     Matrix4 mvp = sphere.modelMatrix * worldView;
                     GL.UniformMatrix4(matrixID, false, ref mvp);
@@ -1433,10 +1228,16 @@ namespace Replanetizer.Frames
                     GL.DrawElements(PrimitiveType.Triangles, Sphere.sphereTris.Length, DrawElementsType.UnsignedShort, 0);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 }
+            }
+
 
             if (enableCylinders)
-                foreach (Cylinder cylinder in level.cylinders)
+            {
+                GL.Uniform1(uniformLevelObjectTypeColorID, (int) FramebufferRenderer.RenderedObjectType.Cylinder);
+                for (int i = 0; i < level.cylinders.Count; i++)
                 {
+                    Cylinder cylinder = level.cylinders[i];
+                    GL.Uniform1(uniformLevelObjectNumberColorID, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     Matrix4 mvp = cylinder.modelMatrix * worldView;
                     GL.UniformMatrix4(matrixID, false, ref mvp);
@@ -1446,11 +1247,16 @@ namespace Replanetizer.Frames
                     GL.DrawElements(PrimitiveType.Triangles, Cylinder.cylinderTris.Length, DrawElementsType.UnsignedShort, 0);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 }
+            }
+
 
             if (enableType0C)
-                foreach (Type0C type0c in level.type0Cs)
+            {
+                GL.Uniform1(uniformLevelObjectTypeColorID, (int) FramebufferRenderer.RenderedObjectType.Type0C);
+                for (int i = 0; i < level.type0Cs.Count; i++)
                 {
-                    GL.UseProgram(colorShaderID);
+                    Type0C type0c = level.type0Cs[i];
+                    GL.Uniform1(uniformLevelObjectNumberColorID, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     Matrix4 mvp = type0c.modelMatrix * worldView;
                     GL.UniformMatrix4(matrixID, false, ref mvp);
@@ -1463,9 +1269,12 @@ namespace Replanetizer.Frames
                     GL.DrawElements(PrimitiveType.Triangles, Type0C.cubeElements.Length, DrawElementsType.UnsignedShort, 0);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 }
+            }
+
 
             if (enableCollision)
             {
+                GL.Uniform1(uniformLevelObjectTypeColorID, (int) FramebufferRenderer.RenderedObjectType.Null);
                 for (int i = 0; i < collisions.Count; i++)
                 {
                     Collision col = (Collision) collisions[i].Item1;

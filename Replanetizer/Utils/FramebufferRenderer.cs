@@ -5,9 +5,24 @@ namespace Replanetizer.Utils
 {
     public class FramebufferRenderer : IDisposable
     {
+        public enum RenderedObjectType
+        {
+            Null = 0,
+            Terrain = 1,
+            Shrub = 2,
+            Tie = 3,
+            Moby = 4,
+            Spline = 5,
+            Cuboid = 6,
+            Sphere = 7,
+            Cylinder = 8,
+            Type0C = 9,
+            Tool = 10
+        }
         private bool disposed = false;
 
         public int targetTexture { get; }
+        public int idTexture { get; }
         private int bufferTexture;
         private int framebufferID;
 
@@ -25,15 +40,25 @@ namespace Replanetizer.Utils
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int) TextureMagFilter.Nearest);
 
+            idTexture = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, idTexture);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.R32i, width, height, 0, PixelFormat.RedInteger, PixelType.Int, (IntPtr) 0);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int) TextureMagFilter.Nearest);
+
             framebufferID = GL.GenFramebuffer();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebufferID);
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, targetTexture, 0);
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2D, bufferTexture, 0);
+            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment1, TextureTarget.Texture2D, idTexture, 0);
         }
 
         public void RenderToTexture(Action renderFunction)
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebufferID);
+
+            DrawBuffersEnum[] buffers = { DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1 };
+            GL.DrawBuffers(2, buffers);
 
             GL.Enable(EnableCap.DepthTest);
             GL.DepthFunc(DepthFunction.Less);
@@ -45,6 +70,15 @@ namespace Replanetizer.Utils
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.DeleteVertexArray(VAO);
+        }
+
+        public void ExposeFramebuffer(Action func)
+        {
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebufferID);
+
+            func();
+
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         }
 
         public void Dispose()

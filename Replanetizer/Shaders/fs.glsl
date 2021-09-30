@@ -5,7 +5,8 @@ in vec2 UV;
 in vec4 DiffuseColor;
 
 // Ouput data
-out vec4 color;
+layout (location = 0) out vec4 color;
+layout (location = 1) out int id;
 
 // Values that stay constant for the whole mesh.
 uniform sampler2D myTextureSampler;
@@ -15,6 +16,8 @@ uniform float fogNearDistance;
 uniform float fogFarDistance;
 uniform float fogNearIntensity;
 uniform float fogFarIntensity;
+uniform int levelObjectType;
+uniform int levelObjectNumber;
 
 float get_depth() {
     float ndcDepth = (2.0 * gl_FragCoord.z - gl_DepthRange.near - gl_DepthRange.far) /
@@ -49,4 +52,5 @@ void main(){
         color = textureColor;
     }
 
+    id = (levelObjectType << 24) | levelObjectNumber;
 }

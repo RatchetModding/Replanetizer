@@ -23,8 +23,22 @@ namespace LibReplanetizer.LevelObjects
             return model.GetVertices();
         }
 
-        public bool IsDynamic() { 
-            return model.IsDynamic();  
+        public byte[] GetAmbientRGBAs()
+        {
+            if (this is Tie)
+            {
+                Tie tie = (Tie) this;
+                return tie.colorBytes;
+            }
+            else
+            {
+                return model.rgbas;
+            }
+        }
+
+        public bool IsDynamic()
+        {
+            return model.IsDynamic();
         }
 
     }

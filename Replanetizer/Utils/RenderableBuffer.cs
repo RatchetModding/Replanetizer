@@ -59,7 +59,7 @@ namespace Replanetizer.Utils
 
             // VBO
             int vboLength = modelObject.GetVertices().Length * sizeof(float);
-            if (type == RenderedObjectType.Terrain) vboLength += modelObject.model.rgbas.Length * sizeof(Byte);
+            if (type == RenderedObjectType.Terrain || type == RenderedObjectType.Tie) vboLength += modelObject.GetAmbientRGBAs().Length * sizeof(Byte);
             if (vboLength > 0)
             {
                 GL.GenBuffers(1, out vbo);
@@ -86,9 +86,9 @@ namespace Replanetizer.Utils
             if (BindVBO())
             {
                 float[] vboData = modelObject.GetVertices();
-                if (type == RenderedObjectType.Terrain)
+                if (type == RenderedObjectType.Terrain || type == RenderedObjectType.Tie)
                 {
-                    byte[] rgbas = modelObject.model.rgbas;
+                    byte[] rgbas = modelObject.GetAmbientRGBAs();
                     float[] fullData = new float[vboData.Length + rgbas.Length / 4];
                     for (int i = 0; i < vboData.Length / 8; i++)
                     {
@@ -203,7 +203,7 @@ namespace Replanetizer.Utils
 
         private void SetupVertexAttribPointers()
         {
-            if (type == RenderedObjectType.Terrain)
+            if (type == RenderedObjectType.Terrain || type == RenderedObjectType.Tie)
             {
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, 0);
                 GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 3);

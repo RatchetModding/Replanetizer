@@ -3,6 +3,7 @@
 // Interpolated values from the vertex shaders
 in vec2 UV;
 in vec4 DiffuseColor;
+in vec4 BakedColor;
 
 // Ouput data
 layout (location = 0) out vec4 color;
@@ -39,12 +40,24 @@ float quick_exp(float x) {
 
 /*
  * We use one shader for all shading types.
- * Terrain: (TODO) RGBAs
- * Shrubs: StaticColor + DiffuseColor
- * Ties: DiffuseColor + (TODO) Colorbytes
- * Mobies: StaticColor + DiffuseColor
+ * Terrain (1): RGBAs + (TODO) DiffuseColor
+ * Shrubs (2): StaticColor + DiffuseColor
+ * Ties (3): (TODO) Colorbytes + DiffuseColor
+ * Mobies (4): StaticColor + DiffuseColor
  *
  * Weights of all these colors and the fog are probably not exact atm.
+ *
+ * Some Notes about the rendering in the game:
+ * - Ratchets Helmet and the Ship treat light in the opposite direction, i.e.
+ *   if a directional light points up, it will be treated as if it was pointing down.
+ *   This seems to only apply to these two and these two are the only object that seem to
+ *   have specular highlights.
+ * - Terrain uses directional lights aswell but it is unknown where the corresponding
+ *   integer is stored. In general, the terrain uses the same directional lights as
+ *   the objects around them.
+ * - Mobies and Shrubs need their vertex normals to always be flipped while the same
+ *   does not seem to hold for ties. In fact, sometimes not both lights in a pair
+ *   of directional lights seem to be used for ties.
  */
 void main(){
     //color of the texture at the specified UV
@@ -54,11 +67,15 @@ void main(){
 
     if (levelObjectType == 2 || levelObjectType == 4) {
         ambient = staticColor;
+    } else if (levelObjectType == 1) {
+        ambient = BakedColor;
+    } else if (levelObjectType == 11) {
+        ambient = vec4(1.0f);
     }
 
     vec4 diffuse = vec4(0.0f);
 
-    if (levelObjectType >= 2 && levelObjectType <= 4) {
+    if (levelObjectType >= 1 && levelObjectType <= 4) {
         diffuse = DiffuseColor;
     }
 

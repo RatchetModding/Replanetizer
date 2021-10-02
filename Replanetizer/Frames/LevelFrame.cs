@@ -48,6 +48,11 @@ namespace Replanetizer.Frames
         uniformLevelObjectTypeID, uniformLevelObjectNumberID, uniformLevelObjectTypeColorID,
         uniformLevelObjectNumberColorID, uniformStaticColorID;
 
+        private int lightsBufferObject;
+        private float[][] lightsData;
+
+        private int alignmentUBO = GL.GetInteger(GetPName.UniformBufferOffsetAlignment);
+
         private Matrix4 projection { get; set; }
         private Matrix4 view { get; set; }
 
@@ -438,6 +443,8 @@ namespace Replanetizer.Frames
 
             uniformStaticColorID = GL.GetUniformLocation(shaderID, "staticColor");
 
+            LoadDirectionalLights(level.lights);
+
             projection = Matrix4.CreatePerspectiveFieldOfView((float) Math.PI / 3, (float) Width / Height, 0.1f, 10000.0f);
             view = camera.GetViewMatrix();
 
@@ -557,6 +564,78 @@ namespace Replanetizer.Frames
                     LoadSingleCollisionBO((Collision) collisionModel);
                 }
             }
+        }
+
+        /// <summary>
+        /// Binds the light to the uniform buffer specified by lightIndex.
+        /// Binds an all black light if lightIndex is out of bounds.
+        /// </summary>
+        private void BindLightsBuffer(int lightIndex)
+        {
+            if (lightIndex < 0) lightIndex = level.lights.Count;
+            lightIndex = Math.Min(lightIndex, level.lights.Count);
+            GL.BindBufferRange(BufferRangeTarget.UniformBuffer, 0, lightsBufferObject, new IntPtr(alignmentUBO * lightIndex), sizeof(float) * 16);
+        }
+
+        /// <summary>
+        /// Updates the buffers of the lights.
+        /// </summary>
+        private void UpdateDirectionalLights(List<Light> lights)
+        {
+            GL.BindBuffer(BufferTarget.UniformBuffer, lightsBufferObject);
+            int lightSize = sizeof(float) * 16;
+
+            for (int i = 0; i < lights.Count; i++)
+            {
+                lightsData[i][0] = lights[i].color1.X;
+                lightsData[i][1] = lights[i].color1.Y;
+                lightsData[i][2] = lights[i].color1.Z;
+                lightsData[i][3] = lights[i].color1.W;
+                lightsData[i][4] = lights[i].direction1.X;
+                lightsData[i][5] = lights[i].direction1.Y;
+                lightsData[i][6] = lights[i].direction1.Z;
+                lightsData[i][7] = lights[i].direction1.W;
+                lightsData[i][8] = lights[i].color2.X;
+                lightsData[i][9] = lights[i].color2.Y;
+                lightsData[i][10] = lights[i].color2.Z;
+                lightsData[i][11] = lights[i].color2.W;
+                lightsData[i][12] = lights[i].direction2.X;
+                lightsData[i][13] = lights[i].direction2.Y;
+                lightsData[i][14] = lights[i].direction2.Z;
+                lightsData[i][15] = lights[i].direction2.W;
+                GL.BufferSubData(BufferTarget.UniformBuffer, new IntPtr(alignmentUBO * i), lightSize, lightsData[i]);
+            }
+
+            GL.BindBuffer(BufferTarget.UniformBuffer, 0);
+        }
+
+        /// <summary>
+        /// Initializes buffers for the directional lights to be used in the shaders.
+        /// An all black light is added additionally for all objects with out of bounds light indices.
+        /// </summary>
+        private void LoadDirectionalLights(List<Light> lights)
+        {
+            int loc = GL.GetUniformBlockIndex(shaderID, "lights");
+            GL.UniformBlockBinding(shaderID, loc, 0);
+
+            int lightsCountInShader = lights.Count + 1;
+
+            lightsBufferObject = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.UniformBuffer, lightsBufferObject);
+            GL.BufferData(BufferTarget.UniformBuffer, alignmentUBO * lightsCountInShader, IntPtr.Zero, BufferUsageHint.StaticRead);
+            GL.BindBuffer(BufferTarget.UniformBuffer, 0);
+
+            lightsData = new float[lightsCountInShader][];
+
+            for (int i = 0; i < lightsCountInShader; i++)
+            {
+                lightsData[i] = new float[16];
+            }
+
+            // Upload the all black light, it won't be updated later
+            GL.BufferSubData(BufferTarget.UniformBuffer, new IntPtr(alignmentUBO * lightsCountInShader - 1), sizeof(float) * 16, lightsData[lightsCountInShader - 1]);
+
+            UpdateDirectionalLights(lights);
         }
 
         public void LoadLevel(Level level)
@@ -1004,7 +1083,8 @@ namespace Replanetizer.Frames
             GL.UniformMatrix4(matrixID, false, ref mvp);
             ActivateBuffersForModel(modelObject);
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
+            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
+            GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
 
             //Bind textures one by one, applying it to the relevant vertices based on the index array
             foreach (TextureConfig conf in modelObject.model.textureConfig)
@@ -1087,6 +1167,9 @@ namespace Replanetizer.Frames
 
             GL.EnableVertexAttribArray(0);
             GL.EnableVertexAttribArray(1);
+            GL.EnableVertexAttribArray(2);
+
+            UpdateDirectionalLights(level.lights);
 
             GL.UseProgram(shaderID);
             if (level != null && level.levelVariables != null)
@@ -1101,6 +1184,7 @@ namespace Replanetizer.Frames
 
             if (enableSkybox)
             {
+                GL.Uniform1(uniformLevelObjectTypeID, (int) FramebufferRenderer.RenderedObjectType.Null);
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 GL.Disable(EnableCap.DepthTest);
@@ -1108,7 +1192,8 @@ namespace Replanetizer.Frames
                 GL.UniformMatrix4(matrixID, false, ref mvp);
                 ActivateBuffersForModel(level.skybox);
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
-                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
+                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
+                GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
                 foreach (TextureConfig conf in level.skybox.textureConfig)
                 {
                     GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? textureIds[level.textures[conf.ID]] : 0);
@@ -1138,10 +1223,10 @@ namespace Replanetizer.Frames
                     Shrub shrub = level.shrubs[i];
                     GL.Uniform1(uniformLevelObjectNumberID, i);
                     GL.Uniform4(uniformStaticColorID, shrub.color);
+                    BindLightsBuffer(shrub.light);
                     RenderModelObject(shrub, shrub == selectedObject);
                 }
             }
-
 
             if (enableTie)
             {
@@ -1150,11 +1235,10 @@ namespace Replanetizer.Frames
                 {
                     Tie tie = level.ties[i];
                     GL.Uniform1(uniformLevelObjectNumberID, i);
+                    BindLightsBuffer(tie.light);
                     RenderModelObject(tie, tie == selectedObject);
                 }
             }
-
-
 
             if (enableMoby)
             {
@@ -1172,6 +1256,7 @@ namespace Replanetizer.Frames
                 {
                     Moby mob = level.mobs[i];
                     GL.Uniform1(uniformLevelObjectNumberID, i);
+                    BindLightsBuffer(mob.light);
                     GL.Uniform4(uniformStaticColorID, mob.color);
                     RenderModelObject(mob, mob == selectedObject);
                 }
@@ -1311,6 +1396,7 @@ namespace Replanetizer.Frames
 
             GL.DisableVertexAttribArray(0);
             GL.DisableVertexAttribArray(1);
+            GL.DisableVertexAttribArray(2);
         }
 
         public void AddSubFrame(Frame frame)

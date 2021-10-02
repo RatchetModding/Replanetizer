@@ -83,6 +83,8 @@ namespace Replanetizer.Frames
         private ConditionalWeakTable<IRenderable, BufferContainer> bufferTable;
         public Dictionary<Texture, int> textureIds;
 
+        public List<RenderableBuffer> mobiesBuffers, tiesBuffers, shrubsBuffers, terrainBuffers;
+
         MemoryHook.MemoryHook hook;
 
         private List<int> collisionVbo = new List<int>();
@@ -443,6 +445,10 @@ namespace Replanetizer.Frames
 
             uniformStaticColorID = GL.GetUniformLocation(shaderID, "staticColor");
 
+            RenderableBuffer.matrixID = matrixID;
+            RenderableBuffer.shaderID = shaderID;
+            RenderableBuffer.colorShaderID = colorShaderID;
+
             LoadDirectionalLights(level.lights);
 
             projection = Matrix4.CreatePerspectiveFieldOfView((float) Math.PI / 3, (float) Width / Height, 0.1f, 10000.0f);
@@ -638,6 +644,37 @@ namespace Replanetizer.Frames
             UpdateDirectionalLights(lights);
         }
 
+        private void InitRenderableBuffers()
+        {
+            mobiesBuffers = new List<RenderableBuffer>();
+
+            for (int i = 0; i < level.mobs.Count; i++)
+            {
+                mobiesBuffers.Add(new RenderableBuffer(level.mobs[i], RenderedObjectType.Moby, i, level, textureIds));
+            }
+
+            tiesBuffers = new List<RenderableBuffer>();
+
+            for (int i = 0; i < level.ties.Count; i++)
+            {
+                tiesBuffers.Add(new RenderableBuffer(level.ties[i], RenderedObjectType.Tie, i, level, textureIds));
+            }
+
+            shrubsBuffers = new List<RenderableBuffer>();
+
+            for (int i = 0; i < level.shrubs.Count; i++)
+            {
+                shrubsBuffers.Add(new RenderableBuffer(level.shrubs[i], RenderedObjectType.Shrub, i, level, textureIds));
+            }
+
+            terrainBuffers = new List<RenderableBuffer>();
+
+            for (int i = 0; i < terrains.Count; i++)
+            {
+                terrainBuffers.Add(new RenderableBuffer(terrains[i], RenderedObjectType.Terrain, i, level, textureIds));
+            }
+        }
+
         public void LoadLevel(Level level)
         {
             this.level = level;
@@ -668,6 +705,7 @@ namespace Replanetizer.Frames
                 camera.SetRotation(0, 0);
             }
             SelectObject(null);
+            InitRenderableBuffers();
             InvalidateView();
         }
 
@@ -973,7 +1011,7 @@ namespace Replanetizer.Frames
         {
             // Render tool on top of everything
             GL.Clear(ClearBufferMask.DepthBufferBit);
-            GL.Uniform1(uniformLevelObjectTypeColorID, (int) FramebufferRenderer.RenderedObjectType.Tool);
+            GL.Uniform1(uniformLevelObjectTypeColorID, (int) RenderedObjectType.Tool);
 
             if ((selectedObject != null) && (currentTool != null))
             {
@@ -1031,32 +1069,32 @@ namespace Replanetizer.Frames
 
             if (hit == 0) return null;
 
-            FramebufferRenderer.RenderedObjectType hitType = (FramebufferRenderer.RenderedObjectType) (hit >> 24);
+            RenderedObjectType hitType = (RenderedObjectType) (hit >> 24);
             int hitId = hit & 0xffffff;
 
             switch (hitType)
             {
-                case FramebufferRenderer.RenderedObjectType.Null:
+                case RenderedObjectType.Null:
                     return null;
-                case FramebufferRenderer.RenderedObjectType.Terrain:
+                case RenderedObjectType.Terrain:
                     return terrains[hitId];
-                case FramebufferRenderer.RenderedObjectType.Shrub:
+                case RenderedObjectType.Shrub:
                     return level.shrubs[hitId];
-                case FramebufferRenderer.RenderedObjectType.Tie:
+                case RenderedObjectType.Tie:
                     return level.ties[hitId];
-                case FramebufferRenderer.RenderedObjectType.Moby:
+                case RenderedObjectType.Moby:
                     return level.mobs[hitId];
-                case FramebufferRenderer.RenderedObjectType.Spline:
+                case RenderedObjectType.Spline:
                     return level.splines[hitId];
-                case FramebufferRenderer.RenderedObjectType.Cuboid:
+                case RenderedObjectType.Cuboid:
                     return level.cuboids[hitId];
-                case FramebufferRenderer.RenderedObjectType.Sphere:
+                case RenderedObjectType.Sphere:
                     return level.spheres[hitId];
-                case FramebufferRenderer.RenderedObjectType.Cylinder:
+                case RenderedObjectType.Cylinder:
                     return level.cylinders[hitId];
-                case FramebufferRenderer.RenderedObjectType.Type0C:
+                case RenderedObjectType.Type0C:
                     return level.type0Cs[hitId];
-                case FramebufferRenderer.RenderedObjectType.Tool:
+                case RenderedObjectType.Tool:
                     switch (hitId)
                     {
                         case 0: xLock = true; break;
@@ -1074,43 +1112,6 @@ namespace Replanetizer.Frames
         public void InvalidateView()
         {
             invalidate = true;
-        }
-
-        void RenderModelObject(ModelObject modelObject, bool selected)
-        {
-            if (modelObject.model == null || modelObject.model.vertexBuffer == null || modelObject.model.textureConfig.Count == 0) return;
-            Matrix4 mvp = modelObject.modelMatrix * worldView;  //Has to be done in this order to work correctly
-            GL.UniformMatrix4(matrixID, false, ref mvp);
-            ActivateBuffersForModel(modelObject);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
-            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
-            GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
-
-            //Bind textures one by one, applying it to the relevant vertices based on the index array
-            foreach (TextureConfig conf in modelObject.model.textureConfig)
-            {
-                GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? textureIds[level.textures[conf.ID]] : 0);
-                GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
-            }
-
-            if (selected)
-            {
-                bool switchBlends = enableTransparency && (modelObject is Moby);
-
-                if (switchBlends)
-                    GL.Disable(EnableCap.Blend);
-
-                GL.UseProgram(colorShaderID);
-                GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
-                GL.UniformMatrix4(matrixID, false, ref mvp);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                GL.DrawElements(PrimitiveType.Triangles, modelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                GL.UseProgram(shaderID);
-
-                if (switchBlends)
-                    GL.Enable(EnableCap.Blend);
-            }
         }
 
         public bool TryRPCS3Hook()
@@ -1159,6 +1160,7 @@ namespace Replanetizer.Frames
         protected void OnPaint()
         {
             worldView = view * projection;
+            RenderableBuffer.worldView = worldView;
 
             if (level != null && level.levelVariables != null)
                 GL.ClearColor(level.levelVariables.fogColor);
@@ -1171,7 +1173,10 @@ namespace Replanetizer.Frames
 
             UpdateDirectionalLights(level.lights);
 
+            GL.UseProgram(colorShaderID);
+            GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
             GL.UseProgram(shaderID);
+
             if (level != null && level.levelVariables != null)
             {
                 GL.Uniform4(uniformFogColorID, level.levelVariables.fogColor);
@@ -1184,7 +1189,7 @@ namespace Replanetizer.Frames
 
             if (enableSkybox)
             {
-                GL.Uniform1(uniformLevelObjectTypeID, (int) FramebufferRenderer.RenderedObjectType.Null);
+                GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Skybox);
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 GL.Disable(EnableCap.DepthTest);
@@ -1205,38 +1210,43 @@ namespace Replanetizer.Frames
 
             if (enableTerrain)
             {
-                GL.Uniform1(uniformLevelObjectTypeID, (int) FramebufferRenderer.RenderedObjectType.Terrain);
-                for (int i = 0; i < terrains.Count; i++)
+                GL.EnableVertexAttribArray(3);
+                GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Terrain);
+                foreach (RenderableBuffer buffer in terrainBuffers)
                 {
-                    TerrainFragment tFrag = terrains[i];
-                    GL.Uniform1(uniformLevelObjectNumberID, i);
-                    RenderModelObject(tFrag, tFrag == selectedObject);
+                    GL.Uniform1(uniformLevelObjectNumberID, buffer.ID);
+                    BindLightsBuffer(0);
+                    buffer.Select(selectedObject);
+                    buffer.Render(false);
                 }
+                GL.DisableVertexAttribArray(3);
             }
-
 
             if (enableShrub)
             {
-                GL.Uniform1(uniformLevelObjectTypeID, (int) FramebufferRenderer.RenderedObjectType.Shrub);
-                for (int i = 0; i < level.shrubs.Count; i++)
+                GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Shrub);
+                foreach (RenderableBuffer buffer in shrubsBuffers)
                 {
-                    Shrub shrub = level.shrubs[i];
-                    GL.Uniform1(uniformLevelObjectNumberID, i);
-                    GL.Uniform4(uniformStaticColorID, shrub.color);
-                    BindLightsBuffer(shrub.light);
-                    RenderModelObject(shrub, shrub == selectedObject);
+                    GL.Uniform1(uniformLevelObjectNumberID, buffer.ID);
+                    buffer.UpdateUniforms();
+                    BindLightsBuffer(buffer.light);
+                    GL.Uniform4(uniformStaticColorID, buffer.ambient);
+                    buffer.Select(selectedObject);
+                    buffer.Render(false);
                 }
             }
 
             if (enableTie)
             {
-                GL.Uniform1(uniformLevelObjectTypeID, (int) FramebufferRenderer.RenderedObjectType.Tie);
-                for (int i = 0; i < level.ties.Count; i++)
+                GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Tie);
+                foreach (RenderableBuffer buffer in tiesBuffers)
                 {
-                    Tie tie = level.ties[i];
-                    GL.Uniform1(uniformLevelObjectNumberID, i);
-                    BindLightsBuffer(tie.light);
-                    RenderModelObject(tie, tie == selectedObject);
+                    GL.Uniform1(uniformLevelObjectNumberID, buffer.ID);
+                    buffer.UpdateUniforms();
+                    BindLightsBuffer(buffer.light);
+                    GL.Uniform4(uniformStaticColorID, buffer.ambient);
+                    buffer.Select(selectedObject);
+                    buffer.Render(false);
                 }
             }
 
@@ -1244,7 +1254,7 @@ namespace Replanetizer.Frames
             {
                 if (hook != null) hook.UpdateMobys(level.mobs, level.mobyModels);
 
-                GL.Uniform1(uniformLevelObjectTypeID, (int) FramebufferRenderer.RenderedObjectType.Moby);
+                GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Moby);
 
                 if (enableTransparency)
                 {
@@ -1252,13 +1262,14 @@ namespace Replanetizer.Frames
                     GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 }
 
-                for (int i = 0; i < level.mobs.Count; i++)
+                foreach (RenderableBuffer buffer in mobiesBuffers)
                 {
-                    Moby mob = level.mobs[i];
-                    GL.Uniform1(uniformLevelObjectNumberID, i);
-                    BindLightsBuffer(mob.light);
-                    GL.Uniform4(uniformStaticColorID, mob.color);
-                    RenderModelObject(mob, mob == selectedObject);
+                    GL.Uniform1(uniformLevelObjectNumberID, buffer.ID);
+                    buffer.UpdateUniforms();
+                    BindLightsBuffer(buffer.light);
+                    GL.Uniform4(uniformStaticColorID, buffer.ambient);
+                    buffer.Select(selectedObject);
+                    buffer.Render(enableTransparency);
                 }
 
                 GL.Disable(EnableCap.Blend);
@@ -1268,7 +1279,7 @@ namespace Replanetizer.Frames
 
             if (enableSpline)
             {
-                GL.Uniform1(uniformLevelObjectTypeColorID, (int) FramebufferRenderer.RenderedObjectType.Spline);
+                GL.Uniform1(uniformLevelObjectTypeColorID, (int) RenderedObjectType.Spline);
                 for (int i = 0; i < level.splines.Count; i++)
                 {
                     Spline spline = level.splines[i];
@@ -1285,7 +1296,7 @@ namespace Replanetizer.Frames
 
             if (enableCuboid)
             {
-                GL.Uniform1(uniformLevelObjectTypeColorID, (int) FramebufferRenderer.RenderedObjectType.Cuboid);
+                GL.Uniform1(uniformLevelObjectTypeColorID, (int) RenderedObjectType.Cuboid);
                 for (int i = 0; i < level.cuboids.Count; i++)
                 {
                     Cuboid cuboid = level.cuboids[i];
@@ -1304,7 +1315,7 @@ namespace Replanetizer.Frames
 
             if (enableSpheres)
             {
-                GL.Uniform1(uniformLevelObjectTypeColorID, (int) FramebufferRenderer.RenderedObjectType.Sphere);
+                GL.Uniform1(uniformLevelObjectTypeColorID, (int) RenderedObjectType.Sphere);
                 for (int i = 0; i < level.spheres.Count; i++)
                 {
                     Sphere sphere = level.spheres[i];
@@ -1323,7 +1334,7 @@ namespace Replanetizer.Frames
 
             if (enableCylinders)
             {
-                GL.Uniform1(uniformLevelObjectTypeColorID, (int) FramebufferRenderer.RenderedObjectType.Cylinder);
+                GL.Uniform1(uniformLevelObjectTypeColorID, (int) RenderedObjectType.Cylinder);
                 for (int i = 0; i < level.cylinders.Count; i++)
                 {
                     Cylinder cylinder = level.cylinders[i];
@@ -1342,7 +1353,7 @@ namespace Replanetizer.Frames
 
             if (enableType0C)
             {
-                GL.Uniform1(uniformLevelObjectTypeColorID, (int) FramebufferRenderer.RenderedObjectType.Type0C);
+                GL.Uniform1(uniformLevelObjectTypeColorID, (int) RenderedObjectType.Type0C);
                 for (int i = 0; i < level.type0Cs.Count; i++)
                 {
                     Type0C type0c = level.type0Cs[i];
@@ -1364,7 +1375,7 @@ namespace Replanetizer.Frames
 
             if (enableCollision)
             {
-                GL.Uniform1(uniformLevelObjectTypeColorID, (int) FramebufferRenderer.RenderedObjectType.Null);
+                GL.Uniform1(uniformLevelObjectTypeColorID, (int) RenderedObjectType.Null);
                 for (int i = 0; i < collisions.Count; i++)
                 {
                     Collision col = (Collision) collisions[i].Item1;

@@ -1238,6 +1238,7 @@ namespace Replanetizer.Frames
 
             if (enableTie)
             {
+                GL.EnableVertexAttribArray(3);
                 GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Tie);
                 foreach (RenderableBuffer buffer in tiesBuffers)
                 {
@@ -1248,6 +1249,7 @@ namespace Replanetizer.Frames
                     buffer.Select(selectedObject);
                     buffer.Render(false);
                 }
+                GL.DisableVertexAttribArray(3);
             }
 
             if (enableMoby)

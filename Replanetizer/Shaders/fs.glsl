@@ -40,9 +40,9 @@ float quick_exp(float x) {
 
 /*
  * We use one shader for all shading types.
- * Terrain (1): RGBAs + (TODO) DiffuseColor
+ * Terrain (1): RGBAs + DiffuseColor
  * Shrubs (2): StaticColor + DiffuseColor
- * Ties (3): (TODO) Colorbytes + DiffuseColor
+ * Ties (3): Colorbytes + DiffuseColor
  * Mobies (4): StaticColor + DiffuseColor
  *
  * Weights of all these colors and the fog are probably not exact atm.
@@ -67,7 +67,7 @@ void main(){
 
     if (levelObjectType == 2 || levelObjectType == 4) {
         ambient = staticColor;
-    } else if (levelObjectType == 1) {
+    } else if (levelObjectType == 1 || levelObjectType == 3) {
         ambient = BakedColor;
     } else if (levelObjectType == 11) {
         ambient = vec4(1.0f);

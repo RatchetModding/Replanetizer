@@ -31,7 +31,7 @@ void main(){
 
     DiffuseColor = vec4(0.0f,0.0f,0.0f,1.0f);
 
-    if (levelObjectType == 1) {
+    if (levelObjectType == 1 || levelObjectType == 3) {
         BakedColor = vertexRGBA;
     }
 

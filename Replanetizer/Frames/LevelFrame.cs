@@ -644,35 +644,17 @@ namespace Replanetizer.Frames
             UpdateDirectionalLights(lights);
         }
 
-        private void InitRenderableBuffers()
+        /// <summary>
+        /// Returns a list of RenderableBuffers for a collection objects with each object of the same type.
+        /// </summary>
+        private List<RenderableBuffer> GetRenderableBuffer(IEnumerable<ModelObject> objects, RenderedObjectType type)
         {
-            mobiesBuffers = new List<RenderableBuffer>();
-
-            for (int i = 0; i < level.mobs.Count; i++)
+            List<RenderableBuffer> buffers = new List<RenderableBuffer>();
+            for (int i = 0; i < objects.Count(); i++)
             {
-                mobiesBuffers.Add(new RenderableBuffer(level.mobs[i], RenderedObjectType.Moby, i, level, textureIds));
+                buffers.Add(new RenderableBuffer(objects.ElementAt(i), type, i, level, textureIds));
             }
-
-            tiesBuffers = new List<RenderableBuffer>();
-
-            for (int i = 0; i < level.ties.Count; i++)
-            {
-                tiesBuffers.Add(new RenderableBuffer(level.ties[i], RenderedObjectType.Tie, i, level, textureIds));
-            }
-
-            shrubsBuffers = new List<RenderableBuffer>();
-
-            for (int i = 0; i < level.shrubs.Count; i++)
-            {
-                shrubsBuffers.Add(new RenderableBuffer(level.shrubs[i], RenderedObjectType.Shrub, i, level, textureIds));
-            }
-
-            terrainBuffers = new List<RenderableBuffer>();
-
-            for (int i = 0; i < terrains.Count; i++)
-            {
-                terrainBuffers.Add(new RenderableBuffer(terrains[i], RenderedObjectType.Terrain, i, level, textureIds));
-            }
+            return buffers;
         }
 
         public void LoadLevel(Level level)
@@ -692,7 +674,7 @@ namespace Replanetizer.Frames
             {
                 selectedChunks[i] = true;
             }
-            setSelectedChunks();
+
 
             if (level.mobs.Count > 0)
             {
@@ -705,7 +687,11 @@ namespace Replanetizer.Frames
                 camera.SetRotation(0, 0);
             }
             SelectObject(null);
-            InitRenderableBuffers();
+            setSelectedChunks();
+            shrubsBuffers = GetRenderableBuffer(level.shrubs, RenderedObjectType.Shrub);
+            tiesBuffers = GetRenderableBuffer(level.ties, RenderedObjectType.Tie);
+            mobiesBuffers = GetRenderableBuffer(level.mobs, RenderedObjectType.Moby);
+
             InvalidateView();
         }
 
@@ -736,6 +722,7 @@ namespace Replanetizer.Frames
                 }
             }
 
+            terrainBuffers = GetRenderableBuffer(terrains, RenderedObjectType.Terrain);
             InvalidateView();
         }
 

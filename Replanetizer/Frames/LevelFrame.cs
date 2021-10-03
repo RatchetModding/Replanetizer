@@ -395,7 +395,8 @@ namespace Replanetizer.Frames
                     //Setup openGL variables
                     GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
                     GL.Enable(EnableCap.DepthTest);
-                    GL.LineWidth(5.0f);
+                    GL.LineWidth(0.5f);
+                    GL.Enable(EnableCap.LineSmooth);
                     GL.Viewport(0, 0, Width, Height);
 
                     OnPaint();

@@ -11,11 +11,25 @@ namespace Replanetizer.Utils
         public Vector3 position = new Vector3();
         public Vector3 rotation = new Vector3(0, 0, -0.75f);
 
+        public float fovy { get; set; } = (float) Math.PI / 3;
+        public float aspect { get; set; } = (float) 16 / 9;
+        public float near { get; set; } = 0.1f;
+        public float far { get; set; } = 10000.0f;
+
+        /// <summary>
+        /// The frustum is defined by 6 planes which are each defined by a point and a normal.
+        /// The order of the planes is Near, Far, Right, Left, Up, Down.
+        /// </summary>
+        public Vector3[] frustumPlanePoints;
+        public Vector3[] frustumPlaneNormals;
+
+        private Matrix4 projectionMatrix;
+
         public Matrix3 GetRotationMatrix()
         {
             return Matrix3.CreateRotationX(rotation.X) * Matrix3.CreateRotationY(rotation.Y) * Matrix3.CreateRotationZ(rotation.Z);
         }
-        
+
         private static Vector3 LegacyTransform(Vector3 vec, Matrix3 mat)
         {
             Vector3 result = new Vector3();
@@ -29,6 +43,16 @@ namespace Replanetizer.Utils
         {
             Vector3 forward = LegacyTransform(Vector3.UnitY, GetRotationMatrix());
             return Matrix4.LookAt(position, position + forward, Vector3.UnitZ);
+        }
+
+        public void ComputeProjectionMatrix()
+        {
+            projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(fovy, aspect, near, far);
+        }
+
+        public Matrix4 GetProjectionMatrix()
+        {
+            return projectionMatrix;
         }
 
         public void SetPosition(Vector3 position)
@@ -63,11 +87,11 @@ namespace Replanetizer.Utils
                 if (double.IsNaN(yaw)) yaw = 0;
             }
 
-            yaw = yaw - (float)Math.PI / 2;
-            SetRotation(-(float)Math.PI / 10, yaw);
+            yaw = yaw - (float) Math.PI / 2;
+            SetRotation(-(float) Math.PI / 10, yaw);
 
-            float ypos = (float)-Math.Cos(yaw);
-            float xpos = (float)Math.Sin(yaw);
+            float ypos = (float) -Math.Cos(yaw);
+            float xpos = (float) Math.Sin(yaw);
 
             SetPosition(new Vector3(
                 levelObject.position.X + xpos * distanceToObject,
@@ -109,6 +133,50 @@ namespace Replanetizer.Utils
         public void Scale(float x, float y, float z)
         {
             //Not used
+        }
+
+        public void ComputeFrustum()
+        {
+            frustumPlanePoints = new Vector3[6];
+            frustumPlaneNormals = new Vector3[6];
+
+            float Hfar = 2.0f * MathF.Tan(fovy * 0.5f) * far;
+            float Wfar = Hfar * aspect;
+
+            Vector3 forward = LegacyTransform(Vector3.UnitY, GetRotationMatrix());
+            forward.Normalize();
+
+            Vector3 up = Vector3.UnitZ;
+            Vector3 right = Vector3.Cross(forward, up);
+
+            Vector3 nc = position + forward * near;
+            frustumPlanePoints[0] = nc;
+            frustumPlaneNormals[0] = forward;
+
+            Vector3 fc = position + forward * far;
+            frustumPlanePoints[1] = fc;
+            frustumPlaneNormals[1] = -forward;
+
+            Vector3 a = (fc + right * Wfar * 0.5f) - position;
+            a.Normalize();
+            frustumPlanePoints[2] = position;
+            frustumPlaneNormals[2] = Vector3.Cross(up, a);
+
+            Vector3 b = (fc - right * Wfar * 0.5f) - position;
+            b.Normalize();
+            frustumPlanePoints[3] = position;
+            frustumPlaneNormals[3] = Vector3.Cross(b, up);
+
+            Vector3 c = (fc + up * Hfar * 0.5f) - position;
+            c.Normalize();
+            frustumPlanePoints[4] = position;
+            frustumPlaneNormals[4] = Vector3.Cross(c, right);
+
+            Vector3 d = (fc - up * Hfar * 0.5f) - position;
+            d.Normalize();
+            frustumPlanePoints[5] = position;
+            frustumPlaneNormals[5] = Vector3.Cross(right, d);
+
         }
     }
 }

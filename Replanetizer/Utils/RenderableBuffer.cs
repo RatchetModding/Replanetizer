@@ -23,8 +23,10 @@ namespace Replanetizer.Utils
         public RenderedObjectType type { get; }
         public int light { get; set; }
         public Color ambient { get; set; }
+        public float renderDistance { get; set; }
 
         private bool selected;
+        private bool culled;
 
         private Level level;
         private Dictionary<Texture, int> textureIds;
@@ -68,7 +70,7 @@ namespace Replanetizer.Utils
             }
 
             UpdateBuffers();
-            UpdateUniforms();
+            UpdateVars();
         }
 
         /// <summary>
@@ -112,23 +114,31 @@ namespace Replanetizer.Utils
         /// <summary>
         /// Updates the light and ambient variables which can then be used to update the shader.
         /// </summary>
-        public void UpdateUniforms()
+        public void UpdateVars()
         {
             switch (type)
             {
+                case RenderedObjectType.Terrain:
+                    TerrainFragment frag = (TerrainFragment) modelObject;
+                    light = 0;
+                    renderDistance = float.MaxValue;
+                    break;
                 case RenderedObjectType.Moby:
                     Moby mob = (Moby) modelObject;
                     light = mob.light;
                     ambient = mob.color;
+                    renderDistance = mob.drawDistance;
                     break;
                 case RenderedObjectType.Tie:
                     Tie tie = (Tie) modelObject;
                     light = tie.light;
+                    renderDistance = float.MaxValue;
                     break;
                 case RenderedObjectType.Shrub:
                     Shrub shrub = (Shrub) modelObject;
                     light = shrub.light;
                     ambient = shrub.color;
+                    renderDistance = shrub.drawDistance;
                     break;
             }
         }
@@ -143,10 +153,32 @@ namespace Replanetizer.Utils
         }
 
         /// <summary>
+        /// Sets an internal variable to true if the object is to be culled.
+        /// Mobies and shrubs are culled by their drawDistance.
+        /// (TODO) Ties and terrain is culled by frustum culling.
+        /// </summary>
+        public void ComputeCulling(Camera camera, bool distanceCulling)
+        {
+            if (distanceCulling)
+            {
+                float dist = (modelObject.position - camera.position).Length;
+
+                if (dist > renderDistance)
+                {
+                    culled = true;
+                    return;
+                }
+            }
+
+            culled = false;
+        }
+
+        /// <summary>
         /// Renders an object based on the buffers.
         /// </summary>
         public void Render(bool switchBlends)
         {
+            if (culled) return;
             if (!BindIBO() || !BindVBO()) return;
             Matrix4 mvp = modelObject.modelMatrix * worldView;  //Has to be done in this order to work correctly
             GL.UniformMatrix4(matrixID, false, ref mvp);

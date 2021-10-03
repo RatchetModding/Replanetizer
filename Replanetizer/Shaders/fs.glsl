@@ -63,6 +63,8 @@ void main(){
     //color of the texture at the specified UV
     vec4 textureColor = texture(myTextureSampler, UV);
 
+    if (textureColor.w < 0.1f) discard;
+
     vec4 ambient = vec4(1.0f);
 
     if (levelObjectType == 2 || levelObjectType == 4) {

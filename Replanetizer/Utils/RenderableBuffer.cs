@@ -187,6 +187,7 @@ namespace Replanetizer.Utils
                         case RenderedObjectType.Shrub:
                             ShrubModel shrub = (ShrubModel) modelObject.model;
                             center = new Vector3(shrub.cullingX, shrub.cullingY, shrub.cullingZ);
+                            center = modelObject.rotation * center;
                             center += modelObject.position;
                             float shrubScale = MathF.MaxMagnitude(modelObject.scale.X, MathF.MaxMagnitude(modelObject.scale.Y, modelObject.scale.Z));
                             size = shrub.cullingRadius * shrubScale;
@@ -194,6 +195,7 @@ namespace Replanetizer.Utils
                         case RenderedObjectType.Tie:
                             TieModel tie = (TieModel) modelObject.model;
                             center = new Vector3(tie.cullingX, tie.cullingY, tie.cullingZ);
+                            center = modelObject.rotation * center;
                             center += modelObject.position;
                             float tieScale = MathF.MaxMagnitude(modelObject.scale.X, MathF.MaxMagnitude(modelObject.scale.Y, modelObject.scale.Z));
                             size = tie.cullingRadius * tieScale;

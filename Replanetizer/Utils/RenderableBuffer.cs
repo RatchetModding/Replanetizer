@@ -119,8 +119,8 @@ namespace Replanetizer.Utils
             switch (type)
             {
                 case RenderedObjectType.Terrain:
-                    TerrainFragment frag = (TerrainFragment) modelObject;
-                    light = 0;
+                    TerrainModel terrain = (TerrainModel) modelObject.model;
+                    light = (int) terrain.lights[0];
                     renderDistance = float.MaxValue;
                     break;
                 case RenderedObjectType.Moby:

@@ -23,21 +23,11 @@ namespace LibReplanetizer.LevelObjects
 
     public class TerrainFragment : ModelObject
     {
-        /*
-         * These first 4 values probably define an axis aligned bounding box
-         * which is probably used for frustum culling since terrain has no
-         * maximum render distance and the mesh is not "offset"
-         * Testing this seemed to confirm that this is culling related
-         * but it remains to be shown whether these are in fact AABBs
-         */
-        [Category("Unknowns"), DisplayName("OFF_00: AABB X")]
-        public float off_00 { get; set; }
-        [Category("Unknowns"), DisplayName("OFF_04: AABB Y")]
-        public float off_04 { get; set; }
-        [Category("Unknowns"), DisplayName("OFF_08: AABB Z")]
-        public float off_08 { get; set; }
-        [Category("Unknowns"), DisplayName("OFF_0C: AABB Size")]
-        public float off_0C { get; set; }
+
+        [Category("Attributes"), DisplayName("Culling Center")]
+        public Vector3 cullingCenter { get; set; }
+        [Category("Attributes"), DisplayName("Culling Radius")]
+        public float cullingSize { get; set; }
 
         // 0x10 = pointer to TextureConfig
         // 0x14 = TextureConfig count
@@ -62,10 +52,10 @@ namespace LibReplanetizer.LevelObjects
         {
             int offset = num * 0x30;
 
-            off_00 = ReadFloat(tfragBlock, offset + 0x00);
-            off_04 = ReadFloat(tfragBlock, offset + 0x04);
-            off_08 = ReadFloat(tfragBlock, offset + 0x08);
-            off_0C = ReadFloat(tfragBlock, offset + 0x0C);
+            float cullingX = ReadFloat(tfragBlock, offset + 0x00);
+            float cullingY = ReadFloat(tfragBlock, offset + 0x04);
+            float cullingZ = ReadFloat(tfragBlock, offset + 0x08);
+            cullingSize = ReadFloat(tfragBlock, offset + 0x0C);
 
             off_1C = ReadUshort(tfragBlock, offset + 0x1C);
             off_1E = ReadUshort(tfragBlock, offset + 0x1E);
@@ -80,6 +70,8 @@ namespace LibReplanetizer.LevelObjects
             modelID = model.id;
 
             modelMatrix = Matrix4.Identity;
+
+            cullingCenter = new Vector3(cullingX, cullingY, cullingZ);
         }
 
         public override LevelObject Clone()
@@ -92,10 +84,10 @@ namespace LibReplanetizer.LevelObjects
         {
             byte[] head = new byte[0x30];
 
-            WriteFloat(head, 0x00, off_00);
-            WriteFloat(head, 0x04, off_04);
-            WriteFloat(head, 0x08, off_08);
-            WriteFloat(head, 0x0C, off_0C);
+            WriteFloat(head, 0x00, cullingCenter.X);
+            WriteFloat(head, 0x04, cullingCenter.Y);
+            WriteFloat(head, 0x08, cullingCenter.Z);
+            WriteFloat(head, 0x0C, cullingSize);
 
             WriteInt(head, 0x10, 0);
             WriteInt(head, 0x14, 0);

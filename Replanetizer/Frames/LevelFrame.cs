@@ -53,7 +53,6 @@ namespace Replanetizer.Frames
 
         private int alignmentUBO = GL.GetInteger(GetPName.UniformBufferOffsetAlignment);
 
-        private Matrix4 projection { get; set; }
         private Matrix4 view { get; set; }
 
         private int currentSplineVertex;
@@ -74,7 +73,7 @@ namespace Replanetizer.Frames
         public bool enableMoby = true, enableTie = true, enableShrub = true, enableSpline = false,
             enableCuboid = false, enableSpheres = false, enableCylinders = false, enableType0C = false,
             enableSkybox = true, enableTerrain = true, enableCollision = false, enableTransparency = true,
-            enableDistanceCulling = true, enableFog = true, enableCameraInfo = true;
+            enableDistanceCulling = true, enableFrustumCulling = true, enableFog = true, enableCameraInfo = true;
 
         public Camera camera;
         private Tool currentTool;
@@ -238,6 +237,7 @@ namespace Replanetizer.Frames
                     ImGui.Separator();
                     if (ImGui.Checkbox("Transparency", ref enableTransparency)) InvalidateView();
                     if (ImGui.Checkbox("Distance Culling", ref enableDistanceCulling)) InvalidateView();
+                    if (ImGui.Checkbox("Frustum Culling", ref enableFrustumCulling)) InvalidateView();
                     if (ImGui.Checkbox("Fog", ref enableFog)) InvalidateView();
                     ImGui.Separator();
                     ImGui.Checkbox("Camera Info", ref enableCameraInfo);
@@ -334,6 +334,8 @@ namespace Replanetizer.Frames
 
             Width = (int) (vMax.X - vMin.X);
             Height = (int) (vMax.Y - vMin.Y);
+
+            camera.aspect = (float) Width / Height;
 
             if (Width <= 0 || Height <= 0) return;
 
@@ -453,7 +455,7 @@ namespace Replanetizer.Frames
 
             LoadDirectionalLights(level.lights);
 
-            projection = Matrix4.CreatePerspectiveFieldOfView((float) Math.PI / 3, (float) Width / Height, 0.1f, 10000.0f);
+            camera.ComputeProjectionMatrix();
             view = camera.GetViewMatrix();
 
             translateTool = new TranslationTool();
@@ -930,7 +932,7 @@ namespace Replanetizer.Frames
 
             view = camera.GetViewMatrix();
 
-            Vector3 mouseRay = MouseToWorldRay(projection, view, new Size(Width, Height), mousePos);
+            Vector3 mouseRay = MouseToWorldRay(camera.GetProjectionMatrix(), view, new Size(Width, Height), mousePos);
 
             if (wnd.IsMouseButtonDown(MouseButton.Left))
             {
@@ -1041,7 +1043,7 @@ namespace Replanetizer.Frames
         {
             if (!initialized) return;
             GL.Viewport(0, 0, Width, Height);
-            projection = Matrix4.CreatePerspectiveFieldOfView((float) Math.PI / 3, (float) Width / Height, 0.1f, 10000.0f);
+            camera.ComputeProjectionMatrix();
             view = camera.GetViewMatrix();
 
             renderer?.Dispose();
@@ -1150,7 +1152,7 @@ namespace Replanetizer.Frames
         {
             GL.Uniform1(uniformLevelObjectNumberID, buffer.ID);
             buffer.UpdateVars();
-            buffer.ComputeCulling(camera, enableDistanceCulling);
+            buffer.ComputeCulling(camera, enableDistanceCulling, enableFrustumCulling);
             BindLightsBuffer(buffer.light);
             GL.Uniform4(uniformStaticColorID, buffer.ambient);
             buffer.Select(selectedObject);
@@ -1159,8 +1161,10 @@ namespace Replanetizer.Frames
 
         protected void OnPaint()
         {
-            worldView = view * projection;
+            worldView = view * camera.GetProjectionMatrix();
             RenderableBuffer.worldView = worldView;
+
+            camera.ComputeFrustum();
 
             if (level != null && level.levelVariables != null)
                 GL.ClearColor(level.levelVariables.fogColor);
@@ -1193,7 +1197,7 @@ namespace Replanetizer.Frames
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 GL.Disable(EnableCap.DepthTest);
-                Matrix4 mvp = view.ClearTranslation() * projection;
+                Matrix4 mvp = view.ClearTranslation() * camera.GetProjectionMatrix();
                 GL.UniformMatrix4(matrixID, false, ref mvp);
                 ActivateBuffersForModel(level.skybox);
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);

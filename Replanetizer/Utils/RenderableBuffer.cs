@@ -4,7 +4,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
-using Replanetizer.Utils;
+using LibReplanetizer.Models;
 using System.Drawing;
 
 namespace Replanetizer.Utils
@@ -157,7 +157,7 @@ namespace Replanetizer.Utils
         /// Mobies and shrubs are culled by their drawDistance.
         /// (TODO) Ties and terrain is culled by frustum culling.
         /// </summary>
-        public void ComputeCulling(Camera camera, bool distanceCulling)
+        public void ComputeCulling(Camera camera, bool distanceCulling, bool frustumCulling)
         {
             if (distanceCulling)
             {
@@ -167,6 +167,50 @@ namespace Replanetizer.Utils
                 {
                     culled = true;
                     return;
+                }
+            }
+
+            if (frustumCulling)
+            {
+                if (type == RenderedObjectType.Terrain || type == RenderedObjectType.Tie || type == RenderedObjectType.Shrub)
+                {
+                    Vector3 center = Vector3.Zero;
+                    float size = 0.0f;
+
+                    switch (type)
+                    {
+                        case RenderedObjectType.Terrain:
+                            TerrainFragment frag = (TerrainFragment) modelObject;
+                            center = frag.cullingCenter;
+                            size = frag.cullingSize;
+                            break;
+                        case RenderedObjectType.Shrub:
+                            ShrubModel shrub = (ShrubModel) modelObject.model;
+                            center = new Vector3(shrub.cullingX, shrub.cullingY, shrub.cullingZ);
+                            center += modelObject.position;
+                            float shrubScale = MathF.MaxMagnitude(modelObject.scale.X, MathF.MaxMagnitude(modelObject.scale.Y, modelObject.scale.Z));
+                            size = shrub.cullingRadius * shrubScale;
+                            break;
+                        case RenderedObjectType.Tie:
+                            TieModel tie = (TieModel) modelObject.model;
+                            center = new Vector3(tie.cullingX, tie.cullingY, tie.cullingZ);
+                            center += modelObject.position;
+                            float tieScale = MathF.MaxMagnitude(modelObject.scale.X, MathF.MaxMagnitude(modelObject.scale.Y, modelObject.scale.Z));
+                            size = tie.cullingRadius * tieScale;
+                            break;
+                    }
+
+                    for (int i = 0; i < 6; i++)
+                    {
+                        Vector3 planeNormal = camera.frustumPlaneNormals[i];
+                        Vector3 planePoint = camera.frustumPlanePoints[i];
+
+                        if (Vector3.Dot(center - planePoint, planeNormal) < -size)
+                        {
+                            culled = true;
+                            return;
+                        }
+                    }
                 }
             }
 

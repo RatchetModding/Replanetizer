@@ -35,12 +35,6 @@ void main(){
         BakedColor = vertexRGBA;
     }
 
-    if (levelObjectType == 3) {
-        DiffuseColor += vec4(max(0.0f,dot(direction1.xyz,vertexNormal)) * color1.xyz,1.0f);
-        DiffuseColor += vec4(max(0.0f,-dot(direction2.xyz,vertexNormal)) * color2.xyz,1.0f);
-    }
-    else {
-        DiffuseColor += vec4(max(0.0f,-dot(direction1.xyz,vertexNormal)) * color1.xyz,1.0f);
-        DiffuseColor += vec4(max(0.0f,-dot(direction2.xyz,vertexNormal)) * color2.xyz,1.0f);
-    }
+    DiffuseColor += vec4(max(0.0f,-dot(direction1.xyz,vertexNormal)) * color1.xyz,1.0f);
+    DiffuseColor += vec4(max(0.0f,-dot(direction2.xyz,vertexNormal)) * color2.xyz,1.0f);
 }

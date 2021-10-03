@@ -52,12 +52,12 @@ float quick_exp(float x) {
  *   if a directional light points up, it will be treated as if it was pointing down.
  * - Ratchets helmet and the ship seem to be the only objects that
  *   have specular highlights.
- * - Terrain uses directional lights aswell but it is unknown where the corresponding
- *   integer is stored. In general, the terrain uses the same directional lights as
- *   the objects around them.
- * - Mobies and Shrubs seem to need their vertex normals to always be flipped while the same
- *   does not seem to hold for ties. In fact, sometimes not both lights in a pair
- *   of directional lights seem to be used for ties.
+ * - Terrain stores the information about which directional light is used on a per vertex
+ *   basis. Replanetizer uses the light specified by the first vertex as in most cases all
+ *   vertices have the same light and because the shaders are not capable of switching
+ *   lights for each vertex.
+ * - Vertex normals seem to always need to be flipped. No idea why they would have done it that way.
+ *   However, especially for ties this seems to not always work.
  */
 void main(){
     //color of the texture at the specified UV

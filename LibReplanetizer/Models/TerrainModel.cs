@@ -11,7 +11,7 @@ namespace LibReplanetizer.Models
         // Don't use this directly, call getIDAssigned() instead to retrieve an ID
         private static short STATIC_ID = 0;
 
-        public List<uint> off_0C = new List<uint>();    // Something to do with lighting
+        public List<uint> lights = new List<uint>();
         int faceCount;
         public TerrainModel(FileStream fs, TerrainHead head, byte[] tfragBlock, int num)
         {
@@ -40,7 +40,7 @@ namespace LibReplanetizer.Models
             byte[] vertBlock = ReadBlock(fs, head.vertexPointers[slotNum] + vertexIndex * 0x1C, vertexCount * 0x1C);
             for (int i = 0; i < vertBlock.Length / 0x1c; i++)
             {
-                off_0C.Add(ReadUint(vertBlock, i * 0x1c + 0x18));
+                lights.Add(ReadUint(vertBlock, i * 0x1c + 0x18));
             }
 
         }
@@ -59,7 +59,7 @@ namespace LibReplanetizer.Models
                 WriteFloat(outBytes, offset + 0x0C, vertexBuffer[(i * 8) + 3]);
                 WriteFloat(outBytes, offset + 0x10, vertexBuffer[(i * 8) + 4]);
                 WriteFloat(outBytes, offset + 0x14, vertexBuffer[(i * 8) + 5]);
-                WriteUint(outBytes, offset + 0x18, off_0C[i]);
+                WriteUint(outBytes, offset + 0x18, lights[i]);
             }
 
             return outBytes;

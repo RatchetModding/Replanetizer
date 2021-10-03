@@ -1182,19 +1182,10 @@ namespace Replanetizer.Frames
             GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
             GL.UseProgram(shaderID);
 
-            if (level != null && level.levelVariables != null)
-            {
-                GL.Uniform4(uniformFogColorID, level.levelVariables.fogColor);
-                GL.Uniform1(uniformFogNearDistID, level.levelVariables.fogNearDistance);
-                GL.Uniform1(uniformFogFarDistID, level.levelVariables.fogFarDistance);
-                GL.Uniform1(uniformFogNearIntensityID, level.levelVariables.fogNearIntensity / 255.0f);
-                GL.Uniform1(uniformFogFarIntensityID, level.levelVariables.fogFarIntensity / 255.0f);
-                GL.Uniform1(uniformUseFogID, (enableFog) ? 1 : 0);
-            }
-
             if (enableSkybox)
             {
                 GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Skybox);
+                GL.Uniform1(uniformUseFogID, 0);
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 GL.Disable(EnableCap.DepthTest);
@@ -1211,6 +1202,16 @@ namespace Replanetizer.Frames
                 }
                 GL.Enable(EnableCap.DepthTest);
                 GL.Disable(EnableCap.Blend);
+            }
+
+            if (level != null && level.levelVariables != null)
+            {
+                GL.Uniform4(uniformFogColorID, level.levelVariables.fogColor);
+                GL.Uniform1(uniformFogNearDistID, level.levelVariables.fogNearDistance);
+                GL.Uniform1(uniformFogFarDistID, level.levelVariables.fogFarDistance);
+                GL.Uniform1(uniformFogNearIntensityID, level.levelVariables.fogNearIntensity / 255.0f);
+                GL.Uniform1(uniformFogFarIntensityID, level.levelVariables.fogFarIntensity / 255.0f);
+                GL.Uniform1(uniformUseFogID, (enableFog) ? 1 : 0);
             }
 
             if (enableTerrain)

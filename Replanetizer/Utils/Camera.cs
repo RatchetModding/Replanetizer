@@ -11,7 +11,7 @@ namespace Replanetizer.Utils
         public Vector3 position = new Vector3();
         public Vector3 rotation = new Vector3(0, 0, -0.75f);
 
-        public float fovy { get; set; } = (float) Math.PI / 3;
+        public float fovy { get; set; } = (float) 3 / MathF.PI;
         public float aspect { get; set; } = (float) 16 / 9;
         public float near { get; set; } = 0.1f;
         public float far { get; set; } = 10000.0f;

@@ -58,6 +58,7 @@ float quick_exp(float x) {
  *   lights for each vertex.
  * - Vertex normals seem to always need to be flipped. No idea why they would have done it that way.
  *   However, especially for ties this seems to not always work.
+ * - Fog seems to be twice as bright for ties.
  */
 void main(){
     //color of the texture at the specified UV
@@ -87,7 +88,11 @@ void main(){
 
         float intensity = clamp(depth * fogNearIntensity + (1.0f - depth) * fogFarIntensity, 0.0f, 1.0f);
 
-        color.xyz = intensity * color.xyz + (1.0f - intensity) * fogColor.xyz;
+        if (levelObjectType == 3) {
+            color.xyz = mix(2.0f * fogColor.xyz, color.xyz, intensity);
+        } else {
+            color.xyz = mix(fogColor.xyz, color.xyz, intensity);
+        }
     }
 
     id = (levelObjectType << 24) | levelObjectNumber;

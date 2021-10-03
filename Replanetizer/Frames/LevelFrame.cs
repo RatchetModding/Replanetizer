@@ -74,7 +74,7 @@ namespace Replanetizer.Frames
         public bool enableMoby = true, enableTie = true, enableShrub = true, enableSpline = false,
             enableCuboid = false, enableSpheres = false, enableCylinders = false, enableType0C = false,
             enableSkybox = true, enableTerrain = true, enableCollision = false, enableTransparency = true,
-            enableFog = true, enableCameraInfo = true;
+            enableDistanceCulling = true, enableFog = true, enableCameraInfo = true;
 
         public Camera camera;
         private Tool currentTool;
@@ -235,7 +235,9 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Skybox", ref enableSkybox)) InvalidateView();
                     if (ImGui.Checkbox("Terrain", ref enableTerrain)) InvalidateView();
                     if (ImGui.Checkbox("Collision", ref enableCollision)) InvalidateView();
+                    ImGui.Separator();
                     if (ImGui.Checkbox("Transparency", ref enableTransparency)) InvalidateView();
+                    if (ImGui.Checkbox("Distance Culling", ref enableDistanceCulling)) InvalidateView();
                     if (ImGui.Checkbox("Fog", ref enableFog)) InvalidateView();
                     ImGui.Separator();
                     ImGui.Checkbox("Camera Info", ref enableCameraInfo);
@@ -1144,6 +1146,17 @@ namespace Replanetizer.Frames
             }
         }
 
+        private void RenderBuffer(RenderableBuffer buffer, bool transparency)
+        {
+            GL.Uniform1(uniformLevelObjectNumberID, buffer.ID);
+            buffer.UpdateVars();
+            buffer.ComputeCulling(camera, enableDistanceCulling);
+            BindLightsBuffer(buffer.light);
+            GL.Uniform4(uniformStaticColorID, buffer.ambient);
+            buffer.Select(selectedObject);
+            buffer.Render(transparency);
+        }
+
         protected void OnPaint()
         {
             worldView = view * projection;
@@ -1200,12 +1213,7 @@ namespace Replanetizer.Frames
                 GL.EnableVertexAttribArray(3);
                 GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Terrain);
                 foreach (RenderableBuffer buffer in terrainBuffers)
-                {
-                    GL.Uniform1(uniformLevelObjectNumberID, buffer.ID);
-                    BindLightsBuffer(0);
-                    buffer.Select(selectedObject);
-                    buffer.Render(false);
-                }
+                    RenderBuffer(buffer, false);
                 GL.DisableVertexAttribArray(3);
             }
 
@@ -1213,14 +1221,7 @@ namespace Replanetizer.Frames
             {
                 GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Shrub);
                 foreach (RenderableBuffer buffer in shrubsBuffers)
-                {
-                    GL.Uniform1(uniformLevelObjectNumberID, buffer.ID);
-                    buffer.UpdateUniforms();
-                    BindLightsBuffer(buffer.light);
-                    GL.Uniform4(uniformStaticColorID, buffer.ambient);
-                    buffer.Select(selectedObject);
-                    buffer.Render(false);
-                }
+                    RenderBuffer(buffer, false);
             }
 
             if (enableTie)
@@ -1228,14 +1229,7 @@ namespace Replanetizer.Frames
                 GL.EnableVertexAttribArray(3);
                 GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Tie);
                 foreach (RenderableBuffer buffer in tiesBuffers)
-                {
-                    GL.Uniform1(uniformLevelObjectNumberID, buffer.ID);
-                    buffer.UpdateUniforms();
-                    BindLightsBuffer(buffer.light);
-                    GL.Uniform4(uniformStaticColorID, buffer.ambient);
-                    buffer.Select(selectedObject);
-                    buffer.Render(false);
-                }
+                    RenderBuffer(buffer, false);
                 GL.DisableVertexAttribArray(3);
             }
 
@@ -1252,14 +1246,7 @@ namespace Replanetizer.Frames
                 }
 
                 foreach (RenderableBuffer buffer in mobiesBuffers)
-                {
-                    GL.Uniform1(uniformLevelObjectNumberID, buffer.ID);
-                    buffer.UpdateUniforms();
-                    BindLightsBuffer(buffer.light);
-                    GL.Uniform4(uniformStaticColorID, buffer.ambient);
-                    buffer.Select(selectedObject);
-                    buffer.Render(enableTransparency);
-                }
+                    RenderBuffer(buffer, enableTransparency);
 
                 GL.Disable(EnableCap.Blend);
             }

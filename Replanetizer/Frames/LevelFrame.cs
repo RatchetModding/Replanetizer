@@ -53,6 +53,8 @@ namespace Replanetizer.Frames
 
         private int alignmentUBO = GL.GetInteger(GetPName.UniformBufferOffsetAlignment);
 
+        private float movingAvgFrametime = 1.0f;
+
         private Matrix4 view { get; set; }
 
         private int currentSplineVertex;
@@ -318,9 +320,24 @@ namespace Replanetizer.Frames
                 ImGui.Text(
                     $"Rotation: (yaw: {camRotZ:F4}, pitch: {camRotX:F4})"
                 );
-                float fps = (int) (1.0f / deltaTime);
-                float frametime = ((float) ((int) (10000.0f * deltaTime))) / 10;
+
+                movingAvgFrametime = movingAvgFrametime * 0.95f + deltaTime * 0.05f;
+                float fps = MathF.Round(1.0f / movingAvgFrametime);
+                float frametime = ((float) (MathF.Round(10000.0f * movingAvgFrametime))) / 10.0f;
+                switch (fps)
+                {
+                    case < 30:
+                        ImGui.PushStyleColor(ImGuiCol.Text, 0xff0000ff);
+                        break;
+                    case < 50:
+                        ImGui.PushStyleColor(ImGuiCol.Text, 0xff00ffff);
+                        break;
+                    default:
+                        ImGui.PushStyleColor(ImGuiCol.Text, 0xffffffff);
+                        break;
+                }
                 ImGui.Text("FPS: " + fps + " (" + frametime + " ms)");
+                ImGui.PopStyleColor();
             }
             ImGui.End();
         }

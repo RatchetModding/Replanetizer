@@ -41,7 +41,7 @@ namespace Replanetizer.Frames
             MouseButton = MouseButton.Right
         };
 
-        private int shaderID, matrixID;
+        private int shaderID, matrixID, uniformLevelObjectTypeID;
 
         private float xDelta;
 
@@ -231,6 +231,7 @@ namespace Replanetizer.Frames
             shaderID = levelFrame.shaderID;
 
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
+            uniformLevelObjectTypeID = GL.GetUniformLocation(shaderID, "levelObjectType");
 
             GL.Enable(EnableCap.DepthTest);
             GL.EnableClientState(ArrayCap.VertexArray);
@@ -370,13 +371,16 @@ namespace Replanetizer.Frames
 
                 GL.UseProgram(shaderID);
                 GL.UniformMatrix4(matrixID, false, ref mvp);
+                GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Null);
 
                 GL.EnableVertexAttribArray(0);
                 GL.EnableVertexAttribArray(1);
+                GL.EnableVertexAttribArray(2);
 
                 container.Bind();
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
-                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
+                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
+                GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
 
                 //Bind textures one by one, applying it to the relevant vertices based on the index array
                 foreach (TextureConfig conf in selectedModel.textureConfig)
@@ -385,6 +389,7 @@ namespace Replanetizer.Frames
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
 
+                GL.DisableVertexAttribArray(2);
                 GL.DisableVertexAttribArray(1);
                 GL.DisableVertexAttribArray(0);
             }

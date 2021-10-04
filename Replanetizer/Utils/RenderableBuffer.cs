@@ -58,7 +58,16 @@ namespace Replanetizer.Utils
 
             // VBO
             int vboLength = modelObject.GetVertices().Length * sizeof(float);
-            if (type == RenderedObjectType.Terrain || type == RenderedObjectType.Tie) vboLength += modelObject.GetAmbientRGBAs().Length * sizeof(Byte);
+            switch (type)
+            {
+                case RenderedObjectType.Terrain:
+                    vboLength += modelObject.GetAmbientRGBAs().Length * sizeof(Byte) + ((TerrainModel) modelObject.model).lights.Count * sizeof(int);
+                    break;
+                case RenderedObjectType.Tie:
+                    vboLength += modelObject.GetAmbientRGBAs().Length * sizeof(Byte);
+                    break;
+            }
+
             if (vboLength > 0)
             {
                 GL.GenBuffers(1, out vbo);
@@ -85,23 +94,49 @@ namespace Replanetizer.Utils
             if (BindVBO())
             {
                 float[] vboData = modelObject.GetVertices();
-                if (type == RenderedObjectType.Terrain || type == RenderedObjectType.Tie)
+                switch (type)
                 {
-                    byte[] rgbas = modelObject.GetAmbientRGBAs();
-                    float[] fullData = new float[vboData.Length + rgbas.Length / 4];
-                    for (int i = 0; i < vboData.Length / 8; i++)
-                    {
-                        fullData[9 * i + 0] = vboData[8 * i + 0];
-                        fullData[9 * i + 1] = vboData[8 * i + 1];
-                        fullData[9 * i + 2] = vboData[8 * i + 2];
-                        fullData[9 * i + 3] = vboData[8 * i + 3];
-                        fullData[9 * i + 4] = vboData[8 * i + 4];
-                        fullData[9 * i + 5] = vboData[8 * i + 5];
-                        fullData[9 * i + 6] = vboData[8 * i + 6];
-                        fullData[9 * i + 7] = vboData[8 * i + 7];
-                        fullData[9 * i + 8] = BitConverter.ToSingle(rgbas, i * 4);
-                    }
-                    vboData = fullData;
+                    case RenderedObjectType.Terrain:
+                        {
+                            byte[] rgbas = modelObject.GetAmbientRGBAs();
+                            TerrainModel terrainModel = (TerrainModel) modelObject.model;
+                            int[] lights = terrainModel.lights.ToArray();
+                            float[] fullData = new float[vboData.Length + rgbas.Length / 4 + lights.Length];
+                            for (int i = 0; i < vboData.Length / 8; i++)
+                            {
+                                fullData[10 * i + 0] = vboData[8 * i + 0];
+                                fullData[10 * i + 1] = vboData[8 * i + 1];
+                                fullData[10 * i + 2] = vboData[8 * i + 2];
+                                fullData[10 * i + 3] = vboData[8 * i + 3];
+                                fullData[10 * i + 4] = vboData[8 * i + 4];
+                                fullData[10 * i + 5] = vboData[8 * i + 5];
+                                fullData[10 * i + 6] = vboData[8 * i + 6];
+                                fullData[10 * i + 7] = vboData[8 * i + 7];
+                                fullData[10 * i + 8] = BitConverter.ToSingle(rgbas, i * 4);
+                                fullData[10 * i + 9] = (float) lights[i];
+                            }
+                            vboData = fullData;
+                            break;
+                        }
+                    case RenderedObjectType.Tie:
+                        {
+                            byte[] rgbas = modelObject.GetAmbientRGBAs();
+                            float[] fullData = new float[vboData.Length + rgbas.Length / 4];
+                            for (int i = 0; i < vboData.Length / 8; i++)
+                            {
+                                fullData[9 * i + 0] = vboData[8 * i + 0];
+                                fullData[9 * i + 1] = vboData[8 * i + 1];
+                                fullData[9 * i + 2] = vboData[8 * i + 2];
+                                fullData[9 * i + 3] = vboData[8 * i + 3];
+                                fullData[9 * i + 4] = vboData[8 * i + 4];
+                                fullData[9 * i + 5] = vboData[8 * i + 5];
+                                fullData[9 * i + 6] = vboData[8 * i + 6];
+                                fullData[9 * i + 7] = vboData[8 * i + 7];
+                                fullData[9 * i + 8] = BitConverter.ToSingle(rgbas, i * 4);
+                            }
+                            vboData = fullData;
+                            break;
+                        }
                 }
                 GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, vboData.Length * sizeof(float), vboData);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
@@ -117,23 +152,23 @@ namespace Replanetizer.Utils
             {
                 case RenderedObjectType.Terrain:
                     TerrainModel terrain = (TerrainModel) modelObject.model;
-                    light = (int) terrain.lights[0];
+                    light = ShaderIDTable.ALLOCATED_LIGHTS;
                     renderDistance = float.MaxValue;
                     break;
                 case RenderedObjectType.Moby:
                     Moby mob = (Moby) modelObject;
-                    light = mob.light;
+                    light = Math.Max(0, Math.Min(ShaderIDTable.ALLOCATED_LIGHTS, mob.light));
                     ambient = mob.color;
                     renderDistance = mob.drawDistance;
                     break;
                 case RenderedObjectType.Tie:
                     Tie tie = (Tie) modelObject;
-                    light = tie.light;
+                    light = Math.Max(0, Math.Min(ShaderIDTable.ALLOCATED_LIGHTS, tie.light));
                     renderDistance = float.MaxValue;
                     break;
                 case RenderedObjectType.Shrub:
                     Shrub shrub = (Shrub) modelObject;
-                    light = shrub.light;
+                    light = Math.Max(0, Math.Min(ShaderIDTable.ALLOCATED_LIGHTS, shrub.light));
                     ambient = shrub.color;
                     renderDistance = shrub.drawDistance;
                     break;
@@ -224,6 +259,8 @@ namespace Replanetizer.Utils
             if (culled) return;
             if (!BindIBO() || !BindVBO()) return;
 
+            SetupVertexAttribPointers();
+
             switch (type)
             {
                 case RenderedObjectType.Terrain:
@@ -233,8 +270,7 @@ namespace Replanetizer.Utils
                     GL.UniformMatrix4(shaderIDTable.UniformModelToWorldMatrix, false, ref modelObject.modelMatrix);
                     GL.Uniform1(shaderIDTable.UniformLevelObjectNumber, ID);
                     GL.Uniform4(shaderIDTable.UniformAmbientColor, ambient);
-
-                    SetupVertexAttribPointers();
+                    GL.Uniform1(shaderIDTable.UniformLightIndex, light);
 
                     //Bind textures one by one, applying it to the relevant vertices based on the index array
                     foreach (TextureConfig conf in modelObject.model.textureConfig)
@@ -283,11 +319,20 @@ namespace Replanetizer.Utils
             return success;
         }
 
+        /// <summary>
+        /// Sets up the vertex attribute pointers according to the type.
+        /// </summary>
         private void SetupVertexAttribPointers()
         {
             switch (type)
             {
                 case RenderedObjectType.Terrain:
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 10, 0);
+                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 3);
+                    GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 6);
+                    GL.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 10, sizeof(float) * 8);
+                    GL.VertexAttribPointer(4, 1, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 9);
+                    break;
                 case RenderedObjectType.Tie:
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, 0);
                     GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 3);

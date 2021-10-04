@@ -20,11 +20,14 @@ out vec4 BakedColor;
 
 // Values that stay constant for the whole mesh.
 uniform mat4 MVP;
+uniform mat4 MWP;
 uniform int levelObjectType;
 
 void main(){
     // Output position of the vertex, in clip space : MVP * position
     gl_Position = MVP * vec4(vertexPosition_modelspace, 1.0f);
+
+    vec3 normal = normalize((MWP * vec4(vertexNormal, 0.0f)).xyz);
 
     // UV of the vertex. No special space for this one.
     UV = vertexUV;
@@ -35,6 +38,6 @@ void main(){
         BakedColor = vertexRGBA;
     }
 
-    DiffuseColor += vec4(max(0.0f,-dot(direction1.xyz,vertexNormal)) * color1.xyz,1.0f);
-    DiffuseColor += vec4(max(0.0f,-dot(direction2.xyz,vertexNormal)) * color2.xyz,1.0f);
+    DiffuseColor += vec4(max(0.0f,-dot(direction1.xyz,normal)) * color1.xyz,1.0f);
+    DiffuseColor += vec4(max(0.0f,-dot(direction2.xyz,normal)) * color2.xyz,1.0f);
 }

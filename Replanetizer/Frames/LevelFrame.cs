@@ -46,7 +46,7 @@ namespace Replanetizer.Frames
         public int uniformFogColorID, uniformFogNearDistID, uniformFogFarDistID,
         uniformFogNearIntensityID, uniformFogFarIntensityID, uniformUseFogID,
         uniformLevelObjectTypeID, uniformLevelObjectNumberID, uniformLevelObjectTypeColorID,
-        uniformLevelObjectNumberColorID, uniformStaticColorID;
+        uniformLevelObjectNumberColorID, uniformStaticColorID, uniformModelWorldMatrixID;
 
         private int lightsBufferObject;
         private float[][] lightsData;
@@ -453,6 +453,8 @@ namespace Replanetizer.Frames
             matrixID = GL.GetUniformLocation(shaderID, "MVP");
             colorID = GL.GetUniformLocation(colorShaderID, "incolor");
 
+            uniformModelWorldMatrixID = GL.GetUniformLocation(shaderID, "MWP");
+
             uniformFogColorID = GL.GetUniformLocation(shaderID, "fogColor");
             uniformFogNearDistID = GL.GetUniformLocation(shaderID, "fogNearDistance");
             uniformFogFarDistID = GL.GetUniformLocation(shaderID, "fogFarDistance");
@@ -468,6 +470,7 @@ namespace Replanetizer.Frames
             uniformStaticColorID = GL.GetUniformLocation(shaderID, "staticColor");
 
             RenderableBuffer.matrixID = matrixID;
+            RenderableBuffer.uniformModelWorldMatrixID = uniformModelWorldMatrixID;
             RenderableBuffer.shaderID = shaderID;
             RenderableBuffer.colorShaderID = colorShaderID;
 

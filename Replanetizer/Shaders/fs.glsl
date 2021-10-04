@@ -56,8 +56,6 @@ float quick_exp(float x) {
  *   basis. Replanetizer uses the light specified by the first vertex as in most cases all
  *   vertices have the same light and because the shaders are not capable of switching
  *   lights for each vertex.
- * - Vertex normals seem to always need to be flipped. No idea why they would have done it that way.
- *   However, especially for ties this seems to not always work.
  * - Fog seems to be twice as bright for ties.
  */
 void main(){

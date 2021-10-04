@@ -108,11 +108,6 @@ namespace Replanetizer.Frames
             {
                 if (ImGui.BeginMenu("Level"))
                 {
-                    if (ImGui.MenuItem("Save"))
-                    {
-                        level.Save();
-                    }
-
                     if (ImGui.MenuItem("Save as"))
                     {
                         var res = CrossFileDialog.SaveFile();

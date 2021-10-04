@@ -39,7 +39,7 @@ namespace LibReplanetizer
                     float yy = mobyModel.boneDatas[i].unk2 / 1024f;
                     float zz = mobyModel.boneDatas[i].unk3 / 1024f;
 
-                    short par = (short)(mobyModel.boneMatrices[i].bb / 0x40);
+                    short par = (short) (mobyModel.boneMatrices[i].bb / 0x40);
                     spookyStream.WriteLine("joint h" + i.ToString() + " " + (par == 0 ? "" : par.ToString()));
                     spookyStream.WriteLine("pq " + xx.ToString() + " " + yy.ToString() + " " + zz.ToString());
                 }
@@ -140,6 +140,46 @@ namespace LibReplanetizer
             }
         }
 
+        /// <summary>
+        /// Returns a corrected version of the indexBuffer of the model in which all face orientations are correct/equal to vertex normals orientations.
+        /// </summary>
+        private static ushort[] ComputeOrientation(Model model)
+        {
+            ushort[] result = new ushort[model.indexBuffer.Length];
+
+            for (int i = 0; i < model.indexBuffer.Length / 3; i++)
+            {
+                ushort f1 = model.indexBuffer[i * 3 + 0];
+                ushort f2 = model.indexBuffer[i * 3 + 1];
+                ushort f3 = model.indexBuffer[i * 3 + 2];
+
+                Vector3 v1 = new Vector3(model.vertexBuffer[f1 * 8 + 0], model.vertexBuffer[f1 * 8 + 1], model.vertexBuffer[f1 * 8 + 2]);
+                Vector3 v2 = new Vector3(model.vertexBuffer[f2 * 8 + 0], model.vertexBuffer[f2 * 8 + 1], model.vertexBuffer[f2 * 8 + 2]);
+                Vector3 v3 = new Vector3(model.vertexBuffer[f3 * 8 + 0], model.vertexBuffer[f3 * 8 + 1], model.vertexBuffer[f3 * 8 + 2]);
+
+                Vector3 faceNormal = Vector3.Cross(v3 - v2, v1 - v2);
+
+                Vector3 n1 = new Vector3(model.vertexBuffer[f1 * 8 + 3], model.vertexBuffer[f1 * 8 + 4], model.vertexBuffer[f1 * 8 + 5]);
+                Vector3 n2 = new Vector3(model.vertexBuffer[f2 * 8 + 3], model.vertexBuffer[f2 * 8 + 4], model.vertexBuffer[f2 * 8 + 5]);
+                Vector3 n3 = new Vector3(model.vertexBuffer[f3 * 8 + 3], model.vertexBuffer[f3 * 8 + 4], model.vertexBuffer[f3 * 8 + 5]);
+
+                Vector3 n = 0.333f * n1 + 0.333f * n2 + 0.333f * n3;
+
+                if (Vector3.Dot(faceNormal, n) < 0.0f)
+                {
+                    ushort temp = f1;
+                    f1 = f3;
+                    f3 = temp;
+                }
+
+                result[i * 3 + 0] = f1;
+                result[i * 3 + 1] = f2;
+                result[i * 3 + 2] = f3;
+            }
+
+            return result;
+        }
+
         public static void WriteObj(string fileName, Model model)
         {
             string pathName = Path.GetDirectoryName(fileName);
@@ -189,10 +229,11 @@ namespace LibReplanetizer
                     OBJfs.WriteLine("vt " + tu.ToString("G") + " " + tv.ToString("G"));
                 }
 
+                ushort[] indexBuffer = ComputeOrientation(model);
 
                 //Faces
                 int textureNum = 0;
-                for (int i = 0; i < model.indexBuffer.Length / 3; i++)
+                for (int i = 0; i < indexBuffer.Length / 3; i++)
                 {
                     int triIndex = i * 3;
                     if ((model.textureConfig != null) && (textureNum < model.textureConfig.Count) && (triIndex >= model.textureConfig[textureNum].start))
@@ -203,9 +244,9 @@ namespace LibReplanetizer
                         textureNum++;
                     }
 
-                    int f1 = model.indexBuffer[triIndex + 0] + 1;
-                    int f2 = model.indexBuffer[triIndex + 1] + 1;
-                    int f3 = model.indexBuffer[triIndex + 2] + 1;
+                    int f1 = indexBuffer[triIndex + 0] + 1;
+                    int f2 = indexBuffer[triIndex + 1] + 1;
+                    int f3 = indexBuffer[triIndex + 2] + 1;
                     OBJfs.WriteLine("f " + (f1 + "/" + f1 + "/" + f1) + " " + (f2 + "/" + f2 + "/" + f2) + " " + (f3 + "/" + f3 + "/" + f3));
                 }
             }
@@ -255,8 +296,10 @@ namespace LibReplanetizer
                 OBJfs.WriteLine("vt " + tu.ToString("G") + " " + tv.ToString("G"));
             }
 
+            ushort[] indexBuffer = ComputeOrientation(model);
+
             int textureNum = 0;
-            for (int i = 0; i < model.indexBuffer.Length / 3; i++)
+            for (int i = 0; i < indexBuffer.Length / 3; i++)
             {
                 int triIndex = i * 3;
                 if ((model.textureConfig != null) && (textureNum < model.textureConfig.Count) && (triIndex >= model.textureConfig[textureNum].start))
@@ -267,9 +310,9 @@ namespace LibReplanetizer
                     textureNum++;
                 }
 
-                int f1 = model.indexBuffer[triIndex + 0] + 1 + faceOffset;
-                int f2 = model.indexBuffer[triIndex + 1] + 1 + faceOffset;
-                int f3 = model.indexBuffer[triIndex + 2] + 1 + faceOffset;
+                int f1 = indexBuffer[triIndex + 0] + 1 + faceOffset;
+                int f2 = indexBuffer[triIndex + 1] + 1 + faceOffset;
+                int f3 = indexBuffer[triIndex + 2] + 1 + faceOffset;
                 OBJfs.WriteLine("f " + (f1 + "/" + f1 + "/" + f1) + " " + (f2 + "/" + f2 + "/" + f2) + " " + (f3 + "/" + f3 + "/" + f3));
             }
 
@@ -285,8 +328,9 @@ namespace LibReplanetizer
                 if (settings.chunksSelected[0])
                 {
                     terrain.AddRange(level.terrainEngine.fragments);
-                }     
-            } else
+                }
+            }
+            else
             {
                 for (int i = 0; i < level.terrainChunks.Count; i++)
                 {
@@ -307,7 +351,7 @@ namespace LibReplanetizer
 
             List<TerrainFragment> terrain = collectTerrainFragments(level, settings);
 
-            StreamWriter MTLfs = null; 
+            StreamWriter MTLfs = null;
 
             if (settings.exportMTLFile) MTLfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl");
 
@@ -512,8 +556,10 @@ namespace LibReplanetizer
                     1f - model.vertexBuffer[(x * 0x08) + 0x7]));
             }
 
+            ushort[] indexBuffer = ComputeOrientation(model);
+
             int textureNum = 0;
-            for (int i = 0; i < model.indexBuffer.Length / 3; i++)
+            for (int i = 0; i < indexBuffer.Length / 3; i++)
             {
                 int triIndex = i * 3;
                 int materialID = 0;
@@ -534,9 +580,9 @@ namespace LibReplanetizer
                 }
 
                 faces[materialID].Add(new Tuple<int, int, int>(
-                    model.indexBuffer[triIndex + 0] + 1 + faceOffset,
-                    model.indexBuffer[triIndex + 1] + 1 + faceOffset,
-                    model.indexBuffer[triIndex + 2] + 1 + faceOffset));
+                    indexBuffer[triIndex + 0] + 1 + faceOffset,
+                    indexBuffer[triIndex + 1] + 1 + faceOffset,
+                    indexBuffer[triIndex + 2] + 1 + faceOffset));
             }
 
             return vertexCount;
@@ -551,11 +597,11 @@ namespace LibReplanetizer
 
             int materialCount = level.textures.Count;
 
-            List<Tuple<int,int,int>>[] faces = new List<Tuple<int,int,int>>[materialCount];
+            List<Tuple<int, int, int>>[] faces = new List<Tuple<int, int, int>>[materialCount];
 
             for (int i = 0; i < materialCount; i++)
             {
-                faces[i] = new List<Tuple<int,int,int>>();
+                faces[i] = new List<Tuple<int, int, int>>();
             }
 
             List<Vector3> vertices = new List<Vector3>();
@@ -587,8 +633,10 @@ namespace LibReplanetizer
                         1f - model.vertexBuffer[(x * 0x08) + 0x7]));
                 }
 
+                ushort[] indexBuffer = ComputeOrientation(model);
+
                 int textureNum = 0;
-                for (int i = 0; i < model.indexBuffer.Length / 3; i++)
+                for (int i = 0; i < indexBuffer.Length / 3; i++)
                 {
                     int triIndex = i * 3;
                     int materialID = 0;
@@ -609,9 +657,9 @@ namespace LibReplanetizer
                     }
 
                     faces[materialID].Add(new Tuple<int, int, int>(
-                        model.indexBuffer[triIndex + 0] + 1 + faceOffset,
-                        model.indexBuffer[triIndex + 1] + 1 + faceOffset,
-                        model.indexBuffer[triIndex + 2] + 1 + faceOffset));
+                        indexBuffer[triIndex + 0] + 1 + faceOffset,
+                        indexBuffer[triIndex + 1] + 1 + faceOffset,
+                        indexBuffer[triIndex + 2] + 1 + faceOffset));
                 }
 
                 faceOffset += vertexCount;
@@ -682,8 +730,8 @@ namespace LibReplanetizer
                 {
                     OBJfs.WriteLine("vt " + vt.X.ToString("G") + " " + vt.Y.ToString("G"));
                 }
-                
-                for (int i = 0; i < materialCount; i++) 
+
+                for (int i = 0; i < materialCount; i++)
                 {
                     List<Tuple<int, int, int>> list = faces[i];
 
@@ -697,7 +745,7 @@ namespace LibReplanetizer
                         OBJfs.WriteLine("g Texture_" + i);
                     }
 
-                    foreach (Tuple<int,int,int> t in list)
+                    foreach (Tuple<int, int, int> t in list)
                     {
                         OBJfs.WriteLine("f " + (t.Item1 + "/" + t.Item1 + "/" + t.Item1) + " " + (t.Item2 + "/" + t.Item2 + "/" + t.Item2) + " " + (t.Item3 + "/" + t.Item3 + "/" + t.Item3));
                     }
@@ -707,9 +755,9 @@ namespace LibReplanetizer
 
         public static void WriteObj(string fileName, Level level, WriterLevelSettings settings)
         {
-            switch(settings.mode)
+            switch (settings.mode)
             {
-                case WriterLevelMode.Separate: 
+                case WriterLevelMode.Separate:
                     WriteObjSeparate(fileName, level, settings);
                     return;
                 case WriterLevelMode.Combined:
@@ -731,7 +779,8 @@ namespace LibReplanetizer
          * - Typewise: Combines all ModelObjects of the same type (Tie, Shrubs etc.) into one mesh
          * - Materialwise: Combines all faces using the same material/texture into one mesh
          */
-        public enum WriterLevelMode{
+        public enum WriterLevelMode
+        {
             Separate,
             Combined,
             Typewise,

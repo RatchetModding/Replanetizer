@@ -32,7 +32,7 @@ namespace Replanetizer.Utils
             for (int i = 0; i < level.textures.Count; i++)
             {
                 Bitmap image = level.textures[i].getTextureImage();
-                image.Save(Path.Join(path, $"texture_{i}.png"), ImageFormat.Png);
+                image.Save(Path.Join(path, $"{i}.png"), ImageFormat.Png);
             }
 
             for (int i = 0; i < level.armorTextures.Count; i++)

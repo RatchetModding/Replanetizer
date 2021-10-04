@@ -41,7 +41,7 @@ namespace Replanetizer.Frames
             MouseButton = MouseButton.Right
         };
 
-        private int shaderID, matrixID, uniformLevelObjectTypeID;
+        private ShaderIDTable shaderIDTable;
 
         private float xDelta;
 
@@ -73,10 +73,11 @@ namespace Replanetizer.Frames
         private int Width, Height;
         private PropertyFrame propertyFrame;
 
-        public ModelFrame(Window wnd, LevelFrame levelFrame, Model model = null) : base(wnd, levelFrame)
+        public ModelFrame(Window wnd, LevelFrame levelFrame, ShaderIDTable shaderIDTable, Model model = null) : base(wnd, levelFrame)
         {
             modelTextureList = new List<Texture>();
             propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
+            this.shaderIDTable = shaderIDTable;
             UpdateWindowSize();
             OnResize();
             SelectModel(model);
@@ -228,10 +229,6 @@ namespace Replanetizer.Frames
         private void ModelViewer_Load()
         {
             GL.ClearColor(Color.SkyBlue);
-            shaderID = levelFrame.shaderID;
-
-            matrixID = GL.GetUniformLocation(shaderID, "MVP");
-            uniformLevelObjectTypeID = GL.GetUniformLocation(shaderID, "levelObjectType");
 
             GL.Enable(EnableCap.DepthTest);
             GL.EnableClientState(ArrayCap.VertexArray);
@@ -367,11 +364,12 @@ namespace Replanetizer.Frames
             if (selectedModel != null)
             {
                 // Has to be done in this order to work correctly
-                Matrix4 mvp = trans * scale * rot * worldView;
+                Matrix4 mvp = trans * scale * rot;
 
-                GL.UseProgram(shaderID);
-                GL.UniformMatrix4(matrixID, false, ref mvp);
-                GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Null);
+                GL.UseProgram(shaderIDTable.ShaderMain);
+                GL.UniformMatrix4(shaderIDTable.UniformModelToWorldMatrix, false, ref mvp);
+                GL.UniformMatrix4(shaderIDTable.UniformWorldToViewMatrix, false, ref worldView);
+                GL.Uniform1(shaderIDTable.UniformLevelObjectType, (int) RenderedObjectType.Null);
 
                 GL.EnableVertexAttribArray(0);
                 GL.EnableVertexAttribArray(1);

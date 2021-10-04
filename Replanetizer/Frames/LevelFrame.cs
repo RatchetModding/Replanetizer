@@ -35,18 +35,9 @@ namespace Replanetizer.Frames
         private static Vector4 normalColor = new Vector4(1, 1, 1, 1); // White
         private static Vector4 selectedColor = new Vector4(1, 0, 1, 1); // Purple
 
-        public Matrix4 worldView { get; set; }
+        public Matrix4 worldView;
 
-        public int shaderID { get; set; }
-        public int colorShaderID { get; set; }
-        public int collisionShaderID { get; set; }
-        public int matrixID { get; set; }
-        public int colorID { get; set; }
-
-        public int uniformFogColorID, uniformFogNearDistID, uniformFogFarDistID,
-        uniformFogNearIntensityID, uniformFogFarIntensityID, uniformUseFogID,
-        uniformLevelObjectTypeID, uniformLevelObjectNumberID, uniformLevelObjectTypeColorID,
-        uniformLevelObjectNumberColorID, uniformStaticColorID, uniformModelWorldMatrixID;
+        public ShaderIDTable shaderIDTable;
 
         private int lightsBufferObject;
         private float[][] lightsData;
@@ -206,7 +197,7 @@ namespace Replanetizer.Frames
                     }
                     if (ImGui.MenuItem("Model viewer"))
                     {
-                        subFrames.Add(new ModelFrame(this.wnd, this));
+                        subFrames.Add(new ModelFrame(this.wnd, this, this.shaderIDTable));
                     }
                     if (ImGui.MenuItem("Texture viewer"))
                     {
@@ -446,33 +437,35 @@ namespace Replanetizer.Frames
             string applicationFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string shaderFolder = Path.Join(applicationFolder, "Shaders");
 
-            shaderID = LinkShader(shaderFolder, "vs.glsl", "fs.glsl");
-            colorShaderID = LinkShader(shaderFolder, "colorshadervs.glsl", "colorshaderfs.glsl");
-            collisionShaderID = LinkShader(shaderFolder, "collisionshadervs.glsl", "collisionshaderfs.glsl");
+            shaderIDTable = new ShaderIDTable();
 
-            matrixID = GL.GetUniformLocation(shaderID, "MVP");
-            colorID = GL.GetUniformLocation(colorShaderID, "incolor");
+            shaderIDTable.ShaderMain = LinkShader(shaderFolder, "vs.glsl", "fs.glsl");
+            shaderIDTable.ShaderColor = LinkShader(shaderFolder, "colorshadervs.glsl", "colorshaderfs.glsl");
+            shaderIDTable.ShaderCollision = LinkShader(shaderFolder, "collisionshadervs.glsl", "collisionshaderfs.glsl");
 
-            uniformModelWorldMatrixID = GL.GetUniformLocation(shaderID, "MWP");
+            shaderIDTable.UniformWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.ShaderMain, "WorldToView");
+            shaderIDTable.UniformModelToWorldMatrix = GL.GetUniformLocation(shaderIDTable.ShaderMain, "ModelToWorld");
+            shaderIDTable.UniformColorWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.ShaderColor, "WorldToView");
+            shaderIDTable.UniformColorModelToWorldMatrix = GL.GetUniformLocation(shaderIDTable.ShaderColor, "ModelToWorld");
+            shaderIDTable.UniformCollisionWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.ShaderCollision, "WorldToView");
 
-            uniformFogColorID = GL.GetUniformLocation(shaderID, "fogColor");
-            uniformFogNearDistID = GL.GetUniformLocation(shaderID, "fogNearDistance");
-            uniformFogFarDistID = GL.GetUniformLocation(shaderID, "fogFarDistance");
-            uniformFogNearIntensityID = GL.GetUniformLocation(shaderID, "fogNearIntensity");
-            uniformFogFarIntensityID = GL.GetUniformLocation(shaderID, "fogFarIntensity");
-            uniformUseFogID = GL.GetUniformLocation(shaderID, "useFog");
+            shaderIDTable.UniformColor = GL.GetUniformLocation(shaderIDTable.ShaderColor, "incolor");
 
-            uniformLevelObjectTypeID = GL.GetUniformLocation(shaderID, "levelObjectType");
-            uniformLevelObjectNumberID = GL.GetUniformLocation(shaderID, "levelObjectNumber");
-            uniformLevelObjectTypeColorID = GL.GetUniformLocation(colorShaderID, "levelObjectType");
-            uniformLevelObjectNumberColorID = GL.GetUniformLocation(colorShaderID, "levelObjectNumber");
+            shaderIDTable.UniformFogColor = GL.GetUniformLocation(shaderIDTable.ShaderMain, "fogColor");
+            shaderIDTable.UniformFogNearDist = GL.GetUniformLocation(shaderIDTable.ShaderMain, "fogNearDistance");
+            shaderIDTable.UniformFogFarDist = GL.GetUniformLocation(shaderIDTable.ShaderMain, "fogFarDistance");
+            shaderIDTable.UniformFogNearIntensity = GL.GetUniformLocation(shaderIDTable.ShaderMain, "fogNearIntensity");
+            shaderIDTable.UniformFogFarIntensity = GL.GetUniformLocation(shaderIDTable.ShaderMain, "fogFarIntensity");
+            shaderIDTable.UniformUseFog = GL.GetUniformLocation(shaderIDTable.ShaderMain, "useFog");
 
-            uniformStaticColorID = GL.GetUniformLocation(shaderID, "staticColor");
+            shaderIDTable.UniformLevelObjectType = GL.GetUniformLocation(shaderIDTable.ShaderMain, "levelObjectType");
+            shaderIDTable.UniformLevelObjectNumber = GL.GetUniformLocation(shaderIDTable.ShaderMain, "levelObjectNumber");
+            shaderIDTable.UniformColorLevelObjectType = GL.GetUniformLocation(shaderIDTable.ShaderColor, "levelObjectType");
+            shaderIDTable.UniformColorLevelObjectNumber = GL.GetUniformLocation(shaderIDTable.ShaderColor, "levelObjectNumber");
 
-            RenderableBuffer.matrixID = matrixID;
-            RenderableBuffer.uniformModelWorldMatrixID = uniformModelWorldMatrixID;
-            RenderableBuffer.shaderID = shaderID;
-            RenderableBuffer.colorShaderID = colorShaderID;
+            shaderIDTable.UniformAmbientColor = GL.GetUniformLocation(shaderIDTable.ShaderMain, "staticColor");
+
+            RenderableBuffer.shaderIDTable = shaderIDTable;
 
             LoadDirectionalLights(level.lights);
 
@@ -646,8 +639,8 @@ namespace Replanetizer.Frames
         /// </summary>
         private void LoadDirectionalLights(List<Light> lights)
         {
-            int loc = GL.GetUniformBlockIndex(shaderID, "lights");
-            GL.UniformBlockBinding(shaderID, loc, 0);
+            int loc = GL.GetUniformBlockIndex(shaderIDTable.ShaderMain, "lights");
+            GL.UniformBlockBinding(shaderIDTable.ShaderMain, loc, 0);
 
             int lightsCountInShader = lights.Count + 1;
 
@@ -1023,7 +1016,7 @@ namespace Replanetizer.Frames
         {
             // Render tool on top of everything
             GL.Clear(ClearBufferMask.DepthBufferBit);
-            GL.Uniform1(uniformLevelObjectTypeColorID, (int) RenderedObjectType.Tool);
+            GL.Uniform1(shaderIDTable.UniformColorLevelObjectType, (int) RenderedObjectType.Tool);
 
             if ((selectedObject != null) && (currentTool != null))
             {
@@ -1171,19 +1164,18 @@ namespace Replanetizer.Frames
 
         private void RenderBuffer(RenderableBuffer buffer, bool transparency)
         {
-            GL.Uniform1(uniformLevelObjectNumberID, buffer.ID);
+            GL.Uniform1(shaderIDTable.UniformLevelObjectNumber, buffer.ID);
             buffer.UpdateVars();
             buffer.ComputeCulling(camera, enableDistanceCulling, enableFrustumCulling);
             BindLightsBuffer(buffer.light);
-            GL.Uniform4(uniformStaticColorID, buffer.ambient);
+            GL.Uniform4(shaderIDTable.UniformAmbientColor, buffer.ambient);
             buffer.Select(selectedObject);
             buffer.Render(transparency);
         }
 
         protected void OnPaint()
         {
-            worldView = view * camera.GetProjectionMatrix();
-            RenderableBuffer.worldView = worldView;
+            worldView = camera.GetViewMatrix() * camera.GetProjectionMatrix();
 
             camera.ComputeFrustum();
 
@@ -1198,19 +1190,22 @@ namespace Replanetizer.Frames
 
             UpdateDirectionalLights(level.lights);
 
-            GL.UseProgram(colorShaderID);
-            GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
-            GL.UseProgram(shaderID);
+            GL.UseProgram(shaderIDTable.ShaderColor);
+            GL.Uniform4(shaderIDTable.UniformColor, new Vector4(1, 1, 1, 1));
+            GL.UseProgram(shaderIDTable.ShaderMain);
+            GL.UniformMatrix4(shaderIDTable.UniformWorldToViewMatrix, false, ref worldView);
 
             if (enableSkybox)
             {
-                GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Skybox);
-                GL.Uniform1(uniformUseFogID, 0);
+                GL.Uniform1(shaderIDTable.UniformLevelObjectType, (int) RenderedObjectType.Skybox);
+                GL.Uniform1(shaderIDTable.UniformUseFog, 0);
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 GL.Disable(EnableCap.DepthTest);
                 Matrix4 mvp = view.ClearTranslation() * camera.GetProjectionMatrix();
-                GL.UniformMatrix4(matrixID, false, ref mvp);
+                GL.UniformMatrix4(shaderIDTable.UniformWorldToViewMatrix, false, ref mvp);
+                Matrix4 modelWorld = Matrix4.Identity;
+                GL.UniformMatrix4(shaderIDTable.UniformModelToWorldMatrix, false, ref modelWorld);
                 ActivateBuffersForModel(level.skybox);
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
                 GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
@@ -1222,22 +1217,23 @@ namespace Replanetizer.Frames
                 }
                 GL.Enable(EnableCap.DepthTest);
                 GL.Disable(EnableCap.Blend);
+                GL.UniformMatrix4(shaderIDTable.UniformWorldToViewMatrix, false, ref worldView);
             }
 
             if (level != null && level.levelVariables != null)
             {
-                GL.Uniform4(uniformFogColorID, level.levelVariables.fogColor);
-                GL.Uniform1(uniformFogNearDistID, level.levelVariables.fogNearDistance);
-                GL.Uniform1(uniformFogFarDistID, level.levelVariables.fogFarDistance);
-                GL.Uniform1(uniformFogNearIntensityID, level.levelVariables.fogNearIntensity / 255.0f);
-                GL.Uniform1(uniformFogFarIntensityID, level.levelVariables.fogFarIntensity / 255.0f);
-                GL.Uniform1(uniformUseFogID, (enableFog) ? 1 : 0);
+                GL.Uniform4(shaderIDTable.UniformFogColor, level.levelVariables.fogColor);
+                GL.Uniform1(shaderIDTable.UniformFogNearDist, level.levelVariables.fogNearDistance);
+                GL.Uniform1(shaderIDTable.UniformFogFarDist, level.levelVariables.fogFarDistance);
+                GL.Uniform1(shaderIDTable.UniformFogNearIntensity, level.levelVariables.fogNearIntensity / 255.0f);
+                GL.Uniform1(shaderIDTable.UniformFogFarIntensity, level.levelVariables.fogFarIntensity / 255.0f);
+                GL.Uniform1(shaderIDTable.UniformUseFog, (enableFog) ? 1 : 0);
             }
 
             if (enableTerrain)
             {
                 GL.EnableVertexAttribArray(3);
-                GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Terrain);
+                GL.Uniform1(shaderIDTable.UniformLevelObjectType, (int) RenderedObjectType.Terrain);
                 foreach (RenderableBuffer buffer in terrainBuffers)
                     RenderBuffer(buffer, false);
                 GL.DisableVertexAttribArray(3);
@@ -1245,7 +1241,7 @@ namespace Replanetizer.Frames
 
             if (enableShrub)
             {
-                GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Shrub);
+                GL.Uniform1(shaderIDTable.UniformLevelObjectType, (int) RenderedObjectType.Shrub);
                 foreach (RenderableBuffer buffer in shrubsBuffers)
                     RenderBuffer(buffer, false);
             }
@@ -1253,7 +1249,7 @@ namespace Replanetizer.Frames
             if (enableTie)
             {
                 GL.EnableVertexAttribArray(3);
-                GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Tie);
+                GL.Uniform1(shaderIDTable.UniformLevelObjectType, (int) RenderedObjectType.Tie);
                 foreach (RenderableBuffer buffer in tiesBuffers)
                     RenderBuffer(buffer, false);
                 GL.DisableVertexAttribArray(3);
@@ -1263,7 +1259,7 @@ namespace Replanetizer.Frames
             {
                 if (hook != null) hook.UpdateMobys(level.mobs, level.mobyModels);
 
-                GL.Uniform1(uniformLevelObjectTypeID, (int) RenderedObjectType.Moby);
+                GL.Uniform1(shaderIDTable.UniformLevelObjectType, (int) RenderedObjectType.Moby);
 
                 if (enableTransparency)
                 {
@@ -1277,18 +1273,17 @@ namespace Replanetizer.Frames
                 GL.Disable(EnableCap.Blend);
             }
 
-            GL.UseProgram(colorShaderID);
+            GL.UseProgram(shaderIDTable.ShaderColor);
+            GL.UniformMatrix4(shaderIDTable.UniformColorWorldToViewMatrix, false, ref worldView);
 
             if (enableSpline)
             {
-                GL.Uniform1(uniformLevelObjectTypeColorID, (int) RenderedObjectType.Spline);
+                GL.Uniform1(shaderIDTable.UniformColorLevelObjectType, (int) RenderedObjectType.Spline);
                 for (int i = 0; i < level.splines.Count; i++)
                 {
                     Spline spline = level.splines[i];
-                    GL.Uniform1(uniformLevelObjectNumberColorID, i);
-                    var worldView = this.worldView;
-                    GL.UniformMatrix4(matrixID, false, ref worldView);
-                    GL.Uniform4(colorID, spline == selectedObject ? selectedColor : normalColor);
+                    GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
+                    GL.Uniform4(shaderIDTable.UniformColor, spline == selectedObject ? selectedColor : normalColor);
                     ActivateBuffersForModel(spline);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
                     GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
@@ -1298,15 +1293,14 @@ namespace Replanetizer.Frames
 
             if (enableCuboid)
             {
-                GL.Uniform1(uniformLevelObjectTypeColorID, (int) RenderedObjectType.Cuboid);
+                GL.Uniform1(shaderIDTable.UniformColorLevelObjectType, (int) RenderedObjectType.Cuboid);
                 for (int i = 0; i < level.cuboids.Count; i++)
                 {
                     Cuboid cuboid = level.cuboids[i];
-                    GL.Uniform1(uniformLevelObjectNumberColorID, i);
+                    GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                    Matrix4 mvp = cuboid.modelMatrix * worldView;
-                    GL.UniformMatrix4(matrixID, false, ref mvp);
-                    GL.Uniform4(colorID, selectedObject == cuboid ? selectedColor : normalColor);
+                    GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref cuboid.modelMatrix);
+                    GL.Uniform4(shaderIDTable.UniformColor, selectedObject == cuboid ? selectedColor : normalColor);
                     ActivateBuffersForModel(cuboid);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
                     GL.DrawElements(PrimitiveType.Triangles, Cuboid.cubeElements.Length, DrawElementsType.UnsignedShort, 0);
@@ -1317,15 +1311,14 @@ namespace Replanetizer.Frames
 
             if (enableSpheres)
             {
-                GL.Uniform1(uniformLevelObjectTypeColorID, (int) RenderedObjectType.Sphere);
+                GL.Uniform1(shaderIDTable.UniformColorLevelObjectType, (int) RenderedObjectType.Sphere);
                 for (int i = 0; i < level.spheres.Count; i++)
                 {
                     Sphere sphere = level.spheres[i];
-                    GL.Uniform1(uniformLevelObjectNumberColorID, i);
+                    GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                    Matrix4 mvp = sphere.modelMatrix * worldView;
-                    GL.UniformMatrix4(matrixID, false, ref mvp);
-                    GL.Uniform4(colorID, selectedObject == sphere ? selectedColor : normalColor);
+                    GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref sphere.modelMatrix);
+                    GL.Uniform4(shaderIDTable.UniformColor, selectedObject == sphere ? selectedColor : normalColor);
                     ActivateBuffersForModel(sphere);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
                     GL.DrawElements(PrimitiveType.Triangles, Sphere.sphereTris.Length, DrawElementsType.UnsignedShort, 0);
@@ -1336,15 +1329,14 @@ namespace Replanetizer.Frames
 
             if (enableCylinders)
             {
-                GL.Uniform1(uniformLevelObjectTypeColorID, (int) RenderedObjectType.Cylinder);
+                GL.Uniform1(shaderIDTable.UniformColorLevelObjectType, (int) RenderedObjectType.Cylinder);
                 for (int i = 0; i < level.cylinders.Count; i++)
                 {
                     Cylinder cylinder = level.cylinders[i];
-                    GL.Uniform1(uniformLevelObjectNumberColorID, i);
+                    GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                    Matrix4 mvp = cylinder.modelMatrix * worldView;
-                    GL.UniformMatrix4(matrixID, false, ref mvp);
-                    GL.Uniform4(colorID, selectedObject == cylinder ? selectedColor : normalColor);
+                    GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref cylinder.modelMatrix);
+                    GL.Uniform4(shaderIDTable.UniformColor, selectedObject == cylinder ? selectedColor : normalColor);
                     ActivateBuffersForModel(cylinder);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
                     GL.DrawElements(PrimitiveType.Triangles, Cylinder.cylinderTris.Length, DrawElementsType.UnsignedShort, 0);
@@ -1355,15 +1347,14 @@ namespace Replanetizer.Frames
 
             if (enableType0C)
             {
-                GL.Uniform1(uniformLevelObjectTypeColorID, (int) RenderedObjectType.Type0C);
+                GL.Uniform1(shaderIDTable.UniformColorLevelObjectType, (int) RenderedObjectType.Type0C);
                 for (int i = 0; i < level.type0Cs.Count; i++)
                 {
                     Type0C type0c = level.type0Cs[i];
-                    GL.Uniform1(uniformLevelObjectNumberColorID, i);
+                    GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                    Matrix4 mvp = type0c.modelMatrix * worldView;
-                    GL.UniformMatrix4(matrixID, false, ref mvp);
-                    GL.Uniform4(colorID, type0c == selectedObject ? selectedColor : normalColor);
+                    GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref type0c.modelMatrix);
+                    GL.Uniform4(shaderIDTable.UniformColor, type0c == selectedObject ? selectedColor : normalColor);
 
                     ActivateBuffersForModel(type0c);
 
@@ -1377,7 +1368,16 @@ namespace Replanetizer.Frames
 
             if (enableCollision)
             {
-                GL.Uniform1(uniformLevelObjectTypeColorID, (int) RenderedObjectType.Null);
+                GL.Uniform1(shaderIDTable.UniformColorLevelObjectType, (int) RenderedObjectType.Null);
+
+                GL.UseProgram(shaderIDTable.ShaderColor);
+                GL.Uniform4(shaderIDTable.UniformColor, new Vector4(1, 1, 1, 1));
+                GL.UniformMatrix4(shaderIDTable.UniformColorWorldToViewMatrix, false, ref worldView);
+                Matrix4 modelWorld = Matrix4.Identity;
+                GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref modelWorld);
+                GL.UseProgram(shaderIDTable.ShaderCollision);
+                GL.UniformMatrix4(shaderIDTable.UniformCollisionWorldToViewMatrix, false, ref worldView);
+
                 for (int i = 0; i < collisions.Count; i++)
                 {
                     Collision col = (Collision) collisions[i].Item1;
@@ -1386,11 +1386,7 @@ namespace Replanetizer.Frames
 
                     if (col.indBuff.Length == 0) continue;
 
-                    GL.UseProgram(colorShaderID);
-                    Matrix4 worldView = this.worldView;
-                    GL.UniformMatrix4(matrixID, false, ref worldView);
-                    GL.Uniform4(colorID, new Vector4(1, 1, 1, 1));
-
+                    GL.UseProgram(shaderIDTable.ShaderColor);
                     GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
                     GL.VertexAttribPointer(1, 4, VertexAttribPointerType.UnsignedByte, false, sizeof(float) * 4, sizeof(float) * 3);
@@ -1398,8 +1394,7 @@ namespace Replanetizer.Frames
 
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.DrawElements(PrimitiveType.Triangles, col.indBuff.Length, DrawElementsType.UnsignedInt, 0);
-                    GL.UseProgram(collisionShaderID);
-                    GL.UniformMatrix4(matrixID, false, ref worldView);
+                    GL.UseProgram(shaderIDTable.ShaderCollision);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                     GL.DrawElements(PrimitiveType.Triangles, col.indBuff.Length, DrawElementsType.UnsignedInt, 0);
                 }

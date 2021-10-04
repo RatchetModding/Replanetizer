@@ -19,15 +19,15 @@ out vec4 DiffuseColor;
 out vec4 BakedColor;
 
 // Values that stay constant for the whole mesh.
-uniform mat4 MVP;
-uniform mat4 MWP;
+uniform mat4 WorldToView;
+uniform mat4 ModelToWorld;
 uniform int levelObjectType;
 
 void main(){
     // Output position of the vertex, in clip space : MVP * position
-    gl_Position = MVP * vec4(vertexPosition_modelspace, 1.0f);
+    gl_Position = WorldToView * (ModelToWorld * vec4(vertexPosition_modelspace, 1.0f));
 
-    vec3 normal = normalize((MWP * vec4(vertexNormal, 0.0f)).xyz);
+    vec3 normal = normalize((ModelToWorld * vec4(vertexNormal, 0.0f)).xyz);
 
     // UV of the vertex. No special space for this one.
     UV = vertexUV;

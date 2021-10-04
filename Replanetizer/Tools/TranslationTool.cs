@@ -69,49 +69,27 @@ namespace Replanetizer.Tools
             GetVBO();
 
             Matrix4 modelMatrix = Matrix4.CreateTranslation(position);
-            var mvp = modelMatrix * frame.worldView;
-            GL.UniformMatrix4(frame.matrixID, false, ref mvp);
+            GL.UniformMatrix4(frame.shaderIDTable.UniformModelToWorldMatrix, false, ref modelMatrix);
 
-            GL.Uniform1(frame.uniformLevelObjectNumberColorID, 0);
-
-            GL.Uniform4(frame.colorID, new Vector4(1, 0, 0, 1));
+            GL.Uniform1(frame.shaderIDTable.UniformColorLevelObjectNumber, 0);
+            GL.Uniform4(frame.shaderIDTable.UniformColor, new Vector4(1, 0, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
-
-            GL.Uniform4(frame.colorID, new Vector4(1, 0, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 3, 3);
-
-            GL.Uniform4(frame.colorID, new Vector4(1, 0, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 6, 3);
-
-            GL.Uniform4(frame.colorID, new Vector4(1, 0, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 9, 3);
 
-            GL.Uniform1(frame.uniformLevelObjectNumberColorID, 1);
-
-            GL.Uniform4(frame.colorID, new Vector4(0, 1, 0, 1));
+            GL.Uniform1(frame.shaderIDTable.UniformColorLevelObjectNumber, 1);
+            GL.Uniform4(frame.shaderIDTable.UniformColor, new Vector4(0, 1, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 12, 3);
-
-            GL.Uniform4(frame.colorID, new Vector4(0, 1, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 15, 3);
-
-            GL.Uniform4(frame.colorID, new Vector4(0, 1, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 18, 3);
-
-            GL.Uniform4(frame.colorID, new Vector4(0, 1, 0, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 21, 3);
 
-            GL.Uniform1(frame.uniformLevelObjectNumberColorID, 2);
-
-            GL.Uniform4(frame.colorID, new Vector4(0, 0, 1, 1));
+            GL.Uniform1(frame.shaderIDTable.UniformColorLevelObjectNumber, 2);
+            GL.Uniform4(frame.shaderIDTable.UniformColor, new Vector4(0, 0, 1, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 24, 3);
-
-            GL.Uniform4(frame.colorID, new Vector4(0, 0, 1, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 27, 3);
-
-            GL.Uniform4(frame.colorID, new Vector4(0, 0, 1, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 30, 3);
-
-            GL.Uniform4(frame.colorID, new Vector4(0, 0, 1, 1));
             GL.DrawArrays(PrimitiveType.Triangles, 33, 3);
         }
 

@@ -31,11 +31,7 @@ namespace Replanetizer.Utils
         private Level level;
         private Dictionary<Texture, int> textureIds;
 
-        public static int matrixID { get; set; }
-        public static int uniformModelWorldMatrixID { get; set; }
-        public static int shaderID { get; set; }
-        public static int colorShaderID { get; set; }
-        public static Matrix4 worldView { get; set; }
+        public static ShaderIDTable shaderIDTable { get; set; }
 
         public RenderableBuffer(ModelObject modelObject, RenderedObjectType type, int ID, Level level, Dictionary<Texture, int> textureIds)
         {
@@ -227,9 +223,7 @@ namespace Replanetizer.Utils
         {
             if (culled) return;
             if (!BindIBO() || !BindVBO()) return;
-            Matrix4 mvp = modelObject.modelMatrix * worldView;  //Has to be done in this order to work correctly
-            GL.UniformMatrix4(matrixID, false, ref mvp);
-            GL.UniformMatrix4(uniformModelWorldMatrixID, false, ref modelObject.modelMatrix);
+            GL.UniformMatrix4(shaderIDTable.UniformModelToWorldMatrix, false, ref modelObject.modelMatrix);
 
             SetupVertexAttribPointers();
 
@@ -245,12 +239,12 @@ namespace Replanetizer.Utils
                 if (switchBlends)
                     GL.Disable(EnableCap.Blend);
 
-                GL.UseProgram(colorShaderID);
-                GL.UniformMatrix4(matrixID, false, ref mvp);
+                GL.UseProgram(shaderIDTable.ShaderColor);
+                GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref modelObject.modelMatrix);
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                 GL.DrawElements(PrimitiveType.Triangles, modelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                GL.UseProgram(shaderID);
+                GL.UseProgram(shaderIDTable.ShaderMain);
 
                 if (switchBlends)
                     GL.Enable(EnableCap.Blend);

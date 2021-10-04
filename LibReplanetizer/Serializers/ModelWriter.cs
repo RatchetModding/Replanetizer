@@ -226,8 +226,7 @@ namespace LibReplanetizer
 
                 // Faces
                 int textureNum = 0;
-                var lastVn = 0;
-                var windingOrder = false;
+                HashSet<(int, int)> visitedEdges = new();
                 for (int i = 0; i < model.indexBuffer.Length / 3; i++)
                 {
                     int triIndex = i * 3;
@@ -246,14 +245,19 @@ namespace LibReplanetizer
                     int vt = indexToUVs[i] + 1;
                     int vn = indexToNormals[i] + 1;
 
-                    // Flip the winding order if the vertex normals didn't change
-                    windingOrder = (vn == lastVn) ? !windingOrder : false;
+                    if (visitedEdges.Contains((v1, v2)) ||
+                        visitedEdges.Contains((v2, v3)) ||
+                        visitedEdges.Contains((v3, v1)))
+                    {
+                        (v2, v3) = (v3, v2);
+                    }
+
                     OBJfs.WriteLine(
-                        windingOrder
-                        ? $"f {v1}/{vt}/{vn} {v3}/{vt}/{vn} {v2}/{vt}/{vn}"
-                        : $"f {v1}/{vt}/{vn} {v2}/{vt}/{vn} {v3}/{vt}/{vn}"
+                        $"f {v1}/{vt}/{vn} {v3}/{vt}/{vn} {v2}/{vt}/{vn}"
                     );
-                    lastVn = vn;
+                    visitedEdges.Add((v1, v2));
+                    visitedEdges.Add((v2, v3));
+                    visitedEdges.Add((v3, v1));
                 }
             }
 

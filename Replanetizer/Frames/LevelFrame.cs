@@ -722,6 +722,8 @@ namespace Replanetizer.Frames
                 }
             }
 
+            if (terrainBuffers != null) foreach (RenderableBuffer buffer in terrainBuffers) buffer.Dispose();
+
             terrainBuffers = GetRenderableBuffer(terrains, RenderedObjectType.Terrain);
             InvalidateView();
         }
@@ -1400,7 +1402,6 @@ namespace Replanetizer.Frames
         {
             if (!subFrames.Contains(frame)) subFrames.Add(frame);
         }
-
     }
 
 }

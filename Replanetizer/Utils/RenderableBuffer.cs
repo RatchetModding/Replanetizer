@@ -12,7 +12,7 @@ namespace Replanetizer.Utils
     /*
      * A container to store IBO and VBO references for a Model
      */
-    public class RenderableBuffer
+    public class RenderableBuffer : IDisposable
     {
         private ModelObject modelObject;
 
@@ -346,6 +346,12 @@ namespace Replanetizer.Utils
                     GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
                     break;
             }
+        }
+
+        public void Dispose()
+        {
+            GL.DeleteBuffer(ibo);
+            GL.DeleteBuffer(vbo);
         }
     }
 }

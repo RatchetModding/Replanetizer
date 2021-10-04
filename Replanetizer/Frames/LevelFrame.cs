@@ -458,6 +458,7 @@ namespace Replanetizer.Frames
             shaderIDTable.UniformColorLevelObjectNumber = GL.GetUniformLocation(shaderIDTable.ShaderColor, "levelObjectNumber");
 
             shaderIDTable.UniformAmbientColor = GL.GetUniformLocation(shaderIDTable.ShaderMain, "staticColor");
+            shaderIDTable.UniformLightIndex = GL.GetUniformLocation(shaderIDTable.ShaderMain, "lightIndex");
 
             RenderableBuffer.shaderIDTable = shaderIDTable;
 
@@ -585,17 +586,6 @@ namespace Replanetizer.Frames
         }
 
         /// <summary>
-        /// Binds the light to the uniform buffer specified by lightIndex.
-        /// Binds an all black light if lightIndex is out of bounds.
-        /// </summary>
-        private void BindLightsBuffer(int lightIndex)
-        {
-            if (lightIndex < 0) lightIndex = level.lights.Count;
-            lightIndex = Math.Min(lightIndex, level.lights.Count);
-            GL.BindBufferRange(BufferRangeTarget.UniformBuffer, 0, lightsBufferObject, new IntPtr(alignmentUBO * lightIndex), sizeof(float) * 16);
-        }
-
-        /// <summary>
         /// Updates the buffers of the lights.
         /// </summary>
         private void UpdateDirectionalLights(List<Light> lights)
@@ -621,7 +611,7 @@ namespace Replanetizer.Frames
                 lightsData[i][13] = lights[i].direction2.Y;
                 lightsData[i][14] = lights[i].direction2.Z;
                 lightsData[i][15] = lights[i].direction2.W;
-                GL.BufferSubData(BufferTarget.UniformBuffer, new IntPtr(alignmentUBO * i), lightSize, lightsData[i]);
+                GL.BufferSubData(BufferTarget.UniformBuffer, new IntPtr(sizeof(float) * 16 * i), lightSize, lightsData[i]);
             }
 
             GL.BindBuffer(BufferTarget.UniformBuffer, 0);
@@ -636,22 +626,20 @@ namespace Replanetizer.Frames
             int loc = GL.GetUniformBlockIndex(shaderIDTable.ShaderMain, "lights");
             GL.UniformBlockBinding(shaderIDTable.ShaderMain, loc, 0);
 
-            int lightsCountInShader = lights.Count + 1;
-
             lightsBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.UniformBuffer, lightsBufferObject);
-            GL.BufferData(BufferTarget.UniformBuffer, alignmentUBO * lightsCountInShader, IntPtr.Zero, BufferUsageHint.StaticRead);
+            GL.BufferData(BufferTarget.UniformBuffer, sizeof(float) * 16 * ShaderIDTable.ALLOCATED_LIGHTS, IntPtr.Zero, BufferUsageHint.StaticRead);
             GL.BindBuffer(BufferTarget.UniformBuffer, 0);
 
-            lightsData = new float[lightsCountInShader][];
+            lightsData = new float[ShaderIDTable.ALLOCATED_LIGHTS][];
 
-            for (int i = 0; i < lightsCountInShader; i++)
+            for (int i = 0; i < ShaderIDTable.ALLOCATED_LIGHTS; i++)
             {
                 lightsData[i] = new float[16];
-            }
 
-            // Upload the all black light, it won't be updated later
-            GL.BufferSubData(BufferTarget.UniformBuffer, new IntPtr(alignmentUBO * lightsCountInShader - 1), sizeof(float) * 16, lightsData[lightsCountInShader - 1]);
+                // Upload the all black light, all unused ones will remain black.
+                GL.BufferSubData(BufferTarget.UniformBuffer, new IntPtr(sizeof(float) * 16 * i), sizeof(float) * 16, lightsData[i]);
+            }
 
             UpdateDirectionalLights(lights);
         }
@@ -1163,7 +1151,7 @@ namespace Replanetizer.Frames
         {
             buffer.UpdateVars();
             buffer.ComputeCulling(camera, enableDistanceCulling, enableFrustumCulling);
-            BindLightsBuffer(buffer.light);
+            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, 0, lightsBufferObject);
             buffer.Select(selectedObject);
             buffer.Render();
         }
@@ -1229,9 +1217,11 @@ namespace Replanetizer.Frames
             if (enableTerrain)
             {
                 GL.EnableVertexAttribArray(3);
+                GL.EnableVertexAttribArray(4);
                 GL.Uniform1(shaderIDTable.UniformLevelObjectType, (int) RenderedObjectType.Terrain);
                 foreach (RenderableBuffer buffer in terrainBuffers)
                     RenderBuffer(buffer);
+                GL.DisableVertexAttribArray(4);
                 GL.DisableVertexAttribArray(3);
             }
 

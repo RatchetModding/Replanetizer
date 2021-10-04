@@ -8,7 +8,7 @@ namespace LibReplanetizer.LevelObjects
         public static Vector4 normalColor = new Vector4(1, 1, 1, 1); // White
         public static Vector4 selectedColor = new Vector4(1, 0, 1, 1); // Purple
 
-        public Matrix4 modelMatrix;
+        public Matrix4 modelMatrix = Matrix4.Identity;
 
         [Category("Attributes"), DisplayName("Position")]
         public Vector3 position { get; set; } = new Vector3();

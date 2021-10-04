@@ -32,6 +32,7 @@ namespace Replanetizer.Utils
         private Dictionary<Texture, int> textureIds;
 
         public static int matrixID { get; set; }
+        public static int uniformModelWorldMatrixID { get; set; }
         public static int shaderID { get; set; }
         public static int colorShaderID { get; set; }
         public static Matrix4 worldView { get; set; }
@@ -228,6 +229,7 @@ namespace Replanetizer.Utils
             if (!BindIBO() || !BindVBO()) return;
             Matrix4 mvp = modelObject.modelMatrix * worldView;  //Has to be done in this order to work correctly
             GL.UniformMatrix4(matrixID, false, ref mvp);
+            GL.UniformMatrix4(uniformModelWorldMatrixID, false, ref modelObject.modelMatrix);
 
             SetupVertexAttribPointers();
 

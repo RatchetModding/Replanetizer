@@ -398,8 +398,7 @@ namespace Replanetizer.Frames
                     //Setup openGL variables
                     GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
                     GL.Enable(EnableCap.DepthTest);
-                    GL.LineWidth(0.5f);
-                    GL.Enable(EnableCap.LineSmooth);
+                    GL.LineWidth(1.0f);
                     GL.Viewport(0, 0, Width, Height);
 
                     OnPaint();
@@ -1012,6 +1011,7 @@ namespace Replanetizer.Frames
             // Render tool on top of everything
             GL.Clear(ClearBufferMask.DepthBufferBit);
             GL.Uniform1(shaderIDTable.UniformColorLevelObjectType, (int) RenderedObjectType.Tool);
+            GL.LineWidth(5.0f);
 
             if ((selectedObject != null) && (currentTool != null))
             {
@@ -1024,6 +1024,8 @@ namespace Replanetizer.Frames
                     currentTool.Render(selectedObject.position, this);
                 }
             }
+
+            GL.LineWidth(1.0f);
         }
 
         private int LinkShader(string shaderFolder, string vsname, string fsname)
@@ -1187,6 +1189,7 @@ namespace Replanetizer.Frames
 
             GL.UseProgram(shaderIDTable.ShaderColor);
             GL.Uniform4(shaderIDTable.UniformColor, new Vector4(1, 1, 1, 1));
+            GL.UniformMatrix4(shaderIDTable.UniformColorWorldToViewMatrix, false, ref worldView);
             GL.UseProgram(shaderIDTable.ShaderMain);
             GL.UniformMatrix4(shaderIDTable.UniformWorldToViewMatrix, false, ref worldView);
 
@@ -1269,7 +1272,6 @@ namespace Replanetizer.Frames
             }
 
             GL.UseProgram(shaderIDTable.ShaderColor);
-            GL.UniformMatrix4(shaderIDTable.UniformColorWorldToViewMatrix, false, ref worldView);
 
             if (enableSpline)
             {
@@ -1278,6 +1280,7 @@ namespace Replanetizer.Frames
                 {
                     Spline spline = level.splines[i];
                     GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
+                    GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref spline.modelMatrix);
                     GL.Uniform4(shaderIDTable.UniformColor, spline == selectedObject ? selectedColor : normalColor);
                     ActivateBuffersForModel(spline);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
@@ -1364,6 +1367,7 @@ namespace Replanetizer.Frames
             if (enableCollision)
             {
                 GL.Uniform1(shaderIDTable.UniformColorLevelObjectType, (int) RenderedObjectType.Null);
+                GL.LineWidth(5.0f);
 
                 GL.UseProgram(shaderIDTable.ShaderColor);
                 GL.Uniform4(shaderIDTable.UniformColor, new Vector4(1, 1, 1, 1));
@@ -1393,6 +1397,8 @@ namespace Replanetizer.Frames
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                     GL.DrawElements(PrimitiveType.Triangles, col.indBuff.Length, DrawElementsType.UnsignedInt, 0);
                 }
+
+                GL.LineWidth(1.0f);
             }
 
             RenderTool();

@@ -240,11 +240,13 @@ namespace Replanetizer.Utils
                     GL.Disable(EnableCap.Blend);
 
                 GL.UseProgram(shaderIDTable.ShaderColor);
+                GL.Enable(EnableCap.LineSmooth);
                 GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref modelObject.modelMatrix);
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                 GL.DrawElements(PrimitiveType.Triangles, modelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 GL.UseProgram(shaderIDTable.ShaderMain);
+                GL.Disable(EnableCap.LineSmooth);
 
                 if (switchBlends)
                     GL.Enable(EnableCap.Blend);

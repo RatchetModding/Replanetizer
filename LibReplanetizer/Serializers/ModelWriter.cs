@@ -173,29 +173,56 @@ namespace LibReplanetizer
                 OBJfs.WriteLine("o Object_" + model.id.ToString("X4"));
                 if (model.textureConfig != null)
                     OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
-                //Vertices, normals, UV's
+
+                // Vertices
                 for (int x = 0; x < model.vertexBuffer.Length / 8; x++)
                 {
                     float px = model.vertexBuffer[(x * 0x08) + 0x0];
                     float py = model.vertexBuffer[(x * 0x08) + 0x1];
                     float pz = model.vertexBuffer[(x * 0x08) + 0x2];
+                    OBJfs.WriteLine($"v {px:F6} {py:F6} {pz:F6}");
+                }
+
+                // Normals (deduplicated)
+                var uniqueNormalsCount = 0;
+                var uniqueNormals = new Dictionary<(float, float, float), int>();
+                var indexToNormals = new int[model.vertexBuffer.Length];
+                for (var x = 0; x < model.vertexBuffer.Length / 8; x++)
+                {
                     float nx = model.vertexBuffer[(x * 0x08) + 0x3];
                     float ny = model.vertexBuffer[(x * 0x08) + 0x4];
                     float nz = model.vertexBuffer[(x * 0x08) + 0x5];
-                    float tu = model.vertexBuffer[(x * 0x08) + 0x6];
-                    float tv = 1f - model.vertexBuffer[(x * 0x08) + 0x7];
-                    OBJfs.WriteLine("v " + px.ToString("G") + " " + py.ToString("G") + " " + pz.ToString("G"));
-                    OBJfs.WriteLine("vn " + nx.ToString("G") + " " + ny.ToString("G") + " " + nz.ToString("G"));
-                    OBJfs.WriteLine("vt " + tu.ToString("G") + " " + tv.ToString("G"));
+                    if (!uniqueNormals.TryGetValue((nx, ny, nz), out var normalIdx))
+                    {
+                        uniqueNormals[(nx, ny, nz)] = normalIdx = uniqueNormalsCount++;
+                        OBJfs.WriteLine($"vn {nx:F6} {ny:F6} {nz:F6}");
+                    }
+                    indexToNormals[x] = normalIdx;
                 }
 
+                // UVs (deduplicated)
+                var uniqueUVsCount = 0;
+                var uniqueUVs = new Dictionary<(float, float), int>();
+                var indexToUVs = new int[model.vertexBuffer.Length];
+                for (var x = 0; x < model.vertexBuffer.Length / 8; x++)
+                {
+                    float tu = model.vertexBuffer[(x * 0x08) + 0x6];
+                    float tv = 1f - model.vertexBuffer[(x * 0x08) + 0x7];
+                    if (!uniqueUVs.TryGetValue((tu, tv), out var uvIdx))
+                    {
+                        uniqueUVs[(tu, tv)] = uvIdx = uniqueUVsCount++;
+                        OBJfs.WriteLine($"vt {tu:F6} {tv:F6}");
+                    }
+                    indexToUVs[x] = uvIdx;
+                }
 
-                //Faces
+                // Faces
                 int textureNum = 0;
                 for (int i = 0; i < model.indexBuffer.Length / 3; i++)
                 {
                     int triIndex = i * 3;
-                    if ((model.textureConfig != null) && (textureNum < model.textureConfig.Count) && (triIndex >= model.textureConfig[textureNum].start))
+                    if (model.textureConfig != null && textureNum < model.textureConfig.Count &&
+                        triIndex >= model.textureConfig[textureNum].start)
                     {
                         string modelId = model.textureConfig[textureNum].ID.ToString();
                         OBJfs.WriteLine("usemtl mtl_" + modelId);
@@ -203,10 +230,15 @@ namespace LibReplanetizer
                         textureNum++;
                     }
 
-                    int f1 = model.indexBuffer[triIndex + 0] + 1;
-                    int f2 = model.indexBuffer[triIndex + 1] + 1;
-                    int f3 = model.indexBuffer[triIndex + 2] + 1;
-                    OBJfs.WriteLine("f " + (f1 + "/" + f1 + "/" + f1) + " " + (f2 + "/" + f2 + "/" + f2) + " " + (f3 + "/" + f3 + "/" + f3));
+                    int v1 = model.indexBuffer[triIndex + 0] + 1;
+                    int v2 = model.indexBuffer[triIndex + 1] + 1;
+                    int v3 = model.indexBuffer[triIndex + 2] + 1;
+                    int vt = indexToUVs[i] + 1;
+                    int vn = indexToNormals[i] + 1;
+
+                    OBJfs.WriteLine(
+                        $"f {v1}/{vt}/{vn} {v2}/{vt}/{vn} {v3}/{vt}/{vn}"
+                    );
                 }
             }
 
@@ -285,7 +317,7 @@ namespace LibReplanetizer
                 if (settings.chunksSelected[0])
                 {
                     terrain.AddRange(level.terrainEngine.fragments);
-                }     
+                }
             } else
             {
                 for (int i = 0; i < level.terrainChunks.Count; i++)
@@ -307,7 +339,7 @@ namespace LibReplanetizer
 
             List<TerrainFragment> terrain = collectTerrainFragments(level, settings);
 
-            StreamWriter MTLfs = null; 
+            StreamWriter MTLfs = null;
 
             if (settings.exportMTLFile) MTLfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl");
 
@@ -682,8 +714,8 @@ namespace LibReplanetizer
                 {
                     OBJfs.WriteLine("vt " + vt.X.ToString("G") + " " + vt.Y.ToString("G"));
                 }
-                
-                for (int i = 0; i < materialCount; i++) 
+
+                for (int i = 0; i < materialCount; i++)
                 {
                     List<Tuple<int, int, int>> list = faces[i];
 
@@ -709,7 +741,7 @@ namespace LibReplanetizer
         {
             switch(settings.mode)
             {
-                case WriterLevelMode.Separate: 
+                case WriterLevelMode.Separate:
                     WriteObjSeparate(fileName, level, settings);
                     return;
                 case WriterLevelMode.Combined:

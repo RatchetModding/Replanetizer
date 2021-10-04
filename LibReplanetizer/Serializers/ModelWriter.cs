@@ -218,6 +218,8 @@ namespace LibReplanetizer
 
                 // Faces
                 int textureNum = 0;
+                var lastVn = 0;
+                var windingOrder = false;
                 for (int i = 0; i < model.indexBuffer.Length / 3; i++)
                 {
                     int triIndex = i * 3;
@@ -236,9 +238,14 @@ namespace LibReplanetizer
                     int vt = indexToUVs[i] + 1;
                     int vn = indexToNormals[i] + 1;
 
+                    // Flip the winding order if the vertex normals didn't change
+                    windingOrder = (vn == lastVn) ? !windingOrder : false;
                     OBJfs.WriteLine(
-                        $"f {v1}/{vt}/{vn} {v2}/{vt}/{vn} {v3}/{vt}/{vn}"
+                        windingOrder
+                        ? $"f {v1}/{vt}/{vn} {v3}/{vt}/{vn} {v2}/{vt}/{vn}"
+                        : $"f {v1}/{vt}/{vn} {v2}/{vt}/{vn} {v3}/{vt}/{vn}"
                     );
+                    lastVn = vn;
                 }
             }
 

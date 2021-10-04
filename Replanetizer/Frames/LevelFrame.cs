@@ -1159,15 +1159,13 @@ namespace Replanetizer.Frames
             }
         }
 
-        private void RenderBuffer(RenderableBuffer buffer, bool transparency)
+        private void RenderBuffer(RenderableBuffer buffer)
         {
-            GL.Uniform1(shaderIDTable.UniformLevelObjectNumber, buffer.ID);
             buffer.UpdateVars();
             buffer.ComputeCulling(camera, enableDistanceCulling, enableFrustumCulling);
             BindLightsBuffer(buffer.light);
-            GL.Uniform4(shaderIDTable.UniformAmbientColor, buffer.ambient);
             buffer.Select(selectedObject);
-            buffer.Render(transparency);
+            buffer.Render();
         }
 
         protected void OnPaint()
@@ -1233,7 +1231,7 @@ namespace Replanetizer.Frames
                 GL.EnableVertexAttribArray(3);
                 GL.Uniform1(shaderIDTable.UniformLevelObjectType, (int) RenderedObjectType.Terrain);
                 foreach (RenderableBuffer buffer in terrainBuffers)
-                    RenderBuffer(buffer, false);
+                    RenderBuffer(buffer);
                 GL.DisableVertexAttribArray(3);
             }
 
@@ -1241,7 +1239,7 @@ namespace Replanetizer.Frames
             {
                 GL.Uniform1(shaderIDTable.UniformLevelObjectType, (int) RenderedObjectType.Shrub);
                 foreach (RenderableBuffer buffer in shrubsBuffers)
-                    RenderBuffer(buffer, false);
+                    RenderBuffer(buffer);
             }
 
             if (enableTie)
@@ -1249,7 +1247,7 @@ namespace Replanetizer.Frames
                 GL.EnableVertexAttribArray(3);
                 GL.Uniform1(shaderIDTable.UniformLevelObjectType, (int) RenderedObjectType.Tie);
                 foreach (RenderableBuffer buffer in tiesBuffers)
-                    RenderBuffer(buffer, false);
+                    RenderBuffer(buffer);
                 GL.DisableVertexAttribArray(3);
             }
 
@@ -1266,7 +1264,7 @@ namespace Replanetizer.Frames
                 }
 
                 foreach (RenderableBuffer buffer in mobiesBuffers)
-                    RenderBuffer(buffer, enableTransparency);
+                    RenderBuffer(buffer);
 
                 GL.Disable(EnableCap.Blend);
             }

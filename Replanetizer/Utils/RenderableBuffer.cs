@@ -152,7 +152,7 @@ namespace Replanetizer.Utils
         /// <summary>
         /// Sets an internal variable to true if the object is to be culled.
         /// Mobies and shrubs are culled by their drawDistance.
-        /// (TODO) Ties and terrain is culled by frustum culling.
+        /// Ties, terrain and shrubs are culled by frustum culling.
         /// </summary>
         public void ComputeCulling(Camera camera, bool distanceCulling, bool frustumCulling)
         {
@@ -219,38 +219,44 @@ namespace Replanetizer.Utils
         /// <summary>
         /// Renders an object based on the buffers.
         /// </summary>
-        public void Render(bool switchBlends)
+        public void Render()
         {
             if (culled) return;
             if (!BindIBO() || !BindVBO()) return;
-            GL.UniformMatrix4(shaderIDTable.UniformModelToWorldMatrix, false, ref modelObject.modelMatrix);
 
-            SetupVertexAttribPointers();
-
-            //Bind textures one by one, applying it to the relevant vertices based on the index array
-            foreach (TextureConfig conf in modelObject.model.textureConfig)
+            switch (type)
             {
-                GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? textureIds[level.textures[conf.ID]] : 0);
-                GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+                case RenderedObjectType.Terrain:
+                case RenderedObjectType.Shrub:
+                case RenderedObjectType.Tie:
+                case RenderedObjectType.Moby:
+                    GL.UniformMatrix4(shaderIDTable.UniformModelToWorldMatrix, false, ref modelObject.modelMatrix);
+                    GL.Uniform1(shaderIDTable.UniformLevelObjectNumber, ID);
+                    GL.Uniform4(shaderIDTable.UniformAmbientColor, ambient);
+
+                    SetupVertexAttribPointers();
+
+                    //Bind textures one by one, applying it to the relevant vertices based on the index array
+                    foreach (TextureConfig conf in modelObject.model.textureConfig)
+                    {
+                        GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? textureIds[level.textures[conf.ID]] : 0);
+                        GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+                    }
+
+                    if (selected)
+                    {
+                        GL.UseProgram(shaderIDTable.ShaderColor);
+                        GL.Enable(EnableCap.LineSmooth);
+                        GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref modelObject.modelMatrix);
+                        GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                        GL.DrawElements(PrimitiveType.Triangles, modelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
+                        GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                        GL.UseProgram(shaderIDTable.ShaderMain);
+                        GL.Disable(EnableCap.LineSmooth);
+                    }
+                    break;
             }
 
-            if (selected)
-            {
-                if (switchBlends)
-                    GL.Disable(EnableCap.Blend);
-
-                GL.UseProgram(shaderIDTable.ShaderColor);
-                GL.Enable(EnableCap.LineSmooth);
-                GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref modelObject.modelMatrix);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                GL.DrawElements(PrimitiveType.Triangles, modelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                GL.UseProgram(shaderIDTable.ShaderMain);
-                GL.Disable(EnableCap.LineSmooth);
-
-                if (switchBlends)
-                    GL.Enable(EnableCap.Blend);
-            }
         }
 
         /// <summary>
@@ -279,18 +285,21 @@ namespace Replanetizer.Utils
 
         private void SetupVertexAttribPointers()
         {
-            if (type == RenderedObjectType.Terrain || type == RenderedObjectType.Tie)
+            switch (type)
             {
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, 0);
-                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 3);
-                GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 6);
-                GL.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 9, sizeof(float) * 8);
-            }
-            else
-            {
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
-                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
-                GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
+                case RenderedObjectType.Terrain:
+                case RenderedObjectType.Tie:
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, 0);
+                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 3);
+                    GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 6);
+                    GL.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 9, sizeof(float) * 8);
+                    break;
+                case RenderedObjectType.Shrub:
+                case RenderedObjectType.Moby:
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
+                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
+                    GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
+                    break;
             }
         }
     }

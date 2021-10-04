@@ -142,7 +142,7 @@ namespace LibReplanetizer
                 Logger.Debug("Success");
 
                 Logger.Debug("Parsing moby models...");
-                mobyModels = engineParser.GetMobyModels();  
+                mobyModels = engineParser.GetMobyModels();
                 Logger.Debug("Added {0} moby models", mobyModels.Count);
 
                 Logger.Debug("Parsing tie models...");
@@ -178,7 +178,7 @@ namespace LibReplanetizer
                 Logger.Debug("Added {0} terrain elements", terrainEngine?.fragments.Count);
 
                 Logger.Debug("Parsing player animations...");
-                playerAnimations = engineParser.GetPlayerAnimations((MobyModel)mobyModels[0]);
+                playerAnimations = engineParser.GetPlayerAnimations((MobyModel) mobyModels[0]);
                 Logger.Debug("Added {0} player animations", playerAnimations?.Count);
 
                 uiElements = engineParser.GetUiElements();
@@ -266,7 +266,7 @@ namespace LibReplanetizer
 
             for (int i = 0; i < 5; i++)
             {
-                var chunkPath = Path.Join(path, @"chunk"+i+".ps3");
+                var chunkPath = Path.Join(path, @"chunk" + i + ".ps3");
                 if (!File.Exists(chunkPath)) continue;
 
                 using (ChunkParser chunkParser = new ChunkParser(chunkPath, game))
@@ -364,11 +364,6 @@ namespace LibReplanetizer
             valid = true;
         }
 
-        public void Save()
-        {
-            Save(path);
-        }
-
         public void Save(string outputFile)
         {
             string directory;
@@ -386,7 +381,7 @@ namespace LibReplanetizer
             gameplaySerializer.Save(this, directory);
 
             for (int i = 0; i < terrainChunks.Count; i++)
-            {      
+            {
                 ChunkSerializer chunkSerializer = new ChunkSerializer();
                 chunkSerializer.Save(this, directory, i);
             }

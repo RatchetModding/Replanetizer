@@ -174,13 +174,21 @@ namespace LibReplanetizer
                 if (model.textureConfig != null)
                     OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
 
-                // Vertices
+                // Vertices (deduplicated)
+                var uniqueVerticesCount = 0;
+                var uniqueVertices = new Dictionary<(float, float, float), int>();
+                var indexToVertices = new int[model.vertexBuffer.Length];
                 for (int x = 0; x < model.vertexBuffer.Length / 8; x++)
                 {
                     float px = model.vertexBuffer[(x * 0x08) + 0x0];
                     float py = model.vertexBuffer[(x * 0x08) + 0x1];
                     float pz = model.vertexBuffer[(x * 0x08) + 0x2];
-                    OBJfs.WriteLine($"v {px:F6} {py:F6} {pz:F6}");
+                    if (!uniqueVertices.TryGetValue((px, py, pz), out var vertexIdx))
+                    {
+                        uniqueVertices[(px, py, pz)] = vertexIdx = uniqueVerticesCount++;
+                        OBJfs.WriteLine($"v {px:F6} {py:F6} {pz:F6}");
+                    }
+                    indexToVertices[x] = vertexIdx;
                 }
 
                 // Normals (deduplicated)
@@ -232,9 +240,9 @@ namespace LibReplanetizer
                         textureNum++;
                     }
 
-                    int v1 = model.indexBuffer[triIndex + 0] + 1;
-                    int v2 = model.indexBuffer[triIndex + 1] + 1;
-                    int v3 = model.indexBuffer[triIndex + 2] + 1;
+                    int v1 = indexToVertices[model.indexBuffer[triIndex + 0]] + 1;
+                    int v2 = indexToVertices[model.indexBuffer[triIndex + 1]] + 1;
+                    int v3 = indexToVertices[model.indexBuffer[triIndex + 2]] + 1;
                     int vt = indexToUVs[i] + 1;
                     int vn = indexToNormals[i] + 1;
 

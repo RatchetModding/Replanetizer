@@ -60,17 +60,17 @@ namespace Replanetizer.Frames
                 }
                 ImGui.TreePop();
             }
-            
+
             if (ImGui.Button("Perform export"))
             {
-                var res = CrossFileDialog.SaveFile();
+                var res = CrossFileDialog.SaveFile("Level.obj", "*.obj");
                 if (res.Length > 0)
                 {
                     ModelWriter.WriteObj(res, level, settings);
                     isOpen = false;
                 }
             }
-                
+
         }
     }
 }

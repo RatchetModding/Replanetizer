@@ -70,7 +70,6 @@ namespace Replanetizer.Utils
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(true);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -85,9 +84,15 @@ namespace Replanetizer.Utils
                 GL.DeleteFramebuffer(framebufferID);
                 GL.DeleteTexture(bufferTexture);
                 GL.DeleteTexture(targetTexture);
+                GL.DeleteTexture(idTexture);
             }
 
             disposed = true;
+        }
+
+        ~FramebufferRenderer()
+        {
+            Dispose(false);
         }
     }
 }

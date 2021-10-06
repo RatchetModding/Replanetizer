@@ -174,54 +174,43 @@ namespace LibReplanetizer
                 if (model.textureConfig != null)
                     OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
 
-                // Vertices (deduplicated)
-                var uniqueVerticesCount = 0;
-                var uniqueVertices = new Dictionary<Vector3, int>();
-                var indexToVertices = new int[model.vertexBuffer.Length / 8];
-                var vertices = new List<Vector3>();
-                for (int vertIdx = 0; vertIdx < model.vertexBuffer.Length / 8; vertIdx++)
+                var vertexCount = model.vertexBuffer.Length / 8;
+
+                // Vertices
+                var vertices = new Vector3[vertexCount];
+                for (int vertIdx = 0; vertIdx < vertexCount; vertIdx++)
                 {
-                    var px = model.vertexBuffer[(vertIdx * 0x08) + 0x0];
-                    var py = model.vertexBuffer[(vertIdx * 0x08) + 0x1];
-                    var pz = model.vertexBuffer[(vertIdx * 0x08) + 0x2];
+                    var px = model.vertexBuffer[vertIdx * 0x08 + 0x0];
+                    var py = model.vertexBuffer[vertIdx * 0x08 + 0x1];
+                    var pz = model.vertexBuffer[vertIdx * 0x08 + 0x2];
                     var pos = new Vector3(px, py, pz);
-                    if (!uniqueVertices.TryGetValue(pos, out var vertexIdx))
-                    {
-                        uniqueVertices[pos] = vertexIdx = uniqueVerticesCount++;
-                        OBJfs.WriteLine($"v {px:F6} {py:F6} {pz:F6}");
-                        vertices.Add(pos);
-                    }
-                    indexToVertices[vertIdx] = vertexIdx;
+                    vertices[vertIdx] = pos;
+                    OBJfs.WriteLine($"v {px:F6} {py:F6} {pz:F6}");
                 }
 
-                // Normals (deduplicated)
-                var uniqueNormalsCount = 0;
-                var uniqueNormals = new Dictionary<Vector3, int>();
-                var indexToNormals = new int[model.vertexBuffer.Length / 8];
-                var normals = new List<Vector3>();
-                for (var vertIdx = 0; vertIdx < model.vertexBuffer.Length / 8; vertIdx++)
+                // Normals
+                var normals = new Vector3[vertexCount];
+                for (var vertIdx = 0; vertIdx < vertexCount; vertIdx++)
                 {
-                    var nx = model.vertexBuffer[(vertIdx * 0x08) + 0x3];
-                    var ny = model.vertexBuffer[(vertIdx * 0x08) + 0x4];
-                    var nz = model.vertexBuffer[(vertIdx * 0x08) + 0x5];
+                    // We could write the vertex normals to the file, but they
+                    // seem to cause visual artifacts when importing to
+                    // Blender. We *will* use them, however, to determine face
+                    // winding order when writing faces later in this method.
+                    var nx = model.vertexBuffer[vertIdx * 0x08 + 0x3];
+                    var ny = model.vertexBuffer[vertIdx * 0x08 + 0x4];
+                    var nz = model.vertexBuffer[vertIdx * 0x08 + 0x5];
                     var normal = new Vector3(nx, ny, nz);
-                    if (!uniqueNormals.TryGetValue(normal, out var normalIdx))
-                    {
-                        uniqueNormals[normal] = normalIdx = uniqueNormalsCount++;
-                        OBJfs.WriteLine($"vn {nx:F6} {ny:F6} {nz:F6}");
-                        normals.Add(normal);
-                    }
-                    indexToNormals[vertIdx] = normalIdx;
+                    normals[vertIdx] = normal;
                 }
 
                 // UVs (deduplicated)
                 var uniqueUVsCount = 0;
                 var uniqueUVs = new Dictionary<(float, float), int>();
-                var indexToUVs = new int[model.vertexBuffer.Length / 8];
-                for (var vertIdx = 0; vertIdx < model.vertexBuffer.Length / 8; vertIdx++)
+                var indexToUVs = new int[vertexCount];
+                for (var vertIdx = 0; vertIdx < vertexCount; vertIdx++)
                 {
-                    float tu = model.vertexBuffer[(vertIdx * 0x08) + 0x6];
-                    float tv = 1f - model.vertexBuffer[(vertIdx * 0x08) + 0x7];
+                    var tu = model.vertexBuffer[(vertIdx * 0x08) + 0x6];
+                    var tv = 1f - model.vertexBuffer[(vertIdx * 0x08) + 0x7];
                     if (!uniqueUVs.TryGetValue((tu, tv), out var uvIdx))
                     {
                         uniqueUVs[(tu, tv)] = uvIdx = uniqueUVsCount++;
@@ -232,7 +221,8 @@ namespace LibReplanetizer
 
                 // Faces
                 int textureNum = 0;
-                for (int faceIdx = 0; faceIdx < model.indexBuffer.Length / 3; faceIdx++)
+                var faceCount = model.indexBuffer.Length / 3;
+                for (int faceIdx = 0; faceIdx < faceCount; faceIdx++)
                 {
                     int vertIdx = faceIdx * 3;
                     if (model.textureConfig != null && textureNum < model.textureConfig.Count &&
@@ -244,37 +234,31 @@ namespace LibReplanetizer
                         textureNum++;
                     }
 
-                    var v1Idx = model.indexBuffer[vertIdx + 0];
-                    var v2Idx = model.indexBuffer[vertIdx + 1];
-                    var v3Idx = model.indexBuffer[vertIdx + 2];
+                    var v1 = model.indexBuffer[vertIdx + 0];
+                    var v2 = model.indexBuffer[vertIdx + 1];
+                    var v3 = model.indexBuffer[vertIdx + 2];
 
-                    int v1 = indexToVertices[v1Idx] + 1;
-                    int v2 = indexToVertices[v2Idx] + 1;
-                    int v3 = indexToVertices[v3Idx] + 1;
-                    int vt1 = indexToUVs[v1Idx] + 1;
-                    int vt2 = indexToUVs[v2Idx] + 1;
-                    int vt3 = indexToUVs[v3Idx] + 1;
-                    int vn = indexToNormals[v1Idx] + 1;
+                    var vt1 = indexToUVs[v1] + 1;
+                    var vt2 = indexToUVs[v2] + 1;
+                    var vt3 = indexToUVs[v3] + 1;
 
-                    if (shouldReverseWinding(vertices, normals, v1, v2, v3, vn))
+                    if (shouldReverseWinding(vertices, v1, v2, v3, normals[v1]))
                         (v2, v3) = (v3, v2);
 
                     OBJfs.WriteLine(
-                        $"f {v1}/{vt1}/{vn} {v2}/{vt2}/{vn} {v3}/{vt3}/{vn}"
+                        $"f {v1 + 1}/{vt1} {v2 + 1}/{vt2} {v3 + 1}/{vt3}"
                     );
                 }
             }
-
         }
 
         /// <returns>whether the face normal is facing the vertex normal</returns>
         private static bool shouldReverseWinding(
-            List<Vector3> vertices, List<Vector3> normals, int v1Idx, int v2Idx, int v3Idx, int vnIdx)
+            Vector3[] vertices, int v1Idx, int v2Idx, int v3Idx, Vector3 normal)
         {
-            var p1 = vertices[v1Idx - 1];
-            var p2 = vertices[v2Idx - 1];
-            var p3 = vertices[v3Idx - 1];
-            var normal = normals[vnIdx - 1];
+            var p1 = vertices[v1Idx];
+            var p2 = vertices[v2Idx];
+            var p3 = vertices[v3Idx];
             p2 -= p1;
             p3 -= p1;
             var faceNormal = Vector3.Cross(p2, p3);

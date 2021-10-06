@@ -651,10 +651,17 @@ namespace LibReplanetizer
                         materialID = 0;
                     }
 
+                    var v1 = model.indexBuffer[triIndex + 0];
+                    var v2 = model.indexBuffer[triIndex + 1];
+                    var v3 = model.indexBuffer[triIndex + 2];
+
+                    if (shouldReverseWinding(vertices, normals, v1, v2, v3))
+                        (v2, v3) = (v3, v2);
+
                     faces[materialID].Add(new Tuple<int, int, int>(
-                        model.indexBuffer[triIndex + 0] + 1 + faceOffset,
-                        model.indexBuffer[triIndex + 1] + 1 + faceOffset,
-                        model.indexBuffer[triIndex + 2] + 1 + faceOffset));
+                        v1 + 1 + faceOffset,
+                        v2 + 1 + faceOffset,
+                        v3 + 1 + faceOffset));
                 }
 
                 faceOffset += vertexCount;

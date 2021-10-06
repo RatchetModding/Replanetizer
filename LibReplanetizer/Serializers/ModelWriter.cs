@@ -13,23 +13,27 @@ namespace LibReplanetizer
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
+        private static void writeObjectMaterial(StreamWriter MTLfs, string id)
+        {
+            MTLfs.WriteLine($"newmtl mtl_{id}");
+            MTLfs.WriteLine("Ns 1000");
+            MTLfs.WriteLine("Ka 1.000000 1.000000 1.000000");
+            MTLfs.WriteLine("Kd 1.000000 1.000000 1.000000");
+            MTLfs.WriteLine("Ni 1.000000");
+            MTLfs.WriteLine("d 1.000000");
+            MTLfs.WriteLine("illum 1");
+            MTLfs.WriteLine($"map_Kd {id}.png");
+        }
+
         private static void writeObjectMaterial(StreamWriter MTLfs, Model model, List<int> usedMtls)
         {
             for (int i = 0; i < model.textureConfig.Count; i++)
             {
                 int modelTextureID = model.textureConfig[i].ID;
-                if (!usedMtls.Contains(modelTextureID))
-                {
-                    MTLfs.WriteLine("newmtl mtl_" + modelTextureID);
-                    MTLfs.WriteLine("Ns 1000");
-                    MTLfs.WriteLine("Ka 1.000000 1.000000 1.000000");
-                    MTLfs.WriteLine("Kd 1.000000 1.000000 1.000000");
-                    MTLfs.WriteLine("Ni 1.000000");
-                    MTLfs.WriteLine("d 1.000000");
-                    MTLfs.WriteLine("illum 1");
-                    MTLfs.WriteLine("map_Kd " + modelTextureID + ".png");
-                    usedMtls.Add(modelTextureID);
-                }
+                if (usedMtls.Contains(modelTextureID))
+                    continue;
+                writeObjectMaterial(MTLfs, modelTextureID.ToString());
+                usedMtls.Add(modelTextureID);
             }
         }
 

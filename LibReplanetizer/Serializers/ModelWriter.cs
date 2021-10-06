@@ -242,7 +242,7 @@ namespace LibReplanetizer
                     var vt2 = indexToUVs[v2] + 1;
                     var vt3 = indexToUVs[v3] + 1;
 
-                    if (shouldReverseWinding(vertices, v1, v2, v3, normals[v1]))
+                    if (shouldReverseWinding(vertices, normals, v1, v2, v3))
                         (v2, v3) = (v3, v2);
 
                     OBJfs.WriteLine(
@@ -252,18 +252,33 @@ namespace LibReplanetizer
             }
         }
 
-        /// <returns>whether the face normal is facing the vertex normal</returns>
+        /// <summary>
+        /// Average a tri's vertex normals to get the target face normal, then
+        /// check whether the current winding order yields a normal facing
+        /// the target face normal
+        /// </summary>
+        /// <returns>whether to reverse the winding order</returns>
         private static bool shouldReverseWinding(
-            Vector3[] vertices, int v1Idx, int v2Idx, int v3Idx, Vector3 normal)
+            Vector3[] vertices, Vector3[] vertexNormals, int v1, int v2, int v3)
         {
-            var p1 = vertices[v1Idx];
-            var p2 = vertices[v2Idx];
-            var p3 = vertices[v3Idx];
+            var targetFaceNormal = faceNormalFromVertexNormals(vertexNormals, v1, v2, v3);
+            var p1 = vertices[v1];
+            var p2 = vertices[v2];
+            var p3 = vertices[v3];
             p2 -= p1;
             p3 -= p1;
             var faceNormal = Vector3.Cross(p2, p3);
-            var dot = Vector3.Dot(faceNormal, normal);
+            var dot = Vector3.Dot(faceNormal, targetFaceNormal);
             return dot < 0f;
+        }
+
+        private static Vector3 faceNormalFromVertexNormals(
+            Vector3[] normals, int v1, int v2, int v3)
+        {
+            var n1 = normals[v1];
+            var n2 = normals[v2];
+            var n3 = normals[v3];
+            return (n1 + n2 + n3) / 3;
         }
 
         private static void writeObjectMaterial(StreamWriter MTLfs, Model model, List<int> usedMtls)

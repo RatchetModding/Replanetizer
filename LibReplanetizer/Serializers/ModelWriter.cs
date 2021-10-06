@@ -512,7 +512,7 @@ namespace LibReplanetizer
             if (settings.exportMTLFile) MTLfs.Dispose();
         }
 
-        private static int SeparateModelObjectByMaterial(ModelObject t, List<Tuple<int, int, int>>[] faces, List<Vector3> vertices, List<Vector3> normals, List<Vector2> uvs, int faceOffset)
+        private static int SeparateModelObjectByMaterial(ModelObject t, List<Tuple<int, int, int>>[] faces, List<Vector3> vertices, List<Vector2> uvs, int faceOffset)
         {
             Model model = t.model;
 
@@ -540,7 +540,6 @@ namespace LibReplanetizer
                     model.vertexBuffer[(x * 0x08) + 0x5],
                     1.0f);
                 normal *= matrixOnlyRot;
-                normals.Add(normal.Xyz);
                 thisNormals[x] = normal.Xyz;
 
                 uvs.Add(new Vector2(
@@ -602,11 +601,11 @@ namespace LibReplanetizer
             }
 
             List<Vector3> vertices = new List<Vector3>();
-            List<Vector3> normals = new List<Vector3>();
             List<Vector2> uvs = new List<Vector2>();
 
             int faceOffset = 0;
 
+            List<Vector3> terrainNormals = new List<Vector3>();
             foreach (TerrainFragment t in terrain)
             {
                 Model model = t.model;
@@ -620,7 +619,7 @@ namespace LibReplanetizer
                         model.vertexBuffer[(x * 0x08) + 0x1],
                         model.vertexBuffer[(x * 0x08) + 0x2]));
 
-                    normals.Add(new Vector3(
+                    terrainNormals.Add(new Vector3(
                         model.vertexBuffer[(x * 0x08) + 0x3],
                         model.vertexBuffer[(x * 0x08) + 0x4],
                         model.vertexBuffer[(x * 0x08) + 0x5]));
@@ -655,7 +654,7 @@ namespace LibReplanetizer
                     var v2 = model.indexBuffer[triIndex + 1];
                     var v3 = model.indexBuffer[triIndex + 2];
 
-                    if (shouldReverseWinding(vertices, normals, v1, v2, v3))
+                    if (shouldReverseWinding(vertices, terrainNormals, v1, v2, v3))
                         (v2, v3) = (v3, v2);
 
                     faces[materialID].Add(new Tuple<int, int, int>(
@@ -671,7 +670,7 @@ namespace LibReplanetizer
             {
                 foreach (Tie t in level.ties)
                 {
-                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, normals, uvs, faceOffset);
+                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, uvs, faceOffset);
                 }
             }
 
@@ -679,7 +678,7 @@ namespace LibReplanetizer
             {
                 foreach (Shrub t in level.shrubs)
                 {
-                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, normals, uvs, faceOffset);
+                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, uvs, faceOffset);
                 }
             }
 
@@ -687,7 +686,7 @@ namespace LibReplanetizer
             {
                 foreach (Moby t in level.mobs)
                 {
-                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, normals, uvs, faceOffset);
+                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, uvs, faceOffset);
                 }
             }
 
@@ -712,11 +711,6 @@ namespace LibReplanetizer
                 foreach (Vector3 v in vertices)
                 {
                     OBJfs.WriteLine($"v {v.X:F6} {v.Y:F6} {v.Z:F6}");
-                }
-
-                foreach (Vector3 vn in normals)
-                {
-                    OBJfs.WriteLine($"v {vn.X:F6} {vn.Y:F6} {vn.Z:F6}");
                 }
 
                 foreach (Vector2 vt in uvs)

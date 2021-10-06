@@ -128,12 +128,18 @@ namespace LibReplanetizer
         /// </summary>
         /// <returns>whether to reverse the winding order</returns>
         private static bool shouldReverseWinding(
-            Vector3[] vertices, Vector3[] vertexNormals, int v1, int v2, int v3)
+            IReadOnlyList<Vector3> vertices, IReadOnlyList<Vector3> vertexNormals, int v1, int v2, int v3)
         {
             var targetFaceNormal = faceNormalFromVertexNormals(vertexNormals, v1, v2, v3);
             var p1 = vertices[v1];
             var p2 = vertices[v2];
             var p3 = vertices[v3];
+            return shouldReverseWinding(p1, p2, p3, targetFaceNormal);
+        }
+
+        private static bool shouldReverseWinding(
+            Vector3 p1, Vector3 p2, Vector3 p3, Vector3 targetFaceNormal)
+        {
             p2 -= p1;
             p3 -= p1;
             var faceNormal = Vector3.Cross(p2, p3);
@@ -142,7 +148,7 @@ namespace LibReplanetizer
         }
 
         private static Vector3 faceNormalFromVertexNormals(
-            Vector3[] normals, int v1, int v2, int v3)
+            IReadOnlyList<Vector3> normals, int v1, int v2, int v3)
         {
             var n1 = normals[v1];
             var n2 = normals[v2];
@@ -511,6 +517,11 @@ namespace LibReplanetizer
             Model model = t.model;
 
             int vertexCount = model.vertexBuffer.Length / 8;
+            var modelMatrix = t.modelMatrix;
+            var matrixOnlyRot = modelMatrix.ClearScale().ClearTranslation();
+            // For correcting winding order we need proper indexing
+            var thisVertices = new Vector3[vertexCount];
+            var thisNormals = new Vector3[vertexCount];
 
             for (int x = 0; x < vertexCount; x++)
             {
@@ -519,15 +530,18 @@ namespace LibReplanetizer
                     model.vertexBuffer[(x * 0x08) + 0x1],
                     model.vertexBuffer[(x * 0x08) + 0x2],
                     1.0f);
-
-                v *= t.modelMatrix;
-
+                v *= modelMatrix;
                 vertices.Add(v.Xyz);
+                thisVertices[x] = v.Xyz;
 
-                normals.Add(new Vector3(
+                var normal = new Vector4(
                     model.vertexBuffer[(x * 0x08) + 0x3],
                     model.vertexBuffer[(x * 0x08) + 0x4],
-                    model.vertexBuffer[(x * 0x08) + 0x5]));
+                    model.vertexBuffer[(x * 0x08) + 0x5],
+                    1.0f);
+                normal *= matrixOnlyRot;
+                normals.Add(normal.Xyz);
+                thisNormals[x] = normal.Xyz;
 
                 uvs.Add(new Vector2(
                     model.vertexBuffer[(x * 0x08) + 0x6],
@@ -555,10 +569,17 @@ namespace LibReplanetizer
                     materialID = 0;
                 }
 
+                var v1 = model.indexBuffer[triIndex + 0];
+                var v2 = model.indexBuffer[triIndex + 1];
+                var v3 = model.indexBuffer[triIndex + 2];
+
+                if (shouldReverseWinding(thisVertices, thisNormals, v1, v2, v3))
+                    (v2, v3) = (v3, v2);
+
                 faces[materialID].Add(new Tuple<int, int, int>(
-                    model.indexBuffer[triIndex + 0] + 1 + faceOffset,
-                    model.indexBuffer[triIndex + 1] + 1 + faceOffset,
-                    model.indexBuffer[triIndex + 2] + 1 + faceOffset));
+                    v1 + 1 + faceOffset,
+                    v2 + 1 + faceOffset,
+                    v3 + 1 + faceOffset));
             }
 
             return vertexCount;
@@ -670,16 +691,7 @@ namespace LibReplanetizer
                     for (int i = 0; i < materialCount; i++)
                     {
                         if (faces[i].Count != 0)
-                        {
-                            MTLfs.WriteLine("newmtl mtl_" + i);
-                            MTLfs.WriteLine("Ns 1000");
-                            MTLfs.WriteLine("Ka 1.000000 1.000000 1.000000");
-                            MTLfs.WriteLine("Kd 1.000000 1.000000 1.000000");
-                            MTLfs.WriteLine("Ni 1.000000");
-                            MTLfs.WriteLine("d 1.000000");
-                            MTLfs.WriteLine("illum 1");
-                            MTLfs.WriteLine("map_Kd " + i + ".png");
-                        }
+                            writeObjectMaterial(MTLfs, i.ToString());
                     }
                 }
             }
@@ -688,21 +700,21 @@ namespace LibReplanetizer
             using (StreamWriter OBJfs = new StreamWriter(fileName))
             {
                 if (settings.exportMTLFile)
-                    OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
+                    OBJfs.WriteLine($"mtllib {fileNameNoExtension}.mtl");
 
                 foreach (Vector3 v in vertices)
                 {
-                    OBJfs.WriteLine("v " + v.X.ToString("G") + " " + v.Y.ToString("G") + " " + v.Z.ToString("G"));
+                    OBJfs.WriteLine($"v {v.X:F6} {v.Y:F6} {v.Z:F6}");
                 }
 
                 foreach (Vector3 vn in normals)
                 {
-                    OBJfs.WriteLine("vn " + vn.X.ToString("G") + " " + vn.Y.ToString("G") + " " + vn.Z.ToString("G"));
+                    OBJfs.WriteLine($"v {vn.X:F6} {vn.Y:F6} {vn.Z:F6}");
                 }
 
                 foreach (Vector2 vt in uvs)
                 {
-                    OBJfs.WriteLine("vt " + vt.X.ToString("G") + " " + vt.Y.ToString("G"));
+                    OBJfs.WriteLine($"vt {vt.X:F6} {vt.Y:F6}");
                 }
 
                 for (int i = 0; i < materialCount; i++)
@@ -719,9 +731,11 @@ namespace LibReplanetizer
                         OBJfs.WriteLine("g Texture_" + i);
                     }
 
-                    foreach (Tuple<int,int,int> t in list)
+                    foreach (var (v1, v2, v3) in list)
                     {
-                        OBJfs.WriteLine("f " + (t.Item1 + "/" + t.Item1 + "/" + t.Item1) + " " + (t.Item2 + "/" + t.Item2 + "/" + t.Item2) + " " + (t.Item3 + "/" + t.Item3 + "/" + t.Item3));
+                        OBJfs.WriteLine(
+                            $"f {v1}/{v1}/{v1} {v2}/{v2}/{v2} {v3}/{v3}/{v3}"
+                        );
                     }
                 }
             }

@@ -13,6 +13,134 @@ namespace LibReplanetizer
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
+        private static void writeObjectMaterial(StreamWriter MTLfs, string id)
+        {
+            MTLfs.WriteLine($"newmtl mtl_{id}");
+            MTLfs.WriteLine("Ns 1000");
+            MTLfs.WriteLine("Ka 1.000000 1.000000 1.000000");
+            MTLfs.WriteLine("Kd 1.000000 1.000000 1.000000");
+            MTLfs.WriteLine("Ni 1.000000");
+            MTLfs.WriteLine("d 1.000000");
+            MTLfs.WriteLine("illum 1");
+            MTLfs.WriteLine($"map_Kd {id}.png");
+        }
+
+        private static void writeObjectMaterial(StreamWriter MTLfs, Model model, List<int> usedMtls)
+        {
+            for (int i = 0; i < model.textureConfig.Count; i++)
+            {
+                int modelTextureID = model.textureConfig[i].ID;
+                if (usedMtls.Contains(modelTextureID))
+                    continue;
+                writeObjectMaterial(MTLfs, modelTextureID.ToString());
+                usedMtls.Add(modelTextureID);
+            }
+        }
+
+        private static int writeObjectData(StreamWriter OBJfs, Model model, int faceOffset, Matrix4 modelMatrix)
+        {
+            var vertexCount = model.vertexBuffer.Length / 8;
+
+            // Vertices
+            var vertices = new Vector3[vertexCount];
+            for (int vertIdx = 0; vertIdx < vertexCount; vertIdx++)
+            {
+                var px = model.vertexBuffer[vertIdx * 0x08 + 0x0];
+                var py = model.vertexBuffer[vertIdx * 0x08 + 0x1];
+                var pz = model.vertexBuffer[vertIdx * 0x08 + 0x2];
+                var pos = new Vector4(px, py, pz, 1.0f) * modelMatrix;
+                vertices[vertIdx] = pos.Xyz;
+                OBJfs.WriteLine($"v {pos.X:F6} {pos.Y:F6} {pos.Z:F6}");
+            }
+
+            // Normals
+            var normals = new Vector3[vertexCount];
+            for (var vertIdx = 0; vertIdx < vertexCount; vertIdx++)
+            {
+                var nx = model.vertexBuffer[vertIdx * 0x08 + 0x3];
+                var ny = model.vertexBuffer[vertIdx * 0x08 + 0x4];
+                var nz = model.vertexBuffer[vertIdx * 0x08 + 0x5];
+                var normal = (new Vector4(nx, ny, nz, 0.0f) * modelMatrix).Xyz;
+                normal.Normalize();
+                normals[vertIdx] = normal;
+                OBJfs.WriteLine($"vn {normal.X:F6} {normal.Y:F6} {normal.Z:F6}");
+            }
+
+            // UVs
+            for (var vertIdx = 0; vertIdx < vertexCount; vertIdx++)
+            {
+                var tu = model.vertexBuffer[(vertIdx * 0x08) + 0x6];
+                var tv = 1f - model.vertexBuffer[(vertIdx * 0x08) + 0x7];
+                OBJfs.WriteLine($"vt {tu:F6} {tv:F6}");
+            }
+
+            // Faces
+            int textureNum = 0;
+            var faceCount = model.indexBuffer.Length / 3;
+            for (int faceIdx = 0; faceIdx < faceCount; faceIdx++)
+            {
+                int vertIdx = faceIdx * 3;
+                if (model.textureConfig != null && textureNum < model.textureConfig.Count &&
+                    vertIdx >= model.textureConfig[textureNum].start)
+                {
+                    string modelId = model.textureConfig[textureNum].ID.ToString();
+                    OBJfs.WriteLine("usemtl mtl_" + modelId);
+                    OBJfs.WriteLine("g Texture_" + modelId);
+                    textureNum++;
+                }
+
+                int v1 = model.indexBuffer[vertIdx + 0];
+                int v2 = model.indexBuffer[vertIdx + 1];
+                int v3 = model.indexBuffer[vertIdx + 2];
+
+                if (shouldReverseWinding(vertices, normals, v1, v2, v3))
+                    (v2, v3) = (v3, v2);
+
+                v1 += 1 + faceOffset;
+                v2 += 1 + faceOffset;
+                v3 += 1 + faceOffset;
+
+                OBJfs.WriteLine($"f {v1}/{v1}/{v1} {v2}/{v2}/{v2} {v3}/{v3}/{v3}");
+            }
+
+            return vertexCount;
+        }
+
+        /// <summary>
+        /// Average a tri's vertex normals to get the target face normal, then
+        /// check whether the current winding order yields a normal facing
+        /// the target face normal
+        /// </summary>
+        /// <returns>whether to reverse the winding order</returns>
+        private static bool shouldReverseWinding(
+            IReadOnlyList<Vector3> vertices, IReadOnlyList<Vector3> vertexNormals, int v1, int v2, int v3)
+        {
+            var targetFaceNormal = faceNormalFromVertexNormals(vertexNormals, v1, v2, v3);
+            var p1 = vertices[v1];
+            var p2 = vertices[v2];
+            var p3 = vertices[v3];
+            return shouldReverseWinding(p1, p2, p3, targetFaceNormal);
+        }
+
+        private static bool shouldReverseWinding(
+            Vector3 p1, Vector3 p2, Vector3 p3, Vector3 targetFaceNormal)
+        {
+            p2 -= p1;
+            p3 -= p1;
+            var faceNormal = Vector3.Cross(p2, p3);
+            var dot = Vector3.Dot(faceNormal, targetFaceNormal);
+            return dot < 0f;
+        }
+
+        private static Vector3 faceNormalFromVertexNormals(
+            IReadOnlyList<Vector3> normals, int v1, int v2, int v3)
+        {
+            var n1 = normals[v1];
+            var n2 = normals[v2];
+            var n3 = normals[v3];
+            return (n1 + n2 + n3) / 3;
+        }
+
         public static void WriteIqe(string fileName, Level level, Model model)
         {
             Logger.Trace(fileName);
@@ -140,46 +268,6 @@ namespace LibReplanetizer
             }
         }
 
-        /// <summary>
-        /// Returns a corrected version of the indexBuffer of the model in which all face orientations are correct/equal to vertex normals orientations.
-        /// </summary>
-        private static ushort[] ComputeOrientation(Model model)
-        {
-            ushort[] result = new ushort[model.indexBuffer.Length];
-
-            for (int i = 0; i < model.indexBuffer.Length / 3; i++)
-            {
-                ushort f1 = model.indexBuffer[i * 3 + 0];
-                ushort f2 = model.indexBuffer[i * 3 + 1];
-                ushort f3 = model.indexBuffer[i * 3 + 2];
-
-                Vector3 v1 = new Vector3(model.vertexBuffer[f1 * 8 + 0], model.vertexBuffer[f1 * 8 + 1], model.vertexBuffer[f1 * 8 + 2]);
-                Vector3 v2 = new Vector3(model.vertexBuffer[f2 * 8 + 0], model.vertexBuffer[f2 * 8 + 1], model.vertexBuffer[f2 * 8 + 2]);
-                Vector3 v3 = new Vector3(model.vertexBuffer[f3 * 8 + 0], model.vertexBuffer[f3 * 8 + 1], model.vertexBuffer[f3 * 8 + 2]);
-
-                Vector3 faceNormal = Vector3.Cross(v3 - v2, v1 - v2);
-
-                Vector3 n1 = new Vector3(model.vertexBuffer[f1 * 8 + 3], model.vertexBuffer[f1 * 8 + 4], model.vertexBuffer[f1 * 8 + 5]);
-                Vector3 n2 = new Vector3(model.vertexBuffer[f2 * 8 + 3], model.vertexBuffer[f2 * 8 + 4], model.vertexBuffer[f2 * 8 + 5]);
-                Vector3 n3 = new Vector3(model.vertexBuffer[f3 * 8 + 3], model.vertexBuffer[f3 * 8 + 4], model.vertexBuffer[f3 * 8 + 5]);
-
-                Vector3 n = 0.333f * n1 + 0.333f * n2 + 0.333f * n3;
-
-                if (Vector3.Dot(faceNormal, n) < 0.0f)
-                {
-                    ushort temp = f1;
-                    f1 = f3;
-                    f3 = temp;
-                }
-
-                result[i * 3 + 0] = f1;
-                result[i * 3 + 1] = f2;
-                result[i * 3 + 2] = f3;
-            }
-
-            return result;
-        }
-
         public static void WriteObj(string fileName, Model model)
         {
             string pathName = Path.GetDirectoryName(fileName);
@@ -189,23 +277,7 @@ namespace LibReplanetizer
             {
                 // List used mtls to prevent it from making duplicate entries
                 List<int> usedMtls = new List<int>();
-
-                for (int i = 0; i < model.textureConfig.Count; i++)
-                {
-                    int modelTextureID = model.textureConfig[i].ID;
-                    if (!usedMtls.Contains(modelTextureID))
-                    {
-                        MTLfs.WriteLine("newmtl mtl_" + modelTextureID);
-                        MTLfs.WriteLine("Ns 1000");
-                        MTLfs.WriteLine("Ka 1.000000 1.000000 1.000000");
-                        MTLfs.WriteLine("Kd 1.000000 1.000000 1.000000");
-                        MTLfs.WriteLine("Ni 1.000000");
-                        MTLfs.WriteLine("d 1.000000");
-                        MTLfs.WriteLine("illum 1");
-                        MTLfs.WriteLine("map_Kd " + modelTextureID + ".png");
-                        usedMtls.Add(modelTextureID);
-                    }
-                }
+                writeObjectMaterial(MTLfs, model, usedMtls);
             }
 
             using (StreamWriter OBJfs = new StreamWriter(fileName))
@@ -213,30 +285,61 @@ namespace LibReplanetizer
                 OBJfs.WriteLine("o Object_" + model.id.ToString("X4"));
                 if (model.textureConfig != null)
                     OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
-                //Vertices, normals, UV's
-                for (int x = 0; x < model.vertexBuffer.Length / 8; x++)
+<<<<<<< HEAD
+
+                var vertexCount = model.vertexBuffer.Length / 8;
+
+                // Vertices
+                var vertices = new Vector3[vertexCount];
+                for (int vertIdx = 0; vertIdx < vertexCount; vertIdx++)
                 {
-                    float px = model.vertexBuffer[(x * 0x08) + 0x0];
-                    float py = model.vertexBuffer[(x * 0x08) + 0x1];
-                    float pz = model.vertexBuffer[(x * 0x08) + 0x2];
-                    float nx = model.vertexBuffer[(x * 0x08) + 0x3];
-                    float ny = model.vertexBuffer[(x * 0x08) + 0x4];
-                    float nz = model.vertexBuffer[(x * 0x08) + 0x5];
-                    float tu = model.vertexBuffer[(x * 0x08) + 0x6];
-                    float tv = 1f - model.vertexBuffer[(x * 0x08) + 0x7];
-                    OBJfs.WriteLine("v " + px.ToString("G") + " " + py.ToString("G") + " " + pz.ToString("G"));
-                    OBJfs.WriteLine("vn " + nx.ToString("G") + " " + ny.ToString("G") + " " + nz.ToString("G"));
-                    OBJfs.WriteLine("vt " + tu.ToString("G") + " " + tv.ToString("G"));
+                    var px = model.vertexBuffer[vertIdx * 0x08 + 0x0];
+                    var py = model.vertexBuffer[vertIdx * 0x08 + 0x1];
+                    var pz = model.vertexBuffer[vertIdx * 0x08 + 0x2];
+                    var pos = new Vector3(px, py, pz);
+                    vertices[vertIdx] = pos;
+                    OBJfs.WriteLine($"v {px:F6} {py:F6} {pz:F6}");
                 }
 
-                ushort[] indexBuffer = ComputeOrientation(model);
-
-                //Faces
-                int textureNum = 0;
-                for (int i = 0; i < indexBuffer.Length / 3; i++)
+                // Normals
+                var normals = new Vector3[vertexCount];
+                for (var vertIdx = 0; vertIdx < vertexCount; vertIdx++)
                 {
-                    int triIndex = i * 3;
-                    if ((model.textureConfig != null) && (textureNum < model.textureConfig.Count) && (triIndex >= model.textureConfig[textureNum].start))
+                    // We could write the vertex normals to the file, but they
+                    // seem to cause visual artifacts when importing to
+                    // Blender. We *will* use them, however, to determine face
+                    // winding order when writing faces later in this method.
+                    var nx = model.vertexBuffer[vertIdx * 0x08 + 0x3];
+                    var ny = model.vertexBuffer[vertIdx * 0x08 + 0x4];
+                    var nz = model.vertexBuffer[vertIdx * 0x08 + 0x5];
+                    var normal = new Vector3(nx, ny, nz);
+                    normals[vertIdx] = normal;
+                }
+
+                // UVs (deduplicated)
+                var uniqueUVsCount = 0;
+                var uniqueUVs = new Dictionary<(float, float), int>();
+                var indexToUVs = new int[vertexCount];
+                for (var vertIdx = 0; vertIdx < vertexCount; vertIdx++)
+                {
+                    var tu = model.vertexBuffer[(vertIdx * 0x08) + 0x6];
+                    var tv = 1f - model.vertexBuffer[(vertIdx * 0x08) + 0x7];
+                    if (!uniqueUVs.TryGetValue((tu, tv), out var uvIdx))
+                    {
+                        uniqueUVs[(tu, tv)] = uvIdx = uniqueUVsCount++;
+                        OBJfs.WriteLine($"vt {tu:F6} {tv:F6}");
+                    }
+                    indexToUVs[vertIdx] = uvIdx;
+                }
+
+                // Faces
+                int textureNum = 0;
+                var faceCount = model.indexBuffer.Length / 3;
+                for (int faceIdx = 0; faceIdx < faceCount; faceIdx++)
+                {
+                    int vertIdx = faceIdx * 3;
+                    if (model.textureConfig != null && textureNum < model.textureConfig.Count &&
+                        vertIdx >= model.textureConfig[textureNum].start)
                     {
                         string modelId = model.textureConfig[textureNum].ID.ToString();
                         OBJfs.WriteLine("usemtl mtl_" + modelId);
@@ -244,79 +347,62 @@ namespace LibReplanetizer
                         textureNum++;
                     }
 
-                    int f1 = indexBuffer[triIndex + 0] + 1;
-                    int f2 = indexBuffer[triIndex + 1] + 1;
-                    int f3 = indexBuffer[triIndex + 2] + 1;
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+                    int f1 = model.indexBuffer[triIndex + 0] + 1;
+                    int f2 = model.indexBuffer[triIndex + 1] + 1;
+                    int f3 = model.indexBuffer[triIndex + 2] + 1;
                     OBJfs.WriteLine("f " + (f1 + "/" + f1 + "/" + f1) + " " + (f2 + "/" + f2 + "/" + f2) + " " + (f3 + "/" + f3 + "/" + f3));
+=======
+                    int v1 = model.indexBuffer[triIndex + 0] + 1;
+                    int v2 = model.indexBuffer[triIndex + 1] + 1;
+                    int v3 = model.indexBuffer[triIndex + 2] + 1;
+=======
+                    int v1 = indexToVertices[model.indexBuffer[triIndex + 0]] + 1;
+                    int v2 = indexToVertices[model.indexBuffer[triIndex + 1]] + 1;
+                    int v3 = indexToVertices[model.indexBuffer[triIndex + 2]] + 1;
+>>>>>>> 624da9a (Deduplicate vertices.)
+                    int vt = indexToUVs[i] + 1;
+                    int vn = indexToNormals[i] + 1;
+=======
+                    var v1Idx = model.indexBuffer[vertIdx + 0];
+                    var v2Idx = model.indexBuffer[vertIdx + 1];
+                    var v3Idx = model.indexBuffer[vertIdx + 2];
+>>>>>>> 45737b6 (Add method to ensure that each face normal (based on winding order) matches the vertex normal. This fixes most issues with the alternating face normals.)
+=======
+                    var v1 = model.indexBuffer[vertIdx + 0];
+                    var v2 = model.indexBuffer[vertIdx + 1];
+                    var v3 = model.indexBuffer[vertIdx + 2];
+>>>>>>> 17b0964 (Allow duplicate vertices again so we can preserve sharp edges. Don't write vertex normals.)
+
+                    var vt1 = indexToUVs[v1] + 1;
+                    var vt2 = indexToUVs[v2] + 1;
+                    var vt3 = indexToUVs[v3] + 1;
+
+                    if (shouldReverseWinding(vertices, normals, v1, v2, v3))
+                        (v2, v3) = (v3, v2);
+
+                    OBJfs.WriteLine(
+                        $"f {v1 + 1}/{vt1} {v2 + 1}/{vt2} {v3 + 1}/{vt3}"
+                    );
+<<<<<<< HEAD
+<<<<<<< HEAD
+                    lastVn = vn;
+>>>>>>> 90a47cf (Flip winding order when normals change.)
+=======
+                    visitedEdges.Add((v1, v2));
+                    visitedEdges.Add((v2, v3));
+                    visitedEdges.Add((v3, v1));
+>>>>>>> a41b946 (Flip winding order if we've encountered one of the edges before.)
+=======
+>>>>>>> 45737b6 (Add method to ensure that each face normal (based on winding order) matches the vertex normal. This fixes most issues with the alternating face normals.)
                 }
+=======
+                writeObjectData(OBJfs, model, 0, Matrix4.Identity);
+>>>>>>> e0d8cbe (Extract material and data writing from WriteObj into writeObjectMaterial and writeObjectData.)
             }
-
-        }
-
-        private static void writeObjectMaterial(StreamWriter MTLfs, Model model, List<int> usedMtls)
-        {
-            for (int i = 0; i < model.textureConfig.Count; i++)
-            {
-                int modelTextureID = model.textureConfig[i].ID;
-                if (!usedMtls.Contains(modelTextureID))
-                {
-                    MTLfs.WriteLine("newmtl mtl_" + modelTextureID);
-                    MTLfs.WriteLine("Ns 1000");
-                    MTLfs.WriteLine("Ka 1.000000 1.000000 1.000000");
-                    MTLfs.WriteLine("Kd 1.000000 1.000000 1.000000");
-                    MTLfs.WriteLine("Ni 1.000000");
-                    MTLfs.WriteLine("d 1.000000");
-                    MTLfs.WriteLine("illum 1");
-                    MTLfs.WriteLine("map_Kd " + modelTextureID + ".png");
-                    usedMtls.Add(modelTextureID);
-                }
-            }
-        }
-
-        private static int writeObjectData(StreamWriter OBJfs, Model model, int faceOffset, Matrix4 modelMatrix)
-        {
-            int vertexCount = model.vertexBuffer.Length / 8;
-            for (int x = 0; x < vertexCount; x++)
-            {
-                Vector4 v = new Vector4(
-                    model.vertexBuffer[(x * 0x08) + 0x0],
-                    model.vertexBuffer[(x * 0x08) + 0x1],
-                    model.vertexBuffer[(x * 0x08) + 0x2],
-                    1.0f);
-
-                v *= modelMatrix;
-
-                float nx = model.vertexBuffer[(x * 0x08) + 0x3];
-                float ny = model.vertexBuffer[(x * 0x08) + 0x4];
-                float nz = model.vertexBuffer[(x * 0x08) + 0x5];
-                float tu = model.vertexBuffer[(x * 0x08) + 0x6];
-                float tv = 1f - model.vertexBuffer[(x * 0x08) + 0x7];
-                OBJfs.WriteLine("v " + v.X.ToString("G") + " " + v.Y.ToString("G") + " " + v.Z.ToString("G"));
-                OBJfs.WriteLine("vn " + nx.ToString("G") + " " + ny.ToString("G") + " " + nz.ToString("G"));
-                OBJfs.WriteLine("vt " + tu.ToString("G") + " " + tv.ToString("G"));
-            }
-
-            ushort[] indexBuffer = ComputeOrientation(model);
-
-            int textureNum = 0;
-            for (int i = 0; i < indexBuffer.Length / 3; i++)
-            {
-                int triIndex = i * 3;
-                if ((model.textureConfig != null) && (textureNum < model.textureConfig.Count) && (triIndex >= model.textureConfig[textureNum].start))
-                {
-                    string modelId = model.textureConfig[textureNum].ID.ToString();
-                    OBJfs.WriteLine("usemtl mtl_" + modelId);
-                    OBJfs.WriteLine("g Texture_" + modelId);
-                    textureNum++;
-                }
-
-                int f1 = indexBuffer[triIndex + 0] + 1 + faceOffset;
-                int f2 = indexBuffer[triIndex + 1] + 1 + faceOffset;
-                int f3 = indexBuffer[triIndex + 2] + 1 + faceOffset;
-                OBJfs.WriteLine("f " + (f1 + "/" + f1 + "/" + f1) + " " + (f2 + "/" + f2 + "/" + f2) + " " + (f3 + "/" + f3 + "/" + f3));
-            }
-
-            return vertexCount;
         }
 
         private static List<TerrainFragment> collectTerrainFragments(Level level, WriterLevelSettings settings)
@@ -328,9 +414,14 @@ namespace LibReplanetizer
                 if (settings.chunksSelected[0])
                 {
                     terrain.AddRange(level.terrainEngine.fragments);
+<<<<<<< HEAD
+                }     
+            } else
+=======
                 }
             }
             else
+>>>>>>> 28e53e9 (Fixed use of modelMatrix in modelWriter.)
             {
                 for (int i = 0; i < level.terrainChunks.Count; i++)
                 {
@@ -528,11 +619,15 @@ namespace LibReplanetizer
             if (settings.exportMTLFile) MTLfs.Dispose();
         }
 
-        private static int SeparateModelObjectByMaterial(ModelObject t, List<Tuple<int, int, int>>[] faces, List<Vector3> vertices, List<Vector3> normals, List<Vector2> uvs, int faceOffset)
+        private static int SeparateModelObjectByMaterial(ModelObject t, List<Tuple<int, int, int>>[] faces, List<Vector3> vertices, List<Vector2> uvs, List<Vector3> normals, int faceOffset)
         {
             Model model = t.model;
 
             int vertexCount = model.vertexBuffer.Length / 8;
+            var modelMatrix = t.modelMatrix;
+            // For correcting winding order we need proper indexing
+            var thisVertices = new Vector3[vertexCount];
+            var thisNormals = new Vector3[vertexCount];
 
             for (int x = 0; x < vertexCount; x++)
             {
@@ -541,25 +636,27 @@ namespace LibReplanetizer
                     model.vertexBuffer[(x * 0x08) + 0x1],
                     model.vertexBuffer[(x * 0x08) + 0x2],
                     1.0f);
-
-                v *= t.modelMatrix;
-
+                v *= modelMatrix;
                 vertices.Add(v.Xyz);
+                thisVertices[x] = v.Xyz;
 
-                normals.Add(new Vector3(
+                var normal = new Vector4(
                     model.vertexBuffer[(x * 0x08) + 0x3],
                     model.vertexBuffer[(x * 0x08) + 0x4],
-                    model.vertexBuffer[(x * 0x08) + 0x5]));
+                    model.vertexBuffer[(x * 0x08) + 0x5],
+                    0.0f);
+                normal *= modelMatrix;
+                normal.Normalize();
+                normals.Add(normal.Xyz);
+                thisNormals[x] = normal.Xyz;
 
                 uvs.Add(new Vector2(
                     model.vertexBuffer[(x * 0x08) + 0x6],
                     1f - model.vertexBuffer[(x * 0x08) + 0x7]));
             }
 
-            ushort[] indexBuffer = ComputeOrientation(model);
-
             int textureNum = 0;
-            for (int i = 0; i < indexBuffer.Length / 3; i++)
+            for (int i = 0; i < model.indexBuffer.Length / 3; i++)
             {
                 int triIndex = i * 3;
                 int materialID = 0;
@@ -579,10 +676,17 @@ namespace LibReplanetizer
                     materialID = 0;
                 }
 
+                var v1 = model.indexBuffer[triIndex + 0];
+                var v2 = model.indexBuffer[triIndex + 1];
+                var v3 = model.indexBuffer[triIndex + 2];
+
+                if (shouldReverseWinding(thisVertices, thisNormals, v1, v2, v3))
+                    (v2, v3) = (v3, v2);
+
                 faces[materialID].Add(new Tuple<int, int, int>(
-                    indexBuffer[triIndex + 0] + 1 + faceOffset,
-                    indexBuffer[triIndex + 1] + 1 + faceOffset,
-                    indexBuffer[triIndex + 2] + 1 + faceOffset));
+                    v1 + 1 + faceOffset,
+                    v2 + 1 + faceOffset,
+                    v3 + 1 + faceOffset));
             }
 
             return vertexCount;
@@ -605,71 +709,21 @@ namespace LibReplanetizer
             }
 
             List<Vector3> vertices = new List<Vector3>();
-            List<Vector3> normals = new List<Vector3>();
             List<Vector2> uvs = new List<Vector2>();
+            List<Vector3> normals = new List<Vector3>();
 
             int faceOffset = 0;
 
             foreach (TerrainFragment t in terrain)
             {
-                Model model = t.model;
-
-                int vertexCount = model.vertexBuffer.Length / 8;
-
-                for (int x = 0; x < vertexCount; x++)
-                {
-                    vertices.Add(new Vector3(
-                        model.vertexBuffer[(x * 0x08) + 0x0],
-                        model.vertexBuffer[(x * 0x08) + 0x1],
-                        model.vertexBuffer[(x * 0x08) + 0x2]));
-
-                    normals.Add(new Vector3(
-                        model.vertexBuffer[(x * 0x08) + 0x3],
-                        model.vertexBuffer[(x * 0x08) + 0x4],
-                        model.vertexBuffer[(x * 0x08) + 0x5]));
-
-                    uvs.Add(new Vector2(
-                        model.vertexBuffer[(x * 0x08) + 0x6],
-                        1f - model.vertexBuffer[(x * 0x08) + 0x7]));
-                }
-
-                ushort[] indexBuffer = ComputeOrientation(model);
-
-                int textureNum = 0;
-                for (int i = 0; i < indexBuffer.Length / 3; i++)
-                {
-                    int triIndex = i * 3;
-                    int materialID = 0;
-
-                    if ((model.textureConfig != null) && (textureNum < model.textureConfig.Count))
-                    {
-                        if ((textureNum + 1 < model.textureConfig.Count) && (triIndex >= model.textureConfig[textureNum + 1].start))
-                        {
-                            textureNum++;
-                        }
-
-                        materialID = model.textureConfig[textureNum].ID;
-                    }
-
-                    if (materialID >= faces.Length || materialID < 0)
-                    {
-                        materialID = 0;
-                    }
-
-                    faces[materialID].Add(new Tuple<int, int, int>(
-                        indexBuffer[triIndex + 0] + 1 + faceOffset,
-                        indexBuffer[triIndex + 1] + 1 + faceOffset,
-                        indexBuffer[triIndex + 2] + 1 + faceOffset));
-                }
-
-                faceOffset += vertexCount;
+                faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, uvs, normals, faceOffset);
             }
 
             if (settings.writeTies)
             {
                 foreach (Tie t in level.ties)
                 {
-                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, normals, uvs, faceOffset);
+                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, uvs, normals, faceOffset);
                 }
             }
 
@@ -677,7 +731,7 @@ namespace LibReplanetizer
             {
                 foreach (Shrub t in level.shrubs)
                 {
-                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, normals, uvs, faceOffset);
+                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, uvs, normals, faceOffset);
                 }
             }
 
@@ -685,7 +739,7 @@ namespace LibReplanetizer
             {
                 foreach (Moby t in level.mobs)
                 {
-                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, normals, uvs, faceOffset);
+                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, uvs, normals, faceOffset);
                 }
             }
 
@@ -696,16 +750,7 @@ namespace LibReplanetizer
                     for (int i = 0; i < materialCount; i++)
                     {
                         if (faces[i].Count != 0)
-                        {
-                            MTLfs.WriteLine("newmtl mtl_" + i);
-                            MTLfs.WriteLine("Ns 1000");
-                            MTLfs.WriteLine("Ka 1.000000 1.000000 1.000000");
-                            MTLfs.WriteLine("Kd 1.000000 1.000000 1.000000");
-                            MTLfs.WriteLine("Ni 1.000000");
-                            MTLfs.WriteLine("d 1.000000");
-                            MTLfs.WriteLine("illum 1");
-                            MTLfs.WriteLine("map_Kd " + i + ".png");
-                        }
+                            writeObjectMaterial(MTLfs, i.ToString());
                     }
                 }
             }
@@ -714,21 +759,21 @@ namespace LibReplanetizer
             using (StreamWriter OBJfs = new StreamWriter(fileName))
             {
                 if (settings.exportMTLFile)
-                    OBJfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
+                    OBJfs.WriteLine($"mtllib {fileNameNoExtension}.mtl");
 
                 foreach (Vector3 v in vertices)
                 {
-                    OBJfs.WriteLine("v " + v.X.ToString("G") + " " + v.Y.ToString("G") + " " + v.Z.ToString("G"));
+                    OBJfs.WriteLine($"v {v.X:F6} {v.Y:F6} {v.Z:F6}");
                 }
 
                 foreach (Vector3 vn in normals)
                 {
-                    OBJfs.WriteLine("vn " + vn.X.ToString("G") + " " + vn.Y.ToString("G") + " " + vn.Z.ToString("G"));
+                    OBJfs.WriteLine($"vn {vn.X:F6} {vn.Y:F6} {vn.Z:F6}");
                 }
 
                 foreach (Vector2 vt in uvs)
                 {
-                    OBJfs.WriteLine("vt " + vt.X.ToString("G") + " " + vt.Y.ToString("G"));
+                    OBJfs.WriteLine($"vt {vt.X:F6} {vt.Y:F6}");
                 }
 
                 for (int i = 0; i < materialCount; i++)
@@ -745,9 +790,11 @@ namespace LibReplanetizer
                         OBJfs.WriteLine("g Texture_" + i);
                     }
 
-                    foreach (Tuple<int, int, int> t in list)
+                    foreach (var (v1, v2, v3) in list)
                     {
-                        OBJfs.WriteLine("f " + (t.Item1 + "/" + t.Item1 + "/" + t.Item1) + " " + (t.Item2 + "/" + t.Item2 + "/" + t.Item2) + " " + (t.Item3 + "/" + t.Item3 + "/" + t.Item3));
+                        OBJfs.WriteLine(
+                            $"f {v1}/{v1}/{v1} {v2}/{v2}/{v2} {v3}/{v3}/{v3}"
+                        );
                     }
                 }
             }

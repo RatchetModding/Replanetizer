@@ -165,7 +165,7 @@ namespace Replanetizer.Frames
                 });
                 invalidate = false;
             }
-            ImGui.Image((IntPtr) renderer.targetTexture, new System.Numerics.Vector2(Width, Height),
+            ImGui.Image((IntPtr) renderer.outputTexture, new System.Numerics.Vector2(Width, Height),
                 System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
 
             ImGui.NextColumn();

@@ -51,6 +51,10 @@ namespace Replanetizer.Frames
         private int currentSplineVertex;
         public LevelObject selectedObject;
 
+        private int antialiasing = 1;
+        private string[] antialiasing_options = { "Off", "2x MSAA", "4x MSAA", "8x MSAA", "16x MSAA", "32x MSAA", "64x MSAA", "128x MSAA", "256x MSAA", "512x MSAA" };
+        private int max_antialiasing = 4;
+
         private Vector2 mousePos;
         private Vector3 prevMouseRay;
         private Rectangle contentRegion;
@@ -93,6 +97,9 @@ namespace Replanetizer.Frames
             selectionCallbacks = new List<Action<LevelObject>>();
             bufferTable = new ConditionalWeakTable<IRenderable, BufferContainer>();
             camera = new Camera();
+
+            max_antialiasing = (int) Math.Log2((double) GL.GetInteger(GetPName.MaxSamples));
+
             UpdateWindowSize();
             OnResize();
         }
@@ -227,6 +234,13 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Distance Culling", ref enableDistanceCulling)) InvalidateView();
                     if (ImGui.Checkbox("Frustum Culling", ref enableFrustumCulling)) InvalidateView();
                     if (ImGui.Checkbox("Fog", ref enableFog)) InvalidateView();
+                    ImGui.PushItemWidth(90.0f);
+                    if (ImGui.Combo("Antialiasing", ref antialiasing, antialiasing_options, 1 + max_antialiasing))
+                    {
+                        UpdateAALevel();
+                        InvalidateView();
+                    }
+                    ImGui.PopItemWidth();
                     ImGui.Separator();
                     ImGui.Checkbox("Camera Info", ref enableCameraInfo);
 
@@ -1040,6 +1054,16 @@ namespace Replanetizer.Frames
             Logger.Debug("Compiled shader from {0}, log: {1}", filename, GL.GetShaderInfoLog(address));
         }
 
+        private void UpdateAALevel()
+        {
+            if (antialiasing == 0)
+                GL.Disable(EnableCap.Multisample);
+            else
+                GL.Enable(EnableCap.Multisample);
+
+            FramebufferRenderer.MSAA_LEVEL = 1 << antialiasing;
+        }
+
         protected void OnResize()
         {
             if (!initialized) return;
@@ -1049,6 +1073,7 @@ namespace Replanetizer.Frames
 
             renderer?.Dispose();
             renderer = new FramebufferRenderer(Width, Height);
+            UpdateAALevel();
         }
 
         public LevelObject GetObjectAtScreenPosition(Vector2 pos)

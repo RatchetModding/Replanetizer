@@ -5,34 +5,36 @@ namespace Replanetizer.Utils
 {
     public class FramebufferRenderer : IDisposable
     {
+        public static int MSAA_LEVEL = 2;
+        private int internal_allocated_msaa_level;
+
         private bool disposed = false;
 
         private int targetTexture;
         private int typeTexture;
-        public int outputTexture { get; }
-        public int outputTypeTexture { get; }
+        public int outputTexture { get; set; }
+        public int outputTypeTexture { get; set; }
         private int framebufferID;
         private int renderbufferID;
         private int outputFramebufferID;
 
         private int width, height;
 
-        public FramebufferRenderer(int width, int height)
+        private void AllocateAllResources()
         {
-            this.width = width;
-            this.height = height;
+            internal_allocated_msaa_level = MSAA_LEVEL;
 
             targetTexture = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2DMultisample, targetTexture);
-            GL.TexImage2DMultisample(TextureTargetMultisample.Texture2DMultisample, 16, PixelInternalFormat.Rgb, width, height, true);
+            GL.TexImage2DMultisample(TextureTargetMultisample.Texture2DMultisample, MSAA_LEVEL, PixelInternalFormat.Rgb, width, height, true);
 
             renderbufferID = GL.GenRenderbuffer();
             GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, renderbufferID);
-            GL.RenderbufferStorageMultisample(RenderbufferTarget.Renderbuffer, 16, RenderbufferStorage.DepthComponent, width, height);
+            GL.RenderbufferStorageMultisample(RenderbufferTarget.Renderbuffer, MSAA_LEVEL, RenderbufferStorage.DepthComponent, width, height);
 
             typeTexture = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2DMultisample, typeTexture);
-            GL.TexImage2DMultisample(TextureTargetMultisample.Texture2DMultisample, 16, PixelInternalFormat.R32i, width, height, true);
+            GL.TexImage2DMultisample(TextureTargetMultisample.Texture2DMultisample, MSAA_LEVEL, PixelInternalFormat.R32i, width, height, true);
 
             framebufferID = GL.GenFramebuffer();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebufferID);
@@ -58,8 +60,22 @@ namespace Replanetizer.Utils
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment1, TextureTarget.Texture2D, outputTypeTexture, 0);
         }
 
+        public FramebufferRenderer(int width, int height)
+        {
+            this.width = width;
+            this.height = height;
+
+            AllocateAllResources();
+        }
+
         public void RenderToTexture(Action renderFunction)
         {
+            if (internal_allocated_msaa_level != MSAA_LEVEL)
+            {
+                DeleteAllResources();
+                AllocateAllResources();
+            }
+
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebufferID);
             GL.Viewport(0, 0, width, height);
 
@@ -101,6 +117,17 @@ namespace Replanetizer.Utils
             Dispose(true);
         }
 
+        private void DeleteAllResources()
+        {
+            GL.DeleteFramebuffer(framebufferID);
+            GL.DeleteFramebuffer(outputFramebufferID);
+            GL.DeleteRenderbuffer(renderbufferID);
+            GL.DeleteTexture(targetTexture);
+            GL.DeleteTexture(typeTexture);
+            GL.DeleteTexture(outputTexture);
+            GL.DeleteTexture(outputTypeTexture);
+        }
+
         protected virtual void Dispose(bool disposing)
         {
             if (disposed)
@@ -110,13 +137,7 @@ namespace Replanetizer.Utils
 
             if (disposing)
             {
-                GL.DeleteFramebuffer(framebufferID);
-                GL.DeleteFramebuffer(outputFramebufferID);
-                GL.DeleteRenderbuffer(renderbufferID);
-                GL.DeleteTexture(targetTexture);
-                GL.DeleteTexture(typeTexture);
-                GL.DeleteTexture(outputTexture);
-                GL.DeleteTexture(outputTypeTexture);
+                DeleteAllResources();
             }
 
             disposed = true;

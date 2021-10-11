@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -49,7 +50,7 @@ namespace Replanetizer.Frames
         private Matrix4 view { get; set; }
 
         private int currentSplineVertex;
-        public LevelObject selectedObject;
+        public ObservableCollection<LevelObject> SelectedObjects { get; } = new();
 
         private Vector2 mousePos;
         private Vector3 prevMouseRay;

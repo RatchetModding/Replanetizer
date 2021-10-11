@@ -1,4 +1,11 @@
-﻿using OpenTK.Mathematics;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,15 +31,15 @@ namespace LibReplanetizer
             public float value;
         }
 
-        static FloatUnion flt;
+        static FloatUnion FLOAT_BYTES;
 
         public static float ReadFloat(byte[] buf, int offset)
         {
-            flt.byte0 = buf[offset + 3];
-            flt.byte1 = buf[offset + 2];
-            flt.byte2 = buf[offset + 1];
-            flt.byte3 = buf[offset];
-            return flt.value;
+            FLOAT_BYTES.byte0 = buf[offset + 3];
+            FLOAT_BYTES.byte1 = buf[offset + 2];
+            FLOAT_BYTES.byte2 = buf[offset + 1];
+            FLOAT_BYTES.byte3 = buf[offset];
+            return FLOAT_BYTES.value;
         }
 
         public static int ReadInt(byte[] buf, int offset)
@@ -42,17 +49,17 @@ namespace LibReplanetizer
 
         public static short ReadShort(byte[] buf, int offset)
         {
-            return (short)(buf[offset + 0] << 8 | buf[offset + 1]);
+            return (short) (buf[offset + 0] << 8 | buf[offset + 1]);
         }
 
         public static uint ReadUint(byte[] buf, int offset)
         {
-            return (uint)(buf[offset + 0] << 24 | buf[offset + 1] << 16 | buf[offset + 2] << 8 | buf[offset + 3]);
+            return (uint) (buf[offset + 0] << 24 | buf[offset + 1] << 16 | buf[offset + 2] << 8 | buf[offset + 3]);
         }
 
         public static ushort ReadUshort(byte[] buf, int offset)
         {
-            return (ushort)(buf[offset + 0] << 8 | buf[offset + 1]);
+            return (ushort) (buf[offset + 0] << 8 | buf[offset + 1]);
         }
 
         public static Matrix4 ReadMatrix4(byte[] buf, int offset)

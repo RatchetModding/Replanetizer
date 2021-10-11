@@ -1,4 +1,11 @@
-﻿using LibReplanetizer.Models.Animations;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using LibReplanetizer.Models.Animations;
 using System.Collections.Generic;
 using System.IO;
 using static LibReplanetizer.DataFunctions;
@@ -7,7 +14,7 @@ namespace LibReplanetizer.Models
 {
     public class MobyModel : Model
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
 
         const int VERTELEMENTSIZE = 0x28;
         const int TEXTUREELEMENTSIZE = 0x10;
@@ -96,7 +103,7 @@ namespace LibReplanetizer.Models
             int soundPointer = ReadInt(headBlock, 0x28);
             null3 = ReadInt(headBlock, 0x2C);
 
-            if (null1 != 0 || null2 != 0 || null3 != 0) { Logger.Warn("Warning: null in model header wan't null"); }
+            if (null1 != 0 || null2 != 0 || null3 != 0) { LOGGER.Warn("Warning: null in model header wan't null"); }
 
             unk1 = ReadFloat(headBlock, 0x30);
             unk2 = ReadFloat(headBlock, 0x34);
@@ -115,7 +122,7 @@ namespace LibReplanetizer.Models
                 {
                     animations.Add(new Animation(fs, offset, ReadInt(animationPointerBlock, i * 0x04), boneCount));
                 }
-            }    
+            }
 
             // Type 10 ( has something to do with collision )
             if (type10Pointer > 0)
@@ -498,8 +505,8 @@ namespace LibReplanetizer.Models
             outbytes[0x09] = lpBoneCount;
             outbytes[0x0A] = count3;
             outbytes[0x0B] = count4;
-            outbytes[0x0C] = (byte)animations.Count;
-            outbytes[0x0D] = (byte)modelSounds.Count;
+            outbytes[0x0C] = (byte) animations.Count;
+            outbytes[0x0D] = (byte) modelSounds.Count;
             outbytes[0x0E] = lpRenderDist;
             outbytes[0x0F] = count8;
 
@@ -568,9 +575,9 @@ namespace LibReplanetizer.Models
 
             if (faceBytes.Length != 0)
                 WriteInt(outbytes, meshDataOffset + 0x14, faceOffset);
-            WriteShort(outbytes, meshDataOffset + 0x18, (short)(vertexBytes.Length / VERTELEMENTSIZE));
-            WriteShort(outbytes, meshDataOffset + 0x1a, (short)(otherBuffer.Count / 0x20));
-            WriteShort(outbytes, meshDataOffset + 0x1C, (short)(vertexCount2));
+            WriteShort(outbytes, meshDataOffset + 0x18, (short) (vertexBytes.Length / VERTELEMENTSIZE));
+            WriteShort(outbytes, meshDataOffset + 0x1a, (short) (otherBuffer.Count / 0x20));
+            WriteShort(outbytes, meshDataOffset + 0x1C, (short) (vertexCount2));
 
 
             for (int i = 0; i < textureConfig.Count; i++)

@@ -1,4 +1,11 @@
-﻿using System;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -38,9 +45,9 @@ namespace LibReplanetizer
             this.data = data;
 
             mipMapCount = 1;
-            off_06 = unchecked((short)0x8829);
+            off_06 = unchecked((short) 0x8829);
             off_08 = 0x00010101;
-            off_0C = unchecked((int)0x80030000);
+            off_0C = unchecked((int) 0x80030000);
 
             off_10 = 0x0000AAE4;
             off_14 = 0x02063E80;
@@ -140,12 +147,12 @@ namespace LibReplanetizer
             byte alpha0 = imageReader.ReadByte();
             byte alpha1 = imageReader.ReadByte();
 
-            ulong alphaMask = (ulong)imageReader.ReadByte();
-            alphaMask += (ulong)imageReader.ReadByte() << 8;
-            alphaMask += (ulong)imageReader.ReadByte() << 16;
-            alphaMask += (ulong)imageReader.ReadByte() << 24;
-            alphaMask += (ulong)imageReader.ReadByte() << 32;
-            alphaMask += (ulong)imageReader.ReadByte() << 40;
+            ulong alphaMask = (ulong) imageReader.ReadByte();
+            alphaMask += (ulong) imageReader.ReadByte() << 8;
+            alphaMask += (ulong) imageReader.ReadByte() << 16;
+            alphaMask += (ulong) imageReader.ReadByte() << 24;
+            alphaMask += (ulong) imageReader.ReadByte() << 32;
+            alphaMask += (ulong) imageReader.ReadByte() << 40;
 
             ushort c0 = imageReader.ReadUInt16();
             ushort c1 = imageReader.ReadUInt16();
@@ -164,7 +171,7 @@ namespace LibReplanetizer
                     byte r = 0, g = 0, b = 0, a = 255;
                     uint index = (lookupTable >> 2 * (4 * blockY + blockX)) & 0x03;
 
-                    uint alphaIndex = (uint)((alphaMask >> 3 * (4 * blockY + blockX)) & 0x07);
+                    uint alphaIndex = (uint) ((alphaMask >> 3 * (4 * blockY + blockX)) & 0x07);
                     if (alphaIndex == 0)
                     {
                         a = alpha0;
@@ -175,7 +182,7 @@ namespace LibReplanetizer
                     }
                     else if (alpha0 > alpha1)
                     {
-                        a = (byte)(((8 - alphaIndex) * alpha0 + (alphaIndex - 1) * alpha1) / 7);
+                        a = (byte) (((8 - alphaIndex) * alpha0 + (alphaIndex - 1) * alpha1) / 7);
                     }
                     else if (alphaIndex == 6)
                     {
@@ -187,7 +194,7 @@ namespace LibReplanetizer
                     }
                     else
                     {
-                        a = (byte)(((6 - alphaIndex) * alpha0 + (alphaIndex - 1) * alpha1) / 5);
+                        a = (byte) (((6 - alphaIndex) * alpha0 + (alphaIndex - 1) * alpha1) / 5);
                     }
 
                     switch (index)
@@ -203,14 +210,14 @@ namespace LibReplanetizer
                             b = b1;
                             break;
                         case 2:
-                            r = (byte)((2 * r0 + r1) / 3);
-                            g = (byte)((2 * g0 + g1) / 3);
-                            b = (byte)((2 * b0 + b1) / 3);
+                            r = (byte) ((2 * r0 + r1) / 3);
+                            g = (byte) ((2 * g0 + g1) / 3);
+                            b = (byte) ((2 * b0 + b1) / 3);
                             break;
                         case 3:
-                            r = (byte)((r0 + 2 * r1) / 3);
-                            g = (byte)((g0 + 2 * g1) / 3);
-                            b = (byte)((b0 + 2 * b1) / 3);
+                            r = (byte) ((r0 + 2 * r1) / 3);
+                            g = (byte) ((g0 + 2 * g1) / 3);
+                            b = (byte) ((b0 + 2 * b1) / 3);
                             break;
                     }
 
@@ -232,11 +239,11 @@ namespace LibReplanetizer
             int temp;
 
             temp = (color >> 11) * 255 + 16;
-            r = (byte)((temp / 32 + temp) / 32);
+            r = (byte) ((temp / 32 + temp) / 32);
             temp = ((color & 0x07E0) >> 5) * 255 + 32;
-            g = (byte)((temp / 64 + temp) / 64);
+            g = (byte) ((temp / 64 + temp) / 64);
             temp = (color & 0x001F) * 255 + 16;
-            b = (byte)((temp / 32 + temp) / 32);
+            b = (byte) ((temp / 32 + temp) / 32);
         }
     }
 }

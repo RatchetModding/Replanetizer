@@ -1,4 +1,11 @@
-﻿using ImGuiNET;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using ImGuiNET;
 using LibReplanetizer.LevelObjects;
 using System;
 using System.Collections.Generic;
@@ -34,7 +41,7 @@ namespace Replanetizer.Frames
 
         private Dictionary<string, Dictionary<string, PropertyInfo>> recomputeSinglePropertiesSet(object o)
         {
-            Dictionary<string, Dictionary<string, PropertyInfo>>  properties = new Dictionary<string, Dictionary<string, PropertyInfo>>();
+            Dictionary<string, Dictionary<string, PropertyInfo>> properties = new Dictionary<string, Dictionary<string, PropertyInfo>>();
             var objProps = o.GetType().GetProperties();
             foreach (var prop in objProps)
             {
@@ -78,7 +85,7 @@ namespace Replanetizer.Frames
                 {
                     foreach (var (key, value) in categoryPair.Value)
                     {
-                        float v = (float)value.GetValue(lightConfig);
+                        float v = (float) value.GetValue(lightConfig);
                         if (ImGui.InputFloat(key, ref v))
                         {
                             value.SetValue(lightConfig, v);
@@ -87,7 +94,7 @@ namespace Replanetizer.Frames
                     }
                 }
             }
-            
+
             if (ImGui.CollapsingHeader("Lights"))
             {
                 for (int i = 0; i < lightsProperties.Count; i++)
@@ -99,7 +106,7 @@ namespace Replanetizer.Frames
                         foreach (var categoryPair in t.Item2)
                         {
                             var value1 = categoryPair.Value["Color 1"];
-                            OpenTK.Mathematics.Vector4 v1 = (OpenTK.Mathematics.Vector4)value1.GetValue(t.Item1);
+                            OpenTK.Mathematics.Vector4 v1 = (OpenTK.Mathematics.Vector4) value1.GetValue(t.Item1);
 
                             Vector3 color1 = new Vector3(v1.X, v1.Y, v1.Z);
 
@@ -114,7 +121,7 @@ namespace Replanetizer.Frames
                             }
 
                             var value2 = categoryPair.Value["Direction 1"];
-                            OpenTK.Mathematics.Vector4 v2 = (OpenTK.Mathematics.Vector4)value2.GetValue(t.Item1);
+                            OpenTK.Mathematics.Vector4 v2 = (OpenTK.Mathematics.Vector4) value2.GetValue(t.Item1);
 
                             Vector3 dir1 = new Vector3(v2.X, v2.Y, v2.Z);
 
@@ -129,7 +136,7 @@ namespace Replanetizer.Frames
                             }
 
                             var value3 = categoryPair.Value["Color 2"];
-                            OpenTK.Mathematics.Vector4 v3 = (OpenTK.Mathematics.Vector4)value3.GetValue(t.Item1);
+                            OpenTK.Mathematics.Vector4 v3 = (OpenTK.Mathematics.Vector4) value3.GetValue(t.Item1);
 
                             Vector3 color2 = new Vector3(v3.X, v3.Y, v3.Z);
 
@@ -144,7 +151,7 @@ namespace Replanetizer.Frames
                             }
 
                             var value4 = categoryPair.Value["Direction 2"];
-                            OpenTK.Mathematics.Vector4 v4 = (OpenTK.Mathematics.Vector4)value4.GetValue(t.Item1);
+                            OpenTK.Mathematics.Vector4 v4 = (OpenTK.Mathematics.Vector4) value4.GetValue(t.Item1);
 
                             Vector3 dir2 = new Vector3(v4.X, v4.Y, v4.Z);
 

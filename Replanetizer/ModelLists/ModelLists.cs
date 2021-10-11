@@ -1,3 +1,10 @@
+// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -9,12 +16,12 @@ namespace Replanetizer.ModelLists
     public static class ModelLists
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        
+
         public static Lazy<Dictionary<int, string>> mobNames = new(() =>
         {
             return GetModelNames("ModelListRC1.txt");
         });
-        
+
         public static Lazy<Dictionary<int, string>> tieNames = new(() =>
         {
             return GetModelNames("TieModelsRC1.txt");
@@ -29,7 +36,7 @@ namespace Replanetizer.ModelLists
                 string applicationFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 string listFolder = Path.Join(applicationFolder, "ModelLists");
                 var fullPath = Path.Join(listFolder, fileName);
-                
+
                 using (StreamReader stream = new StreamReader(fullPath))
                 {
                     string line;

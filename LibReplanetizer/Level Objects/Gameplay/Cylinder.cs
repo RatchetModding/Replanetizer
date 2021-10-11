@@ -1,4 +1,11 @@
-﻿using System;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System;
 using OpenTK.Mathematics;
 using static LibReplanetizer.DataFunctions;
 
@@ -11,7 +18,7 @@ namespace LibReplanetizer.LevelObjects
         public Matrix4 mat1;
         public Matrix4 mat2;
 
-        static readonly float[] cylinderVerts = {
+        static readonly float[] CYLINDER_VERTS = {
             0.0f, 0.0f, 0.0f,
             0.000000f, -1.000000f, -1.000000f,
             0.000000f, -1.000000f, 1.000000f,
@@ -39,7 +46,7 @@ namespace LibReplanetizer.LevelObjects
             -0.500001f, -0.866025f, 1.000000f
         };
 
-        public static readonly ushort[] cylinderTris = {
+        public static readonly ushort[] CYLINDER_TRIS = {
             2, 3, 1,
             4, 5, 3,
             6, 7, 5,
@@ -109,12 +116,12 @@ namespace LibReplanetizer.LevelObjects
 
         public ushort[] GetIndices()
         {
-            return cylinderTris;
+            return CYLINDER_TRIS;
         }
 
         public float[] GetVertices()
         {
-            return cylinderVerts;
+            return CYLINDER_VERTS;
         }
 
         public bool IsDynamic()

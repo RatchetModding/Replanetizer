@@ -1,4 +1,11 @@
-﻿using LibReplanetizer.Headers;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using LibReplanetizer.Headers;
 using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
 using LibReplanetizer.Models.Animations;
@@ -124,7 +131,7 @@ namespace LibReplanetizer.Parsers
             //Read the whole terrain header
             int headerSize = (game.num == 4) ? 0x70 : 0x60;
             byte[] terrainBlock = ReadBlock(fileStream, terrainModelPointer, headerSize);
-            
+
             TerrainHead head = new TerrainHead(terrainBlock, game);
 
             byte[] tfragBlock = ReadBlock(fileStream, head.headPointer, head.headCount * 0x30);
@@ -169,7 +176,7 @@ namespace LibReplanetizer.Parsers
             List<Animation> animations = new List<Animation>(ratchet.animations.Count);
             if (offset > 0)
             {
-                byte boneCount = (byte)ratchet.boneMatrices.Count;
+                byte boneCount = (byte) ratchet.boneMatrices.Count;
 
                 byte[] headBlock = ReadBlock(fileStream, offset, count * 0x04);
 

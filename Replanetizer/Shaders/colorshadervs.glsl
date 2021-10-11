@@ -11,10 +11,10 @@ uniform mat4 WorldToView;
 uniform mat4 ModelToWorld;
 uniform vec4 incolor;
 
-void main(){
-    // Output position of the vertex, in clip space : MVP * position
-    gl_Position = WorldToView * (ModelToWorld * vec4(vertexPosition_modelspace, 1.0f));
+void main() {
+	// Output position of the vertex, in clip space : MVP * position
+	gl_Position = WorldToView * (ModelToWorld * vec4(vertexPosition_modelspace, 1.0f));
 
-    // UV of the vertex. No special space for this one.
+	// UV of the vertex. No special space for this one.
 	DiffuseColor = incolor;
 }

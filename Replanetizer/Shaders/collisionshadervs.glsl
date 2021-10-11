@@ -10,10 +10,10 @@ out vec4 diffuseColors;
 // Values that stay constant for the whole mesh.
 uniform mat4 WorldToView;
 
-void main(){
+void main() {
     // Output position of the vertex, in clip space : MVP * position
     gl_Position = WorldToView * vec4(vertexPosition_modelspace, 1.0f);
 
     // UV of the vertex. No special space for this one.
-	diffuseColors = vertexColors;
+    diffuseColors = vertexColors;
 }

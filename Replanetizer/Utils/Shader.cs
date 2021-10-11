@@ -1,4 +1,11 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using OpenTK.Graphics.OpenGL4;
@@ -16,7 +23,7 @@ namespace Replanetizer.Utils
     class Shader
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        
+
         public readonly string Name;
         public int Program { get; private set; }
         private readonly Dictionary<string, int> UniformToLocation = new Dictionary<string, int>();
@@ -82,7 +89,7 @@ namespace Replanetizer.Utils
                     Debug.Print($"The uniform '{uniform}' does not exist in the shader '{Name}'!");
                 }
             }
-            
+
             return location;
         }
 
@@ -131,7 +138,7 @@ namespace Replanetizer.Utils
                 string Info = GL.GetShaderInfoLog(Shader);
                 Logger.Debug("GL.CompileShader for shader '{0}' [{1}] had info log:\n{2}", name, type, Info);
             }
-            
+
             return Shader;
         }
     }

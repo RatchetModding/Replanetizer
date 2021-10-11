@@ -1,4 +1,11 @@
-﻿using System.IO;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System.IO;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Models
@@ -32,7 +39,7 @@ namespace LibReplanetizer.Models
             cullingRadius = ReadFloat(tieBlock, offset + 0x0C);
 
             int vertexPointer = ReadInt(tieBlock, offset + 0x10);
-            int UVPointer = ReadInt(tieBlock, offset + 0x14);
+            int uvPointer = ReadInt(tieBlock, offset + 0x14);
             int indexPointer = ReadInt(tieBlock, offset + 0x18);
             int texturePointer = ReadInt(tieBlock, offset + 0x1C);
 
@@ -53,7 +60,7 @@ namespace LibReplanetizer.Models
             int faceCount = GetFaceCount();
 
             //Get vertex buffer float[vertX, vertY, vertZ, normX, normY, normZ] and UV array float[U, V] * vertexCount
-            vertexBuffer = GetVertices(fs, vertexPointer, UVPointer, vertexCount, TIEVERTELEMSIZE, TIEUVELEMSIZE);
+            vertexBuffer = GetVertices(fs, vertexPointer, uvPointer, vertexCount, TIEVERTELEMSIZE, TIEUVELEMSIZE);
 
             //Get index buffer ushort[i] * faceCount
             indexBuffer = GetIndices(fs, indexPointer, faceCount);
@@ -71,17 +78,17 @@ namespace LibReplanetizer.Models
             int texturePointer = GetLength(offStart);
             int hack = DistToFile80(texturePointer + textureConfig.Count * TIETEXELEMSIZE);
             int vertexPointer = GetLength(texturePointer + textureConfig.Count * TIETEXELEMSIZE + hack); //+ 0x70
-            int UVPointer = GetLength(vertexPointer + (vertexBuffer.Length / 8) * TIEVERTELEMSIZE);
-            int indexPointer = GetLength(UVPointer + (vertexBuffer.Length / 8) * TIEUVELEMSIZE);
+            int uvPointer = GetLength(vertexPointer + (vertexBuffer.Length / 8) * TIEVERTELEMSIZE);
+            int indexPointer = GetLength(uvPointer + (vertexBuffer.Length / 8) * TIEUVELEMSIZE);
 
             WriteInt(outBytes, 0x10, vertexPointer);
-            WriteInt(outBytes, 0x14, UVPointer);
+            WriteInt(outBytes, 0x14, uvPointer);
             WriteInt(outBytes, 0x18, indexPointer);
             WriteInt(outBytes, 0x1C, texturePointer);
 
             WriteUint(outBytes, 0x20, off_20);
             WriteInt(outBytes, 0x24, vertexBuffer.Length / 8);
-            WriteShort(outBytes, 0x28, (short)textureConfig.Count);
+            WriteShort(outBytes, 0x28, (short) textureConfig.Count);
             WriteShort(outBytes, 0x2A, wiggleMode);
             WriteFloat(outBytes, 0x2C, off_2C);
 
@@ -98,14 +105,14 @@ namespace LibReplanetizer.Models
             int texturePointer = 0;
             int hack = DistToFile80(offStart + texturePointer + textureConfig.Count * TIETEXELEMSIZE);
             int vertexPointer = GetLength(texturePointer + textureConfig.Count * TIETEXELEMSIZE + hack); //+ 0x70
-            int UVPointer = GetLength(vertexPointer + (vertexBuffer.Length / 8) * TIEVERTELEMSIZE);
-            int indexPointer = GetLength(UVPointer + (vertexBuffer.Length / 8) * TIEUVELEMSIZE);
+            int uvPointer = GetLength(vertexPointer + (vertexBuffer.Length / 8) * TIEVERTELEMSIZE);
+            int indexPointer = GetLength(uvPointer + (vertexBuffer.Length / 8) * TIEUVELEMSIZE);
             int length = GetLength(indexPointer + indexBuffer.Length * 2);
 
             byte[] outBytes = new byte[length];
             SerializeTieVertices().CopyTo(outBytes, vertexPointer);
             GetFaceBytes().CopyTo(outBytes, indexPointer);
-            SerializeUVs().CopyTo(outBytes, UVPointer);
+            SerializeUVs().CopyTo(outBytes, uvPointer);
 
             for (int i = 0; i < textureConfig.Count; i++)
             {

@@ -1,4 +1,11 @@
-﻿using LibReplanetizer.LevelObjects;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +20,7 @@ namespace LibReplanetizer.Serializers
             if (bytes != null)
             {
                 SeekPast(fs);
-                int pos = (int)fs.Position;
+                int pos = (int) fs.Position;
                 fs.Write(bytes, 0, bytes.Length);
                 return pos;
             }
@@ -25,7 +32,7 @@ namespace LibReplanetizer.Serializers
             if (bytes != null)
             {
                 SeekPast4(fs);
-                int pos = (int)fs.Position;
+                int pos = (int) fs.Position;
                 fs.Write(bytes, 0, bytes.Length);
                 return pos;
             }
@@ -67,7 +74,7 @@ namespace LibReplanetizer.Serializers
 
             for (int i = 0; i < tFrags.Count; i++)
             {
-                TerrainModel mod = (TerrainModel)(tFrags[i].model);
+                TerrainModel mod = (TerrainModel) (tFrags[i].model);
 
                 int offset = i * 0x30;
                 tFrags[i].ToByteArray().CopyTo(tfragHeads, offset);
@@ -81,8 +88,8 @@ namespace LibReplanetizer.Serializers
                     chunk++;
                 }
 
-                WriteUshort(tfragHeads, offset + 0x18, (ushort)(vertBytes[chunk].Count / 0x1c));
-                WriteUshort(tfragHeads, offset + 0x1a, (ushort)(tFrags[i].model.vertexBuffer.Length / 8));
+                WriteUshort(tfragHeads, offset + 0x18, (ushort) (vertBytes[chunk].Count / 0x1c));
+                WriteUshort(tfragHeads, offset + 0x1a, (ushort) (tFrags[i].model.vertexBuffer.Length / 8));
 
                 WriteUshort(tfragHeads, offset + 0x22, chunk);
 
@@ -96,7 +103,7 @@ namespace LibReplanetizer.Serializers
                     textureBytes.AddRange(texBytes);
                 }
 
-                indexBytes[chunk].AddRange(tFrags[i].model.GetFaceBytes((ushort)(vertBytes[chunk].Count / 0x1C)));
+                indexBytes[chunk].AddRange(tFrags[i].model.GetFaceBytes((ushort) (vertBytes[chunk].Count / 0x1C)));
                 vertBytes[chunk].AddRange(modelVertBytes);
                 rgbaBytes[chunk].AddRange(tFrags[i].model.rgbas);
                 uvBytes[chunk].AddRange(tFrags[i].model.SerializeUVs());
@@ -108,7 +115,7 @@ namespace LibReplanetizer.Serializers
             byte[] head = new byte[headerSize];
             WriteInt(head, 0, fileOffset + headerSize);
             WriteUshort(head, 0x4, terrain.levelNumber);
-            WriteUshort(head, 0x6, (ushort)tFrags.Count);
+            WriteUshort(head, 0x6, (ushort) tFrags.Count);
 
             outBytes.AddRange(head);
             outBytes.AddRange(tfragHeads);

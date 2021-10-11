@@ -1,3 +1,10 @@
+// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,12 +29,12 @@ namespace Replanetizer.Utils
             {
                 if (PrefersKdialog())
                     return KDialog.OpenFile(title, filter);
-                
+
                 return Zenity.OpenFile(title, filter);
-            } 
+            }
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return Win32Dialog.OpenFile(title, filter);
-            
+
             throw new NoImplementationException();
         }
 
@@ -37,42 +44,42 @@ namespace Replanetizer.Utils
             {
                 if (PrefersKdialog())
                     return KDialog.OpenMultipleFiles(title);
-                
+
                 return Zenity.OpenMultipleFiles(title);
-            } 
+            }
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return Win32Dialog.OpenMultipleFiles(title);
-            
+
             throw new NoImplementationException();
         }
-        
+
         public static string SaveFile(string title = "Enter the name of the file to save to", string filter = "")
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 if (PrefersKdialog())
                     return KDialog.SaveFile(title);
-                
+
                 return Zenity.SaveFile(title);
-            } 
+            }
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return Win32Dialog.SaveFile(title, filter);
-            
+
             throw new NoImplementationException();
         }
-        
+
         public static string OpenFolder(string title = "Choose a folder")
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 if (PrefersKdialog())
                     return KDialog.OpenFolder(title);
-                
+
                 return Zenity.OpenFolder(title);
-            } 
+            }
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return Win32Dialog.OpenFolder(title);
-            
+
             throw new NoImplementationException();
         }
 
@@ -145,37 +152,37 @@ namespace Replanetizer.Utils
                         zArgs.Add("--" + entry.Key);
                         zArgs.Add(entry.Value);
                     }
-                
+
                 return RunProcess("kdialog", zArgs);
             }
-            
+
             public static string OpenFile(string title, string filter = "")
             {
                 return RunKDialog(new List<string>() { "getopenfilename" },
                     new Dictionary<string, string>() { { "title", title } });
             }
-            
+
             public static List<string> OpenMultipleFiles(string title)
             {
                 var result = RunKDialog(new List<string>() { "getopenfilename", "multiple" },
                     new Dictionary<string, string>() { { "title", title } });
-                
+
                 return result.Split(' ').ToList();
             }
-            
+
             public static string SaveFile(string title)
             {
                 return RunKDialog(new List<string>() { "getsavefilename" },
                     new Dictionary<string, string>() { { "title", title } });
             }
-            
+
             public static string OpenFolder(string title)
             {
                 return RunKDialog(new List<string>() { "getexistingdirectory" },
                     new Dictionary<string, string>() { { "title", title } });
             }
         }
-        
+
         private static class Zenity
         {
             private static string RunZenity(List<string> args = null, Dictionary<string, string> kwargs = null)
@@ -188,16 +195,16 @@ namespace Replanetizer.Utils
                 if (kwargs != null)
                     foreach (var entry in kwargs)
                         zArgs.Add("--" + entry.Key + "=" + entry.Value);
-                
+
                 return RunProcess("zenity", zArgs);
             }
-            
+
             public static string OpenFile(string title, string filter = "")
             {
                 return RunZenity(new List<string>() { "file-selection" },
                     new Dictionary<string, string>() { { "title", title } });
             }
-            
+
             public static List<string> OpenMultipleFiles(string title)
             {
                 var result = RunZenity(new List<string>() { "file-selection", "multiple" },
@@ -205,20 +212,20 @@ namespace Replanetizer.Utils
 
                 return result.Split("|").ToList();
             }
-            
+
             public static string SaveFile(string title)
             {
                 return RunZenity(new List<string>() { "file-selection", "save", "confirm-overwrite" },
                     new Dictionary<string, string>() { { "title", title } });
             }
-            
+
             public static string OpenFolder(string title)
             {
                 return RunZenity(new List<string>() { "file-selection", "directory" },
                     new Dictionary<string, string>() { { "title", title } });
             }
         }
-        
+
         private static class Win32Dialog
         {
             private static string BuildFilterList(string filter)
@@ -256,7 +263,7 @@ namespace Replanetizer.Utils
                 throw new NoImplementationException();
 #endif
             }
-            
+
             public static List<string> OpenMultipleFiles(string title)
             {
 #if _WINDOWS
@@ -265,7 +272,7 @@ namespace Replanetizer.Utils
                 throw new NoImplementationException();
 #endif
             }
-            
+
             public static string SaveFile(string title, string filter = "")
             {
 #if _WINDOWS
@@ -278,7 +285,7 @@ namespace Replanetizer.Utils
                 throw new NoImplementationException();
 #endif
             }
-            
+
             public static string OpenFolder(string title)
             {
 #if _WINDOWS

@@ -1,4 +1,11 @@
-﻿using LibReplanetizer.Models;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using LibReplanetizer.Models;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
@@ -193,7 +200,7 @@ namespace LibReplanetizer.LevelObjects
         {
             int offset = num * game.mobyElemSize;
             missionID = ReadInt(mobyBlock, offset + 0x04);
-            spawnType = (SpawnType)ReadInt(mobyBlock, offset + 0x08);
+            spawnType = (SpawnType) ReadInt(mobyBlock, offset + 0x08);
             mobyID = ReadInt(mobyBlock, offset + 0x0C);
 
             bolts = ReadInt(mobyBlock, offset + 0x10);
@@ -247,7 +254,7 @@ namespace LibReplanetizer.LevelObjects
 
             missionID = ReadInt(mobyBlock, offset + 0x04);
             dataval = ReadInt(mobyBlock, offset + 0x08);
-            spawnType = (SpawnType)ReadInt(mobyBlock, offset + 0x0C);
+            spawnType = (SpawnType) ReadInt(mobyBlock, offset + 0x0C);
 
             mobyID = ReadInt(mobyBlock, offset + 0x10);
             bolts = ReadInt(mobyBlock, offset + 0x14);
@@ -356,7 +363,7 @@ namespace LibReplanetizer.LevelObjects
 
         public override byte[] ToByteArray()
         {
-            switch(game.num)
+            switch (game.num)
             {
                 case 1:
                     return ToByteArrayRC1();
@@ -378,7 +385,7 @@ namespace LibReplanetizer.LevelObjects
 
             WriteInt(buffer, 0x00, game.mobyElemSize);
             WriteInt(buffer, 0x04, missionID);
-            WriteInt(buffer, 0x08, (int)spawnType);
+            WriteInt(buffer, 0x08, (int) spawnType);
             WriteInt(buffer, 0x0C, mobyID);
 
             WriteInt(buffer, 0x10, bolts);
@@ -429,7 +436,7 @@ namespace LibReplanetizer.LevelObjects
             WriteInt(buffer, 0x00, game.mobyElemSize);
             WriteInt(buffer, 0x04, missionID);
             WriteInt(buffer, 0x08, dataval);
-            WriteInt(buffer, 0x0C, (int)spawnType);
+            WriteInt(buffer, 0x0C, (int) spawnType);
 
             WriteInt(buffer, 0x10, mobyID);
             WriteInt(buffer, 0x14, bolts);

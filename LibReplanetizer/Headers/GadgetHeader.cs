@@ -1,4 +1,11 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System.Collections.Generic;
 using System.IO;
 using static LibReplanetizer.DataFunctions;
 
@@ -31,7 +38,7 @@ namespace LibReplanetizer.Headers
 
             textureCount = 0;
 
-            for (int i = texturePointer; i < gadgetFile.Length; i+= 0x24)
+            for (int i = texturePointer; i < gadgetFile.Length; i += 0x24)
             {
                 textureCount++;
             }
@@ -47,7 +54,7 @@ namespace LibReplanetizer.Headers
         public static string FindGadgetFile(GameType game, string enginePath)
         {
             string superFolder = Path.GetDirectoryName(Path.GetDirectoryName(enginePath));
-            
+
             switch (game.num)
             {
                 case 2:
@@ -59,7 +66,7 @@ namespace LibReplanetizer.Headers
                     if (File.Exists(rac3Path)) return rac3Path;
                     break;
             }
-            
+
             return "";
         }
 

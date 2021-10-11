@@ -1,4 +1,11 @@
-﻿using OpenTK.Mathematics;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using OpenTK.Mathematics;
 using System;
 using System.ComponentModel;
 using static LibReplanetizer.DataFunctions;
@@ -11,9 +18,9 @@ namespace LibReplanetizer.LevelObjects
         public const int ELEMENTSIZE = 0x90;
 
         [Category("Attributes"), DisplayName("ID")]
-        public ushort ID { get; set; }
+        public ushort id { get; set; }
         [Category("Attributes"), DisplayName("ID2")]
-        public ushort ID2 { get; set; }
+        public ushort id2 { get; set; }
         [Category("Attributes"), DisplayName("Function Pointer")]
         public int functionPointer { get; set; }
         [Category("Attributes"), DisplayName("Pvar Index")]
@@ -21,8 +28,8 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Update Distance")]
         public float updateDistance { get; set; }
 
-        static readonly float[] cube = new float[]
-{
+        static readonly float[] CUBE = new float[]
+        {
             -1.0f, -1.0f,  1.0f,
             1.0f, -1.0f,  1.0f,
             1.0f,  1.0f,  1.0f,
@@ -33,7 +40,7 @@ namespace LibReplanetizer.LevelObjects
             1.0f,  1.0f, -1.0f,
             -1.0f,  1.0f, -1.0f
         };
-        public static readonly ushort[] cubeElements = new ushort[] { 0, 1, 2, 2, 3, 0, 1, 5, 6, 6, 2, 1, 7, 6, 5, 5, 4, 7, 4, 0, 3, 3, 7, 4, 4, 5, 1, 1, 0, 4, 3, 2, 6, 6, 7, 3 };
+        public static readonly ushort[] CUBE_ELEMENTS = new ushort[] { 0, 1, 2, 2, 3, 0, 1, 5, 6, 6, 2, 1, 7, 6, 5, 5, 4, 7, 4, 0, 3, 3, 7, 4, 4, 5, 1, 1, 0, 4, 3, 2, 6, 6, 7, 3 };
 
         public Matrix4 mat1; //Definitely a matrix. Contains logically positioned and rotated points.
         public Matrix4 mat2; //Not entirely sure if is a matrix. If it is, it has to be relative to mat1.
@@ -41,8 +48,8 @@ namespace LibReplanetizer.LevelObjects
         public Type0C(byte[] block, int num)
         {
             int offset = num * ELEMENTSIZE;
-            ID = ReadUshort(block, offset + 0x00);
-            ID2 = ReadUshort(block, offset + 0x02);
+            id = ReadUshort(block, offset + 0x00);
+            id2 = ReadUshort(block, offset + 0x02);
             functionPointer = ReadInt(block, offset + 0x04);
             pvarIndex = ReadInt(block, offset + 0x08);
             updateDistance = ReadFloat(block, offset + 0x0C);
@@ -61,8 +68,8 @@ namespace LibReplanetizer.LevelObjects
         {
             byte[] bytes = new byte[ELEMENTSIZE];
 
-            WriteUshort(bytes, 0x00, ID);
-            WriteUshort(bytes, 0x02, ID2);
+            WriteUshort(bytes, 0x00, id);
+            WriteUshort(bytes, 0x02, id2);
             WriteInt(bytes, 0x04, functionPointer);
             WriteInt(bytes, 0x08, pvarIndex);
             WriteFloat(bytes, 0x0C, updateDistance);
@@ -80,12 +87,12 @@ namespace LibReplanetizer.LevelObjects
 
         public ushort[] GetIndices()
         {
-            return cubeElements;
+            return CUBE_ELEMENTS;
         }
 
         public float[] GetVertices()
         {
-            return cube;
+            return CUBE;
         }
 
         public bool IsDynamic()

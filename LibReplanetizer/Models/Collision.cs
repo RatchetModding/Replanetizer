@@ -1,4 +1,11 @@
-﻿using LibReplanetizer.LevelObjects;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using LibReplanetizer.LevelObjects;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -38,7 +45,7 @@ namespace LibReplanetizer.Models
             int collisionLength = ReadInt(headBlock, 0x04);
             if (collisionLength == 0)
             {
-                collisionLength = (int)fs.Length - collisionStart;
+                collisionLength = (int) fs.Length - collisionStart;
             }
             byte[] collision = ReadBlock(fs, collisionStart, collisionLength);
 
@@ -131,9 +138,9 @@ namespace LibReplanetizer.Models
                                 */
 
                                 // Colorize different types of collision without knowing what they are
-                                fc.r = (byte)((collisionType[v] & 0x03) << 6);
-                                fc.g = (byte)((collisionType[v] & 0x0C) << 4);
-                                fc.b = (byte)(collisionType[v] & 0xF0);
+                                fc.r = (byte) ((collisionType[v] & 0x03) << 6);
+                                fc.g = (byte) ((collisionType[v] & 0x0C) << 4);
+                                fc.b = (byte) (collisionType[v] & 0xF0);
 
                                 vertexList.Add(fc.value);
                                 totalVertexCount++;

@@ -1,4 +1,11 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System.Collections.Generic;
 using System.IO;
 using static LibReplanetizer.DataFunctions;
 
@@ -79,9 +86,9 @@ namespace LibReplanetizer.Models.Animations
             WriteFloat(head, 0x04, unk2);
             WriteFloat(head, 0x08, unk3);
             WriteFloat(head, 0x0C, unk4);
-            head[0x10] = (byte)frames.Count;
+            head[0x10] = (byte) frames.Count;
             head[0x11] = unk5;
-            head[0x12] = (byte)sounds.Count;
+            head[0x12] = (byte) sounds.Count;
             head[0x13] = unk7;
             WriteUint(head, 0x14, null1);
             WriteFloat(head, 0x18, speed);

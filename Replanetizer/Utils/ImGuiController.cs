@@ -1,4 +1,11 @@
-﻿using System;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using ImGuiNET;
@@ -16,7 +23,7 @@ namespace Replanetizer.Utils
     public class ImGuiController : IDisposable
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        
+
         private bool _frameBegun;
 
         private int _vertexArray;
@@ -27,7 +34,7 @@ namespace Replanetizer.Utils
 
         private GLTexture _fontGlTexture;
         private Shader _shader;
-        
+
         private int _windowWidth;
         private int _windowHeight;
 
@@ -52,7 +59,7 @@ namespace Replanetizer.Utils
             SetKeyMappings();
 
             SetPerFrameImGuiData(1f / 60f);
-            
+
             ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
             ImGui.NewFrame();
@@ -145,8 +152,8 @@ void main()
             _fontGlTexture = new GLTexture("ImGui Text Atlas", width, height, pixels);
             _fontGlTexture.SetMagFilter(TextureMagFilter.Linear);
             _fontGlTexture.SetMinFilter(TextureMinFilter.Linear);
-            
-            io.Fonts.SetTexID((IntPtr)_fontGlTexture.Texture);
+
+            io.Fonts.SetTexID((IntPtr) _fontGlTexture.Texture);
             io.Fonts.ClearTexData();
         }
 
@@ -161,7 +168,7 @@ void main()
             if (_frameBegun)
             {
                 _frameBegun = false;
-                
+
                 GL.VertexArrayVertexBuffer(_vertexArray, 0, _vertexBuffer, IntPtr.Zero, Unsafe.SizeOf<ImDrawVert>());
                 GL.VertexArrayElementBuffer(_vertexArray, _indexBuffer);
 
@@ -176,7 +183,7 @@ void main()
                 GL.EnableVertexArrayAttrib(_vertexArray, 2);
                 GL.VertexArrayAttribBinding(_vertexArray, 2, 0);
                 GL.VertexArrayAttribFormat(_vertexArray, 2, 4, VertexAttribType.UnsignedByte, true, 16);
-                
+
                 ImGui.Render();
                 RenderImDrawData(ImGui.GetDrawData());
             }
@@ -226,17 +233,17 @@ void main()
             io.MouseDown[1] = MouseState[MouseButton.Right];
             io.MouseDown[2] = MouseState[MouseButton.Middle];
 
-            var screenPoint = new Vector2i((int)MouseState.X, (int)MouseState.Y);
+            var screenPoint = new Vector2i((int) MouseState.X, (int) MouseState.Y);
             var point = screenPoint;//wnd.PointToClient(screenPoint);
             io.MousePos = new System.Numerics.Vector2(point.X, point.Y);
-            
+
             foreach (Keys key in Enum.GetValues(typeof(Keys)))
             {
                 if (key == Keys.Unknown)
                 {
                     continue;
                 }
-                io.KeysDown[(int)key] = KeyboardState.IsKeyDown(key);
+                io.KeysDown[(int) key] = KeyboardState.IsKeyDown(key);
             }
 
             foreach (var c in PressedChars)
@@ -259,7 +266,7 @@ void main()
         internal void MouseScroll(Vector2 offset)
         {
             ImGuiIOPtr io = ImGui.GetIO();
-            
+
             io.MouseWheel = offset.Y;
             io.MouseWheelH = offset.X;
         }
@@ -267,25 +274,25 @@ void main()
         private static void SetKeyMappings()
         {
             ImGuiIOPtr io = ImGui.GetIO();
-            io.KeyMap[(int)ImGuiKey.Tab] = (int)Keys.Tab;
-            io.KeyMap[(int)ImGuiKey.LeftArrow] = (int)Keys.Left;
-            io.KeyMap[(int)ImGuiKey.RightArrow] = (int)Keys.Right;
-            io.KeyMap[(int)ImGuiKey.UpArrow] = (int)Keys.Up;
-            io.KeyMap[(int)ImGuiKey.DownArrow] = (int)Keys.Down;
-            io.KeyMap[(int)ImGuiKey.PageUp] = (int)Keys.PageUp;
-            io.KeyMap[(int)ImGuiKey.PageDown] = (int)Keys.PageDown;
-            io.KeyMap[(int)ImGuiKey.Home] = (int)Keys.Home;
-            io.KeyMap[(int)ImGuiKey.End] = (int)Keys.End;
-            io.KeyMap[(int)ImGuiKey.Delete] = (int)Keys.Delete;
-            io.KeyMap[(int)ImGuiKey.Backspace] = (int)Keys.Backspace;
-            io.KeyMap[(int)ImGuiKey.Enter] = (int)Keys.Enter;
-            io.KeyMap[(int)ImGuiKey.Escape] = (int)Keys.Escape;
-            io.KeyMap[(int)ImGuiKey.A] = (int)Keys.A;
-            io.KeyMap[(int)ImGuiKey.C] = (int)Keys.C;
-            io.KeyMap[(int)ImGuiKey.V] = (int)Keys.V;
-            io.KeyMap[(int)ImGuiKey.X] = (int)Keys.X;
-            io.KeyMap[(int)ImGuiKey.Y] = (int)Keys.Y;
-            io.KeyMap[(int)ImGuiKey.Z] = (int)Keys.Z;
+            io.KeyMap[(int) ImGuiKey.Tab] = (int) Keys.Tab;
+            io.KeyMap[(int) ImGuiKey.LeftArrow] = (int) Keys.Left;
+            io.KeyMap[(int) ImGuiKey.RightArrow] = (int) Keys.Right;
+            io.KeyMap[(int) ImGuiKey.UpArrow] = (int) Keys.Up;
+            io.KeyMap[(int) ImGuiKey.DownArrow] = (int) Keys.Down;
+            io.KeyMap[(int) ImGuiKey.PageUp] = (int) Keys.PageUp;
+            io.KeyMap[(int) ImGuiKey.PageDown] = (int) Keys.PageDown;
+            io.KeyMap[(int) ImGuiKey.Home] = (int) Keys.Home;
+            io.KeyMap[(int) ImGuiKey.End] = (int) Keys.End;
+            io.KeyMap[(int) ImGuiKey.Delete] = (int) Keys.Delete;
+            io.KeyMap[(int) ImGuiKey.Backspace] = (int) Keys.Backspace;
+            io.KeyMap[(int) ImGuiKey.Enter] = (int) Keys.Enter;
+            io.KeyMap[(int) ImGuiKey.Escape] = (int) Keys.Escape;
+            io.KeyMap[(int) ImGuiKey.A] = (int) Keys.A;
+            io.KeyMap[(int) ImGuiKey.C] = (int) Keys.C;
+            io.KeyMap[(int) ImGuiKey.V] = (int) Keys.V;
+            io.KeyMap[(int) ImGuiKey.X] = (int) Keys.X;
+            io.KeyMap[(int) ImGuiKey.Y] = (int) Keys.Y;
+            io.KeyMap[(int) ImGuiKey.Z] = (int) Keys.Z;
         }
 
         private void RenderImDrawData(ImDrawDataPtr draw_data)
@@ -302,7 +309,7 @@ void main()
                 int vertexSize = cmd_list.VtxBuffer.Size * Unsafe.SizeOf<ImDrawVert>();
                 if (vertexSize > _vertexBufferSize)
                 {
-                    int newSize = (int)Math.Max(_vertexBufferSize * 1.5f, vertexSize);
+                    int newSize = (int) Math.Max(_vertexBufferSize * 1.5f, vertexSize);
                     GL.NamedBufferData(_vertexBuffer, newSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
                     _vertexBufferSize = newSize;
 
@@ -312,7 +319,7 @@ void main()
                 int indexSize = cmd_list.IdxBuffer.Size * sizeof(ushort);
                 if (indexSize > _indexBufferSize)
                 {
-                    int newSize = (int)Math.Max(_indexBufferSize * 1.5f, indexSize);
+                    int newSize = (int) Math.Max(_indexBufferSize * 1.5f, indexSize);
                     GL.NamedBufferData(_indexBuffer, newSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
                     _indexBufferSize = newSize;
 
@@ -371,26 +378,26 @@ void main()
                     else
                     {
                         GL.ActiveTexture(TextureUnit.Texture0);
-                        GL.BindTexture(TextureTarget.Texture2D, (int)pcmd.TextureId);
+                        GL.BindTexture(TextureTarget.Texture2D, (int) pcmd.TextureId);
                         Util.CheckGLError("Texture");
 
                         // We do _windowHeight - (int)clip.W instead of (int)clip.Y because gl has flipped Y when it comes to these coordinates
                         var clip = pcmd.ClipRect;
-                        GL.Scissor((int)clip.X, _windowHeight - (int)clip.W, (int)(clip.Z - clip.X), (int)(clip.W - clip.Y));
+                        GL.Scissor((int) clip.X, _windowHeight - (int) clip.W, (int) (clip.Z - clip.X), (int) (clip.W - clip.Y));
                         Util.CheckGLError("Scissor");
 
                         if ((io.BackendFlags & ImGuiBackendFlags.RendererHasVtxOffset) != 0)
                         {
-                            GL.DrawElementsBaseVertex(PrimitiveType.Triangles, (int)pcmd.ElemCount, DrawElementsType.UnsignedShort, (IntPtr)(idx_offset * sizeof(ushort)), vtx_offset);
+                            GL.DrawElementsBaseVertex(PrimitiveType.Triangles, (int) pcmd.ElemCount, DrawElementsType.UnsignedShort, (IntPtr) (idx_offset * sizeof(ushort)), vtx_offset);
                         }
                         else
                         {
-                            GL.DrawElements(BeginMode.Triangles, (int)pcmd.ElemCount, DrawElementsType.UnsignedShort, (int)pcmd.IdxOffset * sizeof(ushort));
+                            GL.DrawElements(BeginMode.Triangles, (int) pcmd.ElemCount, DrawElementsType.UnsignedShort, (int) pcmd.IdxOffset * sizeof(ushort));
                         }
                         Util.CheckGLError("Draw");
                     }
 
-                    idx_offset += (int)pcmd.ElemCount;
+                    idx_offset += (int) pcmd.ElemCount;
                 }
                 vtx_offset += cmd_list.VtxBuffer.Size;
             }

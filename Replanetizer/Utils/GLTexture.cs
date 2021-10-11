@@ -1,4 +1,11 @@
-﻿using System;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using OpenTK.Graphics.OpenGL4;
@@ -15,10 +22,10 @@ namespace Replanetizer.Utils
 
     public class GLTexture : IDisposable
     {
-        public const SizedInternalFormat Srgb8Alpha8 = (SizedInternalFormat)All.Srgb8Alpha8;
-        public const SizedInternalFormat RGB32F = (SizedInternalFormat)All.Rgb32f;
+        public const SizedInternalFormat Srgb8Alpha8 = (SizedInternalFormat) All.Srgb8Alpha8;
+        public const SizedInternalFormat RGB32F = (SizedInternalFormat) All.Rgb32f;
 
-        public const GetPName MAX_TEXTURE_MAX_ANISOTROPY = (GetPName)0x84FF;
+        public const GetPName MAX_TEXTURE_MAX_ANISOTROPY = (GetPName) 0x84FF;
 
         public static readonly float MaxAniso;
 
@@ -43,7 +50,7 @@ namespace Replanetizer.Utils
             if (generateMipmaps)
             {
                 // Calculate how many levels to generate for this texture
-                MipmapLevels = (int)Math.Floor(Math.Log(Math.Max(Width, Height), 2));
+                MipmapLevels = (int) Math.Floor(Math.Log(Math.Max(Width, Height), 2));
             }
             else
             {
@@ -59,7 +66,7 @@ namespace Replanetizer.Utils
 
             BitmapData data = image.LockBits(new Rectangle(0, 0, Width, Height),
                 ImageLockMode.ReadOnly, global::System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            
+
             GL.TextureSubImage2D(Texture, 0, 0, 0, Width, Height, PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
             Util.CheckGLError("SubImage");
 
@@ -67,13 +74,13 @@ namespace Replanetizer.Utils
 
             if (generateMipmaps) GL.GenerateTextureMipmap(Texture);
 
-            GL.TextureParameter(Texture, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+            GL.TextureParameter(Texture, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
             Util.CheckGLError("WrapS");
-            GL.TextureParameter(Texture, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+            GL.TextureParameter(Texture, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
             Util.CheckGLError("WrapT");
 
-            GL.TextureParameter(Texture, TextureParameterName.TextureMinFilter, (int)(generateMipmaps ? TextureMinFilter.Linear : TextureMinFilter.LinearMipmapLinear));
-            GL.TextureParameter(Texture, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+            GL.TextureParameter(Texture, TextureParameterName.TextureMinFilter, (int) (generateMipmaps ? TextureMinFilter.Linear : TextureMinFilter.LinearMipmapLinear));
+            GL.TextureParameter(Texture, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Linear);
             Util.CheckGLError("Filtering");
 
             GL.TextureParameter(Texture, TextureParameterName.TextureMaxLevel, MipmapLevels - 1);
@@ -98,7 +105,7 @@ namespace Replanetizer.Utils
             Width = width;
             Height = height;
             InternalFormat = srgb ? Srgb8Alpha8 : SizedInternalFormat.Rgba8;
-            MipmapLevels = generateMipmaps == false ? 1 : (int)Math.Floor(Math.Log(Math.Max(Width, Height), 2));
+            MipmapLevels = generateMipmaps == false ? 1 : (int) Math.Floor(Math.Log(Math.Max(Width, Height), 2));
 
             Util.CreateTexture(TextureTarget.Texture2D, Name, out Texture);
             GL.TextureStorage2D(Texture, MipmapLevels, InternalFormat, Width, Height);
@@ -115,17 +122,17 @@ namespace Replanetizer.Utils
 
         public void SetMinFilter(TextureMinFilter filter)
         {
-            GL.TextureParameter(Texture, TextureParameterName.TextureMinFilter, (int)filter);
+            GL.TextureParameter(Texture, TextureParameterName.TextureMinFilter, (int) filter);
         }
 
         public void SetMagFilter(TextureMagFilter filter)
         {
-            GL.TextureParameter(Texture, TextureParameterName.TextureMagFilter, (int)filter);
+            GL.TextureParameter(Texture, TextureParameterName.TextureMagFilter, (int) filter);
         }
 
         public void SetAnisotropy(float level)
         {
-            const TextureParameterName TEXTURE_MAX_ANISOTROPY = (TextureParameterName)0x84FE;
+            const TextureParameterName TEXTURE_MAX_ANISOTROPY = (TextureParameterName) 0x84FE;
             GL.TextureParameter(Texture, TEXTURE_MAX_ANISOTROPY, Util.Clamp(level, 1, MaxAniso));
         }
 
@@ -135,10 +142,10 @@ namespace Replanetizer.Utils
             GL.TextureParameter(Texture, TextureParameterName.TextureMinLod, min);
             GL.TextureParameter(Texture, TextureParameterName.TextureMaxLod, max);
         }
-        
+
         public void SetWrap(TextureCoordinate coord, TextureWrapMode mode)
         {
-            GL.TextureParameter(Texture, (TextureParameterName)coord, (int)mode);
+            GL.TextureParameter(Texture, (TextureParameterName) coord, (int) mode);
         }
 
         public void Dispose()

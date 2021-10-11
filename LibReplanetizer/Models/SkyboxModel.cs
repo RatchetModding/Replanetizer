@@ -1,4 +1,11 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System.Collections.Generic;
 using System.IO;
 using static LibReplanetizer.DataFunctions;
 
@@ -36,7 +43,7 @@ namespace LibReplanetizer.Models
             int vertOffset = ReadInt(skyBlockHead, headSize - 0x8);
             int faceOffset = ReadInt(skyBlockHead, headSize - 0x4);
 
-            int vertexCount = (int)((faceOffset - vertOffset) / VERTELEMSIZE);
+            int vertexCount = (int) ((faceOffset - vertOffset) / VERTELEMSIZE);
 
 
             textureConfigs = new List<List<TextureConfig>>();
@@ -76,7 +83,7 @@ namespace LibReplanetizer.Models
             var headBytes = new byte[headLength];
             WriteInt(headBytes, 0x00, off_00);
             WriteShort(headBytes, 0x04, off_04);
-            WriteShort(headBytes, 0x06, (short)textureConfigs.Count);
+            WriteShort(headBytes, 0x06, (short) textureConfigs.Count);
             WriteInt(headBytes, 0x08, off_08);
             WriteInt(headBytes, 0x0C, off_0C);
 
@@ -90,7 +97,7 @@ namespace LibReplanetizer.Models
                     WriteShort(headBytes, offs + 0x00, 1);
                 }
 
-                WriteShort(headBytes, offs + 0x02, (short)textureConfigs[i].Count);
+                WriteShort(headBytes, offs + 0x02, (short) textureConfigs[i].Count);
                 offs += 0x10;
                 foreach (var conf in textureConfigs[i])
                 {

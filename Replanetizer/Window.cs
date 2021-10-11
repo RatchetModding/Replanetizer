@@ -1,4 +1,11 @@
-﻿using System;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System;
 using System.Collections.Generic;
 using ImGuiNET;
 using LibReplanetizer;
@@ -13,14 +20,14 @@ namespace Replanetizer
 {
     public class Window : GameWindow
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        public string OpenGLString;
-        
-        private ImGuiController _controller;
+        private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
+        public string openGLString;
+
+        private ImGuiController controller;
         private List<Frame> openFrames;
 
         public string[] args;
-        
+
         public Window(string[] args) : base(GameWindowSettings.Default,
             new NativeWindowSettings() { Size = new Vector2i(1600, 900), APIVersion = new Version(4, 5) })
         {
@@ -32,21 +39,21 @@ namespace Replanetizer
         {
             base.OnLoad();
 
-            OpenGLString = "OpenGL " + GL.GetString(StringName.Version);
-            Title = String.Format("Replanetizer ({0})", OpenGLString);
+            openGLString = "OpenGL " + GL.GetString(StringName.Version);
+            Title = String.Format("Replanetizer ({0})", openGLString);
 
-            _controller = new ImGuiController(ClientSize.X, ClientSize.Y);
-            
+            controller = new ImGuiController(ClientSize.X, ClientSize.Y);
+
             if (args.Length > 0)
             {
                 LevelFrame lf = new LevelFrame(this);
                 Level l = new Level(args[0]);
                 lf.LoadLevel(l);
-                
+
                 openFrames.Add(lf);
             }
         }
-        
+
         protected override void OnResize(ResizeEventArgs e)
         {
             base.OnResize(e);
@@ -55,7 +62,7 @@ namespace Replanetizer
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
 
             // Tell ImGui of the new size
-            _controller.WindowResized(ClientSize.X, ClientSize.Y);
+            controller.WindowResized(ClientSize.X, ClientSize.Y);
         }
 
         public static bool FrameMustClose(Frame frame)
@@ -68,16 +75,16 @@ namespace Replanetizer
             base.OnRenderFrame(e);
 
             openFrames.RemoveAll(FrameMustClose);
-            
+
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
-            _controller.Update(this, (float)e.Time);
-            
+            controller.Update(this, (float) e.Time);
+
             RenderUI((float) e.Time);
-            
+
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             GL.ClearColor(new Color4(0, 32, 48, 255));
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-            _controller.Render();
+            controller.Render();
             Util.CheckGLError("End of frame");
             SwapBuffers();
         }
@@ -85,15 +92,15 @@ namespace Replanetizer
         protected override void OnTextInput(TextInputEventArgs e)
         {
             base.OnTextInput(e);
-            
-            _controller.PressChar((char)e.Unicode);
+
+            controller.PressChar((char) e.Unicode);
         }
 
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
             base.OnMouseWheel(e);
-            
-            _controller.MouseScroll(e.Offset);
+
+            controller.MouseScroll(e.Offset);
         }
 
         private static bool FrameIsLevel(Frame frame)
@@ -139,7 +146,7 @@ namespace Replanetizer
                     }
                     ImGui.EndMenu();
                 }
-                
+
                 ImGui.EndMainMenuBar();
             }
         }

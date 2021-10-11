@@ -1,4 +1,11 @@
-﻿using OpenTK.Mathematics;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using OpenTK.Mathematics;
 using System;
 using System.ComponentModel;
 using System.Drawing;
@@ -9,24 +16,24 @@ namespace LibReplanetizer
     {
         public static float fToDegrees(float radians)
         {
-            return radians * 180 / (float)Math.PI;
+            return radians * 180 / (float) Math.PI;
         }
         public static float fToRadians(float angle)
         {
-            return (float)Math.PI / 180 * angle;
+            return (float) Math.PI / 180 * angle;
         }
         public static float fRound(float value, float numberOfDecimals)
         {
-            float multiplier = (float)Math.Pow(10, numberOfDecimals);
-            return (float)Math.Ceiling(value * multiplier) / multiplier;
+            float multiplier = (float) Math.Pow(10, numberOfDecimals);
+            return (float) Math.Ceiling(value * multiplier) / multiplier;
         }
         public static float fSin(float input)
         {
-            return (float)Math.Sin(input);
+            return (float) Math.Sin(input);
         }
         public static float fCos(float input)
         {
-            return (float)Math.Cos(input);
+            return (float) Math.Cos(input);
         }
 
         public static Vector3 MouseToWorldRay(Matrix4 projection, Matrix4 view, Size viewport, Vector2 mouse)
@@ -40,8 +47,8 @@ namespace LibReplanetizer
         {
             Vector4 vec;
 
-            vec.X = 2.0f * mouse.X / (float)viewport.Width - 1;
-            vec.Y = -(2.0f * mouse.Y / (float)viewport.Height - 1);
+            vec.X = 2.0f * mouse.X / (float) viewport.Width - 1;
+            vec.Y = -(2.0f * mouse.Y / (float) viewport.Height - 1);
             vec.Z = mouse.Z;
             vec.W = 1.0f;
 
@@ -79,7 +86,7 @@ namespace LibReplanetizer
 
         public static float piClamp(float input)
         {
-            float pi = (float)Math.PI;
+            float pi = (float) Math.PI;
             float val = input;
             while (val < -2 * pi)
             {
@@ -152,7 +159,7 @@ namespace LibReplanetizer
         {
             try
             {
-                string[] tokens = ((string)value).Split(' ');
+                string[] tokens = ((string) value).Split(' ');
                 return new Vector3(
                     float.Parse(tokens[0]),
                     float.Parse(tokens[1]),
@@ -167,7 +174,7 @@ namespace LibReplanetizer
 
         public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
         {
-            Vector3 p = (Vector3)value;
+            Vector3 p = (Vector3) value;
             return String.Format(
                 "{0} {1} {2}",
                 Math.Round(p.X, 2),
@@ -187,7 +194,7 @@ namespace LibReplanetizer
         {
             try
             {
-                string[] tokens = ((string)value).Split(' ');
+                string[] tokens = ((string) value).Split(' ');
                 return new Vector3(
                     Utilities.fToRadians(float.Parse(tokens[0])),
                     Utilities.fToRadians(float.Parse(tokens[1])),
@@ -202,7 +209,7 @@ namespace LibReplanetizer
 
         public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
         {
-            Vector3 p = (Vector3)value;
+            Vector3 p = (Vector3) value;
             return String.Format(
                 "{0} {1} {2}",
                 Math.Round(Utilities.fToDegrees(p.X), 2),

@@ -1,4 +1,11 @@
-﻿using LibReplanetizer.Headers;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using LibReplanetizer.Headers;
 using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
 using System;
@@ -305,7 +312,7 @@ namespace LibReplanetizer.Parsers
         }
 
         public List<KeyValuePair<int, int>> GetType5Cs()
-        { 
+        {
             var keyValuePairs = new List<KeyValuePair<int, int>>();
             byte[] bytes;
             for (int i = 0; (bytes = ReadBlock(fileStream, gameplayHeader.type5CPointer + i * 8, 8))[0] != 0xFF; i++)
@@ -471,13 +478,13 @@ namespace LibReplanetizer.Parsers
         }
 
 
-        public byte[] getShrubData(int shrubCount)
+        public byte[] GetShrubData(int shrubCount)
         {
             if (gameplayHeader.shrubPointer == 0) { return null; }
             return ReadBlock(fileStream, gameplayHeader.shrubPointer, 0x10 + 0x70 * shrubCount);
         }
 
-        public byte[] getTieGroups()
+        public byte[] GetTieGroups()
         {
             if (gameplayHeader.tieGroupsPointer == 0) { return null; }
             byte[] header = ReadBlock(fileStream, gameplayHeader.tieGroupsPointer, 16);
@@ -486,7 +493,7 @@ namespace LibReplanetizer.Parsers
             return ReadBlock(fileStream, gameplayHeader.tieGroupsPointer, 0x10 + length + count * 0x4);
         }
 
-        public byte[] getShrubGroups()
+        public byte[] GetShrubGroups()
         {
             if (gameplayHeader.shrubGroupsPointer == 0) { return null; }
             byte[] header = ReadBlock(fileStream, gameplayHeader.shrubGroupsPointer, 16);
@@ -495,7 +502,7 @@ namespace LibReplanetizer.Parsers
             return ReadBlock(fileStream, gameplayHeader.shrubGroupsPointer, 0x10 + length + count * 0x4);
         }
 
-        public byte[] getAreasData()
+        public byte[] GetAreasData()
         {
             if (gameplayHeader.areasPointer == 0) { return null; }
             return ReadBlock(fileStream, gameplayHeader.areasPointer, gameplayHeader.occlusionPointer - gameplayHeader.areasPointer);
@@ -523,12 +530,12 @@ namespace LibReplanetizer.Parsers
                 pVarSectionLength += ReadUint(pVarHeadBlock, (i * 8) + 0x04);
             }
 
-            byte[] pVarBlock = ReadBlock(fileStream, gameplayHeader.pvarPointer, (int)pVarSectionLength);
+            byte[] pVarBlock = ReadBlock(fileStream, gameplayHeader.pvarPointer, (int) pVarSectionLength);
             for (int i = 0; i < pvarCount; i++)
             {
                 uint mobpVarsStart = ReadUint(pVarHeadBlock, (i * 8));
                 uint mobpVarsCount = ReadUint(pVarHeadBlock, (i * 8) + 0x04);
-                byte[] mobpVars = GetBytes(pVarBlock, (int)mobpVarsStart, (int)mobpVarsCount);
+                byte[] mobpVars = GetBytes(pVarBlock, (int) mobpVarsStart, (int) mobpVarsCount);
                 pVars.Add(mobpVars);
             }
 

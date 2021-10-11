@@ -1,4 +1,11 @@
-﻿using System;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -23,7 +30,7 @@ namespace Replanetizer.Frames
 {
     public class LevelFrame : Frame
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Level";
 
         private FramebufferRenderer renderer;
@@ -32,8 +39,8 @@ namespace Replanetizer.Frames
         private List<TerrainFragment> terrains = new List<TerrainFragment>();
         private List<Tuple<Model, int, int>> collisions = new List<Tuple<Model, int, int>>();
 
-        private static Vector4 normalColor = new Vector4(1, 1, 1, 1); // White
-        private static Vector4 selectedColor = new Vector4(1, 0, 1, 1); // Purple
+        private static Vector4 NORMALCOLOR = new Vector4(1, 1, 1, 1); // White
+        private static Vector4 SELECTEDCOLOR = new Vector4(1, 0, 1, 1); // Purple
 
         public Matrix4 worldView;
 
@@ -86,7 +93,7 @@ namespace Replanetizer.Frames
         private List<int> collisionVbo = new List<int>();
         private List<int> collisionIbo = new List<int>();
 
-        private int Width, Height;
+        private int width, height;
 
         private List<Frame> subFrames;
         private List<Action<LevelObject>> selectionCallbacks;
@@ -266,7 +273,7 @@ namespace Replanetizer.Frames
                     {
                         for (int i = 0; i < selectedChunks.Length; i++)
                         {
-                            if (ImGui.Checkbox("Chunk " + i, ref selectedChunks[i])) setSelectedChunks();
+                            if (ImGui.Checkbox("Chunk " + i, ref selectedChunks[i])) SetSelectedChunks();
                         }
 
                         ImGui.EndMenu();
@@ -344,19 +351,19 @@ namespace Replanetizer.Frames
 
         private void UpdateWindowSize()
         {
-            int prevWidth = Width, prevHeight = Height;
+            int prevWidth = width, prevHeight = height;
 
             System.Numerics.Vector2 vMin = ImGui.GetWindowContentRegionMin();
             System.Numerics.Vector2 vMax = ImGui.GetWindowContentRegionMax();
 
-            Width = (int) (vMax.X - vMin.X);
-            Height = (int) (vMax.Y - vMin.Y);
+            width = (int) (vMax.X - vMin.X);
+            height = (int) (vMax.Y - vMin.Y);
 
-            camera.aspect = (float) Width / Height;
+            camera.aspect = (float) width / height;
 
-            if (Width <= 0 || Height <= 0) return;
+            if (width <= 0 || height <= 0) return;
 
-            if (Width != prevWidth || Height != prevHeight)
+            if (width != prevWidth || height != prevHeight)
             {
                 InvalidateView();
                 OnResize();
@@ -365,7 +372,7 @@ namespace Replanetizer.Frames
             System.Numerics.Vector2 windowPos = ImGui.GetWindowPos();
             Vector2 windowZero = new Vector2(windowPos.X + vMin.X, windowPos.Y + vMin.Y);
             mousePos = wnd.MousePosition - windowZero;
-            contentRegion = new Rectangle((int) windowZero.X, (int) windowZero.Y, Width, Height);
+            contentRegion = new Rectangle((int) windowZero.X, (int) windowZero.Y, width, height);
         }
 
         public override void RenderAsWindow(float deltaTime)
@@ -413,13 +420,13 @@ namespace Replanetizer.Frames
                     GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
                     GL.Enable(EnableCap.DepthTest);
                     GL.LineWidth(1.0f);
-                    GL.Viewport(0, 0, Width, Height);
+                    GL.Viewport(0, 0, width, height);
 
                     OnPaint();
                 });
                 invalidate = false;
             }
-            ImGui.Image((IntPtr) renderer.outputTexture, new System.Numerics.Vector2(Width, Height),
+            ImGui.Image((IntPtr) renderer.outputTexture, new System.Numerics.Vector2(width, height),
                     System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
         }
 
@@ -434,8 +441,8 @@ namespace Replanetizer.Frames
 
         private void CustomGLControl_Load()
         {
-            GL.GenVertexArrays(1, out int VAO);
-            GL.BindVertexArray(VAO);
+            GL.GenVertexArrays(1, out int vao);
+            GL.BindVertexArray(vao);
 
             //Setup openGL variables
             GL.ClearColor(Color.SkyBlue);
@@ -489,7 +496,7 @@ namespace Replanetizer.Frames
             initialized = true;
         }
 
-        private void loadTexture(Texture t)
+        private void LoadTexture(Texture t)
         {
             int texId;
             GL.GenTextures(1, out texId);
@@ -530,27 +537,27 @@ namespace Replanetizer.Frames
             textureIds = new Dictionary<Texture, int>();
             foreach (Texture t in level.textures)
             {
-                loadTexture(t);
+                LoadTexture(t);
             }
 
             foreach (List<Texture> list in level.armorTextures)
             {
                 foreach (Texture t in list)
                 {
-                    loadTexture(t);
+                    LoadTexture(t);
                 }
             }
 
             foreach (Texture t in level.gadgetTextures)
             {
-                loadTexture(t);
+                LoadTexture(t);
             }
 
             foreach (Mission mission in level.missions)
             {
                 foreach (Texture t in mission.textures)
                 {
-                    loadTexture(t);
+                    LoadTexture(t);
                 }
             }
         }
@@ -701,7 +708,7 @@ namespace Replanetizer.Frames
                 camera.SetRotation(0, 0);
             }
             SelectObject(null);
-            setSelectedChunks();
+            SetSelectedChunks();
             shrubsBuffers = GetRenderableBuffer(level.shrubs, RenderedObjectType.Shrub);
             tiesBuffers = GetRenderableBuffer(level.ties, RenderedObjectType.Tie);
             mobiesBuffers = GetRenderableBuffer(level.mobs, RenderedObjectType.Moby);
@@ -709,7 +716,7 @@ namespace Replanetizer.Frames
             InvalidateView();
         }
 
-        public void setSelectedChunks()
+        public void SetSelectedChunks()
         {
             if (level.terrainChunks.Count == 0)
             {
@@ -944,7 +951,7 @@ namespace Replanetizer.Frames
 
             view = camera.GetViewMatrix();
 
-            Vector3 mouseRay = MouseToWorldRay(camera.GetProjectionMatrix(), view, new Size(Width, Height), mousePos);
+            Vector3 mouseRay = MouseToWorldRay(camera.GetProjectionMatrix(), view, new Size(width, height), mousePos);
 
             if (wnd.IsMouseButtonDown(MouseButton.Left))
             {
@@ -1051,7 +1058,7 @@ namespace Replanetizer.Frames
             }
             GL.CompileShader(address);
             GL.AttachShader(program, address);
-            Logger.Debug("Compiled shader from {0}, log: {1}", filename, GL.GetShaderInfoLog(address));
+            LOGGER.Debug("Compiled shader from {0}, log: {1}", filename, GL.GetShaderInfoLog(address));
         }
 
         private void UpdateAALevel()
@@ -1067,12 +1074,12 @@ namespace Replanetizer.Frames
         protected void OnResize()
         {
             if (!initialized) return;
-            GL.Viewport(0, 0, Width, Height);
+            GL.Viewport(0, 0, width, height);
             camera.ComputeProjectionMatrix();
             view = camera.GetViewMatrix();
 
             renderer?.Dispose();
-            renderer = new FramebufferRenderer(Width, Height);
+            renderer = new FramebufferRenderer(width, height);
             UpdateAALevel();
         }
 
@@ -1082,7 +1089,7 @@ namespace Replanetizer.Frames
 
             int hit = 0;
             GL.ReadBuffer(ReadBufferMode.ColorAttachment1);
-            GL.ReadPixels((int) pos.X, Height - (int) pos.Y, 1, 1, PixelFormat.RedInteger, PixelType.Int, ref hit);
+            GL.ReadPixels((int) pos.X, height - (int) pos.Y, 1, 1, PixelFormat.RedInteger, PixelType.Int, ref hit);
 
             if (hit == 0) return null;
 
@@ -1296,7 +1303,7 @@ namespace Replanetizer.Frames
                     Spline spline = level.splines[i];
                     GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
                     GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref spline.modelMatrix);
-                    GL.Uniform4(shaderIDTable.UniformColor, spline == selectedObject ? selectedColor : normalColor);
+                    GL.Uniform4(shaderIDTable.UniformColor, spline == selectedObject ? SELECTEDCOLOR : NORMALCOLOR);
                     ActivateBuffersForModel(spline);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
                     GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
@@ -1313,10 +1320,10 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref cuboid.modelMatrix);
-                    GL.Uniform4(shaderIDTable.UniformColor, selectedObject == cuboid ? selectedColor : normalColor);
+                    GL.Uniform4(shaderIDTable.UniformColor, selectedObject == cuboid ? SELECTEDCOLOR : NORMALCOLOR);
                     ActivateBuffersForModel(cuboid);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-                    GL.DrawElements(PrimitiveType.Triangles, Cuboid.cubeElements.Length, DrawElementsType.UnsignedShort, 0);
+                    GL.DrawElements(PrimitiveType.Triangles, Cuboid.CUBE_ELEMENTS.Length, DrawElementsType.UnsignedShort, 0);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 }
             }
@@ -1331,10 +1338,10 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref sphere.modelMatrix);
-                    GL.Uniform4(shaderIDTable.UniformColor, selectedObject == sphere ? selectedColor : normalColor);
+                    GL.Uniform4(shaderIDTable.UniformColor, selectedObject == sphere ? SELECTEDCOLOR : NORMALCOLOR);
                     ActivateBuffersForModel(sphere);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-                    GL.DrawElements(PrimitiveType.Triangles, Sphere.sphereTris.Length, DrawElementsType.UnsignedShort, 0);
+                    GL.DrawElements(PrimitiveType.Triangles, Sphere.SPHERE_TRIS.Length, DrawElementsType.UnsignedShort, 0);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 }
             }
@@ -1349,10 +1356,10 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref cylinder.modelMatrix);
-                    GL.Uniform4(shaderIDTable.UniformColor, selectedObject == cylinder ? selectedColor : normalColor);
+                    GL.Uniform4(shaderIDTable.UniformColor, selectedObject == cylinder ? SELECTEDCOLOR : NORMALCOLOR);
                     ActivateBuffersForModel(cylinder);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-                    GL.DrawElements(PrimitiveType.Triangles, Cylinder.cylinderTris.Length, DrawElementsType.UnsignedShort, 0);
+                    GL.DrawElements(PrimitiveType.Triangles, Cylinder.CYLINDER_TRIS.Length, DrawElementsType.UnsignedShort, 0);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 }
             }
@@ -1367,13 +1374,13 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref type0c.modelMatrix);
-                    GL.Uniform4(shaderIDTable.UniformColor, type0c == selectedObject ? selectedColor : normalColor);
+                    GL.Uniform4(shaderIDTable.UniformColor, type0c == selectedObject ? SELECTEDCOLOR : NORMALCOLOR);
 
                     ActivateBuffersForModel(type0c);
 
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
 
-                    GL.DrawElements(PrimitiveType.Triangles, Type0C.cubeElements.Length, DrawElementsType.UnsignedShort, 0);
+                    GL.DrawElements(PrimitiveType.Triangles, Type0C.CUBE_ELEMENTS.Length, DrawElementsType.UnsignedShort, 0);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 }
             }

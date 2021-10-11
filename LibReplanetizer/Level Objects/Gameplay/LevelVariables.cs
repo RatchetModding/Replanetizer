@@ -1,4 +1,11 @@
-﻿using System.ComponentModel;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using OpenTK.Mathematics;
@@ -335,7 +342,7 @@ namespace LibReplanetizer.LevelObjects
             off_80 = ReadInt(levelVarBlock, 0x80);
 
             unknownBytes = new byte[levelVarBlock.Length - 0x84];
-            
+
             for (int i = 0; i < levelVarBlock.Length - 0x84; i++)
             {
                 unknownBytes[i] = levelVarBlock[0x84 + i];

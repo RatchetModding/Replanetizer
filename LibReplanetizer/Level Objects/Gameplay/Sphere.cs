@@ -1,4 +1,11 @@
-﻿using System;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System;
 using OpenTK.Mathematics;
 using static LibReplanetizer.DataFunctions;
 
@@ -14,7 +21,7 @@ namespace LibReplanetizer.LevelObjects
 
         // Sphere with 80 verts made in Blender
         // the first vertex is a dummy so I didnt have to apply -1 to the triangle indices
-        static readonly float[] sphereVerts = {
+        static readonly float[] SPHERE_VERTS = {
             0.0f, 0.0f, 0.0f,
             0.000000f, -1.000000f, 0.000000f,
             0.723607f, -0.447220f, 0.525725f,
@@ -60,7 +67,7 @@ namespace LibReplanetizer.LevelObjects
             0.162456f, 0.850654f, -0.499995f
         };
 
-        public static readonly ushort[] sphereTris = {
+        public static readonly ushort[] SPHERE_TRIS = {
             1, 14, 13,
             2, 14, 16,
             1, 13, 18,
@@ -175,12 +182,12 @@ namespace LibReplanetizer.LevelObjects
 
         public ushort[] GetIndices()
         {
-            return sphereTris;
+            return SPHERE_TRIS;
         }
 
         public float[] GetVertices()
         {
-            return sphereVerts;
+            return SPHERE_VERTS;
         }
 
         public bool IsDynamic()

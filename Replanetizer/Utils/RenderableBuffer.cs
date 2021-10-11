@@ -188,14 +188,9 @@ namespace Replanetizer.Utils
         /// Sets an internal variable to true if the corresponding modelObject is a member
         /// of selectedObjects in which case an outline will be rendered.
         /// </summary>
-        public void Select(IEnumerable<LevelObject> selectedObjects)
+        public void Select(IList<LevelObject> selectedObjects)
         {
-            foreach (var obj in selectedObjects)
-                if (modelObject == obj)
-                {
-                    selected = true;
-                    return;
-                }
+            selected = selectedObjects.Contains(modelObject);
         }
 
         /// <summary>

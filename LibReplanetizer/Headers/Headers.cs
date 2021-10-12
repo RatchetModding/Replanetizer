@@ -1,4 +1,11 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System.Collections.Generic;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Headers
@@ -14,7 +21,7 @@ namespace LibReplanetizer.Headers
         public ushort headCount;
         public List<int> vertexPointers = new List<int>();
         public List<int> rgbaPointers = new List<int>();
-        public List<int> UVpointers = new List<int>();
+        public List<int> uvPointers = new List<int>();
         public List<int> indexPointers = new List<int>();
         public List<int> unkPointers = new List<int>();
 
@@ -33,7 +40,7 @@ namespace LibReplanetizer.Headers
                     {
                         vertexPointers.Add(ReadInt(terrainBlock, 0x08 + i * 4));
                         rgbaPointers.Add(ReadInt(terrainBlock, 0x18 + i * 4));
-                        UVpointers.Add(ReadInt(terrainBlock, 0x28 + i * 4));
+                        uvPointers.Add(ReadInt(terrainBlock, 0x28 + i * 4));
                         indexPointers.Add(ReadInt(terrainBlock, 0x38 + i * 4));
                     }
                     break;
@@ -42,7 +49,7 @@ namespace LibReplanetizer.Headers
                     {
                         vertexPointers.Add(ReadInt(terrainBlock, 0x08 + i * 4));
                         rgbaPointers.Add(ReadInt(terrainBlock, 0x18 + i * 4));
-                        UVpointers.Add(ReadInt(terrainBlock, 0x28 + i * 4));
+                        uvPointers.Add(ReadInt(terrainBlock, 0x28 + i * 4));
                         indexPointers.Add(ReadInt(terrainBlock, 0x38 + i * 4));
                         unkPointers.Add(ReadInt(terrainBlock, 0x48 + i * 4));
                     }

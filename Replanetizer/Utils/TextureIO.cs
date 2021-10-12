@@ -1,4 +1,11 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -23,7 +30,7 @@ namespace Replanetizer.Utils
                     imageFormat = ImageFormat.Jpeg;
                     break;
             }
-            var bitmap = texture.getTextureImage();
+            var bitmap = texture.GetTextureImage();
             bitmap.Save(path, imageFormat);
         }
 
@@ -31,7 +38,7 @@ namespace Replanetizer.Utils
         {
             for (int i = 0; i < level.textures.Count; i++)
             {
-                Bitmap image = level.textures[i].getTextureImage();
+                Bitmap image = level.textures[i].GetTextureImage();
                 image.Save(Path.Join(path, $"{i}.png"), ImageFormat.Png);
             }
 
@@ -40,14 +47,14 @@ namespace Replanetizer.Utils
                 List<Texture> textures = level.armorTextures[i];
                 for (int j = 0; j < textures.Count; j++)
                 {
-                    Bitmap image = textures[j].getTextureImage();
+                    Bitmap image = textures[j].GetTextureImage();
                     image.Save(Path.Join(path, $"armor_{i}_{j}.png"), ImageFormat.Png);
                 }
             }
 
             for (int i = 0; i < level.gadgetTextures.Count; i++)
             {
-                Bitmap image = level.gadgetTextures[i].getTextureImage();
+                Bitmap image = level.gadgetTextures[i].GetTextureImage();
                 image.Save(Path.Join(path, $"gadget_{i}.png"), ImageFormat.Png);
             }
 
@@ -56,7 +63,7 @@ namespace Replanetizer.Utils
                 List<Texture> textures = level.missions[i].textures;
                 for (int j = 0; j < textures.Count; j++)
                 {
-                    Bitmap image = textures[j].getTextureImage();
+                    Bitmap image = textures[j].GetTextureImage();
                     image.Save(Path.Join(path, $"mission_{i}_{j}.png"), ImageFormat.Png);
                 }
             }

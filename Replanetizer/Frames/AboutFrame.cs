@@ -1,3 +1,10 @@
+// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
 using System;
 using System.Reflection;
 using ImGuiNET;
@@ -8,7 +15,7 @@ namespace Replanetizer.Frames
     {
         private string aboutText;
         protected override string frameName { get; set; } = "About Replanetizer";
-        
+
         public AboutFrame(Window wnd) : base(wnd)
         {
             var currentAssembly = Assembly.GetExecutingAssembly();
@@ -33,7 +40,7 @@ https://material.io/tools/icons/?style=baseline,
 which is protected under the apache 2.0 license availible at 
 https://www.apache.org/licenses/LICENSE-2.0.html
 
-", gitTreeStatus, wnd.OpenGLString);
+", gitTreeStatus, wnd.openGLString);
         }
 
         public override void Render(float deltaTime)

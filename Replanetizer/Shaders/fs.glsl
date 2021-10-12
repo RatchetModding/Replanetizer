@@ -6,8 +6,8 @@ in vec3 lightColor;
 in float fogBlend;
 
 // Ouput data
-layout (location = 0) out vec4 color;
-layout (location = 1) out int id;
+layout(location = 0) out vec4 color;
+layout(location = 1) out int id;
 
 // Values that stay constant for the whole mesh.
 uniform sampler2D myTextureSampler;
@@ -31,16 +31,16 @@ uniform vec4 fogColor;
  * - Terrain does not use alpha cutoff.
  * - In RaC 3, ties do not use alpha cutoff. Replanetizer uses the RaC 1 and 2 behaviour.
  */
-void main(){
-    //color of the texture at the specified UV
-    vec4 textureColor = texture(myTextureSampler, UV);
+void main() {
+	//color of the texture at the specified UV
+	vec4 textureColor = texture(myTextureSampler, UV);
 
-    if (textureColor.w < 0.1f && levelObjectType >= 2) discard;
+	if (textureColor.w < 0.1f && levelObjectType >= 2) discard;
 
-    color.xyz = textureColor.xyz * lightColor;
-    color.w = textureColor.w;
+	color.xyz = textureColor.xyz * lightColor;
+	color.w = textureColor.w;
 
-    color.xyz = mix(color.xyz, fogColor.xyz, fogBlend);
+	color.xyz = mix(color.xyz, fogColor.xyz, fogBlend);
 
-    id = (levelObjectType << 24) | levelObjectNumber;
+	id = (levelObjectType << 24) | levelObjectNumber;
 }

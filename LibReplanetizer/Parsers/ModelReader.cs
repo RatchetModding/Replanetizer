@@ -1,4 +1,11 @@
-﻿using LibReplanetizer.Models;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using LibReplanetizer.Models;
 using System.Collections.Generic;
 using System.IO;
 
@@ -45,7 +52,7 @@ namespace LibReplanetizer
                         case "usemtl":
                             conf.Add(new TextureConfig
                             {
-                                ID = 0x2d8,
+                                id = 0x2d8,
                                 start = prevCnt,
                                 size = indCnt - prevCnt,
                                 mode = mod
@@ -59,22 +66,22 @@ namespace LibReplanetizer
                             string[] f2 = g[2].Split('/');
                             string[] f3 = g[3].Split('/');
 
-                            ushort vert1 = (ushort)(ushort.Parse(f1[0]) - 1);
-                            ushort vert2 = (ushort)(ushort.Parse(f2[0]) - 1);
-                            ushort vert3 = (ushort)(ushort.Parse(f3[0]) - 1);
+                            ushort vert1 = (ushort) (ushort.Parse(f1[0]) - 1);
+                            ushort vert2 = (ushort) (ushort.Parse(f2[0]) - 1);
+                            ushort vert3 = (ushort) (ushort.Parse(f3[0]) - 1);
 
-                            ushort normal1 = (ushort)(ushort.Parse(f1[2]) - 1);
-                            ushort normal2 = (ushort)(ushort.Parse(f2[2]) - 1);
-                            ushort normal3 = (ushort)(ushort.Parse(f3[2]) - 1);
+                            ushort normal1 = (ushort) (ushort.Parse(f1[2]) - 1);
+                            ushort normal2 = (ushort) (ushort.Parse(f2[2]) - 1);
+                            ushort normal3 = (ushort) (ushort.Parse(f3[2]) - 1);
 
-                            ushort uv1 = (ushort)(ushort.Parse(f1[1]) - 1);
-                            ushort uv2 = (ushort)(ushort.Parse(f2[1]) - 1);
-                            ushort uv3 = (ushort)(ushort.Parse(f3[1]) - 1);
+                            ushort uv1 = (ushort) (ushort.Parse(f1[1]) - 1);
+                            ushort uv2 = (ushort) (ushort.Parse(f2[1]) - 1);
+                            ushort uv3 = (ushort) (ushort.Parse(f3[1]) - 1);
 
 
-                            indBuff.Add((ushort)(indCnt + 0));
-                            indBuff.Add((ushort)(indCnt + 1));
-                            indBuff.Add((ushort)(indCnt + 2));
+                            indBuff.Add((ushort) (indCnt + 0));
+                            indBuff.Add((ushort) (indCnt + 1));
+                            indBuff.Add((ushort) (indCnt + 2));
 
                             vertexBufferList.Add(vertexList[(vert1) * 3 + 0]);
                             vertexBufferList.Add(vertexList[(vert1) * 3 + 1]);
@@ -118,7 +125,7 @@ namespace LibReplanetizer
 
                 TextureConfig cc = new TextureConfig
                 {
-                    ID = 428,
+                    id = 428,
                     start = prevCnt,
                     size = indCnt - prevCnt,
                     mode = mod

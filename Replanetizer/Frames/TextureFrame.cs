@@ -1,4 +1,11 @@
-﻿using System;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System;
 using System.Collections.Generic;
 using ImGuiNET;
 using LibReplanetizer;
@@ -11,12 +18,12 @@ namespace Replanetizer.Frames
     {
         protected sealed override string frameName { get; set; } = "Textures";
         private Level level => levelFrame.level;
-        private static System.Numerics.Vector2 listSize = new(64, 64);
+        private static System.Numerics.Vector2 LIST_SIZE = new(64, 64);
         private float itemSizeX;
 
         public TextureFrame(Window wnd, LevelFrame levelFrame) : base(wnd, levelFrame)
         {
-            itemSizeX = listSize.X + ImGui.GetStyle().ItemSpacing.X;
+            itemSizeX = LIST_SIZE.X + ImGui.GetStyle().ItemSpacing.X;
         }
 
         public static void RenderTextureList(List<Texture> textures, float itemSizeX, Dictionary<Texture, int> textureIds, int additionalOffset = 0)
@@ -28,7 +35,7 @@ namespace Replanetizer.Frames
             while (i < textures.Count)
             {
                 Texture t = textures[i];
-                ImGui.Image((IntPtr)textureIds[t], listSize);
+                ImGui.Image((IntPtr) textureIds[t], LIST_SIZE);
                 if (ImGui.BeginPopupContextItem($"context-menu for {i}"))
                 {
                     if (ImGui.Button("Export"))
@@ -45,18 +52,18 @@ namespace Replanetizer.Frames
                 {
                     ImGui.BeginTooltip();
                     ImGui.Text($"{t.width}x{t.height}");
-                    ImGui.Image((IntPtr)textureIds[t], new System.Numerics.Vector2(t.width, t.height));
+                    ImGui.Image((IntPtr) textureIds[t], new System.Numerics.Vector2(t.width, t.height));
                     ImGui.EndTooltip();
                 }
 
                 i++;
-                
+
                 if ((i % itemsPerRow) != 0)
                 {
                     ImGui.SameLine();
                 }
             }
-            
+
             ImGui.NewLine();
         }
 

@@ -1,3 +1,10 @@
+// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
 using System;
 using OpenTK.Graphics.OpenGL4;
 
@@ -6,7 +13,7 @@ namespace Replanetizer.Utils
     public class FramebufferRenderer : IDisposable
     {
         public static int MSAA_LEVEL = 2;
-        private int internal_allocated_msaa_level;
+        private int internalAllocatedMsaaLevel;
 
         private bool disposed = false;
 
@@ -22,7 +29,7 @@ namespace Replanetizer.Utils
 
         private void AllocateAllResources()
         {
-            internal_allocated_msaa_level = MSAA_LEVEL;
+            internalAllocatedMsaaLevel = MSAA_LEVEL;
 
             targetTexture = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2DMultisample, targetTexture);
@@ -70,7 +77,7 @@ namespace Replanetizer.Utils
 
         public void RenderToTexture(Action renderFunction)
         {
-            if (internal_allocated_msaa_level != MSAA_LEVEL)
+            if (internalAllocatedMsaaLevel != MSAA_LEVEL)
             {
                 DeleteAllResources();
                 AllocateAllResources();
@@ -85,8 +92,8 @@ namespace Replanetizer.Utils
             GL.Enable(EnableCap.DepthTest);
             GL.DepthFunc(DepthFunction.Less);
 
-            GL.GenVertexArrays(1, out int VAO);
-            GL.BindVertexArray(VAO);
+            GL.GenVertexArrays(1, out int vao);
+            GL.BindVertexArray(vao);
 
             renderFunction();
 
@@ -100,7 +107,7 @@ namespace Replanetizer.Utils
             GL.BlitFramebuffer(0, 0, width, height, 0, 0, width, height, ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Nearest);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
-            GL.DeleteVertexArray(VAO);
+            GL.DeleteVertexArray(vao);
         }
 
         public void ExposeFramebuffer(Action func)

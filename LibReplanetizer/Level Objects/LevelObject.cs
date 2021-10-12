@@ -1,12 +1,19 @@
-﻿using OpenTK.Mathematics;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using OpenTK.Mathematics;
 using System.ComponentModel;
 
 namespace LibReplanetizer.LevelObjects
 {
     public abstract class LevelObject : ITransformable, ISerializable
     {
-        public static Vector4 normalColor = new Vector4(1, 1, 1, 1); // White
-        public static Vector4 selectedColor = new Vector4(1, 0, 1, 1); // Purple
+        public static Vector4 NORMAL_COLOR = new Vector4(1, 1, 1, 1); // White
+        public static Vector4 SELECTED_COLOR = new Vector4(1, 0, 1, 1); // Purple
 
         public Matrix4 modelMatrix = Matrix4.Identity;
 

@@ -1,4 +1,11 @@
-﻿using System;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -16,7 +23,7 @@ namespace Replanetizer.Frames
 {
     public class ModelFrame : LevelSubFrame
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Models";
 
         private FramebufferRenderer renderer;
@@ -29,16 +36,16 @@ namespace Replanetizer.Frames
         private List<Texture> selectedTextureSet;
         private List<Texture> modelTextureList;
 
-        private readonly KeyHeldHandler keyHeldHandler = new()
+        private readonly KeyHeldHandler KEY_HELD_HANDLER = new()
         {
-            WatchedKeys = { Keys.Up, Keys.Down },
-            HoldDelay = 0.45f,
-            RepeatDelay = 0.06f
+            watchedKeys = { Keys.Up, Keys.Down },
+            holdDelay = 0.45f,
+            repeatDelay = 0.06f
         };
 
-        private readonly MouseGrabHandler mouseGrabHandler = new()
+        private readonly MouseGrabHandler MOUSE_GRAB_HANDLER = new()
         {
-            MouseButton = MouseButton.Right
+            mouseButton = MouseButton.Right
         };
 
         private ShaderIDTable shaderIDTable;
@@ -70,7 +77,7 @@ namespace Replanetizer.Frames
         private BufferContainer container;
         private Rectangle contentRegion;
         private Vector2 mousePos;
-        private int Width, Height;
+        private int width, height;
         private PropertyFrame propertyFrame;
 
         public ModelFrame(Window wnd, LevelFrame levelFrame, ShaderIDTable shaderIDTable, Model model = null) : base(wnd, levelFrame)
@@ -109,7 +116,7 @@ namespace Replanetizer.Frames
         private void RenderTree()
         {
             var colW = ImGui.GetColumnWidth() - 10;
-            var childSize = new System.Numerics.Vector2(colW, Height);
+            var childSize = new System.Numerics.Vector2(colW, height);
             if (ImGui.BeginChild("TreeView", childSize, false, ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {
                 RenderSubTree("Moby", level.mobyModels, level.textures);
@@ -145,7 +152,7 @@ namespace Replanetizer.Frames
 
             ImGui.Columns(3);
             ImGui.SetColumnWidth(0, 200);
-            ImGui.SetColumnWidth(1, (float) Width);
+            ImGui.SetColumnWidth(1, (float) width);
             RenderTree();
             ImGui.NextColumn();
 
@@ -159,18 +166,18 @@ namespace Replanetizer.Frames
                     GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
                     GL.Enable(EnableCap.DepthTest);
                     GL.LineWidth(5.0f);
-                    GL.Viewport(0, 0, Width, Height);
+                    GL.Viewport(0, 0, width, height);
 
                     OnPaint();
                 });
                 invalidate = false;
             }
-            ImGui.Image((IntPtr) renderer.outputTexture, new System.Numerics.Vector2(Width, Height),
+            ImGui.Image((IntPtr) renderer.outputTexture, new System.Numerics.Vector2(width, height),
                 System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
 
             ImGui.NextColumn();
             var colW = ImGui.GetColumnWidth() - 10;
-            var colSize = new System.Numerics.Vector2(colW, Height);
+            var colSize = new System.Numerics.Vector2(colW, height);
 
             if (ImGui.BeginChild("TextureAndPropertyView", colSize, false, ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {
@@ -196,7 +203,7 @@ namespace Replanetizer.Frames
 
         private void UpdateWindowSize()
         {
-            int prevWidth = Width, prevHeight = Height;
+            int prevWidth = width, prevHeight = height;
 
             System.Numerics.Vector2 vMin = ImGui.GetWindowContentRegionMin();
             System.Numerics.Vector2 vMax = ImGui.GetWindowContentRegionMax();
@@ -204,17 +211,17 @@ namespace Replanetizer.Frames
             vMin.X += 220;
             vMax.X -= 300;
 
-            Width = (int) (vMax.X - vMin.X);
-            Height = (int) (vMax.Y - vMin.Y);
+            width = (int) (vMax.X - vMin.X);
+            height = (int) (vMax.Y - vMin.Y);
 
-            if (Width <= 0 || Height <= 0)
+            if (width <= 0 || height <= 0)
             {
-                Width = 0;
-                Height = 0;
+                width = 0;
+                height = 0;
                 return;
             }
 
-            if (Width != prevWidth || Height != prevHeight)
+            if (width != prevWidth || height != prevHeight)
             {
                 invalidate = true;
                 OnResize();
@@ -223,7 +230,7 @@ namespace Replanetizer.Frames
             System.Numerics.Vector2 windowPos = ImGui.GetWindowPos();
             Vector2 windowZero = new Vector2(windowPos.X + vMin.X, windowPos.Y + vMin.Y);
             mousePos = wnd.MousePosition - windowZero;
-            contentRegion = new Rectangle((int) windowZero.X, (int) windowZero.Y, Width, Height);
+            contentRegion = new Rectangle((int) windowZero.X, (int) windowZero.Y, width, height);
         }
 
         private void ModelViewer_Load()
@@ -236,8 +243,8 @@ namespace Replanetizer.Frames
             worldView = CreateWorldView();
             trans = Matrix4.CreateTranslation(0.0f, 0.0f, -5.0f);
 
-            GL.GenVertexArrays(1, out int VAO);
-            GL.BindVertexArray(VAO);
+            GL.GenVertexArrays(1, out int vao);
+            GL.BindVertexArray(vao);
         }
 
         public void UpdateModel()
@@ -257,7 +264,7 @@ namespace Replanetizer.Frames
 
             for (int i = 0; i < selectedModel.textureConfig.Count; i++)
             {
-                int textureId = selectedModel.textureConfig[i].ID;
+                int textureId = selectedModel.textureConfig[i].id;
                 if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
 
                 modelTextureList.Add(selectedTextureSet[textureId]);
@@ -335,7 +342,7 @@ namespace Replanetizer.Frames
                 textureSet = selectedModelTexturesSet;
             else
             {
-                Logger.Warn(
+                LOGGER.Warn(
                     $"Either {nameof(selectedModelTexturesSet)} or " +
                     $"{nameof(selectedModelArmorTexturesSet)} should be " +
                     "non-null. We'll default to level.textures."
@@ -350,9 +357,9 @@ namespace Replanetizer.Frames
         {
             // To scale the zoom value to make a vector of that magnitude
             // magnitude == sqrt(3*zoom^2)
-            const float invSqrt3 = 0.57735f;
-            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(FIELD_OF_VIEW, (float) Width / Height, CLIP_NEAR, CLIP_FAR);
-            Matrix4 view = Matrix4.LookAt(new Vector3(invSqrt3 * ZOOM_SCALE * zoom), Vector3.Zero, Vector3.UnitZ);
+            const float INV_SQRT3 = 0.57735f;
+            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(FIELD_OF_VIEW, (float) width / height, CLIP_NEAR, CLIP_FAR);
+            Matrix4 view = Matrix4.LookAt(new Vector3(INV_SQRT3 * ZOOM_SCALE * zoom), Vector3.Zero, Vector3.UnitZ);
             return view * projection;
         }
 
@@ -366,10 +373,10 @@ namespace Replanetizer.Frames
                 // Has to be done in this order to work correctly
                 Matrix4 mvp = trans * scale * rot;
 
-                GL.UseProgram(shaderIDTable.ShaderMain);
-                GL.UniformMatrix4(shaderIDTable.UniformModelToWorldMatrix, false, ref mvp);
-                GL.UniformMatrix4(shaderIDTable.UniformWorldToViewMatrix, false, ref worldView);
-                GL.Uniform1(shaderIDTable.UniformLevelObjectType, (int) RenderedObjectType.Null);
+                GL.UseProgram(shaderIDTable.shaderMain);
+                GL.UniformMatrix4(shaderIDTable.uniformModelToWorldMatrix, false, ref mvp);
+                GL.UniformMatrix4(shaderIDTable.uniformWorldToViewMatrix, false, ref worldView);
+                GL.Uniform1(shaderIDTable.uniformLevelObjectType, (int) RenderedObjectType.Null);
 
                 GL.EnableVertexAttribArray(0);
                 GL.EnableVertexAttribArray(1);
@@ -383,7 +390,7 @@ namespace Replanetizer.Frames
                 //Bind textures one by one, applying it to the relevant vertices based on the index array
                 foreach (TextureConfig conf in selectedModel.textureConfig)
                 {
-                    GL.BindTexture(TextureTarget.Texture2D, (conf.ID >= 0 && conf.ID < selectedTextureSet.Count) ? levelFrame.textureIds[selectedTextureSet[conf.ID]] : 0);
+                    GL.BindTexture(TextureTarget.Texture2D, (conf.id >= 0 && conf.id < selectedTextureSet.Count) ? levelFrame.textureIds[selectedTextureSet[conf.id]] : 0);
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
 
@@ -410,7 +417,7 @@ namespace Replanetizer.Frames
             if (!isRotating && !(isWindowHovered && isMouseInContentRegion))
                 return;
 
-            keyHeldHandler.Update(wnd.KeyboardState, deltaTime);
+            KEY_HELD_HANDLER.Update(wnd.KeyboardState, deltaTime);
 
             if (wnd.MouseState.ScrollDelta.Y != 0)
             {
@@ -428,9 +435,9 @@ namespace Replanetizer.Frames
                 invalidate = true;
             }
 
-            if (keyHeldHandler.IsKeyHeld(Keys.Down))
+            if (KEY_HELD_HANDLER.IsKeyHeld(Keys.Down))
                 CycleModels(1);
-            else if (keyHeldHandler.IsKeyHeld(Keys.Up))
+            else if (KEY_HELD_HANDLER.IsKeyHeld(Keys.Up))
                 CycleModels(-1);
         }
 
@@ -439,7 +446,7 @@ namespace Replanetizer.Frames
         /// <returns>whether the cursor is being grabbed</returns>
         private bool CheckForRotationInput(float deltaTime, bool allowNewGrab)
         {
-            if (mouseGrabHandler.TryGrabMouse(wnd, allowNewGrab))
+            if (MOUSE_GRAB_HANDLER.TryGrabMouse(wnd, allowNewGrab))
                 ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.NoMouse;
             else
             {
@@ -459,7 +466,7 @@ namespace Replanetizer.Frames
             invalidate = true;
 
             renderer?.Dispose();
-            renderer = new FramebufferRenderer(Width, Height);
+            renderer = new FramebufferRenderer(width, height);
         }
 
         private void ExportSelectedModel()
@@ -492,7 +499,7 @@ namespace Replanetizer.Frames
 
             foreach (var config in selectedModel.textureConfig)
             {
-                var textureId = config.ID;
+                var textureId = config.id;
                 if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
 
                 var texture = selectedTextureSet[textureId];

@@ -1,4 +1,11 @@
-﻿using LibReplanetizer.Headers;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using LibReplanetizer.Headers;
 using System.Collections.Generic;
 using System.IO;
 using static LibReplanetizer.DataFunctions;
@@ -15,7 +22,7 @@ namespace LibReplanetizer.Models
         int faceCount;
         public TerrainModel(FileStream fs, TerrainHead head, byte[] tfragBlock, int num)
         {
-            id = getIDAssigned();
+            id = GetIDAssigned();
             size = 1.0f;
 
             int offset = num * 0x30;
@@ -31,7 +38,7 @@ namespace LibReplanetizer.Models
             textureConfig = GetTextureConfigs(fs, texturePointer, textureCount, 0x10, true);
             faceCount = GetFaceCount();
 
-            vertexBuffer = GetVertices(fs, head.vertexPointers[slotNum] + vertexIndex * 0x1C, head.UVpointers[slotNum] + vertexIndex * 0x08, vertexCount, 0x1C, 0x08);
+            vertexBuffer = GetVertices(fs, head.vertexPointers[slotNum] + vertexIndex * 0x1C, head.uvPointers[slotNum] + vertexIndex * 0x08, vertexCount, 0x1C, 0x08);
             indexBuffer = GetIndices(fs, head.indexPointers[slotNum] + faceStart * 2, faceCount, vertexIndex);
 
             rgbas = ReadBlock(fs, head.rgbaPointers[slotNum] + vertexIndex * 4, vertexCount * 4);
@@ -65,7 +72,7 @@ namespace LibReplanetizer.Models
             return outBytes;
         }
 
-        private static short getIDAssigned()
+        private static short GetIDAssigned()
         {
             return STATIC_ID++;
         }

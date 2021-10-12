@@ -1,4 +1,11 @@
-﻿using LibReplanetizer.Headers;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using LibReplanetizer.Headers;
 using LibReplanetizer.LevelObjects;
 using System;
 using System.Collections.Generic;
@@ -263,8 +270,8 @@ namespace LibReplanetizer.Serializers
             int totalSize = headerSize + dataSize;
             byte[] bytes = new byte[totalSize];
 
-            WriteUint(bytes, 0, (uint)languageData.Count());
-            WriteUint(bytes, 4, (uint)totalSize);
+            WriteUint(bytes, 0, (uint) languageData.Count());
+            WriteUint(bytes, 4, (uint) totalSize);
 
             int textPos = headerSize;
             int headerPos = 8;
@@ -279,8 +286,8 @@ namespace LibReplanetizer.Serializers
 
                 System.Text.Encoding.ASCII.GetBytes(entry.Value, 0, entry.Value.Length, bytes, textPos);
 
-                WriteUint(bytes, headerPos, (uint)textPos);
-                WriteUint(bytes, headerPos + 4, (uint)entry.Key);
+                WriteUint(bytes, headerPos, (uint) textPos);
+                WriteUint(bytes, headerPos + 4, (uint) entry.Key);
                 WriteUint(bytes, headerPos + 8, 0xFFFFFFFF);
                 WriteUint(bytes, headerPos + 12, 0);
                 headerPos += 16;
@@ -297,7 +304,7 @@ namespace LibReplanetizer.Serializers
             byte[] bytes = new byte[0x10 + mobs.Count * game.mobyElemSize];
 
             //Header
-            WriteUint(bytes, 0, (uint)mobs.Count);
+            WriteUint(bytes, 0, (uint) mobs.Count);
             WriteUint(bytes, 4, 0x100);
 
             for (int i = 0; i < mobs.Count; i++)
@@ -414,13 +421,13 @@ namespace LibReplanetizer.Serializers
             byte[] offsetBlock = new byte[GetLength(offsets.Count * 4)];
             for (int i = 0; i < offsets.Count; i++)
             {
-                WriteUint(offsetBlock, i * 4, (uint)offsets[i]);
+                WriteUint(offsetBlock, i * 4, (uint) offsets[i]);
             }
 
             var bytes = new byte[0x10 + offsetBlock.Length + splineData.Count];
-            WriteUint(bytes, 0, (uint)splines.Count);
-            WriteUint(bytes, 0x04, (uint)(0x10 + offsetBlock.Length));
-            WriteUint(bytes, 0x08, (uint)(splineData.Count));
+            WriteUint(bytes, 0, (uint) splines.Count);
+            WriteUint(bytes, 0x04, (uint) (0x10 + offsetBlock.Length));
+            WriteUint(bytes, 0x08, (uint) (splineData.Count));
             offsetBlock.CopyTo(bytes, 0x10);
             splineData.CopyTo(bytes, 0x10 + offsetBlock.Length);
 
@@ -436,8 +443,8 @@ namespace LibReplanetizer.Serializers
             for (int i = 0; i < pVars.Count; i++)
             {
                 WriteUint(bytes, (i * 8) + 0x00, offset);
-                WriteUint(bytes, (i * 8) + 0x04, (uint)pVars[i].Length);
-                offset += (uint)pVars[i].Length;
+                WriteUint(bytes, (i * 8) + 0x04, (uint) pVars[i].Length);
+                offset += (uint) pVars[i].Length;
             }
             return bytes;
         }

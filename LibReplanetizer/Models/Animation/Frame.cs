@@ -1,4 +1,11 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System.Collections.Generic;
 using System.IO;
 using static LibReplanetizer.DataFunctions;
 
@@ -91,17 +98,17 @@ namespace LibReplanetizer.Models.Animations
             }
 
 
-            ushort sec0Pointer = (ushort)rotationBytes.Length;
-            ushort translationPointer = (ushort)(rotationBytes.Length + sec0Bytes.Length);
+            ushort sec0Pointer = (ushort) rotationBytes.Length;
+            ushort translationPointer = (ushort) (rotationBytes.Length + sec0Bytes.Length);
 
             byte[] header = new byte[0x10];
             WriteFloat(header, 0x00, speed);
             WriteUshort(header, 0x04, frameIndex);
             WriteUshort(header, 0x06, frameLength);
             WriteUshort(header, 0x08, sec0Pointer);
-            WriteUshort(header, 0x0A, (ushort)sec0s.Count);
+            WriteUshort(header, 0x0A, (ushort) sec0s.Count);
             WriteUshort(header, 0x0C, translationPointer);
-            WriteUshort(header, 0x0E, (ushort)translations.Count);
+            WriteUshort(header, 0x0E, (ushort) translations.Count);
 
             byte[] outBytes = new byte[GetLength(0x10 + rotationBytes.Length + sec0Bytes.Length + translationBytes.Length)];
             header.CopyTo(outBytes, 0);

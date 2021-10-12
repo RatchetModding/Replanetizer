@@ -1,3 +1,10 @@
+// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
 using LibReplanetizer;
 using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
@@ -19,7 +26,7 @@ namespace Replanetizer.Utils
         private int ibo = 0;
         private int vbo = 0;
 
-        public int ID { get; }
+        public int id { get; }
         public RenderedObjectType type { get; }
         public int light { get; set; }
         public Color ambient { get; set; }
@@ -31,12 +38,12 @@ namespace Replanetizer.Utils
         private Level level;
         private Dictionary<Texture, int> textureIds;
 
-        public static ShaderIDTable shaderIDTable { get; set; }
+        public static ShaderIDTable SHADER_ID_TABLE { get; set; }
 
-        public RenderableBuffer(ModelObject modelObject, RenderedObjectType type, int ID, Level level, Dictionary<Texture, int> textureIds)
+        public RenderableBuffer(ModelObject modelObject, RenderedObjectType type, int id, Level level, Dictionary<Texture, int> textureIds)
         {
             this.modelObject = modelObject;
-            this.ID = ID;
+            this.id = id;
             this.type = type;
             this.textureIds = textureIds;
             this.level = level;
@@ -61,10 +68,10 @@ namespace Replanetizer.Utils
             switch (type)
             {
                 case RenderedObjectType.Terrain:
-                    vboLength += modelObject.GetAmbientRGBAs().Length * sizeof(Byte) + ((TerrainModel) modelObject.model).lights.Count * sizeof(int);
+                    vboLength += modelObject.GetAmbientRgbas().Length * sizeof(Byte) + ((TerrainModel) modelObject.model).lights.Count * sizeof(int);
                     break;
                 case RenderedObjectType.Tie:
-                    vboLength += modelObject.GetAmbientRGBAs().Length * sizeof(Byte);
+                    vboLength += modelObject.GetAmbientRgbas().Length * sizeof(Byte);
                     break;
             }
 
@@ -84,21 +91,21 @@ namespace Replanetizer.Utils
         /// </summary>
         public void UpdateBuffers()
         {
-            if (BindIBO())
+            if (BindIbo())
             {
                 ushort[] iboData = modelObject.GetIndices();
                 GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, iboData.Length * sizeof(ushort), iboData);
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
             }
 
-            if (BindVBO())
+            if (BindVbo())
             {
                 float[] vboData = modelObject.GetVertices();
                 switch (type)
                 {
                     case RenderedObjectType.Terrain:
                         {
-                            byte[] rgbas = modelObject.GetAmbientRGBAs();
+                            byte[] rgbas = modelObject.GetAmbientRgbas();
                             TerrainModel terrainModel = (TerrainModel) modelObject.model;
                             int[] lights = terrainModel.lights.ToArray();
                             float[] fullData = new float[vboData.Length + rgbas.Length / 4 + lights.Length];
@@ -120,7 +127,7 @@ namespace Replanetizer.Utils
                         }
                     case RenderedObjectType.Tie:
                         {
-                            byte[] rgbas = modelObject.GetAmbientRGBAs();
+                            byte[] rgbas = modelObject.GetAmbientRgbas();
                             float[] fullData = new float[vboData.Length + rgbas.Length / 4];
                             for (int i = 0; i < vboData.Length / 8; i++)
                             {
@@ -266,7 +273,7 @@ namespace Replanetizer.Utils
         public void Render()
         {
             if (culled) return;
-            if (!BindIBO() || !BindVBO()) return;
+            if (!BindIbo() || !BindVbo()) return;
 
             SetupVertexAttribPointers();
 
@@ -276,27 +283,27 @@ namespace Replanetizer.Utils
                 case RenderedObjectType.Shrub:
                 case RenderedObjectType.Tie:
                 case RenderedObjectType.Moby:
-                    GL.UniformMatrix4(shaderIDTable.UniformModelToWorldMatrix, false, ref modelObject.modelMatrix);
-                    GL.Uniform1(shaderIDTable.UniformLevelObjectNumber, ID);
-                    GL.Uniform4(shaderIDTable.UniformAmbientColor, ambient);
-                    GL.Uniform1(shaderIDTable.UniformLightIndex, light);
+                    GL.UniformMatrix4(SHADER_ID_TABLE.uniformModelToWorldMatrix, false, ref modelObject.modelMatrix);
+                    GL.Uniform1(SHADER_ID_TABLE.uniformLevelObjectNumber, id);
+                    GL.Uniform4(SHADER_ID_TABLE.uniformAmbientColor, ambient);
+                    GL.Uniform1(SHADER_ID_TABLE.uniformLightIndex, light);
 
                     //Bind textures one by one, applying it to the relevant vertices based on the index array
                     foreach (TextureConfig conf in modelObject.model.textureConfig)
                     {
-                        GL.BindTexture(TextureTarget.Texture2D, (conf.ID > 0) ? textureIds[level.textures[conf.ID]] : 0);
+                        GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[level.textures[conf.id]] : 0);
                         GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                     }
 
                     if (selected)
                     {
-                        GL.UseProgram(shaderIDTable.ShaderColor);
+                        GL.UseProgram(SHADER_ID_TABLE.shaderColor);
                         GL.Enable(EnableCap.LineSmooth);
-                        GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref modelObject.modelMatrix);
+                        GL.UniformMatrix4(SHADER_ID_TABLE.uniformColorModelToWorldMatrix, false, ref modelObject.modelMatrix);
                         GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                         GL.DrawElements(PrimitiveType.Triangles, modelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
                         GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                        GL.UseProgram(shaderIDTable.ShaderMain);
+                        GL.UseProgram(SHADER_ID_TABLE.shaderMain);
                         GL.Disable(EnableCap.LineSmooth);
                     }
                     break;
@@ -307,7 +314,7 @@ namespace Replanetizer.Utils
         /// <summary>
         /// Attempts to bind the index buffer object. Returns true on success, false else.
         /// </summary>
-        public bool BindIBO()
+        public bool BindIbo()
         {
             bool success = ibo != 0;
             if (success)
@@ -319,7 +326,7 @@ namespace Replanetizer.Utils
         /// <summary>
         /// Attempts to bind the vertex buffer object. Returns true on success, false else.
         /// </summary>
-        public bool BindVBO()
+        public bool BindVbo()
         {
             bool success = vbo != 0;
             if (success)

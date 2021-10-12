@@ -1,4 +1,11 @@
-﻿using LibReplanetizer.Models;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using LibReplanetizer.Models;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
@@ -193,7 +200,7 @@ namespace LibReplanetizer.LevelObjects
         {
             int offset = num * game.mobyElemSize;
             missionID = ReadInt(mobyBlock, offset + 0x04);
-            spawnType = (SpawnType)ReadInt(mobyBlock, offset + 0x08);
+            spawnType = (SpawnType) ReadInt(mobyBlock, offset + 0x08);
             mobyID = ReadInt(mobyBlock, offset + 0x0C);
 
             bolts = ReadInt(mobyBlock, offset + 0x10);
@@ -247,7 +254,7 @@ namespace LibReplanetizer.LevelObjects
 
             missionID = ReadInt(mobyBlock, offset + 0x04);
             dataval = ReadInt(mobyBlock, offset + 0x08);
-            spawnType = (SpawnType)ReadInt(mobyBlock, offset + 0x0C);
+            spawnType = (SpawnType) ReadInt(mobyBlock, offset + 0x0C);
 
             mobyID = ReadInt(mobyBlock, offset + 0x10);
             bolts = ReadInt(mobyBlock, offset + 0x14);
@@ -356,7 +363,7 @@ namespace LibReplanetizer.LevelObjects
 
         public override byte[] ToByteArray()
         {
-            switch(game.num)
+            switch (game.num)
             {
                 case 1:
                     return ToByteArrayRC1();
@@ -378,7 +385,7 @@ namespace LibReplanetizer.LevelObjects
 
             WriteInt(buffer, 0x00, game.mobyElemSize);
             WriteInt(buffer, 0x04, missionID);
-            WriteInt(buffer, 0x08, (int)spawnType);
+            WriteInt(buffer, 0x08, (int) spawnType);
             WriteInt(buffer, 0x0C, mobyID);
 
             WriteInt(buffer, 0x10, bolts);
@@ -429,7 +436,7 @@ namespace LibReplanetizer.LevelObjects
             WriteInt(buffer, 0x00, game.mobyElemSize);
             WriteInt(buffer, 0x04, missionID);
             WriteInt(buffer, 0x08, dataval);
-            WriteInt(buffer, 0x0C, (int)spawnType);
+            WriteInt(buffer, 0x0C, (int) spawnType);
 
             WriteInt(buffer, 0x10, mobyID);
             WriteInt(buffer, 0x14, bolts);
@@ -533,12 +540,12 @@ namespace LibReplanetizer.LevelObjects
         public override void UpdateTransformMatrix()
         {
             Vector3 euler = rotation.ToEulerAngles();
-            Matrix4 rot_z = Matrix4.CreateFromAxisAngle(Vector3.UnitZ, euler.Z);
-            Matrix4 rot_y = Matrix4.CreateFromAxisAngle(Vector3.UnitY, euler.Y);
-            Matrix4 rot_x = Matrix4.CreateFromAxisAngle(Vector3.UnitX, euler.X);
+            Matrix4 rotZ = Matrix4.CreateFromAxisAngle(Vector3.UnitZ, euler.Z);
+            Matrix4 rotY = Matrix4.CreateFromAxisAngle(Vector3.UnitY, euler.Y);
+            Matrix4 rotX = Matrix4.CreateFromAxisAngle(Vector3.UnitX, euler.X);
             Matrix4 scaleMatrix = Matrix4.CreateScale(scale * model.size);
             Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
-            modelMatrix = scaleMatrix * rot_x * rot_y * rot_z * translationMatrix;
+            modelMatrix = scaleMatrix * rotX * rotY * rotZ * translationMatrix;
         }
 
         public void UpdateFromMemory(byte[] mobyMemory, int offset, List<Model> models)

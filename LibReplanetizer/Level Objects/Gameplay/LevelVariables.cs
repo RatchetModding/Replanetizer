@@ -1,4 +1,11 @@
-﻿using System.ComponentModel;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using OpenTK.Mathematics;
@@ -45,43 +52,43 @@ namespace LibReplanetizer.LevelObjects
         public Color unkColor { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_48: Always 0")]
-        public int off_48 { get; set; }
+        public int off48 { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_4C: Always 0")]
-        public int off_4c { get; set; }
+        public int off4C { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_58: Always 0")]
-        public int off_58 { get; set; }
+        public int off58 { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_5C")]
-        public int off_5C { get; set; }
+        public int off5C { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_60")]
-        public int off_60 { get; set; }
+        public int off60 { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_64")]
-        public float off_64 { get; set; }
+        public float off64 { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_68")]
-        public int off_68 { get; set; }
+        public int off68 { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_6C")]
-        public int off_6C { get; set; }
+        public int off6C { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_70")]
-        public int off_70 { get; set; }
+        public int off70 { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_74")]
-        public float off_74 { get; set; }
+        public float off74 { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_78")]
-        public int off_78 { get; set; }
+        public int off78 { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_7C")]
-        public int off_7C { get; set; }
+        public int off7C { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_80")]
-        public int off_80 { get; set; }
+        public int off80 { get; set; }
 
         [Category("Unknown"), DisplayName("UnknownBytes")]
         public byte[] unknownBytes { get; set; }
@@ -133,8 +140,8 @@ namespace LibReplanetizer.LevelObjects
 
             int shipColorG = ReadInt(levelVarBlock, 0x40);
             int shipColorB = ReadInt(levelVarBlock, 0x44);
-            off_48 = ReadInt(levelVarBlock, 0x48);
-            off_4c = ReadInt(levelVarBlock, 0x4C);
+            off48 = ReadInt(levelVarBlock, 0x48);
+            off4C = ReadInt(levelVarBlock, 0x4C);
 
             unknownBytes = new byte[levelVarBlock.Length - 0x50];
 
@@ -187,18 +194,18 @@ namespace LibReplanetizer.LevelObjects
 
             int shipColorG = ReadInt(levelVarBlock, 0x50);
             int shipColorB = ReadInt(levelVarBlock, 0x54);
-            off_58 = ReadInt(levelVarBlock, 0x58);
-            off_5C = ReadInt(levelVarBlock, 0x5C);
+            off58 = ReadInt(levelVarBlock, 0x58);
+            off5C = ReadInt(levelVarBlock, 0x5C);
 
-            off_60 = ReadInt(levelVarBlock, 0x60);
-            off_64 = ReadFloat(levelVarBlock, 0x64);
-            off_68 = ReadInt(levelVarBlock, 0x68);
-            off_6C = ReadInt(levelVarBlock, 0x6C);
+            off60 = ReadInt(levelVarBlock, 0x60);
+            off64 = ReadFloat(levelVarBlock, 0x64);
+            off68 = ReadInt(levelVarBlock, 0x68);
+            off6C = ReadInt(levelVarBlock, 0x6C);
 
-            off_70 = ReadInt(levelVarBlock, 0x70);
-            off_74 = ReadFloat(levelVarBlock, 0x74);
-            off_78 = ReadInt(levelVarBlock, 0x78);
-            off_7C = ReadInt(levelVarBlock, 0x7C);
+            off70 = ReadInt(levelVarBlock, 0x70);
+            off74 = ReadFloat(levelVarBlock, 0x74);
+            off78 = ReadInt(levelVarBlock, 0x78);
+            off7C = ReadInt(levelVarBlock, 0x7C);
 
             unknownBytes = new byte[levelVarBlock.Length - 0x80];
 
@@ -252,20 +259,20 @@ namespace LibReplanetizer.LevelObjects
 
             int shipColorG = ReadInt(levelVarBlock, 0x50);
             int shipColorB = ReadInt(levelVarBlock, 0x54);
-            off_58 = ReadInt(levelVarBlock, 0x58);
-            off_5C = ReadInt(levelVarBlock, 0x5C);
+            off58 = ReadInt(levelVarBlock, 0x58);
+            off5C = ReadInt(levelVarBlock, 0x5C);
 
-            off_60 = ReadInt(levelVarBlock, 0x60);
-            off_64 = ReadFloat(levelVarBlock, 0x64);
-            off_68 = ReadInt(levelVarBlock, 0x68);
-            off_6C = ReadInt(levelVarBlock, 0x6C);
+            off60 = ReadInt(levelVarBlock, 0x60);
+            off64 = ReadFloat(levelVarBlock, 0x64);
+            off68 = ReadInt(levelVarBlock, 0x68);
+            off6C = ReadInt(levelVarBlock, 0x6C);
 
-            off_70 = ReadInt(levelVarBlock, 0x70);
-            off_74 = ReadFloat(levelVarBlock, 0x74);
-            off_78 = ReadInt(levelVarBlock, 0x78);
-            off_7C = ReadInt(levelVarBlock, 0x7C);
+            off70 = ReadInt(levelVarBlock, 0x70);
+            off74 = ReadFloat(levelVarBlock, 0x74);
+            off78 = ReadInt(levelVarBlock, 0x78);
+            off7C = ReadInt(levelVarBlock, 0x7C);
 
-            off_80 = ReadInt(levelVarBlock, 0x80);
+            off80 = ReadInt(levelVarBlock, 0x80);
 
             unknownBytes = new byte[levelVarBlock.Length - 0x84];
 
@@ -319,23 +326,23 @@ namespace LibReplanetizer.LevelObjects
 
             int shipColorG = ReadInt(levelVarBlock, 0x50);
             int shipColorB = ReadInt(levelVarBlock, 0x54);
-            off_58 = ReadInt(levelVarBlock, 0x58);
-            off_5C = ReadInt(levelVarBlock, 0x5C);
+            off58 = ReadInt(levelVarBlock, 0x58);
+            off5C = ReadInt(levelVarBlock, 0x5C);
 
-            off_60 = ReadInt(levelVarBlock, 0x60);
-            off_64 = ReadFloat(levelVarBlock, 0x64);
-            off_68 = ReadInt(levelVarBlock, 0x68);
-            off_6C = ReadInt(levelVarBlock, 0x6C);
+            off60 = ReadInt(levelVarBlock, 0x60);
+            off64 = ReadFloat(levelVarBlock, 0x64);
+            off68 = ReadInt(levelVarBlock, 0x68);
+            off6C = ReadInt(levelVarBlock, 0x6C);
 
-            off_70 = ReadInt(levelVarBlock, 0x70);
-            off_74 = ReadFloat(levelVarBlock, 0x74);
-            off_78 = ReadInt(levelVarBlock, 0x78);
-            off_7C = ReadInt(levelVarBlock, 0x7C);
+            off70 = ReadInt(levelVarBlock, 0x70);
+            off74 = ReadFloat(levelVarBlock, 0x74);
+            off78 = ReadInt(levelVarBlock, 0x78);
+            off7C = ReadInt(levelVarBlock, 0x7C);
 
-            off_80 = ReadInt(levelVarBlock, 0x80);
+            off80 = ReadInt(levelVarBlock, 0x80);
 
             unknownBytes = new byte[levelVarBlock.Length - 0x84];
-            
+
             for (int i = 0; i < levelVarBlock.Length - 0x84; i++)
             {
                 unknownBytes[i] = levelVarBlock[0x84 + i];
@@ -410,8 +417,8 @@ namespace LibReplanetizer.LevelObjects
                 WriteInt(bytes, 0x44, unkColor.B);
             }
 
-            WriteInt(bytes, 0x48, off_48);
-            WriteInt(bytes, 0x4C, off_4c);
+            WriteInt(bytes, 0x48, off48);
+            WriteInt(bytes, 0x4C, off4C);
 
             unknownBytes.CopyTo(bytes, 0x50);
 
@@ -459,18 +466,18 @@ namespace LibReplanetizer.LevelObjects
                 WriteInt(bytes, 0x54, unkColor.B);
             }
 
-            WriteInt(bytes, 0x58, off_58);
-            WriteInt(bytes, 0x5C, off_5C);
+            WriteInt(bytes, 0x58, off58);
+            WriteInt(bytes, 0x5C, off5C);
 
-            WriteInt(bytes, 0x60, off_60);
-            WriteFloat(bytes, 0x64, off_64);
-            WriteInt(bytes, 0x68, off_68);
-            WriteInt(bytes, 0x6C, off_6C);
+            WriteInt(bytes, 0x60, off60);
+            WriteFloat(bytes, 0x64, off64);
+            WriteInt(bytes, 0x68, off68);
+            WriteInt(bytes, 0x6C, off6C);
 
-            WriteInt(bytes, 0x70, off_70);
-            WriteFloat(bytes, 0x74, off_74);
-            WriteInt(bytes, 0x78, off_78);
-            WriteInt(bytes, 0x7C, off_7C);
+            WriteInt(bytes, 0x70, off70);
+            WriteFloat(bytes, 0x74, off74);
+            WriteInt(bytes, 0x78, off78);
+            WriteInt(bytes, 0x7C, off7C);
 
             unknownBytes.CopyTo(bytes, 0x80);
 
@@ -518,20 +525,20 @@ namespace LibReplanetizer.LevelObjects
                 WriteInt(bytes, 0x54, unkColor.B);
             }
 
-            WriteInt(bytes, 0x58, off_58);
-            WriteInt(bytes, 0x5C, off_5C);
+            WriteInt(bytes, 0x58, off58);
+            WriteInt(bytes, 0x5C, off5C);
 
-            WriteInt(bytes, 0x60, off_60);
-            WriteFloat(bytes, 0x64, off_64);
-            WriteInt(bytes, 0x68, off_68);
-            WriteInt(bytes, 0x6C, off_6C);
+            WriteInt(bytes, 0x60, off60);
+            WriteFloat(bytes, 0x64, off64);
+            WriteInt(bytes, 0x68, off68);
+            WriteInt(bytes, 0x6C, off6C);
 
-            WriteInt(bytes, 0x70, off_70);
-            WriteFloat(bytes, 0x74, off_74);
-            WriteInt(bytes, 0x78, off_78);
-            WriteInt(bytes, 0x7C, off_7C);
+            WriteInt(bytes, 0x70, off70);
+            WriteFloat(bytes, 0x74, off74);
+            WriteInt(bytes, 0x78, off78);
+            WriteInt(bytes, 0x7C, off7C);
 
-            WriteInt(bytes, 0x80, off_80);
+            WriteInt(bytes, 0x80, off80);
 
             unknownBytes.CopyTo(bytes, 0x84);
 
@@ -579,20 +586,20 @@ namespace LibReplanetizer.LevelObjects
                 WriteInt(bytes, 0x54, unkColor.B);
             }
 
-            WriteInt(bytes, 0x58, off_58);
-            WriteInt(bytes, 0x5C, off_5C);
+            WriteInt(bytes, 0x58, off58);
+            WriteInt(bytes, 0x5C, off5C);
 
-            WriteInt(bytes, 0x60, off_60);
-            WriteFloat(bytes, 0x64, off_64);
-            WriteInt(bytes, 0x68, off_68);
-            WriteInt(bytes, 0x6C, off_6C);
+            WriteInt(bytes, 0x60, off60);
+            WriteFloat(bytes, 0x64, off64);
+            WriteInt(bytes, 0x68, off68);
+            WriteInt(bytes, 0x6C, off6C);
 
-            WriteInt(bytes, 0x70, off_70);
-            WriteFloat(bytes, 0x74, off_74);
-            WriteInt(bytes, 0x78, off_78);
-            WriteInt(bytes, 0x7C, off_7C);
+            WriteInt(bytes, 0x70, off70);
+            WriteFloat(bytes, 0x74, off74);
+            WriteInt(bytes, 0x78, off78);
+            WriteInt(bytes, 0x7C, off7C);
 
-            WriteInt(bytes, 0x80, off_80);
+            WriteInt(bytes, 0x80, off80);
 
             unknownBytes.CopyTo(bytes, 0x84);
 

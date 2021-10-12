@@ -1,12 +1,19 @@
-﻿using System.IO;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using System.IO;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Headers
 {
     public class EngineHeader
     {
-        const int RAC123ENGINESIZE = 0x84;
-        const int DLENGINESIZE = 0x98;
+        const int RAC123_ENGINE_SIZE = 0x84;
+        const int DL_ENGINE_SIZE = 0x98;
 
         public GameType game;
 
@@ -96,7 +103,7 @@ namespace LibReplanetizer.Headers
 
         private void GetRC123Vals(FileStream engineFile)
         {
-            byte[] engineHeadBlock = ReadBlock(engineFile, 0, RAC123ENGINESIZE);
+            byte[] engineHeadBlock = ReadBlock(engineFile, 0, RAC123_ENGINE_SIZE);
 
             mobyModelPointer = ReadInt(engineHeadBlock, 0x00);
             renderDefPointer = ReadInt(engineHeadBlock, 0x04);
@@ -139,7 +146,7 @@ namespace LibReplanetizer.Headers
 
         private void GetDLVals(FileStream engineFile)
         {
-            byte[] engineHeadBlock = ReadBlock(engineFile, 0, DLENGINESIZE);
+            byte[] engineHeadBlock = ReadBlock(engineFile, 0, DL_ENGINE_SIZE);
 
             mobyModelPointer = ReadInt(engineHeadBlock, 0x00);
             renderDefPointer = ReadInt(engineHeadBlock, 0x04);
@@ -203,7 +210,7 @@ namespace LibReplanetizer.Headers
 
         private byte[] SerializeRC123()
         {
-            byte[] bytes = new byte[RAC123ENGINESIZE];
+            byte[] bytes = new byte[RAC123_ENGINE_SIZE];
 
             WriteInt(bytes, 0x00, mobyModelPointer);
             WriteInt(bytes, 0x04, renderDefPointer);
@@ -252,7 +259,7 @@ namespace LibReplanetizer.Headers
 
         private byte[] SerializeDL()
         {
-            byte[] bytes = new byte[DLENGINESIZE];
+            byte[] bytes = new byte[DL_ENGINE_SIZE];
 
             WriteInt(bytes, 0x00, mobyModelPointer);
             WriteInt(bytes, 0x04, renderDefPointer);

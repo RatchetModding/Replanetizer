@@ -1,4 +1,11 @@
-﻿using OpenTK.Mathematics;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using OpenTK.Mathematics;
 using System;
 using static LibReplanetizer.DataFunctions;
 
@@ -13,7 +20,7 @@ namespace LibReplanetizer.LevelObjects
         public Matrix4 mat2;
 
 
-        static readonly float[] cube = {
+        static readonly float[] CUBE = {
             -1.0f, -1.0f,  1.0f,
             1.0f, -1.0f,  1.0f,
             1.0f,  1.0f,  1.0f,
@@ -25,7 +32,7 @@ namespace LibReplanetizer.LevelObjects
             -1.0f,  1.0f, -1.0f
         };
 
-        public static readonly ushort[] cubeElements = {
+        public static readonly ushort[] CUBE_ELEMENTS = {
             0, 1, 2,
             2, 3, 0,
             1, 5, 6,
@@ -73,12 +80,12 @@ namespace LibReplanetizer.LevelObjects
 
         public ushort[] GetIndices()
         {
-            return cubeElements;
+            return CUBE_ELEMENTS;
         }
 
         public float[] GetVertices()
         {
-            return cube;
+            return CUBE;
         }
 
         public bool IsDynamic()

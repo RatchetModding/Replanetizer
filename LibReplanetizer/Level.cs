@@ -1,4 +1,11 @@
-﻿using LibReplanetizer.Headers;
+﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Replanetizer is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+// Please see the LICENSE.md file for more details.
+
+using LibReplanetizer.Headers;
 using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
 using LibReplanetizer.Models.Animations;
@@ -12,7 +19,7 @@ namespace LibReplanetizer
 {
     public class Level
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
 
         public bool valid;
 
@@ -114,7 +121,7 @@ namespace LibReplanetizer
 
         ~Level()
         {
-            Logger.Trace("Level destroyed");
+            LOGGER.Trace("Level destroyed");
         }
 
         //New file constructor
@@ -137,52 +144,52 @@ namespace LibReplanetizer
                 billboardBytes = engineParser.GetBillboardBytes();
                 soundConfigBytes = engineParser.GetSoundConfigBytes();
 
-                Logger.Debug("Parsing skybox...");
+                LOGGER.Debug("Parsing skybox...");
                 skybox = engineParser.GetSkyboxModel();
-                Logger.Debug("Success");
+                LOGGER.Debug("Success");
 
-                Logger.Debug("Parsing moby models...");
+                LOGGER.Debug("Parsing moby models...");
                 mobyModels = engineParser.GetMobyModels();
-                Logger.Debug("Added {0} moby models", mobyModels.Count);
+                LOGGER.Debug("Added {0} moby models", mobyModels.Count);
 
-                Logger.Debug("Parsing tie models...");
+                LOGGER.Debug("Parsing tie models...");
                 tieModels = engineParser.GetTieModels();
-                Logger.Debug("Added {0} tie models", tieModels.Count);
+                LOGGER.Debug("Added {0} tie models", tieModels.Count);
 
-                Logger.Debug("Parsing shrub models...");
+                LOGGER.Debug("Parsing shrub models...");
                 shrubModels = engineParser.GetShrubModels();
-                Logger.Debug("Added {0} shrub models", shrubModels.Count);
+                LOGGER.Debug("Added {0} shrub models", shrubModels.Count);
 
-                Logger.Debug("Parsing weapons...");
+                LOGGER.Debug("Parsing weapons...");
                 gadgetModels = engineParser.GetGadgets();
-                Logger.Debug("Added {0} weapons", gadgetModels.Count);
+                LOGGER.Debug("Added {0} weapons", gadgetModels.Count);
 
-                Logger.Debug("Parsing textures...");
+                LOGGER.Debug("Parsing textures...");
                 textures = engineParser.GetTextures();
-                Logger.Debug("Added {0} textures", textures.Count);
+                LOGGER.Debug("Added {0} textures", textures.Count);
 
-                Logger.Debug("Parsing ties...");
+                LOGGER.Debug("Parsing ties...");
                 ties = engineParser.GetTies(tieModels);
-                Logger.Debug("Added {0} ties", ties.Count);
+                LOGGER.Debug("Added {0} ties", ties.Count);
 
-                Logger.Debug("Parsing Shrubs...");
+                LOGGER.Debug("Parsing Shrubs...");
                 shrubs = engineParser.GetShrubs(shrubModels);
-                Logger.Debug("Added {0} shrubs", shrubs.Count);
+                LOGGER.Debug("Added {0} shrubs", shrubs.Count);
 
-                Logger.Debug("Parsing Lights...");
+                LOGGER.Debug("Parsing Lights...");
                 lights = engineParser.GetLights();
-                Logger.Debug("Added {0} lights", lights.Count);
+                LOGGER.Debug("Added {0} lights", lights.Count);
 
-                Logger.Debug("Parsing terrain elements...");
+                LOGGER.Debug("Parsing terrain elements...");
                 terrainEngine = engineParser.GetTerrainModel();
-                Logger.Debug("Added {0} terrain elements", terrainEngine?.fragments.Count);
+                LOGGER.Debug("Added {0} terrain elements", terrainEngine?.fragments.Count);
 
-                Logger.Debug("Parsing player animations...");
+                LOGGER.Debug("Parsing player animations...");
                 playerAnimations = engineParser.GetPlayerAnimations((MobyModel) mobyModels[0]);
-                Logger.Debug("Added {0} player animations", playerAnimations?.Count);
+                LOGGER.Debug("Added {0} player animations", playerAnimations?.Count);
 
                 uiElements = engineParser.GetUiElements();
-                Logger.Debug("Added {0} ui elements", uiElements?.Count);
+                LOGGER.Debug("Added {0} ui elements", uiElements?.Count);
 
                 lightConfig = engineParser.GetLightConfig();
                 textureConfigMenus = engineParser.GetTextureConfigMenu();
@@ -200,20 +207,20 @@ namespace LibReplanetizer
             // Gameplay elements
             using (GameplayParser gameplayParser = new GameplayParser(game, path + @"/gameplay_ntsc"))
             {
-                Logger.Debug("Parsing Level variables...");
+                LOGGER.Debug("Parsing Level variables...");
                 levelVariables = gameplayParser.GetLevelVariables();
 
-                Logger.Debug("Parsing mobs...");
+                LOGGER.Debug("Parsing mobs...");
                 mobs = gameplayParser.GetMobies(mobyModels);
-                Logger.Debug("Added {0} mobs", mobs?.Count);
+                LOGGER.Debug("Added {0} mobs", mobs?.Count);
 
-                Logger.Debug("Parsing splines...");
+                LOGGER.Debug("Parsing splines...");
                 splines = gameplayParser.GetSplines();
-                Logger.Debug("Added {0} splines", splines?.Count);
+                LOGGER.Debug("Added {0} splines", splines?.Count);
 
-                Logger.Debug("Parsing languages...");
+                LOGGER.Debug("Parsing languages...");
                 english = gameplayParser.GetEnglish();
-                ukenglish = gameplayParser.GetUKEnglish();
+                ukenglish = gameplayParser.GetUkEnglish();
                 french = gameplayParser.GetFrench();
                 german = gameplayParser.GetGerman();
                 spanish = gameplayParser.GetSpanish();
@@ -221,7 +228,7 @@ namespace LibReplanetizer
                 japanese = gameplayParser.GetJapanese();
                 korean = gameplayParser.GetKorean();
 
-                Logger.Debug("Parsing other gameplay assets...");
+                LOGGER.Debug("Parsing other gameplay assets...");
                 unk6 = gameplayParser.GetUnk6();
                 unk7 = gameplayParser.GetUnk7();
                 unk12 = gameplayParser.GetUnk12();
@@ -232,12 +239,12 @@ namespace LibReplanetizer
                 unk18 = gameplayParser.GetUnk18();
 
                 tieData = gameplayParser.GetTieData(ties.Count);
-                shrubData = gameplayParser.getShrubData(shrubs.Count);
+                shrubData = gameplayParser.GetShrubData(shrubs.Count);
 
-                tieGroupData = gameplayParser.getTieGroups();
-                shrubGroupData = gameplayParser.getShrubGroups();
+                tieGroupData = gameplayParser.GetTieGroups();
+                shrubGroupData = gameplayParser.GetShrubGroups();
 
-                areasData = gameplayParser.getAreasData();
+                areasData = gameplayParser.GetAreasData();
 
                 directionalLights = gameplayParser.GetDirectionalLights();
                 type0Cs = gameplayParser.GetType0Cs();
@@ -283,7 +290,7 @@ namespace LibReplanetizer
 
             foreach (string armor in armorPaths)
             {
-                Logger.Debug("Looking for armor data in {0}", armor);
+                LOGGER.Debug("Looking for armor data in {0}", armor);
                 List<Texture> tex;
                 MobyModel model;
                 using (ArmorParser parser = new ArmorParser(game, armor))
@@ -310,7 +317,7 @@ namespace LibReplanetizer
 
             if (gadgetPath != "")
             {
-                Logger.Debug("Looking for gadget data in {0}", gadgetPath);
+                LOGGER.Debug("Looking for gadget data in {0}", gadgetPath);
                 using (GadgetParser parser = new GadgetParser(game, gadgetPath))
                 {
                     gadgetModels.AddRange(parser.GetModels());
@@ -333,11 +340,11 @@ namespace LibReplanetizer
 
                 if (!File.Exists(vramPath))
                 {
-                    Logger.Warn("Could not find .vram file for {0}", missionPath);
+                    LOGGER.Warn("Could not find .vram file for {0}", missionPath);
                     continue;
                 }
 
-                Logger.Debug("Looking for mission data in {0}", missionPath);
+                LOGGER.Debug("Looking for mission data in {0}", missionPath);
 
                 Mission mission = new Mission(i);
 
@@ -360,7 +367,7 @@ namespace LibReplanetizer
                 vramParser.GetTextures(textures);
             }
 
-            Logger.Info("Level parsing done");
+            LOGGER.Info("Level parsing done");
             valid = true;
         }
 

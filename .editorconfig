@@ -70,9 +70,9 @@ dotnet_naming_rule.const.symbols  = const
 dotnet_naming_rule.const.style    = all_upper_style
 
 # readonly vars should be all_upper with _ word separator
-dotnet_naming_rule.const.severity = error
-dotnet_naming_rule.const.symbols  = readonly
-dotnet_naming_rule.const.style    = all_upper_style
+dotnet_naming_rule.readonly.severity = error
+dotnet_naming_rule.readonly.symbols  = readonly
+dotnet_naming_rule.readonly.style    = all_upper_style
 
 # vars should be camelCase
 dotnet_naming_rule.camel_case_for_private_internal_fields.severity = error
@@ -96,14 +96,14 @@ dotnet_naming_symbols.readonly.required_modifiers = readonly
 dotnet_naming_style.pascal_case_style.capitalization = pascal_case
 dotnet_naming_style.camel_case_style.capitalization = camel_case
 dotnet_naming_style.all_upper_style.capitalization = all_upper
-dotnet_naming_style.all_upper_style.word_seperator = _
+dotnet_naming_style.all_upper_style.word_separator = _
 
 # Code style defaults
 csharp_using_directive_placement = outside_namespace:suggestion
 dotnet_sort_system_directives_first = true
 csharp_prefer_braces = true:silent
-csharp_preserve_single_line_blocks = true:none
-csharp_preserve_single_line_statements = false:none
+csharp_preserve_single_line_blocks = true
+csharp_preserve_single_line_statements = false
 csharp_prefer_static_local_function = true:suggestion
 csharp_prefer_simple_using_statement = false:none
 csharp_style_prefer_switch_expression = true:suggestion
@@ -155,7 +155,7 @@ csharp_space_after_dot = false
 csharp_space_after_keywords_in_control_flow_statements = true
 csharp_space_after_semicolon_in_for_statement = true
 csharp_space_around_binary_operators = before_and_after
-csharp_space_around_declaration_statements = do_not_ignore
+csharp_space_around_declaration_statements = false
 csharp_space_before_colon_in_inheritance_clause = true
 csharp_space_before_comma = false
 csharp_space_before_dot = false

@@ -39,8 +39,8 @@ namespace Replanetizer.Frames
         private List<TerrainFragment> terrains = new List<TerrainFragment>();
         private List<Tuple<Model, int, int>> collisions = new List<Tuple<Model, int, int>>();
 
-        private static Vector4 NORMALCOLOR = new Vector4(1, 1, 1, 1); // White
-        private static Vector4 SELECTEDCOLOR = new Vector4(1, 0, 1, 1); // Purple
+        private static Vector4 NORMAL_COLOR = new Vector4(1, 1, 1, 1); // White
+        private static Vector4 SELECTED_COLOR = new Vector4(1, 0, 1, 1); // Purple
 
         public Matrix4 worldView;
 
@@ -1303,7 +1303,7 @@ namespace Replanetizer.Frames
                     Spline spline = level.splines[i];
                     GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
                     GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref spline.modelMatrix);
-                    GL.Uniform4(shaderIDTable.UniformColor, spline == selectedObject ? SELECTEDCOLOR : NORMALCOLOR);
+                    GL.Uniform4(shaderIDTable.UniformColor, spline == selectedObject ? SELECTED_COLOR : NORMAL_COLOR);
                     ActivateBuffersForModel(spline);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
                     GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
@@ -1320,7 +1320,7 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref cuboid.modelMatrix);
-                    GL.Uniform4(shaderIDTable.UniformColor, selectedObject == cuboid ? SELECTEDCOLOR : NORMALCOLOR);
+                    GL.Uniform4(shaderIDTable.UniformColor, selectedObject == cuboid ? SELECTED_COLOR : NORMAL_COLOR);
                     ActivateBuffersForModel(cuboid);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
                     GL.DrawElements(PrimitiveType.Triangles, Cuboid.CUBE_ELEMENTS.Length, DrawElementsType.UnsignedShort, 0);
@@ -1338,7 +1338,7 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref sphere.modelMatrix);
-                    GL.Uniform4(shaderIDTable.UniformColor, selectedObject == sphere ? SELECTEDCOLOR : NORMALCOLOR);
+                    GL.Uniform4(shaderIDTable.UniformColor, selectedObject == sphere ? SELECTED_COLOR : NORMAL_COLOR);
                     ActivateBuffersForModel(sphere);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
                     GL.DrawElements(PrimitiveType.Triangles, Sphere.SPHERE_TRIS.Length, DrawElementsType.UnsignedShort, 0);
@@ -1356,7 +1356,7 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref cylinder.modelMatrix);
-                    GL.Uniform4(shaderIDTable.UniformColor, selectedObject == cylinder ? SELECTEDCOLOR : NORMALCOLOR);
+                    GL.Uniform4(shaderIDTable.UniformColor, selectedObject == cylinder ? SELECTED_COLOR : NORMAL_COLOR);
                     ActivateBuffersForModel(cylinder);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
                     GL.DrawElements(PrimitiveType.Triangles, Cylinder.CYLINDER_TRIS.Length, DrawElementsType.UnsignedShort, 0);
@@ -1374,7 +1374,7 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.UniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.UniformColorModelToWorldMatrix, false, ref type0c.modelMatrix);
-                    GL.Uniform4(shaderIDTable.UniformColor, type0c == selectedObject ? SELECTEDCOLOR : NORMALCOLOR);
+                    GL.Uniform4(shaderIDTable.UniformColor, type0c == selectedObject ? SELECTED_COLOR : NORMAL_COLOR);
 
                     ActivateBuffersForModel(type0c);
 

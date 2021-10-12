@@ -220,7 +220,7 @@ namespace LibReplanetizer
 
                 LOGGER.Debug("Parsing languages...");
                 english = gameplayParser.GetEnglish();
-                ukenglish = gameplayParser.GetUKEnglish();
+                ukenglish = gameplayParser.GetUkEnglish();
                 french = gameplayParser.GetFrench();
                 german = gameplayParser.GetGerman();
                 spanish = gameplayParser.GetSpanish();

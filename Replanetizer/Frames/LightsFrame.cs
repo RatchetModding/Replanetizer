@@ -36,10 +36,10 @@ namespace Replanetizer.Frames
 
             lightsProperties = new List<Tuple<Light, Dictionary<string, Dictionary<string, PropertyInfo>>>>();
 
-            recomputeProperties();
+            RecomputeProperties();
         }
 
-        private Dictionary<string, Dictionary<string, PropertyInfo>> recomputeSinglePropertiesSet(object o)
+        private Dictionary<string, Dictionary<string, PropertyInfo>> RecomputeSinglePropertiesSet(object o)
         {
             Dictionary<string, Dictionary<string, PropertyInfo>> properties = new Dictionary<string, Dictionary<string, PropertyInfo>>();
             var objProps = o.GetType().GetProperties();
@@ -62,13 +62,13 @@ namespace Replanetizer.Frames
             return properties;
         }
 
-        private void recomputeProperties()
+        private void RecomputeProperties()
         {
-            configProperties = recomputeSinglePropertiesSet(lightConfig);
+            configProperties = RecomputeSinglePropertiesSet(lightConfig);
 
             foreach (Light light in lights)
             {
-                lightsProperties.Add(new Tuple<Light, Dictionary<string, Dictionary<string, PropertyInfo>>>(light, recomputeSinglePropertiesSet(light)));
+                lightsProperties.Add(new Tuple<Light, Dictionary<string, Dictionary<string, PropertyInfo>>>(light, RecomputeSinglePropertiesSet(light)));
             }
         }
 

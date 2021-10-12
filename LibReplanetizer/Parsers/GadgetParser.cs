@@ -49,8 +49,8 @@ namespace LibReplanetizer.Parsers
 
                 foreach (TextureConfig t in models[i].textureConfig)
                 {
-                    maxID = (maxID < t.ID + 1) ? t.ID + 1 : maxID;
-                    t.ID += offset;
+                    maxID = (maxID < t.id + 1) ? t.id + 1 : maxID;
+                    t.id += offset;
                 }
 
                 offset += maxID;

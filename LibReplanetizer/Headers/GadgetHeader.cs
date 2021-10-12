@@ -18,18 +18,18 @@ namespace LibReplanetizer.Headers
         public int textureCount;
 
         // Are they always 47? If not I would expect the count somewhere
-        private const int gadgetCount = 47;
+        private const int GADGET_COUNT = 47;
 
         public GadgetHeader() { }
 
 
         public GadgetHeader(FileStream gadgetFile)
         {
-            byte[] gadgetHeaderBytes = ReadBlock(gadgetFile, 0x00, gadgetCount * 0x04);
+            byte[] gadgetHeaderBytes = ReadBlock(gadgetFile, 0x00, GADGET_COUNT * 0x04);
 
             modelPointers = new List<int>();
 
-            for (int i = 0; i < gadgetCount; i++)
+            for (int i = 0; i < GADGET_COUNT; i++)
             {
                 modelPointers.Add(ReadInt(gadgetHeaderBytes, i * 0x04));
             }

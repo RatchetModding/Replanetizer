@@ -20,7 +20,7 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("offset")]
         public long offset { get; set; }
 
-        static int cnt = 0;
+        static int CNT = 0;
 
         /*public override Vector3 position
         {
@@ -69,7 +69,7 @@ namespace LibReplanetizer.LevelObjects
 
         public void LoadFromByteArray(byte[] splineBlock, int offset)
         {
-            name = cnt;
+            name = CNT;
             int count = ReadInt(splineBlock, offset);
             vertexBuffer = new float[count * 3];
             wVals = new float[count];
@@ -86,7 +86,7 @@ namespace LibReplanetizer.LevelObjects
                 //_position = new Vector3(vertexBuffer[0], vertexBuffer[1], vertexBuffer[2]);
             }
 
-            cnt++;
+            CNT++;
         }
 
         public override byte[] ToByteArray()

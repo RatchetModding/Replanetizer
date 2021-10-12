@@ -17,39 +17,39 @@ namespace Replanetizer.Utils
     {
         private class KeyHeldInfo
         {
-            public float Duration { get; set; }
-            public int Repetitions { get; set; }
-            public bool IsFiring { get; set; }
+            public float duration { get; set; }
+            public int repetitions { get; set; }
+            public bool isFiring { get; set; }
 
             public void Reset()
             {
-                Duration = 0f;
-                Repetitions = 0;
-                IsFiring = false;
+                duration = 0f;
+                repetitions = 0;
+                isFiring = false;
             }
         }
 
         /// <summary>
         /// Wait for this many seconds before beginning to fire repeat actions
         /// </summary>
-        public float HoldDelay { get; set; } = 0.5f;
+        public float holdDelay { get; set; } = 0.5f;
 
         /// <summary>
         /// Delay between firing repeat actions
         /// </summary>
-        public float RepeatDelay { get; set; } = 0.1f;
+        public float repeatDelay { get; set; } = 0.1f;
 
         /// <summary>
         /// Keys to watch for being held
         /// </summary>
-        public ObservableCollection<Keys> WatchedKeys { get; }
+        public ObservableCollection<Keys> watchedKeys { get; }
 
-        private readonly Dictionary<Keys, KeyHeldInfo> keysHeld = new();
+        private readonly Dictionary<Keys, KeyHeldInfo> KEYS_HELD = new();
 
         public KeyHeldHandler()
         {
-            WatchedKeys = new ObservableCollection<Keys>();
-            WatchedKeys.CollectionChanged += WatchedKeysOnCollectionChanged;
+            watchedKeys = new ObservableCollection<Keys>();
+            watchedKeys.CollectionChanged += WatchedKeysOnCollectionChanged;
         }
 
         private void WatchedKeysOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -57,12 +57,12 @@ namespace Replanetizer.Utils
             if (e.OldItems != null)
                 foreach (Keys item in e.OldItems)
                 {
-                    keysHeld.Remove(item);
+                    KEYS_HELD.Remove(item);
                 }
             if (e.NewItems != null)
                 foreach (Keys item in e.NewItems)
                 {
-                    keysHeld.Add(item, new KeyHeldInfo());
+                    KEYS_HELD.Add(item, new KeyHeldInfo());
                 }
         }
 
@@ -73,9 +73,9 @@ namespace Replanetizer.Utils
         /// <param name="deltaTime">the delta time since the last update</param>
         public void Update(KeyboardState keyboardState, float deltaTime)
         {
-            foreach (var key in WatchedKeys)
+            foreach (var key in watchedKeys)
             {
-                var info = keysHeld[key];
+                var info = KEYS_HELD[key];
                 if (keyboardState.IsKeyDown(key))
                     UpdateKeyHeldInfo(info, deltaTime);
                 else if (keyboardState.IsKeyReleased(key))
@@ -85,28 +85,28 @@ namespace Replanetizer.Utils
 
         private void UpdateKeyHeldInfo(KeyHeldInfo info, float deltaTime)
         {
-            info.IsFiring = false;
+            info.isFiring = false;
 
-            info.Duration += deltaTime;
-            if (info.Duration < HoldDelay)
+            info.duration += deltaTime;
+            if (info.duration < holdDelay)
             {
                 // We're not repeating yet
-                if (info.Repetitions == 0)
+                if (info.repetitions == 0)
                 {
                     // Fire for the initial press
-                    info.Repetitions = 1;
-                    info.IsFiring = true;
+                    info.repetitions = 1;
+                    info.isFiring = true;
                 }
                 return;
             }
 
-            var time = info.Duration - HoldDelay;
-            var newRepetitions = (int) (time / RepeatDelay);
-            if (newRepetitions != info.Repetitions)
+            var time = info.duration - holdDelay;
+            var newRepetitions = (int) (time / repeatDelay);
+            if (newRepetitions != info.repetitions)
             {
                 // Fire once for this new repetition
-                info.Repetitions = newRepetitions;
-                info.IsFiring = true;
+                info.repetitions = newRepetitions;
+                info.isFiring = true;
             }
         }
 
@@ -118,7 +118,7 @@ namespace Replanetizer.Utils
         /// <returns></returns>
         public bool IsKeyHeld(Keys key)
         {
-            return keysHeld.TryGetValue(key, out var info) && info.IsFiring;
+            return KEYS_HELD.TryGetValue(key, out var info) && info.isFiring;
         }
     }
 }

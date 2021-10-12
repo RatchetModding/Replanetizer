@@ -11,11 +11,11 @@ namespace Replanetizer.Utils
 {
     public class MouseGrabHandler
     {
-        private bool _isGrabbed;
+        private bool isGrabbed;
         /// <summary>
         /// the mouse button to check for being held
         /// </summary>
-        public MouseButton MouseButton { get; set; }
+        public MouseButton mouseButton { get; set; }
 
         /// <summary>
         /// Check that the mouse button is being held and grab the cursor.
@@ -27,16 +27,16 @@ namespace Replanetizer.Utils
         /// <returns>whether the cursor is being grabbed</returns>
         public bool TryGrabMouse(Window wnd, bool allowNewGrab)
         {
-            var isDown = wnd.MouseState.IsButtonDown(MouseButton);
-            var wasDown = wnd.MouseState.WasButtonDown(MouseButton);
+            var isDown = wnd.MouseState.IsButtonDown(mouseButton);
+            var wasDown = wnd.MouseState.WasButtonDown(mouseButton);
 
             if (!isDown)
             {
-                if (wasDown && _isGrabbed)
+                if (wasDown && isGrabbed)
                 {
                     // Released click while cursor was being grabbed; unhide
                     // the cursor
-                    _isGrabbed = false;
+                    isGrabbed = false;
                     wnd.CursorVisible = true;
                     wnd.CursorGrabbed = false;
                 }
@@ -50,12 +50,12 @@ namespace Replanetizer.Utils
                     return false;
 
                 // Hide the cursor and allow it to move without any bounds
-                _isGrabbed = true;
+                isGrabbed = true;
                 wnd.CursorVisible = false;
                 wnd.CursorGrabbed = true;
             }
 
-            return _isGrabbed;
+            return isGrabbed;
         }
     }
 }

@@ -52,7 +52,7 @@ namespace LibReplanetizer
                         case "usemtl":
                             conf.Add(new TextureConfig
                             {
-                                ID = 0x2d8,
+                                id = 0x2d8,
                                 start = prevCnt,
                                 size = indCnt - prevCnt,
                                 mode = mod
@@ -125,7 +125,7 @@ namespace LibReplanetizer
 
                 TextureConfig cc = new TextureConfig
                 {
-                    ID = 428,
+                    id = 428,
                     start = prevCnt,
                     size = indCnt - prevCnt,
                     mode = mod

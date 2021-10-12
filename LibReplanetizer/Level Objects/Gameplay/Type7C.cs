@@ -13,44 +13,44 @@ namespace LibReplanetizer.LevelObjects
     {
         public const int ELEMENTSIZE = 0x20;
 
-        public float off_00;
-        public float off_04;
-        public float off_08;
-        public float off_0C;
+        public float off00;
+        public float off04;
+        public float off08;
+        public float off0C;
 
-        public int off_10;
-        public int off_14;
-        public int off_18;
-        public int off_1C;
+        public int off10;
+        public int off14;
+        public int off18;
+        public int off1C;
 
         public Type7C(byte[] block, int num)
         {
             int offset = num * ELEMENTSIZE;
 
-            off_00 = ReadFloat(block, offset + 0x00);
-            off_04 = ReadFloat(block, offset + 0x04);
-            off_08 = ReadFloat(block, offset + 0x08);
-            off_0C = ReadFloat(block, offset + 0x0C);
+            off00 = ReadFloat(block, offset + 0x00);
+            off04 = ReadFloat(block, offset + 0x04);
+            off08 = ReadFloat(block, offset + 0x08);
+            off0C = ReadFloat(block, offset + 0x0C);
 
-            off_10 = ReadInt(block, offset + 0x10);
-            off_14 = ReadInt(block, offset + 0x14);
-            off_18 = ReadInt(block, offset + 0x18);
-            off_1C = ReadInt(block, offset + 0x1C);
+            off10 = ReadInt(block, offset + 0x10);
+            off14 = ReadInt(block, offset + 0x14);
+            off18 = ReadInt(block, offset + 0x18);
+            off1C = ReadInt(block, offset + 0x1C);
         }
 
         public byte[] Serialize()
         {
             byte[] bytes = new byte[ELEMENTSIZE];
 
-            WriteFloat(bytes, 0x00, off_00);
-            WriteFloat(bytes, 0x04, off_04);
-            WriteFloat(bytes, 0x08, off_08);
-            WriteFloat(bytes, 0x0C, off_0C);
+            WriteFloat(bytes, 0x00, off00);
+            WriteFloat(bytes, 0x04, off04);
+            WriteFloat(bytes, 0x08, off08);
+            WriteFloat(bytes, 0x0C, off0C);
 
-            WriteInt(bytes, 0x10, off_10);
-            WriteInt(bytes, 0x14, off_14);
-            WriteInt(bytes, 0x18, off_18);
-            WriteInt(bytes, 0x1C, off_1C);
+            WriteInt(bytes, 0x10, off10);
+            WriteInt(bytes, 0x14, off14);
+            WriteInt(bytes, 0x18, off18);
+            WriteInt(bytes, 0x1C, off1C);
 
             return bytes;
         }

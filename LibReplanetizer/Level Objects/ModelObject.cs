@@ -30,7 +30,7 @@ namespace LibReplanetizer.LevelObjects
             return model.GetVertices();
         }
 
-        public byte[] GetAmbientRGBAs()
+        public byte[] GetAmbientRgbas()
         {
             if (this is Tie)
             {

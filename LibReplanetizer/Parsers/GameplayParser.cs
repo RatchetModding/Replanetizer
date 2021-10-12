@@ -83,7 +83,7 @@ namespace LibReplanetizer.Parsers
             return GetLang(gameplayHeader.englishPointer);
         }
 
-        public Dictionary<int, String> GetUKEnglish()
+        public Dictionary<int, String> GetUkEnglish()
         {
             return GetLang(gameplayHeader.ukenglishPointer);
         }

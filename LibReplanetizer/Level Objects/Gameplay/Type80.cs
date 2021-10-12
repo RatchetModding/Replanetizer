@@ -16,10 +16,10 @@ namespace LibReplanetizer.LevelObjects
         public const int HEADSIZE = 0x10;
         public const int DATASIZE = 0x80;
 
-        public float off_00;
-        public float off_04;
-        public float off_08;
-        public float off_0C;
+        public float off00;
+        public float off04;
+        public float off08;
+        public float off0C;
 
         public Matrix4 mat1;
         public Matrix4 mat2;
@@ -29,10 +29,10 @@ namespace LibReplanetizer.LevelObjects
             int headOffset = num * HEADSIZE;
             int dataOffset = num * DATASIZE;
 
-            off_00 = ReadFloat(block, headOffset + 0x00);
-            off_04 = ReadFloat(block, headOffset + 0x04);
-            off_08 = ReadFloat(block, headOffset + 0x08);
-            off_0C = ReadFloat(block, headOffset + 0x0C);
+            off00 = ReadFloat(block, headOffset + 0x00);
+            off04 = ReadFloat(block, headOffset + 0x04);
+            off08 = ReadFloat(block, headOffset + 0x08);
+            off0C = ReadFloat(block, headOffset + 0x0C);
 
             mat1 = ReadMatrix4(dataBlock, dataOffset + 0x00); //May be matrix data, but i'm not sure.
             mat2 = ReadMatrix4(dataBlock, dataOffset + 0x40); //Don't think this is a matrix.
@@ -46,10 +46,10 @@ namespace LibReplanetizer.LevelObjects
         {
             byte[] bytes = new byte[HEADSIZE];
 
-            WriteFloat(bytes, 0x00, off_00);
-            WriteFloat(bytes, 0x04, off_04);
-            WriteFloat(bytes, 0x08, off_08);
-            WriteFloat(bytes, 0x0C, off_0C);
+            WriteFloat(bytes, 0x00, off00);
+            WriteFloat(bytes, 0x04, off04);
+            WriteFloat(bytes, 0x08, off08);
+            WriteFloat(bytes, 0x0C, off0C);
 
             return bytes;
         }

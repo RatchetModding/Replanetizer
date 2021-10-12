@@ -85,7 +85,7 @@ namespace Replanetizer
             GL.ClearColor(new Color4(0, 32, 48, 255));
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             controller.Render();
-            Util.CheckGLError("End of frame");
+            Util.CheckGlError("End of frame");
             SwapBuffers();
         }
 

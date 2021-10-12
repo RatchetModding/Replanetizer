@@ -18,12 +18,12 @@ namespace Replanetizer.Frames
     {
         protected sealed override string frameName { get; set; } = "Textures";
         private Level level => levelFrame.level;
-        private static System.Numerics.Vector2 listSize = new(64, 64);
+        private static System.Numerics.Vector2 LIST_SIZE = new(64, 64);
         private float itemSizeX;
 
         public TextureFrame(Window wnd, LevelFrame levelFrame) : base(wnd, levelFrame)
         {
-            itemSizeX = listSize.X + ImGui.GetStyle().ItemSpacing.X;
+            itemSizeX = LIST_SIZE.X + ImGui.GetStyle().ItemSpacing.X;
         }
 
         public static void RenderTextureList(List<Texture> textures, float itemSizeX, Dictionary<Texture, int> textureIds, int additionalOffset = 0)
@@ -35,7 +35,7 @@ namespace Replanetizer.Frames
             while (i < textures.Count)
             {
                 Texture t = textures[i];
-                ImGui.Image((IntPtr) textureIds[t], listSize);
+                ImGui.Image((IntPtr) textureIds[t], LIST_SIZE);
                 if (ImGui.BeginPopupContextItem($"context-menu for {i}"))
                 {
                     if (ImGui.Button("Export"))

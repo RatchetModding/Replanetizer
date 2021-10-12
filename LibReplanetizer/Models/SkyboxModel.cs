@@ -18,10 +18,10 @@ namespace LibReplanetizer.Models
         public GameType game;
 
         //Unhandled offsets for serialization
-        int off_00;
-        short off_04;
-        int off_08;
-        int off_0C;
+        int off00;
+        short off04;
+        int off08;
+        int off0C;
 
         List<List<TextureConfig>> textureConfigs;
 
@@ -34,10 +34,10 @@ namespace LibReplanetizer.Models
             size = 1.0f;
             byte[] skyBlockHead = ReadBlock(fs, offset, headSize);
 
-            off_00 = ReadInt(skyBlockHead, 0x00);
-            off_04 = ReadShort(skyBlockHead, 0x04);
-            off_08 = ReadInt(skyBlockHead, 0x08);
-            off_0C = ReadInt(skyBlockHead, 0x0C);
+            off00 = ReadInt(skyBlockHead, 0x00);
+            off04 = ReadShort(skyBlockHead, 0x04);
+            off08 = ReadInt(skyBlockHead, 0x08);
+            off0C = ReadInt(skyBlockHead, 0x0C);
 
             short faceGroupCount = ReadShort(skyBlockHead, 0x06);
             int vertOffset = ReadInt(skyBlockHead, headSize - 0x8);
@@ -60,7 +60,7 @@ namespace LibReplanetizer.Models
             }
 
             int faceCount = GetFaceCount();
-            vertexBuffer = GetVerticesUV(fs, vertOffset, vertexCount, VERTELEMSIZE);
+            vertexBuffer = GetVerticesUv(fs, vertOffset, vertexCount, VERTELEMSIZE);
 
             indexBuffer = GetIndices(fs, faceOffset, faceCount);
 
@@ -81,18 +81,18 @@ namespace LibReplanetizer.Models
             int headLength = faceStart + faceLength;
 
             var headBytes = new byte[headLength];
-            WriteInt(headBytes, 0x00, off_00);
-            WriteShort(headBytes, 0x04, off_04);
+            WriteInt(headBytes, 0x00, off00);
+            WriteShort(headBytes, 0x04, off04);
             WriteShort(headBytes, 0x06, (short) textureConfigs.Count);
-            WriteInt(headBytes, 0x08, off_08);
-            WriteInt(headBytes, 0x0C, off_0C);
+            WriteInt(headBytes, 0x08, off08);
+            WriteInt(headBytes, 0x0C, off0C);
 
             int offs = faceStart;
             int[] headList = new int[textureConfigs.Count];
             for (int i = 0; i < textureConfigs.Count; i++)
             {
                 headList[i] = startOffset + offs;
-                if (textureConfigs[i][0].ID == 0)
+                if (textureConfigs[i][0].id == 0)
                 {
                     WriteShort(headBytes, offs + 0x00, 1);
                 }
@@ -101,7 +101,7 @@ namespace LibReplanetizer.Models
                 offs += 0x10;
                 foreach (var conf in textureConfigs[i])
                 {
-                    WriteInt(headBytes, offs, conf.ID);
+                    WriteInt(headBytes, offs, conf.id);
                     offs += 4;
                     WriteInt(headBytes, offs, conf.start);
                     offs += 4;
@@ -116,7 +116,7 @@ namespace LibReplanetizer.Models
 
 
             int vertOffset = GetLength(offs);
-            byte[] vertexBytes = GetVertexBytesUV(vertexBuffer);
+            byte[] vertexBytes = GetVertexBytesUv(vertexBuffer);
 
             int faceOffset = GetLength(vertOffset + vertexBytes.Length);
             byte[] faceBytes = GetFaceBytes();

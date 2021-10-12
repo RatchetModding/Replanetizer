@@ -21,13 +21,13 @@ namespace LibReplanetizer.Models
         public float cullingZ { get; set; }
         public float cullingRadius { get; set; }
 
-        public uint off_20 { get; set; }
+        public uint off20 { get; set; }
         public short wiggleMode { get; set; }
-        public float off_2C { get; set; }
+        public float off2C { get; set; }
 
-        public uint off_34 { get; set; }
-        public uint off_38 { get; set; }
-        public uint off_3C { get; set; }
+        public uint off34 { get; set; }
+        public uint off38 { get; set; }
+        public uint off3C { get; set; }
 
 
         public TieModel(FileStream fs, byte[] tieBlock, int num)
@@ -43,16 +43,16 @@ namespace LibReplanetizer.Models
             int indexPointer = ReadInt(tieBlock, offset + 0x18);
             int texturePointer = ReadInt(tieBlock, offset + 0x1C);
 
-            off_20 = ReadUint(tieBlock, offset + 0x20);                 //null
+            off20 = ReadUint(tieBlock, offset + 0x20);                 //null
             int vertexCount = ReadInt(tieBlock, offset + 0x24);
             short textureCount = ReadShort(tieBlock, offset + 0x28);
             wiggleMode = ReadShort(tieBlock, offset + 0x2A);
-            off_2C = ReadFloat(tieBlock, offset + 0x2C);
+            off2C = ReadFloat(tieBlock, offset + 0x2C);
 
             id = ReadShort(tieBlock, offset + 0x30);
-            off_34 = ReadUint(tieBlock, offset + 0x34);                 //null
-            off_38 = ReadUint(tieBlock, offset + 0x38);                 //null
-            off_3C = ReadUint(tieBlock, offset + 0x3C);                 //null
+            off34 = ReadUint(tieBlock, offset + 0x34);                 //null
+            off38 = ReadUint(tieBlock, offset + 0x38);                 //null
+            off3C = ReadUint(tieBlock, offset + 0x3C);                 //null
 
             size = 1.0f;
 
@@ -86,16 +86,16 @@ namespace LibReplanetizer.Models
             WriteInt(outBytes, 0x18, indexPointer);
             WriteInt(outBytes, 0x1C, texturePointer);
 
-            WriteUint(outBytes, 0x20, off_20);
+            WriteUint(outBytes, 0x20, off20);
             WriteInt(outBytes, 0x24, vertexBuffer.Length / 8);
             WriteShort(outBytes, 0x28, (short) textureConfig.Count);
             WriteShort(outBytes, 0x2A, wiggleMode);
-            WriteFloat(outBytes, 0x2C, off_2C);
+            WriteFloat(outBytes, 0x2C, off2C);
 
             WriteShort(outBytes, 0x30, id);
-            WriteUint(outBytes, 0x34, off_34);
-            WriteUint(outBytes, 0x38, off_38);
-            WriteUint(outBytes, 0x3C, off_3C);
+            WriteUint(outBytes, 0x34, off34);
+            WriteUint(outBytes, 0x38, off38);
+            WriteUint(outBytes, 0x3C, off3C);
 
             return outBytes;
         }
@@ -116,7 +116,7 @@ namespace LibReplanetizer.Models
 
             for (int i = 0; i < textureConfig.Count; i++)
             {
-                WriteInt(outBytes, texturePointer + i * 0x18 + 0x00, textureConfig[i].ID);
+                WriteInt(outBytes, texturePointer + i * 0x18 + 0x00, textureConfig[i].id);
                 WriteInt(outBytes, texturePointer + i * 0x18 + 0x04, -1);
                 WriteInt(outBytes, texturePointer + i * 0x18 + 0x08, textureConfig[i].start);
                 WriteInt(outBytes, texturePointer + i * 0x18 + 0x0C, textureConfig[i].size);

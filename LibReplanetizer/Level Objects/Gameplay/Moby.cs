@@ -540,12 +540,12 @@ namespace LibReplanetizer.LevelObjects
         public override void UpdateTransformMatrix()
         {
             Vector3 euler = rotation.ToEulerAngles();
-            Matrix4 rot_z = Matrix4.CreateFromAxisAngle(Vector3.UnitZ, euler.Z);
-            Matrix4 rot_y = Matrix4.CreateFromAxisAngle(Vector3.UnitY, euler.Y);
-            Matrix4 rot_x = Matrix4.CreateFromAxisAngle(Vector3.UnitX, euler.X);
+            Matrix4 rotZ = Matrix4.CreateFromAxisAngle(Vector3.UnitZ, euler.Z);
+            Matrix4 rotY = Matrix4.CreateFromAxisAngle(Vector3.UnitY, euler.Y);
+            Matrix4 rotX = Matrix4.CreateFromAxisAngle(Vector3.UnitX, euler.X);
             Matrix4 scaleMatrix = Matrix4.CreateScale(scale * model.size);
             Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
-            modelMatrix = scaleMatrix * rot_x * rot_y * rot_z * translationMatrix;
+            modelMatrix = scaleMatrix * rotX * rotY * rotZ * translationMatrix;
         }
 
         public void UpdateFromMemory(byte[] mobyMemory, int offset, List<Model> models)

@@ -40,19 +40,19 @@ namespace LibReplanetizer.LevelObjects
         // 0x14 = TextureConfig count
         // 0x18 = vertex offset, vertex count
         [Category("Unknowns"), DisplayName("OFF_1C: Always 65535")]
-        public ushort off_1C { get; set; }   // Always 0xffff
+        public ushort off1C { get; set; }   // Always 0xffff
         [Category("Unknowns"), DisplayName("OFF_1E: Fragment ID")]
-        public ushort off_1E { get; set; }   // 0 in rac1, index in rac2/3
+        public ushort off1E { get; set; }   // 0 in rac1, index in rac2/3
 
         [Category("Unknowns"), DisplayName("OFF_1C: Always 65280")]
-        public ushort off_20 { get; set; }   // Always 0xff00
+        public ushort off20 { get; set; }   // Always 0xff00
         // 0x22 = which rgba, uv and index pointer to use (0 for the first, 1 for the second)
         [Category("Unknowns"), DisplayName("OFF_24: Always 0")]
-        public uint off_24 { get; set; }     // Always 0
+        public uint off24 { get; set; }     // Always 0
         [Category("Unknowns"), DisplayName("OFF_28: Always 0")]
-        public uint off_28 { get; set; }     // Always 0
+        public uint off28 { get; set; }     // Always 0
         [Category("Unknowns"), DisplayName("OFF_2C: Always 0")]
-        public uint off_2C { get; set; }     // Always 0
+        public uint off2C { get; set; }     // Always 0
 
 
         public TerrainFragment(FileStream fs, TerrainHead head, byte[] tfragBlock, int num)
@@ -64,13 +64,13 @@ namespace LibReplanetizer.LevelObjects
             float cullingZ = ReadFloat(tfragBlock, offset + 0x08);
             cullingSize = ReadFloat(tfragBlock, offset + 0x0C);
 
-            off_1C = ReadUshort(tfragBlock, offset + 0x1C);
-            off_1E = ReadUshort(tfragBlock, offset + 0x1E);
+            off1C = ReadUshort(tfragBlock, offset + 0x1C);
+            off1E = ReadUshort(tfragBlock, offset + 0x1E);
 
-            off_20 = ReadUshort(tfragBlock, offset + 0x20);
-            off_24 = ReadUint(tfragBlock, offset + 0x24);
-            off_28 = ReadUint(tfragBlock, offset + 0x28);
-            off_2C = ReadUint(tfragBlock, offset + 0x2C);
+            off20 = ReadUshort(tfragBlock, offset + 0x20);
+            off24 = ReadUint(tfragBlock, offset + 0x24);
+            off28 = ReadUint(tfragBlock, offset + 0x28);
+            off2C = ReadUint(tfragBlock, offset + 0x2C);
 
             model = new TerrainModel(fs, head, tfragBlock, num);
 
@@ -99,14 +99,14 @@ namespace LibReplanetizer.LevelObjects
             WriteInt(head, 0x10, 0);
             WriteInt(head, 0x14, 0);
             WriteInt(head, 0x18, 0);
-            WriteUshort(head, 0x1C, off_1C);
-            WriteUshort(head, 0x1E, off_1E);
+            WriteUshort(head, 0x1C, off1C);
+            WriteUshort(head, 0x1E, off1E);
 
-            WriteUshort(head, 0x20, off_20);
+            WriteUshort(head, 0x20, off20);
             WriteUshort(head, 0x22, 0);
-            WriteUint(head, 0x24, off_24);
-            WriteUint(head, 0x28, off_28);
-            WriteUint(head, 0x2C, off_2C);
+            WriteUint(head, 0x24, off24);
+            WriteUint(head, 0x28, off28);
+            WriteUint(head, 0x2C, off2C);
 
             return head;
         }

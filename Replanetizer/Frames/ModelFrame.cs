@@ -38,14 +38,14 @@ namespace Replanetizer.Frames
 
         private readonly KeyHeldHandler KEY_HELD_HANDLER = new()
         {
-            WatchedKeys = { Keys.Up, Keys.Down },
-            HoldDelay = 0.45f,
-            RepeatDelay = 0.06f
+            watchedKeys = { Keys.Up, Keys.Down },
+            holdDelay = 0.45f,
+            repeatDelay = 0.06f
         };
 
         private readonly MouseGrabHandler MOUSE_GRAB_HANDLER = new()
         {
-            MouseButton = MouseButton.Right
+            mouseButton = MouseButton.Right
         };
 
         private ShaderIDTable shaderIDTable;
@@ -264,7 +264,7 @@ namespace Replanetizer.Frames
 
             for (int i = 0; i < selectedModel.textureConfig.Count; i++)
             {
-                int textureId = selectedModel.textureConfig[i].ID;
+                int textureId = selectedModel.textureConfig[i].id;
                 if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
 
                 modelTextureList.Add(selectedTextureSet[textureId]);
@@ -357,9 +357,9 @@ namespace Replanetizer.Frames
         {
             // To scale the zoom value to make a vector of that magnitude
             // magnitude == sqrt(3*zoom^2)
-            const float invSqrt3 = 0.57735f;
+            const float INV_SQRT3 = 0.57735f;
             Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(FIELD_OF_VIEW, (float) width / height, CLIP_NEAR, CLIP_FAR);
-            Matrix4 view = Matrix4.LookAt(new Vector3(invSqrt3 * ZOOM_SCALE * zoom), Vector3.Zero, Vector3.UnitZ);
+            Matrix4 view = Matrix4.LookAt(new Vector3(INV_SQRT3 * ZOOM_SCALE * zoom), Vector3.Zero, Vector3.UnitZ);
             return view * projection;
         }
 
@@ -373,10 +373,10 @@ namespace Replanetizer.Frames
                 // Has to be done in this order to work correctly
                 Matrix4 mvp = trans * scale * rot;
 
-                GL.UseProgram(shaderIDTable.ShaderMain);
-                GL.UniformMatrix4(shaderIDTable.UniformModelToWorldMatrix, false, ref mvp);
-                GL.UniformMatrix4(shaderIDTable.UniformWorldToViewMatrix, false, ref worldView);
-                GL.Uniform1(shaderIDTable.UniformLevelObjectType, (int) RenderedObjectType.Null);
+                GL.UseProgram(shaderIDTable.shaderMain);
+                GL.UniformMatrix4(shaderIDTable.uniformModelToWorldMatrix, false, ref mvp);
+                GL.UniformMatrix4(shaderIDTable.uniformWorldToViewMatrix, false, ref worldView);
+                GL.Uniform1(shaderIDTable.uniformLevelObjectType, (int) RenderedObjectType.Null);
 
                 GL.EnableVertexAttribArray(0);
                 GL.EnableVertexAttribArray(1);
@@ -390,7 +390,7 @@ namespace Replanetizer.Frames
                 //Bind textures one by one, applying it to the relevant vertices based on the index array
                 foreach (TextureConfig conf in selectedModel.textureConfig)
                 {
-                    GL.BindTexture(TextureTarget.Texture2D, (conf.ID >= 0 && conf.ID < selectedTextureSet.Count) ? levelFrame.textureIds[selectedTextureSet[conf.ID]] : 0);
+                    GL.BindTexture(TextureTarget.Texture2D, (conf.id >= 0 && conf.id < selectedTextureSet.Count) ? levelFrame.textureIds[selectedTextureSet[conf.id]] : 0);
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
 
@@ -499,7 +499,7 @@ namespace Replanetizer.Frames
 
             foreach (var config in selectedModel.textureConfig)
             {
-                var textureId = config.ID;
+                var textureId = config.id;
                 if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
 
                 var texture = selectedTextureSet[textureId];

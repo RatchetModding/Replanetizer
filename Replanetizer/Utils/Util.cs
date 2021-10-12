@@ -21,7 +21,7 @@ namespace Replanetizer.Utils
         }
 
         [Conditional("DEBUG")]
-        public static void CheckGLError(string title)
+        public static void CheckGlError(string title)
         {
             var error = GL.GetError();
             if (error != ErrorCode.NoError)

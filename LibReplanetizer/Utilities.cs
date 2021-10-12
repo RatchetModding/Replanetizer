@@ -14,24 +14,24 @@ namespace LibReplanetizer
 {
     public static class Utilities
     {
-        public static float fToDegrees(float radians)
+        public static float ToDegreesF(float radians)
         {
             return radians * 180 / (float) Math.PI;
         }
-        public static float fToRadians(float angle)
+        public static float ToRadiansF(float angle)
         {
             return (float) Math.PI / 180 * angle;
         }
-        public static float fRound(float value, float numberOfDecimals)
+        public static float RoundF(float value, float numberOfDecimals)
         {
             float multiplier = (float) Math.Pow(10, numberOfDecimals);
             return (float) Math.Ceiling(value * multiplier) / multiplier;
         }
-        public static float fSin(float input)
+        public static float SinF(float input)
         {
             return (float) Math.Sin(input);
         }
-        public static float fCos(float input)
+        public static float CosF(float input)
         {
             return (float) Math.Cos(input);
         }
@@ -84,9 +84,9 @@ namespace LibReplanetizer
             return sourceWithoutTranslation;
         }
 
-        public static float piClamp(float input)
+        public static float PiClamp(float input)
         {
-            float pi = (float) Math.PI;
+            float pi = MathF.PI;
             float val = input;
             while (val < -2 * pi)
             {
@@ -126,25 +126,25 @@ namespace LibReplanetizer
 
     public struct Pixel
     {
-        public byte R, G, B, A;
+        public byte r, g, b, a;
 
         public Pixel(byte[] input)
         {
-            R = input[0];
-            G = input[1];
-            B = input[2];
-            A = input[3];
+            r = input[0];
+            g = input[1];
+            b = input[2];
+            a = input[3];
         }
 
         public uint ToUInt32()
         {
-            byte[] temp = new byte[] { R, G, B, A };
+            byte[] temp = new byte[] { r, g, b, a };
             return BitConverter.ToUInt32(temp, 0);
         }
 
         public override string ToString()
         {
-            return R + ", " + G + ", " + B + ", " + A;
+            return r + ", " + g + ", " + b + ", " + a;
         }
     }
 
@@ -196,9 +196,9 @@ namespace LibReplanetizer
             {
                 string[] tokens = ((string) value).Split(' ');
                 return new Vector3(
-                    Utilities.fToRadians(float.Parse(tokens[0])),
-                    Utilities.fToRadians(float.Parse(tokens[1])),
-                    Utilities.fToRadians(float.Parse(tokens[2]))
+                    Utilities.ToRadiansF(float.Parse(tokens[0])),
+                    Utilities.ToRadiansF(float.Parse(tokens[1])),
+                    Utilities.ToRadiansF(float.Parse(tokens[2]))
                 );
             }
             catch
@@ -212,9 +212,9 @@ namespace LibReplanetizer
             Vector3 p = (Vector3) value;
             return String.Format(
                 "{0} {1} {2}",
-                Math.Round(Utilities.fToDegrees(p.X), 2),
-                Math.Round(Utilities.fToDegrees(p.Y), 2),
-                Math.Round(Utilities.fToDegrees(p.Z), 2)
+                Math.Round(Utilities.ToDegreesF(p.X), 2),
+                Math.Round(Utilities.ToDegreesF(p.Y), 2),
+                Math.Round(Utilities.ToDegreesF(p.Z), 2)
             );
         }
     }

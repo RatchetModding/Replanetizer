@@ -582,7 +582,7 @@ namespace LibReplanetizer.Models
 
             for (int i = 0; i < textureConfig.Count; i++)
             {
-                WriteInt(outbytes, textureConfigOffset + i * 0x10 + 0x00, textureConfig[i].ID);
+                WriteInt(outbytes, textureConfigOffset + i * 0x10 + 0x00, textureConfig[i].id);
                 WriteInt(outbytes, textureConfigOffset + i * 0x10 + 0x04, textureConfig[i].start);
                 WriteInt(outbytes, textureConfigOffset + i * 0x10 + 0x08, textureConfig[i].size);
                 WriteInt(outbytes, textureConfigOffset + i * 0x10 + 0x0C, textureConfig[i].mode);
@@ -590,7 +590,7 @@ namespace LibReplanetizer.Models
 
             for (int i = 0; i < otherTextureConfigs.Count; i++)
             {
-                WriteInt(outbytes, otherTextureConfigOffset + i * 0x10 + 0x00, otherTextureConfigs[i].ID);
+                WriteInt(outbytes, otherTextureConfigOffset + i * 0x10 + 0x00, otherTextureConfigs[i].id);
                 WriteInt(outbytes, otherTextureConfigOffset + i * 0x10 + 0x04, otherTextureConfigs[i].start);
                 WriteInt(outbytes, otherTextureConfigOffset + i * 0x10 + 0x08, otherTextureConfigs[i].size);
                 WriteInt(outbytes, otherTextureConfigOffset + i * 0x10 + 0x0C, otherTextureConfigs[i].mode);

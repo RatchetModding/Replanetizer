@@ -96,7 +96,7 @@ namespace LibReplanetizer.Serializers
                 foreach (var texConf in tFrags[i].model.textureConfig)
                 {
                     byte[] texBytes = new byte[0x10];
-                    WriteInt(texBytes, 0x00, texConf.ID);
+                    WriteInt(texBytes, 0x00, texConf.id);
                     WriteInt(texBytes, 0x04, texConf.start + indexBytes[chunk].Count / 2);
                     WriteInt(texBytes, 0x08, texConf.size);
                     WriteInt(texBytes, 0x0C, texConf.mode);

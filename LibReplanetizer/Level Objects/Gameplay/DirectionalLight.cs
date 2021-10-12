@@ -29,25 +29,25 @@ namespace LibReplanetizer.LevelObjects
             float colorABlue = ReadFloat(block, offset + 0x08);
             float colorAAlpha = ReadFloat(block, offset + 0x0C);
 
-            float dirAX = ReadFloat(block, offset + 0x10);
-            float dirAY = ReadFloat(block, offset + 0x14);
-            float dirAZ = ReadFloat(block, offset + 0x18);
-            float dirAW = ReadFloat(block, offset + 0x1C);
+            float dirAx = ReadFloat(block, offset + 0x10);
+            float dirAy = ReadFloat(block, offset + 0x14);
+            float dirAz = ReadFloat(block, offset + 0x18);
+            float dirAw = ReadFloat(block, offset + 0x1C);
 
             float colorBRed = ReadFloat(block, offset + 0x20);
             float colorBGreen = ReadFloat(block, offset + 0x24);
             float colorBBlue = ReadFloat(block, offset + 0x28);
             float colorBAlpha = ReadFloat(block, offset + 0x2C);
 
-            float dirBX = ReadFloat(block, offset + 0x30);
-            float dirBY = ReadFloat(block, offset + 0x34);
-            float dirBZ = ReadFloat(block, offset + 0x38);
-            float dirBW = ReadFloat(block, offset + 0x3C);
+            float dirBx = ReadFloat(block, offset + 0x30);
+            float dirBy = ReadFloat(block, offset + 0x34);
+            float dirBz = ReadFloat(block, offset + 0x38);
+            float dirBw = ReadFloat(block, offset + 0x3C);
 
             colorA = new Vector4(colorARed, colorAGreen, colorABlue, colorAAlpha);
-            directionA = new Vector4(dirAX, dirAY, dirAZ, dirAW);
+            directionA = new Vector4(dirAx, dirAy, dirAz, dirAw);
             colorB = new Vector4(colorBRed, colorBGreen, colorBBlue, colorBAlpha);
-            directionB = new Vector4(dirBX, dirBY, dirBZ, dirBW);
+            directionB = new Vector4(dirBx, dirBy, dirBz, dirBw);
         }
 
         public override byte[] ToByteArray()

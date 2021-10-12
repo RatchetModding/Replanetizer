@@ -37,9 +37,9 @@ namespace Replanetizer.MemoryHook
         [DllImport("kernel32.dll")]
         private static extern bool WriteProcessMemory(IntPtr hProcess, Int64 lpBaseAddress, byte[] lpBuffer, int nSize, ref int lpNumberOfBytesWritten);
 
-        private readonly Process process;
-        private readonly IntPtr processHandle;
-        private readonly MemoryAddresses addresses;
+        private readonly Process PROCESS;
+        private readonly IntPtr PROCESS_HANDLE;
+        private readonly MemoryAddresses ADDRESSES;
 
         public bool hookWorking = false;
 
@@ -48,7 +48,7 @@ namespace Replanetizer.MemoryHook
             switch (gameNum)
             {
                 case 1:
-                    addresses = new MemoryAddresses
+                    ADDRESSES = new MemoryAddresses
                     {
                         moby = 0x300A390A0,
                         camera = 0x300951500
@@ -62,8 +62,8 @@ namespace Replanetizer.MemoryHook
             Process[] processList = Process.GetProcessesByName("rpcs3");
             if (processList.Length > 0)
             {
-                process = processList[0];
-                processHandle = OpenProcess(PROCESS_WM_READ, false, process.Id);
+                PROCESS = processList[0];
+                PROCESS_HANDLE = OpenProcess(PROCESS_WM_READ, false, PROCESS.Id);
 
                 hookWorking = true;
             }
@@ -74,7 +74,7 @@ namespace Replanetizer.MemoryHook
             if (!hookWorking) return;
             int bytesRead = 0;
             byte[] camBfr = new byte[0x20];
-            ReadProcessMemory(processHandle, addresses.camera, camBfr, camBfr.Length, ref bytesRead);
+            ReadProcessMemory(PROCESS_HANDLE, ADDRESSES.camera, camBfr, camBfr.Length, ref bytesRead);
             camera.position = new Vector3(ReadFloat(camBfr, 0x00), ReadFloat(camBfr, 0x04), ReadFloat(camBfr, 0x08));
             camera.rotation = new Vector3(ReadFloat(camBfr, 0x10), ReadFloat(camBfr, 0x14), ReadFloat(camBfr, 0x18) - (float) (Math.PI / 2));
         }
@@ -87,13 +87,13 @@ namespace Replanetizer.MemoryHook
             int bytesRead = 0;
             byte[] ptrbuf = new byte[0xC];
 
-            ReadProcessMemory(processHandle, addresses.moby, ptrbuf, ptrbuf.Length, ref bytesRead);
+            ReadProcessMemory(PROCESS_HANDLE, ADDRESSES.moby, ptrbuf, ptrbuf.Length, ref bytesRead);
             int firstMoby = ReadInt(ptrbuf, 0x00);
             int lastMoby = ReadInt(ptrbuf, 0x08);
 
             byte[] mobys = new byte[lastMoby - firstMoby + 0x100];
 
-            ReadProcessMemory(processHandle, 0x300000000 + firstMoby, mobys, mobys.Length, ref bytesRead);
+            ReadProcessMemory(PROCESS_HANDLE, 0x300000000 + firstMoby, mobys, mobys.Length, ref bytesRead);
 
             while (levelMobs.Count < mobys.Length / 0x100)
             {

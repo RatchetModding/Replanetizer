@@ -60,18 +60,18 @@ namespace LibReplanetizer.Models
         //Get texture configs of different types using elemsize
         public static List<TextureConfig> GetTextureConfigs(FileStream fs, int texturePointer, int textureCount, int elemSize, bool negate = false)
         {
-            int IDoffset = 0, startOffset = 0, sizeOffset = 0, modeOffset = 0;
+            int idOffset = 0, startOffset = 0, sizeOffset = 0, modeOffset = 0;
 
             switch (elemSize)
             {
                 case 0x10:
-                    IDoffset = 0x00;
+                    idOffset = 0x00;
                     startOffset = 0x04;
                     sizeOffset = 0x08;
                     modeOffset = 0x0C;
                     break;
                 case 0x18:
-                    IDoffset = 0x00;
+                    idOffset = 0x00;
                     startOffset = 0x08;
                     sizeOffset = 0x0C;
                     modeOffset = 0x14;
@@ -84,7 +84,7 @@ namespace LibReplanetizer.Models
             for (int i = 0; i < textureCount; i++)
             {
                 TextureConfig textureConfig = new TextureConfig();
-                textureConfig.ID = ReadInt(texBlock, (i * elemSize) + IDoffset);
+                textureConfig.id = ReadInt(texBlock, (i * elemSize) + idOffset);
                 textureConfig.start = ReadInt(texBlock, (i * elemSize) + startOffset);
                 textureConfig.size = ReadInt(texBlock, (i * elemSize) + sizeOffset);
                 textureConfig.mode = ReadInt(texBlock, (i * elemSize) + modeOffset);
@@ -185,7 +185,7 @@ namespace LibReplanetizer.Models
         }
 
         //Get vertices with UV's baked in, but no normals
-        public static float[] GetVerticesUV(FileStream fs, int vertexPointer, int vertexCount, int elemSize)
+        public static float[] GetVerticesUv(FileStream fs, int vertexPointer, int vertexCount, int elemSize)
         {
             float[] vertexBuffer = new float[vertexCount * 8];
 
@@ -205,7 +205,7 @@ namespace LibReplanetizer.Models
             return vertexBuffer;
         }
 
-        public static byte[] GetVertexBytesUV(float[] vertexBuffer)
+        public static byte[] GetVertexBytesUv(float[] vertexBuffer)
         {
             int vertexCount = vertexBuffer.Length / 8;
             byte[] vertexBytes = new byte[vertexCount * 0x18];
@@ -233,12 +233,12 @@ namespace LibReplanetizer.Models
         }
 
         //Get vertices with UV's located somewhere else
-        public static float[] GetVertices(FileStream fs, int vertexPointer, int UVPointer, int vertexCount, int vertexElemSize, int UVElemSize)
+        public static float[] GetVertices(FileStream fs, int vertexPointer, int uvPointer, int vertexCount, int vertexElemSize, int uvElemSize)
         {
             float[] vertexBuffer = new float[vertexCount * 8];
 
             byte[] vertBlock = ReadBlock(fs, vertexPointer, vertexCount * vertexElemSize);
-            byte[] UVBlock = ReadBlock(fs, UVPointer, vertexCount * UVElemSize);
+            byte[] uvBlock = ReadBlock(fs, uvPointer, vertexCount * uvElemSize);
             for (int i = 0; i < vertexCount; i++)
             {
                 vertexBuffer[(i * 8) + 0] = (ReadFloat(vertBlock, (i * vertexElemSize) + 0x00));    //VertexX
@@ -248,8 +248,8 @@ namespace LibReplanetizer.Models
                 vertexBuffer[(i * 8) + 4] = (ReadFloat(vertBlock, (i * vertexElemSize) + 0x10));    //NormY
                 vertexBuffer[(i * 8) + 5] = (ReadFloat(vertBlock, (i * vertexElemSize) + 0x14));    //NormZ
 
-                vertexBuffer[(i * 8) + 6] = (ReadFloat(UVBlock, (i * UVElemSize) + 0x00));    //UVu
-                vertexBuffer[(i * 8) + 7] = (ReadFloat(UVBlock, (i * UVElemSize) + 0x04));    //UVv
+                vertexBuffer[(i * 8) + 6] = (ReadFloat(uvBlock, (i * uvElemSize) + 0x00));    //UVu
+                vertexBuffer[(i * 8) + 7] = (ReadFloat(uvBlock, (i * uvElemSize) + 0x04));    //UVv
             }
             return vertexBuffer;
         }

@@ -13,7 +13,7 @@ namespace Replanetizer.Utils
     public class FramebufferRenderer : IDisposable
     {
         public static int MSAA_LEVEL = 2;
-        private int internal_allocated_msaa_level;
+        private int internalAllocatedMsaaLevel;
 
         private bool disposed = false;
 
@@ -29,7 +29,7 @@ namespace Replanetizer.Utils
 
         private void AllocateAllResources()
         {
-            internal_allocated_msaa_level = MSAA_LEVEL;
+            internalAllocatedMsaaLevel = MSAA_LEVEL;
 
             targetTexture = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2DMultisample, targetTexture);
@@ -77,7 +77,7 @@ namespace Replanetizer.Utils
 
         public void RenderToTexture(Action renderFunction)
         {
-            if (internal_allocated_msaa_level != MSAA_LEVEL)
+            if (internalAllocatedMsaaLevel != MSAA_LEVEL)
             {
                 DeleteAllResources();
                 AllocateAllResources();

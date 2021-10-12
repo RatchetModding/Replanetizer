@@ -147,8 +147,8 @@ namespace Replanetizer.Utils
             frustumPlanePoints = new Vector3[6];
             frustumPlaneNormals = new Vector3[6];
 
-            float Hfar = MathF.Tan(fovy) * far;
-            float Wfar = Hfar * aspect;
+            float hfar = MathF.Tan(fovy) * far;
+            float wfar = hfar * aspect;
 
             Vector3 forward = LegacyTransform(Vector3.UnitY, GetRotationMatrix());
             forward.Normalize();
@@ -166,22 +166,22 @@ namespace Replanetizer.Utils
             frustumPlanePoints[1] = fc;
             frustumPlaneNormals[1] = -forward;
 
-            Vector3 a = (fc + right * Wfar) - position;
+            Vector3 a = (fc + right * wfar) - position;
             a.Normalize();
             frustumPlanePoints[2] = position;
             frustumPlaneNormals[2] = Vector3.Cross(up, a);
 
-            Vector3 b = (fc - right * Wfar) - position;
+            Vector3 b = (fc - right * wfar) - position;
             b.Normalize();
             frustumPlanePoints[3] = position;
             frustumPlaneNormals[3] = Vector3.Cross(b, up);
 
-            Vector3 c = (fc + up * Hfar) - position;
+            Vector3 c = (fc + up * hfar) - position;
             c.Normalize();
             frustumPlanePoints[4] = position;
             frustumPlaneNormals[4] = Vector3.Cross(c, right);
 
-            Vector3 d = (fc - up * Hfar) - position;
+            Vector3 d = (fc - up * hfar) - position;
             d.Normalize();
             frustumPlanePoints[5] = position;
             frustumPlaneNormals[5] = Vector3.Cross(right, d);

@@ -50,7 +50,7 @@ namespace Replanetizer.Frames
                 ImGui.Checkbox("Include Ties", ref settings.writeTies);
                 ImGui.Checkbox("Include Shrubs", ref settings.writeShrubs);
                 ImGui.Checkbox("Include Mobies", ref settings.writeMobies);
-                ImGui.Checkbox("Include MLT File", ref settings.exportMTLFile);
+                ImGui.Checkbox("Include MLT File", ref settings.exportMtlFile);
                 ImGui.TreePop();
             }
 

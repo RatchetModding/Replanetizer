@@ -20,18 +20,18 @@ namespace LibReplanetizer.LevelObjects
         const int ELEMENTSIZE = 0x70;
 
         [Category("Unknowns"), DisplayName("OFF_54: Always 4000 in RaC 2/3")]
-        public uint off_54 { get; set; }
+        public uint off54 { get; set; }
         [Category("Unknowns"), DisplayName("OFF_58: Tie ID")]
-        public uint off_58 { get; set; }
+        public uint off58 { get; set; }
         [Category("Unknowns"), DisplayName("OFF_5C: Always 0")]
-        public uint off_5C { get; set; }
+        public uint off5C { get; set; }
 
         [Category("Unknowns"), DisplayName("OFF_64: Always 0")]
-        public uint off_64 { get; set; }
+        public uint off64 { get; set; }
         [Category("Attributes"), DisplayName("Light")]
         public ushort light { get; set; }
         [Category("Unknowns"), DisplayName("OFF_6C: Always 0")]
-        public uint off_6C { get; set; }
+        public uint off6C { get; set; }
 
         public byte[] colorBytes;
 
@@ -54,14 +54,14 @@ namespace LibReplanetizer.LevelObjects
             */
 
             modelID = ReadInt(levelBlock, offset + 0x50);
-            off_54 = ReadUint(levelBlock, offset + 0x54);
-            off_58 = ReadUint(levelBlock, offset + 0x58);
-            off_5C = ReadUint(levelBlock, offset + 0x5C);
+            off54 = ReadUint(levelBlock, offset + 0x54);
+            off58 = ReadUint(levelBlock, offset + 0x58);
+            off5C = ReadUint(levelBlock, offset + 0x5C);
 
             int colorOffset = ReadInt(levelBlock, offset + 0x60);
-            off_64 = ReadUint(levelBlock, offset + 0x64);
+            off64 = ReadUint(levelBlock, offset + 0x64);
             light = ReadUshort(levelBlock, offset + 0x68);
-            off_6C = ReadUint(levelBlock, offset + 0x6C);
+            off6C = ReadUint(levelBlock, offset + 0x6C);
 
             model = tieModels.Find(tieModel => tieModel.id == modelID);
             colorBytes = ReadBlock(fs, colorOffset, (model.vertexBuffer.Length / 8) * 4);
@@ -93,15 +93,15 @@ namespace LibReplanetizer.LevelObjects
             WriteMatrix4(bytes, 0x00, modelMatrix);
 
             WriteInt(bytes, 0x50, modelID);
-            WriteUint(bytes, 0x54, off_54);
-            WriteUint(bytes, 0x58, off_58);
-            WriteUint(bytes, 0x5C, off_5C);
+            WriteUint(bytes, 0x54, off54);
+            WriteUint(bytes, 0x58, off58);
+            WriteUint(bytes, 0x5C, off5C);
 
             WriteInt(bytes, 0x60, colorOffset);
-            WriteUint(bytes, 0x64, off_64);
+            WriteUint(bytes, 0x64, off64);
             WriteUshort(bytes, 0x68, light);
             WriteUshort(bytes, 0x6A, 0xffff);
-            WriteUint(bytes, 0x6C, off_6C);
+            WriteUint(bytes, 0x6C, off6C);
 
             return bytes;
         }
@@ -114,15 +114,15 @@ namespace LibReplanetizer.LevelObjects
             WriteMatrix4(bytes, 0x00, modelMatrix);
 
             WriteInt(bytes, 0x50, modelID);
-            WriteUint(bytes, 0x54, off_54);
-            WriteUint(bytes, 0x58, off_58);
-            WriteUint(bytes, 0x5C, off_5C);
+            WriteUint(bytes, 0x54, off54);
+            WriteUint(bytes, 0x58, off58);
+            WriteUint(bytes, 0x5C, off5C);
 
             WriteInt(bytes, 0x60, 0);
-            WriteUint(bytes, 0x64, off_64);
+            WriteUint(bytes, 0x64, off64);
             WriteUshort(bytes, 0x68, light);
             WriteUshort(bytes, 0x6A, 0xffff);
-            WriteUint(bytes, 0x6C, off_6C);
+            WriteUint(bytes, 0x6C, off6C);
 
             return bytes;
         }

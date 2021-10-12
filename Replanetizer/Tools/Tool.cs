@@ -22,20 +22,20 @@ namespace Replanetizer.Tools
             VertexTranslator
         }
 
-        protected int VBO;
+        protected int vbo;
         protected float[] vb;
 
-        protected void GetVBO()
+        protected void GetVbo()
         {
-            if (VBO == 0)
+            if (vbo == 0)
             {
-                GL.GenBuffers(1, out VBO);
-                GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
+                GL.GenBuffers(1, out vbo);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
                 GL.BufferData(BufferTarget.ArrayBuffer, vb.Length * sizeof(float), vb, BufferUsageHint.StaticDraw);
             }
             else
             {
-                GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             }
 
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);

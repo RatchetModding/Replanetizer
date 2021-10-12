@@ -15,14 +15,14 @@ namespace Replanetizer.ModelLists
 {
     public static class ModelLists
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
 
-        public static Lazy<Dictionary<int, string>> mobNames = new(() =>
+        public static Lazy<Dictionary<int, string>> MOB_NAMES = new(() =>
         {
             return GetModelNames("ModelListRC1.txt");
         });
 
-        public static Lazy<Dictionary<int, string>> tieNames = new(() =>
+        public static Lazy<Dictionary<int, string>> TIE_NAMES = new(() =>
         {
             return GetModelNames("TieModelsRC1.txt");
         });
@@ -50,7 +50,7 @@ namespace Replanetizer.ModelLists
             }
             catch (FileNotFoundException)
             {
-                Logger.Warn("Model list file not found! No names for you!");
+                LOGGER.Warn("Model list file not found! No names for you!");
             }
 
             return modelNames;

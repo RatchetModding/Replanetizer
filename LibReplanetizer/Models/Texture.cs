@@ -27,15 +27,15 @@ namespace LibReplanetizer
         public int vramPointer;
         public byte[] data;
 
-        public short off_06;
-        public int off_08;
-        public int off_0C;
+        public short off06;
+        public int off08;
+        public int off0C;
 
-        public int off_10;
-        public int off_14;
-        public int off_1C;
+        public int off10;
+        public int off14;
+        public int off1C;
 
-        public int off_20;
+        public int off20;
 
 
         public Texture(int id, short width, short height, byte[] data)
@@ -45,32 +45,32 @@ namespace LibReplanetizer
             this.data = data;
 
             mipMapCount = 1;
-            off_06 = unchecked((short) 0x8829);
-            off_08 = 0x00010101;
-            off_0C = unchecked((int) 0x80030000);
+            off06 = unchecked((short) 0x8829);
+            off08 = 0x00010101;
+            off0C = unchecked((int) 0x80030000);
 
-            off_10 = 0x0000AAE4;
-            off_14 = 0x02063E80;
-            off_1C = 0x00100000;
+            off10 = 0x0000AAE4;
+            off14 = 0x02063E80;
+            off1C = 0x00100000;
 
-            off_20 = 0x00FF0000;
+            off20 = 0x00FF0000;
         }
 
         public Texture(byte[] textureBlock, int offset)
         {
             vramPointer = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x00);
             mipMapCount = ReadShort(textureBlock, (offset * TEXTUREELEMSIZE) + 0x04);
-            off_06 = ReadShort(textureBlock, (offset * TEXTUREELEMSIZE) + 0x06);
-            off_08 = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x08);
-            off_0C = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x0C);
+            off06 = ReadShort(textureBlock, (offset * TEXTUREELEMSIZE) + 0x06);
+            off08 = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x08);
+            off0C = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x0C);
 
-            off_10 = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x10);
-            off_14 = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x14);
+            off10 = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x10);
+            off14 = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x14);
             width = ReadShort(textureBlock, (offset * TEXTUREELEMSIZE) + 0x18);
             height = ReadShort(textureBlock, (offset * TEXTUREELEMSIZE) + 0x1A);
-            off_1C = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x1C);
+            off1C = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x1C);
 
-            off_20 = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x20);
+            off20 = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x20);
         }
 
         public byte[] Serialize(int vramOffset)
@@ -79,22 +79,22 @@ namespace LibReplanetizer
 
             WriteInt(outBytes, 0x00, vramOffset);
             WriteShort(outBytes, 0x04, mipMapCount);
-            WriteShort(outBytes, 0x06, off_06);
-            WriteInt(outBytes, 0x08, off_08);
-            WriteInt(outBytes, 0x0C, off_0C);
+            WriteShort(outBytes, 0x06, off06);
+            WriteInt(outBytes, 0x08, off08);
+            WriteInt(outBytes, 0x0C, off0C);
 
-            WriteInt(outBytes, 0x10, off_10);
-            WriteInt(outBytes, 0x14, off_14);
+            WriteInt(outBytes, 0x10, off10);
+            WriteInt(outBytes, 0x14, off14);
             WriteShort(outBytes, 0x18, width);
             WriteShort(outBytes, 0x1A, height);
-            WriteInt(outBytes, 0x1C, off_1C);
+            WriteInt(outBytes, 0x1C, off1C);
 
-            WriteInt(outBytes, 0x20, off_20);
+            WriteInt(outBytes, 0x20, off20);
 
             return outBytes;
         }
 
-        public Bitmap getTextureImage()
+        public Bitmap GetTextureImage()
         {
             if (img != null) return img;
 

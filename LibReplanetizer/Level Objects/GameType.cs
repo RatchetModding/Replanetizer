@@ -9,7 +9,7 @@ namespace LibReplanetizer
 {
     public class GameType
     {
-        public static readonly int[] mobySizes = { 0x78, 0x88, 0x88, 0x70 };
+        public static readonly int[] MOBY_SIZES = { 0x78, 0x88, 0x88, 0x70 };
 
         public int num;
         public int mobyElemSize;
@@ -19,7 +19,7 @@ namespace LibReplanetizer
         {
             num = gameNum;
 
-            mobyElemSize = mobySizes[gameNum - 1];
+            mobyElemSize = MOBY_SIZES[gameNum - 1];
         }
     }
 }

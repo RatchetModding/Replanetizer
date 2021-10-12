@@ -22,135 +22,135 @@ namespace Replanetizer.Utils
 
     public class GLTexture : IDisposable
     {
-        public const SizedInternalFormat Srgb8Alpha8 = (SizedInternalFormat) All.Srgb8Alpha8;
+        public const SizedInternalFormat SRGB8_ALPHA8 = (SizedInternalFormat) All.Srgb8Alpha8;
         public const SizedInternalFormat RGB32F = (SizedInternalFormat) All.Rgb32f;
 
         public const GetPName MAX_TEXTURE_MAX_ANISOTROPY = (GetPName) 0x84FF;
 
-        public static readonly float MaxAniso;
+        public static readonly float MAX_ANISO;
 
         static GLTexture()
         {
-            MaxAniso = GL.GetFloat(MAX_TEXTURE_MAX_ANISOTROPY);
+            MAX_ANISO = GL.GetFloat(MAX_TEXTURE_MAX_ANISOTROPY);
         }
 
-        public readonly string Name;
-        public readonly int Texture;
-        public readonly int Width, Height;
-        public readonly int MipmapLevels;
-        public readonly SizedInternalFormat InternalFormat;
+        public readonly string NAME;
+        public readonly int TEXTURE;
+        public readonly int WIDTH, HEIGHT;
+        public readonly int MIPMAP_LEVELS;
+        public readonly SizedInternalFormat INTERNAL_FORMAT;
 
         public GLTexture(string name, Bitmap image, bool generateMipmaps, bool srgb)
         {
-            Name = name;
-            Width = image.Width;
-            Height = image.Height;
-            InternalFormat = srgb ? Srgb8Alpha8 : SizedInternalFormat.Rgba8;
+            NAME = name;
+            WIDTH = image.Width;
+            HEIGHT = image.Height;
+            INTERNAL_FORMAT = srgb ? SRGB8_ALPHA8 : SizedInternalFormat.Rgba8;
 
             if (generateMipmaps)
             {
                 // Calculate how many levels to generate for this texture
-                MipmapLevels = (int) Math.Floor(Math.Log(Math.Max(Width, Height), 2));
+                MIPMAP_LEVELS = (int) Math.Floor(Math.Log(Math.Max(WIDTH, HEIGHT), 2));
             }
             else
             {
                 // There is only one level
-                MipmapLevels = 1;
+                MIPMAP_LEVELS = 1;
             }
 
-            Util.CheckGLError("Clear");
+            Util.CheckGlError("Clear");
 
-            Util.CreateTexture(TextureTarget.Texture2D, Name, out Texture);
-            GL.TextureStorage2D(Texture, MipmapLevels, InternalFormat, Width, Height);
-            Util.CheckGLError("Storage2d");
+            Util.CreateTexture(TextureTarget.Texture2D, NAME, out TEXTURE);
+            GL.TextureStorage2D(TEXTURE, MIPMAP_LEVELS, INTERNAL_FORMAT, WIDTH, HEIGHT);
+            Util.CheckGlError("Storage2d");
 
-            BitmapData data = image.LockBits(new Rectangle(0, 0, Width, Height),
+            BitmapData data = image.LockBits(new Rectangle(0, 0, WIDTH, HEIGHT),
                 ImageLockMode.ReadOnly, global::System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
-            GL.TextureSubImage2D(Texture, 0, 0, 0, Width, Height, PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
-            Util.CheckGLError("SubImage");
+            GL.TextureSubImage2D(TEXTURE, 0, 0, 0, WIDTH, HEIGHT, PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
+            Util.CheckGlError("SubImage");
 
             image.UnlockBits(data);
 
-            if (generateMipmaps) GL.GenerateTextureMipmap(Texture);
+            if (generateMipmaps) GL.GenerateTextureMipmap(TEXTURE);
 
-            GL.TextureParameter(Texture, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
-            Util.CheckGLError("WrapS");
-            GL.TextureParameter(Texture, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
-            Util.CheckGLError("WrapT");
+            GL.TextureParameter(TEXTURE, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
+            Util.CheckGlError("WrapS");
+            GL.TextureParameter(TEXTURE, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
+            Util.CheckGlError("WrapT");
 
-            GL.TextureParameter(Texture, TextureParameterName.TextureMinFilter, (int) (generateMipmaps ? TextureMinFilter.Linear : TextureMinFilter.LinearMipmapLinear));
-            GL.TextureParameter(Texture, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Linear);
-            Util.CheckGLError("Filtering");
+            GL.TextureParameter(TEXTURE, TextureParameterName.TextureMinFilter, (int) (generateMipmaps ? TextureMinFilter.Linear : TextureMinFilter.LinearMipmapLinear));
+            GL.TextureParameter(TEXTURE, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Linear);
+            Util.CheckGlError("Filtering");
 
-            GL.TextureParameter(Texture, TextureParameterName.TextureMaxLevel, MipmapLevels - 1);
+            GL.TextureParameter(TEXTURE, TextureParameterName.TextureMaxLevel, MIPMAP_LEVELS - 1);
 
             // This is a bit weird to do here
             image.Dispose();
         }
 
-        public GLTexture(string name, int GLTex, int width, int height, int mipmaplevels, SizedInternalFormat internalFormat)
+        public GLTexture(string name, int glTex, int width, int height, int mipmaplevels, SizedInternalFormat internalFormat)
         {
-            Name = name;
-            Texture = GLTex;
-            Width = width;
-            Height = height;
-            MipmapLevels = mipmaplevels;
-            InternalFormat = internalFormat;
+            NAME = name;
+            TEXTURE = glTex;
+            WIDTH = width;
+            HEIGHT = height;
+            MIPMAP_LEVELS = mipmaplevels;
+            INTERNAL_FORMAT = internalFormat;
         }
 
         public GLTexture(string name, int width, int height, IntPtr data, bool generateMipmaps = false, bool srgb = false)
         {
-            Name = name;
-            Width = width;
-            Height = height;
-            InternalFormat = srgb ? Srgb8Alpha8 : SizedInternalFormat.Rgba8;
-            MipmapLevels = generateMipmaps == false ? 1 : (int) Math.Floor(Math.Log(Math.Max(Width, Height), 2));
+            NAME = name;
+            WIDTH = width;
+            HEIGHT = height;
+            INTERNAL_FORMAT = srgb ? SRGB8_ALPHA8 : SizedInternalFormat.Rgba8;
+            MIPMAP_LEVELS = generateMipmaps == false ? 1 : (int) Math.Floor(Math.Log(Math.Max(WIDTH, HEIGHT), 2));
 
-            Util.CreateTexture(TextureTarget.Texture2D, Name, out Texture);
-            GL.TextureStorage2D(Texture, MipmapLevels, InternalFormat, Width, Height);
+            Util.CreateTexture(TextureTarget.Texture2D, NAME, out TEXTURE);
+            GL.TextureStorage2D(TEXTURE, MIPMAP_LEVELS, INTERNAL_FORMAT, WIDTH, HEIGHT);
 
-            GL.TextureSubImage2D(Texture, 0, 0, 0, Width, Height, PixelFormat.Bgra, PixelType.UnsignedByte, data);
+            GL.TextureSubImage2D(TEXTURE, 0, 0, 0, WIDTH, HEIGHT, PixelFormat.Bgra, PixelType.UnsignedByte, data);
 
-            if (generateMipmaps) GL.GenerateTextureMipmap(Texture);
+            if (generateMipmaps) GL.GenerateTextureMipmap(TEXTURE);
 
             SetWrap(TextureCoordinate.S, TextureWrapMode.Repeat);
             SetWrap(TextureCoordinate.T, TextureWrapMode.Repeat);
 
-            GL.TextureParameter(Texture, TextureParameterName.TextureMaxLevel, MipmapLevels - 1);
+            GL.TextureParameter(TEXTURE, TextureParameterName.TextureMaxLevel, MIPMAP_LEVELS - 1);
         }
 
         public void SetMinFilter(TextureMinFilter filter)
         {
-            GL.TextureParameter(Texture, TextureParameterName.TextureMinFilter, (int) filter);
+            GL.TextureParameter(TEXTURE, TextureParameterName.TextureMinFilter, (int) filter);
         }
 
         public void SetMagFilter(TextureMagFilter filter)
         {
-            GL.TextureParameter(Texture, TextureParameterName.TextureMagFilter, (int) filter);
+            GL.TextureParameter(TEXTURE, TextureParameterName.TextureMagFilter, (int) filter);
         }
 
         public void SetAnisotropy(float level)
         {
             const TextureParameterName TEXTURE_MAX_ANISOTROPY = (TextureParameterName) 0x84FE;
-            GL.TextureParameter(Texture, TEXTURE_MAX_ANISOTROPY, Util.Clamp(level, 1, MaxAniso));
+            GL.TextureParameter(TEXTURE, TEXTURE_MAX_ANISOTROPY, Util.Clamp(level, 1, MAX_ANISO));
         }
 
         public void SetLod(int @base, int min, int max)
         {
-            GL.TextureParameter(Texture, TextureParameterName.TextureLodBias, @base);
-            GL.TextureParameter(Texture, TextureParameterName.TextureMinLod, min);
-            GL.TextureParameter(Texture, TextureParameterName.TextureMaxLod, max);
+            GL.TextureParameter(TEXTURE, TextureParameterName.TextureLodBias, @base);
+            GL.TextureParameter(TEXTURE, TextureParameterName.TextureMinLod, min);
+            GL.TextureParameter(TEXTURE, TextureParameterName.TextureMaxLod, max);
         }
 
         public void SetWrap(TextureCoordinate coord, TextureWrapMode mode)
         {
-            GL.TextureParameter(Texture, (TextureParameterName) coord, (int) mode);
+            GL.TextureParameter(TEXTURE, (TextureParameterName) coord, (int) mode);
         }
 
         public void Dispose()
         {
-            GL.DeleteTexture(Texture);
+            GL.DeleteTexture(TEXTURE);
         }
     }
 }

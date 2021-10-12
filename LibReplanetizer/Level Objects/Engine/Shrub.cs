@@ -22,9 +22,9 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Draw Distance")]
         public float drawDistance { get; set; }
         [Category("Unknowns"), DisplayName("OFF_58: Always 0")]
-        public uint off_58 { get; set; }
+        public uint off58 { get; set; }
         [Category("Unknowns"), DisplayName("OFF_5C: Always 0")]
-        public uint off_5C { get; set; }
+        public uint off5C { get; set; }
 
         // Seems to be some kind of static lighting color
         // Changing it to red will make the shrub be very red
@@ -33,11 +33,11 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Static Color")]
         public Color color { get; set; }
         [Category("Unknowns"), DisplayName("OFF_64: Always 0")]
-        public uint off_64 { get; set; }
+        public uint off64 { get; set; }
         [Category("Attributes"), DisplayName("Light")]
         public ushort light { get; set; }
         [Category("Unknowns"), DisplayName("OFF_6C: Always 0")]
-        public uint off_6C { get; set; }
+        public uint off6C { get; set; }
 
 
         public Shrub(Matrix4 matrix4)
@@ -60,16 +60,16 @@ namespace LibReplanetizer.LevelObjects
 
             modelID = ReadInt(levelBlock, offset + 0x50);
             drawDistance = ReadFloat(levelBlock, offset + 0x54);
-            off_58 = ReadUint(levelBlock, offset + 0x58);
-            off_5C = ReadUint(levelBlock, offset + 0x5C);
+            off58 = ReadUint(levelBlock, offset + 0x58);
+            off5C = ReadUint(levelBlock, offset + 0x5C);
 
             byte r = levelBlock[offset + 0x60];
             byte g = levelBlock[offset + 0x61];
             byte b = levelBlock[offset + 0x62];
             byte a = levelBlock[offset + 0x63];
-            off_64 = ReadUint(levelBlock, offset + 0x64);
+            off64 = ReadUint(levelBlock, offset + 0x64);
             light = ReadUshort(levelBlock, offset + 0x68);
-            off_6C = ReadUint(levelBlock, offset + 0x6C);
+            off6C = ReadUint(levelBlock, offset + 0x6C);
 
             model = shrubModels.Find(shrubModel => shrubModel.id == modelID);
             color = Color.FromArgb(a, r, g, b);
@@ -102,17 +102,17 @@ namespace LibReplanetizer.LevelObjects
 
             WriteInt(bytes, 0x50, modelID);
             WriteFloat(bytes, 0x54, drawDistance);
-            WriteUint(bytes, 0x58, off_58);
-            WriteUint(bytes, 0x5C, off_5C);
+            WriteUint(bytes, 0x58, off58);
+            WriteUint(bytes, 0x5C, off5C);
 
             bytes[0x60] = color.R;
             bytes[0x61] = color.G;
             bytes[0x62] = color.B;
             bytes[0x63] = color.A;
-            WriteUint(bytes, 0x64, off_64);
+            WriteUint(bytes, 0x64, off64);
             WriteUshort(bytes, 0x68, light);
             WriteUshort(bytes, 0x6A, 0xffff);
-            WriteUint(bytes, 0x6C, off_6C);
+            WriteUint(bytes, 0x6C, off6C);
 
             return bytes;
         }

@@ -55,27 +55,27 @@ dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
 dotnet_style_predefined_type_for_member_access = true:suggestion
 
 # functions should use PascalCase
-dotnet_naming_rule.pascal_case_for_public.severity = error
+dotnet_naming_rule.pascal_case_for_public.severity = suggestion
 dotnet_naming_rule.pascal_case_for_public.symbols  = functions
 dotnet_naming_rule.pascal_case_for_public.style    = pascal_case_style
 
 # static vars should be all_upper with _ word separator
-dotnet_naming_rule.static.severity = error
+dotnet_naming_rule.static.severity = suggestion
 dotnet_naming_rule.static.symbols  = static
 dotnet_naming_rule.static.style    = all_upper_style
 
 # const vars should be all_upper with _ word separator
-dotnet_naming_rule.const.severity = error
+dotnet_naming_rule.const.severity = suggestion
 dotnet_naming_rule.const.symbols  = const
 dotnet_naming_rule.const.style    = all_upper_style
 
 # readonly vars should be all_upper with _ word separator
-dotnet_naming_rule.readonly.severity = error
+dotnet_naming_rule.readonly.severity = suggestion
 dotnet_naming_rule.readonly.symbols  = readonly
 dotnet_naming_rule.readonly.style    = all_upper_style
 
 # vars should be camelCase
-dotnet_naming_rule.camel_case_for_private_internal_fields.severity = error
+dotnet_naming_rule.camel_case_for_private_internal_fields.severity = suggestion
 dotnet_naming_rule.camel_case_for_private_internal_fields.symbols  = fields
 dotnet_naming_rule.camel_case_for_private_internal_fields.style    = camel_case_style
 

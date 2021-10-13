@@ -32,6 +32,13 @@ namespace Replanetizer.Utils
             _pivotDirty = dirty;
         }
 
+        public new void Clear()
+        {
+            splinesCount = 0;
+            nonSplinesCount = 0;
+            SetDirty(true);
+            base.Clear();
+        }
         public new bool Add(LevelObject obj)
         {
             if (Contains(obj))

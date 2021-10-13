@@ -983,14 +983,16 @@ namespace Replanetizer.Frames
         {
             float xAxis = 0, yAxis = 0, zAxis = 0;
 
-            if (wnd.KeyboardState.IsKeyDown(Keys.W)) yAxis++;
-            if (wnd.KeyboardState.IsKeyDown(Keys.S)) yAxis--;
-            if (wnd.KeyboardState.IsKeyDown(Keys.A)) xAxis--;
-            if (wnd.KeyboardState.IsKeyDown(Keys.D)) xAxis++;
-            if (wnd.KeyboardState.IsKeyDown(Keys.Q)) zAxis--;
-            if (wnd.KeyboardState.IsKeyDown(Keys.E)) zAxis++;
+            if (KEYMAP.IsDown(Keybinds.MoveRight)) xAxis++;
+            if (KEYMAP.IsDown(Keybinds.MoveLeft)) xAxis--;
+            if (KEYMAP.IsDown(Keybinds.MoveForward)) yAxis++;
+            if (KEYMAP.IsDown(Keybinds.MoveBackward)) yAxis--;
+            if (KEYMAP.IsDown(Keybinds.MoveUp)) zAxis++;
+            if (KEYMAP.IsDown(Keybinds.MoveDown)) zAxis--;
 
-            return new Vector3(xAxis, yAxis, zAxis);
+            var inputAxes = new Vector3(xAxis, yAxis, zAxis);
+            inputAxes.NormalizeFast();
+            return inputAxes;
         }
 
         public void ActivateBuffersForModel(IRenderable renderable)

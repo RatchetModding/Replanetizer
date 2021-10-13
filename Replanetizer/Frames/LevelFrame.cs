@@ -7,7 +7,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -57,7 +57,7 @@ namespace Replanetizer.Frames
         private Matrix4 view { get; set; }
 
         private int currentSplineVertex;
-        public ObservableCollection<LevelObject> SelectedObjects { get; } = new();
+        public readonly Selection selectedObjects;
 
         private int antialiasing = 1;
         private string[] antialiasingOptions = { "Off", "2x MSAA", "4x MSAA", "8x MSAA", "16x MSAA", "32x MSAA", "64x MSAA", "128x MSAA", "256x MSAA", "512x MSAA" };
@@ -97,16 +97,17 @@ namespace Replanetizer.Frames
         private int width, height;
 
         private List<Frame> subFrames;
-        private List<Action<LevelObject>> selectionCallbacks;
 
         public LevelFrame(Window wnd) : base(wnd)
         {
             subFrames = new List<Frame>();
-            selectionCallbacks = new List<Action<LevelObject>>();
             bufferTable = new ConditionalWeakTable<IRenderable, BufferContainer>();
             camera = new Camera();
 
             maxAntialiasing = (int) Math.Log2((double) GL.GetInteger(GetPName.MaxSamples));
+
+            selectedObjects = new Selection();
+            selectedObjects.CollectionChanged += SelectedObjectsOnCollectionChanged;
 
             UpdateWindowSize();
             OnResize();
@@ -750,33 +751,10 @@ namespace Replanetizer.Frames
             InvalidateView();
         }
 
-        private void TriggerSelectionCallbacks()
+        public void SelectedObjectsOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            foreach (Delegate callback in selectionCallbacks)
-            {
-                callback.DynamicInvoke(selectedObject);
-            }
-        }
-
-        public void RegisterCallback(Action<LevelObject> callback)
-        {
-            selectionCallbacks.Add(callback);
-        }
-
-        public void SelectObject(LevelObject newObject = null)
-        {
-            if (newObject != null)
-            {
-                if ((selectedObject is Spline) && !(newObject is Spline))
-                {
-                    //Previous object was spline, new isn't
-                    if (currentTool is VertexTranslationTool) SelectTool(null);
-                }
-            }
-
-            selectedObject = newObject;
-            InvalidateView();
-            TriggerSelectionCallbacks();
+            if (!selectedObjects.isOnlySplines && currentTool is VertexTranslationTool)
+                SelectTool();
         }
 
         public void DeleteObject(LevelObject levelObject)
@@ -1187,7 +1165,7 @@ namespace Replanetizer.Frames
             buffer.UpdateVars();
             buffer.ComputeCulling(camera, enableDistanceCulling, enableFrustumCulling);
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, 0, lightsBufferObject);
-            buffer.Select(SelectedObjects);
+            buffer.Select(selectedObject);
             buffer.Render();
         }
 
@@ -1304,7 +1282,7 @@ namespace Replanetizer.Frames
                     Spline spline = level.splines[i];
                     GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
                     GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref spline.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, SelectedObjects.Contains(spline) ? SELECTED_COLOR : NORMAL_COLOR);
+                    GL.Uniform4(shaderIDTable.uniformColor, spline == selectedObject ? SELECTED_COLOR : NORMAL_COLOR);
                     ActivateBuffersForModel(spline);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
                     GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
@@ -1321,7 +1299,7 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref cuboid.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, SelectedObjects.Contains(cuboid) ? SELECTED_COLOR : NORMAL_COLOR);
+                    GL.Uniform4(shaderIDTable.uniformColor, selectedObject == cuboid ? SELECTED_COLOR : NORMAL_COLOR);
                     ActivateBuffersForModel(cuboid);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
                     GL.DrawElements(PrimitiveType.Triangles, Cuboid.CUBE_ELEMENTS.Length, DrawElementsType.UnsignedShort, 0);
@@ -1339,7 +1317,7 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref sphere.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, SelectedObjects.Contains(sphere) ? SELECTED_COLOR : NORMAL_COLOR);
+                    GL.Uniform4(shaderIDTable.uniformColor, selectedObject == sphere ? SELECTED_COLOR : NORMAL_COLOR);
                     ActivateBuffersForModel(sphere);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
                     GL.DrawElements(PrimitiveType.Triangles, Sphere.SPHERE_TRIS.Length, DrawElementsType.UnsignedShort, 0);
@@ -1357,7 +1335,7 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref cylinder.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, SelectedObjects.Contains(cylinder) ? SELECTED_COLOR : NORMAL_COLOR);
+                    GL.Uniform4(shaderIDTable.uniformColor, selectedObject == cylinder ? SELECTED_COLOR : NORMAL_COLOR);
                     ActivateBuffersForModel(cylinder);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
                     GL.DrawElements(PrimitiveType.Triangles, Cylinder.CYLINDER_TRIS.Length, DrawElementsType.UnsignedShort, 0);
@@ -1375,7 +1353,7 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref type0C.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, SelectedObjects.Contains(type0C) ? SELECTED_COLOR : NORMAL_COLOR);
+                    GL.Uniform4(shaderIDTable.uniformColor, type0C == selectedObject ? SELECTED_COLOR : NORMAL_COLOR);
 
                     ActivateBuffersForModel(type0C);
 

@@ -30,8 +30,8 @@ namespace Replanetizer.Utils
         ToolVertexTranslator,
 
         // Misc
-        Delete,
-        MultiSelectModifier,
+        DeleteObject,
+        MultiSelectModifier
     }
 
     public readonly struct KeyCombo
@@ -93,7 +93,7 @@ namespace Replanetizer.Utils
                 { Keybinds.ToolScaling, new[] { new KeyCombo(Keys.D3) } },
                 { Keybinds.ToolVertexTranslator, new[] { new KeyCombo(Keys.D4) } },
                 // Misc
-                { Keybinds.Delete, new[] { new KeyCombo(Keys.Delete) } },
+                { Keybinds.DeleteObject, new[] { new KeyCombo(Keys.Delete) } },
                 {
                     Keybinds.MultiSelectModifier,
                     new[] { new KeyCombo(Keys.LeftShift), new KeyCombo(Keys.RightShift) }

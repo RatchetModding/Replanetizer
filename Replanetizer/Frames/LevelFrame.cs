@@ -840,12 +840,12 @@ namespace Replanetizer.Frames
 
         private void HandleKeyboardShortcuts()
         {
-            if (wnd.IsKeyPressed(Keys.D1)) SelectTool(translateTool);
-            if (wnd.IsKeyPressed(Keys.D2)) SelectTool(rotationTool);
-            if (wnd.IsKeyPressed(Keys.D3)) SelectTool(scalingTool);
-            if (wnd.IsKeyPressed(Keys.D4)) SelectTool(vertexTranslator);
-            if (wnd.IsKeyPressed(Keys.D5)) SelectTool();
-            if (wnd.IsKeyPressed(Keys.Delete)) DeleteObject(selectedObjects);
+            if (KEYMAP.IsPressed(Keybinds.ToolNone)) SelectTool();
+            if (KEYMAP.IsPressed(Keybinds.ToolTranslate)) SelectTool(translateTool);
+            if (KEYMAP.IsPressed(Keybinds.ToolRotation)) SelectTool(rotationTool);
+            if (KEYMAP.IsPressed(Keybinds.ToolScaling)) SelectTool(scalingTool);
+            if (KEYMAP.IsPressed(Keybinds.ToolVertexTranslator)) SelectTool(vertexTranslator);
+            if (KEYMAP.IsPressed(Keybinds.DeleteObject)) DeleteObject(selectedObjects);
         }
 
         public void SelectTool(Tool tool = null)
@@ -878,7 +878,7 @@ namespace Replanetizer.Frames
 
         private void CheckForMovementInput(float deltaTime)
         {
-            float moveSpeed = wnd.IsKeyDown(Keys.LeftShift) ? 40 : 10;
+            float moveSpeed = KEYMAP.IsDown(Keybinds.MoveFastModifier) ? 40 : 10;
             Vector3 moveDir = GetInputAxes();
             if (moveDir.Length > 0)
             {

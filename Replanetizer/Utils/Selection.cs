@@ -10,17 +10,17 @@ namespace Replanetizer.Utils
         {
             get
             {
-                if (_pivotDirty)
+                if (pivotDirty)
                 {
                     _pivot = CalculatePivotPoint();
-                    _pivotDirty = false;
+                    pivotDirty = false;
                 }
 
                 return _pivot;
             }
         }
 
-        private bool _pivotDirty;
+        private bool pivotDirty;
         private Vector3 _pivot;
 
         public bool isOnlySplines => splinesCount > 1 && nonSplinesCount == 0;
@@ -29,7 +29,7 @@ namespace Replanetizer.Utils
 
         private void SetDirty(bool dirty)
         {
-            _pivotDirty = dirty;
+            pivotDirty = dirty;
         }
 
         public new void Clear()

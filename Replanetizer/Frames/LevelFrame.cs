@@ -266,8 +266,8 @@ namespace Replanetizer.Frames
                     if (ImGui.MenuItem("Scale            [3]")) SelectTool(scalingTool);
                     if (ImGui.MenuItem("Vertex translate [4]")) SelectTool(vertexTranslator);
                     if (ImGui.MenuItem("No tool          [5]")) SelectTool(null);
-                    if (ImGui.MenuItem("Delete object  [Del]")) DeleteObject(selectedObject);
-                    if (ImGui.MenuItem("Deselect object")) SelectObject(null);
+                    if (ImGui.MenuItem("Delete selected  [Del]")) DeleteObject(selectedObjects);
+                    if (ImGui.MenuItem("Deselect all")) selectedObjects.Clear();
 
                     ImGui.EndMenu();
                 }

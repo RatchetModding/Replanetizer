@@ -106,7 +106,7 @@ namespace Replanetizer.Utils
             this.keymap = keymap;
         }
 
-        public bool IsKeybindDown(Keybinds keybind)
+        public bool IsDown(Keybinds keybind)
         {
             foreach (KeyCombo keyCombo in keymap[keybind])
             {
@@ -117,7 +117,7 @@ namespace Replanetizer.Utils
             return false;
         }
 
-        public bool IsKeybindPressed(Keybinds keybind)
+        public bool IsPressed(Keybinds keybind)
         {
             foreach (KeyCombo keyCombo in keymap[keybind])
             {
@@ -128,7 +128,7 @@ namespace Replanetizer.Utils
             return false;
         }
 
-        public bool IsKeybindReleased(Keybinds keybind)
+        public bool IsReleased(Keybinds keybind)
         {
             foreach (KeyCombo keyCombo in keymap[keybind])
             {

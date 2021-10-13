@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using LibReplanetizer.LevelObjects;
 using OpenTK.Mathematics;
 
@@ -87,6 +88,16 @@ namespace Replanetizer.Utils
         public bool ToggleOne(LevelObject obj)
         {
             return Set(obj) || Remove(obj);
+        }
+
+        public bool TryGetOne([NotNullWhen(true)] out LevelObject? obj)
+        {
+            obj = null;
+            if (Count != 1)
+                return false;
+
+            obj = this[0];
+            return true;
         }
 
         private Vector3 CalculatePivotPoint()

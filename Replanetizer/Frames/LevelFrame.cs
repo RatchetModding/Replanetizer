@@ -1168,7 +1168,7 @@ namespace Replanetizer.Frames
             buffer.UpdateVars();
             buffer.ComputeCulling(camera, enableDistanceCulling, enableFrustumCulling);
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, 0, lightsBufferObject);
-            buffer.Select(selectedObject);
+            buffer.Select(selectedObjects);
             buffer.Render();
         }
 

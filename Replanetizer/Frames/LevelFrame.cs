@@ -82,7 +82,7 @@ namespace Replanetizer.Frames
             enableDistanceCulling = true, enableFrustumCulling = true, enableFog = true, enableCameraInfo = true;
 
         public Camera camera;
-        private Tool currentTool;
+        private Tool? currentTool;
         public Tool translateTool, rotationTool, scalingTool, vertexTranslator;
 
         private ConditionalWeakTable<IRenderable, BufferContainer> bufferTable;
@@ -205,8 +205,9 @@ namespace Replanetizer.Frames
                 {
                     if (ImGui.MenuItem("Object properties"))
                     {
-                        var newFrame = new PropertyFrame(this.wnd, this, selectedObject, listenToCallbacks: true);
-                        RegisterCallback(newFrame.SelectionCallback);
+                        var newFrame = new PropertyFrame(this.wnd, this, selectedObjects, listenToCallbacks: true);
+                        // TODO callbacks
+                        // RegisterCallback(newFrame.SelectionCallback);
                         subFrames.Add(newFrame);
                     }
                     if (ImGui.MenuItem("Model viewer"))
@@ -712,7 +713,7 @@ namespace Replanetizer.Frames
                 camera.SetPosition(0, 0, 0);
                 camera.SetRotation(0, 0);
             }
-            SelectObject(null);
+            selectedObjects.Clear();
             SetSelectedChunks();
             shrubsBuffers = GetRenderableBuffer(level.shrubs, RenderedObjectType.Shrub);
             tiesBuffers = GetRenderableBuffer(level.ties, RenderedObjectType.Tie);
@@ -758,12 +759,18 @@ namespace Replanetizer.Frames
         {
             if (!selectedObjects.isOnlySplines && currentTool is VertexTranslationTool)
                 SelectTool();
+            InvalidateView();
+        }
+
+        public void DeleteObject(IEnumerable<LevelObject> levelObjects)
+        {
+            foreach (var obj in levelObjects)
+                DeleteObject(obj);
         }
 
         public void DeleteObject(LevelObject levelObject)
         {
-            if (levelObject == null) return;
-            SelectObject(null);
+            selectedObjects.Remove(levelObject);
             switch (levelObject)
             {
                 case Moby moby:
@@ -803,8 +810,9 @@ namespace Replanetizer.Frames
 
         private void HandleMouseWheelChanges()
         {
-            if (!(selectedObject is Spline spline)) return;
-            if (!(currentTool is VertexTranslationTool)) return;
+            if (currentTool is not VertexTranslationTool) return;
+            if (!selectedObjects.TryGetOne(out var obj) || obj is not Spline spline)
+                return;
 
             int delta = (int) wnd.MouseState.ScrollDelta.Length / 120;
             if (delta > 0)
@@ -826,7 +834,7 @@ namespace Replanetizer.Frames
             if (!(moby.Clone() is Moby newMoby)) return;
 
             level.mobs.Add(newMoby);
-            SelectObject(newMoby);
+            selectedObjects.Set(newMoby);
             InvalidateView();
         }
 
@@ -837,7 +845,7 @@ namespace Replanetizer.Frames
             if (wnd.IsKeyPressed(Keys.D3)) SelectTool(scalingTool);
             if (wnd.IsKeyPressed(Keys.D4)) SelectTool(vertexTranslator);
             if (wnd.IsKeyPressed(Keys.D5)) SelectTool();
-            if (wnd.IsKeyPressed(Keys.Delete)) DeleteObject(selectedObject);
+            if (wnd.IsKeyPressed(Keys.Delete)) DeleteObject(selectedObjects);
         }
 
         public void SelectTool(Tool tool = null)
@@ -886,27 +894,22 @@ namespace Replanetizer.Frames
             float magnitudeMultiplier = 50;
             Vector3 magnitude = (mouseRay - prevMouseRay) * magnitudeMultiplier;
 
-            switch (currentTool)
+            foreach (var obj in selectedObjects)
             {
-                case TranslationTool t:
-                    selectedObject.Translate(direction * magnitude);
-                    break;
-                case RotationTool t:
-                    selectedObject.Rotate(direction * magnitude);
-                    break;
-                case ScalingTool t:
-                    selectedObject.Scale(direction * magnitude + Vector3.One);
-                    break;
-                case VertexTranslationTool t:
-                    if (selectedObject is Spline spline)
+                if (currentTool is TranslationTool)
+                    obj.Translate(direction * magnitude);
+                else if (currentTool is RotationTool)
+                    obj.Rotate(direction * magnitude);
+                else if (currentTool is ScalingTool)
+                    obj.Scale(direction * magnitude + Vector3.One);
+                else if (currentTool is VertexTranslationTool && obj is Spline spline)
+                {
+                    spline.TranslateVertex(currentSplineVertex, direction * magnitude);
+                    if (hook is { hookWorking: true })
                     {
-                        spline.TranslateVertex(currentSplineVertex, direction * magnitude);
-                        if (hook != null && hook.hookWorking)
-                        {
-                            hook.HandleSplineTranslation(level, spline, currentSplineVertex);
-                        }
+                        hook.HandleSplineTranslation(level, spline, currentSplineVertex);
                     }
-                    break;
+                }
             }
 
             InvalidateView();
@@ -935,39 +938,7 @@ namespace Replanetizer.Frames
 
             Vector3 mouseRay = MouseToWorldRay(camera.GetProjectionMatrix(), view, new Size(width, height), mousePos);
 
-            if (wnd.IsMouseButtonDown(MouseButton.Left))
-            {
-                LevelObject obj = null;
-                Vector3 direction = Vector3.Zero;
-
-                renderer.ExposeFramebuffer(() =>
-                {
-                    obj = GetObjectAtScreenPosition(mousePos);
-                });
-
-                if (xLock)
-                {
-                    direction = Vector3.UnitX;
-                }
-                else if (yLock)
-                {
-                    direction = Vector3.UnitY;
-                }
-                else if (zLock)
-                {
-                    direction = Vector3.UnitZ;
-                }
-
-                if (xLock || yLock || zLock)
-                {
-                    HandleToolUpdates(mouseRay, direction);
-                }
-                else if (!wnd.MouseState.WasButtonDown(MouseButton.Left))
-                {
-                    SelectObject(obj);
-                }
-            }
-            else
+            if (!HandleLeftMouseDown(mouseRay))
             {
                 xLock = false;
                 yLock = false;
@@ -977,6 +948,48 @@ namespace Replanetizer.Frames
             lastMouseX = (int) wnd.MousePosition.X;
             lastMouseY = (int) wnd.MousePosition.Y;
             prevMouseRay = mouseRay;
+        }
+
+        private bool HandleLeftMouseDown(Vector3 mouseRay)
+        {
+            if (!wnd.IsMouseButtonDown(MouseButton.Left))
+                return false;
+
+            LevelObject? obj = null;
+            Vector3 direction = Vector3.Zero;
+
+            renderer.ExposeFramebuffer(() => { obj = GetObjectAtScreenPosition(mousePos); });
+
+            if (xLock)
+                direction = Vector3.UnitX;
+            else if (yLock)
+                direction = Vector3.UnitY;
+            else if (zLock)
+                direction = Vector3.UnitZ;
+
+            if (xLock || yLock || zLock)
+                HandleToolUpdates(mouseRay, direction);
+            else
+                HandleSelect(obj);
+
+            return true;
+        }
+
+        private bool HandleSelect(LevelObject? obj)
+        {
+            if (obj == null)
+                return false;
+            if (wnd.MouseState.WasButtonDown(MouseButton.Left))
+                return false;
+
+            bool isMultiSelect = KEYMAP.IsDown(Keybinds.MultiSelectModifier);
+
+            if (isMultiSelect)
+                selectedObjects.Toggle(obj);
+            else
+                selectedObjects.ToggleOne(obj);
+
+            return true;
         }
 
         private Vector3 GetInputAxes()
@@ -1003,22 +1016,21 @@ namespace Replanetizer.Frames
 
         public void RenderTool()
         {
+            if (currentTool == null || selectedObjects.Count == 0)
+                return;
+
             // Render tool on top of everything
             GL.Clear(ClearBufferMask.DepthBufferBit);
             GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.Tool);
             GL.LineWidth(5.0f);
 
-            if ((selectedObject != null) && (currentTool != null))
+            if (selectedObjects.TryGetOne(out var obj) && obj is Spline spline &&
+                currentTool is VertexTranslationTool)
             {
-                if ((currentTool is VertexTranslationTool) && (selectedObject is Spline spline))
-                {
-                    currentTool.Render(spline.GetVertex(currentSplineVertex), this);
-                }
-                else
-                {
-                    currentTool.Render(selectedObject.position, this);
-                }
+                currentTool.Render(spline.GetVertex(currentSplineVertex), this);
             }
+            else
+                currentTool.Render(selectedObjects.pivot, this);
 
             GL.LineWidth(1.0f);
         }
@@ -1287,7 +1299,7 @@ namespace Replanetizer.Frames
                     Spline spline = level.splines[i];
                     GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
                     GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref spline.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, spline == selectedObject ? SELECTED_COLOR : NORMAL_COLOR);
+                    GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(spline) ? SELECTED_COLOR : NORMAL_COLOR);
                     ActivateBuffersForModel(spline);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
                     GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
@@ -1304,7 +1316,7 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref cuboid.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, selectedObject == cuboid ? SELECTED_COLOR : NORMAL_COLOR);
+                    GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(cuboid) ? SELECTED_COLOR : NORMAL_COLOR);
                     ActivateBuffersForModel(cuboid);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
                     GL.DrawElements(PrimitiveType.Triangles, Cuboid.CUBE_ELEMENTS.Length, DrawElementsType.UnsignedShort, 0);
@@ -1322,7 +1334,7 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref sphere.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, selectedObject == sphere ? SELECTED_COLOR : NORMAL_COLOR);
+                    GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(sphere) ? SELECTED_COLOR : NORMAL_COLOR);
                     ActivateBuffersForModel(sphere);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
                     GL.DrawElements(PrimitiveType.Triangles, Sphere.SPHERE_TRIS.Length, DrawElementsType.UnsignedShort, 0);
@@ -1340,7 +1352,7 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref cylinder.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, selectedObject == cylinder ? SELECTED_COLOR : NORMAL_COLOR);
+                    GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(cylinder) ? SELECTED_COLOR : NORMAL_COLOR);
                     ActivateBuffersForModel(cylinder);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
                     GL.DrawElements(PrimitiveType.Triangles, Cylinder.CYLINDER_TRIS.Length, DrawElementsType.UnsignedShort, 0);
@@ -1358,7 +1370,7 @@ namespace Replanetizer.Frames
                     GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref type0C.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, type0C == selectedObject ? SELECTED_COLOR : NORMAL_COLOR);
+                    GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(type0C) ? SELECTED_COLOR : NORMAL_COLOR);
 
                     ActivateBuffersForModel(type0C);
 

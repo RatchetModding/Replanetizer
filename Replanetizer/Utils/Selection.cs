@@ -84,6 +84,11 @@ namespace Replanetizer.Utils
             return Add(obj) || Remove(obj);
         }
 
+        public bool ToggleOne(LevelObject obj)
+        {
+            return Set(obj) || Remove(obj);
+        }
+
         private Vector3 CalculatePivotPoint()
         {
             var pivot = new Vector3();

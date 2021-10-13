@@ -72,6 +72,7 @@ namespace Replanetizer.Frames
         {
             mouseButton = MouseButton.Right
         };
+        public readonly Keymap KEYMAP;
 
         public bool initialized, invalidate;
         public bool[] selectedChunks;
@@ -105,6 +106,8 @@ namespace Replanetizer.Frames
             camera = new Camera();
 
             maxAntialiasing = (int) Math.Log2((double) GL.GetInteger(GetPName.MaxSamples));
+
+            KEYMAP = new Keymap(wnd, Keymap.DEFAULT_KEYMAP);
 
             selectedObjects = new Selection();
             selectedObjects.CollectionChanged += SelectedObjectsOnCollectionChanged;

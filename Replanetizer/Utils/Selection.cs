@@ -28,17 +28,12 @@ namespace Replanetizer.Utils
         private int splinesCount;
         private int nonSplinesCount;
 
-        private void SetDirty(bool dirty)
+        /// <summary>
+        /// Flag lazy properties for recalculation (e.g. when object positions change)
+        /// </summary>
+        public void SetDirty(bool dirty = true)
         {
             pivotDirty = dirty;
-        }
-
-        /// <summary>
-        /// Force recalculate lazy properties (e.g. when object positions change)
-        /// </summary>
-        public void Update()
-        {
-            SetDirty(true);
         }
 
         public new void Clear()

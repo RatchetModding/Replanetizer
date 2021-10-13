@@ -912,7 +912,7 @@ namespace Replanetizer.Frames
                 }
             }
 
-            selectedObjects.Update();
+            selectedObjects.SetDirty();
             InvalidateView();
         }
 

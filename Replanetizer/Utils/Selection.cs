@@ -33,6 +33,14 @@ namespace Replanetizer.Utils
             pivotDirty = dirty;
         }
 
+        /// <summary>
+        /// Force recalculate lazy properties (e.g. when object positions change)
+        /// </summary>
+        public void Update()
+        {
+            SetDirty(true);
+        }
+
         public new void Clear()
         {
             splinesCount = 0;

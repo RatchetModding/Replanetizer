@@ -39,6 +39,17 @@ namespace Replanetizer.Utils
             SetDirty(true);
             base.Clear();
         }
+
+        public bool Set(LevelObject obj)
+        {
+            if (Count == 1 && ReferenceEquals(this[0], obj))
+                return false;
+
+            Clear();
+            Add(obj);
+            return true;
+        }
+
         public new bool Add(LevelObject obj)
         {
             if (Contains(obj))
@@ -52,12 +63,6 @@ namespace Replanetizer.Utils
             SetDirty(true);
             base.Add(obj);
             return true;
-        }
-
-        public void Set(LevelObject obj)
-        {
-            Clear();
-            Add(obj);
         }
 
         public new bool Remove(LevelObject obj)

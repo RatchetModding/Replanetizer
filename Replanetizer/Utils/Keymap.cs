@@ -5,6 +5,7 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -39,10 +40,18 @@ namespace Replanetizer.Utils
         public Keys[] modifiers { get; }
         public Keys key { get; }
 
-        public KeyCombo(Keys key, params Keys[] modifiers)
+        public KeyCombo(Keys key)
         {
             this.key = key;
-            this.modifiers = modifiers;
+            modifiers = Array.Empty<Keys>();
+        }
+
+        public KeyCombo(params Keys[] modifiersAndKey)
+        {
+            key = modifiersAndKey[^1];
+            modifiers = new Keys[modifiersAndKey.Length - 1];
+            Array.ConstrainedCopy(modifiersAndKey, 0, modifiers, 0, modifiersAndKey.Length - 1);
+            modifiers = modifiersAndKey;
         }
 
         public bool IsDown(Window wnd)

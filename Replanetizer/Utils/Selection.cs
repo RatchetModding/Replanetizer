@@ -1,12 +1,16 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using LibReplanetizer.LevelObjects;
 using OpenTK.Mathematics;
 
 namespace Replanetizer.Utils
 {
-    public class Selection : ObservableCollection<LevelObject>
+    public class Selection : INotifyCollectionChanged, ICollection<LevelObject>
     {
+        private readonly HashSet<LevelObject> OBJECTS = new();
+
         public Vector3 pivot
         {
             get
@@ -28,6 +32,26 @@ namespace Replanetizer.Utils
         private int splinesCount;
         private int nonSplinesCount;
 
+        public int Count => OBJECTS.Count;
+        public bool IsReadOnly => false;
+
+        public IEnumerator<LevelObject> GetEnumerator() => OBJECTS.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public bool Contains(LevelObject obj) => OBJECTS.Contains(obj);
+
+        public void CopyTo(LevelObject[] array, int arrayIndex)
+        {
+            OBJECTS.CopyTo(array, arrayIndex);
+        }
+
+        public event NotifyCollectionChangedEventHandler? CollectionChanged;
+
+        protected void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        {
+            CollectionChanged?.Invoke(this, e);
+        }
+
         /// <summary>
         /// Flag lazy properties for recalculation (e.g. when object positions change)
         /// </summary>
@@ -36,42 +60,46 @@ namespace Replanetizer.Utils
             pivotDirty = dirty;
         }
 
-        public new void Clear()
+        public void Clear()
         {
+            var removedItems = new List<LevelObject>(OBJECTS);
+            OBJECTS.Clear();
+
             splinesCount = 0;
             nonSplinesCount = 0;
-            SetDirty(true);
-            base.Clear();
+            SetDirty();
+
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(
+                NotifyCollectionChangedAction.Reset, removedItems
+            ));
         }
 
-        public bool Set(LevelObject obj)
+        public void Set(LevelObject obj)
         {
-            if (Count == 1 && ReferenceEquals(this[0], obj))
-                return false;
-
             Clear();
             Add(obj);
-            return true;
         }
 
-        public new bool Add(LevelObject obj)
+        public void Add(LevelObject obj)
         {
-            if (Contains(obj))
-                return false;
+            OBJECTS.Add(obj);
 
             if (obj is Spline)
                 splinesCount++;
             else
                 nonSplinesCount++;
 
-            SetDirty(true);
-            base.Add(obj);
-            return true;
+            SetDirty();
+            OnCollectionChanged(
+                new NotifyCollectionChangedEventArgs(
+                    NotifyCollectionChangedAction.Add, obj
+                )
+            );
         }
 
-        public new bool Remove(LevelObject obj)
+        public bool Remove(LevelObject obj)
         {
-            if (!base.Remove(obj))
+            if (!OBJECTS.Remove(obj))
                 return false;
 
             if (obj is Spline)
@@ -79,38 +107,49 @@ namespace Replanetizer.Utils
             else
                 nonSplinesCount--;
 
-            SetDirty(true);
+            SetDirty();
+            OnCollectionChanged(
+                new NotifyCollectionChangedEventArgs(
+                    NotifyCollectionChangedAction.Remove, obj
+                )
+            );
             return true;
         }
 
-        public bool Toggle(LevelObject obj)
+        public void Toggle(LevelObject obj)
         {
-            return Add(obj) || Remove(obj);
+            if (OBJECTS.Contains(obj))
+                Remove(obj);
+            else
+                Add(obj);
         }
 
-        public bool ToggleOne(LevelObject obj)
+        public void ToggleOne(LevelObject obj)
         {
-            return Set(obj) || Remove(obj);
+            if (OBJECTS.Contains(obj))
+                Clear();
+            else
+                Set(obj);
         }
 
         public bool TryGetOne([NotNullWhen(true)] out LevelObject? obj)
         {
             obj = null;
-            if (Count != 1)
+            if (OBJECTS.Count != 1)
                 return false;
 
-            obj = this[0];
+            obj = OBJECTS.GetEnumerator().Current;
             return true;
         }
 
         private Vector3 CalculatePivotPoint()
         {
             var pivot = new Vector3();
-            foreach (var obj in this)
+            foreach (var obj in OBJECTS)
             {
                 pivot += obj.position;
             }
-            pivot /= Count;
+            pivot /= OBJECTS.Count;
             return pivot;
         }
     }

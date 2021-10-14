@@ -96,6 +96,29 @@ namespace Replanetizer.Utils
             );
         }
 
+        public void Add(IEnumerable<LevelObject> objects)
+        {
+            var newItems = new List<LevelObject>();
+
+            foreach (var obj in objects)
+            {
+                newItems.Add(obj);
+                OBJECTS.Add(obj);
+
+                if (obj is Spline)
+                    splinesCount++;
+                else
+                    nonSplinesCount++;
+            }
+
+            SetDirty();
+            OnCollectionChanged(
+                new NotifyCollectionChangedEventArgs(
+                    NotifyCollectionChangedAction.Add, newItems
+                )
+            );
+        }
+
         public bool Remove(LevelObject obj)
         {
             if (!OBJECTS.Remove(obj))
@@ -113,6 +136,30 @@ namespace Replanetizer.Utils
                 )
             );
             return true;
+        }
+
+
+        public void Remove(IEnumerable<LevelObject> objects)
+        {
+            var removedItems = new List<LevelObject>();
+
+            foreach (var obj in objects)
+            {
+                removedItems.Remove(obj);
+                OBJECTS.Remove(obj);
+
+                if (obj is Spline)
+                    splinesCount--;
+                else
+                    nonSplinesCount--;
+            }
+
+            SetDirty();
+            OnCollectionChanged(
+                new NotifyCollectionChangedEventArgs(
+                    NotifyCollectionChangedAction.Remove, removedItems
+                )
+            );
         }
 
         public void Toggle(LevelObject obj)

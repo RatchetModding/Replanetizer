@@ -49,9 +49,7 @@ namespace Replanetizer.Utils
         public KeyCombo(params Keys[] modifiersAndKey)
         {
             key = modifiersAndKey[^1];
-            modifiers = new Keys[modifiersAndKey.Length - 1];
-            Array.ConstrainedCopy(modifiersAndKey, 0, modifiers, 0, modifiersAndKey.Length - 1);
-            modifiers = modifiersAndKey;
+            modifiers = modifiersAndKey[..^1];
         }
 
         public bool IsDown(Window wnd)

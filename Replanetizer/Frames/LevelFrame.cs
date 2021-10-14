@@ -457,12 +457,14 @@ namespace Replanetizer.Frames
             shaderIDTable.shaderMain = LinkShader(shaderFolder, "vs.glsl", "fs.glsl");
             shaderIDTable.shaderColor = LinkShader(shaderFolder, "colorshadervs.glsl", "colorshaderfs.glsl");
             shaderIDTable.shaderCollision = LinkShader(shaderFolder, "collisionshadervs.glsl", "collisionshaderfs.glsl");
+            shaderIDTable.shaderSky = LinkShader(shaderFolder, "skyvs.glsl", "skyfs.glsl");
 
             shaderIDTable.uniformWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.shaderMain, "WorldToView");
             shaderIDTable.uniformModelToWorldMatrix = GL.GetUniformLocation(shaderIDTable.shaderMain, "ModelToWorld");
             shaderIDTable.uniformColorWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.shaderColor, "WorldToView");
             shaderIDTable.uniformColorModelToWorldMatrix = GL.GetUniformLocation(shaderIDTable.shaderColor, "ModelToWorld");
             shaderIDTable.uniformCollisionWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.shaderCollision, "WorldToView");
+            shaderIDTable.uniformSkyWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.shaderSky, "WorldToView");
 
             shaderIDTable.uniformColor = GL.GetUniformLocation(shaderIDTable.shaderColor, "incolor");
 
@@ -480,6 +482,8 @@ namespace Replanetizer.Frames
 
             shaderIDTable.uniformAmbientColor = GL.GetUniformLocation(shaderIDTable.shaderMain, "staticColor");
             shaderIDTable.uniformLightIndex = GL.GetUniformLocation(shaderIDTable.shaderMain, "lightIndex");
+
+            shaderIDTable.uniformSkyTexAvailable = GL.GetUniformLocation(shaderIDTable.shaderSky, "texAvailable");
 
             RenderableBuffer.SHADER_ID_TABLE = shaderIDTable;
 
@@ -684,8 +688,6 @@ namespace Replanetizer.Frames
 
             GL.ClearColor(level.levelVariables.fogColor);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
-            level.skybox.textureConfig.Sort((emp1, emp2) => emp1.start.CompareTo(emp2.start));
 
             LoadLevelTextures();
             LoadCollisionBOs();
@@ -1215,27 +1217,26 @@ namespace Replanetizer.Frames
 
             if (enableSkybox)
             {
-                GL.Uniform1(shaderIDTable.uniformLevelObjectType, (int) RenderedObjectType.Skybox);
-                GL.Uniform1(shaderIDTable.uniformUseFog, 0);
+                GL.UseProgram(shaderIDTable.shaderSky);
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 GL.Disable(EnableCap.DepthTest);
                 Matrix4 mvp = view.ClearTranslation() * camera.GetProjectionMatrix();
-                GL.UniformMatrix4(shaderIDTable.uniformWorldToViewMatrix, false, ref mvp);
-                Matrix4 modelWorld = Matrix4.Identity;
-                GL.UniformMatrix4(shaderIDTable.uniformModelToWorldMatrix, false, ref modelWorld);
+                GL.UniformMatrix4(shaderIDTable.uniformSkyWorldToViewMatrix, false, ref mvp);
                 ActivateBuffersForModel(level.skybox);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
-                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
-                GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
-                foreach (TextureConfig conf in level.skybox.textureConfig)
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 6, 0);
+                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 6, sizeof(float) * 3);
+                GL.VertexAttribPointer(2, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 6, sizeof(float) * 5);
+                for (int i = 0; i < level.skybox.textureConfig.Count; i++)
                 {
+                    TextureConfig conf = level.skybox.textureConfig[i];
+                    GL.Uniform1(shaderIDTable.uniformSkyTexAvailable, (conf.id > 0) ? 1.0f : 0.0f);
                     GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[level.textures[conf.id]] : 0);
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
                 GL.Enable(EnableCap.DepthTest);
                 GL.Disable(EnableCap.Blend);
-                GL.UniformMatrix4(shaderIDTable.uniformWorldToViewMatrix, false, ref worldView);
+                GL.UseProgram(shaderIDTable.shaderMain);
             }
 
             if (level != null && level.levelVariables != null)

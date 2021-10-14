@@ -12,12 +12,14 @@ namespace Replanetizer.Utils
         public int shaderMain { get; set; }
         public int shaderColor { get; set; }
         public int shaderCollision { get; set; }
+        public int shaderSky { get; set; }
         public int uniformColor { get; set; }
         public int uniformWorldToViewMatrix { get; set; }
         public int uniformModelToWorldMatrix { get; set; }
         public int uniformColorWorldToViewMatrix { get; set; }
         public int uniformColorModelToWorldMatrix { get; set; }
         public int uniformCollisionWorldToViewMatrix { get; set; }
+        public int uniformSkyWorldToViewMatrix { get; set; }
         public int uniformUseFog { get; set; }
         public int uniformFogColor { get; set; }
         public int uniformFogFarDist { get; set; }
@@ -33,5 +35,6 @@ namespace Replanetizer.Utils
         // Number of lights we allocate, if you change this, you need to change it in the shader aswell.
         public static readonly int ALLOCATED_LIGHTS = 20;
         public int uniformLightIndex { get; set; }
+        public int uniformSkyTexAvailable { get; set; }
     }
 }

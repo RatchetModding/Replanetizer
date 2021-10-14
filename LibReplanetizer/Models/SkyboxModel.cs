@@ -6,6 +6,7 @@
 // Please see the LICENSE.md file for more details.
 
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using static LibReplanetizer.DataFunctions;
 
@@ -17,13 +18,15 @@ namespace LibReplanetizer.Models
 
         public GameType game;
 
-        //Unhandled offsets for serialization
-        int off00;
-        short off04;
-        int off08;
-        int off0C;
+        public Color someColor;
 
-        List<List<TextureConfig>> textureConfigs;
+        //Unhandled offsets for serialization
+        public short off04;
+        public short off08;
+        public short off0A;
+        public int off0C;
+
+        public List<List<TextureConfig>> textureConfigs;
 
         public SkyboxModel(FileStream fs, GameType game, int offset)
         {
@@ -34,9 +37,13 @@ namespace LibReplanetizer.Models
             size = 1.0f;
             byte[] skyBlockHead = ReadBlock(fs, offset, headSize);
 
-            off00 = ReadInt(skyBlockHead, 0x00);
+            byte red = skyBlockHead[0x00];
+            byte green = skyBlockHead[0x01];
+            byte blue = skyBlockHead[0x02];
+            byte alpha = skyBlockHead[0x03];
             off04 = ReadShort(skyBlockHead, 0x04);
-            off08 = ReadInt(skyBlockHead, 0x08);
+            off08 = ReadShort(skyBlockHead, 0x08);
+            off0A = ReadShort(skyBlockHead, 0x0A);
             off0C = ReadInt(skyBlockHead, 0x0C);
 
             short faceGroupCount = ReadShort(skyBlockHead, 0x06);
@@ -44,7 +51,6 @@ namespace LibReplanetizer.Models
             int faceOffset = ReadInt(skyBlockHead, headSize - 0x4);
 
             int vertexCount = (int) ((faceOffset - vertOffset) / VERTELEMSIZE);
-
 
             textureConfigs = new List<List<TextureConfig>>();
             textureConfig = new List<TextureConfig>();
@@ -60,11 +66,13 @@ namespace LibReplanetizer.Models
             }
 
             int faceCount = GetFaceCount();
-            vertexBuffer = GetVerticesUv(fs, vertOffset, vertexCount, VERTELEMSIZE);
+            vertexBuffer = GetVerticesSkybox(fs, vertOffset, vertexCount);
 
             indexBuffer = GetIndices(fs, faceOffset, faceCount);
 
             this.game = game;
+
+            someColor = Color.FromArgb(alpha, red, green, blue);
         }
 
         public byte[] Serialize(int startOffset)
@@ -81,10 +89,14 @@ namespace LibReplanetizer.Models
             int headLength = faceStart + faceLength;
 
             var headBytes = new byte[headLength];
-            WriteInt(headBytes, 0x00, off00);
+            headBytes[0x00] = someColor.R;
+            headBytes[0x01] = someColor.G;
+            headBytes[0x02] = someColor.B;
+            headBytes[0x03] = someColor.A;
             WriteShort(headBytes, 0x04, off04);
             WriteShort(headBytes, 0x06, (short) textureConfigs.Count);
-            WriteInt(headBytes, 0x08, off08);
+            WriteShort(headBytes, 0x08, off08);
+            WriteShort(headBytes, 0x0A, off0A);
             WriteInt(headBytes, 0x0C, off0C);
 
             int offs = faceStart;
@@ -116,7 +128,7 @@ namespace LibReplanetizer.Models
 
 
             int vertOffset = GetLength(offs);
-            byte[] vertexBytes = GetVertexBytesUv(vertexBuffer);
+            byte[] vertexBytes = GetVertexBytesSkybox(vertexBuffer);
 
             int faceOffset = GetLength(vertOffset + vertexBytes.Length);
             byte[] faceBytes = GetFaceBytes();

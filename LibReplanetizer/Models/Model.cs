@@ -8,6 +8,7 @@
 using LibReplanetizer.LevelObjects;
 using System.Collections.Generic;
 using System.IO;
+using System;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Models
@@ -185,39 +186,37 @@ namespace LibReplanetizer.Models
         }
 
         //Get vertices with UV's baked in, but no normals
-        public static float[] GetVerticesUv(FileStream fs, int vertexPointer, int vertexCount, int elemSize)
+        public static float[] GetVerticesSkybox(FileStream fs, int vertexPointer, int vertexCount)
         {
-            float[] vertexBuffer = new float[vertexCount * 8];
+            float[] vertexBuffer = new float[vertexCount * 6];
 
             //List<float> vertexBuffer = new List<float>();
-            byte[] vertBlock = ReadBlock(fs, vertexPointer, vertexCount * elemSize);
+            byte[] vertBlock = ReadBlock(fs, vertexPointer, vertexCount * 0x18);
             for (int i = 0; i < vertexCount; i++)
             {
-                vertexBuffer[(i * 8) + 0] = (ReadFloat(vertBlock, (i * elemSize) + 0x00));    //VertexX
-                vertexBuffer[(i * 8) + 1] = (ReadFloat(vertBlock, (i * elemSize) + 0x04));    //VertexY
-                vertexBuffer[(i * 8) + 2] = (ReadFloat(vertBlock, (i * elemSize) + 0x08));    //VertexZ
-                vertexBuffer[(i * 8) + 3] = (ReadFloat(vertBlock, (i * elemSize) + 0x14));    //Actually vertexcolors
-                vertexBuffer[(i * 8) + 4] = 0;    //NormY
-                vertexBuffer[(i * 8) + 5] = 0;    //NormZ
-                vertexBuffer[(i * 8) + 6] = (ReadFloat(vertBlock, (i * elemSize) + 0x0C));    //UVu
-                vertexBuffer[(i * 8) + 7] = (ReadFloat(vertBlock, (i * elemSize) + 0x10));    //UVv
+                vertexBuffer[(i * 6) + 0] = ReadFloat(vertBlock, i * 0x18 + 0x00);              //VertexX
+                vertexBuffer[(i * 6) + 1] = ReadFloat(vertBlock, i * 0x18 + 0x04);              //VertexY
+                vertexBuffer[(i * 6) + 2] = ReadFloat(vertBlock, i * 0x18 + 0x08);              //VertexZ
+                vertexBuffer[(i * 6) + 3] = ReadFloat(vertBlock, i * 0x18 + 0x0C);              //UVu
+                vertexBuffer[(i * 6) + 4] = ReadFloat(vertBlock, i * 0x18 + 0x10);              //UVv
+                vertexBuffer[(i * 6) + 5] = BitConverter.ToSingle(vertBlock, i * 0x18 + 0x14);  //Actually vertexcolors
             }
             return vertexBuffer;
         }
 
-        public static byte[] GetVertexBytesUv(float[] vertexBuffer)
+        public static byte[] GetVertexBytesSkybox(float[] vertexBuffer)
         {
-            int vertexCount = vertexBuffer.Length / 8;
+            int vertexCount = vertexBuffer.Length / 6;
             byte[] vertexBytes = new byte[vertexCount * 0x18];
 
             for (int i = 0; i < vertexCount; i++)
             {
-                WriteFloat(vertexBytes, (i * 0x18) + 0x00, vertexBuffer[(i * 8) + 0]);
-                WriteFloat(vertexBytes, (i * 0x18) + 0x04, vertexBuffer[(i * 8) + 1]);
-                WriteFloat(vertexBytes, (i * 0x18) + 0x08, vertexBuffer[(i * 8) + 2]);
-                WriteFloat(vertexBytes, (i * 0x18) + 0x0C, vertexBuffer[(i * 8) + 6]);
-                WriteFloat(vertexBytes, (i * 0x18) + 0x10, vertexBuffer[(i * 8) + 7]);
-                WriteFloat(vertexBytes, (i * 0x18) + 0x14, vertexBuffer[(i * 8) + 3]);
+                WriteFloat(vertexBytes, (i * 0x18) + 0x00, vertexBuffer[(i * 6) + 0]);
+                WriteFloat(vertexBytes, (i * 0x18) + 0x04, vertexBuffer[(i * 6) + 1]);
+                WriteFloat(vertexBytes, (i * 0x18) + 0x08, vertexBuffer[(i * 6) + 2]);
+                WriteFloat(vertexBytes, (i * 0x18) + 0x0C, vertexBuffer[(i * 6) + 3]);
+                WriteFloat(vertexBytes, (i * 0x18) + 0x10, vertexBuffer[(i * 6) + 4]);
+                BitConverter.GetBytes(vertexBuffer[(i * 6) + 5]).CopyTo(vertexBytes, (i * 0x18) + 0x14);
             }
             return vertexBytes;
         }

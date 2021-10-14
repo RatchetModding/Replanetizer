@@ -162,6 +162,7 @@ namespace Replanetizer.Utils
             );
         }
 
+        // Toggle selection of an object without affecting the other selections
         public void Toggle(LevelObject obj)
         {
             if (OBJECTS.Contains(obj))
@@ -170,9 +171,10 @@ namespace Replanetizer.Utils
                 Add(obj);
         }
 
+        // Toggle selection of just one object, clearing any other selections.
         public void ToggleOne(LevelObject obj)
         {
-            if (OBJECTS.Contains(obj))
+            if (OBJECTS.Count == 1 && OBJECTS.Contains(obj))
                 Clear();
             else
                 Set(obj);

@@ -500,11 +500,23 @@ namespace Replanetizer.Frames
             initialized = true;
         }
 
+        private void SetTextureWrapMode(TextureConfig conf, TextureWrapMode wrapMode)
+        {
+            if (conf.id > 0)
+            {
+                GL.BindTexture(TextureTarget.Texture2D, textureIds[level.textures[conf.id]]);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) wrapMode);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) wrapMode);
+            }
+        }
+
         private void LoadTexture(Texture t)
         {
             int texId;
             GL.GenTextures(1, out texId);
             GL.BindTexture(TextureTarget.Texture2D, texId);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
             int offset = 0;
 
             if (t.mipMapCount > 1)
@@ -543,6 +555,9 @@ namespace Replanetizer.Frames
             {
                 LoadTexture(t);
             }
+
+            // Skybox textures seem to not use repeat for texture wrapping
+            foreach (TextureConfig conf in level.skybox.textureConfig) SetTextureWrapMode(conf, TextureWrapMode.ClampToEdge);
 
             foreach (List<Texture> list in level.armorTextures)
             {

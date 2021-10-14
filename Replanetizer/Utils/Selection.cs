@@ -62,7 +62,6 @@ namespace Replanetizer.Utils
 
         public void Clear()
         {
-            var removedItems = new List<LevelObject>(OBJECTS);
             OBJECTS.Clear();
 
             splinesCount = 0;
@@ -70,7 +69,7 @@ namespace Replanetizer.Utils
             SetDirty();
 
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(
-                NotifyCollectionChangedAction.Reset, removedItems
+                NotifyCollectionChangedAction.Reset
             ));
         }
 

@@ -5,19 +5,22 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Replanetizer.Frames;
 
 namespace Replanetizer.Tools
 {
-    class ScalingTool : Tool
+    class ScalingTool : BasicTransformTool
     {
+        public override ToolType toolType => ToolType.Scale;
+
         public ScalingTool()
         {
-            float length = 1f;
+            const float length = 1f;
 
-            vb = new float[]{
+            vb = new[]{
                 -length,    0,          0,
                 length,     0,          0,
                 0,          -length,    0,
@@ -47,9 +50,14 @@ namespace Replanetizer.Tools
             GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
         }
 
-        public override ToolType GetToolType()
+        public override void Transform(LevelObject obj, Vector3 vec)
         {
-            return ToolType.Scale;
+            obj.Scale(vec + Vector3.One);
+        }
+
+        protected override Vector3 ProcessVec(Vector3 direction, Vector3 magnitude)
+        {
+            return base.ProcessVec(direction, magnitude) + Vector3.One;
         }
     }
 }

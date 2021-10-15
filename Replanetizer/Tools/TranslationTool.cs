@@ -5,19 +5,22 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Replanetizer.Frames;
 
 namespace Replanetizer.Tools
 {
-    class TranslationTool : Tool
+    class TranslationTool : BasicTransformTool
     {
+        public override ToolType toolType => ToolType.Translate;
+
         public TranslationTool()
         {
-            float length = 2.0f;
+            const float length = 2.0f;
 
-            vb = new float[]{
+            vb = new[]{
                 length / 2,     - length / 3,   0,
                 length / 2,     length / 3,     0,
                 length,         0,              0,
@@ -100,9 +103,9 @@ namespace Replanetizer.Tools
             GL.DrawArrays(PrimitiveType.Triangles, 33, 3);
         }
 
-        public override ToolType GetToolType()
+        public override void Transform(LevelObject obj, Vector3 vec)
         {
-            return ToolType.Translate;
+            obj.Translate(vec);
         }
     }
 }

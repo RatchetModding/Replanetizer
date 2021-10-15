@@ -891,25 +891,18 @@ namespace Replanetizer.Frames
 
         private void HandleToolUpdates(Vector3 mouseRay, Vector3 direction)
         {
-            float magnitudeMultiplier = 50;
-            Vector3 magnitude = (mouseRay - prevMouseRay) * magnitudeMultiplier;
+            Vector3 magnitude = mouseRay - prevMouseRay;
 
-            foreach (var obj in selectedObjects)
+            if (currentTool is BasicTransformTool basicTool)
+                basicTool.Transform(selectedObjects, direction, magnitude);
+            else if (currentTool is VertexTranslationTool vertexTranslationTool)
             {
-                if (currentTool is TranslationTool)
-                    obj.Translate(direction * magnitude);
-                else if (currentTool is RotationTool)
-                    obj.Rotate(direction * magnitude);
-                else if (currentTool is ScalingTool)
-                    obj.Scale(direction * magnitude + Vector3.One);
-                else if (currentTool is VertexTranslationTool && obj is Spline spline)
-                {
-                    spline.TranslateVertex(currentSplineVertex, direction * magnitude);
-                    if (hook is { hookWorking: true })
-                    {
-                        hook.HandleSplineTranslation(level, spline, currentSplineVertex);
-                    }
-                }
+                vertexTranslationTool.Transform(selectedObjects, direction, magnitude, currentSplineVertex);
+                // TODO add spline translation hook call
+                // if (hook is { hookWorking: true })
+                // {
+                //     hook.HandleSplineTranslation(level, spline, currentSplineVertex);
+                // }
             }
 
             selectedObjects.SetDirty();

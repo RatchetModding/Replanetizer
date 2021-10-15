@@ -22,6 +22,10 @@ namespace Replanetizer.Tools
             VertexTranslator
         }
 
+        public float transformMultipier { get; set; } = 50f;
+        public TransformationSpace transformationSpace { get; set; } = TransformationSpace.GLOBAL;
+        public PivotPositioning pivotPositioning { get; set; } = PivotPositioning.MEDIAN;
+
         protected int vbo;
         protected float[] vb;
 
@@ -41,7 +45,16 @@ namespace Replanetizer.Tools
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
         }
 
-        public abstract ToolType GetToolType();
+        public abstract ToolType toolType { get; }
         public abstract void Render(Vector3 position, LevelFrame frame);
+
+        protected virtual Vector3 ProcessVec(Vector3 direction, Vector3 magnitude)
+        {
+            return direction * magnitude * transformMultipier;
+        }
+
+        public virtual void Reset()
+        {
+        }
     }
 }

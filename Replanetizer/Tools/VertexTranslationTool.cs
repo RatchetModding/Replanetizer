@@ -5,19 +5,23 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Replanetizer.Frames;
+using Replanetizer.Utils;
 
 namespace Replanetizer.Tools
 {
-    class VertexTranslationTool : Tool
+    class VertexTranslationTool : SpecialTransformTool
     {
+        public override ToolType toolType => ToolType.VertexTranslator;
+
         public VertexTranslationTool()
         {
             float length = 0.7f;
 
-            vb = new float[]{
+            vb = new[]{
                 -length,    0,          0,
                 length,     0,          0,
                 0,          -length,    0,
@@ -47,9 +51,20 @@ namespace Replanetizer.Tools
             GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
         }
 
-        public override ToolType GetToolType()
+        public void Transform(LevelObject obj, Vector3 vec, int vertexIndex)
         {
-            return ToolType.VertexTranslator;
+            if (obj is not Spline spline)
+                return;
+
+            spline.TranslateVertex(vertexIndex, vec);
+        }
+
+        public void Transform(
+            Selection selection, Vector3 direction, Vector3 magnitude, int vertexIndex)
+        {
+            Vector3 vec = ProcessVec(direction, magnitude);
+            if (selection.TryGetOne(out var obj))
+                Transform(obj, vec, vertexIndex);
         }
     }
 }

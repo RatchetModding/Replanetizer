@@ -34,7 +34,7 @@ namespace Replanetizer.Tools
         {
             GetVbo();
 
-            Matrix4 modelMatrix = Matrix4.CreateTranslation(position);
+            var modelMatrix = GetModelMatrix(position, frame);
             GL.UniformMatrix4(frame.shaderIDTable.uniformModelToWorldMatrix, false, ref modelMatrix);
 
             GL.Uniform1(frame.shaderIDTable.uniformColorLevelObjectNumber, 0);

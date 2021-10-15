@@ -28,6 +28,7 @@ namespace Replanetizer.Tools
 
         protected int vbo;
         protected float[] vb;
+        private const float SCREEN_SPACE_SCALE = 0.06f;
 
         protected void GetVbo()
         {
@@ -43,6 +44,15 @@ namespace Replanetizer.Tools
             }
 
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
+        }
+
+        /// <summary>
+        /// Get the model matrix, scaled by camera distance
+        /// </summary>
+        protected Matrix4 GetModelMatrix(Vector3 position, LevelFrame frame)
+        {
+            float camDist = (frame.camera.position - position).LengthFast;
+            return Matrix4.CreateScale(camDist * SCREEN_SPACE_SCALE) * Matrix4.CreateTranslation(position);
         }
 
         public abstract ToolType toolType { get; }

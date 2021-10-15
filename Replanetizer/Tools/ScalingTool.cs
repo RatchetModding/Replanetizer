@@ -52,7 +52,7 @@ namespace Replanetizer.Tools
 
         public override void Transform(LevelObject obj, Vector3 vec)
         {
-            obj.Scale(vec + Vector3.One);
+            obj.Scale(vec);
         }
 
         protected override Vector3 ProcessVec(Vector3 direction, Vector3 magnitude)

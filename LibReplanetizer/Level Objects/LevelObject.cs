@@ -65,7 +65,7 @@ namespace LibReplanetizer.LevelObjects
         }
         public void Scale(float x, float y, float z)
         {
-            Rotate(new Vector3(x, y, z));
+            Scale(new Vector3(x, y, z));
         }
         public void Rotate(float x, float y, float z)
         {

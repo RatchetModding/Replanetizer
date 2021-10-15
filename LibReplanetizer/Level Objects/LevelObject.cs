@@ -46,10 +46,20 @@ namespace LibReplanetizer.LevelObjects
             UpdateTransformMatrix();
         }
 
+        public void Translate(float x, float y, float z)
+        {
+            Translate(new Vector3(x, y, z));
+        }
+
         public void Rotate(Vector3 vector)
         {
             rotation *= Quaternion.FromEulerAngles(vector);
             UpdateTransformMatrix();
+        }
+
+        public void Rotate(float x, float y, float z)
+        {
+            Rotate(new Vector3(x, y, z));
         }
 
         public void Scale(Vector3 scale)
@@ -58,23 +68,15 @@ namespace LibReplanetizer.LevelObjects
             UpdateTransformMatrix();
         }
 
-
         public void Scale(float val)
-        { //To uniformly scale object
+        {
+            // To uniformly scale object
             Scale(new Vector3(val));
         }
+
         public void Scale(float x, float y, float z)
         {
             Scale(new Vector3(x, y, z));
         }
-        public void Rotate(float x, float y, float z)
-        {
-            Rotate(new Vector3(x, y, z));
-        }
-        public void Translate(float x, float y, float z)
-        {
-            Translate(new Vector3(x, y, z));
-        }
-
     }
 }

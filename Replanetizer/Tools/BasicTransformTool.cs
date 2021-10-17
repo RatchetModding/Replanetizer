@@ -13,18 +13,24 @@ namespace Replanetizer.Tools
 {
     public abstract class BasicTransformTool : Tool
     {
-        public abstract void Transform(LevelObject obj, Vector3 vec);
+        public abstract void Transform(LevelObject obj, Vector3 vec, Vector3 pivot);
 
-        public void Transform(LevelObject obj, Vector3 direction, Vector3 magnitude)
+        public void Transform(
+            LevelObject obj, Vector3 direction, Vector3 magnitude, Vector3 pivot)
         {
-            Transform(obj, ProcessVec(direction, magnitude));
+            Transform(obj, ProcessVec(direction, magnitude), pivot);
         }
 
         public void Transform(Selection selection, Vector3 direction, Vector3 magnitude)
         {
             Vector3 vec = ProcessVec(direction, magnitude);
+            Vector3 pivot = selection.pivot;
             foreach (var obj in selection)
-                Transform(obj, vec);
+            {
+                if (pivotPositioning == PivotPositioning.INDIVIDUAL_ORIGINS)
+                    pivot = obj.position;
+                Transform(obj, vec, pivot);
+            }
         }
     }
 }

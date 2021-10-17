@@ -50,7 +50,7 @@ namespace Replanetizer.Tools
             GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
         }
 
-        public override void Transform(LevelObject obj, Vector3 vec)
+        public override void Transform(LevelObject obj, Vector3 vec, Vector3 pivot)
         {
             obj.Rotate(vec);
         }

@@ -52,7 +52,19 @@ namespace Replanetizer.Tools
 
         public override void Transform(LevelObject obj, Vector3 vec, Vector3 pivot)
         {
-            obj.Rotate(vec);
+            if (transformationSpace == TransformationSpace.GLOBAL)
+            {
+                var mat = obj.modelMatrix;
+                var trans = Matrix4.CreateTranslation(pivot);
+                var rot = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(vec));
+                mat = mat * trans.Inverted() * rot * trans;
+                obj.SetFromMatrix(mat);
+            }
+            else if (transformationSpace == TransformationSpace.LOCAL)
+            {
+                // Not implemented yet. This should rotate about the pivot
+                // point in the object's local space
+            }
         }
     }
 }

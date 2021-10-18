@@ -5,11 +5,17 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using Replanetizer.Utils;
+
 namespace Replanetizer.Tools
 {
-    public enum PivotPositioning
+    public class PivotPositioning : EnhancedEnum<PivotPositioning>
     {
-        Median = 0,
-        IndividualOrigins
+        public static readonly PivotPositioning Median = new(0, "Median");
+        public static readonly PivotPositioning IndividualOrigins = new(1, "Individual Origins");
+
+        public PivotPositioning(int key, string humanName) : base(key, humanName)
+        {
+        }
     }
 }

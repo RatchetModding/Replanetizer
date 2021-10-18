@@ -17,6 +17,10 @@ namespace Replanetizer.Tools
         {
         }
 
+        // TODO transforms are not stable unless we store the original matrix
+        //   and pivot throughout the entire user interaction. This can also
+        //   help in optimizing matrix operations, as we can combine matrices
+        //   once and reuse them.
         public abstract void Transform(LevelObject obj, Vector3 vec, Vector3 pivot);
 
         public void Transform(

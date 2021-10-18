@@ -62,8 +62,6 @@ namespace Replanetizer.Tools
             }
             else if (toolbox.transformSpace == TransformSpace.Local)
             {
-                // TODO this is not stable. we need to store the pivot through the
-                //   duration of a transformation action
                 var transPivotOffset = Matrix4.CreateTranslation(obj.position - pivot);
                 var transObj = Matrix4.CreateTranslation(obj.position);
                 var rotObj = Matrix4.CreateFromQuaternion(obj.rotation);

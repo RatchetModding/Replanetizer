@@ -13,7 +13,7 @@ namespace Replanetizer.Tools
 {
     public abstract class Tool
     {
-        public float transformMultipier { get; set; } = 50f;
+        public float transformMultiplier { get; set; } = 50f;
         public TransformationSpace transformationSpace { get; set; } = TransformationSpace.Global;
         public PivotPositioning pivotPositioning { get; set; } = PivotPositioning.Median;
 
@@ -51,7 +51,7 @@ namespace Replanetizer.Tools
 
         protected virtual Vector3 ProcessVec(Vector3 direction, Vector3 magnitude)
         {
-            return direction * magnitude * transformMultipier;
+            return direction * magnitude * transformMultiplier;
         }
 
         public virtual void Reset()

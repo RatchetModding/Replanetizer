@@ -12,7 +12,7 @@ namespace Replanetizer.Tools
     public class PivotPositioning : EnhancedEnum<PivotPositioning>
     {
         public static readonly PivotPositioning Median = new(0, "Median");
-        public static readonly PivotPositioning IndividualOrigins = new(1, "Individual Origins");
+        public static readonly PivotPositioning IndividualOrigins = new(1, "Individual origins");
 
         public PivotPositioning(int key, string humanName) : base(key, humanName)
         {

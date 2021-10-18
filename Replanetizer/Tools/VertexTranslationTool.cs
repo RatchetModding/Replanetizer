@@ -19,7 +19,7 @@ namespace Replanetizer.Tools
 
         public VertexTranslationTool()
         {
-            float length = 0.7f;
+            const float length = 0.7f;
 
             vb = new[]{
                 -length,    0,          0,

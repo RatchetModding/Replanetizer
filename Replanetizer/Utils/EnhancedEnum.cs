@@ -36,6 +36,15 @@ namespace Replanetizer.Utils
             return ENUM_VALUES[newIdx];
         }
 
+        public static T operator --(EnhancedEnum<T> a)
+        {
+            int newIdx = ENUM_VALUES.IndexOf((T) a) - 1;
+            // Negative modulus is weird, that's why I'm not using it here
+            if (newIdx == -1)
+                newIdx = ENUM_VALUES.Count - 1;
+            return ENUM_VALUES[newIdx];
+        }
+
         public static ReadOnlyCollection<T> GetValues()
         {
             return ENUM_VALUES.AsReadOnly();

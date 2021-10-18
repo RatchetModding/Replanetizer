@@ -83,10 +83,6 @@ namespace Replanetizer.Frames
         public Camera camera;
 
         private Toolbox toolbox = new();
-        private int transformSpace;
-        private int pivotPositioning;
-        private string[] transformSpaceOptions = Enum.GetNames<TransformSpace>();
-        private string[] pivotPositioningOptions = Enum.GetNames<PivotPositioning>();
 
         private ConditionalWeakTable<IRenderable, BufferContainer> bufferTable;
         public Dictionary<Texture, int> textureIds;
@@ -281,18 +277,6 @@ namespace Replanetizer.Frames
                         DeleteObject(selectedObjects);
                     if (ImGui.MenuItem("Deselect all"))
                         selectedObjects.Clear();
-
-                    ImGui.Separator();
-
-                    if (ImGui.Combo("Transform space", ref transformSpace, transformSpaceOptions, transformSpaceOptions.Length))
-                    {
-                        toolbox.transformSpace = (TransformSpace) transformSpace;
-                    }
-                    if (ImGui.Combo("Pivot positioning", ref pivotPositioning, pivotPositioningOptions, pivotPositioningOptions.Length))
-                    {
-                        toolbox.pivotPositioning = (PivotPositioning) pivotPositioning;
-                    }
-
                     ImGui.EndMenu();
                 }
 
@@ -303,6 +287,18 @@ namespace Replanetizer.Frames
                             SetSelectedChunks();
                     ImGui.EndMenu();
                 }
+
+                ImGui.Separator();
+
+                if (ImGui.Button(toolbox.transformSpace.HUMAN_NAME))
+                    toolbox.transformSpace++;
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip("Transform space");
+
+                if (ImGui.Button(toolbox.pivotPositioning.HUMAN_NAME))
+                    toolbox.pivotPositioning++;
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip("Pivot positioning");
 
                 ImGui.EndMenuBar();
             }

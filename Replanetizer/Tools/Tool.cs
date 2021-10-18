@@ -23,8 +23,8 @@ namespace Replanetizer.Tools
         }
 
         public float transformMultipier { get; set; } = 50f;
-        public TransformationSpace transformationSpace { get; set; } = TransformationSpace.GLOBAL;
-        public PivotPositioning pivotPositioning { get; set; } = PivotPositioning.MEDIAN;
+        public TransformationSpace transformationSpace { get; set; } = TransformationSpace.Global;
+        public PivotPositioning pivotPositioning { get; set; } = PivotPositioning.Median;
 
         protected int vbo;
         protected float[] vb;

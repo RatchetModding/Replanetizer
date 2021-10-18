@@ -9,7 +9,7 @@ namespace Replanetizer.Tools
 {
     public enum PivotPositioning
     {
-        MEDIAN,
-        INDIVIDUAL_ORIGINS
+        Median = 0,
+        IndividualOrigins
     }
 }

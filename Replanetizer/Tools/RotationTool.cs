@@ -55,12 +55,12 @@ namespace Replanetizer.Tools
             var mat = obj.modelMatrix;
             var rotPivot = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(vec));
 
-            if (transformationSpace == TransformationSpace.GLOBAL)
+            if (transformationSpace == TransformationSpace.Global)
             {
                 var transPivot = Matrix4.CreateTranslation(pivot);
                 mat = mat * transPivot.Inverted() * rotPivot * transPivot;
             }
-            else if (transformationSpace == TransformationSpace.LOCAL)
+            else if (transformationSpace == TransformationSpace.Local)
             {
                 var transPivotOffset = Matrix4.CreateTranslation(obj.position - pivot);
                 var transObj = Matrix4.CreateTranslation(obj.position);

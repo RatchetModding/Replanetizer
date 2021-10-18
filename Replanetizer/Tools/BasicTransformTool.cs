@@ -27,7 +27,7 @@ namespace Replanetizer.Tools
             Vector3 pivot = selection.pivot;
             foreach (var obj in selection)
             {
-                if (pivotPositioning == PivotPositioning.INDIVIDUAL_ORIGINS)
+                if (pivotPositioning == PivotPositioning.IndividualOrigins)
                     pivot = obj.position;
                 Transform(obj, vec, pivot);
             }

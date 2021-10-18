@@ -9,5 +9,8 @@ namespace Replanetizer.Tools
 {
     public abstract class SpecialTransformTool : Tool
     {
+        protected SpecialTransformTool(Toolbox toolbox) : base(toolbox)
+        {
+        }
     }
 }

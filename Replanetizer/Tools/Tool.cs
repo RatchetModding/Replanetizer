@@ -14,12 +14,17 @@ namespace Replanetizer.Tools
     public abstract class Tool
     {
         public float transformMultiplier { get; set; } = 50f;
-        public TransformationSpace transformationSpace { get; set; } = TransformationSpace.Global;
-        public PivotPositioning pivotPositioning { get; set; } = PivotPositioning.Median;
+
+        protected Toolbox toolbox { get; set; }
 
         protected int vbo;
         protected float[] vb;
         private const float SCREEN_SPACE_SCALE = 0.06f;
+
+        public Tool(Toolbox toolbox)
+        {
+            this.toolbox = toolbox;
+        }
 
         protected void GetVbo()
         {

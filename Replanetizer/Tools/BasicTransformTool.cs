@@ -13,6 +13,10 @@ namespace Replanetizer.Tools
 {
     public abstract class BasicTransformTool : Tool
     {
+        protected BasicTransformTool(Toolbox toolbox) : base(toolbox)
+        {
+        }
+
         public abstract void Transform(LevelObject obj, Vector3 vec, Vector3 pivot);
 
         public void Transform(
@@ -27,7 +31,7 @@ namespace Replanetizer.Tools
             Vector3 pivot = selection.pivot;
             foreach (var obj in selection)
             {
-                if (pivotPositioning == PivotPositioning.IndividualOrigins)
+                if (toolbox.pivotPositioning == PivotPositioning.IndividualOrigins)
                     pivot = obj.position;
                 Transform(obj, vec, pivot);
             }

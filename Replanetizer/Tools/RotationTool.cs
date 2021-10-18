@@ -16,7 +16,7 @@ namespace Replanetizer.Tools
     {
         public override ToolType toolType => ToolType.Rotate;
 
-        public RotationTool()
+        public RotationTool(Toolbox toolbox) : base(toolbox)
         {
             const float length = 1.5f;
 
@@ -55,13 +55,15 @@ namespace Replanetizer.Tools
             var mat = obj.modelMatrix;
             var rotPivot = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(vec));
 
-            if (transformationSpace == TransformationSpace.Global)
+            if (toolbox.transformationSpace == TransformationSpace.Global)
             {
                 var transPivot = Matrix4.CreateTranslation(pivot);
                 mat = mat * transPivot.Inverted() * rotPivot * transPivot;
             }
-            else if (transformationSpace == TransformationSpace.Local)
+            else if (toolbox.transformationSpace == TransformationSpace.Local)
             {
+                // TODO this is not stable. we need to store the pivot through the
+                //   duration of a transformation action
                 var transPivotOffset = Matrix4.CreateTranslation(obj.position - pivot);
                 var transObj = Matrix4.CreateTranslation(obj.position);
                 var rotObj = Matrix4.CreateFromQuaternion(obj.rotation);

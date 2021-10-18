@@ -82,8 +82,7 @@ namespace Replanetizer.Frames
             enableDistanceCulling = true, enableFrustumCulling = true, enableFog = true, enableCameraInfo = true;
 
         public Camera camera;
-        private Tool? currentTool;
-        public Tool translateTool, rotationTool, scalingTool, vertexTranslator;
+        private Toolbox toolbox = new();
 
         private ConditionalWeakTable<IRenderable, BufferContainer> bufferTable;
         public Dictionary<Texture, int> textureIds;
@@ -111,6 +110,8 @@ namespace Replanetizer.Frames
 
             selectedObjects = new Selection();
             selectedObjects.CollectionChanged += SelectedObjectsOnCollectionChanged;
+
+            toolbox.ToolChanged += (_, _) => InvalidateView();
 
             UpdateWindowSize();
             OnResize();
@@ -262,11 +263,16 @@ namespace Replanetizer.Frames
 
                 if (ImGui.BeginMenu("Tools"))
                 {
-                    if (ImGui.MenuItem("Translate        [1]")) SelectTool(translateTool);
-                    if (ImGui.MenuItem("Rotate           [2]")) SelectTool(rotationTool);
-                    if (ImGui.MenuItem("Scale            [3]")) SelectTool(scalingTool);
-                    if (ImGui.MenuItem("Vertex translate [4]")) SelectTool(vertexTranslator);
-                    if (ImGui.MenuItem("No tool          [5]")) SelectTool(null);
+                    if (ImGui.MenuItem("Translate        [1]"))
+                        toolbox.ChangeTool(ToolType.Translate);
+                    if (ImGui.MenuItem("Rotate           [2]"))
+                        toolbox.ChangeTool(ToolType.Rotate);
+                    if (ImGui.MenuItem("Scale            [3]"))
+                        toolbox.ChangeTool(ToolType.Scale);
+                    if (ImGui.MenuItem("Vertex translate [4]"))
+                        toolbox.ChangeTool(ToolType.VertexTranslator);
+                    if (ImGui.MenuItem("No tool          [5]"))
+                        toolbox.ChangeTool(ToolType.None);
                     if (ImGui.MenuItem("Delete selected  [Del]")) DeleteObject(selectedObjects);
                     if (ImGui.MenuItem("Deselect all")) selectedObjects.Clear();
 
@@ -493,11 +499,6 @@ namespace Replanetizer.Frames
 
             camera.ComputeProjectionMatrix();
             view = camera.GetViewMatrix();
-
-            translateTool = new TranslationTool();
-            rotationTool = new RotationTool();
-            scalingTool = new ScalingTool();
-            vertexTranslator = new VertexTranslationTool();
 
             initialized = true;
         }
@@ -757,8 +758,8 @@ namespace Replanetizer.Frames
 
         public void SelectedObjectsOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            if (!selectedObjects.isOnlySplines && currentTool is VertexTranslationTool)
-                SelectTool();
+            if (!selectedObjects.isOnlySplines && toolbox.type == ToolType.VertexTranslator)
+                toolbox.ChangeTool(ToolType.None);
             InvalidateView();
         }
 
@@ -810,7 +811,7 @@ namespace Replanetizer.Frames
 
         private void HandleMouseWheelChanges()
         {
-            if (currentTool is not VertexTranslationTool) return;
+            if (toolbox.type != ToolType.VertexTranslator) return;
             if (!selectedObjects.TryGetOne(out var obj) || obj is not Spline spline)
                 return;
 
@@ -840,19 +841,18 @@ namespace Replanetizer.Frames
 
         private void HandleKeyboardShortcuts()
         {
-            if (KEYMAP.IsPressed(Keybinds.ToolNone)) SelectTool();
-            if (KEYMAP.IsPressed(Keybinds.ToolTranslate)) SelectTool(translateTool);
-            if (KEYMAP.IsPressed(Keybinds.ToolRotation)) SelectTool(rotationTool);
-            if (KEYMAP.IsPressed(Keybinds.ToolScaling)) SelectTool(scalingTool);
-            if (KEYMAP.IsPressed(Keybinds.ToolVertexTranslator)) SelectTool(vertexTranslator);
-            if (KEYMAP.IsPressed(Keybinds.DeleteObject)) DeleteObject(selectedObjects);
-        }
-
-        public void SelectTool(Tool tool = null)
-        {
-            currentTool = tool;
-            currentSplineVertex = 0;
-            InvalidateView();
+            if (KEYMAP.IsPressed(Keybinds.ToolNone))
+                toolbox.ChangeTool(ToolType.None);
+            if (KEYMAP.IsPressed(Keybinds.ToolTranslate))
+                toolbox.ChangeTool(ToolType.Translate);
+            if (KEYMAP.IsPressed(Keybinds.ToolRotation))
+                toolbox.ChangeTool(ToolType.Rotate);
+            if (KEYMAP.IsPressed(Keybinds.ToolScaling))
+                toolbox.ChangeTool(ToolType.Scale);
+            if (KEYMAP.IsPressed(Keybinds.ToolVertexTranslator))
+                toolbox.ChangeTool(ToolType.VertexTranslator);
+            if (KEYMAP.IsPressed(Keybinds.DeleteObject))
+                DeleteObject(selectedObjects);
         }
 
         /// <param name="allowNewGrab">whether a new click will begin grabbing</param>
@@ -893,9 +893,9 @@ namespace Replanetizer.Frames
         {
             Vector3 magnitude = mouseRay - prevMouseRay;
 
-            if (currentTool is BasicTransformTool basicTool)
+            if (toolbox.tool is BasicTransformTool basicTool)
                 basicTool.Transform(selectedObjects, direction, magnitude);
-            else if (currentTool is VertexTranslationTool vertexTranslationTool)
+            else if (toolbox.tool is VertexTranslationTool vertexTranslationTool)
             {
                 vertexTranslationTool.Transform(selectedObjects, direction, magnitude, currentSplineVertex);
                 // TODO add spline translation hook call
@@ -1010,7 +1010,7 @@ namespace Replanetizer.Frames
 
         public void RenderTool()
         {
-            if (currentTool == null || selectedObjects.Count == 0)
+            if (toolbox.tool == null || selectedObjects.Count == 0)
                 return;
 
             // Render tool on top of everything
@@ -1019,12 +1019,12 @@ namespace Replanetizer.Frames
             GL.LineWidth(5.0f);
 
             if (selectedObjects.TryGetOne(out var obj) && obj is Spline spline &&
-                currentTool is VertexTranslationTool)
+                toolbox.tool is VertexTranslationTool)
             {
-                currentTool.Render(spline.GetVertex(currentSplineVertex), this);
+                toolbox.tool.Render(spline.GetVertex(currentSplineVertex), this);
             }
             else
-                currentTool.Render(selectedObjects.pivot, this);
+                toolbox.tool.Render(selectedObjects.pivot, this);
 
             GL.LineWidth(1.0f);
         }

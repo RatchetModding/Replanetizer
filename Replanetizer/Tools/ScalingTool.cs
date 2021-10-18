@@ -16,7 +16,7 @@ namespace Replanetizer.Tools
     {
         public override ToolType toolType => ToolType.Scale;
 
-        public ScalingTool()
+        public ScalingTool(Toolbox toolbox) : base(toolbox)
         {
             const float length = 1f;
 

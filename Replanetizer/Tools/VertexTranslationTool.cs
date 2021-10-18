@@ -17,7 +17,7 @@ namespace Replanetizer.Tools
     {
         public override ToolType toolType => ToolType.VertexTranslator;
 
-        public VertexTranslationTool()
+        public VertexTranslationTool(Toolbox toolbox) : base(toolbox)
         {
             const float length = 0.7f;
 

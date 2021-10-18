@@ -16,7 +16,7 @@ namespace Replanetizer.Tools
     {
         public override ToolType toolType => ToolType.Translate;
 
-        public TranslationTool()
+        public TranslationTool(Toolbox toolbox) : base(toolbox)
         {
             const float length = 2.0f;
 

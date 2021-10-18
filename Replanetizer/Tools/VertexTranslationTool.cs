@@ -17,6 +17,8 @@ namespace Replanetizer.Tools
     {
         public override ToolType toolType => ToolType.VertexTranslator;
 
+        public int currentVertex { get; set; }
+
         public VertexTranslationTool(Toolbox toolbox) : base(toolbox)
         {
             const float length = 0.7f;
@@ -51,6 +53,16 @@ namespace Replanetizer.Tools
             GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
         }
 
+        public void Render(Spline spline, LevelFrame frame)
+        {
+            Render(spline.GetVertex(currentVertex), frame);
+        }
+
+        public override void Reset()
+        {
+            currentVertex = 0;
+        }
+
         public void Transform(LevelObject obj, Vector3 vec, int vertexIndex)
         {
             if (obj is not Spline spline)
@@ -65,6 +77,19 @@ namespace Replanetizer.Tools
             Vector3 vec = ProcessVec(direction, magnitude);
             if (selection.TryGetOne(out var obj))
                 Transform(obj, vec, vertexIndex);
+        }
+
+        public void Transform(LevelObject obj, Vector3 vec)
+        {
+            Transform(obj, vec, currentVertex);
+        }
+
+        public void Transform(
+            Selection selection, Vector3 direction, Vector3 magnitude)
+        {
+            Vector3 vec = ProcessVec(direction, magnitude);
+            if (selection.TryGetOne(out var obj))
+                Transform(obj, vec);
         }
     }
 }

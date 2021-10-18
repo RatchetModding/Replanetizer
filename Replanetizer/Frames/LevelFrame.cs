@@ -56,7 +56,6 @@ namespace Replanetizer.Frames
 
         private Matrix4 view { get; set; }
 
-        private int currentSplineVertex;
         public readonly Selection selectedObjects;
 
         private int antialiasing = 1;
@@ -811,22 +810,19 @@ namespace Replanetizer.Frames
 
         private void HandleMouseWheelChanges()
         {
-            if (toolbox.type != ToolType.VertexTranslator) return;
+            if (toolbox.tool is not VertexTranslationTool tool) return;
             if (!selectedObjects.TryGetOne(out var obj) || obj is not Spline spline)
                 return;
 
             int delta = (int) wnd.MouseState.ScrollDelta.Length / 120;
             if (delta > 0)
             {
-                if (currentSplineVertex < spline.GetVertexCount() - 1)
-                {
-                    currentSplineVertex += 1;
-                }
+                if (tool.currentVertex < spline.GetVertexCount() - 1)
+                    tool.currentVertex++;
             }
-            else if (currentSplineVertex > 0)
-            {
-                currentSplineVertex -= 1;
-            }
+            else if (tool.currentVertex > 0)
+                tool.currentVertex--;
+
             InvalidateView();
         }
 
@@ -897,7 +893,7 @@ namespace Replanetizer.Frames
                 basicTool.Transform(selectedObjects, direction, magnitude);
             else if (toolbox.tool is VertexTranslationTool vertexTranslationTool)
             {
-                vertexTranslationTool.Transform(selectedObjects, direction, magnitude, currentSplineVertex);
+                vertexTranslationTool.Transform(selectedObjects, direction, magnitude);
                 // TODO add spline translation hook call
                 // if (hook is { hookWorking: true })
                 // {
@@ -1019,9 +1015,9 @@ namespace Replanetizer.Frames
             GL.LineWidth(5.0f);
 
             if (selectedObjects.TryGetOne(out var obj) && obj is Spline spline &&
-                toolbox.tool is VertexTranslationTool)
+                toolbox.tool is VertexTranslationTool vertexTranslationTool)
             {
-                toolbox.tool.Render(spline.GetVertex(currentSplineVertex), this);
+                vertexTranslationTool.Render(spline, this);
             }
             else
                 toolbox.tool.Render(selectedObjects.pivot, this);

@@ -52,7 +52,30 @@ namespace Replanetizer.Tools
 
         public override void Transform(LevelObject obj, Vector3 vec, Vector3 pivot)
         {
-            obj.Scale(vec);
+            var mat = obj.modelMatrix;
+            var scale = Matrix4.CreateScale(vec);
+
+            if (toolbox.transformSpace == TransformSpace.Global)
+            {
+                var transPivot = Matrix4.CreateTranslation(pivot);
+                mat = mat * transPivot.Inverted() * scale * transPivot;
+            }
+            else if (toolbox.transformSpace == TransformSpace.Local)
+            {
+                var transPivotOffset = Matrix4.CreateTranslation(obj.position - pivot);
+                var transObj = Matrix4.CreateTranslation(obj.position);
+                var rotObj = Matrix4.CreateFromQuaternion(obj.rotation);
+                mat =
+                    mat *
+                    // Move to origin and remove rotation
+                    transObj.Inverted() * rotObj.Inverted() *
+                    // Offset by the pivot, scale, and undo pivot offset
+                    transPivotOffset * scale * transPivotOffset.Inverted() *
+                    // Add back object rotation and position
+                    rotObj * transObj;
+            }
+
+            obj.SetFromMatrix(mat);
         }
 
         protected override Vector3 ProcessVec(Vector3 direction, Vector3 magnitude)

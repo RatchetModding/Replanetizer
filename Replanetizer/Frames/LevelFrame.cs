@@ -81,7 +81,12 @@ namespace Replanetizer.Frames
             enableDistanceCulling = true, enableFrustumCulling = true, enableFog = true, enableCameraInfo = true;
 
         public Camera camera;
+
         private Toolbox toolbox = new();
+        private int transformSpace;
+        private int pivotPositioning;
+        private string[] transformSpaceOptions = Enum.GetNames<TransformSpace>();
+        private string[] pivotPositioningOptions = Enum.GetNames<PivotPositioning>();
 
         private ConditionalWeakTable<IRenderable, BufferContainer> bufferTable;
         public Dictionary<Texture, int> textureIds;
@@ -277,6 +282,17 @@ namespace Replanetizer.Frames
                     if (ImGui.MenuItem("Deselect all"))
                         selectedObjects.Clear();
 
+                    ImGui.Separator();
+
+                    if (ImGui.Combo("Transform space", ref transformSpace, transformSpaceOptions, transformSpaceOptions.Length))
+                    {
+                        toolbox.transformSpace = (TransformSpace) transformSpace;
+                    }
+                    if (ImGui.Combo("Pivot positioning", ref pivotPositioning, pivotPositioningOptions, pivotPositioningOptions.Length))
+                    {
+                        toolbox.pivotPositioning = (PivotPositioning) pivotPositioning;
+                    }
+
                     ImGui.EndMenu();
                 }
 
@@ -285,23 +301,6 @@ namespace Replanetizer.Frames
                     for (int i = 0; i < selectedChunks.Length; i++)
                         if (ImGui.Checkbox($"Chunk {i}", ref selectedChunks[i]))
                             SetSelectedChunks();
-                    ImGui.EndMenu();
-                }
-
-                // Tool options
-                ImGui.Separator();
-
-                if (ImGui.BeginMenu($"Transform space ({Enum.GetName(toolbox.transformationSpace)})"))
-                {
-                    if (ImGui.MenuItem("Global")) toolbox.transformationSpace = TransformationSpace.Global;
-                    if (ImGui.MenuItem("Local")) toolbox.transformationSpace = TransformationSpace.Local;
-                    ImGui.EndMenu();
-                }
-
-                if (ImGui.BeginMenu($"Pivot positioning ({Enum.GetName(toolbox.pivotPositioning)})"))
-                {
-                    if (ImGui.MenuItem("Median")) toolbox.pivotPositioning = PivotPositioning.Median;
-                    if (ImGui.MenuItem("Individual Origins")) toolbox.pivotPositioning = PivotPositioning.IndividualOrigins;
                     ImGui.EndMenu();
                 }
 

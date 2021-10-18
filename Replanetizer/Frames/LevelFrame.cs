@@ -262,18 +262,20 @@ namespace Replanetizer.Frames
 
                 if (ImGui.BeginMenu("Tools"))
                 {
-                    if (ImGui.MenuItem("Translate        [1]"))
+                    if (ImGui.MenuItem($"Translate        [{KEYMAP.NameOf(Keybinds.ToolTranslate)}]"))
                         toolbox.ChangeTool(ToolType.Translation);
-                    if (ImGui.MenuItem("Rotate           [2]"))
+                    if (ImGui.MenuItem($"Rotate           [{KEYMAP.NameOf(Keybinds.ToolRotation)}]"))
                         toolbox.ChangeTool(ToolType.Rotation);
-                    if (ImGui.MenuItem("Scale            [3]"))
+                    if (ImGui.MenuItem($"Scale            [{KEYMAP.NameOf(Keybinds.ToolScaling)}]"))
                         toolbox.ChangeTool(ToolType.Scaling);
-                    if (ImGui.MenuItem("Vertex translate [4]"))
+                    if (ImGui.MenuItem($"Vertex translate [{KEYMAP.NameOf(Keybinds.ToolVertexTranslator)}]"))
                         toolbox.ChangeTool(ToolType.VertexTranslation);
-                    if (ImGui.MenuItem("No tool          [5]"))
+                    if (ImGui.MenuItem($"No tool          [{KEYMAP.NameOf(Keybinds.ToolNone)}]"))
                         toolbox.ChangeTool(ToolType.None);
-                    if (ImGui.MenuItem("Delete selected  [Del]")) DeleteObject(selectedObjects);
-                    if (ImGui.MenuItem("Deselect all")) selectedObjects.Clear();
+                    if (ImGui.MenuItem($"Delete selected  [{KEYMAP.NameOf(Keybinds.DeleteObject)}]"))
+                        DeleteObject(selectedObjects);
+                    if (ImGui.MenuItem("Deselect all"))
+                        selectedObjects.Clear();
 
                     ImGui.EndMenu();
                 }

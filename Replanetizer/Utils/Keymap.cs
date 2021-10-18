@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Text;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Replanetizer.Utils
@@ -50,6 +51,39 @@ namespace Replanetizer.Utils
         {
             key = modifiersAndKey[^1];
             modifiers = modifiersAndKey[..^1];
+        }
+
+        private static string FormatKey(Keys key)
+        {
+            if (key is Keys.LeftControl)
+                return "Ctrl";
+            if (key is Keys.RightControl)
+                return "RCtrl";
+            if (key is Keys.LeftShift)
+                return "Shift";
+            if (key is Keys.RightShift)
+                return "RShift";
+            if (key is Keys.LeftAlt)
+                return "Alt";
+            if (key is Keys.RightAlt)
+                return "RAlt";
+
+            char keyChar = (char) key;
+            if (keyChar >= 0x21 && keyChar <= 0x7e)
+                return keyChar.ToString();
+
+            return key.ToString();
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            foreach (var mod in modifiers)
+            {
+                sb.Append(FormatKey(mod));
+                sb.Append('+');
+            }
+            return sb.Append(FormatKey(key)).ToString();
         }
 
         public bool IsDown(Window wnd)
@@ -144,6 +178,13 @@ namespace Replanetizer.Utils
             }
 
             return false;
+        }
+
+        public string NameOf(Keybinds keybind)
+        {
+            if (!keymap.TryGetValue(keybind, out var keyCombos))
+                return "ERR_NO_KEY";
+            return new StringBuilder().AppendJoin(" ", keyCombos).ToString();
         }
     }
 }

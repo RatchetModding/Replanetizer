@@ -278,14 +278,15 @@ namespace Replanetizer.Frames
                     ImGui.EndMenu();
                 }
 
-                if (selectedChunks.Length > 0)
+                if (selectedChunks.Length > 0 && ImGui.BeginMenu("Chunks"))
                 {
-                    if (ImGui.BeginMenu("Chunks"))
+                    for (int i = 0; i < selectedChunks.Length; i++)
                     {
-                        for (int i = 0; i < selectedChunks.Length; i++)
-                        {
-                            if (ImGui.Checkbox("Chunk " + i, ref selectedChunks[i])) SetSelectedChunks();
-                        }
+                        if (ImGui.Checkbox($"Chunk {i}", ref selectedChunks[i])) SetSelectedChunks();
+                    }
+
+                    ImGui.EndMenu();
+                }
 
                         ImGui.EndMenu();
                     }

@@ -13,15 +13,6 @@ namespace Replanetizer.Tools
 {
     public abstract class Tool
     {
-        public enum ToolType
-        {
-            None,
-            Translate,
-            Rotate,
-            Scale,
-            VertexTranslator
-        }
-
         public float transformMultipier { get; set; } = 50f;
         public TransformationSpace transformationSpace { get; set; } = TransformationSpace.Global;
         public PivotPositioning pivotPositioning { get; set; } = PivotPositioning.Median;

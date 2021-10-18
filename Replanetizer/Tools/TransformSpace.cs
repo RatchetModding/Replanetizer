@@ -7,7 +7,7 @@
 
 namespace Replanetizer.Tools
 {
-    public enum TransformationSpace
+    public enum TransformSpace
     {
         Global = 0,
         Local

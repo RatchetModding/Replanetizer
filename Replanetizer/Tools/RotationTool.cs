@@ -55,12 +55,12 @@ namespace Replanetizer.Tools
             var mat = obj.modelMatrix;
             var rotPivot = Matrix4.CreateFromQuaternion(Quaternion.FromEulerAngles(vec));
 
-            if (toolbox.transformationSpace == TransformationSpace.Global)
+            if (toolbox.transformSpace == TransformSpace.Global)
             {
                 var transPivot = Matrix4.CreateTranslation(pivot);
                 mat = mat * transPivot.Inverted() * rotPivot * transPivot;
             }
-            else if (toolbox.transformationSpace == TransformationSpace.Local)
+            else if (toolbox.transformSpace == TransformSpace.Local)
             {
                 // TODO this is not stable. we need to store the pivot through the
                 //   duration of a transformation action

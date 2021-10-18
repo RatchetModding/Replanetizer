@@ -107,12 +107,12 @@ namespace Replanetizer.Tools
         {
             var mat = obj.modelMatrix;
 
-            if (toolbox.transformationSpace == TransformationSpace.Global)
+            if (toolbox.transformSpace == TransformSpace.Global)
             {
                 var trans = Matrix4.CreateTranslation(vec);
                 mat = mat * trans;
             }
-            else if (toolbox.transformationSpace == TransformationSpace.Local)
+            else if (toolbox.transformSpace == TransformSpace.Local)
             {
                 // Compensate for scale diminishing the strength of the translation
                 var trans = Matrix4.CreateTranslation(vec/obj.scale.LengthFast);

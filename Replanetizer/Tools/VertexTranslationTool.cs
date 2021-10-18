@@ -15,7 +15,7 @@ namespace Replanetizer.Tools
 {
     class VertexTranslationTool : SpecialTransformTool
     {
-        public override ToolType toolType => ToolType.VertexTranslator;
+        public override ToolType toolType => ToolType.VertexTranslation;
 
         public int currentVertex { get; set; }
 

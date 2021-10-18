@@ -14,7 +14,7 @@ namespace Replanetizer.Tools
 {
     class ScalingTool : BasicTransformTool
     {
-        public override ToolType toolType => ToolType.Scale;
+        public override ToolType toolType => ToolType.Scaling;
 
         public ScalingTool(Toolbox toolbox) : base(toolbox)
         {

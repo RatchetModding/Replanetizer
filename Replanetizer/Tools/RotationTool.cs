@@ -14,7 +14,7 @@ namespace Replanetizer.Tools
 {
     class RotationTool : BasicTransformTool
     {
-        public override ToolType toolType => ToolType.Rotate;
+        public override ToolType toolType => ToolType.Rotation;
 
         public RotationTool(Toolbox toolbox) : base(toolbox)
         {

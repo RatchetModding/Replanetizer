@@ -9,10 +9,10 @@ namespace Replanetizer.Tools
 {
     public enum ToolType
     {
-        None,
-        Translate,
-        Rotate,
-        Scale,
-        VertexTranslator
+        None = 0,
+        Translation,
+        Rotation,
+        Scaling,
+        VertexTranslation
     }
 }

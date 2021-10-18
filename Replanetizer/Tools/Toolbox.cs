@@ -51,13 +51,13 @@ namespace Replanetizer.Tools
 
             if (toolType == ToolType.None)
                 _tool = null;
-            else if (toolType == ToolType.Translate)
+            else if (toolType == ToolType.Translation)
                 _tool = TRANSLATION_TOOL;
-            else if (toolType == ToolType.Rotate)
+            else if (toolType == ToolType.Rotation)
                 _tool = ROTATION_TOOL;
-            else if (toolType == ToolType.Scale)
+            else if (toolType == ToolType.Scaling)
                 _tool = SCALING_TOOL;
-            else if (toolType == ToolType.VertexTranslator)
+            else if (toolType == ToolType.VertexTranslation)
                 _tool = VERTEX_TRANSLATION_TOOL;
 
             _tool?.Reset();

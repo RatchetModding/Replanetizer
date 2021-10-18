@@ -14,7 +14,7 @@ namespace Replanetizer.Tools
 {
     class TranslationTool : BasicTransformTool
     {
-        public override ToolType toolType => ToolType.Translate;
+        public override ToolType toolType => ToolType.Translation;
 
         public TranslationTool(Toolbox toolbox) : base(toolbox)
         {

@@ -263,13 +263,13 @@ namespace Replanetizer.Frames
                 if (ImGui.BeginMenu("Tools"))
                 {
                     if (ImGui.MenuItem("Translate        [1]"))
-                        toolbox.ChangeTool(ToolType.Translate);
+                        toolbox.ChangeTool(ToolType.Translation);
                     if (ImGui.MenuItem("Rotate           [2]"))
-                        toolbox.ChangeTool(ToolType.Rotate);
+                        toolbox.ChangeTool(ToolType.Rotation);
                     if (ImGui.MenuItem("Scale            [3]"))
-                        toolbox.ChangeTool(ToolType.Scale);
+                        toolbox.ChangeTool(ToolType.Scaling);
                     if (ImGui.MenuItem("Vertex translate [4]"))
-                        toolbox.ChangeTool(ToolType.VertexTranslator);
+                        toolbox.ChangeTool(ToolType.VertexTranslation);
                     if (ImGui.MenuItem("No tool          [5]"))
                         toolbox.ChangeTool(ToolType.None);
                     if (ImGui.MenuItem("Delete selected  [Del]")) DeleteObject(selectedObjects);
@@ -757,7 +757,7 @@ namespace Replanetizer.Frames
 
         public void SelectedObjectsOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            if (!selectedObjects.isOnlySplines && toolbox.type == ToolType.VertexTranslator)
+            if (!selectedObjects.isOnlySplines && toolbox.type == ToolType.VertexTranslation)
                 toolbox.ChangeTool(ToolType.None);
             InvalidateView();
         }
@@ -840,13 +840,13 @@ namespace Replanetizer.Frames
             if (KEYMAP.IsPressed(Keybinds.ToolNone))
                 toolbox.ChangeTool(ToolType.None);
             if (KEYMAP.IsPressed(Keybinds.ToolTranslate))
-                toolbox.ChangeTool(ToolType.Translate);
+                toolbox.ChangeTool(ToolType.Translation);
             if (KEYMAP.IsPressed(Keybinds.ToolRotation))
-                toolbox.ChangeTool(ToolType.Rotate);
+                toolbox.ChangeTool(ToolType.Rotation);
             if (KEYMAP.IsPressed(Keybinds.ToolScaling))
-                toolbox.ChangeTool(ToolType.Scale);
+                toolbox.ChangeTool(ToolType.Scaling);
             if (KEYMAP.IsPressed(Keybinds.ToolVertexTranslator))
-                toolbox.ChangeTool(ToolType.VertexTranslator);
+                toolbox.ChangeTool(ToolType.VertexTranslation);
             if (KEYMAP.IsPressed(Keybinds.DeleteObject))
                 DeleteObject(selectedObjects);
         }

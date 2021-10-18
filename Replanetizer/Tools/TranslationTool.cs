@@ -105,7 +105,21 @@ namespace Replanetizer.Tools
 
         public override void Transform(LevelObject obj, Vector3 vec, Vector3 pivot)
         {
-            obj.Translate(vec);
+            var mat = obj.modelMatrix;
+
+            if (toolbox.transformationSpace == TransformationSpace.Global)
+            {
+                var trans = Matrix4.CreateTranslation(vec);
+                mat = mat * trans;
+            }
+            else if (toolbox.transformationSpace == TransformationSpace.Local)
+            {
+                // Compensate for scale diminishing the strength of the translation
+                var trans = Matrix4.CreateTranslation(vec/obj.scale.LengthFast);
+                mat = trans * mat;
+            }
+
+            obj.SetFromMatrix(mat);
         }
     }
 }

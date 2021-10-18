@@ -288,8 +288,21 @@ namespace Replanetizer.Frames
                     ImGui.EndMenu();
                 }
 
-                        ImGui.EndMenu();
-                    }
+                // Tool options
+                ImGui.Separator();
+
+                if (ImGui.BeginMenu($"Transform space ({Enum.GetName(toolbox.transformationSpace)})"))
+                {
+                    if (ImGui.MenuItem("Global")) toolbox.transformationSpace = TransformationSpace.Global;
+                    if (ImGui.MenuItem("Local")) toolbox.transformationSpace = TransformationSpace.Local;
+                    ImGui.EndMenu();
+                }
+
+                if (ImGui.BeginMenu($"Pivot positioning ({Enum.GetName(toolbox.pivotPositioning)})"))
+                {
+                    if (ImGui.MenuItem("Median")) toolbox.pivotPositioning = PivotPositioning.Median;
+                    if (ImGui.MenuItem("Individual Origins")) toolbox.pivotPositioning = PivotPositioning.IndividualOrigins;
+                    ImGui.EndMenu();
                 }
 
                 ImGui.EndMenuBar();

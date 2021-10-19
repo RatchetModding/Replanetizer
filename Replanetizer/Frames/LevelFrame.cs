@@ -830,12 +830,12 @@ namespace Replanetizer.Frames
                 return;
 
             int delta = (int) wnd.MouseState.ScrollDelta.Length / 120;
-            if (delta > 0)
-            {
-                if (tool.currentVertex < spline.GetVertexCount() - 1)
-                    tool.currentVertex++;
-            }
-            else if (tool.currentVertex > 0)
+            if (delta == 0)
+                return;
+
+            if (delta > 0 && tool.currentVertex < spline.GetVertexCount() - 1)
+                tool.currentVertex++;
+            else if (delta < 0 && tool.currentVertex > 0)
                 tool.currentVertex--;
 
             InvalidateView();

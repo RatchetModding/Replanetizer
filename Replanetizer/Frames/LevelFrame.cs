@@ -829,7 +829,7 @@ namespace Replanetizer.Frames
             if (!selectedObjects.TryGetOne(out var obj) || obj is not Spline spline)
                 return;
 
-            int delta = (int) wnd.MouseState.ScrollDelta.Length / 120;
+            int delta = (int) wnd.MouseState.ScrollDelta.Y;
             if (delta == 0)
                 return;
 

@@ -11,22 +11,22 @@ namespace Replanetizer.Utils
     {
         private readonly HashSet<LevelObject> OBJECTS = new();
 
-        public Vector3 pivot
+        public Vector3 median
         {
             get
             {
-                if (pivotDirty)
+                if (medianDirty)
                 {
-                    _pivot = CalculatePivotPoint();
-                    pivotDirty = false;
+                    _median = CalculateMedian();
+                    medianDirty = false;
                 }
 
-                return _pivot;
+                return _median;
             }
         }
 
-        private bool pivotDirty;
-        private Vector3 _pivot;
+        private bool medianDirty;
+        private Vector3 _median;
 
         public bool isOnlySplines => splinesCount > 1 && nonSplinesCount == 0;
         private int splinesCount;
@@ -57,7 +57,7 @@ namespace Replanetizer.Utils
         /// </summary>
         public void SetDirty(bool dirty = true)
         {
-            pivotDirty = dirty;
+            medianDirty = dirty;
         }
 
         public void Clear()
@@ -190,15 +190,15 @@ namespace Replanetizer.Utils
             return true;
         }
 
-        private Vector3 CalculatePivotPoint()
+        private Vector3 CalculateMedian()
         {
-            var pivot = new Vector3();
+            var median = new Vector3();
             foreach (var obj in OBJECTS)
             {
-                pivot += obj.position;
+                median += obj.position;
             }
-            pivot /= OBJECTS.Count;
-            return pivot;
+            median /= OBJECTS.Count;
+            return median;
         }
     }
 }

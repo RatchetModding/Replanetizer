@@ -1029,7 +1029,7 @@ namespace Replanetizer.Frames
                 vertexTranslationTool.Render(spline, this);
             }
             else
-                toolbox.tool.Render(selectedObjects.pivot, this);
+                toolbox.tool.Render(selectedObjects.median, this);
 
             GL.LineWidth(1.0f);
         }

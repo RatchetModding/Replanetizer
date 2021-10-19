@@ -32,7 +32,7 @@ namespace Replanetizer.Tools
         public void Transform(Selection selection, Vector3 direction, Vector3 magnitude)
         {
             Vector3 vec = ProcessVec(direction, magnitude);
-            Vector3 pivot = selection.pivot;
+            Vector3 pivot = selection.median;
             foreach (var obj in selection)
             {
                 if (toolbox.pivotPositioning == PivotPositioning.IndividualOrigins)

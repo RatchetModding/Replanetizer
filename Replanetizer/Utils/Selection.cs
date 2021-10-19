@@ -32,6 +32,8 @@ namespace Replanetizer.Utils
         private int splinesCount;
         private int nonSplinesCount;
 
+        public LevelObject? newestObject { get; private set; }
+
         public int Count => OBJECTS.Count;
         public bool IsReadOnly => false;
 
@@ -82,6 +84,7 @@ namespace Replanetizer.Utils
         public void Add(LevelObject obj)
         {
             OBJECTS.Add(obj);
+            newestObject = obj;
 
             if (obj is Spline)
                 splinesCount++;
@@ -104,6 +107,7 @@ namespace Replanetizer.Utils
             {
                 newItems.Add(obj);
                 OBJECTS.Add(obj);
+                newestObject = obj;
 
                 if (obj is Spline)
                     splinesCount++;
@@ -123,6 +127,8 @@ namespace Replanetizer.Utils
         {
             if (!OBJECTS.Remove(obj))
                 return false;
+            if (ReferenceEquals(obj, newestObject))
+                newestObject = null;
 
             if (obj is Spline)
                 splinesCount--;
@@ -147,6 +153,8 @@ namespace Replanetizer.Utils
             {
                 removedItems.Remove(obj);
                 OBJECTS.Remove(obj);
+                if (ReferenceEquals(obj, newestObject))
+                    newestObject = null;
 
                 if (obj is Spline)
                     splinesCount--;

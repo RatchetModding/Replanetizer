@@ -194,7 +194,9 @@ namespace Replanetizer.Utils
             if (OBJECTS.Count != 1)
                 return false;
 
-            obj = OBJECTS.GetEnumerator().Current;
+            using var enumerator = OBJECTS.GetEnumerator();
+            enumerator.MoveNext();
+            obj = enumerator.Current;
             return true;
         }
 

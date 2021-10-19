@@ -909,11 +909,11 @@ namespace Replanetizer.Frames
             else if (toolbox.tool is VertexTranslationTool vertexTranslationTool)
             {
                 vertexTranslationTool.Transform(selectedObjects, direction, magnitude);
-                // TODO add spline translation hook call
-                // if (hook is { hookWorking: true })
-                // {
-                //     hook.HandleSplineTranslation(level, spline, currentSplineVertex);
-                // }
+                if (hook is { hookWorking: true } &&
+                    selectedObjects.TryGetOne(out var obj) && obj is Spline spline)
+                {
+                    hook.HandleSplineTranslation(level, spline, vertexTranslationTool.currentVertex);
+                }
             }
 
             selectedObjects.SetDirty();

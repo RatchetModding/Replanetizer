@@ -74,12 +74,11 @@ namespace Replanetizer.Tools
             };
         }
 
-        public override void Render(Vector3 position, LevelFrame frame)
+        public override void Render(Matrix4 mat, LevelFrame frame)
         {
             GetVbo();
 
-            var modelMatrix = GetModelMatrix(position, frame);
-            GL.UniformMatrix4(frame.shaderIDTable.uniformModelToWorldMatrix, false, ref modelMatrix);
+            GL.UniformMatrix4(frame.shaderIDTable.uniformModelToWorldMatrix, false, ref mat);
 
             GL.Uniform1(frame.shaderIDTable.uniformColorLevelObjectNumber, 0);
             GL.Uniform4(frame.shaderIDTable.uniformColor, new Vector4(1, 0, 0, 1));

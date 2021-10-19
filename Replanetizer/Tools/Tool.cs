@@ -8,6 +8,7 @@
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Replanetizer.Frames;
+using Replanetizer.Utils;
 
 namespace Replanetizer.Tools
 {
@@ -45,14 +46,53 @@ namespace Replanetizer.Tools
         /// <summary>
         /// Get the model matrix, scaled by camera distance
         /// </summary>
-        protected Matrix4 GetModelMatrix(Vector3 position, LevelFrame frame)
+        protected static Matrix4 GetModelMatrix(Vector3 position, LevelFrame frame)
         {
             float camDist = (frame.camera.position - position).LengthFast;
             return Matrix4.CreateScale(camDist * SCREEN_SPACE_SCALE) * Matrix4.CreateTranslation(position);
         }
 
+        /// <summary>
+        /// Get the model matrix, scaled by camera distance
+        /// </summary>
+        protected static Matrix4 GetModelMatrix(Vector3 position, Quaternion rotation, LevelFrame frame)
+        {
+            float camDist = (frame.camera.position - position).LengthFast;
+            return
+                Matrix4.CreateScale(camDist * SCREEN_SPACE_SCALE) *
+                Matrix4.CreateFromQuaternion(rotation) *
+                Matrix4.CreateTranslation(position);
+        }
+
         public abstract ToolType toolType { get; }
-        public abstract void Render(Vector3 position, LevelFrame frame);
+        public abstract void Render(Matrix4 mat, LevelFrame frame);
+
+        public void Render(Vector3 position, LevelFrame frame)
+        {
+            var mat = GetModelMatrix(position, frame);
+            Render(mat, frame);
+        }
+
+        public void Render(Vector3 position, Quaternion rotation, LevelFrame frame)
+        {
+            var mat = GetModelMatrix(position, rotation, frame);
+            Render(mat, frame);
+        }
+
+        public void Render(Selection selection, LevelFrame frame)
+        {
+            if (toolbox.transformSpace == TransformSpace.Global)
+            {
+                Render(selection.median, frame);
+            }
+            else if (toolbox.transformSpace == TransformSpace.Local)
+            {
+                if (selection.newestObject != null)
+                    Render(selection.median, selection.newestObject.rotation, frame);
+                else
+                    Render(selection.median, frame);
+            }
+        }
 
         protected virtual Vector3 ProcessVec(Vector3 direction, Vector3 magnitude)
         {

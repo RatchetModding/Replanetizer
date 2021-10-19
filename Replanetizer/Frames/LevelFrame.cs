@@ -291,12 +291,18 @@ namespace Replanetizer.Frames
                 ImGui.Separator();
 
                 if (ImGui.Button(toolbox.transformSpace.HUMAN_NAME))
+                {
                     toolbox.transformSpace++;
+                    InvalidateView();
+                }
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Transform space");
 
                 if (ImGui.Button(toolbox.pivotPositioning.HUMAN_NAME))
+                {
                     toolbox.pivotPositioning++;
+                    InvalidateView();
+                }
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Pivot positioning");
 

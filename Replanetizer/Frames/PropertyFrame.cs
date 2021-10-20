@@ -35,6 +35,7 @@ namespace Replanetizer.Frames
                 if (value != null)
                     value.CollectionChanged += SelectionOnCollectionChanged;
                 _selection = value;
+                UpdateFromSelection();
             }
         }
 
@@ -70,18 +71,23 @@ namespace Replanetizer.Frames
             this.hideCallbackButton = hideCallbackButton;
         }
 
+        private void UpdateLevelFrame()
+        {
+            levelFrame?.InvalidateView();
+        }
+
         private void SelectionOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            UpdateFromSelection();
+        }
+
+        private void UpdateFromSelection()
         {
             if (selection == null)
                 // This shouldn't happen
                 return;
             selection.TryGetOne(out var obj);
             selectedObject = obj;
-        }
-
-        private void UpdateLevelFrame()
-        {
-            levelFrame?.InvalidateView();
         }
 
         private void RecomputeProperties()

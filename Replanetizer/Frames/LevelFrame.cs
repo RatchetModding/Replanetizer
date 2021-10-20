@@ -206,10 +206,12 @@ namespace Replanetizer.Frames
                 {
                     if (ImGui.MenuItem("Object properties"))
                     {
-                        var newFrame = new PropertyFrame(this.wnd, this, selectedObjects, listenToCallbacks: true);
-                        // TODO callbacks
-                        // RegisterCallback(newFrame.SelectionCallback);
-                        subFrames.Add(newFrame);
+                        subFrames.Add(
+                            new PropertyFrame(this.wnd, this, listenToCallbacks: true)
+                            {
+                                selection = selectedObjects
+                            }
+                        );
                     }
                     if (ImGui.MenuItem("Model viewer"))
                     {
@@ -225,7 +227,12 @@ namespace Replanetizer.Frames
                     }
                     if (ImGui.MenuItem("Level variables"))
                     {
-                        subFrames.Add(new PropertyFrame(this.wnd, this, level.levelVariables, "Level variables"));
+                        subFrames.Add(
+                            new PropertyFrame(this.wnd, this, "Level variables")
+                            {
+                                selectedObject = level.levelVariables
+                            }
+                        );
                     }
                     ImGui.EndMenu();
                 }

@@ -45,6 +45,8 @@ namespace Replanetizer.Frames
             get => _selectedObject;
             set
             {
+                if (!listenToCallbacks)
+                    return;
                 _selectedObject = value;
                 RecomputeProperties();
             }
@@ -74,13 +76,6 @@ namespace Replanetizer.Frames
                 // This shouldn't happen
                 return;
             selection.TryGetOne(out var obj);
-            SelectionCallback(obj);
-        }
-
-        public void SelectionCallback(object? obj)
-        {
-            if (!listenToCallbacks)
-                return;
             selectedObject = obj;
         }
 

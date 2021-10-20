@@ -7,10 +7,17 @@ using OpenTK.Mathematics;
 
 namespace Replanetizer.Utils
 {
+    /// <summary>
+    /// A container for LevelObjects that the user can select. Allows for adding
+    /// and removing individual objects from the selection without resetting it.
+    /// </summary>
     public class Selection : INotifyCollectionChanged, ICollection<LevelObject>
     {
         private readonly HashSet<LevelObject> OBJECTS = new();
 
+        /// <summary>
+        /// The median point of all selected objects (averaged positions)
+        /// </summary>
         public Vector3 median
         {
             get
@@ -28,10 +35,19 @@ namespace Replanetizer.Utils
         private bool medianDirty;
         private Vector3 _median;
 
+        /// <summary>
+        /// Whether the selection contains only splines
+        /// </summary>
         public bool isOnlySplines => splinesCount > 1 && nonSplinesCount == 0;
         private int splinesCount;
         private int nonSplinesCount;
 
+        /// <summary>
+        /// The most recently selected object. Note that this will be null if
+        /// the most recently selected object was deselected, even if there are
+        /// other objects still selected. This is a consequence of using a
+        /// HashSet implementation for quick membership testing.
+        /// </summary>
         public LevelObject? newestObject { get; private set; }
 
         public int Count => OBJECTS.Count;
@@ -47,6 +63,10 @@ namespace Replanetizer.Utils
             OBJECTS.CopyTo(array, arrayIndex);
         }
 
+        /// <summary>
+        /// Occurs when one or more objects are added to or removed from the
+        /// selection, or when the selection is cleared.
+        /// </summary>
         public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
         protected void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
@@ -62,6 +82,9 @@ namespace Replanetizer.Utils
             medianDirty = dirty;
         }
 
+        /// <summary>
+        /// Remove all objects from the selection
+        /// </summary>
         public void Clear()
         {
             OBJECTS.Clear();
@@ -75,12 +98,18 @@ namespace Replanetizer.Utils
             ));
         }
 
+        /// <summary>
+        /// Clear the selection and add only the given object
+        /// </summary>
         public void Set(LevelObject obj)
         {
             Clear();
             Add(obj);
         }
 
+        /// <summary>
+        /// Add an object to the selection
+        /// </summary>
         public void Add(LevelObject obj)
         {
             OBJECTS.Add(obj);
@@ -99,6 +128,9 @@ namespace Replanetizer.Utils
             );
         }
 
+        /// <summary>
+        /// Add several objects to the collection at once
+        /// </summary>
         public void Add(IEnumerable<LevelObject> objects)
         {
             var newItems = new List<LevelObject>();
@@ -123,6 +155,10 @@ namespace Replanetizer.Utils
             );
         }
 
+        /// <summary>
+        /// Remove an object from the selection
+        /// </summary>
+        /// <returns>whether the object was removed from the selection</returns>
         public bool Remove(LevelObject obj)
         {
             if (!OBJECTS.Remove(obj))
@@ -144,7 +180,9 @@ namespace Replanetizer.Utils
             return true;
         }
 
-
+        /// <summary>
+        /// Remove several objects from the selection at once
+        /// </summary>
         public void Remove(IEnumerable<LevelObject> objects)
         {
             var removedItems = new List<LevelObject>();
@@ -170,7 +208,9 @@ namespace Replanetizer.Utils
             );
         }
 
-        // Toggle selection of an object without affecting the other selections
+        /// <summary>
+        /// Toggle selection of an object without affecting the other selections
+        /// </summary>
         public void Toggle(LevelObject obj)
         {
             if (OBJECTS.Contains(obj))
@@ -179,7 +219,9 @@ namespace Replanetizer.Utils
                 Add(obj);
         }
 
-        // Toggle selection of just one object, clearing any other selections.
+        /// <summary>
+        /// Toggle selection of just one object, clearing any other selections
+        /// </summary>
         public void ToggleOne(LevelObject obj)
         {
             if (OBJECTS.Count == 1 && OBJECTS.Contains(obj))
@@ -188,6 +230,12 @@ namespace Replanetizer.Utils
                 Set(obj);
         }
 
+        /// <summary>
+        /// Get the single selected object if it is the only one in the selection
+        /// </summary>
+        /// <param name="obj">the single selected object or null if there are zero
+        /// or multiple objects selected</param>
+        /// <returns>true if the single selected object was set, else false</returns>
         public bool TryGetOne([NotNullWhen(true)] out LevelObject? obj)
         {
             obj = null;
@@ -200,6 +248,9 @@ namespace Replanetizer.Utils
             return true;
         }
 
+        /// <summary>
+        /// Calculate the median point of all selected object
+        /// </summary>
         private Vector3 CalculateMedian()
         {
             var median = new Vector3();

@@ -13,6 +13,9 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Replanetizer.Utils
 {
+    /// <summary>
+    /// Keybind actions for this application
+    /// </summary>
     public enum Keybinds
     {
         // Camera movement
@@ -36,23 +39,40 @@ namespace Replanetizer.Utils
         MultiSelectModifier
     }
 
+    /// <summary>
+    /// Represents a combination of modifier keys and a base key (e.g. "W",
+    /// "Ctrl+Z", "Ctrl+Shift+P")
+    /// </summary>
     public readonly struct KeyCombo
     {
         public Keys[] modifiers { get; }
         public Keys key { get; }
 
+        /// <summary>
+        /// A KeyCombo with only one key
+        /// </summary>
         public KeyCombo(Keys key)
         {
             this.key = key;
             modifiers = Array.Empty<Keys>();
         }
 
+        /// <summary>
+        /// A KeyCombo with one base key and one or more modifier keys (Ctrl,
+        /// Shift, Alt)
+        /// </summary>
+        /// <param name="modifiersAndKey">
+        /// a list of multiple modifier keys and one base key
+        /// </param>
         public KeyCombo(params Keys[] modifiersAndKey)
         {
             key = modifiersAndKey[^1];
             modifiers = modifiersAndKey[..^1];
         }
 
+        /// <summary>
+        /// Format a key into a human-readable form
+        /// </summary>
         private static string FormatKey(Keys key)
         {
             if (key is Keys.LeftControl)
@@ -75,6 +95,9 @@ namespace Replanetizer.Utils
             return key.ToString();
         }
 
+        /// <summary>
+        /// Format this KeyCombo into a human-readable string (e.g. "Ctrl+P")
+        /// </summary>
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -86,6 +109,9 @@ namespace Replanetizer.Utils
             return sb.Append(FormatKey(key)).ToString();
         }
 
+        /// <summary>
+        /// Get whether this KeyCombo is currently held down
+        /// </summary>
         public bool IsDown(Window wnd)
         {
             foreach (Keys modifier in modifiers)
@@ -94,6 +120,9 @@ namespace Replanetizer.Utils
             return wnd.IsKeyDown(key);
         }
 
+        /// <summary>
+        /// Get whether this KeyCombo just started being pressed
+        /// </summary>
         public bool IsPressed(Window wnd)
         {
             foreach (Keys modifier in modifiers)
@@ -102,6 +131,9 @@ namespace Replanetizer.Utils
             return wnd.IsKeyPressed(key);
         }
 
+        /// <summary>
+        /// Get whether this KeyCombo just finished being pressed
+        /// </summary>
         public bool IsReleased(Window wnd)
         {
             foreach (Keys modifier in modifiers)
@@ -111,11 +143,19 @@ namespace Replanetizer.Utils
         }
     }
 
+    /// <summary>
+    /// A class which handles the mapping of keypresses to keybinds. This allows
+    /// you to define actions in a key-agnostic way, and makes it easier to
+    /// change the keys associated with a given action.
+    /// </summary>
     public class Keymap
     {
         public Window wnd { get; set; }
         public IDictionary<Keybinds, KeyCombo[]> keymap { get; set; }
 
+        /// <summary>
+        /// The default keymap for this application
+        /// </summary>
         public static readonly ImmutableDictionary<Keybinds, KeyCombo[]> DEFAULT_KEYMAP =
             new Dictionary<Keybinds, KeyCombo[]>
             {
@@ -147,6 +187,9 @@ namespace Replanetizer.Utils
             this.keymap = keymap;
         }
 
+        /// <summary>
+        /// Get whether <param name="keybind"/> is currently held down
+        /// </summary>
         public bool IsDown(Keybinds keybind)
         {
             foreach (KeyCombo keyCombo in keymap[keybind])
@@ -158,6 +201,9 @@ namespace Replanetizer.Utils
             return false;
         }
 
+        /// <summary>
+        /// Get whether <paramref name="keybind"/> just started being pressed
+        /// </summary>
         public bool IsPressed(Keybinds keybind)
         {
             foreach (KeyCombo keyCombo in keymap[keybind])
@@ -169,6 +215,9 @@ namespace Replanetizer.Utils
             return false;
         }
 
+        /// <summary>
+        /// Get whether <paramref name="keybind"/> just finished being pressed
+        /// </summary>
         public bool IsReleased(Keybinds keybind)
         {
             foreach (KeyCombo keyCombo in keymap[keybind])
@@ -180,6 +229,10 @@ namespace Replanetizer.Utils
             return false;
         }
 
+        /// <summary>
+        /// Get the human-readable name of <paramref name="keybind"/> under the
+        /// current keymap (e.g. "Ctrl+Y / Ctrl+Shift+Z")
+        /// </summary>
         public string NameOf(Keybinds keybind)
         {
             if (!keymap.TryGetValue(keybind, out var keyCombos))

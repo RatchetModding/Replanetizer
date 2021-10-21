@@ -184,7 +184,7 @@ namespace Replanetizer.Utils
         {
             if (!keymap.TryGetValue(keybind, out var keyCombos))
                 return "ERR_NO_KEY";
-            return new StringBuilder().AppendJoin(" ", keyCombos).ToString();
+            return new StringBuilder().AppendJoin(" / ", keyCombos).ToString();
         }
     }
 }

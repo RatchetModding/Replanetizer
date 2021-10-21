@@ -70,7 +70,7 @@ namespace Replanetizer.Utils
 
             char keyChar = (char) key;
             if (keyChar >= 0x21 && keyChar <= 0x7e)
-                return keyChar.ToString();
+                return keyChar.ToString().ToUpper();
 
             return key.ToString();
         }

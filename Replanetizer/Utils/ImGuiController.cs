@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using ImGuiNET;
-using OpenTK.Graphics.OpenGL4;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;

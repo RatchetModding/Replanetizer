@@ -37,6 +37,8 @@ namespace LibReplanetizer
 
         public int off20;
 
+        public int id;
+
 
         public Texture(int id, short width, short height, byte[] data)
         {
@@ -71,6 +73,8 @@ namespace LibReplanetizer
             off1C = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x1C);
 
             off20 = ReadInt(textureBlock, (offset * TEXTUREELEMSIZE) + 0x20);
+
+            id = offset;
         }
 
         public byte[] Serialize(int vramOffset)

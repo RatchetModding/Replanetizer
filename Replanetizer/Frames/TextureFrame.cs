@@ -38,9 +38,9 @@ namespace Replanetizer.Frames
             {
                 Texture t = textures[i];
 
-                ImGui.BeginChild("imageChild_" + prefix + i, ITEM_SIZE, false);
+                ImGui.BeginChild("imageChild_" + prefix + t.id, ITEM_SIZE, false);
                 ImGui.Image((IntPtr) textureIds[t], IMAGE_SIZE);
-                string idText = prefix + i;
+                string idText = prefix + t.id;
                 float idWidth = ImGui.CalcTextSize(idText).X;
                 ImGui.SetCursorPosX(ITEM_SIZE.X - idWidth);
                 ImGui.Text(idText);

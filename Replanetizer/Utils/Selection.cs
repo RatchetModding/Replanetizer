@@ -254,11 +254,17 @@ namespace Replanetizer.Utils
         private Vector3 CalculateMean()
         {
             var mean = new Vector3();
+            int count = 0;
+
             foreach (var obj in OBJECTS)
             {
+                if (obj is TerrainFragment) continue;
+
                 mean += obj.position;
+                count++;
             }
-            mean /= OBJECTS.Count;
+
+            mean /= count;
             return mean;
         }
     }

@@ -16,24 +16,24 @@ namespace Replanetizer.Utils
         private readonly HashSet<LevelObject> OBJECTS = new();
 
         /// <summary>
-        /// The median point of all selected objects (averaged positions)
+        /// The mean point of all selected objects (averaged positions)
         /// </summary>
-        public Vector3 median
+        public Vector3 mean
         {
             get
             {
-                if (medianDirty)
+                if (meanDirty)
                 {
-                    _median = CalculateMedian();
-                    medianDirty = false;
+                    _mean = CalculateMean();
+                    meanDirty = false;
                 }
 
-                return _median;
+                return _mean;
             }
         }
 
-        private bool medianDirty;
-        private Vector3 _median;
+        private bool meanDirty;
+        private Vector3 _mean;
 
         /// <summary>
         /// Whether the selection contains only splines
@@ -79,7 +79,7 @@ namespace Replanetizer.Utils
         /// </summary>
         public void SetDirty(bool dirty = true)
         {
-            medianDirty = dirty;
+            meanDirty = dirty;
         }
 
         /// <summary>
@@ -249,17 +249,17 @@ namespace Replanetizer.Utils
         }
 
         /// <summary>
-        /// Calculate the median point of all selected object
+        /// Calculate the mean point of all selected object
         /// </summary>
-        private Vector3 CalculateMedian()
+        private Vector3 CalculateMean()
         {
-            var median = new Vector3();
+            var mean = new Vector3();
             foreach (var obj in OBJECTS)
             {
-                median += obj.position;
+                mean += obj.position;
             }
-            median /= OBJECTS.Count;
-            return median;
+            mean /= OBJECTS.Count;
+            return mean;
         }
     }
 }

@@ -40,10 +40,23 @@ namespace LibReplanetizer.LevelObjects
             modelMatrix = reflection * scaleMatrix * rot * translationMatrix;
         }
 
+        public void SetFromMatrix(Matrix4 mat)
+        {
+            position = mat.ExtractTranslation();
+            rotation = mat.ExtractRotation();
+            scale = mat.ExtractScale();
+            modelMatrix = mat;
+        }
+
         public void Translate(Vector3 vector)
         {
             position += vector;
             UpdateTransformMatrix();
+        }
+
+        public void Translate(float x, float y, float z)
+        {
+            Translate(new Vector3(x, y, z));
         }
 
         public void Rotate(Vector3 vector)
@@ -52,29 +65,26 @@ namespace LibReplanetizer.LevelObjects
             UpdateTransformMatrix();
         }
 
+        public void Rotate(float x, float y, float z)
+        {
+            Rotate(new Vector3(x, y, z));
+        }
+
         public void Scale(Vector3 scale)
         {
             this.scale *= scale;
             UpdateTransformMatrix();
         }
 
-
         public void Scale(float val)
-        { //To uniformly scale object
+        {
+            // To uniformly scale object
             Scale(new Vector3(val));
         }
+
         public void Scale(float x, float y, float z)
         {
-            Rotate(new Vector3(x, y, z));
+            Scale(new Vector3(x, y, z));
         }
-        public void Rotate(float x, float y, float z)
-        {
-            Rotate(new Vector3(x, y, z));
-        }
-        public void Translate(float x, float y, float z)
-        {
-            Translate(new Vector3(x, y, z));
-        }
-
     }
 }

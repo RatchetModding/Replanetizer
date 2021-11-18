@@ -5,19 +5,22 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Replanetizer.Frames;
 
 namespace Replanetizer.Tools
 {
-    class ScalingTool : Tool
+    class ScalingTool : BasicTransformTool
     {
-        public ScalingTool()
-        {
-            float length = 1f;
+        public override ToolType toolType => ToolType.Scaling;
 
-            vb = new float[]{
+        public ScalingTool(Toolbox toolbox) : base(toolbox)
+        {
+            const float length = 1f;
+
+            vb = new[]{
                 -length,    0,          0,
                 length,     0,          0,
                 0,          -length,    0,
@@ -27,12 +30,11 @@ namespace Replanetizer.Tools
             };
         }
 
-        public override void Render(Vector3 position, LevelFrame frame)
+        public override void Render(Matrix4 mat, LevelFrame frame)
         {
             GetVbo();
 
-            Matrix4 modelMatrix = Matrix4.CreateTranslation(position);
-            GL.UniformMatrix4(frame.shaderIDTable.uniformModelToWorldMatrix, false, ref modelMatrix);
+            GL.UniformMatrix4(frame.shaderIDTable.uniformModelToWorldMatrix, false, ref mat);
 
             GL.Uniform1(frame.shaderIDTable.uniformColorLevelObjectNumber, 0);
             GL.Uniform4(frame.shaderIDTable.uniformColor, new Vector4(1, 0, 0, 1));
@@ -47,9 +49,37 @@ namespace Replanetizer.Tools
             GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
         }
 
-        public override ToolType GetToolType()
+        public override void Transform(LevelObject obj, Vector3 vec, Vector3 pivot)
         {
-            return ToolType.Scale;
+            var mat = obj.modelMatrix;
+            var scale = Matrix4.CreateScale(vec);
+
+            if (toolbox.transformSpace == TransformSpace.Global)
+            {
+                var transPivot = Matrix4.CreateTranslation(pivot);
+                mat = mat * transPivot.Inverted() * scale * transPivot;
+            }
+            else if (toolbox.transformSpace == TransformSpace.Local)
+            {
+                var transPivotOffset = Matrix4.CreateTranslation(obj.position - pivot);
+                var transObj = Matrix4.CreateTranslation(obj.position);
+                var rotObj = Matrix4.CreateFromQuaternion(obj.rotation);
+                mat =
+                    mat *
+                    // Move to origin and remove rotation
+                    transObj.Inverted() * rotObj.Inverted() *
+                    // Offset by the pivot, scale, and undo pivot offset
+                    transPivotOffset * scale * transPivotOffset.Inverted() *
+                    // Add back object rotation and position
+                    rotObj * transObj;
+            }
+
+            obj.SetFromMatrix(mat);
+        }
+
+        protected override Vector3 ProcessVec(Vector3 direction, Vector3 magnitude)
+        {
+            return base.ProcessVec(direction, magnitude) + Vector3.One;
         }
     }
 }

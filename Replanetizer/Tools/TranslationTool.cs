@@ -5,19 +5,22 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Replanetizer.Frames;
 
 namespace Replanetizer.Tools
 {
-    class TranslationTool : Tool
+    class TranslationTool : BasicTransformTool
     {
-        public TranslationTool()
-        {
-            float length = 2.0f;
+        public override ToolType toolType => ToolType.Translation;
 
-            vb = new float[]{
+        public TranslationTool(Toolbox toolbox) : base(toolbox)
+        {
+            const float length = 2.0f;
+
+            vb = new[]{
                 length / 2,     - length / 3,   0,
                 length / 2,     length / 3,     0,
                 length,         0,              0,
@@ -71,12 +74,11 @@ namespace Replanetizer.Tools
             };
         }
 
-        public override void Render(Vector3 position, LevelFrame frame)
+        public override void Render(Matrix4 mat, LevelFrame frame)
         {
             GetVbo();
 
-            Matrix4 modelMatrix = Matrix4.CreateTranslation(position);
-            GL.UniformMatrix4(frame.shaderIDTable.uniformModelToWorldMatrix, false, ref modelMatrix);
+            GL.UniformMatrix4(frame.shaderIDTable.uniformModelToWorldMatrix, false, ref mat);
 
             GL.Uniform1(frame.shaderIDTable.uniformColorLevelObjectNumber, 0);
             GL.Uniform4(frame.shaderIDTable.uniformColor, new Vector4(1, 0, 0, 1));
@@ -100,9 +102,23 @@ namespace Replanetizer.Tools
             GL.DrawArrays(PrimitiveType.Triangles, 33, 3);
         }
 
-        public override ToolType GetToolType()
+        public override void Transform(LevelObject obj, Vector3 vec, Vector3 pivot)
         {
-            return ToolType.Translate;
+            var mat = obj.modelMatrix;
+
+            if (toolbox.transformSpace == TransformSpace.Global)
+            {
+                var trans = Matrix4.CreateTranslation(vec);
+                mat = mat * trans;
+            }
+            else if (toolbox.transformSpace == TransformSpace.Local)
+            {
+                // Compensate for scale diminishing the strength of the translation
+                var trans = Matrix4.CreateTranslation(vec/obj.scale.LengthFast);
+                mat = trans * mat;
+            }
+
+            obj.SetFromMatrix(mat);
         }
     }
 }

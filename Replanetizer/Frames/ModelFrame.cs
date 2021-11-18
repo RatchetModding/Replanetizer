@@ -251,7 +251,7 @@ namespace Replanetizer.Frames
         {
             scale = Matrix4.CreateScale(selectedModel.size);
             invalidate = true;
-            propertyFrame.SelectionCallback(selectedModel);
+            propertyFrame.selectedObject = selectedModel;
             UpdateTextures();
 
             container = BufferContainer.FromRenderable(selectedModel);

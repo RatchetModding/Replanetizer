@@ -192,6 +192,15 @@ namespace Replanetizer.Utils
         }
 
         /// <summary>
+        /// Sets an internal variable to true if the corresponding modelObject is a member
+        /// of selectedObjects in which case an outline will be rendered.
+        /// </summary>
+        public void Select(ICollection<LevelObject> selectedObjects)
+        {
+            selected = selectedObjects.Contains(modelObject);
+        }
+
+        /// <summary>
         /// Sets an internal variable to true if the object is to be culled.
         /// Mobies and shrubs are culled by their drawDistance.
         /// Ties, terrain and shrubs are culled by frustum culling.

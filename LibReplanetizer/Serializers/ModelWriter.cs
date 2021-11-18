@@ -177,10 +177,57 @@ namespace LibReplanetizer
                 colladaStream.WriteLine("\t</asset>");
 
                 //image
+                colladaStream.WriteLine("\t<library_images>");
+                foreach (TextureConfig config in model.textureConfig)
+                {
+                    colladaStream.WriteLine("\t\t<image id=\"texture_" + config.id + "\">");
+                    colladaStream.Write("\t\t\t<init_from>");
+                    colladaStream.Write(config.id + ".png");
+                    colladaStream.WriteLine("</init_from>");
+                    colladaStream.WriteLine("\t\t</image>");
+                }
+                colladaStream.WriteLine("\t</library_images>");
 
                 //effects
+                colladaStream.WriteLine("\t<library_effects>");
+                foreach (TextureConfig config in model.textureConfig)
+                {
+                    colladaStream.WriteLine("\t\t<effect id=\"effect_" + config.id + "\">");
+                    colladaStream.WriteLine("\t\t\t<profile_COMMON>");
+                    colladaStream.WriteLine("\t\t\t\t<newparam sid=\"surface_" + config.id + "\">");
+                    colladaStream.WriteLine("\t\t\t\t\t<surface type=\"2D\">");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<init_from>texture_" + config.id + "</init_from>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<format>A8R8G8B8</format>");
+                    colladaStream.WriteLine("\t\t\t\t\t</surface>");
+                    colladaStream.WriteLine("\t\t\t\t</newparam>");
+                    colladaStream.WriteLine("\t\t\t\t<newparam sid=\"sampler_" + config.id + "\">");
+                    colladaStream.WriteLine("\t\t\t\t\t<sampler2D>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<source>surface_" + config.id + "</source>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<minfilter>LINEAR_MIPMAP_LINEAR</minfilter>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<magfilter>LINEAR</magfilter>");
+                    colladaStream.WriteLine("\t\t\t\t\t</sampler2D>");
+                    colladaStream.WriteLine("\t\t\t\t</newparam>");
+                    colladaStream.WriteLine("\t\t\t\t<technique sid=\"common\">");
+                    colladaStream.WriteLine("\t\t\t\t\t<lambert>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<diffuse>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t\t<texture texture=\"sampler_" + config.id + "\" texcoord=\"texcoord_" + config.id + "\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t</diffuse>");
+                    colladaStream.WriteLine("\t\t\t\t\t</lambert>");
+                    colladaStream.WriteLine("\t\t\t\t</technique>");
+                    colladaStream.WriteLine("\t\t\t</profile_COMMON>");
+                    colladaStream.WriteLine("\t\t</effect>");
+                }
+                colladaStream.WriteLine("\t</library_effects>");
 
                 //materials
+                colladaStream.WriteLine("\t<library_materials>");
+                foreach (TextureConfig config in model.textureConfig)
+                {
+                    colladaStream.WriteLine("\t\t<material id=\"material_" + config.id + "\">");
+                    colladaStream.WriteLine("\t\t\t<instance_effect url=\"#effect_" + config.id + "\"/>");
+                    colladaStream.WriteLine("\t\t</material>");
+                }
+                colladaStream.WriteLine("\t</library_materials>");
 
                 //geometry
                 colladaStream.WriteLine("\t<library_geometries>");
@@ -245,24 +292,27 @@ namespace LibReplanetizer
                 colladaStream.WriteLine("\t\t\t\t<vertices id=\"Model_vertices\">");
                 colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"POSITION\" source=\"#Model_positions\"/>");
                 colladaStream.WriteLine("\t\t\t\t</vertices>");
-                colladaStream.WriteLine("\t\t\t\t<triangles count=\"" + model.indexBuffer.Length / 3 + "\" material=\"material_symbol_0\">");
-                colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"VERTEX\" source=\"#Model_vertices\" offset=\"0\"/>");
-                colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"NORMAL\" source=\"#Model_normals\" offset=\"0\"/>");
-                colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"TEXCOORD\" source=\"#Model_uvs\" offset=\"0\" set=\"0\"/>");
-                colladaStream.Write("\t\t\t\t\t<p> ");
-                for (int i = 0; i < model.indexBuffer.Length / 3; i++)
+                foreach (TextureConfig config in model.textureConfig)
                 {
-                    int f1 = model.indexBuffer[i * 3 + 0];
-                    int f2 = model.indexBuffer[i * 3 + 1];
-                    int f3 = model.indexBuffer[i * 3 + 2];
+                    colladaStream.WriteLine("\t\t\t\t<triangles count=\"" + config.size / 3 + "\" material=\"material_symbol_" + config.id + "\">");
+                    colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"VERTEX\" source=\"#Model_vertices\" offset=\"0\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"NORMAL\" source=\"#Model_normals\" offset=\"0\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"TEXCOORD\" source=\"#Model_uvs\" offset=\"0\" set=\"0\"/>");
+                    colladaStream.Write("\t\t\t\t\t<p> ");
+                    for (int i = config.start / 3; i < config.start / 3 + config.size / 3; i++)
+                    {
+                        int f1 = model.indexBuffer[i * 3 + 0];
+                        int f2 = model.indexBuffer[i * 3 + 1];
+                        int f3 = model.indexBuffer[i * 3 + 2];
 
-                    if (ShouldReverseWinding(vertices, normals, f1, f2, f3))
-                        (f2, f3) = (f3, f2);
+                        if (ShouldReverseWinding(vertices, normals, f1, f2, f3))
+                            (f2, f3) = (f3, f2);
 
-                    colladaStream.Write(f1 + " " + f2 + " " + f3 + " ");
+                        colladaStream.Write(f1 + " " + f2 + " " + f3 + " ");
+                    }
+                    colladaStream.WriteLine("</p>");
+                    colladaStream.WriteLine("\t\t\t\t</triangles>");
                 }
-                colladaStream.WriteLine("</p>");
-                colladaStream.WriteLine("\t\t\t\t</triangles>");
                 colladaStream.WriteLine("\t\t\t</mesh>");
                 colladaStream.WriteLine("\t\t</geometry>");
                 colladaStream.WriteLine("\t</library_geometries>");
@@ -273,6 +323,16 @@ namespace LibReplanetizer
                 colladaStream.WriteLine("\t\t\t<node id=\"Object\" name=\"Object\" type=\"NODE\">");
                 colladaStream.WriteLine("\t\t\t\t<matrix sid=\"transform\">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>");
                 colladaStream.WriteLine("\t\t\t\t<instance_geometry url=\"#Model\" name=\"Model\">");
+                colladaStream.WriteLine("\t\t\t\t\t<bind_material>");
+                colladaStream.WriteLine("\t\t\t\t\t\t<technique_common>");
+                foreach (TextureConfig config in model.textureConfig)
+                {
+                    colladaStream.WriteLine("\t\t\t\t\t\t\t<instance_material symbol=\"material_symbol_" + config.id + "\" target=\"#material_" + config.id + "\">");
+                    colladaStream.WriteLine("\t\t\t\t\t\t\t\t<bind_vertex_input semantic=\"texcoord_" + config.id + "\" input_semantic=\"TEXCOORD\" input_set=\"0\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t\t</instance_material>");
+                }
+                colladaStream.WriteLine("\t\t\t\t\t\t</technique_common>");
+                colladaStream.WriteLine("\t\t\t\t\t</bind_material>");
                 colladaStream.WriteLine("\t\t\t\t</instance_geometry>");
                 colladaStream.WriteLine("\t\t\t</node>");
                 colladaStream.WriteLine("\t\t</visual_scene>");

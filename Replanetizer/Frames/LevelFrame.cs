@@ -57,6 +57,8 @@ namespace Replanetizer.Frames
         private Matrix4 view { get; set; }
 
         public readonly Selection selectedObjects;
+        private string[] selectionPositioningOptions = { PivotPositioning.Mean.HUMAN_NAME, PivotPositioning.IndividualOrigins.HUMAN_NAME };
+        private string[] selectionSpaceOptions = { TransformSpace.Global.HUMAN_NAME, TransformSpace.Local.HUMAN_NAME };
 
         private int antialiasing = 1;
         private string[] antialiasingOptions = { "Off", "2x MSAA", "4x MSAA", "8x MSAA", "16x MSAA", "32x MSAA", "64x MSAA", "128x MSAA", "256x MSAA", "512x MSAA" };
@@ -297,21 +299,31 @@ namespace Replanetizer.Frames
 
                 ImGui.Separator();
 
-                if (ImGui.Button(toolbox.transformSpace.HUMAN_NAME))
+                if (selectedObjects != null && selectedObjects.Count != 0)
                 {
-                    toolbox.transformSpace++;
-                    InvalidateView();
-                }
-                if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Transform space");
+                    if (ImGui.BeginMenu("Selection"))
+                    {
+                        int transformSpace = toolbox.transformSpace.KEY;
+                        int pivotPositioning = toolbox.pivotPositioning.KEY;
 
-                if (ImGui.Button(toolbox.pivotPositioning.HUMAN_NAME))
-                {
-                    toolbox.pivotPositioning++;
-                    InvalidateView();
+                        ImGui.PushItemWidth(160.0f);
+                        if (ImGui.Combo("Transform Space", ref transformSpace, selectionSpaceOptions, selectionSpaceOptions.Count()))
+                        {
+                            toolbox.transformSpace = TransformSpace.GetByKey(transformSpace) ?? TransformSpace.Global;
+                            InvalidateView();
+                        }
+
+                        if (ImGui.Combo("Pivot Positioning", ref pivotPositioning, selectionPositioningOptions, selectionPositioningOptions.Count()))
+                        {
+                            toolbox.pivotPositioning = PivotPositioning.GetByKey(pivotPositioning) ?? PivotPositioning.Mean;
+                            InvalidateView();
+                        }
+                        ImGui.PopItemWidth();
+
+                        ImGui.EndMenu();
+                    }
+
                 }
-                if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Pivot positioning");
 
                 ImGui.EndMenuBar();
             }
@@ -1006,12 +1018,17 @@ namespace Replanetizer.Frames
 
         private bool HandleSelect(LevelObject? obj)
         {
-            if (obj == null)
-                return false;
             if (wnd.MouseState.WasButtonDown(MouseButton.Left))
                 return false;
 
             bool isMultiSelect = KEYMAP.IsDown(Keybinds.MultiSelectModifier);
+
+            if (obj == null)
+            {
+                if (!isMultiSelect)
+                    selectedObjects.Clear();
+                return false;
+            }
 
             if (isMultiSelect)
                 selectedObjects.Toggle(obj);
@@ -1108,7 +1125,7 @@ namespace Replanetizer.Frames
             UpdateAaLevel();
         }
 
-        public LevelObject GetObjectAtScreenPosition(Vector2 pos)
+        public LevelObject? GetObjectAtScreenPosition(Vector2 pos)
         {
             if (xLock || yLock || zLock) return null;
 

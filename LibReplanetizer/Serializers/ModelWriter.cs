@@ -13,11 +13,13 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Globalization;
 
 namespace LibReplanetizer
 {
     public static class ModelWriter
     {
+        private static readonly CultureInfo en_US = CultureInfo.CreateSpecificCulture("en-US");
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
 
         private static void WriteObjectMaterial(StreamWriter mtlfs, string id)
@@ -146,6 +148,138 @@ namespace LibReplanetizer
             var n2 = normals[v2];
             var n3 = normals[v3];
             return (n1 + n2 + n3) / 3;
+        }
+
+        public static void WriteDae(string fileName, Level level, Model model)
+        {
+            LOGGER.Trace(fileName);
+
+            string? filePath = Path.GetDirectoryName(fileName);
+
+            if (!(model is MobyModel mobyModel)) return;
+
+            using (StreamWriter colladaStream = new StreamWriter(fileName))
+            {
+                int vertexCount = model.vertexBuffer.Length / 8;
+
+                colladaStream.WriteLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+                colladaStream.WriteLine("<COLLADA xmlns=\"http://www.collada.org/2005/11/COLLADASchema\" version=\"1.4.1\">");
+
+                //metadata
+                colladaStream.WriteLine("\t<asset>");
+                colladaStream.WriteLine("\t\t<contributor>");
+                colladaStream.WriteLine("\t\t\t<authoring_tool>Replanetizer</authoring_tool>");
+                colladaStream.WriteLine("\t\t</contributor>");
+                colladaStream.WriteLine("\t\t<created>1-1-1T0:0:0</created>");
+                colladaStream.WriteLine("\t\t<modified>1-1-1T0:0:0</modified>");
+                colladaStream.WriteLine("\t\t<unit name=\"meter\" meter=\"1\"/>");
+                colladaStream.WriteLine("\t\t<up_axis>Z_UP</up_axis>");
+                colladaStream.WriteLine("\t</asset>");
+
+                //image
+
+                //effects
+
+                //materials
+
+                //geometry
+                colladaStream.WriteLine("\t<library_geometries>");
+                colladaStream.WriteLine("\t\t<geometry id=\"Model\">");
+                colladaStream.WriteLine("\t\t\t<mesh>");
+                colladaStream.WriteLine("\t\t\t\t<source id=\"Model_positions\">");
+                colladaStream.Write("\t\t\t\t\t<float_array id=\"Model_positions_array\" count=\"" + 3 * vertexCount + "\"> ");
+                Vector3[] vertices = new Vector3[vertexCount];
+                for (int x = 0; x < vertexCount; x++)
+                {
+                    float px = model.vertexBuffer[(x * 0x08) + 0x0];
+                    float py = model.vertexBuffer[(x * 0x08) + 0x1];
+                    float pz = model.vertexBuffer[(x * 0x08) + 0x2];
+                    vertices[x] = new Vector3(px, py, pz);
+                    colladaStream.Write(px.ToString("G", en_US) + " " + py.ToString("G", en_US) + " " + pz.ToString("G", en_US) + " ");
+                }
+                colladaStream.WriteLine("</float_array>");
+                colladaStream.WriteLine("\t\t\t\t\t<technique_common>");
+                colladaStream.WriteLine("\t\t\t\t\t\t<accessor count=\"" + vertexCount + "\" offset=\"0\" source=\"#Model_positions_array\" stride=\"3\">");
+                colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"X\" type=\"float\"/>");
+                colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"Y\" type=\"float\"/>");
+                colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"Z\" type=\"float\"/>");
+                colladaStream.WriteLine("\t\t\t\t\t\t</accessor>");
+                colladaStream.WriteLine("\t\t\t\t\t</technique_common>");
+                colladaStream.WriteLine("\t\t\t\t</source>");
+                colladaStream.WriteLine("\t\t\t\t<source id=\"Model_normals\">");
+                colladaStream.Write("\t\t\t\t\t<float_array id=\"Model_normals_array\" count=\"" + 3 * vertexCount + "\"> ");
+                Vector3[] normals = new Vector3[vertexCount];
+                for (int x = 0; x < vertexCount; x++)
+                {
+                    float nx = model.vertexBuffer[(x * 0x08) + 0x3];
+                    float ny = model.vertexBuffer[(x * 0x08) + 0x4];
+                    float nz = model.vertexBuffer[(x * 0x08) + 0x5];
+                    normals[x] = new Vector3(nx, ny, nz);
+                    colladaStream.Write(nx.ToString("G", en_US) + " " + ny.ToString("G", en_US) + " " + nz.ToString("G", en_US) + " ");
+                }
+                colladaStream.WriteLine("</float_array>");
+                colladaStream.WriteLine("\t\t\t\t\t<technique_common>");
+                colladaStream.WriteLine("\t\t\t\t\t\t<accessor count=\"" + vertexCount + "\" offset=\"0\" source=\"#Model_normals_array\" stride=\"3\">");
+                colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"X\" type=\"float\"/>");
+                colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"Y\" type=\"float\"/>");
+                colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"Z\" type=\"float\"/>");
+                colladaStream.WriteLine("\t\t\t\t\t\t</accessor>");
+                colladaStream.WriteLine("\t\t\t\t\t</technique_common>");
+                colladaStream.WriteLine("\t\t\t\t</source>");
+                colladaStream.WriteLine("\t\t\t\t<source id=\"Model_uvs\">");
+                colladaStream.Write("\t\t\t\t\t<float_array id=\"Model_uvs_array\" count=\"" + 2 * vertexCount + "\"> ");
+                for (int x = 0; x < vertexCount; x++)
+                {
+                    float tu = model.vertexBuffer[(x * 0x08) + 0x6];
+                    float tv = 1.0f - model.vertexBuffer[(x * 0x08) + 0x7];
+                    colladaStream.Write(tu.ToString("G", en_US) + " " + tv.ToString("G", en_US) + " ");
+                }
+                colladaStream.WriteLine("</float_array>");
+                colladaStream.WriteLine("\t\t\t\t\t<technique_common>");
+                colladaStream.WriteLine("\t\t\t\t\t\t<accessor count=\"" + vertexCount + "\" offset=\"0\" source=\"#Model_uvs_array\" stride=\"2\">");
+                colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"S\" type=\"float\"/>");
+                colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"T\" type=\"float\"/>");
+                colladaStream.WriteLine("\t\t\t\t\t\t</accessor>");
+                colladaStream.WriteLine("\t\t\t\t\t</technique_common>");
+                colladaStream.WriteLine("\t\t\t\t</source>");
+                colladaStream.WriteLine("\t\t\t\t<vertices id=\"Model_vertices\">");
+                colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"POSITION\" source=\"#Model_positions\"/>");
+                colladaStream.WriteLine("\t\t\t\t</vertices>");
+                colladaStream.WriteLine("\t\t\t\t<triangles count=\"" + model.indexBuffer.Length / 3 + "\" material=\"material_symbol_0\">");
+                colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"VERTEX\" source=\"#Model_vertices\" offset=\"0\"/>");
+                colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"NORMAL\" source=\"#Model_normals\" offset=\"0\"/>");
+                colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"TEXCOORD\" source=\"#Model_uvs\" offset=\"0\" set=\"0\"/>");
+                colladaStream.Write("\t\t\t\t\t<p> ");
+                for (int i = 0; i < model.indexBuffer.Length / 3; i++)
+                {
+                    int f1 = model.indexBuffer[i * 3 + 0];
+                    int f2 = model.indexBuffer[i * 3 + 1];
+                    int f3 = model.indexBuffer[i * 3 + 2];
+
+                    if (ShouldReverseWinding(vertices, normals, f1, f2, f3))
+                        (f2, f3) = (f3, f2);
+
+                    colladaStream.Write(f1 + " " + f2 + " " + f3 + " ");
+                }
+                colladaStream.WriteLine("</p>");
+                colladaStream.WriteLine("\t\t\t\t</triangles>");
+                colladaStream.WriteLine("\t\t\t</mesh>");
+                colladaStream.WriteLine("\t\t</geometry>");
+                colladaStream.WriteLine("\t</library_geometries>");
+
+                //scene
+                colladaStream.WriteLine("\t<library_visual_scenes>");
+                colladaStream.WriteLine("\t\t<visual_scene id=\"Scene\" name=\"Scene\">");
+                colladaStream.WriteLine("\t\t\t<node id=\"Object\" name=\"Object\" type=\"NODE\">");
+                colladaStream.WriteLine("\t\t\t\t<matrix sid=\"transform\">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>");
+                colladaStream.WriteLine("\t\t\t\t<instance_geometry url=\"#Model\" name=\"Model\">");
+                colladaStream.WriteLine("\t\t\t\t</instance_geometry>");
+                colladaStream.WriteLine("\t\t\t</node>");
+                colladaStream.WriteLine("\t\t</visual_scene>");
+                colladaStream.WriteLine("\t</library_visual_scenes>");
+
+                colladaStream.WriteLine("</COLLADA>");
+            }
         }
 
         public static void WriteIqe(string fileName, Level level, Model model)

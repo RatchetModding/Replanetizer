@@ -35,11 +35,6 @@ namespace LibReplanetizer.LevelObjects
 
         public byte[] colorBytes;
 
-        public Tie(Matrix4 matrix4)
-        {
-            modelMatrix = matrix4;
-        }
-
         public Tie(byte[] levelBlock, int num, List<Model> tieModels, FileStream fs)
         {
             int offset = num * ELEMENTSIZE;
@@ -129,7 +124,7 @@ namespace LibReplanetizer.LevelObjects
 
         public override LevelObject Clone()
         {
-            return new Tie(modelMatrix);
+            return (Tie) this.MemberwiseClone();
         }
     }
 }

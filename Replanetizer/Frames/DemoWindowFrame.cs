@@ -15,6 +15,7 @@ namespace Replanetizer.Frames
 
         public DemoWindowFrame(Window wnd) : base(wnd)
         {
+            frameName = "DefaultFrameName";
         }
 
         public override void Render(float deltaTime)

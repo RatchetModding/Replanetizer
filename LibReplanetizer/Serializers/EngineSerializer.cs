@@ -18,7 +18,7 @@ namespace LibReplanetizer.Serializers
 {
     public class EngineSerializer
     {
-        private string enginePath;
+        private string? enginePath;
 
         public void Save(Level level, string directory)
         {
@@ -389,7 +389,8 @@ namespace LibReplanetizer.Serializers
 
         private byte[] WriteTextures(List<Texture> textures)
         {
-            if (enginePath == null) return null;
+            if (enginePath == null)
+                throw new System.Exception("Cannot write textures without a path!");
 
             var vramBytes = new List<byte>();
             var outBytes = new byte[textures.Count * 0x24];

@@ -152,7 +152,7 @@ namespace LibReplanetizer
         {
             LOGGER.Trace(fileName);
 
-            string filePath = Path.GetDirectoryName(fileName);
+            string? filePath = Path.GetDirectoryName(fileName);
 
             if (!(model is MobyModel mobyModel)) return;
 
@@ -277,7 +277,7 @@ namespace LibReplanetizer
 
         public static void WriteObj(string fileName, Model model)
         {
-            string pathName = Path.GetDirectoryName(fileName);
+            string? pathName = Path.GetDirectoryName(fileName);
             string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
 
             using (StreamWriter mtlfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl"))
@@ -324,7 +324,7 @@ namespace LibReplanetizer
 
         private static void WriteObjSeparate(string fileName, Level level, WriterLevelSettings settings)
         {
-            string pathName = Path.GetDirectoryName(fileName);
+            string? pathName = Path.GetDirectoryName(fileName);
             string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
 
             List<TerrainFragment> terrain = CollectTerrainFragments(level, settings);
@@ -384,7 +384,7 @@ namespace LibReplanetizer
 
         private static void WriteObjCombined(string fileName, Level level, WriterLevelSettings settings)
         {
-            string pathName = Path.GetDirectoryName(fileName);
+            string? pathName = Path.GetDirectoryName(fileName);
             string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
 
             List<TerrainFragment> terrain = CollectTerrainFragments(level, settings);
@@ -441,7 +441,7 @@ namespace LibReplanetizer
 
         private static void WriteObjTypewise(string fileName, Level level, WriterLevelSettings settings)
         {
-            string pathName = Path.GetDirectoryName(fileName);
+            string? pathName = Path.GetDirectoryName(fileName);
             string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
 
             List<TerrainFragment> terrain = CollectTerrainFragments(level, settings);
@@ -581,7 +581,7 @@ namespace LibReplanetizer
 
         private static void WriteObjMaterialwise(string fileName, Level level, WriterLevelSettings settings)
         {
-            string pathName = Path.GetDirectoryName(fileName);
+            string? pathName = Path.GetDirectoryName(fileName);
             string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
 
             List<TerrainFragment> terrain = CollectTerrainFragments(level, settings);

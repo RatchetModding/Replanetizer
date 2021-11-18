@@ -119,7 +119,7 @@ namespace LibReplanetizer.LevelObjects
 
         public override LevelObject Clone()
         {
-            return new Tie(modelMatrix);
+            return (Shrub) this.MemberwiseClone();
         }
     }
 }

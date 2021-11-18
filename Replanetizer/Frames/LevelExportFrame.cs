@@ -15,7 +15,7 @@ namespace Replanetizer.Frames
     public class LevelExportFrame : LevelSubFrame
     {
         protected override string frameName { get; set; } = "Level Export";
-        private Level level => levelFrame.level;
+        private Level? level => levelFrame.level;
 
         private ModelWriter.WriterLevelSettings settings;
         private string[] enumNameMap;
@@ -25,9 +25,12 @@ namespace Replanetizer.Frames
             settings = new ModelWriter.WriterLevelSettings();
             enumNameMap = Enum.GetNames(typeof(ModelWriter.WriterLevelMode));
 
-            for (int i = 0; i < level.terrainChunks.Count; i++)
+            if (level != null)
             {
-                settings.chunksSelected[i] = true;
+                for (int i = 0; i < level.terrainChunks.Count; i++)
+                {
+                    settings.chunksSelected[i] = true;
+                }
             }
         }
 
@@ -68,16 +71,23 @@ namespace Replanetizer.Frames
                 ImGui.TreePop();
             }
 
-            if (ImGui.Button("Perform export"))
+
+            if (level == null)
             {
-                var res = CrossFileDialog.SaveFile("Level.obj", "*.obj");
-                if (res.Length > 0)
+                ImGui.Text("Export unavailable, no level found!");
+            }
+            else
+            {
+                if (ImGui.Button("Perform export"))
                 {
-                    ModelWriter.WriteObj(res, level, settings);
-                    isOpen = false;
+                    var res = CrossFileDialog.SaveFile("Level.obj", "*.obj");
+                    if (res.Length > 0)
+                    {
+                        ModelWriter.WriteObj(res, level, settings);
+                        isOpen = false;
+                    }
                 }
             }
-
         }
     }
 }

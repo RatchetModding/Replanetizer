@@ -156,8 +156,6 @@ namespace LibReplanetizer
 
             string? filePath = Path.GetDirectoryName(fileName);
 
-            if (!(model is MobyModel mobyModel)) return;
-
             using (StreamWriter colladaStream = new StreamWriter(fileName))
             {
                 int vertexCount = model.vertexBuffer.Length / 8;
@@ -317,12 +315,239 @@ namespace LibReplanetizer
                 colladaStream.WriteLine("\t\t</geometry>");
                 colladaStream.WriteLine("\t</library_geometries>");
 
+                if (model is MobyModel)
+                {
+                    MobyModel moby = (MobyModel) model;
+
+                    //animation
+                    colladaStream.WriteLine("\t<library_animations>");
+                    colladaStream.WriteLine("\t</library_animations>");
+
+                    //controllers
+                    colladaStream.WriteLine("\t<library_controllers>");
+                    colladaStream.WriteLine("\t\t<controller id=\"Armature\" name=\"Armature\">");
+                    colladaStream.WriteLine("\t\t\t<skin source=\"#Model\">");
+                    colladaStream.WriteLine("\t\t\t\t<source id=\"Joints\">");
+                    colladaStream.Write("\t\t\t\t\t<Name_array id=\"JointsArray\" count=\"" + moby.boneDatas.Count + "\">");
+                    for (int i = 0; i < moby.boneDatas.Count; i++)
+                    {
+                        colladaStream.Write("J" + i.ToString() + " ");
+                    }
+                    colladaStream.WriteLine("\t\t\t\t\t</Name_array>");
+                    colladaStream.WriteLine("\t\t\t\t\t<technique_common>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<accessor source=\"#JointsArray\" count=\"" + moby.boneDatas.Count + "\" stride=\"1\">");
+                    colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"JOINT\" type=\"Name\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t</accessor>");
+                    colladaStream.WriteLine("\t\t\t\t\t</technique_common>");
+                    colladaStream.WriteLine("\t\t\t\t</source>");
+                    colladaStream.WriteLine("\t\t\t\t<source id=\"Weights\">");
+                    colladaStream.Write("\t\t\t\t\t<float_array id=\"WeightsArray\" count=\"" + vertexCount * 4 + "\">");
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        byte[] vWeights = BitConverter.GetBytes(model.weights[i]);
+                        float a = vWeights[0x00] / 255.0f;
+                        float b = vWeights[0x01] / 255.0f;
+                        float c = vWeights[0x02] / 255.0f;
+                        float d = vWeights[0x03] / 255.0f;
+
+                        colladaStream.Write(a.ToString("G", en_US) + " " + b.ToString("G", en_US) + " " + c.ToString("G", en_US) + " " + d.ToString("G", en_US) + " ");
+                    }
+                    colladaStream.WriteLine("</float_array>");
+                    colladaStream.WriteLine("\t\t\t\t\t<technique_common>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<accessor source=\"#WeightsArray\" count=\"" + 4 * vertexCount + "\" stride=\"1\">");
+                    colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"WEIGHT\" type=\"float\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t</accessor>");
+                    colladaStream.WriteLine("\t\t\t\t\t</technique_common>");
+                    colladaStream.WriteLine("\t\t\t\t</source>");
+                    colladaStream.WriteLine("\t\t\t\t<source id=\"InvBindMats\">");
+                    colladaStream.Write("\t\t\t\t\t<float_array id=\"InvBindMatsArray\" count=\"" + 16 * moby.boneMatrices.Count + "\">");
+                    for (int i = 0; i < moby.boneMatrices.Count; i++)
+                    {
+                        var mat = moby.boneMatrices[i];
+                        /*colladaStream.Write((mat.mat1.M11).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M12).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M13).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M14).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M21).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M22).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M23).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M24).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M31).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M32).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M33).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M34).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M41).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M42).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M43).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M44).ToString("G", en_US) + " ");*/
+                        colladaStream.Write("1.0 ");
+                        colladaStream.Write("0.0 ");
+                        colladaStream.Write("0.0 ");
+                        colladaStream.Write((moby.boneDatas[i].unk1 / 1024f).ToString("G", en_US) + " ");
+                        colladaStream.Write("0.0 ");
+                        colladaStream.Write("1.0 ");
+                        colladaStream.Write("0.0 ");
+                        colladaStream.Write((moby.boneDatas[i].unk2 / 1024f).ToString("G", en_US) + " ");
+                        colladaStream.Write("0.0 ");
+                        colladaStream.Write("0.0 ");
+                        colladaStream.Write("1.0 ");
+                        colladaStream.Write((moby.boneDatas[i].unk3 / 1024f).ToString("G", en_US) + " ");
+                        colladaStream.Write("0.0 ");
+                        colladaStream.Write("0.0 ");
+                        colladaStream.Write("0.0 ");
+                        colladaStream.Write("1.0 ");
+
+                        /*colladaStream.Write(mat.mat1.M11.ToString("G", en_US) + " ");
+                        colladaStream.Write(mat.mat1.M21.ToString("G", en_US) + " ");
+                        colladaStream.Write(mat.mat1.M31.ToString("G", en_US) + " ");
+                        colladaStream.Write(mat.mat1.M41.ToString("G", en_US) + " ");
+                        colladaStream.Write(mat.mat1.M12.ToString("G", en_US) + " ");
+                        colladaStream.Write(mat.mat1.M22.ToString("G", en_US) + " ");
+                        colladaStream.Write(mat.mat1.M32.ToString("G", en_US) + " ");
+                        colladaStream.Write(mat.mat1.M42.ToString("G", en_US) + " ");
+                        colladaStream.Write(mat.mat1.M13.ToString("G", en_US) + " ");
+                        colladaStream.Write(mat.mat1.M23.ToString("G", en_US) + " ");
+                        colladaStream.Write(mat.mat1.M33.ToString("G", en_US) + " ");
+                        colladaStream.Write(mat.mat1.M43.ToString("G", en_US) + " ");
+                        colladaStream.Write(mat.mat1.M14.ToString("G", en_US) + " ");
+                        colladaStream.Write(mat.mat1.M24.ToString("G", en_US) + " ");
+                        colladaStream.Write(mat.mat1.M34.ToString("G", en_US) + " ");
+                        colladaStream.Write(mat.mat1.M44.ToString("G", en_US) + " ");*/
+                    }
+                    colladaStream.WriteLine("\t\t\t\t\t</float_array>");
+                    colladaStream.WriteLine("\t\t\t\t\t<technique_common>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<accessor source=\"#InvBindMatsArray\" count=\"" + moby.boneMatrices.Count + "\" stride=\"16\">");
+                    colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"TRANSFORM\" type=\"float4x4\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t</accessor>");
+                    colladaStream.WriteLine("\t\t\t\t\t</technique_common>");
+                    colladaStream.WriteLine("\t\t\t\t</source>");
+                    colladaStream.WriteLine("\t\t\t\t<joints>");
+                    colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"JOINT\" source=\"#Joints\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"INV_BIND_MATRIX\" source=\"#InvBindMats\"/>");
+                    colladaStream.WriteLine("\t\t\t\t</joints>");
+                    colladaStream.WriteLine("\t\t\t\t<vertex_weights count=\"" + vertexCount + "\">");
+                    colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"JOINT\" source=\"#Joints\" offset=\"0\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"WEIGHT\" source=\"#Weights\" offset=\"1\"/>");
+                    colladaStream.Write("\t\t\t\t\t<vcount>");
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        colladaStream.Write("4 ");
+                    }
+                    colladaStream.WriteLine("</vcount>");
+                    colladaStream.Write("\t\t\t\t\t<v>");
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        Byte[] indices = BitConverter.GetBytes(model.ids[i]);
+
+                        colladaStream.Write(indices[0x00] + " " + (i * 0x04 + 0x00) + " ");
+                        colladaStream.Write(indices[0x01] + " " + (i * 0x04 + 0x01) + " ");
+                        colladaStream.Write(indices[0x02] + " " + (i * 0x04 + 0x02) + " ");
+                        colladaStream.Write(indices[0x03] + " " + (i * 0x04 + 0x03) + " ");
+                    }
+                    colladaStream.WriteLine("</v>");
+                    colladaStream.WriteLine("\t\t\t\t</vertex_weights>");
+                    colladaStream.WriteLine("\t\t\t</skin>");
+                    colladaStream.WriteLine("\t\t</controller>");
+                    colladaStream.WriteLine("\t</library_controllers>");
+
+                    colladaStream.WriteLine("\t<library_animations>");
+                    for (int i = 0; i < moby.animations.Count; i++)
+                    {
+                        Animation anim = (moby.id == 0) ? level.playerAnimations[i] : moby.animations[i];
+                        colladaStream.WriteLine("\t\t<animation id=\"Anim" + i.ToString() + "\" name=\"Anim" + i.ToString() + "\">");
+                        colladaStream.WriteLine("\t\t\t<source id=\"Anim" + i.ToString() + "Input\">");
+                        colladaStream.Write("\t\t\t\t<float_array id=\"Anim" + i.ToString() + "InputArray\" count=\"" + anim.frames.Count + "\">");
+                        for (int j = 0; j < anim.frames.Count; j++)
+                        {
+                            colladaStream.Write((j / (60f * anim.speed)).ToString("G", en_US) + " ");
+                        }
+                        colladaStream.WriteLine("</float_array>");
+                        colladaStream.WriteLine("\t\t\t\t<technique_common>");
+                        colladaStream.WriteLine("\t\t\t\t\t<accessor source=\"#Anim" + i.ToString() + "InputArray\" count=\"" + anim.frames.Count + "\" stride=\"1\">");
+                        colladaStream.WriteLine("\t\t\t\t\t\t<param name=\"TIME\" type=\"float\"/>");
+                        colladaStream.WriteLine("\t\t\t\t\t</accessor>");
+                        colladaStream.WriteLine("\t\t\t\t</technique_common>");
+                        colladaStream.WriteLine("\t\t\t</source>");
+                        colladaStream.WriteLine("\t\t\t<source id=\"Anim" + i.ToString() + "Output\">");
+                        colladaStream.Write("\t\t\t\t<float_array id=\"Anim" + i.ToString() + "OutputArray\" count=\"" + 16 * anim.frames.Count + "\">");
+                        for (int j = 0; j < anim.frames.Count; j++)
+                        {
+                            colladaStream.Write("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ");
+                        }
+                        colladaStream.WriteLine("</float_array>");
+                        colladaStream.WriteLine("\t\t\t\t<technique_common>");
+                        colladaStream.WriteLine("\t\t\t\t\t<accessor source=\"#Anim" + i.ToString() + "OutputArray\" count=\"" + anim.frames.Count + "\" stride=\"16\">");
+                        colladaStream.WriteLine("\t\t\t\t\t\t<param name=\"TRANSFORM\" type=\"float4x4\"/>");
+                        colladaStream.WriteLine("\t\t\t\t\t</accessor>");
+                        colladaStream.WriteLine("\t\t\t\t</technique_common>");
+                        colladaStream.WriteLine("\t\t\t</source>");
+                        colladaStream.WriteLine("\t\t\t<source id=\"Anim" + i.ToString() + "Interp\">");
+                        colladaStream.Write("\t\t\t\t<Name_array id=\"Anim" + i.ToString() + "InterpArray\" count=\"" + anim.frames.Count + "\">");
+                        for (int j = 0; j < anim.frames.Count; j++)
+                        {
+                            colladaStream.Write("LINEAR ");
+                        }
+                        colladaStream.WriteLine("</Name_array>");
+                        colladaStream.WriteLine("\t\t\t\t<technique_common>");
+                        colladaStream.WriteLine("\t\t\t\t\t<accessor source=\"#Anim" + i.ToString() + "InterpArray\" count=\"" + anim.frames.Count + "\" stride=\"1\">");
+                        colladaStream.WriteLine("\t\t\t\t\t\t<param name=\"INTERPOLATION\" type=\"Name\"/>");
+                        colladaStream.WriteLine("\t\t\t\t\t</accessor>");
+                        colladaStream.WriteLine("\t\t\t\t</technique_common>");
+                        colladaStream.WriteLine("\t\t\t</source>");
+                        colladaStream.WriteLine("\t\t\t<sampler id=\"Anim" + i.ToString() + "Sampler\">");
+                        colladaStream.WriteLine("\t\t\t\t<input semantic=\"INPUT\" source=\"#Anim" + i.ToString() + "Input\"/>");
+                        colladaStream.WriteLine("\t\t\t\t<input semantic=\"OUTPUT\" source=\"#Anim" + i.ToString() + "Output\"/>");
+                        colladaStream.WriteLine("\t\t\t\t<input semantic=\"INTERPOLATION\" source=\"#Anim" + i.ToString() + "Interp\"/>");
+                        colladaStream.WriteLine("\t\t\t</sampler>");
+                        colladaStream.WriteLine("\t\t\t<channel source=\"Anim" + i.ToString() + "Sampler\" target=\"Skel/transform\"/>");
+                        colladaStream.WriteLine("\t\t</animation>");
+                    }
+                    colladaStream.WriteLine("\t</library_animations>");
+                }
+
                 //scene
                 colladaStream.WriteLine("\t<library_visual_scenes>");
                 colladaStream.WriteLine("\t\t<visual_scene id=\"Scene\" name=\"Scene\">");
+                if (model is MobyModel)
+                {
+                    MobyModel moby = (MobyModel) model;
+
+                    colladaStream.WriteLine("\t\t\t<node id=\"Skel\" name=\"Skel\">");
+                    for (int i = 0; i < moby.boneDatas.Count; i++)
+                    {
+                        var mat = moby.boneMatrices[i];
+
+                        colladaStream.WriteLine("\t\t\t<node id=\"VSJ" + i.ToString() + "\" sid=\"J" + i.ToString() + "\" name=\"J" + i.ToString() + "\" type=\"JOINT\">");
+                        colladaStream.Write("\t\t\t\t<matrix>");
+                        colladaStream.Write((mat.mat1.M11).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M12).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M13).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M14).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M21).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M22).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M23).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M24).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M31).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M32).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M33).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M34).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M41).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M42).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M43).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.mat1.M44).ToString("G", en_US) + " ");
+                        colladaStream.WriteLine("</matrix>");
+                        colladaStream.WriteLine("\t\t\t</node>");
+                        //}
+                    }
+                    colladaStream.WriteLine("\t\t\t</node>");
+                }
                 colladaStream.WriteLine("\t\t\t<node id=\"Object\" name=\"Object\" type=\"NODE\">");
                 colladaStream.WriteLine("\t\t\t\t<matrix sid=\"transform\">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>");
-                colladaStream.WriteLine("\t\t\t\t<instance_geometry url=\"#Model\" name=\"Model\">");
+                colladaStream.WriteLine("\t\t\t\t<instance_controller url=\"#Armature\" name=\"Armature\">");
+                if (model is MobyModel)
+                {
+                    colladaStream.WriteLine("\t\t\t\t\t<skeleton>#Skel</skeleton>");
+                }
                 colladaStream.WriteLine("\t\t\t\t\t<bind_material>");
                 colladaStream.WriteLine("\t\t\t\t\t\t<technique_common>");
                 foreach (TextureConfig config in model.textureConfig)
@@ -333,7 +558,7 @@ namespace LibReplanetizer
                 }
                 colladaStream.WriteLine("\t\t\t\t\t\t</technique_common>");
                 colladaStream.WriteLine("\t\t\t\t\t</bind_material>");
-                colladaStream.WriteLine("\t\t\t\t</instance_geometry>");
+                colladaStream.WriteLine("\t\t\t\t</instance_controller>");
                 colladaStream.WriteLine("\t\t\t</node>");
                 colladaStream.WriteLine("\t\t</visual_scene>");
                 colladaStream.WriteLine("\t</library_visual_scenes>");

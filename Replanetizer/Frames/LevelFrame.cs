@@ -141,7 +141,7 @@ namespace Replanetizer.Frames
 
                     if (ImGui.BeginMenu("Export"))
                     {
-                        if (ImGui.MenuItem("Collision"))
+                        if (ImGui.MenuItem("Collision (Internal R&C format only)"))
                         {
                             var res = CrossFileDialog.SaveFile();
                             if (res.Length > 0)

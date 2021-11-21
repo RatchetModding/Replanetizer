@@ -168,7 +168,7 @@ namespace Replanetizer.Frames
             else if (type == typeof(string))
             {
                 byte[] v = Encoding.ASCII.GetBytes(val as string ?? string.Empty);
-                if (ImGui.InputText(propertyName, v, (uint)v.Length))
+                if (ImGui.InputText(propertyName, v, (uint) v.Length))
                 {
                     propertyInfo.SetValue(selectedObject, Encoding.ASCII.GetString(v));
                     UpdateLevelFrame();
@@ -188,7 +188,7 @@ namespace Replanetizer.Frames
                 int v = unchecked((int) (uint) val);
                 if (ImGui.InputInt(propertyName, ref v))
                 {
-                    propertyInfo.SetValue(selectedObject, unchecked((uint)v));
+                    propertyInfo.SetValue(selectedObject, unchecked((uint) v));
                     UpdateLevelFrame();
                 }
             }
@@ -197,7 +197,7 @@ namespace Replanetizer.Frames
                 int v = Convert.ToInt32(val);
                 if (ImGui.InputInt(propertyName, ref v))
                 {
-                    propertyInfo.SetValue(selectedObject, (short)(v & 0xffff));
+                    propertyInfo.SetValue(selectedObject, (short) (v & 0xffff));
                     UpdateLevelFrame();
                 }
             }
@@ -206,7 +206,7 @@ namespace Replanetizer.Frames
                 int v = (ushort) val;
                 if (ImGui.InputInt(propertyName, ref v))
                 {
-                    propertyInfo.SetValue(selectedObject, unchecked((ushort)(v & 0xffff)));
+                    propertyInfo.SetValue(selectedObject, unchecked((ushort) (v & 0xffff)));
                     UpdateLevelFrame();
                 }
             }

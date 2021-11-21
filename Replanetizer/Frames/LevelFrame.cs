@@ -238,7 +238,7 @@ namespace Replanetizer.Frames
                     if (ImGui.MenuItem("Level variables"))
                     {
                         subFrames.Add(
-                            new PropertyFrame(this.wnd, this, "Level variables")
+                            new PropertyFrame(this.wnd, this, "Level variables", true)
                             {
                                 selectedObject = level.levelVariables
                             }

@@ -33,6 +33,8 @@ namespace Replanetizer.Frames
             var width = ImGui.GetWindowContentRegionWidth() - additionalOffset;
             var itemsPerRow = (int) Math.Floor(width / itemSizeX);
 
+            if (itemsPerRow == 0) return;
+
             int i = 0;
             while (i < textures.Count)
             {

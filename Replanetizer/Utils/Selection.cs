@@ -88,6 +88,7 @@ namespace Replanetizer.Utils
         public void Clear()
         {
             OBJECTS.Clear();
+            newestObject = null;
 
             splinesCount = 0;
             nonSplinesCount = 0;

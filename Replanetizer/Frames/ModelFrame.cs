@@ -80,7 +80,7 @@ namespace Replanetizer.Frames
         private int width, height;
         private PropertyFrame propertyFrame;
 
-        public ModelFrame(Window wnd, LevelFrame levelFrame, ShaderIDTable shaderIDTable, Model model = null) : base(wnd, levelFrame)
+        public ModelFrame(Window wnd, LevelFrame levelFrame, ShaderIDTable shaderIDTable, Model? model = null) : base(wnd, levelFrame)
         {
             modelTextureList = new List<Texture>();
             propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
@@ -304,12 +304,12 @@ namespace Replanetizer.Frames
             }
         }
 
-        private void SelectModel(Model model)
+        private void SelectModel(Model? model)
         {
             SelectModel(model, level.textures);
         }
 
-        private void SelectModel(Model model, List<Texture> textures)
+        private void SelectModel(Model? model, List<Texture> textures)
         {
             if (model == null) return;
 

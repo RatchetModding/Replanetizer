@@ -12,47 +12,41 @@ namespace LibReplanetizer.Models.Animations
 {
     public class BoneMatrix
     {
-        public Matrix4 mat1;
-        public short bb;
-        public Vector4 col3;
+        public Matrix4 transformation;
+        public float unk1, unk2, unk3;
+        public short parent;
+        public short id;
+        public short unk0x3C;
+
+        //The last 4 bytes and the translation are also present in the BoneData.
 
         public BoneMatrix(byte[] boneBlock, int num)
         {
             int offset = num * 0x40;
-            mat1 = ReadMatrix4(boneBlock, offset);
+            id = (short) (offset / 0x40);
 
-            col3 = mat1.Column3;
+            transformation = ReadMatrix4(boneBlock, offset);
 
-            mat1.M14 = 0;
-            mat1.M24 = 0;
-            mat1.M34 = 0;
-            mat1.M44 = 1;
+            transformation.M41 = 0;
+            transformation.M42 = 0;
+            transformation.M43 = 0;
+            transformation.M44 = 1;
 
-            /*
-            mat1.M11 = 1;
-            mat1.M12 = 0;
-            mat1.M13 = 0;
+            unk1 = ReadFloat(boneBlock, offset + 0x30);
+            unk2 = ReadFloat(boneBlock, offset + 0x34);
+            unk3 = ReadFloat(boneBlock, offset + 0x38);
 
-            mat1.M21 = 0;
-            mat1.M22 = 1;
-            mat1.M23 = 0;
-
-            mat1.M31 = 0;
-            mat1.M32 = 0;
-            mat1.M33 = 1;
-            */
-
-            bb = ReadShort(boneBlock, offset + 0x3E);
-            //mat1.Transpose();
-            //mat1.Invert();
+            //0 for root and some constant else (0b0111000000000000 = 0x7000 = 28672)
+            unk0x3C = ReadShort(boneBlock, offset + 0x3C);
+            parent = (short) (ReadShort(boneBlock, offset + 0x3E) / 0x40);
         }
 
         public byte[] Serialize()
         {
             byte[] outBytes = new byte[0x40];
-            Matrix4 mat = mat1;
+            /*Matrix4 mat = transformation;
             mat.Column3 = col3;
-            WriteMatrix4(outBytes, 0, mat);
+            WriteMatrix4(outBytes, 0, mat);*/
 
             return outBytes;
         }

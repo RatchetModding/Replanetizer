@@ -55,6 +55,8 @@ namespace LibReplanetizer.Models
         public List<TextureConfig> otherTextureConfigs { get; set; } = new List<TextureConfig>();
         public List<ushort> otherIndexBuffer { get; set; } = new List<ushort>();
 
+        public Skeleton skeleton;
+
 
 
         public bool isModel = true;
@@ -243,6 +245,16 @@ namespace LibReplanetizer.Models
                         otherfaceCount += tex.size;
                     }
                     otherIndexBuffer.AddRange(GetIndices(fs, indexPointer + faceCount * sizeof(ushort), otherfaceCount));
+                }
+            }
+
+            if (boneMatrices.Count > 0)
+            {
+                skeleton = new Skeleton(boneMatrices[0]);
+
+                for (int i = 1; i < boneCount; i++)
+                {
+                    skeleton.InsertBone(boneMatrices[i]);
                 }
             }
         }

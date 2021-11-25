@@ -150,41 +150,68 @@ namespace LibReplanetizer
             return (n1 + n2 + n3) / 3;
         }
 
-        private static void WriteSkeletonDae(StreamWriter colladaStream, Skeleton skeleton, string indent = "")
+        private static void WriteSkeletonDae(StreamWriter colladaStream, Skeleton skeleton, float size, string indent = "")
         {
-            Matrix4 mat = skeleton.bone.transformation;
-            float x = skeleton.bone.unk1 / 1024.0f;
-            float y = skeleton.bone.unk2 / 1024.0f;
-            float z = skeleton.bone.unk3 / 1024.0f;
+            Matrix3x4 mat = skeleton.bone.transformation;
 
             colladaStream.WriteLine(indent + "<node id=\"Skel" + skeleton.bone.id.ToString() + "\" sid=\"J" + skeleton.bone.id.ToString() + "\" name=\"Skel" + skeleton.bone.id.ToString() + "\" type=\"JOINT\">");
-            colladaStream.Write(indent + "\t<rotate sid=\"jointOrientX\">");
-            colladaStream.Write((mat.M11).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M12).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M13).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M14).ToString("G", en_US) + " ");
+            // It is unclear which version is correct, I think the first one but both make no difference in blender
+            /*colladaStream.Write(indent + "\t<rotate sid=\"jointOrientZ\">");
+            colladaStream.Write((mat.M31).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M32).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M33).ToString("G", en_US) + " ");
+            colladaStream.Write((0.0f).ToString("G", en_US) + " ");
             colladaStream.WriteLine("</rotate>");
             colladaStream.Write(indent + "\t<rotate sid=\"jointOrientY\">");
             colladaStream.Write((mat.M21).ToString("G", en_US) + " ");
             colladaStream.Write((mat.M22).ToString("G", en_US) + " ");
             colladaStream.Write((mat.M23).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M24).ToString("G", en_US) + " ");
+            colladaStream.Write((0.0f).ToString("G", en_US) + " ");
             colladaStream.WriteLine("</rotate>");
-            colladaStream.Write(indent + "\t<rotate sid=\"jointOrientZ\">");
+            colladaStream.Write(indent + "\t<rotate sid=\"jointOrientX\">");
+            colladaStream.Write((mat.M11).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M12).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M13).ToString("G", en_US) + " ");
+            colladaStream.Write((0.0f).ToString("G", en_US) + " ");
+            colladaStream.WriteLine("</rotate>");
+            colladaStream.Write(indent + "\t<translate sid=\"translate\">");
+            colladaStream.Write((mat.M14 * size / 1024.0f).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M24 * size / 1024.0f).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M34 * size / 1024.0f).ToString("G", en_US) + " ");
+            colladaStream.WriteLine("</translate>");*/
+            colladaStream.Write(indent + "\t<matrix sid=\"transform\">");
+            colladaStream.Write((mat.M11).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M12).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M13).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M14 * size / 1024.0f).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M21).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M22).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M23).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M24 * size / 1024.0f).ToString("G", en_US) + " ");
             colladaStream.Write((mat.M31).ToString("G", en_US) + " ");
             colladaStream.Write((mat.M32).ToString("G", en_US) + " ");
             colladaStream.Write((mat.M33).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M34).ToString("G", en_US) + " ");
-            colladaStream.WriteLine("</rotate>");
-            colladaStream.Write(indent + "\t<translate sid=\"translate\">");
-            colladaStream.Write((x).ToString("G", en_US) + " ");
-            colladaStream.Write((y).ToString("G", en_US) + " ");
-            colladaStream.Write((z).ToString("G", en_US) + " ");
-            colladaStream.WriteLine("</translate>");
+            colladaStream.Write((mat.M34 * size / 1024.0f).ToString("G", en_US) + " ");
+            colladaStream.Write("0 ");
+            colladaStream.Write("0 ");
+            colladaStream.Write("0 ");
+            colladaStream.Write("1 ");
+            colladaStream.WriteLine("</matrix>");
+
+            colladaStream.WriteLine(indent + "<extra>");
+            colladaStream.WriteLine(indent + "\t<technique profile=\"blender\">");
+            colladaStream.WriteLine(indent + "\t\t<connect>1</connect>");
+            colladaStream.WriteLine(indent + "\t\t<layer>0</layer>");
+            colladaStream.WriteLine(indent + "\t\t<roll>0</roll>");
+            colladaStream.WriteLine(indent + "\t\t<tip_x>" + (mat.M14 * size / 1024.0f).ToString("G", en_US) + "</tip_x>");
+            colladaStream.WriteLine(indent + "\t\t<tip_y>" + (mat.M24 * size / 1024.0f).ToString("G", en_US) + "</tip_y>");
+            colladaStream.WriteLine(indent + "\t\t<tip_z>" + (mat.M34 * size / 1024.0f).ToString("G", en_US) + "</tip_z>");
+            colladaStream.WriteLine(indent + "\t</technique>");
+            colladaStream.WriteLine(indent + "</extra>");
 
             foreach (Skeleton child in skeleton.children)
             {
-                WriteSkeletonDae(colladaStream, child, indent + "\t");
+                WriteSkeletonDae(colladaStream, child, size, indent + "\t");
             }
 
             colladaStream.WriteLine(indent + "</node>");
@@ -206,10 +233,11 @@ namespace LibReplanetizer
                 //metadata
                 colladaStream.WriteLine("\t<asset>");
                 colladaStream.WriteLine("\t\t<contributor>");
+                colladaStream.WriteLine("\t\t\t<author>Replanetizer User</author>");
                 colladaStream.WriteLine("\t\t\t<authoring_tool>Replanetizer</authoring_tool>");
                 colladaStream.WriteLine("\t\t</contributor>");
-                colladaStream.WriteLine("\t\t<created>1-1-1T0:0:0</created>");
-                colladaStream.WriteLine("\t\t<modified>1-1-1T0:0:0</modified>");
+                colladaStream.WriteLine("\t\t<created>" + DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day + "T" + DateTime.Now.Hour + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + "</created>");
+                colladaStream.WriteLine("\t\t<modified>" + DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day + "T" + DateTime.Now.Hour + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + "</modified>");
                 colladaStream.WriteLine("\t\t<unit name=\"meter\" meter=\"1\"/>");
                 colladaStream.WriteLine("\t\t<up_axis>Z_UP</up_axis>");
                 colladaStream.WriteLine("\t</asset>");
@@ -402,15 +430,15 @@ namespace LibReplanetizer
                         colladaStream.Write("1.0 ");
                         colladaStream.Write("0.0 ");
                         colladaStream.Write("0.0 ");
-                        colladaStream.Write((moby.boneDatas[i].unk1 / 1024f).ToString("G", en_US) + " ");
+                        colladaStream.Write((moby.boneMatrices[i].cumulativeOffsetX * model.size / 1024f).ToString("G", en_US) + " ");
                         colladaStream.Write("0.0 ");
                         colladaStream.Write("1.0 ");
                         colladaStream.Write("0.0 ");
-                        colladaStream.Write((moby.boneDatas[i].unk2 / 1024f).ToString("G", en_US) + " ");
+                        colladaStream.Write((moby.boneMatrices[i].cumulativeOffsetY * model.size / 1024f).ToString("G", en_US) + " ");
                         colladaStream.Write("0.0 ");
                         colladaStream.Write("0.0 ");
                         colladaStream.Write("1.0 ");
-                        colladaStream.Write((moby.boneDatas[i].unk3 / 1024f).ToString("G", en_US) + " ");
+                        colladaStream.Write((moby.boneMatrices[i].cumulativeOffsetZ * model.size / 1024f).ToString("G", en_US) + " ");
                         colladaStream.Write("0.0 ");
                         colladaStream.Write("0.0 ");
                         colladaStream.Write("0.0 ");
@@ -535,7 +563,6 @@ namespace LibReplanetizer
                     colladaStream.WriteLine("\t</library_animations>");*/
                 }
 
-
                 //scene
                 colladaStream.WriteLine("\t<library_visual_scenes>");
                 colladaStream.WriteLine("\t\t<visual_scene id=\"Scene\" name=\"Scene\">");
@@ -543,7 +570,7 @@ namespace LibReplanetizer
                 {
                     MobyModel moby = (MobyModel) model;
 
-                    WriteSkeletonDae(colladaStream, moby.skeleton, "\t\t\t");
+                    WriteSkeletonDae(colladaStream, moby.skeleton, model.size, "\t\t\t");
                 }
                 colladaStream.WriteLine("\t\t\t<node id=\"Object\" name=\"Object\" type=\"NODE\">");
                 colladaStream.WriteLine("\t\t\t\t<matrix sid=\"transform\">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>");
@@ -586,16 +613,9 @@ namespace LibReplanetizer
                 // Binding pose
                 for (int i = 0; i < mobyModel.boneDatas.Count; i++)
                 {
-                    Quaternion quat = mobyModel.boneMatrices[i].transformation.ExtractRotation();
-
-                    Matrix4 mat = mobyModel.boneMatrices[i].transformation;
-                    float x = mat.M41 / 1024f;
-                    float y = mat.M42 / 1024f;
-                    float z = mat.M43 / 1024f;
-
-                    float xx = mobyModel.boneDatas[i].unk1 / 1024f;
-                    float yy = mobyModel.boneDatas[i].unk2 / 1024f;
-                    float zz = mobyModel.boneDatas[i].unk3 / 1024f;
+                    float xx = mobyModel.boneDatas[i].translationX / 1024f;
+                    float yy = mobyModel.boneDatas[i].translationY / 1024f;
+                    float zz = mobyModel.boneDatas[i].translationZ / 1024f;
 
                     short par = (short) (mobyModel.boneMatrices[i].parent / 0x40);
                     spookyStream.WriteLine("joint h" + i.ToString() + " " + (par == 0 ? "" : par.ToString()));
@@ -638,9 +658,9 @@ namespace LibReplanetizer
                                 }
                             }*/
 
-                            float xx = mobyModel.boneDatas[idx].unk1 / 1024f;
-                            float yy = mobyModel.boneDatas[idx].unk2 / 1024f;
-                            float zz = mobyModel.boneDatas[idx].unk3 / 1024f;
+                            float xx = mobyModel.boneDatas[idx].translationX / 1024f;
+                            float yy = mobyModel.boneDatas[idx].translationY / 1024f;
+                            float zz = mobyModel.boneDatas[idx].translationZ / 1024f;
 
                             spookyStream.WriteLine("pq " + xx.ToString() + " " + yy.ToString() + " " + zz.ToString() + " " + quat[0] / 32767f + " " + quat[1] / 32767f + " " + quat[2] / 32767f + " " + -quat[3] / 32767f);
                             idx++;

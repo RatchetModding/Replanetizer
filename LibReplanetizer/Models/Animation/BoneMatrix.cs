@@ -12,8 +12,8 @@ namespace LibReplanetizer.Models.Animations
 {
     public class BoneMatrix
     {
-        public Matrix4 transformation;
-        public float unk1, unk2, unk3;
+        public Matrix3x4 transformation;
+        public float cumulativeOffsetX, cumulativeOffsetY, cumulativeOffsetZ;
         public short parent;
         public short id;
         public short unk0x3C;
@@ -25,16 +25,11 @@ namespace LibReplanetizer.Models.Animations
             int offset = num * 0x40;
             id = (short) (offset / 0x40);
 
-            transformation = ReadMatrix4(boneBlock, offset);
+            transformation = ReadMatrix3x4(boneBlock, offset);
 
-            transformation.M41 = 0;
-            transformation.M42 = 0;
-            transformation.M43 = 0;
-            transformation.M44 = 1;
-
-            unk1 = ReadFloat(boneBlock, offset + 0x30);
-            unk2 = ReadFloat(boneBlock, offset + 0x34);
-            unk3 = ReadFloat(boneBlock, offset + 0x38);
+            cumulativeOffsetX = ReadFloat(boneBlock, offset + 0x30);
+            cumulativeOffsetY = ReadFloat(boneBlock, offset + 0x34);
+            cumulativeOffsetZ = ReadFloat(boneBlock, offset + 0x38);
 
             //0 for root and some constant else (0b0111000000000000 = 0x7000 = 28672)
             unk0x3C = ReadShort(boneBlock, offset + 0x3C);

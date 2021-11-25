@@ -87,6 +87,26 @@ namespace LibReplanetizer
                 );
         }
 
+        public static Matrix3x4 ReadMatrix3x4(byte[] buf, int offset)
+        {
+            return new Matrix3x4(
+                ReadFloat(buf, offset + 0x00),
+                ReadFloat(buf, offset + 0x04),
+                ReadFloat(buf, offset + 0x08),
+                ReadFloat(buf, offset + 0x0C),
+
+                ReadFloat(buf, offset + 0x10),
+                ReadFloat(buf, offset + 0x14),
+                ReadFloat(buf, offset + 0x18),
+                ReadFloat(buf, offset + 0x1C),
+
+                ReadFloat(buf, offset + 0x20),
+                ReadFloat(buf, offset + 0x24),
+                ReadFloat(buf, offset + 0x28),
+                ReadFloat(buf, offset + 0x2C)
+                );
+        }
+
         public static byte[] ReadBlock(FileStream fs, long offset, int length)
         {
             if (length > 0)

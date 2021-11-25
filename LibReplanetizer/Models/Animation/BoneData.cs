@@ -11,7 +11,7 @@ namespace LibReplanetizer.Models.Animations
 {
     public class BoneData
     {
-        public float unk1, unk2, unk3;
+        public float translationX, translationY, translationZ;
         public short unk0x0C;
         public short parent;
 
@@ -21,9 +21,9 @@ namespace LibReplanetizer.Models.Animations
         public BoneData(byte[] boneDataBlock, int num)
         {
             int offset = num * 0x10;
-            unk1 = ReadFloat(boneDataBlock, offset + 0x00);
-            unk2 = ReadFloat(boneDataBlock, offset + 0x04);
-            unk3 = ReadFloat(boneDataBlock, offset + 0x08);
+            translationX = ReadFloat(boneDataBlock, offset + 0x00);
+            translationY = ReadFloat(boneDataBlock, offset + 0x04);
+            translationZ = ReadFloat(boneDataBlock, offset + 0x08);
 
             //0 for root and some constant else (0b0111000000000000 = 0x7000 = 28672)
             unk0x0C = ReadShort(boneDataBlock, offset + 0x0C);
@@ -34,9 +34,9 @@ namespace LibReplanetizer.Models.Animations
         {
             byte[] outBytes = new byte[0x10];
 
-            WriteFloat(outBytes, 0x00, unk1);
-            WriteFloat(outBytes, 0x04, unk2);
-            WriteFloat(outBytes, 0x08, unk3);
+            WriteFloat(outBytes, 0x00, translationX);
+            WriteFloat(outBytes, 0x04, translationY);
+            WriteFloat(outBytes, 0x08, translationZ);
             //WriteFloat(outBytes, 0x0C, unk4);
 
             return outBytes;

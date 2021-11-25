@@ -12,47 +12,39 @@ namespace LibReplanetizer.Models.Animations
 {
     public class BoneMatrix
     {
-        public Matrix4 mat1;
-        public short bb;
-        public Vector4 col3;
+        public Matrix3x4 transformation;
+        public float cumulativeOffsetX, cumulativeOffsetY, cumulativeOffsetZ;
+        public short parent;
+        public short id;
+        public short unk0x3C;
+
+        //The last 4 bytes and the translation are also present in the BoneData.
 
         public BoneMatrix(byte[] boneBlock, int num)
         {
             int offset = num * 0x40;
-            mat1 = ReadMatrix4(boneBlock, offset);
+            id = (short) (offset / 0x40);
 
-            col3 = mat1.Column3;
+            transformation = ReadMatrix3x4(boneBlock, offset);
 
-            mat1.M14 = 0;
-            mat1.M24 = 0;
-            mat1.M34 = 0;
-            mat1.M44 = 1;
+            cumulativeOffsetX = ReadFloat(boneBlock, offset + 0x30);
+            cumulativeOffsetY = ReadFloat(boneBlock, offset + 0x34);
+            cumulativeOffsetZ = ReadFloat(boneBlock, offset + 0x38);
 
-            /*
-            mat1.M11 = 1;
-            mat1.M12 = 0;
-            mat1.M13 = 0;
-
-            mat1.M21 = 0;
-            mat1.M22 = 1;
-            mat1.M23 = 0;
-
-            mat1.M31 = 0;
-            mat1.M32 = 0;
-            mat1.M33 = 1;
-            */
-
-            bb = ReadShort(boneBlock, offset + 0x3E);
-            //mat1.Transpose();
-            //mat1.Invert();
+            //0 for root and some constant else (0b0111000000000000 = 0x7000 = 28672)
+            unk0x3C = ReadShort(boneBlock, offset + 0x3C);
+            parent = (short) (ReadShort(boneBlock, offset + 0x3E) / 0x40);
         }
 
         public byte[] Serialize()
         {
             byte[] outBytes = new byte[0x40];
-            Matrix4 mat = mat1;
-            mat.Column3 = col3;
-            WriteMatrix4(outBytes, 0, mat);
+            WriteMatrix3x4(outBytes, 0x00, transformation);
+            WriteFloat(outBytes, 0x30, cumulativeOffsetX);
+            WriteFloat(outBytes, 0x34, cumulativeOffsetY);
+            WriteFloat(outBytes, 0x38, cumulativeOffsetZ);
+            WriteShort(outBytes, 0x3C, unk0x3C);
+            WriteShort(outBytes, 0x3E, (short) (parent * 0x40));
 
             return outBytes;
         }

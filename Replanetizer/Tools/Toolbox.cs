@@ -24,7 +24,7 @@ namespace Replanetizer.Tools
         public Tool? tool => _tool;
         public ToolType type => _type;
         public TransformSpace transformSpace { get; set; } = TransformSpace.Global;
-        public PivotPositioning pivotPositioning { get; set; } = PivotPositioning.Median;
+        public PivotPositioning pivotPositioning { get; set; } = PivotPositioning.Mean;
 
         public event EventHandler<ToolChangedEventArgs>? ToolChanged;
 

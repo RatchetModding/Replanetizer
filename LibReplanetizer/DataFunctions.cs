@@ -87,6 +87,26 @@ namespace LibReplanetizer
                 );
         }
 
+        public static Matrix3x4 ReadMatrix3x4(byte[] buf, int offset)
+        {
+            return new Matrix3x4(
+                ReadFloat(buf, offset + 0x00),
+                ReadFloat(buf, offset + 0x04),
+                ReadFloat(buf, offset + 0x08),
+                ReadFloat(buf, offset + 0x0C),
+
+                ReadFloat(buf, offset + 0x10),
+                ReadFloat(buf, offset + 0x14),
+                ReadFloat(buf, offset + 0x18),
+                ReadFloat(buf, offset + 0x1C),
+
+                ReadFloat(buf, offset + 0x20),
+                ReadFloat(buf, offset + 0x24),
+                ReadFloat(buf, offset + 0x28),
+                ReadFloat(buf, offset + 0x2C)
+                );
+        }
+
         public static byte[] ReadBlock(FileStream fs, long offset, int length)
         {
             if (length > 0)
@@ -194,6 +214,24 @@ namespace LibReplanetizer
             WriteFloat(byteArray, offset + 0x34, input.M42);
             WriteFloat(byteArray, offset + 0x38, input.M43);
             WriteFloat(byteArray, offset + 0x3C, input.M44);
+        }
+
+        public static void WriteMatrix3x4(byte[] byteArray, int offset, Matrix3x4 input)
+        {
+            WriteFloat(byteArray, offset + 0x00, input.M11);
+            WriteFloat(byteArray, offset + 0x04, input.M12);
+            WriteFloat(byteArray, offset + 0x08, input.M13);
+            WriteFloat(byteArray, offset + 0x0C, input.M14);
+
+            WriteFloat(byteArray, offset + 0x10, input.M21);
+            WriteFloat(byteArray, offset + 0x14, input.M22);
+            WriteFloat(byteArray, offset + 0x18, input.M23);
+            WriteFloat(byteArray, offset + 0x1C, input.M24);
+
+            WriteFloat(byteArray, offset + 0x20, input.M31);
+            WriteFloat(byteArray, offset + 0x24, input.M32);
+            WriteFloat(byteArray, offset + 0x28, input.M33);
+            WriteFloat(byteArray, offset + 0x2C, input.M34);
         }
 
         public static byte[] GetBytes(byte[] array, int ind, int length)

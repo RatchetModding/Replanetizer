@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using ImGuiNET;
 using LibReplanetizer;
-using OpenTK.Graphics.OpenGL4;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;

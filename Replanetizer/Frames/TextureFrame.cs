@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using ImGuiNET;
 using LibReplanetizer;
 using Replanetizer.Utils;
@@ -18,24 +19,35 @@ namespace Replanetizer.Frames
     {
         protected sealed override string frameName { get; set; } = "Textures";
         private Level level => levelFrame.level;
-        private static System.Numerics.Vector2 LIST_SIZE = new(64, 64);
+        private static Vector2 IMAGE_SIZE = new(64, 64);
+        private static Vector2 ITEM_SIZE = new(64, 84);
         private float itemSizeX;
 
         public TextureFrame(Window wnd, LevelFrame levelFrame) : base(wnd, levelFrame)
         {
-            itemSizeX = LIST_SIZE.X + ImGui.GetStyle().ItemSpacing.X;
+            itemSizeX = IMAGE_SIZE.X + ImGui.GetStyle().ItemSpacing.X;
         }
 
-        public static void RenderTextureList(List<Texture> textures, float itemSizeX, Dictionary<Texture, int> textureIds, int additionalOffset = 0)
+        public static void RenderTextureList(List<Texture> textures, float itemSizeX, Dictionary<Texture, int> textureIds, string prefix = "", int additionalOffset = 0)
         {
             var width = ImGui.GetWindowContentRegionWidth() - additionalOffset;
             var itemsPerRow = (int) Math.Floor(width / itemSizeX);
+
+            if (itemsPerRow == 0) return;
 
             int i = 0;
             while (i < textures.Count)
             {
                 Texture t = textures[i];
-                ImGui.Image((IntPtr) textureIds[t], LIST_SIZE);
+
+                ImGui.BeginChild("imageChild_" + prefix + i, ITEM_SIZE, false);
+                ImGui.Image((IntPtr) textureIds[t], IMAGE_SIZE);
+                string idText = prefix + t.id;
+                float idWidth = ImGui.CalcTextSize(idText).X;
+                ImGui.SetCursorPosX(ITEM_SIZE.X - idWidth);
+                ImGui.Text(idText);
+                ImGui.EndChild();
+
                 if (ImGui.BeginPopupContextItem($"context-menu for {i}"))
                 {
                     if (ImGui.Button("Export"))
@@ -51,8 +63,11 @@ namespace Replanetizer.Frames
                 else if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text($"{t.width}x{t.height}");
                     ImGui.Image((IntPtr) textureIds[t], new System.Numerics.Vector2(t.width, t.height));
+                    string resolutionText = $"{t.width}x{t.height}";
+                    float resolutionWidth = ImGui.CalcTextSize(resolutionText).X;
+                    ImGui.SetCursorPosX(t.width - resolutionWidth);
+                    ImGui.Text(resolutionText);
                     ImGui.EndTooltip();
                 }
 

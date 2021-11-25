@@ -91,7 +91,7 @@ namespace LibReplanetizer.LevelObjects
         public int off80 { get; set; }
 
         [Category("Unknown"), DisplayName("UnknownBytes")]
-        public byte[] unknownBytes { get; set; }
+        public byte[] unknownBytes { get; set; } = new byte[0];
 
         public LevelVariables(GameType game, FileStream fileStream, int levelVarPointer, int length)
         {

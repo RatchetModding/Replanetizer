@@ -38,7 +38,7 @@ namespace Replanetizer.Utils
         private Level level;
         private Dictionary<Texture, int> textureIds;
 
-        public static ShaderIDTable SHADER_ID_TABLE { get; set; }
+        public static ShaderIDTable? SHADER_ID_TABLE { get; set; }
 
         public RenderableBuffer(ModelObject modelObject, RenderedObjectType type, int id, Level level, Dictionary<Texture, int> textureIds)
         {
@@ -272,6 +272,7 @@ namespace Replanetizer.Utils
         /// </summary>
         public void Render()
         {
+            if (SHADER_ID_TABLE == null) return;
             if (culled) return;
             if (!BindIbo() || !BindVbo()) return;
 

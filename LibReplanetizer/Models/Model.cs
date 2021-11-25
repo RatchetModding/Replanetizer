@@ -23,8 +23,13 @@ namespace LibReplanetizer.Models
         public float size;
         public float[] vertexBuffer = { };
         public ushort[] indexBuffer = { };
+
+        // Every vertex can be assigned to at most 4 bones
+        // weights contains 4 uint8 each being of weight (value / 255.0)
+        // ids contains 4 uint8 each defining which bones we refer to
         public uint[] weights;
         public uint[] ids;
+
         public byte[] rgbas;
 
 

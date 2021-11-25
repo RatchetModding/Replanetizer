@@ -23,8 +23,7 @@ namespace LibReplanetizer
 
         public bool valid;
 
-        public string path;
-        public EngineHeader engineHeader;
+        public string? path;
 
         public GameType game;
 
@@ -36,7 +35,6 @@ namespace LibReplanetizer
         public List<Model> armorModels;
         public Model collisionEngine;
         public List<Model> collisionChunks;
-        public List<Model> chunks;
         public List<Texture> textures;
         public List<List<Texture>> armorTextures;
         public List<Texture> gadgetTextures;
@@ -124,9 +122,6 @@ namespace LibReplanetizer
             LOGGER.Trace("Level destroyed");
         }
 
-        //New file constructor
-        public Level() { }
-
         //Engine file constructor
         public Level(string enginePath)
         {
@@ -182,14 +177,14 @@ namespace LibReplanetizer
 
                 LOGGER.Debug("Parsing terrain elements...");
                 terrainEngine = engineParser.GetTerrainModel();
-                LOGGER.Debug("Added {0} terrain elements", terrainEngine?.fragments.Count);
+                LOGGER.Debug("Added {0} terrain elements", terrainEngine.fragments.Count);
 
                 LOGGER.Debug("Parsing player animations...");
                 playerAnimations = engineParser.GetPlayerAnimations((MobyModel) mobyModels[0]);
-                LOGGER.Debug("Added {0} player animations", playerAnimations?.Count);
+                LOGGER.Debug("Added {0} player animations", playerAnimations.Count);
 
                 uiElements = engineParser.GetUiElements();
-                LOGGER.Debug("Added {0} ui elements", uiElements?.Count);
+                LOGGER.Debug("Added {0} ui elements", uiElements.Count);
 
                 lightConfig = engineParser.GetLightConfig();
                 textureConfigMenus = engineParser.GetTextureConfigMenu();
@@ -212,11 +207,11 @@ namespace LibReplanetizer
 
                 LOGGER.Debug("Parsing mobs...");
                 mobs = gameplayParser.GetMobies(mobyModels);
-                LOGGER.Debug("Added {0} mobs", mobs?.Count);
+                LOGGER.Debug("Added {0} mobs", mobs.Count);
 
                 LOGGER.Debug("Parsing splines...");
                 splines = gameplayParser.GetSplines();
-                LOGGER.Debug("Added {0} splines", splines?.Count);
+                LOGGER.Debug("Added {0} splines", splines.Count);
 
                 LOGGER.Debug("Parsing languages...");
                 english = gameplayParser.GetEnglish();
@@ -373,7 +368,7 @@ namespace LibReplanetizer
 
         public void Save(string outputFile)
         {
-            string directory;
+            string? directory;
             if (File.Exists(outputFile) && File.GetAttributes(outputFile).HasFlag(FileAttributes.Directory))
             {
                 directory = outputFile;
@@ -382,6 +377,9 @@ namespace LibReplanetizer
             {
                 directory = Path.GetDirectoryName(outputFile);
             }
+
+            if (directory == null) return;
+
             EngineSerializer engineSerializer = new EngineSerializer();
             engineSerializer.Save(this, directory);
             GameplaySerializer gameplaySerializer = new GameplaySerializer();

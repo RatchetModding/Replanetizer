@@ -32,9 +32,11 @@ namespace Replanetizer.Tools
         public void Transform(Selection selection, Vector3 direction, Vector3 magnitude)
         {
             Vector3 vec = ProcessVec(direction, magnitude);
-            Vector3 pivot = selection.median;
+            Vector3 pivot = selection.mean;
             foreach (var obj in selection)
             {
+                if (obj is TerrainFragment) continue;
+
                 if (toolbox.pivotPositioning == PivotPositioning.IndividualOrigins)
                     pivot = obj.position;
                 Transform(obj, vec, pivot);

@@ -36,8 +36,9 @@
   <ItemGroup>
     <PackageReference Include="ImGui.NET" Version="1.78.0" />
     <PackageReference Include="NLog" Version="4.7.10" />
-    <PackageReference Include="OpenTK" Version="4.6.4" />
-    <PackageReference Include="OpenTK.Windowing.GraphicsLibraryFramework" Version="4.6.4" />
+    <PackageReference Include="OpenTK" Version="4.6.7" />
+    <PackageReference Include="OpenTK.Mathematics" Version="4.6.7" />
+    <PackageReference Include="OpenTK.Windowing.GraphicsLibraryFramework" Version="4.6.7" />
     <PackageReference Include="System.Drawing.Common" Version="5.0.1" />
   </ItemGroup>
 
@@ -88,7 +89,7 @@
   </ItemGroup>
 
   <Target Name="SetSourceRevisionId" BeforeTargets="InitializeSourceControlInformation">
-    <Exec Command="git describe --long --always --dirty --exclude=* --abbrev=8" ConsoleToMSBuild="True" IgnoreExitCode="False">
+    <Exec Command="git describe --long --always --dirty --exclude=* --abbrev=8" ConsoleToMSBuild="True" IgnoreExitCode="True">
       <Output PropertyName="SourceRevisionId" TaskParameter="ConsoleOutput" />
     </Exec>
   </Target>

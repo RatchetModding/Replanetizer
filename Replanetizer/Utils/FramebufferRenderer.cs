@@ -6,7 +6,7 @@
 // Please see the LICENSE.md file for more details.
 
 using System;
-using OpenTK.Graphics.OpenGL4;
+using OpenTK.Graphics.OpenGL;
 
 namespace Replanetizer.Utils
 {

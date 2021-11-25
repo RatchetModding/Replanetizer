@@ -83,14 +83,14 @@ namespace Replanetizer.Tools
         {
             if (toolbox.transformSpace == TransformSpace.Global)
             {
-                Render(selection.median, frame);
+                Render(selection.mean, frame);
             }
             else if (toolbox.transformSpace == TransformSpace.Local)
             {
                 if (selection.newestObject != null)
-                    Render(selection.median, selection.newestObject.rotation, frame);
+                    Render(selection.mean, selection.newestObject.rotation, frame);
                 else
-                    Render(selection.median, frame);
+                    Render(selection.mean, frame);
             }
         }
 

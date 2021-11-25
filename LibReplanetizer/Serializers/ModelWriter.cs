@@ -605,6 +605,9 @@ namespace LibReplanetizer
                 colladaStream.WriteLine("\t\t\t</node>");
                 colladaStream.WriteLine("\t\t</visual_scene>");
                 colladaStream.WriteLine("\t</library_visual_scenes>");
+                colladaStream.WriteLine("\t<scene>");
+                colladaStream.WriteLine("\t\t<instance_visual_scene url=\"#Scene\"/>");
+                colladaStream.WriteLine("\t</scene>");
 
                 colladaStream.WriteLine("</COLLADA>");
             }

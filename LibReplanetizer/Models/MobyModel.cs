@@ -54,11 +54,7 @@ namespace LibReplanetizer.Models
         public List<byte> otherBuffer { get; set; } = new List<byte>();
         public List<TextureConfig> otherTextureConfigs { get; set; } = new List<TextureConfig>();
         public List<ushort> otherIndexBuffer { get; set; } = new List<ushort>();
-
-        public Skeleton skeleton;
-
-
-
+        public Skeleton? skeleton = null;
         public bool isModel = true;
 
 

@@ -570,14 +570,19 @@ namespace LibReplanetizer
                 {
                     MobyModel moby = (MobyModel) model;
 
-                    WriteSkeletonDae(colladaStream, moby.skeleton, model.size, "\t\t\t");
+                    if (moby.skeleton != null)
+                        WriteSkeletonDae(colladaStream, moby.skeleton, model.size, "\t\t\t");
                 }
                 colladaStream.WriteLine("\t\t\t<node id=\"Object\" name=\"Object\" type=\"NODE\">");
                 colladaStream.WriteLine("\t\t\t\t<matrix sid=\"transform\">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>");
-                colladaStream.WriteLine("\t\t\t\t<instance_controller url=\"#Armature\" name=\"Armature\">");
                 if (model is MobyModel)
                 {
+                    colladaStream.WriteLine("\t\t\t\t<instance_controller url=\"#Armature\" name=\"Armature\">");
                     colladaStream.WriteLine("\t\t\t\t\t<skeleton>#Skel0</skeleton>");
+                }
+                else
+                {
+                    colladaStream.WriteLine("\t\t\t\t<instance_geometry url=\"#Model\" name=\"Model\">");
                 }
                 colladaStream.WriteLine("\t\t\t\t\t<bind_material>");
                 colladaStream.WriteLine("\t\t\t\t\t\t<technique_common>");
@@ -589,7 +594,14 @@ namespace LibReplanetizer
                 }
                 colladaStream.WriteLine("\t\t\t\t\t\t</technique_common>");
                 colladaStream.WriteLine("\t\t\t\t\t</bind_material>");
-                colladaStream.WriteLine("\t\t\t\t</instance_controller>");
+                if (model is MobyModel)
+                {
+                    colladaStream.WriteLine("\t\t\t\t</instance_controller>");
+                }
+                else
+                {
+                    colladaStream.WriteLine("\t\t\t\t</instance_geometry>");
+                }
                 colladaStream.WriteLine("\t\t\t</node>");
                 colladaStream.WriteLine("\t\t</visual_scene>");
                 colladaStream.WriteLine("\t</library_visual_scenes>");

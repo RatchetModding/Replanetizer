@@ -216,6 +216,24 @@ namespace LibReplanetizer
             WriteFloat(byteArray, offset + 0x3C, input.M44);
         }
 
+        public static void WriteMatrix3x4(byte[] byteArray, int offset, Matrix3x4 input)
+        {
+            WriteFloat(byteArray, offset + 0x00, input.M11);
+            WriteFloat(byteArray, offset + 0x04, input.M12);
+            WriteFloat(byteArray, offset + 0x08, input.M13);
+            WriteFloat(byteArray, offset + 0x0C, input.M14);
+
+            WriteFloat(byteArray, offset + 0x10, input.M21);
+            WriteFloat(byteArray, offset + 0x14, input.M22);
+            WriteFloat(byteArray, offset + 0x18, input.M23);
+            WriteFloat(byteArray, offset + 0x1C, input.M24);
+
+            WriteFloat(byteArray, offset + 0x20, input.M31);
+            WriteFloat(byteArray, offset + 0x24, input.M32);
+            WriteFloat(byteArray, offset + 0x28, input.M33);
+            WriteFloat(byteArray, offset + 0x2C, input.M34);
+        }
+
         public static byte[] GetBytes(byte[] array, int ind, int length)
         {
             byte[] data = new byte[length];

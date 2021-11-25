@@ -37,7 +37,8 @@ namespace LibReplanetizer.Models.Animations
             WriteFloat(outBytes, 0x00, translationX);
             WriteFloat(outBytes, 0x04, translationY);
             WriteFloat(outBytes, 0x08, translationZ);
-            //WriteFloat(outBytes, 0x0C, unk4);
+            WriteShort(outBytes, 0x0C, unk0x0C);
+            WriteShort(outBytes, 0x0E, (short) (parent * 0x40));
 
             return outBytes;
         }

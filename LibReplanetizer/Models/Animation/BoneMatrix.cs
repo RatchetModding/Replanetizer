@@ -39,9 +39,12 @@ namespace LibReplanetizer.Models.Animations
         public byte[] Serialize()
         {
             byte[] outBytes = new byte[0x40];
-            /*Matrix4 mat = transformation;
-            mat.Column3 = col3;
-            WriteMatrix4(outBytes, 0, mat);*/
+            WriteMatrix3x4(outBytes, 0x00, transformation);
+            WriteFloat(outBytes, 0x30, cumulativeOffsetX);
+            WriteFloat(outBytes, 0x34, cumulativeOffsetY);
+            WriteFloat(outBytes, 0x38, cumulativeOffsetZ);
+            WriteShort(outBytes, 0x3C, unk0x3C);
+            WriteShort(outBytes, 0x3E, (short) (parent * 0x40));
 
             return outBytes;
         }

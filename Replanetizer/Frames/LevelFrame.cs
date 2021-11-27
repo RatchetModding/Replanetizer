@@ -141,14 +141,25 @@ namespace Replanetizer.Frames
 
                     if (ImGui.BeginMenu("Export"))
                     {
-                        if (ImGui.MenuItem("Collision (Internal R&C format only)"))
+                        if (ImGui.MenuItem("Collision"))
                         {
-                            var res = CrossFileDialog.SaveFile();
+                            var res = CrossFileDialog.SaveFile(filter: ".obj|.rcc");
                             if (res.Length > 0)
                             {
-                                FileStream fs = File.Open(res, FileMode.Create);
-                                fs.Write(level.collBytesEngine, 0, level.collBytesEngine.Length);
-                                fs.Close();
+                                var extension = Path.GetExtension(res);
+
+                                switch (extension)
+                                {
+                                    case ".rcc":
+                                        FileStream fs = File.Open(res, FileMode.Create);
+                                        fs.Write(level.collBytesEngine, 0, level.collBytesEngine.Length);
+                                        fs.Close();
+                                        break;
+                                    default:
+                                    case ".obj":
+                                        ModelWriter.WriteCollisionObj(res, level);
+                                        break;
+                                }
                             }
                         }
                         if (ImGui.MenuItem("Level as Model"))
@@ -187,7 +198,7 @@ namespace Replanetizer.Frames
                     }
                     if (ImGui.BeginMenu("Import"))
                     {
-                        if (ImGui.MenuItem("Collision"))
+                        if (ImGui.MenuItem("Collision (Internal R&C format only)"))
                         {
                             var res = CrossFileDialog.OpenFile(filter: ".rcc");
                             if (res.Length > 0)

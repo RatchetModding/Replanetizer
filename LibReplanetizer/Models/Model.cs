@@ -20,7 +20,7 @@ namespace LibReplanetizer.Models
     public abstract class Model : IRenderable
     {
         public short id { get; set; }
-        public float size;
+        public float size = 1.0f;
         public float[] vertexBuffer = { };
         public ushort[] indexBuffer = { };
 

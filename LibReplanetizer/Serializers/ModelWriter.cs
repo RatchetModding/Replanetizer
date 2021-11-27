@@ -55,6 +55,49 @@ namespace LibReplanetizer
             }
         }
 
+        /// <summary>
+        /// Writes a collision model into a stream using the .obj file format.
+        /// Every vertex contains 6 floats specifying position and color.
+        /// No normals or uvs are written.
+        /// </summary>
+        /// <returns>The number of vertices that were written to the stream.</returns>
+        private static int WriteObjectDataCollision(StreamWriter objfs, Collision coll, int faceOffset)
+        {
+            // Vertices
+            var vertexCount = coll.vertexBuffer.Length / 4;
+            for (int vertIdx = 0; vertIdx < vertexCount; vertIdx++)
+            {
+                var px = coll.vertexBuffer[vertIdx * 0x04 + 0x0] * coll.size;
+                var py = coll.vertexBuffer[vertIdx * 0x04 + 0x1] * coll.size;
+                var pz = coll.vertexBuffer[vertIdx * 0x04 + 0x2] * coll.size;
+                FloatColor fc = new FloatColor { r = 255, g = 0, b = 255, a = 255 }; ;
+                fc.value = coll.vertexBuffer[vertIdx * 0x04 + 0x3];
+                float red = fc.r / 255.0f;
+                float green = fc.g / 255.0f;
+                float blue = fc.b / 255.0f;
+                objfs.WriteLine($"v {px:F6} {py:F6} {pz:F6} {red:F6} {green:F6} {blue:F6}");
+            }
+
+            // Faces
+            var faceCount = coll.indBuff.Length / 3;
+            for (int faceIdx = 0; faceIdx < faceCount; faceIdx++)
+            {
+                int vertIdx = faceIdx * 3;
+
+                uint v1 = coll.indBuff[vertIdx + 0];
+                uint v2 = coll.indBuff[vertIdx + 1];
+                uint v3 = coll.indBuff[vertIdx + 2];
+
+                v1 += 1 + (uint) faceOffset;
+                v2 += 1 + (uint) faceOffset;
+                v3 += 1 + (uint) faceOffset;
+
+                objfs.WriteLine($"f {v1} {v2} {v3}");
+            }
+
+            return vertexCount;
+        }
+
         private static int WriteObjectData(StreamWriter objfs, Model model, int faceOffset, Matrix4 modelMatrix)
         {
             var vertexCount = model.vertexBuffer.Length / 8;
@@ -1223,6 +1266,29 @@ namespace LibReplanetizer
                 for (int i = 0; i < 5; i++)
                 {
                     chunksSelected[i] = false;
+                }
+            }
+        }
+
+        public static void WriteCollisionObj(string fileName, Level level)
+        {
+            string? pathName = Path.GetDirectoryName(fileName);
+            string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
+
+            using (StreamWriter objfs = new StreamWriter(fileName))
+            {
+                if (level.collisionChunks.Count == 0)
+                {
+                    WriteObjectDataCollision(objfs, (Collision) level.collisionEngine, 0);
+                }
+                else
+                {
+                    int faceOffset = 0;
+
+                    foreach (Collision col in level.collisionChunks)
+                    {
+                        faceOffset += WriteObjectDataCollision(objfs, col, faceOffset);
+                    }
                 }
             }
         }

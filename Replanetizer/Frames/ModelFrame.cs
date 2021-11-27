@@ -487,6 +487,7 @@ namespace Replanetizer.Frames
                     ModelWriter.WriteIqe(fileName, level, model);
                     break;
                 case ".dae":
+                default:
                     ModelWriter.WriteDae(fileName, level, model);
                     break;
             }

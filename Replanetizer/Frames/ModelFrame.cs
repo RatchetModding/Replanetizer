@@ -474,7 +474,7 @@ namespace Replanetizer.Frames
             var model = selectedModel;
             if (model == null) return;
 
-            var fileName = CrossFileDialog.SaveFile(filter: ".obj|.iqe|.dae");
+            var fileName = CrossFileDialog.SaveFile(filter: ".dae|.obj|.iqe");
             if (fileName.Length == 0) return;
 
             var extension = Path.GetExtension(fileName);

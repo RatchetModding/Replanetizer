@@ -44,14 +44,21 @@ namespace Replanetizer
 
             controller = new ImGuiController(ClientSize.X, ClientSize.Y);
 
+            UpdateInfoFrame.CheckForNewVersion(this);
+
             if (args.Length > 0)
             {
                 LevelFrame lf = new LevelFrame(this);
                 Level l = new Level(args[0]);
                 lf.LoadLevel(l);
 
-                openFrames.Add(lf);
+                AddFrame(lf);
             }
+        }
+
+        public void AddFrame(Frame frame)
+        {
+            openFrames.Add(frame);
         }
 
         protected override void OnResize(ResizeEventArgs e)
@@ -123,7 +130,7 @@ namespace Replanetizer
                             LevelFrame lf = new LevelFrame(this);
                             Level l = new Level(res);
                             lf.LoadLevel(l);
-                            openFrames.Add(lf);
+                            AddFrame(lf);
                         }
                     }
 
@@ -138,11 +145,11 @@ namespace Replanetizer
                 {
                     if (ImGui.MenuItem("About Replanetizer"))
                     {
-                        openFrames.Add(new AboutFrame(this));
+                        AddFrame(new AboutFrame(this));
                     }
                     if (ImGui.MenuItem("Open ImGui demo window"))
                     {
-                        openFrames.Add(new DemoWindowFrame(this));
+                        AddFrame(new DemoWindowFrame(this));
                     }
                     ImGui.EndMenu();
                 }

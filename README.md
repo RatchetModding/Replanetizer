@@ -19,8 +19,7 @@
 </p>
 
 <p align="center">
-
-![screenshot](media/preview.gif)
+  <img src="media/preview.gif" alt="Preview">
 </p>
 
 # Features

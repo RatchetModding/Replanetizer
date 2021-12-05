@@ -27,12 +27,12 @@
 Replanetizer is still in an early state of development. Its feature set entails:
 
  - Visualization
-   - Levelobjects
+   - Level objects
    - Collision
    - Splines
    - Triggers
  - Editing
-   - Transformation of objects
+   - Transformation of level objects
    - Manipulation of variables
  - Export
    - Textures (`.png`)

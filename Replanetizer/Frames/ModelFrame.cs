@@ -404,6 +404,15 @@ namespace Replanetizer.Frames
 
         private void Tick(float deltaTime)
         {
+            // Handle scrolling with arrow keys regardless of whether the window is hovered etc
+            // Our ImGui version does not seem to have anything to check for (window or child) focus
+            KEY_HELD_HANDLER.Update(wnd.KeyboardState, deltaTime);
+
+            if (KEY_HELD_HANDLER.IsKeyHeld(Keys.Down))
+                CycleModels(1);
+            else if (KEY_HELD_HANDLER.IsKeyHeld(Keys.Up))
+                CycleModels(-1);
+
             Point absoluteMousePos = new Point((int) wnd.MousePosition.X, (int) wnd.MousePosition.Y);
             var isWindowHovered = ImGui.IsWindowHovered();
             var isMouseInContentRegion = contentRegion.Contains(absoluteMousePos);
@@ -416,8 +425,6 @@ namespace Replanetizer.Frames
             // in that case
             if (!isRotating && !(isWindowHovered && isMouseInContentRegion))
                 return;
-
-            KEY_HELD_HANDLER.Update(wnd.KeyboardState, deltaTime);
 
             if (wnd.MouseState.ScrollDelta.Y != 0)
             {
@@ -434,11 +441,6 @@ namespace Replanetizer.Frames
                 worldView = CreateWorldView();
                 invalidate = true;
             }
-
-            if (KEY_HELD_HANDLER.IsKeyHeld(Keys.Down))
-                CycleModels(1);
-            else if (KEY_HELD_HANDLER.IsKeyHeld(Keys.Up))
-                CycleModels(-1);
         }
 
         /// <param name="deltaTime">time since last tick</param>

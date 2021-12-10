@@ -135,21 +135,23 @@ namespace LibReplanetizer
             return new byte[0];
         }
 
-        public static String ReadString(FileStream fs, int offset)
+        public static byte[] ReadString(FileStream fs, int offset)
         {
-            String output = "";
+            var output = new List<byte>();
+
             fs.Seek(offset, SeekOrigin.Begin);
-            int pos = offset;
 
             byte[] buffer = new byte[4];
             do
             {
                 fs.Read(buffer, 0, 4);
-                output += System.Text.Encoding.ASCII.GetString(buffer);
+                output.AddRange(buffer);
             }
             while (buffer[3] != '\0');
 
-            return output.Substring(0, output.IndexOf('\0'));
+            output.RemoveAll(item => item == 0);
+
+            return output.ToArray();
         }
 
         public static void WriteUint(byte[] byteArr, int offset, uint input)

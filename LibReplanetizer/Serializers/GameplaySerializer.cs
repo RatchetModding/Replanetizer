@@ -253,11 +253,11 @@ namespace LibReplanetizer.Serializers
             fs.Write(head, 0, head.Length);
         }
 
-        public static byte[] GetLangBytes(Dictionary<int, String> languageData)
+        public static byte[] GetLangBytes(Dictionary<int, byte[]> languageData)
         {
             int headerSize = (languageData.Count() * 16) + 8;
             int dataSize = 0;
-            foreach (KeyValuePair<int, String> entry in languageData)
+            foreach (KeyValuePair<int, byte[]> entry in languageData)
             {
                 int entrySize = entry.Value.Length + 1;
                 if (entrySize % 4 != 0)
@@ -276,7 +276,7 @@ namespace LibReplanetizer.Serializers
             int textPos = headerSize;
             int headerPos = 8;
 
-            foreach (KeyValuePair<int, String> entry in languageData)
+            foreach (KeyValuePair<int, byte[]> entry in languageData)
             {
                 int entrySize = entry.Value.Length + 1;
                 if (entrySize % 4 != 0)
@@ -284,7 +284,7 @@ namespace LibReplanetizer.Serializers
                     entrySize += 4 - (entrySize % 4);
                 }
 
-                System.Text.Encoding.ASCII.GetBytes(entry.Value, 0, entry.Value.Length, bytes, textPos);
+                entry.Value.CopyTo(bytes, textPos);
 
                 WriteUint(bytes, headerPos, (uint) textPos);
                 WriteUint(bytes, headerPos + 4, (uint) entry.Key);

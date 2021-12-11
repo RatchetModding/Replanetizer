@@ -27,57 +27,65 @@ namespace Replanetizer.Frames
 
             if (level != null)
             {
-                for (int i = 0; i < level.terrainChunks.Count; i++)
+                if (level.terrainChunks.Count == 0)
                 {
-                    settings.chunksSelected[i] = true;
+                    settings.chunksSelected[0] = true;
                 }
+                else
+                {
+                    for (int i = 0; i < level.terrainChunks.Count; i++)
+                    {
+                        settings.chunksSelected[i] = true;
+                    }
+                }
+
             }
         }
 
         public override void Render(float deltaTime)
         {
-            ImGui.SetNextItemOpen(true);
-            if (ImGui.TreeNode("Mesh mode"))
+            if (level != null)
             {
-                int meshMode = (int) settings.mode;
-                if (ImGui.Combo("Mesh Mode", ref meshMode, enumNameMap, enumNameMap.Length))
+                ImGui.SetNextItemOpen(true);
+                if (ImGui.TreeNode("Mesh mode"))
                 {
-                    settings.mode = (ModelWriter.WriterLevelMode) meshMode;
-                }
-                ImGui.TreePop();
-            }
-
-            ImGui.SetNextItemOpen(true);
-            if (ImGui.TreeNode("Objects to include"))
-            {
-                ImGui.Checkbox("Include Ties", ref settings.writeTies);
-                ImGui.Checkbox("Include Shrubs", ref settings.writeShrubs);
-                ImGui.Checkbox("Include Mobies", ref settings.writeMobies);
-                ImGui.Checkbox("Include MLT File", ref settings.exportMtlFile);
-                ImGui.TreePop();
-            }
-
-            ImGui.SetNextItemOpen(true);
-            if (ImGui.TreeNode("Chunk config"))
-            {
-                ImGui.TextDisabled("Use CTRL key to select multiple");
-                for (int i = 0; i < settings.chunksSelected.Length; i++)
-                {
-                    if (ImGui.Selectable("Chunk " + i, settings.chunksSelected[i]))
+                    int meshMode = (int) settings.mode;
+                    if (ImGui.Combo("Mesh Mode", ref meshMode, enumNameMap, enumNameMap.Length))
                     {
-                        settings.chunksSelected[i] = !settings.chunksSelected[i];
+                        settings.mode = (ModelWriter.WriterLevelMode) meshMode;
+                    }
+                    ImGui.TreePop();
+                }
+
+                ImGui.SetNextItemOpen(true);
+                if (ImGui.TreeNode("Objects to include"))
+                {
+                    ImGui.Checkbox("Include Ties", ref settings.writeTies);
+                    ImGui.Checkbox("Include Shrubs", ref settings.writeShrubs);
+                    ImGui.Checkbox("Include Mobies", ref settings.writeMobies);
+                    if (level.terrainChunks.Count == 0)
+                        ImGui.Checkbox("Include Terrain", ref settings.chunksSelected[0]);
+                    ImGui.Checkbox("Include MLT File", ref settings.exportMtlFile);
+                    ImGui.TreePop();
+                }
+
+                if (level.terrainChunks.Count != 0)
+                {
+                    ImGui.SetNextItemOpen(true);
+                    if (ImGui.TreeNode("Chunk config"))
+                    {
+                        ImGui.TextDisabled("Use CTRL key to select multiple");
+                        for (int i = 0; i < level.terrainChunks.Count; i++)
+                        {
+                            if (ImGui.Selectable("Chunk " + i, settings.chunksSelected[i]))
+                            {
+                                settings.chunksSelected[i] = !settings.chunksSelected[i];
+                            }
+                        }
+                        ImGui.TreePop();
                     }
                 }
-                ImGui.TreePop();
-            }
 
-
-            if (level == null)
-            {
-                ImGui.Text("Export unavailable, no level found!");
-            }
-            else
-            {
                 if (ImGui.Button("Perform export"))
                 {
                     var res = CrossFileDialog.SaveFile("Level.obj", "*.obj");
@@ -87,6 +95,10 @@ namespace Replanetizer.Frames
                         isOpen = false;
                     }
                 }
+            }
+            else
+            {
+                ImGui.Text("Export unavailable, no level found!");
             }
         }
     }

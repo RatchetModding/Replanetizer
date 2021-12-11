@@ -53,67 +53,63 @@ namespace LibReplanetizer.Parsers
             return new LevelVariables(game, fileStream, gameplayHeader.levelVarPointer, gameplayHeader.englishPointer - gameplayHeader.levelVarPointer);
         }
 
-        public Dictionary<int, byte[]> GetLang(int offset)
+        public List<LanguageData> GetLang(int offset)
         {
-            if (offset == 0) { return new Dictionary<int, byte[]>(); }
+            if (offset == 0) { return new List<LanguageData>(); }
 
             byte[] langHeader = ReadBlock(fileStream, offset, 0x08);
             int numItems = ReadInt(langHeader, 0x00);
             int langLength = ReadInt(langHeader, 0x04);
 
-            var languageData = new Dictionary<int, byte[]>();
+
+            byte[] langBlock = ReadBlock(fileStream, offset, langLength);
+
+            var languageData = new List<LanguageData>();
 
             for (int i = 0; i < numItems; i++)
             {
-                int pointerOffset = offset + 8 + (i * 16);
-                byte[] block = ReadBlock(fileStream, pointerOffset, 0x08);
-
-                int textPointer = ReadInt(block, 0x00);
-                int textId = ReadInt(block, 0x04);
-
-                byte[] textData = ReadString(fileStream, offset + textPointer);
-                languageData.Add(textId, textData);
+                languageData.Add(new LanguageData(langBlock, i));
             }
 
             return languageData;
         }
 
-        public Dictionary<int, byte[]> GetEnglish()
+        public List<LanguageData> GetEnglish()
         {
             return GetLang(gameplayHeader.englishPointer);
         }
 
-        public Dictionary<int, byte[]> GetUkEnglish()
+        public List<LanguageData> GetUkEnglish()
         {
             return GetLang(gameplayHeader.ukenglishPointer);
         }
 
-        public Dictionary<int, byte[]> GetFrench()
+        public List<LanguageData> GetFrench()
         {
             return GetLang(gameplayHeader.frenchPointer);
         }
 
-        public Dictionary<int, byte[]> GetGerman()
+        public List<LanguageData> GetGerman()
         {
             return GetLang(gameplayHeader.germanPointer);
         }
 
-        public Dictionary<int, byte[]> GetSpanish()
+        public List<LanguageData> GetSpanish()
         {
             return GetLang(gameplayHeader.spanishPointer);
         }
 
-        public Dictionary<int, byte[]> GetItalian()
+        public List<LanguageData> GetItalian()
         {
             return GetLang(gameplayHeader.italianPointer);
         }
 
-        public Dictionary<int, byte[]> GetJapanese()
+        public List<LanguageData> GetJapanese()
         {
             return GetLang(gameplayHeader.japanesePointer);
         }
 
-        public Dictionary<int, byte[]> GetKorean()
+        public List<LanguageData> GetKorean()
         {
             return GetLang(gameplayHeader.koreanPointer);
         }

@@ -189,7 +189,7 @@ Link: ", buildDate.ToString(), currVersionDate.ToString());
                                 CultureInfo cultureInfo = new CultureInfo("en-US");
                                 DateTime currVersionDate = DateTime.Parse(time, cultureInfo);
 
-                                if (currVersionDate.CompareTo(compileTime.AddHours(-60000.0)) > 0)
+                                if (currVersionDate.CompareTo(compileTime.AddHours(6.0)) > 0)
                                 {
                                     UpdateInfoFrame frame = new UpdateInfoFrame(wnd, url, compileTime, currVersionDate, newestReleaseTag);
                                     wnd.AddFrame(frame);

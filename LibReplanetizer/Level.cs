@@ -64,14 +64,14 @@ namespace LibReplanetizer
         public LevelVariables levelVariables;
         public OcclusionData occlusionData;
 
-        public Dictionary<int, String> english;
-        public Dictionary<int, String> ukenglish;
-        public Dictionary<int, String> french;
-        public Dictionary<int, String> german;
-        public Dictionary<int, String> spanish;
-        public Dictionary<int, String> italian;
-        public Dictionary<int, String> japanese;
-        public Dictionary<int, String> korean;
+        public List<LanguageData> english;
+        public List<LanguageData> ukenglish;
+        public List<LanguageData> french;
+        public List<LanguageData> german;
+        public List<LanguageData> spanish;
+        public List<LanguageData> italian;
+        public List<LanguageData> japanese;
+        public List<LanguageData> korean;
 
         public byte[] unk3;
         public byte[] unk4;

@@ -253,13 +253,13 @@ namespace LibReplanetizer.Serializers
             fs.Write(head, 0, head.Length);
         }
 
-        public static byte[] GetLangBytes(Dictionary<int, String> languageData)
+        public static byte[] GetLangBytes(List<LanguageData> languageData)
         {
-            int headerSize = (languageData.Count() * 16) + 8;
+            int headerSize = (languageData.Count * 16) + 8;
             int dataSize = 0;
-            foreach (KeyValuePair<int, String> entry in languageData)
+            foreach (LanguageData entry in languageData)
             {
-                int entrySize = entry.Value.Length + 1;
+                int entrySize = entry.text.Length + 1;
                 if (entrySize % 4 != 0)
                 {
                     entrySize += (4 - entrySize % 4);
@@ -270,25 +270,25 @@ namespace LibReplanetizer.Serializers
             int totalSize = headerSize + dataSize;
             byte[] bytes = new byte[totalSize];
 
-            WriteUint(bytes, 0, (uint) languageData.Count());
+            WriteUint(bytes, 0, (uint) languageData.Count);
             WriteUint(bytes, 4, (uint) totalSize);
 
             int textPos = headerSize;
             int headerPos = 8;
 
-            foreach (KeyValuePair<int, String> entry in languageData)
+            foreach (LanguageData entry in languageData)
             {
-                int entrySize = entry.Value.Length + 1;
+                int entrySize = entry.text.Length + 1;
                 if (entrySize % 4 != 0)
                 {
                     entrySize += 4 - (entrySize % 4);
                 }
 
-                System.Text.Encoding.ASCII.GetBytes(entry.Value, 0, entry.Value.Length, bytes, textPos);
+                entry.text.CopyTo(bytes, textPos);
 
                 WriteUint(bytes, headerPos, (uint) textPos);
-                WriteUint(bytes, headerPos + 4, (uint) entry.Key);
-                WriteUint(bytes, headerPos + 8, 0xFFFFFFFF);
+                WriteUint(bytes, headerPos + 4, (uint) entry.id);
+                WriteInt(bytes, headerPos + 8, entry.secondId);
                 WriteUint(bytes, headerPos + 12, 0);
                 headerPos += 16;
                 textPos += entrySize;

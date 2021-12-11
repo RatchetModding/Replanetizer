@@ -106,9 +106,9 @@ namespace LibReplanetizer
             var vertices = new Vector3[vertexCount];
             for (int vertIdx = 0; vertIdx < vertexCount; vertIdx++)
             {
-                var px = model.vertexBuffer[vertIdx * 0x08 + 0x0] * model.size;
-                var py = model.vertexBuffer[vertIdx * 0x08 + 0x1] * model.size;
-                var pz = model.vertexBuffer[vertIdx * 0x08 + 0x2] * model.size;
+                var px = model.vertexBuffer[vertIdx * 0x08 + 0x0];
+                var py = model.vertexBuffer[vertIdx * 0x08 + 0x1];
+                var pz = model.vertexBuffer[vertIdx * 0x08 + 0x2];
                 var pos = new Vector4(px, py, pz, 1.0f) * modelMatrix;
                 vertices[vertIdx] = pos.Xyz;
                 objfs.WriteLine($"v {pos.X:F6} {pos.Y:F6} {pos.Z:F6}");
@@ -824,7 +824,9 @@ namespace LibReplanetizer
                 if (model.textureConfig != null)
                     objfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
 
-                WriteObjectData(objfs, model, 0, Matrix4.Identity);
+                Matrix4 scale = Matrix4.CreateScale(model.size);
+
+                WriteObjectData(objfs, model, 0, scale);
             }
         }
 

@@ -68,7 +68,7 @@ jobs:
             name: replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
             path: /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
 
-  build_mac:
+  build_macos:
     runs-on: macos-10.15
     needs: [build_linux]
     steps:
@@ -100,7 +100,7 @@ jobs:
 
   release:
     runs-on: ubuntu-20.04
-    needs: [build_linux, build_windows]
+    needs: [build_linux, build_windows, build_macos]
     if: github.ref == 'refs/heads/master'
     steps:
       - name: Download all workflow run artifacts
@@ -142,7 +142,7 @@ jobs:
             asset_path: replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip/replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
             asset_content_type: application/zip
 
-      - name: Upload Release Asset Mac
+      - name: Upload Release Asset macOS
         if: github.ref == 'refs/heads/master'
         uses: actions/upload-release-asset@v1.0.1
         env:

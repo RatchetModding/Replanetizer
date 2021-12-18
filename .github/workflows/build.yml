@@ -89,7 +89,7 @@ jobs:
       - run: dotnet publish -c Release -o /tmp/out-osx/replanetizer --self-contained --runtime osx-x64 --framework net5.0 Replanetizer
         name: Build Replanetizer for Mac
 
-      - run: zip -r /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-osx-x64.zip /tmp/out-osx/replanetizer
+      - run: cd /tmp/out-osx/ && zip -r /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-osx-x64.zip replanetizer
         name: Zip up Replanetizer for Mac
 
       - uses: actions/upload-artifact@v2

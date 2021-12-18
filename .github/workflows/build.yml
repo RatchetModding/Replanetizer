@@ -37,7 +37,7 @@ jobs:
         with:
           name: replanetizer-${{steps.get-version.outputs.release_name}}-linux-x64.zip
           path: /tmp/zips/replanetizer-${{steps.get-version.outputs.release_name}}-linux-x64.zip
-          
+
   build_windows:
     runs-on: windows-2019
     needs: [build_linux]
@@ -68,9 +68,39 @@ jobs:
             name: replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
             path: /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
 
+  build_macos:
+    runs-on: macos-10.15
+    needs: [build_linux]
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.x'
+
+      - run: dotnet --list-runtimes && dotnet --list-sdks
+        name: Output dotnet versions for debugging
+
+      - run: git submodule update --init
+        name: Ensure submodules are present and up to date
+
+      - run: mkdir -p /tmp/zips
+        name: Create output directory
+
+      - run: dotnet publish -c Release -o /tmp/out-osx/replanetizer --self-contained --runtime osx-x64 --framework net5.0 Replanetizer
+        name: Build Replanetizer for Mac
+
+      - run: cd /tmp/out-osx/ && zip -r /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-osx-x64.zip replanetizer
+        name: Zip up Replanetizer for Mac
+
+      - uses: actions/upload-artifact@v2
+        name: Upload zips to GitHub actions artifact storage
+        with:
+            name: replanetizer-${{needs.build_linux.outputs.release_name}}-osx-x64.zip
+            path: /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-osx-x64.zip
+
   release:
     runs-on: ubuntu-20.04
-    needs: [build_linux, build_windows]
+    needs: [build_linux, build_windows, build_macos]
     if: github.ref == 'refs/heads/master'
     steps:
       - name: Download all workflow run artifacts
@@ -96,7 +126,7 @@ jobs:
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }} 
+            upload_url: ${{ steps.create_release.outputs.upload_url }}
             asset_name: replanetizer-${{needs.build_linux.outputs.release_name}}-linux-x64.zip
             asset_path: replanetizer-${{needs.build_linux.outputs.release_name}}-linux-x64.zip/replanetizer-${{needs.build_linux.outputs.release_name}}-linux-x64.zip
             asset_content_type: application/zip
@@ -107,7 +137,18 @@ jobs:
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }} 
+            upload_url: ${{ steps.create_release.outputs.upload_url }}
             asset_name: replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
             asset_path: replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip/replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
+            asset_content_type: application/zip
+
+      - name: Upload Release Asset macOS
+        if: github.ref == 'refs/heads/master'
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }}
+            asset_name: replanetizer-${{needs.build_linux.outputs.release_name}}-osx-x64.zip
+            asset_path: replanetizer-${{needs.build_linux.outputs.release_name}}-osx-x64.zip/replanetizer-${{needs.build_linux.outputs.release_name}}-osx-x64.zip
             asset_content_type: application/zip

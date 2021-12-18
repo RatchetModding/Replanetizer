@@ -132,6 +132,14 @@ namespace Replanetizer.Utils
             rotation += vector;
         }
 
+        public void Rotate(Vector2 rot)
+        {
+            rotation.Z -= rot.X;
+            rotation.X -= rot.Y;
+            rotation.X = MathHelper.Clamp(rotation.X,
+                MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
+        }
+
         public void Scale(Vector3 scale)
         {
             //Not used

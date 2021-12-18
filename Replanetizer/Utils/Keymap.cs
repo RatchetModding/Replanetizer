@@ -26,6 +26,10 @@ namespace Replanetizer.Utils
         MoveUp,
         MoveDown,
         MoveFastModifier,
+        RotateRight,
+        RotateLeft,
+        RotateUp,
+        RotateDown,
 
         // Tools
         ToolNone,
@@ -167,6 +171,10 @@ namespace Replanetizer.Utils
                 { Keybinds.MoveUp, new[] { new KeyCombo(Keys.E) } },
                 { Keybinds.MoveDown, new[] { new KeyCombo(Keys.Q) } },
                 { Keybinds.MoveFastModifier, new[] { new KeyCombo(Keys.LeftShift) } },
+                { Keybinds.RotateRight, new[] { new KeyCombo(Keys.Right) } },
+                { Keybinds.RotateLeft, new[] { new KeyCombo(Keys.Left) } },
+                { Keybinds.RotateUp, new[] { new KeyCombo(Keys.Up) } },
+                { Keybinds.RotateDown, new[] { new KeyCombo(Keys.Down) } },
                 // Tools
                 { Keybinds.ToolNone, new[] { new KeyCombo(Keys.D5) } },
                 { Keybinds.ToolTranslate, new[] { new KeyCombo(Keys.D1) } },

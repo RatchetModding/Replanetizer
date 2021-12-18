@@ -933,10 +933,11 @@ namespace Replanetizer.Frames
                 return false;
             }
 
-            camera.rotation.Z -= (wnd.MouseState.Delta.X) * camera.speed * deltaTime;
-            camera.rotation.X -= (wnd.MouseState.Delta.Y) * camera.speed * deltaTime;
-            camera.rotation.X = MathHelper.Clamp(camera.rotation.X,
-                MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
+            Vector2 rot = new Vector2(wnd.MouseState.Delta.X, wnd.MouseState.Delta.Y);
+
+            rot *= camera.speed * deltaTime;
+
+            camera.Rotate(rot);
 
             InvalidateView();
             return true;
@@ -950,6 +951,15 @@ namespace Replanetizer.Frames
             {
                 moveDir *= moveSpeed * deltaTime;
                 camera.TransformedTranslate(moveDir);
+
+                InvalidateView();
+            }
+
+            Vector2 rotateDir = GetInputRotationAxes();
+            if (rotateDir.Length > 0)
+            {
+                rotateDir *= deltaTime;
+                camera.Rotate(rotateDir);
 
                 InvalidateView();
             }
@@ -1069,6 +1079,20 @@ namespace Replanetizer.Frames
             if (KEYMAP.IsDown(Keybinds.MoveDown)) zAxis--;
 
             var inputAxes = new Vector3(xAxis, yAxis, zAxis);
+            inputAxes.NormalizeFast();
+            return inputAxes;
+        }
+
+        private Vector2 GetInputRotationAxes()
+        {
+            float xAxis = 0, yAxis = 0;
+
+            if (KEYMAP.IsDown(Keybinds.RotateRight)) xAxis++;
+            if (KEYMAP.IsDown(Keybinds.RotateLeft)) xAxis--;
+            if (KEYMAP.IsDown(Keybinds.RotateUp)) yAxis--;
+            if (KEYMAP.IsDown(Keybinds.RotateDown)) yAxis++;
+
+            var inputAxes = new Vector2(xAxis, yAxis);
             inputAxes.NormalizeFast();
             return inputAxes;
         }

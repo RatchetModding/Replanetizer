@@ -100,38 +100,51 @@ namespace LibReplanetizer
 
         private static int WriteObjectData(StreamWriter objfs, Model model, int faceOffset, Matrix4 modelMatrix)
         {
-            var vertexCount = model.vertexBuffer.Length / 8;
+            // skybox model has no normals and does the vertex buffer has a different layout
+            // if we see other cases like this, it may be advisable to generalize this
+            bool skyboxModel = (model is SkyboxModel);
+
+            int bufferStride = (skyboxModel) ? 0x06 : 0x08;
+            int vOffset = 0x00;
+            int vnOffset = 0x03;
+            int vtOffset = (skyboxModel) ? 0x03 : 0x06;
+
+            int vertexCount = model.vertexBuffer.Length / bufferStride;
 
             // Vertices
-            var vertices = new Vector3[vertexCount];
+            Vector3[] vertices = new Vector3[vertexCount];
             for (int vertIdx = 0; vertIdx < vertexCount; vertIdx++)
             {
-                var px = model.vertexBuffer[vertIdx * 0x08 + 0x0];
-                var py = model.vertexBuffer[vertIdx * 0x08 + 0x1];
-                var pz = model.vertexBuffer[vertIdx * 0x08 + 0x2];
+                var px = model.vertexBuffer[vertIdx * bufferStride + vOffset + 0x00];
+                var py = model.vertexBuffer[vertIdx * bufferStride + vOffset + 0x01];
+                var pz = model.vertexBuffer[vertIdx * bufferStride + vOffset + 0x02];
                 var pos = new Vector4(px, py, pz, 1.0f) * modelMatrix;
                 vertices[vertIdx] = pos.Xyz;
                 objfs.WriteLine($"v {pos.X:F6} {pos.Y:F6} {pos.Z:F6}");
             }
 
             // Normals
-            var normals = new Vector3[vertexCount];
-            for (var vertIdx = 0; vertIdx < vertexCount; vertIdx++)
+            Vector3[]? normals = (skyboxModel) ? null : new Vector3[vertexCount];
+
+            if (normals != null)
             {
-                var nx = model.vertexBuffer[vertIdx * 0x08 + 0x3];
-                var ny = model.vertexBuffer[vertIdx * 0x08 + 0x4];
-                var nz = model.vertexBuffer[vertIdx * 0x08 + 0x5];
-                var normal = (new Vector4(nx, ny, nz, 0.0f) * modelMatrix).Xyz;
-                normal.Normalize();
-                normals[vertIdx] = normal;
-                objfs.WriteLine($"vn {normal.X:F6} {normal.Y:F6} {normal.Z:F6}");
+                for (var vertIdx = 0; vertIdx < vertexCount; vertIdx++)
+                {
+                    var nx = model.vertexBuffer[vertIdx * bufferStride + vnOffset + 0x00];
+                    var ny = model.vertexBuffer[vertIdx * bufferStride + vnOffset + 0x01];
+                    var nz = model.vertexBuffer[vertIdx * bufferStride + vnOffset + 0x02];
+                    var normal = (new Vector4(nx, ny, nz, 0.0f) * modelMatrix).Xyz;
+                    normal.Normalize();
+                    normals[vertIdx] = normal;
+                    objfs.WriteLine($"vn {normal.X:F6} {normal.Y:F6} {normal.Z:F6}");
+                }
             }
 
             // UVs
             for (var vertIdx = 0; vertIdx < vertexCount; vertIdx++)
             {
-                var tu = model.vertexBuffer[(vertIdx * 0x08) + 0x6];
-                var tv = 1f - model.vertexBuffer[(vertIdx * 0x08) + 0x7];
+                var tu = model.vertexBuffer[(vertIdx * bufferStride) + vtOffset + 0x00];
+                var tv = 1f - model.vertexBuffer[(vertIdx * bufferStride) + vtOffset + 0x01];
                 objfs.WriteLine($"vt {tu:F6} {tv:F6}");
             }
 
@@ -161,7 +174,16 @@ namespace LibReplanetizer
                 v2 += 1 + faceOffset;
                 v3 += 1 + faceOffset;
 
-                objfs.WriteLine($"f {v1}/{v1}/{v1} {v2}/{v2}/{v2} {v3}/{v3}/{v3}");
+                if (skyboxModel)
+                {
+                    objfs.WriteLine($"f {v1}/{v1} {v2}/{v2} {v3}/{v3}");
+
+                }
+                else
+                {
+                    objfs.WriteLine($"f {v1}/{v1}/{v1} {v2}/{v2}/{v2} {v3}/{v3}/{v3}");
+                }
+
             }
 
             return vertexCount;
@@ -174,8 +196,10 @@ namespace LibReplanetizer
         /// </summary>
         /// <returns>whether to reverse the winding order</returns>
         private static bool ShouldReverseWinding(
-            IReadOnlyList<Vector3> vertices, IReadOnlyList<Vector3> vertexNormals, int v1, int v2, int v3)
+            IReadOnlyList<Vector3> vertices, IReadOnlyList<Vector3>? vertexNormals, int v1, int v2, int v3)
         {
+            if (vertexNormals == null) return false;
+
             var targetFaceNormal = FaceNormalFromVertexNormals(vertexNormals, v1, v2, v3);
             var p1 = vertices[v1];
             var p2 = vertices[v2];
@@ -265,7 +289,18 @@ namespace LibReplanetizer
 
             using (StreamWriter colladaStream = new StreamWriter(fileName))
             {
-                int vertexCount = model.vertexBuffer.Length / 8;
+                // skybox model has no normals and does the vertex buffer has a different layout
+                // if we see other cases like this, it may be advisable to generalize this
+                bool skyboxModel = (model is SkyboxModel);
+                bool terrainModel = (model is TerrainModel);
+
+                int bufferStride = (skyboxModel) ? 0x06 : 0x08;
+                int vOffset = 0x00;
+                int vnOffset = 0x03;
+                int vtOffset = (skyboxModel) ? 0x03 : 0x06;
+                int vcOffset = 0x05;
+
+                int vertexCount = model.vertexBuffer.Length / bufferStride;
 
                 colladaStream.WriteLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
                 colladaStream.WriteLine("<COLLADA xmlns=\"http://www.collada.org/2005/11/COLLADASchema\" version=\"1.4.1\">");
@@ -344,9 +379,9 @@ namespace LibReplanetizer
                 Vector3[] vertices = new Vector3[vertexCount];
                 for (int x = 0; x < vertexCount; x++)
                 {
-                    float px = model.vertexBuffer[(x * 0x08) + 0x0] * model.size;
-                    float py = model.vertexBuffer[(x * 0x08) + 0x1] * model.size;
-                    float pz = model.vertexBuffer[(x * 0x08) + 0x2] * model.size;
+                    float px = model.vertexBuffer[(x * bufferStride) + vOffset + 0x0] * model.size;
+                    float py = model.vertexBuffer[(x * bufferStride) + vOffset + 0x1] * model.size;
+                    float pz = model.vertexBuffer[(x * bufferStride) + vOffset + 0x2] * model.size;
                     vertices[x] = new Vector3(px, py, pz);
                     colladaStream.Write(px.ToString("G", en_US) + " " + py.ToString("G", en_US) + " " + pz.ToString("G", en_US) + " ");
                 }
@@ -359,32 +394,74 @@ namespace LibReplanetizer
                 colladaStream.WriteLine("\t\t\t\t\t\t</accessor>");
                 colladaStream.WriteLine("\t\t\t\t\t</technique_common>");
                 colladaStream.WriteLine("\t\t\t\t</source>");
-                colladaStream.WriteLine("\t\t\t\t<source id=\"Model_normals\">");
-                colladaStream.Write("\t\t\t\t\t<float_array id=\"Model_normals_array\" count=\"" + 3 * vertexCount + "\"> ");
-                Vector3[] normals = new Vector3[vertexCount];
-                for (int x = 0; x < vertexCount; x++)
+                Vector3[]? normals = (skyboxModel) ? null : new Vector3[vertexCount];
+                if (normals != null)
                 {
-                    float nx = model.vertexBuffer[(x * 0x08) + 0x3];
-                    float ny = model.vertexBuffer[(x * 0x08) + 0x4];
-                    float nz = model.vertexBuffer[(x * 0x08) + 0x5];
-                    normals[x] = new Vector3(nx, ny, nz);
-                    colladaStream.Write(nx.ToString("G", en_US) + " " + ny.ToString("G", en_US) + " " + nz.ToString("G", en_US) + " ");
+                    colladaStream.WriteLine("\t\t\t\t<source id=\"Model_normals\">");
+                    colladaStream.Write("\t\t\t\t\t<float_array id=\"Model_normals_array\" count=\"" + 3 * vertexCount + "\"> ");
+                    for (int x = 0; x < vertexCount; x++)
+                    {
+                        float nx = model.vertexBuffer[(x * bufferStride) + vnOffset + 0x00];
+                        float ny = model.vertexBuffer[(x * bufferStride) + vnOffset + 0x01];
+                        float nz = model.vertexBuffer[(x * bufferStride) + vnOffset + 0x02];
+                        normals[x] = new Vector3(nx, ny, nz);
+                        colladaStream.Write(nx.ToString("G", en_US) + " " + ny.ToString("G", en_US) + " " + nz.ToString("G", en_US) + " ");
+                    }
+                    colladaStream.WriteLine("</float_array>");
+                    colladaStream.WriteLine("\t\t\t\t\t<technique_common>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<accessor count=\"" + vertexCount + "\" offset=\"0\" source=\"#Model_normals_array\" stride=\"3\">");
+                    colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"X\" type=\"float\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"Y\" type=\"float\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"Z\" type=\"float\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t</accessor>");
+                    colladaStream.WriteLine("\t\t\t\t\t</technique_common>");
+                    colladaStream.WriteLine("\t\t\t\t</source>");
                 }
-                colladaStream.WriteLine("</float_array>");
-                colladaStream.WriteLine("\t\t\t\t\t<technique_common>");
-                colladaStream.WriteLine("\t\t\t\t\t\t<accessor count=\"" + vertexCount + "\" offset=\"0\" source=\"#Model_normals_array\" stride=\"3\">");
-                colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"X\" type=\"float\"/>");
-                colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"Y\" type=\"float\"/>");
-                colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"Z\" type=\"float\"/>");
-                colladaStream.WriteLine("\t\t\t\t\t\t</accessor>");
-                colladaStream.WriteLine("\t\t\t\t\t</technique_common>");
-                colladaStream.WriteLine("\t\t\t\t</source>");
+                if (skyboxModel || terrainModel)
+                {
+                    colladaStream.WriteLine("\t\t\t\t<source id=\"Model_vertex_colors\">");
+                    colladaStream.Write("\t\t\t\t\t<float_array id=\"Model_vertex_colors_array\" count=\"" + 4 * vertexCount + "\"> ");
+                    if (skyboxModel)
+                    {
+                        for (int x = 0; x < vertexCount; x++)
+                        {
+                            byte[] colors = BitConverter.GetBytes(model.vertexBuffer[(x * bufferStride) + vcOffset + 0x00]);
+                            float a = ((float) colors[0]) / 255.0f;
+                            float b = ((float) colors[1]) / 255.0f;
+                            float g = ((float) colors[2]) / 255.0f;
+                            float r = ((float) colors[3]) / 255.0f;
+                            colladaStream.Write(r.ToString("G", en_US) + " " + g.ToString("G", en_US) + " " + b.ToString("G", en_US) + " " + a.ToString("G", en_US) + " ");
+                        }
+                    }
+                    else if (terrainModel)
+                    {
+                        TerrainModel tmodel = (TerrainModel) model;
+                        for (int x = 0; x < vertexCount; x++)
+                        {
+                            float a = ((float) tmodel.rgbas[x * 0x04 + 0x00]) / 255.0f;
+                            float b = ((float) tmodel.rgbas[x * 0x04 + 0x01]) / 255.0f;
+                            float g = ((float) tmodel.rgbas[x * 0x04 + 0x02]) / 255.0f;
+                            float r = ((float) tmodel.rgbas[x * 0x04 + 0x03]) / 255.0f;
+                            colladaStream.Write(r.ToString("G", en_US) + " " + g.ToString("G", en_US) + " " + b.ToString("G", en_US) + " " + a.ToString("G", en_US) + " ");
+                        }
+                    }
+                    colladaStream.WriteLine("</float_array>");
+                    colladaStream.WriteLine("\t\t\t\t\t<technique_common>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<accessor count=\"" + vertexCount + "\" offset=\"0\" source=\"#Model_vertex_colors_array\" stride=\"4\">");
+                    colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"R\" type=\"float\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"G\" type=\"float\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"B\" type=\"float\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"A\" type=\"float\"/>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t</accessor>");
+                    colladaStream.WriteLine("\t\t\t\t\t</technique_common>");
+                    colladaStream.WriteLine("\t\t\t\t</source>");
+                }
                 colladaStream.WriteLine("\t\t\t\t<source id=\"Model_uvs\">");
                 colladaStream.Write("\t\t\t\t\t<float_array id=\"Model_uvs_array\" count=\"" + 2 * vertexCount + "\"> ");
                 for (int x = 0; x < vertexCount; x++)
                 {
-                    float tu = model.vertexBuffer[(x * 0x08) + 0x6];
-                    float tv = 1.0f - model.vertexBuffer[(x * 0x08) + 0x7];
+                    float tu = model.vertexBuffer[(x * bufferStride) + vtOffset + 0x00];
+                    float tv = 1.0f - model.vertexBuffer[(x * bufferStride) + vtOffset + 0x01];
                     colladaStream.Write(tu.ToString("G", en_US) + " " + tv.ToString("G", en_US) + " ");
                 }
                 colladaStream.WriteLine("</float_array>");
@@ -404,6 +481,8 @@ namespace LibReplanetizer
                     colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"VERTEX\" source=\"#Model_vertices\" offset=\"0\"/>");
                     colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"NORMAL\" source=\"#Model_normals\" offset=\"0\"/>");
                     colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"TEXCOORD\" source=\"#Model_uvs\" offset=\"0\" set=\"0\"/>");
+                    if (skyboxModel || terrainModel)
+                        colladaStream.WriteLine("\t\t\t\t\t<input semantic=\"COLOR\" source=\"#Model_vertex_colors\" offset=\"0\"/>");
                     colladaStream.Write("\t\t\t\t\t<p> ");
                     for (int i = config.start / 3; i < config.start / 3 + config.size / 3; i++)
                     {

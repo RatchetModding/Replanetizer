@@ -141,6 +141,11 @@ namespace Replanetizer.Frames
                     }
                     ImGui.TreePop();
                 }
+                if (ImGui.TreeNode("Miscellaneous"))
+                {
+                    RenderModelEntry(level.skybox, level.textures, "Skybox");
+                    ImGui.TreePop();
+                }
                 ImGui.EndChild();
             }
         }
@@ -368,7 +373,7 @@ namespace Replanetizer.Frames
             GL.ClearColor(Color.SkyBlue);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            if (selectedModel != null)
+            if (selectedModel != null && !(selectedModel is SkyboxModel))
             {
                 // Has to be done in this order to work correctly
                 Matrix4 mvp = trans * scale * rot;

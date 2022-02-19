@@ -933,9 +933,9 @@ namespace Replanetizer.Frames
                 return false;
             }
 
-            Vector2 rot = new Vector2(wnd.MouseState.Delta.X, wnd.MouseState.Delta.Y);
+            Vector2 rot = new Vector2(wnd.MouseState.Delta.X * 0.016666f, wnd.MouseState.Delta.Y * 0.016666f);
 
-            rot *= camera.speed * deltaTime;
+            rot *= camera.speed;
 
             camera.Rotate(rot);
 

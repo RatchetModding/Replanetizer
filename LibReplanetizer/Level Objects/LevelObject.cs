@@ -40,7 +40,7 @@ namespace LibReplanetizer.LevelObjects
             modelMatrix = reflection * scaleMatrix * rot * translationMatrix;
         }
 
-        public void SetFromMatrix(Matrix4 mat)
+        public virtual void SetFromMatrix(Matrix4 mat)
         {
             position = mat.ExtractTranslation();
             rotation = mat.ExtractRotation();

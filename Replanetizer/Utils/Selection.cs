@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using LibReplanetizer.LevelObjects;
 using OpenTK.Mathematics;
 
@@ -61,6 +62,11 @@ namespace Replanetizer.Utils
         public void CopyTo(LevelObject[] array, int arrayIndex)
         {
             OBJECTS.CopyTo(array, arrayIndex);
+        }
+
+        public List<LevelObject> ToList()
+        {
+            return OBJECTS.ToList<LevelObject>();
         }
 
         /// <summary>

@@ -23,8 +23,13 @@ namespace Replanetizer.Utils
     {
         private ModelObject modelObject;
 
+        private int loadedModelID = -1;
+
         private int ibo = 0;
         private int vbo = 0;
+
+        private bool iboAllocated = false;
+        private bool vboAllocated = false;
 
         public int id { get; }
         public RenderedObjectType type { get; }
@@ -48,6 +53,34 @@ namespace Replanetizer.Utils
             this.textureIds = textureIds;
             this.level = level;
 
+            GenerateBuffers();
+            UpdateVars();
+        }
+
+        /// <summary>
+        /// Deletes IBO and VBO if they are allocated.
+        /// </summary>
+        private void DeleteBuffers()
+        {
+            if (iboAllocated)
+            {
+                GL.DeleteBuffer(ibo);
+            }
+
+            if (vboAllocated)
+            {
+                GL.DeleteBuffer(vbo);
+            }
+        }
+
+        /// <summary>
+        /// Generates IBO and VBO.
+        /// </summary>
+        private void GenerateBuffers()
+        {
+            DeleteBuffers();
+            loadedModelID = modelObject.modelID;
+
             BufferUsageHint hint = BufferUsageHint.StaticDraw;
             if (modelObject.IsDynamic())
             {
@@ -61,6 +94,7 @@ namespace Replanetizer.Utils
                 GL.GenBuffers(1, out ibo);
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
                 GL.BufferData(BufferTarget.ElementArrayBuffer, iboLength * sizeof(ushort), IntPtr.Zero, hint);
+                iboAllocated = true;
             }
 
             // VBO
@@ -80,10 +114,10 @@ namespace Replanetizer.Utils
                 GL.GenBuffers(1, out vbo);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
                 GL.BufferData(BufferTarget.ArrayBuffer, vboLength, IntPtr.Zero, hint);
+                vboAllocated = true;
             }
 
             UpdateBuffers();
-            UpdateVars();
         }
 
         /// <summary>
@@ -151,7 +185,8 @@ namespace Replanetizer.Utils
         }
 
         /// <summary>
-        /// Updates the light and ambient variables which can then be used to update the shader.
+        /// Updates the light and ambient variables which can then be used to update the shader. Check if the modelID
+        /// has changed and update the buffers if necessary.
         /// </summary>
         public void UpdateVars()
         {
@@ -179,6 +214,11 @@ namespace Replanetizer.Utils
                     ambient = shrub.color;
                     renderDistance = shrub.drawDistance;
                     break;
+            }
+
+            if (loadedModelID != modelObject.modelID)
+            {
+                GenerateBuffers();
             }
         }
 

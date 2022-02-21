@@ -30,6 +30,29 @@ namespace LibReplanetizer.LevelObjects
             return model.GetVertices();
         }
 
+        /// <summary>
+        /// Attempts to load the correct model after the modelID was changed. Only works for mobies and shrubs.
+        /// Ties store data per vertex which is troublesome if you change the model.
+        /// </summary>
+        public void TryChangeModel(Level level)
+        {
+            Model? newModel = null;
+
+            if (this is Moby)
+            {
+                newModel = level.mobyModels.Find(mobyModel => mobyModel.id == modelID);
+            }
+            else if (this is Shrub)
+            {
+                newModel = level.shrubModels.Find(shrubModel => shrubModel.id == modelID);
+            }
+
+            if (newModel != null)
+            {
+                model = newModel;
+            }
+        }
+
         public byte[] GetAmbientRgbas()
         {
             if (this is Tie)

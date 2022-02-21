@@ -5,6 +5,7 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using OpenTK.Mathematics;
 using LibReplanetizer.Models;
 using System.ComponentModel;
 
@@ -51,6 +52,15 @@ namespace LibReplanetizer.LevelObjects
             {
                 model = newModel;
             }
+        }
+
+        public override void SetFromMatrix(Matrix4 mat)
+        {
+            position = mat.ExtractTranslation();
+            rotation = mat.ExtractRotation();
+            scale = mat.ExtractScale();
+            scale = scale * (1.0f / model.size);
+            modelMatrix = mat;
         }
 
         public byte[] GetAmbientRgbas()

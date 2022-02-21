@@ -45,6 +45,20 @@ namespace LibReplanetizer.LevelObjects
             modelMatrix = Matrix4.Add(matrix4, new Matrix4());
         }
 
+        public Shrub(Shrub referenceShrub)
+        {
+            this.model = referenceShrub.model;
+            this.modelID = referenceShrub.modelID;
+            this.light = referenceShrub.light;
+            this.color = referenceShrub.color;
+            this.position = referenceShrub.position;
+            this.rotation = referenceShrub.rotation;
+            this.scale = referenceShrub.scale;
+            this.drawDistance = referenceShrub.drawDistance;
+
+            UpdateTransformMatrix();
+        }
+
         public Shrub(byte[] levelBlock, int num, List<Model> shrubModels)
         {
             int offset = num * ELEMENTSIZE;
@@ -119,7 +133,7 @@ namespace LibReplanetizer.LevelObjects
 
         public override LevelObject Clone()
         {
-            return (Shrub) this.MemberwiseClone();
+            return new Shrub(this);
         }
     }
 }

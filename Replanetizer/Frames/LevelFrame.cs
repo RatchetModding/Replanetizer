@@ -50,6 +50,8 @@ namespace Replanetizer.Frames
         private int lightsBufferObject;
         private float[][] lightsData;
 
+        private Clipboard clipboard = new Clipboard();
+
         private int alignmentUbo = GL.GetInteger(GetPName.UniformBufferOffsetAlignment);
 
         private float movingAvgFrametime = 1.0f;
@@ -919,6 +921,10 @@ namespace Replanetizer.Frames
                 toolbox.ChangeTool(ToolType.VertexTranslation);
             if (KEYMAP.IsPressed(Keybinds.DeleteObject))
                 DeleteObject(selectedObjects);
+            if (KEYMAP.IsPressed(Keybinds.Copy))
+                clipboard.Copy(selectedObjects);
+            if (KEYMAP.IsPressed(Keybinds.Paste))
+                clipboard.Apply(level, this);
         }
 
         /// <param name="allowNewGrab">whether a new click will begin grabbing</param>

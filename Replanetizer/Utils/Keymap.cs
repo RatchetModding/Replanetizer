@@ -38,6 +38,10 @@ namespace Replanetizer.Utils
         ToolScaling,
         ToolVertexTranslator,
 
+        // Clipboard
+        Copy,
+        Paste,
+
         // Misc
         DeleteObject,
         MultiSelectModifier
@@ -181,12 +185,12 @@ namespace Replanetizer.Utils
                 { Keybinds.ToolRotation, new[] { new KeyCombo(Keys.D2) } },
                 { Keybinds.ToolScaling, new[] { new KeyCombo(Keys.D3) } },
                 { Keybinds.ToolVertexTranslator, new[] { new KeyCombo(Keys.D4) } },
+                // Clipboard
+                { Keybinds.Copy, new[] { new KeyCombo(new Keys[]{Keys.LeftControl, Keys.C}) } },
+                { Keybinds.Paste, new[] { new KeyCombo(new Keys[]{Keys.LeftControl, Keys.V}) } },
                 // Misc
                 { Keybinds.DeleteObject, new[] { new KeyCombo(Keys.Delete) } },
-                {
-                    Keybinds.MultiSelectModifier,
-                    new[] { new KeyCombo(Keys.LeftShift), new KeyCombo(Keys.RightShift) }
-                }
+                { Keybinds.MultiSelectModifier, new[] { new KeyCombo(Keys.LeftShift), new KeyCombo(Keys.RightShift) } }
             }.ToImmutableDictionary();
 
         public Keymap(Window wnd, IDictionary<Keybinds, KeyCombo[]> keymap)

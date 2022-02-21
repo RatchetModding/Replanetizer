@@ -19,6 +19,8 @@ namespace LibReplanetizer.LevelObjects
     {
         private GameType game;
 
+        private static int MAX_ID = 0;
+
         [Category("Attributes"), DisplayName("Mission ID")]
         public int missionID { get; set; }
 
@@ -50,7 +52,7 @@ namespace LibReplanetizer.LevelObjects
         /*
          * Unknown3A
          * Always 0
-         * 
+         *
          * Unknown3B
          * Always 0 in RAC1
          * Appears as none zero in RAC2 or RAC3 but only on enemies when the 2nd bit of Unknown1 is set
@@ -89,7 +91,7 @@ namespace LibReplanetizer.LevelObjects
         /*
          * Unknown7A
          * Always 8192
-         * 
+         *
          * Unknown7B
          * Always 0
          */
@@ -104,8 +106,8 @@ namespace LibReplanetizer.LevelObjects
 
         /*
          * Unknown8A
-         * Always 16384 
-         * 
+         * Always 16384
+         *
          * Unknown8B
          * Always 0
          */
@@ -141,7 +143,7 @@ namespace LibReplanetizer.LevelObjects
         /*
          * Unknown12A
          * Always 256
-         * 
+         *
          * Unknown12B
          * Always 0
          */
@@ -151,9 +153,6 @@ namespace LibReplanetizer.LevelObjects
         [Category("Unknowns"), DisplayName("12B: Always 0")]
         public short unk12B { get; set; }
 
-        /*
-         * Seems to correspond to HP in RAC2 and RAC3 (It does not)
-         */
         [Category("Unknowns"), DisplayName("aUnknown 13")]
         public int unk13 { get; set; }
 
@@ -162,7 +161,7 @@ namespace LibReplanetizer.LevelObjects
 
         public Moby()
         {
-
+            this.mobyID = MAX_ID++;
         }
 
         public Moby(GameType game, Model model, Vector3 position, Quaternion rotation, Vector3 scale)
@@ -172,6 +171,34 @@ namespace LibReplanetizer.LevelObjects
             this.position = position;
             this.rotation = rotation;
             this.scale = scale;
+            this.mobyID = MAX_ID++;
+
+            UpdateTransformMatrix();
+        }
+
+        public Moby(Moby referenceMoby)
+        {
+            this.game = referenceMoby.game;
+            this.cutscene = referenceMoby.cutscene;
+            this.missionID = referenceMoby.missionID;
+            this.bolts = referenceMoby.bolts;
+            this.pvarIndex = referenceMoby.pvarIndex;
+            this.dataval = referenceMoby.dataval;
+            this.model = referenceMoby.model;
+            this.modelID = referenceMoby.modelID;
+            this.spawnType = referenceMoby.spawnType;
+            this.updateDistance = referenceMoby.updateDistance;
+            this.light = referenceMoby.light;
+            this.color = referenceMoby.color;
+            this.position = referenceMoby.position;
+            this.rotation = referenceMoby.rotation;
+            this.scale = referenceMoby.scale;
+            this.drawDistance = referenceMoby.drawDistance;
+            this.z2 = referenceMoby.z2;
+            this.groupIndex = referenceMoby.groupIndex;
+            this.mobyID = MAX_ID++;
+
+            UpdateTransformMatrix();
         }
 
         public Moby(GameType game, byte[] mobyBlock, int num, List<Model> mobyModels, bool fromMemory = false)
@@ -193,6 +220,11 @@ namespace LibReplanetizer.LevelObjects
                 default:
                     GetRC23Vals(game, mobyBlock, num, mobyModels);
                     break;
+            }
+
+            if (this.mobyID >= MAX_ID)
+            {
+                MAX_ID = this.mobyID + 1;
             }
         }
 
@@ -534,7 +566,7 @@ namespace LibReplanetizer.LevelObjects
 
         public override LevelObject Clone()
         {
-            return new Moby(game, model, new Vector3(position), rotation, scale);
+            return new Moby(this);
         }
 
         public override void UpdateTransformMatrix()

@@ -59,7 +59,15 @@ namespace LibReplanetizer.LevelObjects
             off6C = ReadUint(levelBlock, offset + 0x6C);
 
             model = tieModels.Find(tieModel => tieModel.id == modelID);
-            colorBytes = ReadBlock(fs, colorOffset, (model.vertexBuffer.Length / 8) * 4);
+
+            if (model == null)
+            {
+                colorBytes = new byte[0];
+            }
+            else
+            {
+                colorBytes = ReadBlock(fs, colorOffset, (model.vertexBuffer.Length / 8) * 4);
+            }
 
             rotation = modelMatrix.ExtractRotation();
             position = modelMatrix.ExtractTranslation();

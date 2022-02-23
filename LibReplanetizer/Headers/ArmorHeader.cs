@@ -49,7 +49,7 @@ namespace LibReplanetizer.Headers
          */
         public static List<string> FindArmorFiles(GameType game, string enginePath)
         {
-            string superFolder = Path.GetDirectoryName(Path.GetDirectoryName(enginePath));
+            string? superFolder = Path.GetDirectoryName(Path.GetDirectoryName(enginePath));
             string armorFolder = Path.Join(superFolder, "global", "armor");
             List<string> files = new List<string>();
 

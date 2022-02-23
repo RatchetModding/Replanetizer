@@ -18,14 +18,14 @@ namespace LibReplanetizer
     {
         public const int TEXTUREELEMSIZE = 0x24;
 
-        public Image renderedImage;
-        public Bitmap img;
+        public Image? renderedImage;
+        public Bitmap? img;
 
         public short width;
         public short height;
         public short mipMapCount;
         public int vramPointer;
-        public byte[] data;
+        public byte[] data = new byte[0];
 
         public short off06;
         public int off08;
@@ -98,11 +98,11 @@ namespace LibReplanetizer
             return outBytes;
         }
 
-        public Bitmap GetTextureImage()
+        public Bitmap? GetTextureImage()
         {
             if (img != null) return img;
 
-            byte[] imgData = DecompressDxt5(data, width, height);
+            byte[]? imgData = DecompressDxt5(data, width, height);
             if (imgData != null)
             {
                 img = new Bitmap(width, height, PixelFormat.Format32bppArgb);
@@ -115,7 +115,7 @@ namespace LibReplanetizer
         }
 
 
-        public static byte[] DecompressDxt5(byte[] imageData, int width, int height)
+        public static byte[]? DecompressDxt5(byte[] imageData, int width, int height)
         {
             if (imageData != null)
             {

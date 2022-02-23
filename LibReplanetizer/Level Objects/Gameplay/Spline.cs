@@ -14,8 +14,8 @@ namespace LibReplanetizer.LevelObjects
     public class Spline : LevelObject, ITransformable, IRenderable
     {
         public int name;
-        public float[] vertexBuffer;
-        public float[] wVals;
+        public float[] vertexBuffer = new float[0];
+        public float[] wVals = new float[0];
 
         [Category("Attributes"), DisplayName("offset")]
         public long offset { get; set; }
@@ -166,7 +166,7 @@ namespace LibReplanetizer.LevelObjects
 
                 //Get local position relative to base
                 Vector3 distance = vertex - basePosition;
-                
+
                 //Rotate local position around Z axis
                 Vector3 rotated1 = new Vector3(
                     distance.X * fCos(z) - distance.Y * fSin(z),

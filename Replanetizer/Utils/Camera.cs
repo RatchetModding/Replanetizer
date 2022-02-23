@@ -27,8 +27,8 @@ namespace Replanetizer.Utils
         /// The frustum is defined by 6 planes which are each defined by a point and a normal.
         /// The order of the planes is Near, Far, Right, Left, Up, Down.
         /// </summary>
-        public Vector3[] frustumPlanePoints;
-        public Vector3[] frustumPlaneNormals;
+        public Vector3[] frustumPlanePoints = new Vector3[6];
+        public Vector3[] frustumPlaneNormals = new Vector3[6];
 
         private Matrix4 projectionMatrix;
 

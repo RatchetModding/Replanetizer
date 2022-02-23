@@ -19,16 +19,30 @@ namespace LibReplanetizer.LevelObjects
 
 
         [Category("Attributes"), TypeConverter(typeof(ExpandableObjectConverter)), DisplayName("Model")]
-        public Model model { get; set; }
+        public Model? model { get; set; }
 
         public ushort[] GetIndices()
         {
-            return model.GetIndices();
+            if (model != null)
+            {
+                return model.GetIndices();
+            }
+            else
+            {
+                return new ushort[0];
+            }
         }
 
         public float[] GetVertices()
         {
-            return model.GetVertices();
+            if (model != null)
+            {
+                return model.GetVertices();
+            }
+            else
+            {
+                return new float[0];
+            }
         }
 
         /// <summary>
@@ -59,12 +73,15 @@ namespace LibReplanetizer.LevelObjects
             position = mat.ExtractTranslation();
             rotation = mat.ExtractRotation();
             scale = mat.ExtractScale();
-            scale = scale * (1.0f / model.size);
+            if (model != null)
+                scale = scale * (1.0f / model.size);
             modelMatrix = mat;
         }
 
         public byte[] GetAmbientRgbas()
         {
+            if (model == null) return new byte[0];
+
             if (this is Tie)
             {
                 Tie tie = (Tie) this;
@@ -78,7 +95,7 @@ namespace LibReplanetizer.LevelObjects
 
         public bool IsDynamic()
         {
-            return model.IsDynamic();
+            return (model == null) ? false : model.IsDynamic();
         }
 
     }

@@ -37,9 +37,11 @@ namespace LibReplanetizer.Headers
          */
         public static List<string> FindMissionFiles(GameType game, string enginePath)
         {
-            string dir = Path.GetDirectoryName(enginePath);
+            string? dir = Path.GetDirectoryName(enginePath);
 
             List<string> files = new List<string>();
+
+            if (dir == null) return files;
 
             switch (game.num)
             {

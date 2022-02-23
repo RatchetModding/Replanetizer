@@ -15,7 +15,7 @@ namespace LibReplanetizer.Headers
         const int RAC123_ENGINE_SIZE = 0x84;
         const int DL_ENGINE_SIZE = 0x98;
 
-        public GameType game;
+        public GameType game = new GameType(1);
 
         public int mobyModelPointer;
         public int renderDefPointer;            // TODO

@@ -287,7 +287,7 @@ namespace LibReplanetizer
             {
                 LOGGER.Debug("Looking for armor data in {0}", armor);
                 List<Texture> tex;
-                MobyModel model;
+                MobyModel? model;
                 using (ArmorParser parser = new ArmorParser(game, armor))
                 {
                     tex = parser.GetTextures();

@@ -21,9 +21,9 @@ namespace Replanetizer
     public class Window : GameWindow
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
-        public string openGLString;
+        public string openGLString = "Unknown OpenGL Version";
 
-        private ImGuiController controller;
+        private ImGuiController? controller;
         private List<Frame> openFrames;
 
         public string[] args;
@@ -68,8 +68,11 @@ namespace Replanetizer
             // Update the opengl viewport
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
 
-            // Tell ImGui of the new size
-            controller.WindowResized(ClientSize.X, ClientSize.Y);
+            if (controller != null)
+            {
+                // Tell ImGui of the new size
+                controller.WindowResized(ClientSize.X, ClientSize.Y);
+            }
         }
 
         public static bool FrameMustClose(Frame frame)
@@ -84,14 +87,19 @@ namespace Replanetizer
             openFrames.RemoveAll(FrameMustClose);
 
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
-            controller.Update(this, (float) e.Time);
+
+            if (controller != null)
+                controller.Update(this, (float) e.Time);
 
             RenderUI((float) e.Time);
 
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             GL.ClearColor(new Color4(0, 32, 48, 255));
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-            controller.Render();
+
+            if (controller != null)
+                controller.Render();
+
             Util.CheckGlError("End of frame");
             SwapBuffers();
         }
@@ -100,14 +108,16 @@ namespace Replanetizer
         {
             base.OnTextInput(e);
 
-            controller.PressChar((char) e.Unicode);
+            if (controller != null)
+                controller.PressChar((char) e.Unicode);
         }
 
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
             base.OnMouseWheel(e);
 
-            controller.MouseScroll(e.Offset);
+            if (controller != null)
+                controller.MouseScroll(e.Offset);
         }
 
         private static bool FrameIsLevel(Frame frame)

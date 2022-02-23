@@ -27,10 +27,10 @@ namespace LibReplanetizer.Models
         // Every vertex can be assigned to at most 4 bones
         // weights contains 4 uint8 each being of weight (value / 255.0)
         // ids contains 4 uint8 each defining which bones we refer to
-        public uint[] weights;
-        public uint[] ids;
+        public uint[] weights = new uint[0];
+        public uint[] ids = new uint[0];
 
-        public byte[] rgbas;
+        public byte[] rgbas = new byte[0];
 
 
         public List<TextureConfig> textureConfig { get; set; } = new List<TextureConfig>();

@@ -13,7 +13,7 @@ namespace LibReplanetizer.Headers
 {
     public class GadgetHeader
     {
-        public List<int> modelPointers;
+        public List<int> modelPointers = new List<int>();
         public int texturePointer;
         public int textureCount;
 
@@ -47,13 +47,13 @@ namespace LibReplanetizer.Headers
         /*
          * Assumes default folder structure, i.e.
          * global
-         * 
+         *
          * levelK
          *      engine.ps3
          */
         public static string FindGadgetFile(GameType game, string enginePath)
         {
-            string superFolder = Path.GetDirectoryName(Path.GetDirectoryName(enginePath));
+            string? superFolder = Path.GetDirectoryName(Path.GetDirectoryName(enginePath));
 
             switch (game.num)
             {

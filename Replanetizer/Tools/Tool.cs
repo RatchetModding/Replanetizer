@@ -19,7 +19,14 @@ namespace Replanetizer.Tools
         protected Toolbox toolbox { get; set; }
 
         protected int vbo;
-        protected float[] vb;
+        protected float[] vb = new[]{
+                0.0f,    0.0f,    0.0f,
+                0.0f,    0.0f,    0.0f,
+                0.0f,    0.0f,    0.0f,
+                0.0f,    0.0f,    0.0f,
+                0.0f,    0.0f,    0.0f,
+                0.0f,    0.0f,    0.0f,
+            };
         private const float SCREEN_SPACE_SCALE = 0.06f;
 
         public Tool(Toolbox toolbox)

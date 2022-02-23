@@ -26,10 +26,12 @@ namespace LibReplanetizer.Models
         public short off0A;
         public int off0C;
 
-        public List<List<TextureConfig>> textureConfigs;
+        public List<List<TextureConfig>> textureConfigs = new List<List<TextureConfig>>();
 
         public SkyboxModel(FileStream fs, GameType game, int offset)
         {
+            this.game = game;
+
             if (offset == 0) return;
 
             int headSize = (game.num == 4) ? 0x20 : 0x1C;
@@ -69,8 +71,6 @@ namespace LibReplanetizer.Models
             vertexBuffer = GetVerticesSkybox(fs, vertOffset, vertexCount);
 
             indexBuffer = GetIndices(fs, faceOffset, faceCount);
-
-            this.game = game;
 
             someColor = Color.FromArgb(alpha, red, green, blue);
         }

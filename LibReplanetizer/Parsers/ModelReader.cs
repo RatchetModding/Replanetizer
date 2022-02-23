@@ -23,7 +23,7 @@ namespace LibReplanetizer
             var conf = new List<TextureConfig>();
             var indBuff = new List<ushort>();
 
-            string line;
+            string? line;
 
             using (StreamReader file = new StreamReader(fileName))
             {

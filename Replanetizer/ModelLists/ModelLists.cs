@@ -33,13 +33,13 @@ namespace Replanetizer.ModelLists
 
             try
             {
-                string applicationFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                string? applicationFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 string listFolder = Path.Join(applicationFolder, "ModelLists");
                 var fullPath = Path.Join(listFolder, fileName);
 
                 using (StreamReader stream = new StreamReader(fullPath))
                 {
-                    string line;
+                    string? line;
                     while ((line = stream.ReadLine()) != null)
                     {
                         string[] stringPart = line.Split('=');

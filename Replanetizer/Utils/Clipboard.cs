@@ -38,7 +38,7 @@ namespace Replanetizer.Utils
             foreach (LevelObject o in originalObjects)
             {
                 // Add different types here once they are supported
-                if (o is Shrub)
+                if (o is Moby || o is Shrub)
                     content.Add(o.Clone());
             }
         }
@@ -57,16 +57,14 @@ namespace Replanetizer.Utils
             {
                 LevelObject o2 = o.Clone();
 
-                if (o2 is Moby)
+                if (o2 is Moby mob)
                 {
-                    Moby mob = (Moby) o2;
                     level.mobs.Add(mob);
                     levelFrame.mobiesBuffers.Add(new RenderableBuffer(mob, RenderedObjectType.Moby, level.mobs.Count - 1, level, levelFrame.textureIds));
                     levelFrame.selectedObjects.Add(mob);
                 }
-                else if (o2 is Shrub)
+                else if (o2 is Shrub shrub)
                 {
-                    Shrub shrub = (Shrub) o2;
                     level.shrubs.Add(shrub);
                     levelFrame.shrubsBuffers.Add(new RenderableBuffer(shrub, RenderedObjectType.Shrub, level.shrubs.Count - 1, level, levelFrame.textureIds));
                     levelFrame.selectedObjects.Add(shrub);

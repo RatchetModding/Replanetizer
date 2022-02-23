@@ -180,9 +180,9 @@ namespace Replanetizer.Frames
                 if (ImGui.InputInt(propertyName, ref v))
                 {
                     propertyInfo.SetValue(selectedObject, v);
-                    if (selectedObject is ModelObject && levelFrame != null)
+                    if (selectedObject is ModelObject modelObject && levelFrame != null)
                     {
-                        ((ModelObject) selectedObject).TryChangeModel(levelFrame.level);
+                        modelObject.TryChangeModel(levelFrame.level);
                     }
                     UpdateLevelFrame();
                 }

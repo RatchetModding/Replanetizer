@@ -23,9 +23,8 @@ namespace LibReplanetizer.Level_Objects
 
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
-            if (destinationType == typeof(string) && value is Quaternion)
+            if (destinationType == typeof(string) && value is Quaternion q)
             {
-                Quaternion q = (Quaternion) value;
                 Vector3 v = new Vector3(
                     x: (float) Math.Atan2(2.0 * (q.W * q.X + q.Y * q.Z), 1.0 - 2.0 * (q.X * q.X + q.Y * q.Y)),
                     y: (float) Math.Asin(2.0 * (q.W * q.Y - q.Z * q.X)),

@@ -230,9 +230,8 @@ namespace Replanetizer.Frames
                     }
                     if (ImGui.MenuItem("Model viewer"))
                     {
-                        if (selectedObjects.newestObject != null && selectedObjects.newestObject is ModelObject)
+                        if (selectedObjects.newestObject != null && selectedObjects.newestObject is ModelObject obj)
                         {
-                            ModelObject obj = (ModelObject) selectedObjects.newestObject;
                             subFrames.Add(new ModelFrame(this.wnd, this, this.shaderIDTable, obj.model));
                         }
                         else

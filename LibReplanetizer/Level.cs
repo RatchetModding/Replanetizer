@@ -62,7 +62,7 @@ namespace LibReplanetizer
         public List<Mission> missions;
 
         public LevelVariables levelVariables;
-        public OcclusionData occlusionData;
+        public OcclusionData? occlusionData;
 
         public List<LanguageData> english;
         public List<LanguageData> ukenglish;

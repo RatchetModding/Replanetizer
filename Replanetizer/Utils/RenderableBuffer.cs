@@ -102,7 +102,9 @@ namespace Replanetizer.Utils
             switch (type)
             {
                 case RenderedObjectType.Terrain:
-                    vboLength += modelObject.GetAmbientRgbas().Length * sizeof(Byte) + ((TerrainModel) modelObject.model).lights.Count * sizeof(int);
+                    TerrainModel? terrainModel = (TerrainModel?) modelObject.model;
+                    if (terrainModel == null) break;
+                    vboLength += modelObject.GetAmbientRgbas().Length * sizeof(Byte) + terrainModel.lights.Count * sizeof(int);
                     break;
                 case RenderedObjectType.Tie:
                     vboLength += modelObject.GetAmbientRgbas().Length * sizeof(Byte);
@@ -140,7 +142,8 @@ namespace Replanetizer.Utils
                     case RenderedObjectType.Terrain:
                         {
                             byte[] rgbas = modelObject.GetAmbientRgbas();
-                            TerrainModel terrainModel = (TerrainModel) modelObject.model;
+                            TerrainModel? terrainModel = (TerrainModel?) modelObject.model;
+                            if (terrainModel == null) break;
                             int[] lights = terrainModel.lights.ToArray();
                             float[] fullData = new float[vboData.Length + rgbas.Length / 4 + lights.Length];
                             for (int i = 0; i < vboData.Length / 8; i++)
@@ -193,7 +196,6 @@ namespace Replanetizer.Utils
             switch (type)
             {
                 case RenderedObjectType.Terrain:
-                    TerrainModel terrain = (TerrainModel) modelObject.model;
                     light = ShaderIDTable.ALLOCATED_LIGHTS;
                     renderDistance = float.MaxValue;
                     break;
@@ -273,7 +275,8 @@ namespace Replanetizer.Utils
                             size = frag.cullingSize;
                             break;
                         case RenderedObjectType.Shrub:
-                            ShrubModel shrub = (ShrubModel) modelObject.model;
+                            ShrubModel? shrub = (ShrubModel?) modelObject.model;
+                            if (shrub == null) break;
                             center = new Vector3(shrub.cullingX, shrub.cullingY, shrub.cullingZ);
                             center = modelObject.rotation * center;
                             center += modelObject.position;
@@ -281,7 +284,8 @@ namespace Replanetizer.Utils
                             size = shrub.cullingRadius * shrubScale;
                             break;
                         case RenderedObjectType.Tie:
-                            TieModel tie = (TieModel) modelObject.model;
+                            TieModel? tie = (TieModel?) modelObject.model;
+                            if (tie == null) break;
                             center = new Vector3(tie.cullingX, tie.cullingY, tie.cullingZ);
                             center = modelObject.rotation * center;
                             center += modelObject.position;
@@ -315,6 +319,7 @@ namespace Replanetizer.Utils
             if (SHADER_ID_TABLE == null) return;
             if (culled) return;
             if (!BindIbo() || !BindVbo()) return;
+            if (modelObject.model == null) return;
 
             SetupVertexAttribPointers();
 

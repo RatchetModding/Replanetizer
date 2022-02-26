@@ -159,8 +159,11 @@ namespace LibReplanetizer.LevelObjects
         [Category("Unknowns"), DisplayName("aUnknown 14")]
         public int unk14 { get; set; }
 
+        // This should probably get removed, not enough information are available to construct a moby like that
         public Moby()
         {
+            this.game = new GameType(1);
+            this.pVars = new byte[0];
             this.mobyID = MAX_ID++;
         }
 
@@ -172,6 +175,7 @@ namespace LibReplanetizer.LevelObjects
             this.rotation = rotation;
             this.scale = scale;
             this.mobyID = MAX_ID++;
+            this.pVars = new byte[0];
 
             UpdateTransformMatrix();
         }
@@ -197,6 +201,7 @@ namespace LibReplanetizer.LevelObjects
             this.z2 = referenceMoby.z2;
             this.groupIndex = referenceMoby.groupIndex;
             this.mobyID = MAX_ID++;
+            this.pVars = new byte[0];
 
             UpdateTransformMatrix();
         }
@@ -204,6 +209,7 @@ namespace LibReplanetizer.LevelObjects
         public Moby(GameType game, byte[] mobyBlock, int num, List<Model> mobyModels, bool fromMemory = false)
         {
             this.game = game;
+            this.pVars = new byte[0];
 
             switch (game.num)
             {
@@ -575,7 +581,8 @@ namespace LibReplanetizer.LevelObjects
             Matrix4 rotZ = Matrix4.CreateFromAxisAngle(Vector3.UnitZ, euler.Z);
             Matrix4 rotY = Matrix4.CreateFromAxisAngle(Vector3.UnitY, euler.Y);
             Matrix4 rotX = Matrix4.CreateFromAxisAngle(Vector3.UnitX, euler.X);
-            Matrix4 scaleMatrix = Matrix4.CreateScale(scale * model.size);
+            Vector3 s = (model == null) ? scale : scale * model.size;
+            Matrix4 scaleMatrix = Matrix4.CreateScale(s);
             Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
             modelMatrix = scaleMatrix * rotX * rotY * rotZ * translationMatrix;
         }
@@ -593,12 +600,14 @@ namespace LibReplanetizer.LevelObjects
 
             ushort modId = ReadUshort(mobyMemory, offset + 0xA6);
             float mobScale = ReadFloat(mobyMemory, offset + 0x2C);
-            Model mod = models.Find(x => x.id == modId);
+            Model? mod = models.Find(x => x.id == modId);
 
             if (mod == null)
             {
                 mod = models.Find(x => x.id == 500);
             }
+
+            if (mod == null) return;
 
             model = mod;
             position = new Vector3(ReadFloat(mobyMemory, offset + 0x10), ReadFloat(mobyMemory, offset + 0x14), ReadFloat(mobyMemory, offset + 0x18));

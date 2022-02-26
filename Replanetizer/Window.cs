@@ -48,10 +48,7 @@ namespace Replanetizer
 
             if (args.Length > 0)
             {
-                LevelFrame lf = new LevelFrame(this);
-                Level l = new Level(args[0]);
-                lf.LoadLevel(l);
-
+                LevelFrame lf = new LevelFrame(this, args[0]);
                 AddFrame(lf);
             }
         }
@@ -137,9 +134,7 @@ namespace Replanetizer
                         if (res.Length > 0)
                         {
                             openFrames.RemoveAll(FrameIsLevel);
-                            LevelFrame lf = new LevelFrame(this);
-                            Level l = new Level(res);
-                            lf.LoadLevel(l);
+                            LevelFrame lf = new LevelFrame(this, res);
                             AddFrame(lf);
                         }
                     }

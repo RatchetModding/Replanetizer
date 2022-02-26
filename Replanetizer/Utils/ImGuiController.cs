@@ -32,8 +32,8 @@ namespace Replanetizer.Utils
         private int indexBuffer;
         private int indexBufferSize;
 
-        private GLTexture fontGlTexture;
-        private Shader shader;
+        private GLTexture? fontGlTexture;
+        private Shader? shader;
 
         private int windowWidth;
         private int windowHeight;
@@ -297,6 +297,8 @@ void main()
 
         private void RenderImDrawData(ImDrawDataPtr drawData)
         {
+            if (shader == null) return;
+
             if (drawData.CmdListsCount == 0)
             {
                 return;
@@ -411,8 +413,11 @@ void main()
         /// </summary>
         public void Dispose()
         {
-            fontGlTexture.Dispose();
-            shader.Dispose();
+            if (fontGlTexture != null)
+                fontGlTexture.Dispose();
+
+            if (shader != null)
+                shader.Dispose();
         }
     }
 }

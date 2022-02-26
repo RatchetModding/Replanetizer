@@ -37,9 +37,9 @@ namespace Replanetizer.MemoryHook
         [DllImport("kernel32.dll")]
         private static extern bool WriteProcessMemory(IntPtr hProcess, Int64 lpBaseAddress, byte[] lpBuffer, int nSize, ref int lpNumberOfBytesWritten);
 
-        private readonly Process PROCESS;
+        private readonly Process? PROCESS;
         private readonly IntPtr PROCESS_HANDLE;
-        private readonly MemoryAddresses ADDRESSES;
+        private readonly MemoryAddresses? ADDRESSES;
 
         public bool hookWorking = false;
 
@@ -72,6 +72,7 @@ namespace Replanetizer.MemoryHook
         public void UpdateCamera(Camera camera)
         {
             if (!hookWorking) return;
+            if (ADDRESSES == null) return;
             int bytesRead = 0;
             byte[] camBfr = new byte[0x20];
             ReadProcessMemory(PROCESS_HANDLE, ADDRESSES.camera, camBfr, camBfr.Length, ref bytesRead);
@@ -82,6 +83,7 @@ namespace Replanetizer.MemoryHook
         public void UpdateMobys(List<Moby> levelMobs, List<Model> models)
         {
             if (!hookWorking) return;
+            if (ADDRESSES == null) return;
             if (!IsX64()) return;
 
             int bytesRead = 0;
@@ -108,7 +110,7 @@ namespace Replanetizer.MemoryHook
 
         private bool IsX64()
         {
-            // The memory hook functions depend on reading 64 bit addresses, 
+            // The memory hook functions depend on reading 64 bit addresses,
             // thus we need to check that the pointer size is 8 (ie 64 bits)
             return IntPtr.Size == 8;
         }
@@ -118,7 +120,7 @@ namespace Replanetizer.MemoryHook
             /*
              * This code was already commented out before I moved it here.
              * TODO: Uncomment and test this at some point. Contributions welcomed.
-             * 
+             *
             //write at 0x346BA1180 + 0xC0 + spline.offset + currentSplineVertex * 0x10;
             // List of splines 0x300A51BE0
 

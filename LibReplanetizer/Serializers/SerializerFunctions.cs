@@ -74,13 +74,15 @@ namespace LibReplanetizer.Serializers
 
             for (int i = 0; i < tFrags.Count; i++)
             {
-                TerrainModel mod = (TerrainModel) (tFrags[i].model);
+                TerrainModel? mod = (TerrainModel?) (tFrags[i].model);
+
+                if (mod == null) continue;
 
                 int offset = i * 0x30;
                 tFrags[i].ToByteArray().CopyTo(tfragHeads, offset);
 
                 WriteInt(tfragHeads, offset + 0x10, fileOffset + headerSize + tfragHeads.Length + textureBytes.Count);
-                WriteInt(tfragHeads, offset + 0x14, tFrags[i].model.textureConfig.Count);
+                WriteInt(tfragHeads, offset + 0x14, mod.textureConfig.Count);
 
                 byte[] modelVertBytes = mod.SerializeVerts();
                 if (((vertBytes[chunk].Count + modelVertBytes.Length) / 0x1c) > 0xffff)
@@ -89,11 +91,11 @@ namespace LibReplanetizer.Serializers
                 }
 
                 WriteUshort(tfragHeads, offset + 0x18, (ushort) (vertBytes[chunk].Count / 0x1c));
-                WriteUshort(tfragHeads, offset + 0x1a, (ushort) (tFrags[i].model.vertexBuffer.Length / 8));
+                WriteUshort(tfragHeads, offset + 0x1a, (ushort) (mod.vertexBuffer.Length / 8));
 
                 WriteUshort(tfragHeads, offset + 0x22, chunk);
 
-                foreach (var texConf in tFrags[i].model.textureConfig)
+                foreach (var texConf in mod.textureConfig)
                 {
                     byte[] texBytes = new byte[0x10];
                     WriteInt(texBytes, 0x00, texConf.id);
@@ -103,10 +105,10 @@ namespace LibReplanetizer.Serializers
                     textureBytes.AddRange(texBytes);
                 }
 
-                indexBytes[chunk].AddRange(tFrags[i].model.GetFaceBytes((ushort) (vertBytes[chunk].Count / 0x1C)));
+                indexBytes[chunk].AddRange(mod.GetFaceBytes((ushort) (vertBytes[chunk].Count / 0x1C)));
                 vertBytes[chunk].AddRange(modelVertBytes);
-                rgbaBytes[chunk].AddRange(tFrags[i].model.rgbas);
-                uvBytes[chunk].AddRange(tFrags[i].model.SerializeUVs());
+                rgbaBytes[chunk].AddRange(mod.rgbas);
+                uvBytes[chunk].AddRange(mod.SerializeUVs());
 
             }
 

@@ -72,7 +72,7 @@ namespace LibReplanetizer.Serializers
                 type50Pointer = SeekWrite(fs, GetKeyValueBytes(level.type50s)),
                 type5CPointer = SeekWrite(fs, GetKeyValueBytes(level.type5Cs)),
                 mobyGroupsPointer = SeekWrite(fs, level.unk6),
-                type4CPointer = SeekWrite(fs, level.unk7),
+                type4CPointer = SeekWrite(fs, GetType4CBytes(level.type4Cs)),
                 tieIdPointer = SeekWrite(fs, GetIdBytes(level.tieIds)),
                 tiePointer = SeekWrite(fs, level.tieData),
                 shrubIdPointer = SeekWrite(fs, GetIdBytes(level.shrubIds)),
@@ -332,6 +332,24 @@ namespace LibReplanetizer.Serializers
             return bytes;
         }
 
+        public byte[] GetType4CBytes(List<Type4C> type4Cs)
+        {
+            if (type4Cs == null) return new byte[0x10];
+
+            byte[] bytes = new byte[0x10 + 0x10 + type4Cs.Count * Type4C.ELEMENTSIZE];
+
+            //Header
+            WriteInt(bytes, 0, 0x10);
+            WriteInt(bytes, 0x04, type4Cs.Count);
+
+            for (int i = 0; i < type4Cs.Count; i++)
+            {
+                type4Cs[i].ToByteArray().CopyTo(bytes, 0x10 + 0x10 + i * Type4C.ELEMENTSIZE);
+            }
+
+            return bytes;
+        }
+
         public byte[] GetType7CBytes(List<Type7C> type7Cs)
         {
             if (type7Cs == null) return new byte[0x10];
@@ -464,7 +482,7 @@ namespace LibReplanetizer.Serializers
             return bytes;
         }
 
-        public byte[] GetOcclusionBytes(OcclusionData occlusionData)
+        public byte[] GetOcclusionBytes(OcclusionData? occlusionData)
         {
             if (occlusionData == null) return new byte[0x10];
 

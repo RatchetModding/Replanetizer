@@ -43,8 +43,10 @@ namespace LibReplanetizer
             mtlfs.WriteLine($"map_Kd {id}.png");
         }
 
-        private static void WriteObjectMaterial(StreamWriter mtlfs, Model model, List<int> usedMtls)
+        private static void WriteObjectMaterial(StreamWriter? mtlfs, Model? model, List<int> usedMtls)
         {
+            if (mtlfs == null || model == null) return;
+
             for (int i = 0; i < model.textureConfig.Count; i++)
             {
                 int modelTextureID = model.textureConfig[i].id;
@@ -98,8 +100,10 @@ namespace LibReplanetizer
             return vertexCount;
         }
 
-        private static int WriteObjectData(StreamWriter objfs, Model model, int faceOffset, Matrix4 modelMatrix)
+        private static int WriteObjectData(StreamWriter objfs, Model? model, int faceOffset, Matrix4 modelMatrix)
         {
+            if (model == null) return 0;
+
             // skybox model has no normals and does the vertex buffer has a different layout
             // if we see other cases like this, it may be advisable to generalize this
             bool skyboxModel = (model is SkyboxModel);
@@ -850,8 +854,9 @@ namespace LibReplanetizer
                             if (model.textureConfig[tCnt].id != -1)
                             {
                                 spookyStream.WriteLine("material " + model.textureConfig[tCnt].id.ToString("x") + ".png");
-                                Bitmap bump = level.textures[model.textureConfig[tCnt].id].GetTextureImage();
-                                bump.Save(filePath + "/" + model.textureConfig[tCnt].id.ToString("x") + ".png");
+                                Bitmap? bump = level.textures[model.textureConfig[tCnt].id].GetTextureImage();
+                                if (bump != null)
+                                    bump.Save(filePath + "/" + model.textureConfig[tCnt].id.ToString("x") + ".png");
                             }
                             tCnt++;
                         }
@@ -941,7 +946,7 @@ namespace LibReplanetizer
 
             List<TerrainFragment> terrain = CollectTerrainFragments(level, settings);
 
-            StreamWriter mtlfs = null;
+            StreamWriter? mtlfs = null;
 
             if (settings.exportMtlFile) mtlfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl");
 
@@ -955,7 +960,7 @@ namespace LibReplanetizer
 
                 foreach (TerrainFragment t in terrain)
                 {
-                    objfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
+                    objfs.WriteLine("o Object_" + t.model?.id.ToString("X4"));
                     faceOffset += WriteObjectData(objfs, t.model, faceOffset, Matrix4.Identity);
                     if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
                 }
@@ -964,7 +969,7 @@ namespace LibReplanetizer
                 {
                     foreach (Tie t in level.ties)
                     {
-                        objfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
+                        objfs.WriteLine("o Object_" + t.model?.id.ToString("X4"));
                         faceOffset += WriteObjectData(objfs, t.model, faceOffset, t.modelMatrix);
                         if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
                     }
@@ -974,7 +979,7 @@ namespace LibReplanetizer
                 {
                     foreach (Shrub t in level.shrubs)
                     {
-                        objfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
+                        objfs.WriteLine("o Object_" + t.model?.id.ToString("X4"));
                         faceOffset += WriteObjectData(objfs, t.model, faceOffset, t.modelMatrix);
                         if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
                     }
@@ -984,14 +989,14 @@ namespace LibReplanetizer
                 {
                     foreach (Moby t in level.mobs)
                     {
-                        objfs.WriteLine("o Object_" + t.model.id.ToString("X4"));
+                        objfs.WriteLine("o Object_" + t.model?.id.ToString("X4"));
                         faceOffset += WriteObjectData(objfs, t.model, faceOffset, t.modelMatrix);
                         if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
                     }
                 }
             }
 
-            if (settings.exportMtlFile) mtlfs.Dispose();
+            if (settings.exportMtlFile) mtlfs?.Dispose();
         }
 
         private static void WriteObjCombined(string fileName, Level level, WriterLevelSettings settings)
@@ -1001,7 +1006,7 @@ namespace LibReplanetizer
 
             List<TerrainFragment> terrain = CollectTerrainFragments(level, settings);
 
-            StreamWriter mtlfs = null;
+            StreamWriter? mtlfs = null;
 
             if (settings.exportMtlFile) mtlfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl");
 
@@ -1048,7 +1053,7 @@ namespace LibReplanetizer
                 }
             }
 
-            if (settings.exportMtlFile) mtlfs.Dispose();
+            if (settings.exportMtlFile) mtlfs?.Dispose();
         }
 
         private static void WriteObjTypewise(string fileName, Level level, WriterLevelSettings settings)
@@ -1058,7 +1063,7 @@ namespace LibReplanetizer
 
             List<TerrainFragment> terrain = CollectTerrainFragments(level, settings);
 
-            StreamWriter mtlfs = null;
+            StreamWriter? mtlfs = null;
 
             if (settings.exportMtlFile) mtlfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl");
 
@@ -1115,12 +1120,14 @@ namespace LibReplanetizer
                 }
             }
 
-            if (settings.exportMtlFile) mtlfs.Dispose();
+            if (settings.exportMtlFile) mtlfs?.Dispose();
         }
 
         private static int SeparateModelObjectByMaterial(ModelObject t, List<Tuple<int, int, int>>[] faces, List<Vector3> vertices, List<Vector2> uvs, List<Vector3> normals, int faceOffset)
         {
-            Model model = t.model;
+            Model? model = t.model;
+
+            if (model == null) return 0;
 
             int vertexCount = model.vertexBuffer.Length / 8;
             var modelMatrix = t.modelMatrix;

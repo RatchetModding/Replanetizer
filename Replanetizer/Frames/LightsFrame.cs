@@ -34,6 +34,7 @@ namespace Replanetizer.Frames
             this.lights = lights;
             this.lightConfig = lightConfig;
 
+            configProperties = new Dictionary<string, Dictionary<string, PropertyInfo>>();
             lightsProperties = new List<Tuple<Light, Dictionary<string, Dictionary<string, PropertyInfo>>>>();
 
             RecomputeProperties();
@@ -45,10 +46,10 @@ namespace Replanetizer.Frames
             var objProps = o.GetType().GetProperties();
             foreach (var prop in objProps)
             {
-                string category = prop.GetCustomAttribute<CategoryAttribute>()?.Category;
+                string? category = prop.GetCustomAttribute<CategoryAttribute>()?.Category;
                 if (category == null) category = "Unknowns";
 
-                string displayName = prop.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
+                string? displayName = prop.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
                 if (displayName == null) displayName = prop.Name;
 
                 if (!properties.ContainsKey(category))
@@ -85,10 +86,12 @@ namespace Replanetizer.Frames
                 {
                     foreach (var (key, value) in categoryPair.Value)
                     {
-                        float v = (float) value.GetValue(lightConfig);
-                        if (ImGui.InputFloat(key, ref v))
+                        object? v = value.GetValue(lightConfig);
+                        if (v == null) continue;
+                        float f = (float) v;
+                        if (ImGui.InputFloat(key, ref f))
                         {
-                            value.SetValue(lightConfig, v);
+                            value.SetValue(lightConfig, f);
                             UpdateLevelFrame();
                         }
                     }
@@ -106,7 +109,9 @@ namespace Replanetizer.Frames
                         foreach (var categoryPair in t.Item2)
                         {
                             var value1 = categoryPair.Value["Color 1"];
-                            OpenTK.Mathematics.Vector4 v1 = (OpenTK.Mathematics.Vector4) value1.GetValue(t.Item1);
+                            object? o = value1.GetValue(t.Item1);
+                            if (o == null) continue;
+                            OpenTK.Mathematics.Vector4 v1 = (OpenTK.Mathematics.Vector4) o;
 
                             Vector3 color1 = new Vector3(v1.X, v1.Y, v1.Z);
 
@@ -121,7 +126,9 @@ namespace Replanetizer.Frames
                             }
 
                             var value2 = categoryPair.Value["Direction 1"];
-                            OpenTK.Mathematics.Vector4 v2 = (OpenTK.Mathematics.Vector4) value2.GetValue(t.Item1);
+                            object? o2 = value2.GetValue(t.Item1);
+                            if (o2 == null) continue;
+                            OpenTK.Mathematics.Vector4 v2 = (OpenTK.Mathematics.Vector4) o2;
 
                             Vector3 dir1 = new Vector3(v2.X, v2.Y, v2.Z);
 
@@ -136,7 +143,9 @@ namespace Replanetizer.Frames
                             }
 
                             var value3 = categoryPair.Value["Color 2"];
-                            OpenTK.Mathematics.Vector4 v3 = (OpenTK.Mathematics.Vector4) value3.GetValue(t.Item1);
+                            object? o3 = value3.GetValue(t.Item1);
+                            if (o3 == null) continue;
+                            OpenTK.Mathematics.Vector4 v3 = (OpenTK.Mathematics.Vector4) o3;
 
                             Vector3 color2 = new Vector3(v3.X, v3.Y, v3.Z);
 
@@ -151,7 +160,9 @@ namespace Replanetizer.Frames
                             }
 
                             var value4 = categoryPair.Value["Direction 2"];
-                            OpenTK.Mathematics.Vector4 v4 = (OpenTK.Mathematics.Vector4) value4.GetValue(t.Item1);
+                            object? o4 = value4.GetValue(t.Item1);
+                            if (o4 == null) continue;
+                            OpenTK.Mathematics.Vector4 v4 = (OpenTK.Mathematics.Vector4) o4;
 
                             Vector3 dir2 = new Vector3(v4.X, v4.Y, v4.Z);
 

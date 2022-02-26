@@ -26,14 +26,14 @@ namespace Replanetizer.Frames
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Models";
 
-        private FramebufferRenderer renderer;
+        private FramebufferRenderer? renderer;
         private Level level => levelFrame.level;
-        private Model selectedModel;
+        private Model? selectedModel;
         private int selectedModelIndex;
-        private List<Model> selectedModelList;
-        private List<Texture> selectedModelTexturesSet;
-        private List<List<Texture>> selectedModelArmorTexturesSet;
-        private List<Texture> selectedTextureSet;
+        private List<Model> selectedModelList = new List<Model>();
+        private List<Texture> selectedModelTexturesSet = new List<Texture>();
+        private List<List<Texture>> selectedModelArmorTexturesSet = new List<List<Texture>>();
+        private List<Texture> selectedTextureSet = new List<Texture>();
         private List<Texture> modelTextureList;
 
         private readonly KeyHeldHandler KEY_HELD_HANDLER = new()
@@ -48,7 +48,7 @@ namespace Replanetizer.Frames
             mouseButton = MouseButton.Right
         };
 
-        private ShaderIDTable shaderIDTable;
+        private ShaderIDTable shaderIDTable = new ShaderIDTable();
 
         private float xDelta;
 
@@ -74,7 +74,7 @@ namespace Replanetizer.Frames
 
         private Matrix4 trans, scale, worldView, rot = Matrix4.Identity;
 
-        private BufferContainer container;
+        private BufferContainer container = new BufferContainer();
         private Rectangle contentRegion;
         private Vector2 mousePos;
         private int width, height;
@@ -154,6 +154,7 @@ namespace Replanetizer.Frames
         {
             UpdateWindowSize();
             if (!initialized) ModelViewer_Load();
+            if (renderer == null) return;
 
             ImGui.Columns(3);
             ImGui.SetColumnWidth(0, 200);
@@ -254,6 +255,8 @@ namespace Replanetizer.Frames
 
         public void UpdateModel()
         {
+            if (selectedModel == null) return;
+
             scale = Matrix4.CreateScale(selectedModel.size);
             invalidate = true;
             propertyFrame.selectedObject = selectedModel;
@@ -265,6 +268,8 @@ namespace Replanetizer.Frames
 
         private void UpdateTextures()
         {
+            if (selectedModel == null) return;
+
             modelTextureList.Clear();
 
             for (int i = 0; i < selectedModel.textureConfig.Count; i++)
@@ -296,8 +301,8 @@ namespace Replanetizer.Frames
 
                 // This is a little weird because armorTextures is a list
                 // of a list of textures -- one list per armor set.
-                selectedModelTexturesSet = null;
-                selectedModelArmorTexturesSet = null;
+                selectedModelTexturesSet = new List<Texture>();
+                selectedModelArmorTexturesSet = new List<List<Texture>>();
                 if (ReferenceEquals(models, level.gadgetModels))
                     selectedModelTexturesSet = level.gadgetTextures;
                 else if (ReferenceEquals(models, level.armorModels))
@@ -502,10 +507,12 @@ namespace Replanetizer.Frames
 
         private void ExportSelectedModelTextures()
         {
-            var textureConfig = selectedModel?.textureConfig;
+            if (selectedModel == null) return;
+
+            List<TextureConfig>? textureConfig = selectedModel.textureConfig;
             if (textureConfig == null) return;
 
-            var folder = CrossFileDialog.OpenFolder();
+            String folder = CrossFileDialog.OpenFolder();
             if (folder.Length == 0) return;
 
             foreach (var config in selectedModel.textureConfig)

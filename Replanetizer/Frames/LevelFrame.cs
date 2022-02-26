@@ -34,7 +34,7 @@ namespace Replanetizer.Frames
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Level";
 
-        private FramebufferRenderer renderer;
+        private FramebufferRenderer? renderer;
         public Level level { get; set; }
 
         private List<TerrainFragment> terrains = new List<TerrainFragment>();
@@ -45,10 +45,10 @@ namespace Replanetizer.Frames
 
         public Matrix4 worldView;
 
-        public ShaderIDTable shaderIDTable;
+        public ShaderIDTable shaderIDTable = new ShaderIDTable();
 
         private int lightsBufferObject;
-        private float[][] lightsData;
+        private float[][]? lightsData;
 
         private Clipboard clipboard = new Clipboard();
 
@@ -78,7 +78,7 @@ namespace Replanetizer.Frames
         public readonly Keymap KEYMAP;
 
         public bool initialized, invalidate;
-        public bool[] selectedChunks;
+        public bool[] selectedChunks = new bool[0];
         public bool enableMoby = true, enableTie = true, enableShrub = true, enableSpline = false,
             enableCuboid = false, enableSpheres = false, enableCylinders = false, enableType0C = false,
             enableSkybox = true, enableTerrain = true, enableCollision = false, enableTransparency = true,
@@ -89,11 +89,12 @@ namespace Replanetizer.Frames
         private Toolbox toolbox = new();
 
         private ConditionalWeakTable<IRenderable, BufferContainer> bufferTable;
-        public Dictionary<Texture, int> textureIds;
+        public Dictionary<Texture, int> textureIds = new Dictionary<Texture, int>();
 
-        public List<RenderableBuffer> mobiesBuffers, tiesBuffers, shrubsBuffers, terrainBuffers;
+        public List<RenderableBuffer> mobiesBuffers = new List<RenderableBuffer>(), tiesBuffers = new List<RenderableBuffer>(),
+        shrubsBuffers = new List<RenderableBuffer>(), terrainBuffers = new List<RenderableBuffer>();
 
-        MemoryHook.MemoryHook hook;
+        MemoryHook.MemoryHook? hook;
 
         private List<int> collisionVbo = new List<int>();
         private List<int> collisionIbo = new List<int>();
@@ -102,8 +103,9 @@ namespace Replanetizer.Frames
 
         private List<Frame> subFrames;
 
-        public LevelFrame(Window wnd) : base(wnd)
+        public LevelFrame(Window wnd, string res) : base(wnd)
         {
+            level = new Level(res);
             subFrames = new List<Frame>();
             bufferTable = new ConditionalWeakTable<IRenderable, BufferContainer>();
             camera = new Camera();
@@ -119,6 +121,8 @@ namespace Replanetizer.Frames
 
             UpdateWindowSize();
             OnResize();
+
+            LoadLevel(level);
         }
 
         public static bool FrameMustClose(Frame frame)
@@ -470,7 +474,7 @@ namespace Replanetizer.Frames
 
         public override void Render(float deltaTime)
         {
-            if (level == null) return;
+            if (renderer == null) return;
 
             RenderMenuBar();
             RenderTextOverlay(deltaTime);
@@ -514,7 +518,7 @@ namespace Replanetizer.Frames
             GL.Enable(EnableCap.DepthTest);
             GL.LineWidth(5.0f);
 
-            string applicationFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string? applicationFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string shaderFolder = Path.Join(applicationFolder, "Shaders");
 
             shaderIDTable = new ShaderIDTable();
@@ -558,6 +562,8 @@ namespace Replanetizer.Frames
             view = camera.GetViewMatrix();
 
             initialized = true;
+
+            OnResize();
         }
 
         private void SetTextureWrapMode(TextureConfig conf, TextureWrapMode wrapMode)
@@ -690,6 +696,7 @@ namespace Replanetizer.Frames
         /// </summary>
         private void UpdateDirectionalLights(List<Light> lights)
         {
+            if (lightsData == null) return;
             GL.BindBuffer(BufferTarget.UniformBuffer, lightsBufferObject);
             int lightSize = sizeof(float) * 16;
 
@@ -757,7 +764,7 @@ namespace Replanetizer.Frames
             return buffers;
         }
 
-        public void LoadLevel(Level level)
+        private void LoadLevel(Level level)
         {
             this.level = level;
 
@@ -1030,6 +1037,8 @@ namespace Replanetizer.Frames
             if (!wnd.IsMouseButtonDown(MouseButton.Left))
                 return false;
 
+            if (renderer == null) return false;
+
             LevelObject? obj = null;
             Vector3 direction = Vector3.Zero;
 
@@ -1286,7 +1295,7 @@ namespace Replanetizer.Frames
 
             camera.ComputeFrustum();
 
-            if (level != null && level.levelVariables != null)
+            if (level.levelVariables != null)
                 GL.ClearColor(level.levelVariables.fogColor);
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -1327,7 +1336,7 @@ namespace Replanetizer.Frames
                 GL.UseProgram(shaderIDTable.shaderMain);
             }
 
-            if (level != null && level.levelVariables != null)
+            if (level.levelVariables != null)
             {
                 GL.Uniform4(shaderIDTable.uniformFogColor, level.levelVariables.fogColor);
                 GL.Uniform1(shaderIDTable.uniformFogNearDist, level.levelVariables.fogNearDistance);

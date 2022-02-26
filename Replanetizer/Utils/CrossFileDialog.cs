@@ -88,20 +88,25 @@ namespace Replanetizer.Utils
             if (File.Exists(fileName))
                 return true;
 
-            var values = Environment.GetEnvironmentVariable("PATH");
-            foreach (var path in values.Split(Path.PathSeparator))
+            String? values = Environment.GetEnvironmentVariable("PATH");
+
+            if (values != null)
             {
-                var fullPath = Path.Combine(path, fileName);
-                if (File.Exists(fullPath))
-                    return true;
+                foreach (var path in values.Split(Path.PathSeparator))
+                {
+                    var fullPath = Path.Combine(path, fileName);
+                    if (File.Exists(fullPath))
+                        return true;
+                }
             }
+
             return false;
         }
 
         private static bool PrefersKdialog()
         {
-            string desktopSession = Environment.GetEnvironmentVariable("DESKTOP_SESSION");
-            string xdgCurrentDesktop = Environment.GetEnvironmentVariable("XDG_CURRENT_DESKTOP");
+            string? desktopSession = Environment.GetEnvironmentVariable("DESKTOP_SESSION");
+            string? xdgCurrentDesktop = Environment.GetEnvironmentVariable("XDG_CURRENT_DESKTOP");
 
             bool probablyKde = (desktopSession != null && desktopSession.ToLower().Equals("kde")) ||
                                (xdgCurrentDesktop != null && xdgCurrentDesktop.ToLower().Equals("kde"));
@@ -139,7 +144,7 @@ namespace Replanetizer.Utils
 
         private static class KDialog
         {
-            private static string RunKDialog(List<string> args = null, Dictionary<string, string> kwargs = null)
+            private static string RunKDialog(List<string>? args = null, Dictionary<string, string>? kwargs = null)
             {
                 List<string> zArgs = new List<string>();
                 if (args != null)
@@ -185,7 +190,7 @@ namespace Replanetizer.Utils
 
         private static class Zenity
         {
-            private static string RunZenity(List<string> args = null, Dictionary<string, string> kwargs = null)
+            private static string RunZenity(List<string>? args = null, Dictionary<string, string>? kwargs = null)
             {
                 List<string> zArgs = new List<string>();
                 if (args != null)

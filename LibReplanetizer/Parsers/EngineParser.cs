@@ -133,7 +133,7 @@ namespace LibReplanetizer.Parsers
             }
             else
             {
-                return null;
+                return new byte[0];
             }
         }
 
@@ -167,25 +167,25 @@ namespace LibReplanetizer.Parsers
 
         public byte[] GetUnk3Bytes()
         {
-            if (engineHead.unk3Pointer == 0) { return null; }
+            if (engineHead.unk3Pointer == 0) { return new byte[0]; }
             return ReadBlock(fileStream, engineHead.unk3Pointer, engineHead.texturePointer - engineHead.unk3Pointer);
         }
 
         public byte[] GetUnk4Bytes()
         {
-            if (engineHead.unk4Pointer == 0) { return null; }
+            if (engineHead.unk4Pointer == 0) { return new byte[0]; }
             return ReadBlock(fileStream, engineHead.unk4Pointer, engineHead.textureConfigMenuPointer - engineHead.unk4Pointer);
         }
 
         public byte[] GetUnk5Bytes()
         {
-            if (engineHead.unk5Pointer == 0) { return null; }
+            if (engineHead.unk5Pointer == 0) { return new byte[0]; }
             return ReadBlock(fileStream, engineHead.unk5Pointer, engineHead.tieModelPointer - engineHead.unk5Pointer);
         }
 
         public byte[] GetUnk8Bytes()
         {
-            if (engineHead.unk8Pointer == 0) { return null; }
+            if (engineHead.unk8Pointer == 0) { return new byte[0]; }
             byte[] head = ReadBlock(fileStream, engineHead.unk8Pointer, 16);
             int amount = ReadInt(head, 4);
             return ReadBlock(fileStream, engineHead.unk8Pointer, 0x10 + amount);
@@ -193,7 +193,7 @@ namespace LibReplanetizer.Parsers
 
         public byte[] GetUnk9Bytes()
         {
-            if (engineHead.unk9Pointer == 0) { return null; }
+            if (engineHead.unk9Pointer == 0) { return new byte[0]; }
             return ReadBlock(fileStream, engineHead.unk9Pointer, engineHead.terrainPointer - engineHead.unk9Pointer);
         }
 

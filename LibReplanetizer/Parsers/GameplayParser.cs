@@ -30,7 +30,7 @@ namespace LibReplanetizer.Parsers
 
         public List<Spline> GetSplines()
         {
-            if (gameplayHeader.splinePointer == 0) { return null; }
+            if (gameplayHeader.splinePointer == 0) { return new List<Spline>(); }
 
             var splines = new List<Spline>();
             int splineCount = ReadInt(ReadBlock(fileStream, gameplayHeader.splinePointer, 4), 0);
@@ -285,7 +285,7 @@ namespace LibReplanetizer.Parsers
 
         public byte[] GetUnk6()
         {
-            if (gameplayHeader.mobyGroupsPointer == 0) { return null; }
+            if (gameplayHeader.mobyGroupsPointer == 0) { return new byte[0]; }
             int count1 = ReadInt(ReadBlock(fileStream, gameplayHeader.mobyGroupsPointer + 0x00, 4), 0);
             int count2 = ReadInt(ReadBlock(fileStream, gameplayHeader.mobyGroupsPointer + 0x04, 4), 0);
             return ReadBlock(fileStream, gameplayHeader.mobyGroupsPointer, count1 * 4 + count2 + 0x10);
@@ -293,7 +293,7 @@ namespace LibReplanetizer.Parsers
 
         public byte[] GetUnk7()
         {
-            if (gameplayHeader.type4CPointer == 0) { return null; }
+            if (gameplayHeader.type4CPointer == 0) { return new byte[0]; }
             int count1 = ReadInt(ReadBlock(fileStream, gameplayHeader.type4CPointer, 4), 0);
             int count2 = ReadInt(ReadBlock(fileStream, gameplayHeader.type4CPointer + 4, 4), 0);
             return ReadBlock(fileStream, gameplayHeader.type4CPointer, count1 + count2 * 8 + 0x10);
@@ -301,7 +301,7 @@ namespace LibReplanetizer.Parsers
 
         public byte[] GetUnk12()
         {
-            if (gameplayHeader.unkPointer12 == 0) { return null; }
+            if (gameplayHeader.unkPointer12 == 0) { return new byte[0]; }
             int count1 = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer12, 4), 0);
             int count2 = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer12 + 4, 4), 0);
             return ReadBlock(fileStream, gameplayHeader.unkPointer12, count1 + count2 * 8 + 0x10);
@@ -358,41 +358,41 @@ namespace LibReplanetizer.Parsers
             }
             else
             {
-                return null;
+                return new byte[0];
             }
 
         }
 
         public byte[] GetUnk14()
         {
-            if (gameplayHeader.unkPointer14 == 0) { return null; }
+            if (gameplayHeader.unkPointer14 == 0) { return new byte[0]; }
             int sectionLength = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer14, 4), 0);
             return ReadBlock(fileStream, gameplayHeader.unkPointer14, sectionLength);
         }
 
         public byte[] GetUnk16()
         {
-            if (gameplayHeader.unkPointer16 == 0) { return null; }
+            if (gameplayHeader.unkPointer16 == 0) { return new byte[0]; }
             return ReadBlock(fileStream, gameplayHeader.unkPointer16, gameplayHeader.grindPathsPointer - gameplayHeader.unkPointer16);
         }
 
         public byte[] GetUnk17()
         {
-            if (gameplayHeader.unkPointer17 == 0) { return null; }
+            if (gameplayHeader.unkPointer17 == 0) { return new byte[0]; }
             int sectionLength = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer17, 4), 0);
             return ReadBlock(fileStream, gameplayHeader.unkPointer17, sectionLength);
         }
 
         public byte[] GetUnk18()
         {
-            if (gameplayHeader.unkPointer18 == 0) { return null; }
+            if (gameplayHeader.unkPointer18 == 0) { return new byte[0]; }
             int amount = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer18, 4), 0);
             return ReadBlock(fileStream, gameplayHeader.unkPointer18, 0x10 + amount * 0x20);
         }
 
         public List<int> GetMobyIds()
         {
-            if (gameplayHeader.mobyIdPointer == 0) { return null; }
+            if (gameplayHeader.mobyIdPointer == 0) { return new List<int>(); }
 
             int count = BitConverter.ToInt32(ReadBlock(fileStream, gameplayHeader.mobyIdPointer, 4), 0);
 
@@ -409,7 +409,7 @@ namespace LibReplanetizer.Parsers
 
         public List<int> GetTieIds()
         {
-            if (gameplayHeader.tieIdPointer == 0) { return null; }
+            if (gameplayHeader.tieIdPointer == 0) { return new List<int>(); }
 
             int count = BitConverter.ToInt32(ReadBlock(fileStream, gameplayHeader.tieIdPointer, 4), 0);
 
@@ -426,7 +426,7 @@ namespace LibReplanetizer.Parsers
 
         public List<int> GetShrubIds()
         {
-            if (gameplayHeader.shrubIdPointer == 0) { return null; }
+            if (gameplayHeader.shrubIdPointer == 0) { return new List<int>(); }
 
             int count = BitConverter.ToInt32(ReadBlock(fileStream, gameplayHeader.shrubIdPointer, 4), 0);
 
@@ -441,7 +441,7 @@ namespace LibReplanetizer.Parsers
             return shrubIds;
         }
 
-        public OcclusionData GetOcclusionData()
+        public OcclusionData? GetOcclusionData()
         {
             if (gameplayHeader.occlusionPointer == 0) { return null; }
 
@@ -451,7 +451,6 @@ namespace LibReplanetizer.Parsers
             byte[] occlusionBlock = ReadBlock(fileStream, gameplayHeader.occlusionPointer + 0x10, head.totalCount * 0x08);
             OcclusionData data = new OcclusionData(occlusionBlock, head);
 
-
             return data;
         }
 
@@ -459,7 +458,7 @@ namespace LibReplanetizer.Parsers
         //Hence we just load the block based on pointers
         public byte[] GetTieData(int tieCount)
         {
-            if (gameplayHeader.tiePointer == 0) { return null; }
+            if (gameplayHeader.tiePointer == 0) { return new byte[0]; }
 
             switch (game.num)
             {
@@ -476,13 +475,13 @@ namespace LibReplanetizer.Parsers
 
         public byte[] GetShrubData(int shrubCount)
         {
-            if (gameplayHeader.shrubPointer == 0) { return null; }
+            if (gameplayHeader.shrubPointer == 0) { return new byte[0]; }
             return ReadBlock(fileStream, gameplayHeader.shrubPointer, 0x10 + 0x70 * shrubCount);
         }
 
         public byte[] GetTieGroups()
         {
-            if (gameplayHeader.tieGroupsPointer == 0) { return null; }
+            if (gameplayHeader.tieGroupsPointer == 0) { return new byte[0]; }
             byte[] header = ReadBlock(fileStream, gameplayHeader.tieGroupsPointer, 16);
             int count = ReadInt(header, 0);
             int length = ReadInt(header, 4);
@@ -491,7 +490,7 @@ namespace LibReplanetizer.Parsers
 
         public byte[] GetShrubGroups()
         {
-            if (gameplayHeader.shrubGroupsPointer == 0) { return null; }
+            if (gameplayHeader.shrubGroupsPointer == 0) { return new byte[0]; }
             byte[] header = ReadBlock(fileStream, gameplayHeader.shrubGroupsPointer, 16);
             int count = ReadInt(header, 0);
             int length = ReadInt(header, 4);
@@ -500,7 +499,7 @@ namespace LibReplanetizer.Parsers
 
         public byte[] GetAreasData()
         {
-            if (gameplayHeader.areasPointer == 0) { return null; }
+            if (gameplayHeader.areasPointer == 0) { return new byte[0]; }
             return ReadBlock(fileStream, gameplayHeader.areasPointer, gameplayHeader.occlusionPointer - gameplayHeader.areasPointer);
         }
 

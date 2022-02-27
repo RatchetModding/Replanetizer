@@ -48,8 +48,30 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Ship Rotation")]
         public float shipRotation { get; set; }
 
-        [Category("Unknown"), DisplayName("Unknown Color")]
-        public Color unkColor { get; set; }
+        // These seem to be 3 pointers
+        // First pointer points to path that ship takes when leaving
+        // Second pointer points to start of camera path when leaving
+        // Third pointer points to end of camera path when leaving
+        //
+        // The pointers point to level local memory as the same pointer in
+        // different levels yields different results.
+        //
+        // The first pointer cannot be reused for the other two, that makes sense,
+        // I guess though that it may reference the same part in memory but it
+        // interprets it differently (what do I know).
+        // The second and third pointer can be interchanged.
+        // In general it seems like it simply interpolates between the start and
+        // end camera matrix found at the second and third pointer.
+        // These matrices seem to be used in other cutscenes/camera paths as well,
+        // i.e., changing the value here can result in giving you the camera path
+        // of some cutscene.
+        // Also note that while I say pointer I mean more like ID or offset or whatever.
+        [Category("Attributes"), DisplayName("Ship Path Index")]
+        public int shipPathID { get; set; }
+        [Category("Attributes"), DisplayName("Ship Camera Start Index")]
+        public int shipCameraStartID { get; set; }
+        [Category("Attributes"), DisplayName("Ship Camera End Index")]
+        public int shipCameraEndID { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_48: Always 0")]
         public int off48 { get; set; }
@@ -136,10 +158,10 @@ namespace LibReplanetizer.LevelObjects
             float shipPositionY = ReadFloat(levelVarBlock, 0x30);
             float shipPositionZ = ReadFloat(levelVarBlock, 0x34);
             shipRotation = ReadFloat(levelVarBlock, 0x38);
-            int shipColorR = ReadInt(levelVarBlock, 0x3C);
+            shipPathID = ReadInt(levelVarBlock, 0x3C);
 
-            int shipColorG = ReadInt(levelVarBlock, 0x40);
-            int shipColorB = ReadInt(levelVarBlock, 0x44);
+            shipCameraStartID = ReadInt(levelVarBlock, 0x40);
+            shipCameraEndID = ReadInt(levelVarBlock, 0x44);
             off48 = ReadInt(levelVarBlock, 0x48);
             off4C = ReadInt(levelVarBlock, 0x4C);
 
@@ -152,15 +174,6 @@ namespace LibReplanetizer.LevelObjects
 
             backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
             fogColor = Color.FromArgb(r, g, b);
-            if (shipColorR != -1)
-            {
-                unkColor = Color.FromArgb(shipColorR, shipColorG, shipColorB);
-            }
-            else
-            {
-                unkColor = Color.Empty;
-            }
-
             sphereCentre = Vector3.Zero;
             shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
         }
@@ -190,10 +203,10 @@ namespace LibReplanetizer.LevelObjects
             float shipPositionY = ReadFloat(levelVarBlock, 0x40);
             float shipPositionZ = ReadFloat(levelVarBlock, 0x44);
             shipRotation = ReadFloat(levelVarBlock, 0x48);
-            int shipColorR = ReadInt(levelVarBlock, 0x4C);
+            shipPathID = ReadInt(levelVarBlock, 0x4C);
 
-            int shipColorG = ReadInt(levelVarBlock, 0x50);
-            int shipColorB = ReadInt(levelVarBlock, 0x54);
+            shipCameraStartID = ReadInt(levelVarBlock, 0x50);
+            shipCameraEndID = ReadInt(levelVarBlock, 0x54);
             off58 = ReadInt(levelVarBlock, 0x58);
             off5C = ReadInt(levelVarBlock, 0x5C);
 
@@ -216,16 +229,6 @@ namespace LibReplanetizer.LevelObjects
 
             backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
             fogColor = Color.FromArgb(r, g, b);
-            if (shipColorR != -1)
-            {
-                unkColor = Color.FromArgb(shipColorR, shipColorG, shipColorB);
-            }
-            else
-            {
-                unkColor = Color.Empty;
-            }
-
-
             sphereCentre = new Vector3(sphereCentreX, sphereCentreY, sphereCentreZ);
             shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
         }
@@ -255,10 +258,10 @@ namespace LibReplanetizer.LevelObjects
             float shipPositionY = ReadFloat(levelVarBlock, 0x40);
             float shipPositionZ = ReadFloat(levelVarBlock, 0x44);
             shipRotation = ReadFloat(levelVarBlock, 0x48);
-            int shipColorR = ReadInt(levelVarBlock, 0x4C);
+            shipPathID = ReadInt(levelVarBlock, 0x4C);
 
-            int shipColorG = ReadInt(levelVarBlock, 0x50);
-            int shipColorB = ReadInt(levelVarBlock, 0x54);
+            shipCameraStartID = ReadInt(levelVarBlock, 0x50);
+            shipCameraEndID = ReadInt(levelVarBlock, 0x54);
             off58 = ReadInt(levelVarBlock, 0x58);
             off5C = ReadInt(levelVarBlock, 0x5C);
 
@@ -283,16 +286,6 @@ namespace LibReplanetizer.LevelObjects
 
             backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
             fogColor = Color.FromArgb(r, g, b);
-            if (shipColorR != -1)
-            {
-                unkColor = Color.FromArgb(shipColorR, shipColorG, shipColorB);
-            }
-            else
-            {
-                unkColor = Color.Empty;
-            }
-
-
             sphereCentre = new Vector3(sphereCentreX, sphereCentreY, sphereCentreZ);
             shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
         }
@@ -322,10 +315,10 @@ namespace LibReplanetizer.LevelObjects
             float shipPositionY = ReadFloat(levelVarBlock, 0x40);
             float shipPositionZ = ReadFloat(levelVarBlock, 0x44);
             shipRotation = ReadFloat(levelVarBlock, 0x48);
-            int shipColorR = ReadInt(levelVarBlock, 0x4C);
+            shipPathID = ReadInt(levelVarBlock, 0x4C);
 
-            int shipColorG = ReadInt(levelVarBlock, 0x50);
-            int shipColorB = ReadInt(levelVarBlock, 0x54);
+            shipCameraStartID = ReadInt(levelVarBlock, 0x50);
+            shipCameraEndID = ReadInt(levelVarBlock, 0x54);
             off58 = ReadInt(levelVarBlock, 0x58);
             off5C = ReadInt(levelVarBlock, 0x5C);
 
@@ -350,16 +343,6 @@ namespace LibReplanetizer.LevelObjects
 
             backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
             fogColor = Color.FromArgb(r, g, b);
-            if (shipColorR != -1)
-            {
-                unkColor = Color.FromArgb(shipColorR, shipColorG, shipColorB);
-            }
-            else
-            {
-                unkColor = Color.Empty;
-            }
-
-
             sphereCentre = new Vector3(sphereCentreX, sphereCentreY, sphereCentreZ);
             shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
         }
@@ -403,20 +386,10 @@ namespace LibReplanetizer.LevelObjects
             WriteFloat(bytes, 0x30, shipPosition.Y);
             WriteFloat(bytes, 0x34, shipPosition.Z);
             WriteFloat(bytes, 0x38, shipRotation);
+            WriteInt(bytes, 0x3C, shipPathID);
 
-            if (unkColor.IsEmpty)
-            {
-                WriteInt(bytes, 0x3C, -1);
-                WriteInt(bytes, 0x40, 0);
-                WriteInt(bytes, 0x44, 0);
-            }
-            else
-            {
-                WriteInt(bytes, 0x3C, unkColor.R);
-                WriteInt(bytes, 0x40, unkColor.G);
-                WriteInt(bytes, 0x44, unkColor.B);
-            }
-
+            WriteInt(bytes, 0x40, shipCameraStartID);
+            WriteInt(bytes, 0x44, shipCameraEndID);
             WriteInt(bytes, 0x48, off48);
             WriteInt(bytes, 0x4C, off4C);
 
@@ -452,20 +425,10 @@ namespace LibReplanetizer.LevelObjects
             WriteFloat(bytes, 0x40, shipPosition.Y);
             WriteFloat(bytes, 0x44, shipPosition.Z);
             WriteFloat(bytes, 0x48, shipRotation);
+            WriteInt(bytes, 0x4C, shipPathID);
 
-            if (unkColor.IsEmpty)
-            {
-                WriteInt(bytes, 0x4C, -1);
-                WriteInt(bytes, 0x50, 0);
-                WriteInt(bytes, 0x54, 0);
-            }
-            else
-            {
-                WriteInt(bytes, 0x4C, unkColor.R);
-                WriteInt(bytes, 0x50, unkColor.G);
-                WriteInt(bytes, 0x54, unkColor.B);
-            }
-
+            WriteInt(bytes, 0x50, shipCameraStartID);
+            WriteInt(bytes, 0x54, shipCameraEndID);
             WriteInt(bytes, 0x58, off58);
             WriteInt(bytes, 0x5C, off5C);
 
@@ -511,20 +474,10 @@ namespace LibReplanetizer.LevelObjects
             WriteFloat(bytes, 0x40, shipPosition.Y);
             WriteFloat(bytes, 0x44, shipPosition.Z);
             WriteFloat(bytes, 0x48, shipRotation);
+            WriteInt(bytes, 0x4C, shipPathID);
 
-            if (unkColor.IsEmpty)
-            {
-                WriteInt(bytes, 0x4C, -1);
-                WriteInt(bytes, 0x50, 0);
-                WriteInt(bytes, 0x54, 0);
-            }
-            else
-            {
-                WriteInt(bytes, 0x4C, unkColor.R);
-                WriteInt(bytes, 0x50, unkColor.G);
-                WriteInt(bytes, 0x54, unkColor.B);
-            }
-
+            WriteInt(bytes, 0x50, shipCameraStartID);
+            WriteInt(bytes, 0x54, shipCameraEndID);
             WriteInt(bytes, 0x58, off58);
             WriteInt(bytes, 0x5C, off5C);
 
@@ -572,20 +525,10 @@ namespace LibReplanetizer.LevelObjects
             WriteFloat(bytes, 0x40, shipPosition.Y);
             WriteFloat(bytes, 0x44, shipPosition.Z);
             WriteFloat(bytes, 0x48, shipRotation);
+            WriteInt(bytes, 0x4C, shipPathID);
 
-            if (unkColor.IsEmpty)
-            {
-                WriteInt(bytes, 0x4C, -1);
-                WriteInt(bytes, 0x50, 0);
-                WriteInt(bytes, 0x54, 0);
-            }
-            else
-            {
-                WriteInt(bytes, 0x4C, unkColor.R);
-                WriteInt(bytes, 0x50, unkColor.G);
-                WriteInt(bytes, 0x54, unkColor.B);
-            }
-
+            WriteInt(bytes, 0x50, shipCameraStartID);
+            WriteInt(bytes, 0x54, shipCameraEndID);
             WriteInt(bytes, 0x58, off58);
             WriteInt(bytes, 0x5C, off5C);
 

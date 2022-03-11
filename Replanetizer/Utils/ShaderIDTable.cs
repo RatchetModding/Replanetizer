@@ -26,6 +26,7 @@ namespace Replanetizer.Utils
         public int uniformFogNearDist { get; set; }
         public int uniformFogFarIntensity { get; set; }
         public int uniformFogNearIntensity { get; set; }
+        public int uniformObjectBlendDistance { get; set; }
         public int uniformLevelObjectType { get; set; }
         public int uniformLevelObjectNumber { get; set; }
         public int uniformColorLevelObjectType { get; set; }
@@ -36,5 +37,6 @@ namespace Replanetizer.Utils
         public static readonly int ALLOCATED_LIGHTS = 20;
         public int uniformLightIndex { get; set; }
         public int uniformSkyTexAvailable { get; set; }
+        public int uniformDissolvePattern { get; set; }
     }
 }

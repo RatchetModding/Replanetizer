@@ -39,6 +39,7 @@ namespace Replanetizer.Utils
 
         private bool selected;
         private bool culled;
+        private float blendDistance = 0.0f;
 
         private Level level;
         private Dictionary<Texture, int> textureIds;
@@ -253,11 +254,17 @@ namespace Replanetizer.Utils
             {
                 float dist = (modelObject.position - camera.position).Length;
 
-                if (dist > renderDistance)
+                blendDistance = MathF.Max(0.125f * (dist - renderDistance), 0.0f);
+
+                if (dist > renderDistance + 8.0f)
                 {
                     culled = true;
                     return;
                 }
+            }
+            else
+            {
+                blendDistance = 0.0f;
             }
 
             if (frustumCulling)
@@ -333,6 +340,7 @@ namespace Replanetizer.Utils
                     GL.Uniform1(SHADER_ID_TABLE.uniformLevelObjectNumber, id);
                     GL.Uniform4(SHADER_ID_TABLE.uniformAmbientColor, ambient);
                     GL.Uniform1(SHADER_ID_TABLE.uniformLightIndex, light);
+                    GL.Uniform1(SHADER_ID_TABLE.uniformObjectBlendDistance, blendDistance);
 
                     //Bind textures one by one, applying it to the relevant vertices based on the index array
                     foreach (TextureConfig conf in modelObject.model.textureConfig)

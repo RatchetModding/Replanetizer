@@ -14,6 +14,8 @@ uniform sampler2D myTextureSampler;
 uniform int levelObjectType;
 uniform int levelObjectNumber;
 uniform vec4 fogColor;
+uniform mat4 dissolvePattern;
+uniform float objectBlendDistance;
 
 /*
  * We use one shader for all shading types.
@@ -34,6 +36,14 @@ uniform vec4 fogColor;
 void main() {
 	//color of the texture at the specified UV
 	vec4 textureColor = texture(myTextureSampler, UV);
+
+    // If the object is further than renderDistance we blend out over distance using a dissolve pattern
+    if ((levelObjectType == 2 || levelObjectType == 4) && objectBlendDistance > 0.0f) {
+        vec2 pixel = vec2(gl_FragCoord.x, gl_FragCoord.y);
+        float alpha = objectBlendDistance;
+        ivec2 patternPos = ivec2(int(mod(pixel.x,4.0f)),int(mod(pixel.y,4.0f)));
+        if (dissolvePattern[patternPos.x][patternPos.y] < alpha) discard;
+    }
 
 	if (textureColor.w < 0.1f && levelObjectType >= 2) discard;
 

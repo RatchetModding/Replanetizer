@@ -532,12 +532,14 @@ namespace LibReplanetizer
                     for (int i = 0; i < vertexCount; i++)
                     {
                         byte[] vWeights = BitConverter.GetBytes(model.weights[i]);
-                        float a = vWeights[0x00] / 255.0f;
-                        float b = vWeights[0x01] / 255.0f;
-                        float c = vWeights[0x02] / 255.0f;
-                        float d = vWeights[0x03] / 255.0f;
-
-                        colladaStream.Write(a.ToString("G", en_US) + " " + b.ToString("G", en_US) + " " + c.ToString("G", en_US) + " " + d.ToString("G", en_US) + " ");
+                        for (int j = 0; j < 4; j++)
+                        {
+                            if (vWeights[j] != 0)
+                            {
+                                float f = vWeights[j] / 255.0f;
+                                colladaStream.Write(f.ToString("G", en_US) + " ");
+                            }
+                        }
                     }
                     colladaStream.WriteLine("</float_array>");
                     colladaStream.WriteLine("\t\t\t\t\t<technique_common>");
@@ -617,18 +619,31 @@ namespace LibReplanetizer
                     colladaStream.Write("\t\t\t\t\t<vcount>");
                     for (int i = 0; i < vertexCount; i++)
                     {
-                        colladaStream.Write("4 ");
+                        byte[] vWeights = BitConverter.GetBytes(model.weights[i]);
+
+                        int c = 0;
+                        for (int j = 0; j < 4; j++)
+                        {
+                            c += (vWeights[j] != 0) ? 1 : 0;
+                        }
+                        colladaStream.Write(c + " ");
                     }
                     colladaStream.WriteLine("</vcount>");
                     colladaStream.Write("\t\t\t\t\t<v>");
+                    int vWeightOffset = 0;
                     for (int i = 0; i < vertexCount; i++)
                     {
                         Byte[] indices = BitConverter.GetBytes(model.ids[i]);
+                        byte[] vWeights = BitConverter.GetBytes(model.weights[i]);
 
-                        colladaStream.Write(indices[0x00] + " " + (i * 0x04 + 0x00) + " ");
-                        colladaStream.Write(indices[0x01] + " " + (i * 0x04 + 0x01) + " ");
-                        colladaStream.Write(indices[0x02] + " " + (i * 0x04 + 0x02) + " ");
-                        colladaStream.Write(indices[0x03] + " " + (i * 0x04 + 0x03) + " ");
+                        for (int j = 0; j < 4; j++)
+                        {
+                            if (vWeights[j] != 0)
+                            {
+                                colladaStream.Write(indices[j] + " " + vWeightOffset + " ");
+                                vWeightOffset++;
+                            }
+                        }
                     }
                     colladaStream.WriteLine("</v>");
                     colladaStream.WriteLine("\t\t\t\t</vertex_weights>");

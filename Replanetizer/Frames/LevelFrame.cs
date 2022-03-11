@@ -544,6 +544,8 @@ namespace Replanetizer.Frames
             shaderIDTable.uniformFogFarIntensity = GL.GetUniformLocation(shaderIDTable.shaderMain, "fogFarIntensity");
             shaderIDTable.uniformUseFog = GL.GetUniformLocation(shaderIDTable.shaderMain, "useFog");
 
+            shaderIDTable.uniformObjectBlendDistance = GL.GetUniformLocation(shaderIDTable.shaderMain, "objectBlendDistance");
+
             shaderIDTable.uniformLevelObjectType = GL.GetUniformLocation(shaderIDTable.shaderMain, "levelObjectType");
             shaderIDTable.uniformLevelObjectNumber = GL.GetUniformLocation(shaderIDTable.shaderMain, "levelObjectNumber");
             shaderIDTable.uniformColorLevelObjectType = GL.GetUniformLocation(shaderIDTable.shaderColor, "levelObjectType");
@@ -554,12 +556,21 @@ namespace Replanetizer.Frames
 
             shaderIDTable.uniformSkyTexAvailable = GL.GetUniformLocation(shaderIDTable.shaderSky, "texAvailable");
 
+            shaderIDTable.uniformDissolvePattern = GL.GetUniformLocation(shaderIDTable.shaderMain, "dissolvePattern");
+
             RenderableBuffer.SHADER_ID_TABLE = shaderIDTable;
 
             LoadDirectionalLights(level.lights);
 
             camera.ComputeProjectionMatrix();
             view = camera.GetViewMatrix();
+
+            GL.UseProgram(shaderIDTable.shaderMain);
+            Matrix4 dissolvePattern = new Matrix4(1.0f / 17.0f, 9.0f / 17.0f, 3.0f / 17.0f, 11.0f / 17.0f,
+                                        13.0f / 17.0f, 5.0f / 17.0f, 15.0f / 17.0f, 7.0f / 17.0f,
+                                        4.0f / 17.0f, 12.0f / 17.0f, 2.0f / 17.0f, 10.0f / 17.0f,
+                                        16.0f / 17.0f, 8.0f / 17.0f, 14.0f / 17.0f, 6.0f / 17.0f);
+            GL.UniformMatrix4(shaderIDTable.uniformDissolvePattern, false, ref dissolvePattern);
 
             initialized = true;
 

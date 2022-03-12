@@ -40,6 +40,16 @@ namespace Replanetizer.Frames
             RecomputeProperties();
         }
 
+        public override void RenderAsWindow(float deltaTime)
+        {
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(550, 0));
+            if (ImGui.Begin(frameName, ref isOpen))
+            {
+                Render(deltaTime);
+                ImGui.End();
+            }
+        }
+
         private Dictionary<string, Dictionary<string, PropertyInfo>> RecomputeSinglePropertiesSet(object o)
         {
             Dictionary<string, Dictionary<string, PropertyInfo>> properties = new Dictionary<string, Dictionary<string, PropertyInfo>>();

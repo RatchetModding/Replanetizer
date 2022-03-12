@@ -241,8 +241,9 @@ namespace LibReplanetizer.Parsers
             List<Type4C> type4Cs = new List<Type4C>();
             if (gameplayHeader.type4CPointer == 0) { return type4Cs; }
 
-            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.type4CPointer, 4), 0);
-            byte[] type4CBlock = ReadBlock(fileStream, gameplayHeader.type4CPointer + 0x10, Type4C.ELEMENTSIZE * count);
+            int offset = ReadInt(ReadBlock(fileStream, gameplayHeader.type4CPointer, 4), 0);
+            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.type4CPointer + 4, 4), 0);
+            byte[] type4CBlock = ReadBlock(fileStream, gameplayHeader.type4CPointer + 0x10 + offset, Type4C.ELEMENTSIZE * count);
             for (int i = 0; i < count; i++)
             {
                 type4Cs.Add(new Type4C(type4CBlock, i));

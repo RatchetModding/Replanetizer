@@ -30,11 +30,11 @@ namespace Replanetizer.Frames
         private Level level => levelFrame.level;
         private Model? selectedModel;
         private int selectedModelIndex;
-        private List<Model> selectedModelList = new List<Model>();
-        private List<Texture> selectedModelTexturesSet = new List<Texture>();
-        private List<List<Texture>> selectedModelArmorTexturesSet = new List<List<Texture>>();
-        private List<Texture> selectedTextureSet = new List<Texture>();
-        private List<Texture> modelTextureList;
+        private List<Model>? selectedModelList;
+        private List<Texture>? selectedModelTexturesSet;
+        private List<List<Texture>>? selectedModelArmorTexturesSet;
+        private List<Texture>? selectedTextureSet;
+        private List<Texture>? modelTextureList;
 
         private readonly KeyHeldHandler KEY_HELD_HANDLER = new()
         {
@@ -88,6 +88,16 @@ namespace Replanetizer.Frames
             UpdateWindowSize();
             OnResize();
             SelectModel(model);
+        }
+
+        public override void RenderAsWindow(float deltaTime)
+        {
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(1280, 720));
+            if (ImGui.Begin(frameName, ref isOpen))
+            {
+                Render(deltaTime);
+                ImGui.End();
+            }
         }
 
         private void RenderModelEntry(Model mod, List<Texture> textureSet, string name)
@@ -189,7 +199,7 @@ namespace Replanetizer.Frames
             {
                 if (selectedModel != null)
                 {
-                    if (modelTextureList.Count > 0)
+                    if (modelTextureList != null && modelTextureList.Count > 0)
                     {
                         TextureFrame.RenderTextureList(modelTextureList, 64, levelFrame.textureIds);
                         ImGui.Separator();
@@ -269,6 +279,9 @@ namespace Replanetizer.Frames
         private void UpdateTextures()
         {
             if (selectedModel == null) return;
+            if (selectedTextureSet == null) return;
+
+            if (modelTextureList == null) modelTextureList = new List<Texture>();
 
             modelTextureList.Clear();
 
@@ -301,8 +314,8 @@ namespace Replanetizer.Frames
 
                 // This is a little weird because armorTextures is a list
                 // of a list of textures -- one list per armor set.
-                selectedModelTexturesSet = new List<Texture>();
-                selectedModelArmorTexturesSet = new List<List<Texture>>();
+                selectedModelTexturesSet = null;
+                selectedModelArmorTexturesSet = null;
                 if (ReferenceEquals(models, level.gadgetModels))
                     selectedModelTexturesSet = level.gadgetTextures;
                 else if (ReferenceEquals(models, level.armorModels))
@@ -378,7 +391,7 @@ namespace Replanetizer.Frames
             GL.ClearColor(Color.SkyBlue);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            if (selectedModel != null && !(selectedModel is SkyboxModel))
+            if (selectedModel != null && selectedTextureSet != null && !(selectedModel is SkyboxModel))
             {
                 // Has to be done in this order to work correctly
                 Matrix4 mvp = trans * scale * rot;
@@ -508,6 +521,7 @@ namespace Replanetizer.Frames
         private void ExportSelectedModelTextures()
         {
             if (selectedModel == null) return;
+            if (selectedTextureSet == null) return;
 
             List<TextureConfig>? textureConfig = selectedModel.textureConfig;
             if (textureConfig == null) return;

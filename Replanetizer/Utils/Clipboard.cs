@@ -17,8 +17,7 @@ namespace Replanetizer.Utils
     /// Currently there are only shrubs supported.
     /// TODO:
     ///     - Mobies (Implemented but copies crash the game)
-    ///     - Ties (Part of occlusion system)
-    ///     - Terrain (Part of occlusion system)
+    ///     - Ties (Implemented but issues with occlusion system)
     /// </summary>
     public class Clipboard
     {
@@ -38,7 +37,7 @@ namespace Replanetizer.Utils
             foreach (LevelObject o in originalObjects)
             {
                 // Add different types here once they are supported
-                if (o is Moby || o is Shrub)
+                if (o is Moby || o is Shrub || o is Tie)
                     content.Add(o.Clone());
             }
         }
@@ -68,6 +67,12 @@ namespace Replanetizer.Utils
                     level.shrubs.Add(shrub);
                     levelFrame.shrubsBuffers.Add(new RenderableBuffer(shrub, RenderedObjectType.Shrub, level.shrubs.Count - 1, level, levelFrame.textureIds));
                     levelFrame.selectedObjects.Add(shrub);
+                }
+                else if (o2 is Tie tie)
+                {
+                    level.ties.Add(tie);
+                    levelFrame.tiesBuffers.Add(new RenderableBuffer(tie, RenderedObjectType.Tie, level.ties.Count - 1, level, levelFrame.textureIds));
+                    levelFrame.selectedObjects.Add(tie);
                 }
             }
         }

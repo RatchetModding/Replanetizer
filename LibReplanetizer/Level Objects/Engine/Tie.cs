@@ -35,6 +35,25 @@ namespace LibReplanetizer.LevelObjects
 
         public byte[] colorBytes;
 
+        public Tie(Tie referenceTie)
+        {
+            this.position = referenceTie.position;
+            this.rotation = referenceTie.rotation;
+            this.scale = referenceTie.scale;
+            this.reflection = referenceTie.reflection;
+            this.modelID = referenceTie.modelID;
+            this.off54 = referenceTie.off54;
+            this.off58 = referenceTie.off58;
+            this.off5C = referenceTie.off5C;
+            this.off64 = referenceTie.off64;
+            this.light = referenceTie.light;
+            this.off6C = referenceTie.off6C;
+            this.model = referenceTie.model;
+            this.colorBytes = (byte[]) referenceTie.colorBytes.Clone();
+
+            UpdateTransformMatrix();
+        }
+
         public Tie(byte[] levelBlock, int num, List<Model> tieModels, FileStream fs)
         {
             int offset = num * ELEMENTSIZE;
@@ -132,7 +151,7 @@ namespace LibReplanetizer.LevelObjects
 
         public override LevelObject Clone()
         {
-            return (Tie) this.MemberwiseClone();
+            return new Tie(this);
         }
     }
 }

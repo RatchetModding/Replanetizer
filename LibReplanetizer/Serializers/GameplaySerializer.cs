@@ -339,7 +339,7 @@ namespace LibReplanetizer.Serializers
             byte[] bytes = new byte[0x10 + 0x10 + type4Cs.Count * Type4C.ELEMENTSIZE];
 
             //Header
-            WriteInt(bytes, 0, 0x10);
+            WriteInt(bytes, 0x00, 0x10);
             WriteInt(bytes, 0x04, type4Cs.Count);
 
             for (int i = 0; i < type4Cs.Count; i++)

@@ -244,15 +244,15 @@ namespace LibReplanetizer
             colladaStream.Write((mat.M11).ToString("G", en_US) + " ");
             colladaStream.Write((mat.M12).ToString("G", en_US) + " ");
             colladaStream.Write((mat.M13).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M14).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M14 * size / 1024.0f).ToString("G", en_US) + " ");
             colladaStream.Write((mat.M21).ToString("G", en_US) + " ");
             colladaStream.Write((mat.M22).ToString("G", en_US) + " ");
             colladaStream.Write((mat.M23).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M24).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M24 * size / 1024.0f).ToString("G", en_US) + " ");
             colladaStream.Write((mat.M31).ToString("G", en_US) + " ");
             colladaStream.Write((mat.M32).ToString("G", en_US) + " ");
             colladaStream.Write((mat.M33).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M34).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M34 * size / 1024.0f).ToString("G", en_US) + " ");
             colladaStream.Write("0 ");
             colladaStream.Write("0 ");
             colladaStream.Write("0 ");

@@ -13,13 +13,15 @@ namespace LibReplanetizer.Models.Animations
     {
         public BoneMatrix bone;
         public List<Skeleton> children;
+        public Skeleton? parent;
 
         /// <summary>
         /// Creates a new skeleton with a root node. Use this function once and use InsertBone to construct the skeleton.
         /// </summary>
-        public Skeleton(BoneMatrix root)
+        public Skeleton(BoneMatrix root, Skeleton? parent)
         {
             bone = root;
+            this.parent = parent;
             children = new List<Skeleton>();
         }
 
@@ -27,7 +29,7 @@ namespace LibReplanetizer.Models.Animations
         {
             if (this.bone.id == bone.parent)
             {
-                children.Add(new Skeleton(bone));
+                children.Add(new Skeleton(bone, this));
                 return true;
             }
 

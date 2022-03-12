@@ -241,18 +241,18 @@ namespace LibReplanetizer
 
             colladaStream.WriteLine(indent + "<node id=\"Skel" + skeleton.bone.id.ToString() + "\" sid=\"J" + skeleton.bone.id.ToString() + "\" name=\"Skel" + skeleton.bone.id.ToString() + "\" type=\"JOINT\">");
             colladaStream.Write(indent + "<matrix sid=\"transform\">");
-            colladaStream.Write("1 ");
-            colladaStream.Write("0 ");
-            colladaStream.Write("0 ");
-            colladaStream.Write("0 ");
-            colladaStream.Write("0 ");
-            colladaStream.Write("1 ");
-            colladaStream.Write("0 ");
-            colladaStream.Write("0 ");
-            colladaStream.Write("0 ");
-            colladaStream.Write("0 ");
-            colladaStream.Write("1 ");
-            colladaStream.Write("0 ");
+            colladaStream.Write((mat.M11).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M12).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M13).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M14).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M21).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M22).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M23).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M24).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M31).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M32).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M33).ToString("G", en_US) + " ");
+            colladaStream.Write((mat.M34).ToString("G", en_US) + " ");
             colladaStream.Write("0 ");
             colladaStream.Write("0 ");
             colladaStream.Write("0 ");
@@ -290,6 +290,8 @@ namespace LibReplanetizer
             LOGGER.Trace(fileName);
 
             string? filePath = Path.GetDirectoryName(fileName);
+
+            bool includeSkeleton = (model is MobyModel mobyModel && mobyModel.boneCount != 0);
 
             using (StreamWriter colladaStream = new StreamWriter(fileName))
             {
@@ -506,7 +508,7 @@ namespace LibReplanetizer
                 colladaStream.WriteLine("\t\t</geometry>");
                 colladaStream.WriteLine("\t</library_geometries>");
 
-                if (model is MobyModel)
+                if (includeSkeleton)
                 {
                     MobyModel moby = (MobyModel) model;
 
@@ -514,6 +516,7 @@ namespace LibReplanetizer
                     colladaStream.WriteLine("\t<library_controllers>");
                     colladaStream.WriteLine("\t\t<controller id=\"Armature\" name=\"Armature\">");
                     colladaStream.WriteLine("\t\t\t<skin source=\"#Model\">");
+                    colladaStream.WriteLine("\t\t\t\t<bind_shape_matrix>1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</bind_shape_matrix>");
                     colladaStream.WriteLine("\t\t\t\t<source id=\"Joints\">");
                     colladaStream.Write("\t\t\t\t\t<Name_array id=\"JointsArray\" count=\"" + moby.boneDatas.Count + "\">");
                     for (int i = 0; i < moby.boneCount; i++)
@@ -737,7 +740,7 @@ namespace LibReplanetizer
                 //scene
                 colladaStream.WriteLine("\t<library_visual_scenes>");
                 colladaStream.WriteLine("\t\t<visual_scene id=\"Scene\" name=\"Scene\">");
-                if (model is MobyModel)
+                if (includeSkeleton)
                 {
                     MobyModel moby = (MobyModel) model;
 
@@ -746,7 +749,7 @@ namespace LibReplanetizer
                 }
                 colladaStream.WriteLine("\t\t\t<node id=\"Object\" name=\"Object\" type=\"NODE\">");
                 colladaStream.WriteLine("\t\t\t\t<matrix sid=\"transform\">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>");
-                if (model is MobyModel)
+                if (includeSkeleton)
                 {
                     colladaStream.WriteLine("\t\t\t\t<instance_controller url=\"#Armature\" name=\"Armature\">");
                     colladaStream.WriteLine("\t\t\t\t\t<skeleton>#Skel0</skeleton>");
@@ -765,7 +768,7 @@ namespace LibReplanetizer
                 }
                 colladaStream.WriteLine("\t\t\t\t\t\t</technique_common>");
                 colladaStream.WriteLine("\t\t\t\t\t</bind_material>");
-                if (model is MobyModel)
+                if (includeSkeleton)
                 {
                     colladaStream.WriteLine("\t\t\t\t</instance_controller>");
                 }

@@ -246,7 +246,7 @@ namespace LibReplanetizer.Models
 
             if (boneMatrices.Count > 0)
             {
-                skeleton = new Skeleton(boneMatrices[0]);
+                skeleton = new Skeleton(boneMatrices[0], null);
 
                 for (int i = 1; i < boneCount; i++)
                 {

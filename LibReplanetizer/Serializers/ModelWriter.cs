@@ -232,27 +232,37 @@ namespace LibReplanetizer
 
         private static void WriteSkeletonDae(StreamWriter colladaStream, Skeleton skeleton, float size, string indent = "")
         {
-            Matrix3x4 mat = skeleton.bone.transformation;
-            Matrix3 mat2 = new Matrix3(mat.Row0.Xyz, mat.Row1.Xyz, mat.Row2.Xyz);
-            mat2.Invert();
-            Vector3 tip = new Vector3(mat.M14, mat.M24, mat.M34);
+            Matrix3x4 trans = skeleton.bone.transformation;
+            Matrix3 orthoTrans = new Matrix3(trans.Row0.Xyz, trans.Row1.Xyz, trans.Row2.Xyz);
+            Matrix3 relOrthoTrans = orthoTrans;
+
+            // We need to represent our transformation relative to the parent node
+            if (skeleton.parent != null)
+            {
+                Matrix3x4 matP = skeleton.parent.bone.transformation;
+                Matrix3 matPTrans = new Matrix3(matP.Row0.Xyz, matP.Row1.Xyz, matP.Row2.Xyz);
+                matPTrans.Transpose();
+                relOrthoTrans = matPTrans * relOrthoTrans;
+            }
+            orthoTrans.Transpose();
+            Vector3 tip = new Vector3(trans.M14, trans.M24, trans.M34);
             tip *= size / 1024.0f;
-            tip = mat2 * tip;
+            tip = orthoTrans * tip;
 
             colladaStream.WriteLine(indent + "<node id=\"Skel" + skeleton.bone.id.ToString() + "\" sid=\"J" + skeleton.bone.id.ToString() + "\" name=\"Skel" + skeleton.bone.id.ToString() + "\" type=\"JOINT\">");
             colladaStream.Write(indent + "<matrix sid=\"transform\">");
-            colladaStream.Write((mat.M11).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M12).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M13).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M14 * size / 1024.0f).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M21).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M22).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M23).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M24 * size / 1024.0f).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M31).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M32).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M33).ToString("G", en_US) + " ");
-            colladaStream.Write((mat.M34 * size / 1024.0f).ToString("G", en_US) + " ");
+            colladaStream.Write((relOrthoTrans.M11).ToString("G", en_US) + " ");
+            colladaStream.Write((relOrthoTrans.M12).ToString("G", en_US) + " ");
+            colladaStream.Write((relOrthoTrans.M13).ToString("G", en_US) + " ");
+            colladaStream.Write((trans.M14 * size / 1024.0f).ToString("G", en_US) + " ");
+            colladaStream.Write((relOrthoTrans.M21).ToString("G", en_US) + " ");
+            colladaStream.Write((relOrthoTrans.M22).ToString("G", en_US) + " ");
+            colladaStream.Write((relOrthoTrans.M23).ToString("G", en_US) + " ");
+            colladaStream.Write((trans.M24 * size / 1024.0f).ToString("G", en_US) + " ");
+            colladaStream.Write((relOrthoTrans.M31).ToString("G", en_US) + " ");
+            colladaStream.Write((relOrthoTrans.M32).ToString("G", en_US) + " ");
+            colladaStream.Write((relOrthoTrans.M33).ToString("G", en_US) + " ");
+            colladaStream.Write((trans.M34 * size / 1024.0f).ToString("G", en_US) + " ");
             colladaStream.Write("0 ");
             colladaStream.Write("0 ");
             colladaStream.Write("0 ");
@@ -295,7 +305,7 @@ namespace LibReplanetizer
 
             using (StreamWriter colladaStream = new StreamWriter(fileName))
             {
-                // skybox model has no normals and does the vertex buffer has a different layout
+                // skybox model has no normals and thus the vertex buffer has a different layout
                 // if we see other cases like this, it may be advisable to generalize this
                 bool skyboxModel = (model is SkyboxModel);
                 bool terrainModel = (model is TerrainModel);
@@ -586,7 +596,7 @@ namespace LibReplanetizer
 
                         Matrix3x4 origTrans = moby.boneMatrices[i].transformation;
                         Matrix3 mat = new Matrix3(origTrans.Row0.Xyz, origTrans.Row1.Xyz, origTrans.Row2.Xyz);
-                        mat.Invert();
+                        mat.Transpose();
 
                         colladaStream.Write((mat.M11).ToString("G", en_US) + " ");
                         colladaStream.Write((mat.M12).ToString("G", en_US) + " ");

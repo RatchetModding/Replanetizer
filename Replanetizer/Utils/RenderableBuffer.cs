@@ -352,6 +352,8 @@ namespace Replanetizer.Utils
                     if (selected)
                     {
                         GL.UseProgram(SHADER_ID_TABLE.shaderColor);
+                        GL.Uniform1(SHADER_ID_TABLE.uniformColorLevelObjectType, (int) type);
+                        GL.Uniform1(SHADER_ID_TABLE.uniformColorLevelObjectNumber, id);
                         GL.Enable(EnableCap.LineSmooth);
                         GL.UniformMatrix4(SHADER_ID_TABLE.uniformColorModelToWorldMatrix, false, ref modelObject.modelMatrix);
                         GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);

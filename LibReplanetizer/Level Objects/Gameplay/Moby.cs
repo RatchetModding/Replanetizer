@@ -28,7 +28,10 @@ namespace LibReplanetizer.LevelObjects
         {
             NoRespawn, NoRespawnAtRevisitAfterInteraction, OnlySpawnAtRevisit, AlwaysRespawn, CrateNoRespawnAfterBreaking,
             CrateAlwaysRespawnAfterBreaking, UnknownType6, UnknownCrateType7, UnknownType8, UnknownType9,
-            UnknownType10, UnknownType11, CrateAlwaysRespawnAtRevisit
+            UnknownType10, UnknownType11, CrateAlwaysRespawnAtRevisit, UnknownType13, UnknownType14, UnknownType15,
+            UnknownType16, UnknownType17, UnknownType18, UnknownType19, UnknownType20, UnknownType21, UnknownType22,
+            UnknownType23, UnknownType24, UnknownType25, UnknownType26, UnknownType27, UnknownType28, UnknownType29,
+            UnknownType30, UnknownType31, UnknownType32
         }
 
         [Category("Unknowns"), DisplayName("Spawn Type")]
@@ -102,7 +105,7 @@ namespace LibReplanetizer.LevelObjects
         public short unk7B { get; set; }
 
         [Category("Attributes"), DisplayName("pVar Index")]
-        public int pvarIndex { get; set; }
+        public int pvarIndex { get; set; } = -1;
 
         /*
          * Unknown8A
@@ -186,7 +189,6 @@ namespace LibReplanetizer.LevelObjects
             this.cutscene = referenceMoby.cutscene;
             this.missionID = referenceMoby.missionID;
             this.bolts = referenceMoby.bolts;
-            this.pvarIndex = referenceMoby.pvarIndex;
             this.dataval = referenceMoby.dataval;
             this.model = referenceMoby.model;
             this.modelID = referenceMoby.modelID;
@@ -200,16 +202,23 @@ namespace LibReplanetizer.LevelObjects
             this.drawDistance = referenceMoby.drawDistance;
             this.z2 = referenceMoby.z2;
             this.groupIndex = referenceMoby.groupIndex;
+            this.pvarIndex = referenceMoby.pvarIndex;
+            this.pVars = referenceMoby.pVars;
             this.mobyID = MAX_ID++;
-            this.pVars = new byte[0];
+
+            this.unk3B = referenceMoby.unk3B;
+            this.unk4 = referenceMoby.unk4;
+            this.unk7A = referenceMoby.unk7A;
+            this.unk8A = referenceMoby.unk8A;
+            this.unk9 = referenceMoby.unk9;
+            this.unk12A = referenceMoby.unk8A;
 
             UpdateTransformMatrix();
         }
 
-        public Moby(GameType game, byte[] mobyBlock, int num, List<Model> mobyModels, bool fromMemory = false)
+        public Moby(GameType game, byte[] mobyBlock, int num, List<Model> mobyModels, List<byte[]> pVars, bool fromMemory = false)
         {
             this.game = game;
-            this.pVars = new byte[0];
 
             switch (game.num)
             {
@@ -231,6 +240,15 @@ namespace LibReplanetizer.LevelObjects
             if (this.mobyID >= MAX_ID)
             {
                 MAX_ID = this.mobyID + 1;
+            }
+
+            if (this.pvarIndex != -1)
+            {
+                this.pVars = pVars[this.pvarIndex];
+            }
+            else
+            {
+                this.pVars = new byte[0];
             }
         }
 

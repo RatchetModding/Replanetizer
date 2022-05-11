@@ -59,6 +59,13 @@ namespace Replanetizer.Utils
                 if (o2 is Moby mob)
                 {
                     level.mobs.Add(mob);
+
+                    if (mob.pvarIndex != -1)
+                    {
+                        mob.pvarIndex = level.pVars.Count;
+                        level.pVars.Add(mob.pVars);
+                    }
+
                     levelFrame.mobiesBuffers.Add(new RenderableBuffer(mob, RenderedObjectType.Moby, level.mobs.Count - 1, level, levelFrame.textureIds));
                     levelFrame.selectedObjects.Add(mob);
                 }

@@ -37,7 +37,7 @@ namespace LibReplanetizer.Parsers
             int splineOffset = ReadInt(ReadBlock(fileStream, gameplayHeader.splinePointer + 4, 4), 0);
             int splineSectionSize = ReadInt(ReadBlock(fileStream, gameplayHeader.splinePointer + 8, 4), 0);
 
-            byte[] splineHeadBlock = ReadBlock(fileStream, gameplayHeader.splinePointer + 0x10, splineCount * 4);
+            byte[] splineHeadBlock = ReadBlock(fileStream, gameplayHeader.splinePointer + 0x10, splineCount * 0x04);
             byte[] splineBlock = ReadBlock(fileStream, gameplayHeader.splinePointer + splineOffset, splineSectionSize);
 
             for (int i = 0; i < splineCount; i++)
@@ -116,7 +116,7 @@ namespace LibReplanetizer.Parsers
 
 
         // TODO consolidate all these into a single function, as they work pretty much the same
-        public List<Moby> GetMobies(List<Model> mobyModels)
+        public List<Moby> GetMobies(List<Model> mobyModels, List<byte[]> pVars)
         {
             var mobs = new List<Moby>();
 
@@ -127,7 +127,7 @@ namespace LibReplanetizer.Parsers
             byte[] mobyBlock = ReadBlock(fileStream, gameplayHeader.mobyPointer + 0x10, game.mobyElemSize * mobyCount);
             for (int i = 0; i < mobyCount; i++)
             {
-                mobs.Add(new Moby(game, mobyBlock, i, mobyModels));
+                mobs.Add(new Moby(game, mobyBlock, i, mobyModels, pVars));
             }
             return mobs;
         }
@@ -303,9 +303,10 @@ namespace LibReplanetizer.Parsers
         public byte[] GetUnk12()
         {
             if (gameplayHeader.unkPointer12 == 0) { return new byte[0]; }
-            int count1 = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer12, 4), 0);
-            int count2 = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer12 + 4, 4), 0);
-            return ReadBlock(fileStream, gameplayHeader.unkPointer12, count1 + count2 * 8 + 0x10);
+            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer12, 4), 0);
+            byte[] block = ReadBlock(fileStream, gameplayHeader.unkPointer12, count * 0x90 + 0x10);
+
+            return block;
         }
 
         public List<KeyValuePair<int, int>> GetType5Cs()
@@ -338,30 +339,15 @@ namespace LibReplanetizer.Parsers
 
         public byte[] GetUnk13()
         {
-            int sectionLength;
 
-            switch (game.num)
-            {
-                case 1:
-                    sectionLength = gameplayHeader.occlusionPointer - gameplayHeader.grindPathsPointer;
-                    break;
-                case 2:
-                case 3:
-                case 4:
-                default:
-                    sectionLength = gameplayHeader.areasPointer - gameplayHeader.grindPathsPointer;
-                    break;
-            }
+            byte[] head = ReadBlock(fileStream, gameplayHeader.grindPathsPointer, 0x10);
+            int count = ReadInt(head, 0x00);
+            int unk1 = ReadInt(head, 0x04);
+            int unk2 = ReadInt(head, 0x08);
 
-            if (sectionLength > 0)
-            {
-                return ReadBlock(fileStream, gameplayHeader.grindPathsPointer, sectionLength);
-            }
-            else
-            {
-                return new byte[0];
-            }
+            byte[] block = ReadBlock(fileStream, gameplayHeader.grindPathsPointer, count * 0x20 + 0x10);
 
+            return block;
         }
 
         public byte[] GetUnk14()
@@ -504,33 +490,26 @@ namespace LibReplanetizer.Parsers
             return ReadBlock(fileStream, gameplayHeader.areasPointer, gameplayHeader.occlusionPointer - gameplayHeader.areasPointer);
         }
 
-        public List<byte[]> GetPvars(List<Moby> mobs)
+        public List<byte[]> GetPvars()
         {
-            int pvarCount = 0;
-            foreach (Moby mob in mobs)
-            {
-                if (mob.pvarIndex > pvarCount)
-                {
-                    pvarCount = mob.pvarIndex;
-                }
-            }
-
-            pvarCount++;
-
             var pVars = new List<byte[]>();
 
-            byte[] pVarHeadBlock = ReadBlock(fileStream, gameplayHeader.pvarSizePointer, pvarCount * 8);
-            uint pVarSectionLength = 0;
-            for (int i = 0; i < pvarCount; i++)
+            byte[] pVarSizes = ReadBlock(fileStream, gameplayHeader.pvarSizePointer, gameplayHeader.pvarPointer - gameplayHeader.pvarSizePointer);
+
+            // Like this because padding is a thing
+            int pVarSizeBlockSize = ReadInt(pVarSizes, pVarSizes.Length - 0x08) + ReadInt(pVarSizes, pVarSizes.Length - 0x04);
+            if (pVarSizeBlockSize == 0)
             {
-                pVarSectionLength += ReadUint(pVarHeadBlock, (i * 8) + 0x04);
+                pVarSizeBlockSize = ReadInt(pVarSizes, pVarSizes.Length - 0x10) + ReadInt(pVarSizes, pVarSizes.Length - 0xC);
             }
 
-            byte[] pVarBlock = ReadBlock(fileStream, gameplayHeader.pvarPointer, (int) pVarSectionLength);
+            int pvarCount = pVarSizes.Length / 0x08;
+
+            byte[] pVarBlock = ReadBlock(fileStream, gameplayHeader.pvarPointer, pVarSizeBlockSize);
             for (int i = 0; i < pvarCount; i++)
             {
-                uint mobpVarsStart = ReadUint(pVarHeadBlock, (i * 8));
-                uint mobpVarsCount = ReadUint(pVarHeadBlock, (i * 8) + 0x04);
+                uint mobpVarsStart = ReadUint(pVarSizes, (i * 8));
+                uint mobpVarsCount = ReadUint(pVarSizes, (i * 8) + 0x04);
                 byte[] mobpVars = GetBytes(pVarBlock, (int) mobpVarsStart, (int) mobpVarsCount);
                 pVars.Add(mobpVars);
             }

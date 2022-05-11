@@ -205,8 +205,11 @@ namespace LibReplanetizer
                 LOGGER.Debug("Parsing Level variables...");
                 levelVariables = gameplayParser.GetLevelVariables();
 
+                LOGGER.Debug("Parsing pvars...");
+                pVars = gameplayParser.GetPvars();
+
                 LOGGER.Debug("Parsing mobs...");
-                mobs = gameplayParser.GetMobies(mobyModels);
+                mobs = gameplayParser.GetMobies(mobyModels, pVars);
                 LOGGER.Debug("Added {0} mobs", mobs.Count);
 
                 LOGGER.Debug("Parsing splines...");
@@ -242,9 +245,8 @@ namespace LibReplanetizer
                 areasData = gameplayParser.GetAreasData();
 
                 directionalLights = gameplayParser.GetDirectionalLights();
+
                 type0Cs = gameplayParser.GetType0Cs();
-                spheres = gameplayParser.GetSpheres();
-                cylinders = gameplayParser.GetCylinders();
                 type4Cs = gameplayParser.GetType4Cs();
                 type7Cs = gameplayParser.GetType7Cs();
                 type80s = gameplayParser.GetType80();
@@ -252,8 +254,10 @@ namespace LibReplanetizer
                 type50s = gameplayParser.GetType50s();
                 type5Cs = gameplayParser.GetType5Cs();
 
-                pVars = gameplayParser.GetPvars(mobs);
                 cuboids = gameplayParser.GetCuboids();
+                spheres = gameplayParser.GetSpheres();
+                cylinders = gameplayParser.GetCylinders();
+
                 gameCameras = gameplayParser.GetGameCameras();
 
                 mobyIds = gameplayParser.GetMobyIds();

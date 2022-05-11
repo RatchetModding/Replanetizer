@@ -865,6 +865,14 @@ namespace Replanetizer.Frames
                 case Moby moby:
                     //objectTree.mobyNode.Nodes[level.mobs.IndexOf(moby)].Remove();
                     level.mobs.Remove(moby);
+                    if (moby.pvarIndex != -1)
+                    {
+                        level.pVars.RemoveAt(moby.pvarIndex);
+                    }
+
+                    // Reinitializing the buffers is simple but slow
+                    if (mobiesBuffers != null) foreach (RenderableBuffer buffer in mobiesBuffers) buffer.Dispose();
+                    mobiesBuffers = GetRenderableBuffer(level.mobs, RenderedObjectType.Moby);
                     break;
                 case Tie tie:
                     //objectTree.tieNode.Nodes[level.ties.IndexOf(tie)].Remove();
@@ -872,18 +880,22 @@ namespace Replanetizer.Frames
                     //level.ties.RemoveRange(1, level.ties.Count - 1);
                     //level.tieModels.RemoveRange(1, level.tieModels.Count - 1);
                     //level.ties.Clear();
+
+                    // Reinitializing the buffers is simple but slow
+                    if (tiesBuffers != null) foreach (RenderableBuffer buffer in tiesBuffers) buffer.Dispose();
+                    tiesBuffers = GetRenderableBuffer(level.ties, RenderedObjectType.Tie);
                     break;
                 case Shrub shrub:
                     level.shrubs.Remove(shrub);
                     //level.shrubs.Clear();
                     //level.shrubModels.RemoveAt(level.shrubModels.Count -1);
                     //level.shrubModels.RemoveRange(5, level.shrubModels.Count - 5);
+
+                    // Reinitializing the buffers is simple but slow
+                    if (shrubsBuffers != null) foreach (RenderableBuffer buffer in shrubsBuffers) buffer.Dispose();
+                    shrubsBuffers = GetRenderableBuffer(level.shrubs, RenderedObjectType.Shrub);
                     break;
                 case TerrainFragment tFrag:
-                    foreach (Terrain terrain in level.terrainChunks)
-                    {
-                        terrain.fragments.Remove(tFrag);
-                    }
                     break;
                 case Spline spline:
                     level.splines.Remove(spline);
@@ -895,6 +907,8 @@ namespace Replanetizer.Frames
                     level.type0Cs.Remove(type0C);
                     break;
             }
+
+            InvalidateView();
         }
 
         private void HandleMouseWheelChanges()

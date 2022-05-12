@@ -75,7 +75,7 @@ namespace Replanetizer.Frames
                     ImGui.Checkbox("Include Mobies", ref settings.writeMobies);
                     if (level.terrainChunks.Count == 0)
                         ImGui.Checkbox("Include Terrain", ref settings.chunksSelected[0]);
-                    ImGui.Checkbox("Include MLT File", ref settings.exportMtlFile);
+                    ImGui.Checkbox("Include MTL File", ref settings.exportMtlFile);
                     ImGui.TreePop();
                 }
 
@@ -101,7 +101,7 @@ namespace Replanetizer.Frames
                     var res = CrossFileDialog.SaveFile("Level.obj", "*.obj");
                     if (res.Length > 0)
                     {
-                        ModelWriter.WriteObj(res, level, settings);
+                        ModelWriter.WriteLevelObj(res, level, settings);
                         isOpen = false;
                     }
                 }

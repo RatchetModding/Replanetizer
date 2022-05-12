@@ -17,6 +17,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Replanetizer.Utils;
 using Texture = LibReplanetizer.Texture;
+using LibReplanetizer.Serializers;
 
 
 namespace Replanetizer.Frames
@@ -35,6 +36,8 @@ namespace Replanetizer.Frames
         private List<List<Texture>>? selectedModelArmorTexturesSet;
         private List<Texture>? selectedTextureSet;
         private List<Texture>? modelTextureList;
+
+        private ModelWriter.WriterModelSettings exportSettings;
 
         private readonly KeyHeldHandler KEY_HELD_HANDLER = new()
         {
@@ -85,6 +88,7 @@ namespace Replanetizer.Frames
             modelTextureList = new List<Texture>();
             propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
             this.shaderIDTable = shaderIDTable;
+            exportSettings = new ModelWriter.WriterModelSettings();
             UpdateWindowSize();
             OnResize();
             SelectModel(model);
@@ -204,6 +208,28 @@ namespace Replanetizer.Frames
                         TextureFrame.RenderTextureList(modelTextureList, 64, levelFrame.textureIds);
                         ImGui.Separator();
                     }
+                    int fileFormat = (int) exportSettings.format;
+                    if (ImGui.Combo("File Format", ref fileFormat, ModelWriter.WRITER_MODEL_FORMAT_STRINGS, ModelWriter.WRITER_MODEL_FORMAT_STRINGS.Length))
+                    {
+                        exportSettings.format = (ModelWriter.WriterModelFormat) fileFormat;
+                    }
+
+                    // Collada specific settings
+                    if (exportSettings.format == ModelWriter.WriterModelFormat.Collada)
+                    {
+                        int animationChoice = (int) exportSettings.animationChoice;
+                        if (ImGui.Combo("Animations", ref animationChoice, ModelWriter.WRITER_MODEL_ANIMATION_CHOICE_STRINGS, ModelWriter.WRITER_MODEL_ANIMATION_CHOICE_STRINGS.Length))
+                        {
+                            exportSettings.animationChoice = (ModelWriter.WriterModelAnimationChoice) animationChoice;
+                        }
+                    }
+
+                    // Wavefront specific settings
+                    if (exportSettings.format == ModelWriter.WriterModelFormat.Wavefront)
+                    {
+                        ImGui.Checkbox("Include MTL File", ref exportSettings.exportMtlFile);
+                    }
+
                     if (ImGui.Button("Export model"))
                         ExportSelectedModel();
                     if (ImGui.Button("Export textures"))
@@ -499,23 +525,23 @@ namespace Replanetizer.Frames
             var model = selectedModel;
             if (model == null) return;
 
-            var fileName = CrossFileDialog.SaveFile(filter: ".dae|.obj|.iqe");
-            if (fileName.Length == 0) return;
-
-            var extension = Path.GetExtension(fileName);
-            switch (extension)
+            string filter = "";
+            switch (exportSettings.format)
             {
-                case ".obj":
-                    ModelWriter.WriteObj(fileName, model);
+                case ModelWriter.WriterModelFormat.Wavefront:
+                    filter = ".obj";
                     break;
-                case ".iqe":
-                    ModelWriter.WriteIqe(fileName, level, model);
+                case ModelWriter.WriterModelFormat.Collada:
+                    filter = ".dae";
                     break;
-                case ".dae":
                 default:
-                    ModelWriter.WriteDae(fileName, level, model);
+                    filter = "*";
                     break;
             }
+            string fileName = CrossFileDialog.SaveFile(filter: filter);
+            if (fileName.Length == 0) return;
+
+            ModelWriter.WriteModel(fileName, level, model, exportSettings);
         }
 
         private void ExportSelectedModelTextures()

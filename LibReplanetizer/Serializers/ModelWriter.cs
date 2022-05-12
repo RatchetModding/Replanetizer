@@ -304,17 +304,11 @@ namespace LibReplanetizer
                 colladaStream.WriteLine(indent + "\t<animation id=\"" + name + "_" + k.ToString() + "\" name=\"" + name + "_" + k.ToString() + "\">");
                 colladaStream.WriteLine(indent + "\t\t<source id=\"" + name + "_" + k.ToString() + "Input\">");
                 colladaStream.Write(indent + "\t\t\t<float_array id=\"" + name + "_" + k.ToString() + "InputArray\" count=\"" + anim.frames.Count + "\">");
+                float frameStartTime = 0.0f;
                 for (int j = 0; j < anim.frames.Count; j++)
                 {
-                    if (anim.speed != 0)
-                    {
-                        colladaStream.Write((j / (60.0f * anim.speed)).ToString("G", en_US) + " ");
-                    }
-                    else
-                    {
-                        colladaStream.Write((j / (12.0f)).ToString("G", en_US) + " ");
-                    }
-
+                    colladaStream.Write((frameStartTime).ToString("G", en_US) + " ");
+                    frameStartTime += 1.0f / (60.0f * anim.frames[j].speed);
                 }
                 colladaStream.WriteLine(indent + "</float_array>");
                 colladaStream.WriteLine(indent + "\t\t\t<technique_common>");

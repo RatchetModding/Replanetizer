@@ -306,7 +306,15 @@ namespace LibReplanetizer
                 colladaStream.Write(indent + "\t\t\t<float_array id=\"" + name + "_" + k.ToString() + "InputArray\" count=\"" + anim.frames.Count + "\">");
                 for (int j = 0; j < anim.frames.Count; j++)
                 {
-                    colladaStream.Write((j / (30.0f)).ToString("G", en_US) + " ");
+                    if (anim.speed != 0)
+                    {
+                        colladaStream.Write((j / (60.0f * anim.speed)).ToString("G", en_US) + " ");
+                    }
+                    else
+                    {
+                        colladaStream.Write((j / (12.0f)).ToString("G", en_US) + " ");
+                    }
+
                 }
                 colladaStream.WriteLine(indent + "</float_array>");
                 colladaStream.WriteLine(indent + "\t\t\t<technique_common>");
@@ -376,14 +384,8 @@ namespace LibReplanetizer
             colladaStream.WriteLine(indent + "</animation>");
         }
 
-        public static void WriteDae(string fileName, Level level, Model model)
+        private static void WriteModelDaeFile(string fileName, Level level, Model model, WriterModelSettings settings, bool includeSkeleton, int id)
         {
-            LOGGER.Trace(fileName);
-
-            string? filePath = Path.GetDirectoryName(fileName);
-
-            bool includeSkeleton = (model is MobyModel mobyModel && mobyModel.boneCount != 0);
-
             using (StreamWriter colladaStream = new StreamWriter(fileName))
             {
                 // skybox model has no normals and thus the vertex buffer has a different layout
@@ -758,17 +760,33 @@ namespace LibReplanetizer
                     }
 
                     colladaStream.WriteLine("\t<library_animations>");
-                    for (int i = 0; i < anims.Count; i++)
+                    if (id == -1)
                     {
-                        WriteDaeAnimation(colladaStream, anims[i], moby.boneCount, "Anim" + i.ToString(), "\t\t");
+                        for (int i = 0; i < anims.Count; i++)
+                        {
+                            WriteDaeAnimation(colladaStream, anims[i], moby.boneCount, "Anim" + i.ToString(), "\t\t");
+                        }
+                    }
+                    else
+                    {
+                        WriteDaeAnimation(colladaStream, anims[id], moby.boneCount, "Anim" + id.ToString(), "\t\t");
                     }
                     colladaStream.WriteLine("\t</library_animations>");
 
                     colladaStream.WriteLine("\t<library_animation_clips>");
-                    for (int i = 0; i < anims.Count; i++)
+                    if (id == -1)
                     {
-                        colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip" + i.ToString() + "\">");
-                        colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim" + i.ToString() + "\"/>");
+                        for (int i = 0; i < anims.Count; i++)
+                        {
+                            colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip" + i.ToString() + "\">");
+                            colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim" + i.ToString() + "\"/>");
+                            colladaStream.WriteLine("\t\t</animation_clip>");
+                        }
+                    }
+                    else
+                    {
+                        colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip" + id.ToString() + "\">");
+                        colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim" + id.ToString() + "\"/>");
                         colladaStream.WriteLine("\t\t</animation_clip>");
                     }
                     colladaStream.WriteLine("\t</library_animation_clips>");
@@ -821,6 +839,35 @@ namespace LibReplanetizer
                 colladaStream.WriteLine("\t</scene>");
 
                 colladaStream.WriteLine("</COLLADA>");
+            }
+        }
+
+        private static void WriteModelDae(string fileName, Level level, Model model, WriterModelSettings settings)
+        {
+            LOGGER.Trace(fileName);
+
+            bool includeSkeleton = (model is MobyModel mobyModel && mobyModel.boneCount != 0);
+
+            if (includeSkeleton && (settings.animationChoice == WriterModelAnimationChoice.AllSeparate))
+            {
+                string fileExt = Path.GetExtension(fileName);
+                string? dir = Path.GetDirectoryName(fileName);
+                fileName = Path.GetFileNameWithoutExtension(fileName);
+
+                if (dir == null) dir = "";
+
+                int numFilesExported = ((MobyModel) model).animations.Count;
+
+                for (int i = 0; i < numFilesExported; i++)
+                {
+                    string filePath = Path.Combine(dir, fileName + "_" + i.ToString() + fileExt);
+
+                    WriteModelDaeFile(filePath, level, model, settings, true, i);
+                }
+            }
+            else
+            {
+                WriteModelDaeFile(fileName, level, model, settings, includeSkeleton, -1);
             }
         }
 
@@ -945,22 +992,26 @@ namespace LibReplanetizer
             }
         }
 
-        public static void WriteObj(string fileName, Model model)
+        private static void WriteModelObj(string fileName, Model model, WriterModelSettings settings)
         {
             string? pathName = Path.GetDirectoryName(fileName);
             string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
 
-            using (StreamWriter mtlfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl"))
+            if (settings.exportMtlFile)
             {
-                // List used mtls to prevent it from making duplicate entries
-                List<int> usedMtls = new List<int>();
-                WriteObjectMaterial(mtlfs, model, usedMtls);
+                using (StreamWriter mtlfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl"))
+                {
+                    // List used mtls to prevent it from making duplicate entries
+                    List<int> usedMtls = new List<int>();
+                    WriteObjectMaterial(mtlfs, model, usedMtls);
+                }
             }
+
 
             using (StreamWriter objfs = new StreamWriter(fileName))
             {
                 objfs.WriteLine("o Object_" + model.id.ToString("X4"));
-                if (model.textureConfig != null)
+                if (model.textureConfig != null && settings.exportMtlFile)
                     objfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
 
                 Matrix4 scale = Matrix4.CreateScale(model.size);
@@ -1361,7 +1412,20 @@ namespace LibReplanetizer
             }
         }
 
-        public static void WriteObj(string fileName, Level level, WriterLevelSettings settings)
+        public static void WriteModel(string fileName, Level level, Model model, WriterModelSettings settings)
+        {
+            switch (settings.format)
+            {
+                case WriterModelFormat.Wavefront:
+                    WriteModelObj(fileName, model, settings);
+                    break;
+                case WriterModelFormat.Collada:
+                    WriteModelDae(fileName, level, model, settings);
+                    break;
+            }
+        }
+
+        public static void WriteLevelObj(string fileName, Level level, WriterLevelSettings settings)
         {
             switch (settings.mode)
             {
@@ -1410,6 +1474,34 @@ namespace LibReplanetizer
                 {
                     chunksSelected[i] = false;
                 }
+            }
+        }
+
+        public static readonly string[] WRITER_MODEL_FORMAT_STRINGS = { "Wavefront (*.obj)", "Collada (*.dae)" };
+
+        public enum WriterModelFormat
+        {
+            Wavefront,
+            Collada
+        };
+
+        public static readonly string[] WRITER_MODEL_ANIMATION_CHOICE_STRINGS = { "No Animations", "All Animations", "Separate File for each Animation (Blender compat)" };
+
+        public enum WriterModelAnimationChoice
+        {
+            None,
+            All,
+            AllSeparate
+        };
+
+        public class WriterModelSettings
+        {
+            public WriterModelFormat format = WriterModelFormat.Collada;
+            public WriterModelAnimationChoice animationChoice = WriterModelAnimationChoice.None;
+            public bool exportMtlFile = true;
+
+            public WriterModelSettings()
+            {
             }
         }
 

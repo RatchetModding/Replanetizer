@@ -741,49 +741,52 @@ namespace LibReplanetizer
                     colladaStream.WriteLine("\t\t</controller>");
                     colladaStream.WriteLine("\t</library_controllers>");
 
-                    //animations
-                    List<Animation> anims;
+                    if (settings.animationChoice != WriterModelAnimationChoice.None)
+                    {
+                        //animations
+                        List<Animation> anims;
 
-                    if (moby.id == 0)
-                    {
-                        anims = level.playerAnimations;
-                    }
-                    else
-                    {
-                        anims = moby.animations;
-                    }
-
-                    colladaStream.WriteLine("\t<library_animations>");
-                    if (id == -1)
-                    {
-                        for (int i = 0; i < anims.Count; i++)
+                        if (moby.id == 0)
                         {
-                            WriteDaeAnimation(colladaStream, anims[i], moby.boneCount, "Anim" + i.ToString(), "\t\t");
+                            anims = level.playerAnimations;
                         }
-                    }
-                    else
-                    {
-                        WriteDaeAnimation(colladaStream, anims[id], moby.boneCount, "Anim" + id.ToString(), "\t\t");
-                    }
-                    colladaStream.WriteLine("\t</library_animations>");
-
-                    colladaStream.WriteLine("\t<library_animation_clips>");
-                    if (id == -1)
-                    {
-                        for (int i = 0; i < anims.Count; i++)
+                        else
                         {
-                            colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip" + i.ToString() + "\">");
-                            colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim" + i.ToString() + "\"/>");
+                            anims = moby.animations;
+                        }
+
+                        colladaStream.WriteLine("\t<library_animations>");
+                        if (id == -1)
+                        {
+                            for (int i = 0; i < anims.Count; i++)
+                            {
+                                WriteDaeAnimation(colladaStream, anims[i], moby.boneCount, "Anim" + i.ToString(), "\t\t");
+                            }
+                        }
+                        else
+                        {
+                            WriteDaeAnimation(colladaStream, anims[id], moby.boneCount, "Anim" + id.ToString(), "\t\t");
+                        }
+                        colladaStream.WriteLine("\t</library_animations>");
+
+                        colladaStream.WriteLine("\t<library_animation_clips>");
+                        if (id == -1)
+                        {
+                            for (int i = 0; i < anims.Count; i++)
+                            {
+                                colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip" + i.ToString() + "\">");
+                                colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim" + i.ToString() + "\"/>");
+                                colladaStream.WriteLine("\t\t</animation_clip>");
+                            }
+                        }
+                        else
+                        {
+                            colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip" + id.ToString() + "\">");
+                            colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim" + id.ToString() + "\"/>");
                             colladaStream.WriteLine("\t\t</animation_clip>");
                         }
+                        colladaStream.WriteLine("\t</library_animation_clips>");
                     }
-                    else
-                    {
-                        colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip" + id.ToString() + "\">");
-                        colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim" + id.ToString() + "\"/>");
-                        colladaStream.WriteLine("\t\t</animation_clip>");
-                    }
-                    colladaStream.WriteLine("\t</library_animation_clips>");
                 }
 
                 //scene

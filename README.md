@@ -36,7 +36,7 @@ Replanetizer is still in an early state of development. Its feature set entails:
    - Manipulation of variables
  - Export
    - Textures (`.png`)
-   - Rigged models (`.dae`, `.obj`, `.iqe`)
+   - Rigged models (`.dae`, `.obj`)
    - Level as a model (`.obj`)
    - Collision (`.obj`)
 

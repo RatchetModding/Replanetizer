@@ -378,6 +378,111 @@ namespace LibReplanetizer
             colladaStream.WriteLine(indent + "</animation>");
         }
 
+        private static void WriteDaeAnimationSequential(StreamWriter colladaStream, List<Animation> anims, int boneCount, string name, string indent = "")
+        {
+            colladaStream.WriteLine(indent + "<animation id=\"" + name + "\" name=\"" + name + "\">");
+
+            int frameCount = 0;
+            foreach (Animation anim in anims)
+            {
+                frameCount += anim.frames.Count;
+            }
+
+            string timeString = "";
+            float frameStartTime = 0.0f;
+            foreach (Animation anim in anims)
+            {
+                foreach (Frame frame in anim.frames)
+                {
+                    timeString += (frameStartTime).ToString("G", en_US) + " ";
+                    if (frame.speed == 0.0f)
+                    {
+                        frameStartTime += 1.0f / (60.0f * 0.2f);
+                    }
+                    else
+                    {
+                        frameStartTime += 1.0f / (60.0f * frame.speed);
+                    }
+                }
+            }
+
+            for (int k = 0; k < boneCount; k++)
+            {
+                colladaStream.WriteLine(indent + "\t<animation id=\"" + name + "_" + k.ToString() + "\" name=\"" + name + "_" + k.ToString() + "\">");
+                colladaStream.WriteLine(indent + "\t\t<source id=\"" + name + "_" + k.ToString() + "Input\">");
+                colladaStream.Write(indent + "\t\t\t<float_array id=\"" + name + "_" + k.ToString() + "InputArray\" count=\"" + frameCount + "\">");
+                colladaStream.Write(timeString);
+                colladaStream.WriteLine(indent + "</float_array>");
+                colladaStream.WriteLine(indent + "\t\t\t<technique_common>");
+                colladaStream.WriteLine(indent + "\t\t\t\t<accessor source=\"#" + name + "_" + k.ToString() + "InputArray\" count=\"" + frameCount + "\" stride=\"1\">");
+                colladaStream.WriteLine(indent + "\t\t\t\t\t<param name=\"TIME\" type=\"float\"/>");
+                colladaStream.WriteLine(indent + "\t\t\t\t</accessor>");
+                colladaStream.WriteLine(indent + "\t\t\t</technique_common>");
+                colladaStream.WriteLine(indent + "\t\t</source>");
+                colladaStream.WriteLine(indent + "\t\t<source id=\"" + name + "_" + k.ToString() + "Output\">");
+                colladaStream.Write(indent + "\t\t\t<float_array id=\"" + name + "_" + k.ToString() + "OutputArray\" count=\"" + 16 * frameCount + "\">");
+                foreach (Animation anim in anims)
+                {
+                    foreach (Frame frame in anim.frames)
+                    {
+                        short[] rots = frame.rotations[k];
+
+                        Quaternion quat = new Quaternion((rots[0] / 32767f) * 180f, (rots[1] / 32767f) * 180f, (rots[2] / 32767f) * 180f, (-rots[3] / 32767f) * 180f);
+
+                        Matrix4 rotation = Matrix4.CreateFromQuaternion(quat);
+                        Matrix4 animationMatrix = rotation;
+                        animationMatrix.Transpose();
+
+                        colladaStream.Write((animationMatrix.M11).ToString("G", en_US) + " ");
+                        colladaStream.Write((animationMatrix.M12).ToString("G", en_US) + " ");
+                        colladaStream.Write((animationMatrix.M13).ToString("G", en_US) + " ");
+                        colladaStream.Write((animationMatrix.M14).ToString("G", en_US) + " ");
+                        colladaStream.Write((animationMatrix.M21).ToString("G", en_US) + " ");
+                        colladaStream.Write((animationMatrix.M22).ToString("G", en_US) + " ");
+                        colladaStream.Write((animationMatrix.M23).ToString("G", en_US) + " ");
+                        colladaStream.Write((animationMatrix.M24).ToString("G", en_US) + " ");
+                        colladaStream.Write((animationMatrix.M31).ToString("G", en_US) + " ");
+                        colladaStream.Write((animationMatrix.M32).ToString("G", en_US) + " ");
+                        colladaStream.Write((animationMatrix.M33).ToString("G", en_US) + " ");
+                        colladaStream.Write((animationMatrix.M34).ToString("G", en_US) + " ");
+                        colladaStream.Write((animationMatrix.M41).ToString("G", en_US) + " ");
+                        colladaStream.Write((animationMatrix.M42).ToString("G", en_US) + " ");
+                        colladaStream.Write((animationMatrix.M43).ToString("G", en_US) + " ");
+                        colladaStream.Write((animationMatrix.M44).ToString("G", en_US) + " ");
+                    }
+                }
+                colladaStream.WriteLine("</float_array>");
+                colladaStream.WriteLine(indent + "\t\t\t<technique_common>");
+                colladaStream.WriteLine(indent + "\t\t\t\t<accessor source=\"#" + name + "_" + k.ToString() + "OutputArray\" count=\"" + frameCount + "\" stride=\"16\">");
+                colladaStream.WriteLine(indent + "\t\t\t\t\t<param name=\"TRANSFORM\" type=\"float4x4\"/>");
+                colladaStream.WriteLine(indent + "\t\t\t\t</accessor>");
+                colladaStream.WriteLine(indent + "\t\t\t</technique_common>");
+                colladaStream.WriteLine(indent + "\t\t</source>");
+                colladaStream.WriteLine(indent + "\t\t<source id=\"" + name + "_" + k.ToString() + "Interp\">");
+                colladaStream.Write(indent + "\t\t\t<Name_array id=\"" + name + "_" + k.ToString() + "InterpArray\" count=\"" + frameCount + "\">");
+                for (int j = 0; j < frameCount; j++)
+                {
+                    colladaStream.Write("LINEAR ");
+                }
+                colladaStream.WriteLine("</Name_array>");
+                colladaStream.WriteLine(indent + "\t\t\t<technique_common>");
+                colladaStream.WriteLine(indent + "\t\t\t\t<accessor source=\"#" + name + "_" + k.ToString() + "InterpArray\" count=\"" + frameCount + "\" stride=\"1\">");
+                colladaStream.WriteLine(indent + "\t\t\t\t\t<param name=\"INTERPOLATION\" type=\"Name\"/>");
+                colladaStream.WriteLine(indent + "\t\t\t\t</accessor>");
+                colladaStream.WriteLine(indent + "\t\t\t</technique_common>");
+                colladaStream.WriteLine(indent + "\t\t</source>");
+                colladaStream.WriteLine(indent + "\t\t<sampler id=\"" + name + "_" + k.ToString() + "Sampler\">");
+                colladaStream.WriteLine(indent + "\t\t\t<input semantic=\"INPUT\" source=\"#" + name + "_" + k.ToString() + "Input\"/>");
+                colladaStream.WriteLine(indent + "\t\t\t<input semantic=\"OUTPUT\" source=\"#" + name + "_" + k.ToString() + "Output\"/>");
+                colladaStream.WriteLine(indent + "\t\t\t<input semantic=\"INTERPOLATION\" source=\"#" + name + "_" + k.ToString() + "Interp\"/>");
+                colladaStream.WriteLine(indent + "\t\t</sampler>");
+                colladaStream.WriteLine(indent + "\t\t<channel source=\"" + name + "_" + k.ToString() + "Sampler\" target=\"Skel" + k.ToString() + "/transform\"/>");
+                colladaStream.WriteLine(indent + "\t</animation>");
+            }
+
+            colladaStream.WriteLine(indent + "</animation>");
+        }
+
         private static void WriteModelDaeFile(string fileName, Level level, Model model, WriterModelSettings settings, bool includeSkeleton, int id)
         {
             using (StreamWriter colladaStream = new StreamWriter(fileName))
@@ -758,9 +863,16 @@ namespace LibReplanetizer
                         colladaStream.WriteLine("\t<library_animations>");
                         if (id == -1)
                         {
-                            for (int i = 0; i < anims.Count; i++)
+                            if (settings.animationChoice == WriterModelAnimationChoice.AllSequential)
                             {
-                                WriteDaeAnimation(colladaStream, anims[i], moby.boneCount, "Anim" + i.ToString(), "\t\t");
+                                WriteDaeAnimationSequential(colladaStream, anims, moby.boneCount, "Anim", "\t\t");
+                            }
+                            else
+                            {
+                                for (int i = 0; i < anims.Count; i++)
+                                {
+                                    WriteDaeAnimation(colladaStream, anims[i], moby.boneCount, "Anim" + i.ToString(), "\t\t");
+                                }
                             }
                         }
                         else
@@ -772,11 +884,21 @@ namespace LibReplanetizer
                         colladaStream.WriteLine("\t<library_animation_clips>");
                         if (id == -1)
                         {
-                            for (int i = 0; i < anims.Count; i++)
+                            switch (settings.animationChoice)
                             {
-                                colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip" + i.ToString() + "\">");
-                                colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim" + i.ToString() + "\"/>");
-                                colladaStream.WriteLine("\t\t</animation_clip>");
+                                case WriterModelAnimationChoice.AllSequential:
+                                    colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip\">");
+                                    colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim\"/>");
+                                    colladaStream.WriteLine("\t\t</animation_clip>");
+                                    break;
+                                case WriterModelAnimationChoice.All:
+                                    for (int i = 0; i < anims.Count; i++)
+                                    {
+                                        colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip" + i.ToString() + "\">");
+                                        colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim" + i.ToString() + "\"/>");
+                                        colladaStream.WriteLine("\t\t</animation_clip>");
+                                    }
+                                    break;
                             }
                         }
                         else
@@ -1361,13 +1483,14 @@ namespace LibReplanetizer
             Collada
         };
 
-        public static readonly string[] WRITER_MODEL_ANIMATION_CHOICE_STRINGS = { "No Animations", "All Animations", "Separate File for each Animation (Blender compat)" };
+        public static readonly string[] WRITER_MODEL_ANIMATION_CHOICE_STRINGS = { "No Animations", "All Animations", "Separate File for each Animation", "Concatenate Animations" };
 
         public enum WriterModelAnimationChoice
         {
             None,
             All,
-            AllSeparate
+            AllSeparate,
+            AllSequential
         };
 
         public class WriterModelSettings

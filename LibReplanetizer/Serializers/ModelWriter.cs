@@ -299,17 +299,33 @@ namespace LibReplanetizer
         {
             colladaStream.WriteLine(indent + "<animation id=\"" + name + "\" name=\"" + name + "\">");
 
+            string timeString = "";
+            float frameStartTime = 0.0f;
+            foreach (Frame frame in anim.frames)
+            {
+                timeString += (frameStartTime).ToString("G", en_US) + " ";
+                if (frame.speed == 0.0f)
+                {
+                    frameStartTime += 1.0f / (60.0f * 0.2f);
+                }
+                else
+                {
+                    frameStartTime += 1.0f / (60.0f * frame.speed);
+                }
+            }
+
+            string interpString = "";
+            for (int j = 0; j < anim.frames.Count; j++)
+            {
+                interpString += "LINEAR ";
+            }
+
             for (int k = 0; k < boneCount; k++)
             {
                 colladaStream.WriteLine(indent + "\t<animation id=\"" + name + "_" + k.ToString() + "\" name=\"" + name + "_" + k.ToString() + "\">");
                 colladaStream.WriteLine(indent + "\t\t<source id=\"" + name + "_" + k.ToString() + "Input\">");
                 colladaStream.Write(indent + "\t\t\t<float_array id=\"" + name + "_" + k.ToString() + "InputArray\" count=\"" + anim.frames.Count + "\">");
-                float frameStartTime = 0.0f;
-                for (int j = 0; j < anim.frames.Count; j++)
-                {
-                    colladaStream.Write((frameStartTime).ToString("G", en_US) + " ");
-                    frameStartTime += 1.0f / (60.0f * anim.frames[j].speed);
-                }
+                colladaStream.Write(timeString);
                 colladaStream.WriteLine(indent + "</float_array>");
                 colladaStream.WriteLine(indent + "\t\t\t<technique_common>");
                 colladaStream.WriteLine(indent + "\t\t\t\t<accessor source=\"#" + name + "_" + k.ToString() + "InputArray\" count=\"" + anim.frames.Count + "\" stride=\"1\">");
@@ -319,9 +335,8 @@ namespace LibReplanetizer
                 colladaStream.WriteLine(indent + "\t\t</source>");
                 colladaStream.WriteLine(indent + "\t\t<source id=\"" + name + "_" + k.ToString() + "Output\">");
                 colladaStream.Write(indent + "\t\t\t<float_array id=\"" + name + "_" + k.ToString() + "OutputArray\" count=\"" + 16 * anim.frames.Count + "\">");
-                for (int j = 0; j < anim.frames.Count; j++)
+                foreach (Frame frame in anim.frames)
                 {
-                    Frame frame = anim.frames[j];
                     short[] rots = frame.rotations[k];
 
                     Quaternion quat = new Quaternion((rots[0] / 32767f) * 180f, (rots[1] / 32767f) * 180f, (rots[2] / 32767f) * 180f, (-rots[3] / 32767f) * 180f);
@@ -356,10 +371,7 @@ namespace LibReplanetizer
                 colladaStream.WriteLine(indent + "\t\t</source>");
                 colladaStream.WriteLine(indent + "\t\t<source id=\"" + name + "_" + k.ToString() + "Interp\">");
                 colladaStream.Write(indent + "\t\t\t<Name_array id=\"" + name + "_" + k.ToString() + "InterpArray\" count=\"" + anim.frames.Count + "\">");
-                for (int j = 0; j < anim.frames.Count; j++)
-                {
-                    colladaStream.Write("LINEAR ");
-                }
+                colladaStream.Write(interpString);
                 colladaStream.WriteLine("</Name_array>");
                 colladaStream.WriteLine(indent + "\t\t\t<technique_common>");
                 colladaStream.WriteLine(indent + "\t\t\t\t<accessor source=\"#" + name + "_" + k.ToString() + "InterpArray\" count=\"" + anim.frames.Count + "\" stride=\"1\">");

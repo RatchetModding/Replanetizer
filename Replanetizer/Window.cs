@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2022, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -6,9 +6,10 @@
 // Please see the LICENSE.md file for more details.
 
 using System;
+using System.IO;
 using System.Collections.Generic;
+using System.Reflection;
 using ImGuiNET;
-using LibReplanetizer;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
@@ -33,6 +34,35 @@ namespace Replanetizer
         {
             this.args = args;
             openFrames = new List<Frame>();
+
+            try
+            {
+                System.Drawing.Icon? icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location);
+                if (icon != null)
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        icon.ToBitmap().Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+                        byte[] iconBytes = ms.ToArray();
+                        int rowSize = icon.Width * 4;
+                        int iconSize = rowSize * icon.Height;
+                        byte[] pixelBytes = new byte[iconSize];
+                        for (int y = 0; y < icon.Height; y++)
+                        {
+                            for (int i = 0; i < 4 * icon.Width; i++)
+                            {
+                                pixelBytes[i + y * rowSize] = iconBytes[54 + i + (icon.Height - y - 1) * rowSize];
+                            }
+                        }
+                        OpenTK.Windowing.Common.Input.Image img = new OpenTK.Windowing.Common.Input.Image(icon.Width, icon.Height, pixelBytes);
+                        OpenTK.Windowing.Common.Input.Image[] imgs = new OpenTK.Windowing.Common.Input.Image[] { img };
+                        this.Icon = new OpenTK.Windowing.Common.Input.WindowIcon(imgs);
+                    }
+                }
+            }
+            catch (ArgumentException)
+            {
+            }
         }
 
         protected override void OnLoad()

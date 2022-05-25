@@ -36,6 +36,9 @@ namespace LibReplanetizer.Models
 
         public Collision(FileStream fs, int collisionPointer)
         {
+            // RaC 1 title screen has no collision
+            if (collisionPointer == 0) return;
+
             float div = 1024f;
 
             uint totalVertexCount = 0;

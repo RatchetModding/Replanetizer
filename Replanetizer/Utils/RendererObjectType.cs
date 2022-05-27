@@ -19,7 +19,8 @@ namespace Replanetizer.Utils
         Sphere = 7,
         Cylinder = 8,
         Type0C = 9,
-        Tool = 10,
-        Skybox = 11
+        GameCamera = 10,
+        Tool = 11,
+        Skybox = 12
     }
 }

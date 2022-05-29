@@ -217,10 +217,13 @@ namespace Replanetizer.Frames
                     // Collada specific settings
                     if (exportSettings.format == ModelWriter.WriterModelFormat.Collada)
                     {
-                        int animationChoice = (int) exportSettings.animationChoice;
-                        if (ImGui.Combo("Animations", ref animationChoice, ModelWriter.WRITER_MODEL_ANIMATION_CHOICE_STRINGS, ModelWriter.WRITER_MODEL_ANIMATION_CHOICE_STRINGS.Length))
+                        if (selectedModel is MobyModel mobyModel && mobyModel.animations.Count > 0)
                         {
-                            exportSettings.animationChoice = (ModelWriter.WriterModelAnimationChoice) animationChoice;
+                            int animationChoice = (int) exportSettings.animationChoice;
+                            if (ImGui.Combo("Animations", ref animationChoice, ModelWriter.WRITER_MODEL_ANIMATION_CHOICE_STRINGS, ModelWriter.WRITER_MODEL_ANIMATION_CHOICE_STRINGS.Length))
+                            {
+                                exportSettings.animationChoice = (ModelWriter.WriterModelAnimationChoice) animationChoice;
+                            }
                         }
                     }
 

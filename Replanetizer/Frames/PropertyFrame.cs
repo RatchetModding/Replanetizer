@@ -6,6 +6,7 @@
 // Please see the LICENSE.md file for more details.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -358,6 +359,12 @@ namespace Replanetizer.Frames
                 }
                 else
                     ImGui.LabelText(propertyName, "[Out of Range] " + Convert.ToString(index));
+            }
+            else if (type is { IsGenericType: true } && type.GetGenericTypeDefinition() == typeof(List<>))
+            {
+                ICollection list = (ICollection) val;
+                var genericType = type.GetGenericArguments()[0].Name;
+                ImGui.LabelText(propertyName, "List<" + genericType + ">[" + list.Count + "]");
             }
             else
                 ImGui.LabelText(propertyName, Convert.ToString(val));

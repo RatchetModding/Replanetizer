@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2022, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -390,7 +390,7 @@ namespace LibReplanetizer
             colladaStream.WriteLine(indent + "</animation>");
         }
 
-        private static void WriteDaeAnimationSequential(StreamWriter colladaStream, List<Animation> anims, int boneCount, string name, string indent = "")
+        private static void WriteDaeAnimationSequential(StreamWriter colladaStream, List<Animation> anims, int boneCount, string name, MobyModel model, string indent = "")
         {
             colladaStream.WriteLine(indent + "<animation id=\"" + name + "\" name=\"" + name + "\">");
 
@@ -437,13 +437,15 @@ namespace LibReplanetizer
                 {
                     foreach (Frame frame in anim.frames)
                     {
-                        short[] rots = frame.rotations[k];
+                        Matrix4 animationMatrix = frame.GetInverseTransformation(k);
 
-                        Quaternion quat = new Quaternion((rots[0] / 32767f) * 180f, (rots[1] / 32767f) * 180f, (rots[2] / 32767f) * 180f, (-rots[3] / 32767f) * 180f);
+                        Vector3 offBone = new Vector3(model.boneDatas[k].translationX, model.boneDatas[k].translationY, model.boneDatas[k].translationZ);
 
-                        Matrix4 rotation = Matrix4.CreateFromQuaternion(quat);
-                        Matrix4 animationMatrix = rotation;
-                        animationMatrix.Transpose();
+                        offBone *= model.size / 1024f;
+
+                        animationMatrix.M14 += offBone.X;
+                        animationMatrix.M24 += offBone.Y;
+                        animationMatrix.M34 += offBone.Z;
 
                         colladaStream.Write((animationMatrix.M11).ToString("G", en_US) + " ");
                         colladaStream.Write((animationMatrix.M12).ToString("G", en_US) + " ");
@@ -877,7 +879,7 @@ namespace LibReplanetizer
                         {
                             if (settings.animationChoice == WriterModelAnimationChoice.AllSequential)
                             {
-                                WriteDaeAnimationSequential(colladaStream, anims, moby.boneCount, "Anim", "\t\t");
+                                WriteDaeAnimationSequential(colladaStream, anims, moby.boneCount, "Anim", moby, "\t\t");
                             }
                             else
                             {
@@ -892,34 +894,6 @@ namespace LibReplanetizer
                             WriteDaeAnimation(colladaStream, anims[id], moby.boneCount, "Anim" + id.ToString(), "\t\t");
                         }
                         colladaStream.WriteLine("\t</library_animations>");
-
-                        colladaStream.WriteLine("\t<library_animation_clips>");
-                        if (id == -1)
-                        {
-                            switch (settings.animationChoice)
-                            {
-                                case WriterModelAnimationChoice.AllSequential:
-                                    colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip\">");
-                                    colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim\"/>");
-                                    colladaStream.WriteLine("\t\t</animation_clip>");
-                                    break;
-                                case WriterModelAnimationChoice.All:
-                                    for (int i = 0; i < anims.Count; i++)
-                                    {
-                                        colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip" + i.ToString() + "\">");
-                                        colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim" + i.ToString() + "\"/>");
-                                        colladaStream.WriteLine("\t\t</animation_clip>");
-                                    }
-                                    break;
-                            }
-                        }
-                        else
-                        {
-                            colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip" + id.ToString() + "\">");
-                            colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim" + id.ToString() + "\"/>");
-                            colladaStream.WriteLine("\t\t</animation_clip>");
-                        }
-                        colladaStream.WriteLine("\t</library_animation_clips>");
                     }
                 }
 

@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2022, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -7,10 +7,35 @@
 
 using System.Collections.Generic;
 using System.IO;
+using OpenTK.Mathematics;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Models.Animations
 {
+    public struct FrameBoneScaling
+    {
+        public FrameBoneScaling(float x, float y, float z, byte bone, byte unk)
+        {
+            this.scale = new Vector3(x, y, z);
+            this.bone = bone;
+            this.unk = unk;
+        }
+        public Vector3 scale;
+        public byte bone;
+        public byte unk;
+    }
+
+    public struct FrameBoneTranslation
+    {
+        public FrameBoneTranslation(float x, float y, float z, byte unk)
+        {
+            this.translation = new Vector3(x, y, z);
+            this.unk = unk;
+        }
+        public Vector3 translation;
+        public byte unk;
+    }
+
     public class Frame
     {
         public float speed { get; set; }
@@ -18,8 +43,32 @@ namespace LibReplanetizer.Models.Animations
         public ushort frameLength { get; set; }
 
         public List<short[]> rotations { get; set; }
-        public List<short[]> sec0s { get; set; }
-        public List<short[]> translations { get; set; }
+        public List<FrameBoneScaling> sec0s { get; set; }
+        public List<FrameBoneTranslation> translations { get; set; }
+
+        public Matrix4 GetInverseTransformation(int bone)
+        {
+            short[] rots = rotations[bone];
+            Quaternion rot = new Quaternion((rots[0] / 32767f) * 180f, (rots[1] / 32767f) * 180f, (rots[2] / 32767f) * 180f, (-rots[3] / 32767f) * 180f);
+            Matrix4 transformation = Matrix4.CreateFromQuaternion(rot);
+            transformation.Transpose();
+            List<FrameBoneScaling> scalings = sec0s.FindAll(s => s.bone == bone);
+
+            foreach (FrameBoneScaling s in scalings)
+            {
+                transformation.M11 *= s.scale.X;
+                transformation.M21 *= s.scale.X;
+                transformation.M31 *= s.scale.X;
+                transformation.M12 *= s.scale.Y;
+                transformation.M22 *= s.scale.Y;
+                transformation.M32 *= s.scale.Y;
+                transformation.M13 *= s.scale.Z;
+                transformation.M23 *= s.scale.Z;
+                transformation.M33 *= s.scale.Z;
+            }
+
+            return transformation;
+        }
 
         public Frame(FileStream fs, int offset, int boneCount)
         {
@@ -31,7 +80,6 @@ namespace LibReplanetizer.Models.Animations
             ushort sec0Count = ReadUshort(header, 0x0A);
             ushort translationPointer = ReadUshort(header, 0x0C);
             ushort translationCount = ReadUshort(header, 0x0E);
-
 
             byte[] frameBlock = ReadBlock(fs, offset + 0x10, frameLength * 0x10);
             rotations = new List<short[]>();
@@ -45,34 +93,32 @@ namespace LibReplanetizer.Models.Animations
                 rotations.Add(rot);
             }
 
-
-            sec0s = new List<short[]>();
+            sec0s = new List<FrameBoneScaling>();
             for (int i = 0; i < sec0Count; i++)
             {
-                short[] rot = new short[4];
-                rot[0] = ReadShort(frameBlock, sec0Pointer + i * 8 + 0x00);
-                rot[1] = ReadShort(frameBlock, sec0Pointer + i * 8 + 0x02);
-                rot[2] = ReadShort(frameBlock, sec0Pointer + i * 8 + 0x04);
-                rot[3] = ReadShort(frameBlock, sec0Pointer + i * 8 + 0x06);
-                sec0s.Add(rot);
+                float x = ReadShort(frameBlock, sec0Pointer + i * 8 + 0x00) / 4096.0f;
+                float y = ReadShort(frameBlock, sec0Pointer + i * 8 + 0x02) / 4096.0f;
+                float z = ReadShort(frameBlock, sec0Pointer + i * 8 + 0x04) / 4096.0f;
+                byte bone = frameBlock[sec0Pointer + i * 8 + 0x06];
+                byte unk = frameBlock[sec0Pointer + i * 8 + 0x07];
+                sec0s.Add(new FrameBoneScaling(x, y, z, bone, unk));
             }
 
-            translations = new List<short[]>();
+            translations = new List<FrameBoneTranslation>();
             for (int i = 0; i < translationCount; i++)
             {
-                short[] rot = new short[4];
-                rot[0] = ReadShort(frameBlock, translationPointer + i * 8 + 0x00);
-                rot[1] = ReadShort(frameBlock, translationPointer + i * 8 + 0x02);
-                rot[2] = ReadShort(frameBlock, translationPointer + i * 8 + 0x04);
-                rot[3] = ReadShort(frameBlock, translationPointer + i * 8 + 0x06);
-                translations.Add(rot);
+                float x = ReadShort(frameBlock, translationPointer + i * 8 + 0x00) / 1024.0f;
+                float y = ReadShort(frameBlock, translationPointer + i * 8 + 0x02) / 1024.0f;
+                float z = ReadShort(frameBlock, translationPointer + i * 8 + 0x04) / 1024.0f;
+                byte unk = frameBlock[translationPointer + i * 8 + 0x06];
+                translations.Add(new FrameBoneTranslation(x, y, z, unk));
             }
         }
 
         public byte[] Serialize()
         {
 
-            byte[] rotationBytes = new byte[rotations.Count * 8];
+            byte[] rotationBytes = new byte[rotations.Count * 0x08];
             for (int i = 0; i < rotations.Count; i++)
             {
                 WriteShort(rotationBytes, i * 8 + 0x00, rotations[i][0]);
@@ -80,23 +126,26 @@ namespace LibReplanetizer.Models.Animations
                 WriteShort(rotationBytes, i * 8 + 0x04, rotations[i][2]);
                 WriteShort(rotationBytes, i * 8 + 0x06, rotations[i][3]);
             }
-            byte[] sec0Bytes = new byte[sec0s.Count * 8];
+
+            byte[] sec0Bytes = new byte[sec0s.Count * 0x08];
             for (int i = 0; i < sec0s.Count; i++)
             {
-                WriteShort(sec0Bytes, i * 8 + 0x00, sec0s[i][0]);
-                WriteShort(sec0Bytes, i * 8 + 0x02, sec0s[i][1]);
-                WriteShort(sec0Bytes, i * 8 + 0x04, sec0s[i][2]);
-                WriteShort(sec0Bytes, i * 8 + 0x06, sec0s[i][3]);
-            }
-            byte[] translationBytes = new byte[translations.Count * 8];
-            for (int i = 0; i < translations.Count; i++)
-            {
-                WriteShort(translationBytes, i * 8 + 0x00, translations[i][0]);
-                WriteShort(translationBytes, i * 8 + 0x02, translations[i][1]);
-                WriteShort(translationBytes, i * 8 + 0x04, translations[i][2]);
-                WriteShort(translationBytes, i * 8 + 0x06, translations[i][3]);
+                WriteShort(sec0Bytes, i * 8 + 0x00, (short) (sec0s[i].scale.X * 4096.0f));
+                WriteShort(sec0Bytes, i * 8 + 0x02, (short) (sec0s[i].scale.Y * 4096.0f));
+                WriteShort(sec0Bytes, i * 8 + 0x04, (short) (sec0s[i].scale.Z * 4096.0f));
+                sec0Bytes[i * 8 + 0x06] = sec0s[i].bone;
+                sec0Bytes[i * 8 + 0x07] = sec0s[i].unk;
             }
 
+            byte[] translationBytes = new byte[translations.Count * 0x08];
+            for (int i = 0; i < translations.Count; i++)
+            {
+                WriteShort(translationBytes, i * 8 + 0x00, (short) (translations[i].translation.X * 1024.0f));
+                WriteShort(translationBytes, i * 8 + 0x02, (short) (translations[i].translation.Y * 1024.0f));
+                WriteShort(translationBytes, i * 8 + 0x04, (short) (translations[i].translation.Z * 1024.0f));
+                translationBytes[i * 8 + 0x06] = translations[i].unk;
+                translationBytes[i * 8 + 0x07] = 0;
+            }
 
             ushort sec0Pointer = (ushort) rotationBytes.Length;
             ushort translationPointer = (ushort) (rotationBytes.Length + sec0Bytes.Length);

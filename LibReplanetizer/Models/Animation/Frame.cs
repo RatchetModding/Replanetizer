@@ -12,39 +12,44 @@ using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Models.Animations
 {
-    public struct FrameBoneScaling
-    {
-        public FrameBoneScaling(float x, float y, float z, byte bone, byte unk)
-        {
-            this.scale = new Vector3(x, y, z);
-            this.bone = bone;
-            this.unk = unk;
-        }
-        public Vector3 scale;
-        public byte bone;
-        public byte unk;
-    }
-
-    public struct FrameBoneTranslation
-    {
-        public FrameBoneTranslation(float x, float y, float z, byte unk)
-        {
-            this.translation = new Vector3(x, y, z);
-            this.unk = unk;
-        }
-        public Vector3 translation;
-        public byte unk;
-    }
-
     public class Frame
     {
+        private struct FrameBoneScaling
+        {
+            public FrameBoneScaling(float x, float y, float z, byte bone, byte unk)
+            {
+                this.scale = new Vector3(x, y, z);
+                this.bone = bone;
+                this.unk = unk;
+            }
+            public Vector3 scale;
+            public byte bone;
+            /*
+             * This value is either 0 or 128
+             * Setting this to always 128 seems to work just fine
+             * Setting this to always 0 causes Clanks rotors to not be scaled correctly
+             */
+            public byte unk;
+        }
+
+        private struct FrameBoneTranslation
+        {
+            public FrameBoneTranslation(float x, float y, float z, byte unk)
+            {
+                this.translation = new Vector3(x, y, z);
+                this.unk = unk;
+            }
+            public Vector3 translation;
+            public byte unk;
+        }
+
         public float speed { get; set; }
         public ushort frameIndex { get; set; }
         public ushort frameLength { get; set; }
 
         public List<short[]> rotations { get; set; }
-        public List<FrameBoneScaling> sec0s { get; set; }
-        public List<FrameBoneTranslation> translations { get; set; }
+        private List<FrameBoneScaling> sec0s { get; set; }
+        private List<FrameBoneTranslation> translations { get; set; }
 
         public Matrix4 GetInverseTransformation(int bone)
         {

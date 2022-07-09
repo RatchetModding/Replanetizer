@@ -54,8 +54,22 @@ namespace LibReplanetizer
             return (n1 + n2 + n3) / 3;
         }
 
+        /// <summary>
+        /// Export a model to a file.
+        /// </summary>
         public abstract void ExportModel(string fileName, Level level, Model model);
 
+        /// <summary>
+        /// Returns the default exporter.
+        /// </summary>
+        public static Exporter? GetExporter()
+        {
+            return new ColladaExporter();
+        }
+
+        /// <summary>
+        /// Returns an exporter for model exporting based on the settings.
+        /// </summary>
         public static Exporter? GetExporter(ExporterModelSettings settings)
         {
             switch (settings.format)
@@ -69,11 +83,17 @@ namespace LibReplanetizer
             return null;
         }
 
+        /// <summary>
+        /// Returns the default exporter for level exporting.
+        /// </summary>
         public static Exporter? GetExporter(ExporterLevelSettings settings)
         {
             return new WavefrontExporter(settings);
         }
 
+        /// <summary>
+        /// Get the file ending associated with the respective exporter.
+        /// </summary>
         public abstract string GetFileEnding();
     }
 
@@ -102,15 +122,11 @@ namespace LibReplanetizer
         public bool writeTies = true;
         public bool writeShrubs = true;
         public bool writeMobies = true;
-        public bool[] chunksSelected = new bool[5];
+        public bool[] chunksSelected = new bool[5] { true, true, true, true, true };
         public bool exportMtlFile = true;
 
         public ExporterLevelSettings()
         {
-            for (int i = 0; i < 5; i++)
-            {
-                chunksSelected[i] = false;
-            }
         }
     }
 

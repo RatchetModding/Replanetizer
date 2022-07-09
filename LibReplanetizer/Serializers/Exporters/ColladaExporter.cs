@@ -17,7 +17,11 @@ namespace LibReplanetizer
 {
     public class ColladaExporter : Exporter
     {
-        private ExporterModelSettings settings;
+        private ExporterModelSettings settings = new ExporterModelSettings();
+
+        public ColladaExporter()
+        {
+        }
 
         public ColladaExporter(ExporterModelSettings settings)
         {

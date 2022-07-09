@@ -73,6 +73,7 @@ namespace Replanetizer.Frames
                     ImGui.Checkbox("Include Mobies", ref settings.writeMobies);
                     if (level.terrainChunks.Count == 0)
                         ImGui.Checkbox("Include Terrain", ref settings.chunksSelected[0]);
+                    ImGui.Checkbox("Include Colors", ref settings.writeColors);
                     ImGui.Checkbox("Include MTL File", ref settings.exportMtlFile);
                     ImGui.TreePop();
                 }

@@ -119,6 +119,7 @@ namespace LibReplanetizer
         public static readonly string[] MODE_STRINGS = { "Separate", "Combined", "Typewise", "Materialwise" };
 
         public Mode mode = Mode.Combined;
+        public bool writeColors = false;
         public bool writeTies = true;
         public bool writeShrubs = true;
         public bool writeMobies = true;

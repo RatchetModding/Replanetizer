@@ -20,6 +20,78 @@ namespace LibReplanetizer
         private ExporterModelSettings modelSettings = new ExporterModelSettings();
         private ExporterLevelSettings levelSettings = new ExporterLevelSettings();
 
+        private class VertexColorContainer
+        {
+            List<Vector3> vertexColors = new List<Vector3>();
+            Vector3 staticColor = new Vector3();
+            bool colorIsPerVertex = false;
+
+            public VertexColorContainer(ModelObject t)
+            {
+                if (t is TerrainFragment || t is Tie)
+                {
+                    colorIsPerVertex = true;
+
+                    byte[] rgbaBytes = t.GetAmbientRgbas();
+                    int vertexCount = rgbaBytes.Length / 4;
+
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        float r = rgbaBytes[0x04 * i + 0x00] / 255.0f;
+                        float g = rgbaBytes[0x04 * i + 0x01] / 255.0f;
+                        float b = rgbaBytes[0x04 * i + 0x02] / 255.0f;
+
+                        vertexColors.Add(new Vector3(r, g, b));
+                    }
+                }
+                else if (t is Moby mob)
+                {
+                    colorIsPerVertex = false;
+
+                    float r = mob.color.R / 255.0f;
+                    float g = mob.color.G / 255.0f;
+                    float b = mob.color.B / 255.0f;
+
+                    staticColor = new Vector3(r, g, b);
+                }
+                else if (t is Shrub shrub)
+                {
+                    colorIsPerVertex = false;
+
+                    float r = shrub.color.R / 255.0f;
+                    float g = shrub.color.G / 255.0f;
+                    float b = shrub.color.B / 255.0f;
+
+                    staticColor = new Vector3(r, g, b);
+                }
+                else
+                {
+                    staticColor = new Vector3(1.0f, 1.0f, 1.0f);
+                }
+
+            }
+
+
+            public VertexColorContainer()
+            {
+                colorIsPerVertex = false;
+
+                staticColor = new Vector3(1.0f, 1.0f, 1.0f);
+            }
+
+            public Vector3 GetColor(int i)
+            {
+                if (colorIsPerVertex)
+                {
+                    return vertexColors[i];
+                }
+                else
+                {
+                    return staticColor;
+                }
+            }
+        }
+
         public WavefrontExporter()
         {
         }
@@ -91,7 +163,7 @@ namespace LibReplanetizer
                 float red = fc.r / 255.0f;
                 float green = fc.g / 255.0f;
                 float blue = fc.b / 255.0f;
-                objfs.WriteLine($"v {px:F6} {py:F6} {pz:F6} {red:F6} {green:F6} {blue:F6}");
+                objfs.WriteLine("v " + px.ToString("G", en_US) + " " + py.ToString("G", en_US) + " " + pz.ToString("G", en_US) + " " + red.ToString("G", en_US) + " " + green.ToString("G", en_US) + " " + blue.ToString("G", en_US));
             }
 
             // Faces
@@ -114,7 +186,7 @@ namespace LibReplanetizer
             return vertexCount;
         }
 
-        private int WriteData(StreamWriter objfs, Model? model, int faceOffset, Matrix4 modelMatrix)
+        private int WriteData(StreamWriter objfs, Model? model, int faceOffset, Matrix4 modelMatrix, VertexColorContainer? vColors = null)
         {
             if (model == null) return 0;
 
@@ -138,7 +210,16 @@ namespace LibReplanetizer
                 var pz = model.vertexBuffer[vertIdx * bufferStride + vOffset + 0x02];
                 var pos = new Vector4(px, py, pz, 1.0f) * modelMatrix;
                 vertices[vertIdx] = pos.Xyz;
-                objfs.WriteLine($"v {pos.X:F6} {pos.Y:F6} {pos.Z:F6}");
+                if (levelSettings.writeColors && vColors != null)
+                {
+                    Vector3 color = vColors.GetColor(vertIdx);
+                    objfs.WriteLine("v " + pos.X.ToString("G", en_US) + " " + pos.Y.ToString("G", en_US) + " " + pos.Z.ToString("G", en_US) + " " + color.X.ToString("G", en_US) + " " + color.Y.ToString("G", en_US) + " " + color.Z.ToString("G", en_US));
+                }
+                else
+                {
+                    objfs.WriteLine("v " + pos.X.ToString("G", en_US) + " " + pos.Y.ToString("G", en_US) + " " + pos.Z.ToString("G", en_US));
+                }
+
             }
 
             // Normals
@@ -154,7 +235,7 @@ namespace LibReplanetizer
                     var normal = (new Vector4(nx, ny, nz, 0.0f) * modelMatrix).Xyz;
                     normal.Normalize();
                     normals[vertIdx] = normal;
-                    objfs.WriteLine($"vn {normal.X:F6} {normal.Y:F6} {normal.Z:F6}");
+                    objfs.WriteLine($"vn " + normal.X.ToString("G", en_US) + " " + normal.Y.ToString("G", en_US) + " " + normal.Z.ToString("G", en_US));
                 }
             }
 
@@ -163,7 +244,7 @@ namespace LibReplanetizer
             {
                 var tu = model.vertexBuffer[(vertIdx * bufferStride) + vtOffset + 0x00];
                 var tv = 1f - model.vertexBuffer[(vertIdx * bufferStride) + vtOffset + 0x01];
-                objfs.WriteLine($"vt {tu:F6} {tv:F6}");
+                objfs.WriteLine($"vt " + tu.ToString("G", en_US) + " " + tv.ToString("G", en_US));
             }
 
             // Faces
@@ -282,7 +363,8 @@ namespace LibReplanetizer
                 foreach (TerrainFragment t in terrain)
                 {
                     objfs.WriteLine("o Object_" + t.model?.id.ToString("X4"));
-                    faceOffset += WriteData(objfs, t.model, faceOffset, Matrix4.Identity);
+                    VertexColorContainer vColors = new VertexColorContainer(t);
+                    faceOffset += WriteData(objfs, t.model, faceOffset, Matrix4.Identity, vColors);
                     if (levelSettings.exportMtlFile) WriteMaterial(mtlfs, t.model, usedMtls);
                 }
 
@@ -291,7 +373,8 @@ namespace LibReplanetizer
                     foreach (Tie t in level.ties)
                     {
                         objfs.WriteLine("o Object_" + t.model?.id.ToString("X4"));
-                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix);
+                        VertexColorContainer vColors = new VertexColorContainer(t);
+                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix, vColors);
                         if (levelSettings.exportMtlFile) WriteMaterial(mtlfs, t.model, usedMtls);
                     }
                 }
@@ -301,7 +384,8 @@ namespace LibReplanetizer
                     foreach (Shrub t in level.shrubs)
                     {
                         objfs.WriteLine("o Object_" + t.model?.id.ToString("X4"));
-                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix);
+                        VertexColorContainer vColors = new VertexColorContainer(t);
+                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix, vColors);
                         if (levelSettings.exportMtlFile) WriteMaterial(mtlfs, t.model, usedMtls);
                     }
                 }
@@ -311,7 +395,8 @@ namespace LibReplanetizer
                     foreach (Moby t in level.mobs)
                     {
                         objfs.WriteLine("o Object_" + t.model?.id.ToString("X4"));
-                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix);
+                        VertexColorContainer vColors = new VertexColorContainer(t);
+                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix, vColors);
                         if (levelSettings.exportMtlFile) WriteMaterial(mtlfs, t.model, usedMtls);
                     }
                 }
@@ -342,7 +427,8 @@ namespace LibReplanetizer
                 objfs.WriteLine("o Object_CombinedLevel");
                 foreach (TerrainFragment t in terrain)
                 {
-                    faceOffset += WriteData(objfs, t.model, faceOffset, Matrix4.Identity);
+                    VertexColorContainer vColors = new VertexColorContainer(t);
+                    faceOffset += WriteData(objfs, t.model, faceOffset, Matrix4.Identity, vColors);
                     if (levelSettings.exportMtlFile) WriteMaterial(mtlfs, t.model, usedMtls);
                 }
 
@@ -350,7 +436,8 @@ namespace LibReplanetizer
                 {
                     foreach (Tie t in level.ties)
                     {
-                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix);
+                        VertexColorContainer vColors = new VertexColorContainer(t);
+                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix, vColors);
                         if (levelSettings.exportMtlFile) WriteMaterial(mtlfs, t.model, usedMtls);
                     }
                 }
@@ -359,7 +446,8 @@ namespace LibReplanetizer
                 {
                     foreach (Shrub t in level.shrubs)
                     {
-                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix);
+                        VertexColorContainer vColors = new VertexColorContainer(t);
+                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix, vColors);
                         if (levelSettings.exportMtlFile) WriteMaterial(mtlfs, t.model, usedMtls);
                     }
                 }
@@ -368,7 +456,8 @@ namespace LibReplanetizer
                 {
                     foreach (Moby t in level.mobs)
                     {
-                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix);
+                        VertexColorContainer vColors = new VertexColorContainer(t);
+                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix, vColors);
                         if (levelSettings.exportMtlFile) WriteMaterial(mtlfs, t.model, usedMtls);
                     }
                 }
@@ -403,7 +492,8 @@ namespace LibReplanetizer
 
                 foreach (TerrainFragment t in terrain)
                 {
-                    faceOffset += WriteData(objfs, t.model, faceOffset, Matrix4.Identity);
+                    VertexColorContainer vColors = new VertexColorContainer(t);
+                    faceOffset += WriteData(objfs, t.model, faceOffset, Matrix4.Identity, vColors);
                     if (levelSettings.exportMtlFile) WriteMaterial(mtlfs, t.model, usedMtls);
                 }
 
@@ -413,7 +503,8 @@ namespace LibReplanetizer
 
                     foreach (Tie t in level.ties)
                     {
-                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix);
+                        VertexColorContainer vColors = new VertexColorContainer(t);
+                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix, vColors);
                         if (levelSettings.exportMtlFile) WriteMaterial(mtlfs, t.model, usedMtls);
                     }
                 }
@@ -424,7 +515,8 @@ namespace LibReplanetizer
 
                     foreach (Shrub t in level.shrubs)
                     {
-                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix);
+                        VertexColorContainer vColors = new VertexColorContainer(t);
+                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix, vColors);
                         if (levelSettings.exportMtlFile) WriteMaterial(mtlfs, t.model, usedMtls);
                     }
                 }
@@ -435,7 +527,8 @@ namespace LibReplanetizer
 
                     foreach (Moby t in level.mobs)
                     {
-                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix);
+                        VertexColorContainer vColors = new VertexColorContainer(t);
+                        faceOffset += WriteData(objfs, t.model, faceOffset, t.modelMatrix, vColors);
                         if (levelSettings.exportMtlFile) WriteMaterial(mtlfs, t.model, usedMtls);
                     }
                 }
@@ -444,7 +537,7 @@ namespace LibReplanetizer
             if (levelSettings.exportMtlFile) mtlfs?.Dispose();
         }
 
-        private static int SeparateModelObjectByMaterial(ModelObject t, List<Tuple<int, int, int>>[] faces, List<Vector3> vertices, List<Vector2> uvs, List<Vector3> normals, int faceOffset)
+        private int SeparateModelObjectByMaterial(ModelObject t, List<Tuple<int, int, int>>[] faces, List<Vector3> vertices, List<Vector3> colors, List<Vector2> uvs, List<Vector3> normals, int faceOffset)
         {
             Model? model = t.model;
 
@@ -456,6 +549,8 @@ namespace LibReplanetizer
             var thisVertices = new Vector3[vertexCount];
             var thisNormals = new Vector3[vertexCount];
 
+            VertexColorContainer vColors = (levelSettings.writeColors) ? new VertexColorContainer(t) : new VertexColorContainer();
+
             for (int x = 0; x < vertexCount; x++)
             {
                 Vector4 v = new Vector4(
@@ -466,6 +561,9 @@ namespace LibReplanetizer
                 v *= modelMatrix;
                 vertices.Add(v.Xyz);
                 thisVertices[x] = v.Xyz;
+
+                if (levelSettings.writeColors)
+                    colors.Add(vColors.GetColor(x));
 
                 var normal = new Vector4(
                     model.vertexBuffer[(x * 0x08) + 0x3],
@@ -536,6 +634,7 @@ namespace LibReplanetizer
             }
 
             List<Vector3> vertices = new List<Vector3>();
+            List<Vector3> colors = new List<Vector3>();
             List<Vector2> uvs = new List<Vector2>();
             List<Vector3> normals = new List<Vector3>();
 
@@ -543,14 +642,14 @@ namespace LibReplanetizer
 
             foreach (TerrainFragment t in terrain)
             {
-                faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, uvs, normals, faceOffset);
+                faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, colors, uvs, normals, faceOffset);
             }
 
             if (levelSettings.writeTies)
             {
                 foreach (Tie t in level.ties)
                 {
-                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, uvs, normals, faceOffset);
+                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, colors, uvs, normals, faceOffset);
                 }
             }
 
@@ -558,7 +657,7 @@ namespace LibReplanetizer
             {
                 foreach (Shrub t in level.shrubs)
                 {
-                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, uvs, normals, faceOffset);
+                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, colors, uvs, normals, faceOffset);
                 }
             }
 
@@ -566,7 +665,7 @@ namespace LibReplanetizer
             {
                 foreach (Moby t in level.mobs)
                 {
-                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, uvs, normals, faceOffset);
+                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, colors, uvs, normals, faceOffset);
                 }
             }
 
@@ -588,19 +687,32 @@ namespace LibReplanetizer
                 if (levelSettings.exportMtlFile)
                     objfs.WriteLine($"mtllib {fileNameNoExtension}.mtl");
 
-                foreach (Vector3 v in vertices)
+                if (levelSettings.writeColors)
                 {
-                    objfs.WriteLine($"v {v.X:F6} {v.Y:F6} {v.Z:F6}");
+                    for (int i = 0; i < vertices.Count; i++)
+                    {
+                        Vector3 v = vertices[i];
+                        Vector3 c = colors[i];
+
+                        objfs.WriteLine("v " + v.X.ToString("G", en_US) + " " + v.Y.ToString("G", en_US) + " " + v.Z.ToString("G", en_US) + " " + c.X.ToString("G", en_US) + " " + c.Y.ToString("G", en_US) + " " + c.Z.ToString("G", en_US));
+                    }
+                }
+                else
+                {
+                    foreach (Vector3 v in vertices)
+                    {
+                        objfs.WriteLine("v " + v.X.ToString("G", en_US) + " " + v.Y.ToString("G", en_US) + " " + v.Z.ToString("G", en_US));
+                    }
                 }
 
                 foreach (Vector3 vn in normals)
                 {
-                    objfs.WriteLine($"vn {vn.X:F6} {vn.Y:F6} {vn.Z:F6}");
+                    objfs.WriteLine("vn " + vn.X.ToString("G", en_US) + " " + vn.Y.ToString("G", en_US) + " " + vn.Z.ToString("G", en_US));
                 }
 
                 foreach (Vector2 vt in uvs)
                 {
-                    objfs.WriteLine($"vt {vt.X:F6} {vt.Y:F6}");
+                    objfs.WriteLine("vt " + vt.X.ToString("G", en_US) + " " + vt.Y.ToString("G", en_US));
                 }
 
                 for (int i = 0; i < materialCount; i++)

@@ -164,7 +164,8 @@ namespace Replanetizer.Frames
                                         break;
                                     default:
                                     case ".obj":
-                                        ModelWriter.WriteCollisionObj(res, level);
+                                        WavefrontExporter exporter = new WavefrontExporter();
+                                        exporter.ExportCollision(res, level);
                                         break;
                                 }
                             }

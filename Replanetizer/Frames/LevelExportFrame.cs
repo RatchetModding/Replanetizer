@@ -17,13 +17,11 @@ namespace Replanetizer.Frames
         protected override string frameName { get; set; } = "Level Export";
         private Level? level => levelFrame.level;
 
-        private ModelWriter.WriterLevelSettings settings;
-        private string[] enumNameMap;
+        private ExporterLevelSettings settings;
 
         public LevelExportFrame(Window wnd, LevelFrame levelFrame) : base(wnd, levelFrame)
         {
-            settings = new ModelWriter.WriterLevelSettings();
-            enumNameMap = Enum.GetNames(typeof(ModelWriter.WriterLevelMode));
+            settings = new ExporterLevelSettings();
 
             if (level != null)
             {
@@ -60,9 +58,9 @@ namespace Replanetizer.Frames
                 if (ImGui.TreeNode("Mesh mode"))
                 {
                     int meshMode = (int) settings.mode;
-                    if (ImGui.Combo("Mesh Mode", ref meshMode, enumNameMap, enumNameMap.Length))
+                    if (ImGui.Combo("Mesh Mode", ref meshMode, ExporterLevelSettings.MODE_STRINGS, ExporterLevelSettings.MODE_STRINGS.Length))
                     {
-                        settings.mode = (ModelWriter.WriterLevelMode) meshMode;
+                        settings.mode = (ExporterLevelSettings.Mode) meshMode;
                     }
                     ImGui.TreePop();
                 }
@@ -98,10 +96,11 @@ namespace Replanetizer.Frames
 
                 if (ImGui.Button("Perform export"))
                 {
-                    var res = CrossFileDialog.SaveFile("Level.obj", "*.obj");
+                    var res = CrossFileDialog.SaveFile("Level.obj", ".obj");
                     if (res.Length > 0)
                     {
-                        ModelWriter.WriteLevelObj(res, level, settings);
+                        WavefrontExporter exporter = new WavefrontExporter(settings);
+                        exporter.ExportLevel(res, level);
                         isOpen = false;
                     }
                 }

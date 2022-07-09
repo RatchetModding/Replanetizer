@@ -37,7 +37,7 @@ namespace Replanetizer.Frames
         private List<Texture>? selectedTextureSet;
         private List<Texture>? modelTextureList;
 
-        private ModelWriter.WriterModelSettings exportSettings;
+        private ExporterModelSettings exportSettings;
 
         private readonly KeyHeldHandler KEY_HELD_HANDLER = new()
         {
@@ -88,7 +88,7 @@ namespace Replanetizer.Frames
             modelTextureList = new List<Texture>();
             propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
             this.shaderIDTable = shaderIDTable;
-            exportSettings = new ModelWriter.WriterModelSettings();
+            exportSettings = new ExporterModelSettings();
             UpdateWindowSize();
             OnResize();
             SelectModel(model);
@@ -209,26 +209,26 @@ namespace Replanetizer.Frames
                         ImGui.Separator();
                     }
                     int fileFormat = (int) exportSettings.format;
-                    if (ImGui.Combo("File Format", ref fileFormat, ModelWriter.WRITER_MODEL_FORMAT_STRINGS, ModelWriter.WRITER_MODEL_FORMAT_STRINGS.Length))
+                    if (ImGui.Combo("File Format", ref fileFormat, ExporterModelSettings.FORMAT_STRINGS, ExporterModelSettings.FORMAT_STRINGS.Length))
                     {
-                        exportSettings.format = (ModelWriter.WriterModelFormat) fileFormat;
+                        exportSettings.format = (ExporterModelSettings.Format) fileFormat;
                     }
 
                     // Collada specific settings
-                    if (exportSettings.format == ModelWriter.WriterModelFormat.Collada)
+                    if (exportSettings.format == ExporterModelSettings.Format.Collada)
                     {
                         if (selectedModel is MobyModel mobyModel && mobyModel.animations.Count > 0)
                         {
                             int animationChoice = (int) exportSettings.animationChoice;
-                            if (ImGui.Combo("Animations", ref animationChoice, ModelWriter.WRITER_MODEL_ANIMATION_CHOICE_STRINGS, ModelWriter.WRITER_MODEL_ANIMATION_CHOICE_STRINGS.Length))
+                            if (ImGui.Combo("Animations", ref animationChoice, ExporterModelSettings.ANIMATION_CHOICE_STRINGS, ExporterModelSettings.ANIMATION_CHOICE_STRINGS.Length))
                             {
-                                exportSettings.animationChoice = (ModelWriter.WriterModelAnimationChoice) animationChoice;
+                                exportSettings.animationChoice = (ExporterModelSettings.AnimationChoice) animationChoice;
                             }
                         }
                     }
 
                     // Wavefront specific settings
-                    if (exportSettings.format == ModelWriter.WriterModelFormat.Wavefront)
+                    if (exportSettings.format == ExporterModelSettings.Format.Wavefront)
                     {
                         ImGui.Checkbox("Include MTL File", ref exportSettings.exportMtlFile);
                     }
@@ -528,23 +528,15 @@ namespace Replanetizer.Frames
             var model = selectedModel;
             if (model == null) return;
 
-            string filter = "";
-            switch (exportSettings.format)
-            {
-                case ModelWriter.WriterModelFormat.Wavefront:
-                    filter = ".obj";
-                    break;
-                case ModelWriter.WriterModelFormat.Collada:
-                    filter = ".dae";
-                    break;
-                default:
-                    filter = "*";
-                    break;
-            }
-            string fileName = CrossFileDialog.SaveFile(filter: filter);
+            Exporter? exporter = Exporter.GetExporter(exportSettings);
+            if (exporter == null) return;
+
+            string filter = exporter.GetFileEnding();
+
+            string fileName = CrossFileDialog.SaveFile("model" + filter, filter);
             if (fileName.Length == 0) return;
 
-            ModelWriter.WriteModel(fileName, level, model, exportSettings);
+            exporter.ExportModel(fileName, level, model);
         }
 
         private void ExportSelectedModelTextures()

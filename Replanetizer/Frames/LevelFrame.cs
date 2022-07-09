@@ -1325,9 +1325,7 @@ namespace Replanetizer.Frames
 
             camera.ComputeFrustum();
 
-            if (level.levelVariables != null)
-                GL.ClearColor(level.levelVariables.fogColor);
-
+            GL.ClearColor(level.levelVariables.fogColor);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.EnableVertexAttribArray(0);

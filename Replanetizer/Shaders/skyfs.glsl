@@ -18,5 +18,5 @@ void main() {
 	color.xyz = mix(lightColor.xyz, textureColor.xyz, texAvailable);
 	color.w = textureColor.w * lightColor.w * 2.0f;
 
-	id = (11 << 24);
+	id = 0;
 }

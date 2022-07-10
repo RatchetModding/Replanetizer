@@ -5,6 +5,8 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using LibReplanetizer;
+using LibReplanetizer.Models;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,17 +17,34 @@ namespace Replanetizer.ModelLists
 {
     public static class ModelLists
     {
+        private static Dictionary<int, string>? __RC1_MOB_NAMES = null;
+        private static Dictionary<int, string>? __RC1_TIE_NAMES = null;
+
+        public static Dictionary<int, string> RC1_MOB_NAMES
+        {
+            get
+            {
+                if (__RC1_MOB_NAMES == null)
+                {
+                    __RC1_MOB_NAMES = GetModelNames("MobyModelsRC1.txt");
+                }
+                return __RC1_MOB_NAMES;
+            }
+        }
+
+        public static Dictionary<int, string> RC1_TIE_NAMES
+        {
+            get
+            {
+                if (__RC1_TIE_NAMES == null)
+                {
+                    __RC1_TIE_NAMES = GetModelNames("TieModelsRC1.txt");
+                }
+                return __RC1_TIE_NAMES;
+            }
+        }
+
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
-
-        public static Lazy<Dictionary<int, string>> MOB_NAMES = new(() =>
-        {
-            return GetModelNames("ModelListRC1.txt");
-        });
-
-        public static Lazy<Dictionary<int, string>> TIE_NAMES = new(() =>
-        {
-            return GetModelNames("TieModelsRC1.txt");
-        });
 
         private static Dictionary<int, string> GetModelNames(string fileName)
         {
@@ -54,6 +73,34 @@ namespace Replanetizer.ModelLists
             }
 
             return modelNames;
+        }
+
+        public static string? GetModelName(Model obj, GameType game)
+        {
+            string? result = "Unknown";
+
+            switch (game.num)
+            {
+                case 1:
+                    if (obj is MobyModel)
+                    {
+                        if (!RC1_MOB_NAMES.TryGetValue(obj.id, out result)) return null;
+                        break;
+                    }
+                    else if (obj is TieModel)
+                    {
+                        if (!RC1_TIE_NAMES.TryGetValue(obj.id, out result)) return null;
+                        break;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                default:
+                    return null;
+            }
+
+            return result;
         }
     }
 }

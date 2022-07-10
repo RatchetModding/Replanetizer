@@ -76,11 +76,11 @@
     <None Update="NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="ModelLists\ModelListRC1.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Update="ModelLists\MobyModelsRC1.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="ModelLists\TieModelsRC1.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

@@ -25,7 +25,7 @@ namespace Replanetizer.Frames
     public class ModelFrame : LevelSubFrame
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
-        protected override string frameName { get; set; } = "Models";
+        protected override string frameName { get; set; } = "Model Viewer";
 
         private string filter = "";
         private string filterUpper = "";
@@ -187,15 +187,35 @@ namespace Replanetizer.Frames
             }
         }
 
+        private void UpdateWindowTitle()
+        {
+            if (selectedModel == null)
+            {
+                frameName = "Model Viewer";
+            }
+            else
+            {
+                frameName = "Model Viewer - " + GetDisplayName(selectedModel);
+            }
+
+            /*
+             * The ###Model Viewer tells ImGui that the Windows ID is "Model Viewer"
+             * This is necessary as otherwise every title change would create a new window
+             */
+            frameName += "###Model Viewer";
+        }
+
         public override void Render(float deltaTime)
         {
             UpdateWindowSize();
+            UpdateWindowTitle();
             if (!initialized) ModelViewer_Load();
             if (renderer == null) return;
 
             ImGui.Columns(3);
-            ImGui.SetColumnWidth(0, 200);
+            ImGui.SetColumnWidth(0, 250);
             ImGui.SetColumnWidth(1, (float) width);
+            ImGui.SetColumnWidth(2, 320);
             RenderTree();
             ImGui.NextColumn();
 
@@ -276,8 +296,8 @@ namespace Replanetizer.Frames
             System.Numerics.Vector2 vMin = ImGui.GetWindowContentRegionMin();
             System.Numerics.Vector2 vMax = ImGui.GetWindowContentRegionMax();
 
-            vMin.X += 220;
-            vMax.X -= 300;
+            vMin.X += 250;
+            vMax.X -= 320;
 
             width = (int) (vMax.X - vMin.X);
             height = (int) (vMax.Y - vMin.Y);

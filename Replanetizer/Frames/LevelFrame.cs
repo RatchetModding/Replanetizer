@@ -82,7 +82,8 @@ namespace Replanetizer.Frames
         public bool enableMoby = true, enableTie = true, enableShrub = true, enableSpline = false,
             enableCuboid = false, enableSpheres = false, enableCylinders = false, enableType0C = false,
             enableSkybox = true, enableTerrain = true, enableCollision = false, enableTransparency = true,
-            enableDistanceCulling = true, enableFrustumCulling = true, enableFog = true, enableCameraInfo = true;
+            enableDistanceCulling = true, enableFrustumCulling = true, enableFog = true, enableCameraInfo = true,
+            enableGameCameras = false;
 
         public Camera camera;
 
@@ -163,7 +164,8 @@ namespace Replanetizer.Frames
                                         break;
                                     default:
                                     case ".obj":
-                                        ModelWriter.WriteCollisionObj(res, level);
+                                        WavefrontExporter exporter = new WavefrontExporter();
+                                        exporter.ExportCollision(res, level);
                                         break;
                                 }
                             }
@@ -273,6 +275,7 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Spheres", ref enableSpheres)) InvalidateView();
                     if (ImGui.Checkbox("Cylinders", ref enableCylinders)) InvalidateView();
                     if (ImGui.Checkbox("Type0C", ref enableType0C)) InvalidateView();
+                    if (ImGui.Checkbox("Cameras", ref enableGameCameras)) InvalidateView();
                     if (ImGui.Checkbox("Skybox", ref enableSkybox)) InvalidateView();
                     if (ImGui.Checkbox("Terrain", ref enableTerrain)) InvalidateView();
                     if (ImGui.Checkbox("Collision", ref enableCollision)) InvalidateView();
@@ -1242,6 +1245,8 @@ namespace Replanetizer.Frames
                     return level.cylinders[hitId];
                 case RenderedObjectType.Type0C:
                     return level.type0Cs[hitId];
+                case RenderedObjectType.GameCamera:
+                    return level.gameCameras[hitId];
                 case RenderedObjectType.Tool:
                     switch (hitId)
                     {
@@ -1250,6 +1255,8 @@ namespace Replanetizer.Frames
                         case 2: zLock = true; break;
                     }
                     InvalidateView();
+                    return null;
+                case RenderedObjectType.Skybox:
                     return null;
             }
 
@@ -1320,9 +1327,7 @@ namespace Replanetizer.Frames
 
             camera.ComputeFrustum();
 
-            if (level.levelVariables != null)
-                GL.ClearColor(level.levelVariables.fogColor);
-
+            GL.ClearColor(level.levelVariables.fogColor);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.EnableVertexAttribArray(0);
@@ -1504,6 +1509,26 @@ namespace Replanetizer.Frames
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
 
                     GL.DrawElements(PrimitiveType.Triangles, Type0C.CUBE_ELEMENTS.Length, DrawElementsType.UnsignedShort, 0);
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                }
+            }
+
+            if (enableGameCameras)
+            {
+                GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.GameCamera);
+                for (int i = 0; i < level.gameCameras.Count; i++)
+                {
+                    GameCamera cam = level.gameCameras[i];
+                    GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                    GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref cam.modelMatrix);
+                    GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(cam) ? SELECTED_COLOR : NORMAL_COLOR);
+
+                    ActivateBuffersForModel(cam);
+
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+
+                    GL.DrawElements(PrimitiveType.Triangles, GameCamera.CAM_ELEMENTS.Length, DrawElementsType.UnsignedShort, 0);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 }
             }

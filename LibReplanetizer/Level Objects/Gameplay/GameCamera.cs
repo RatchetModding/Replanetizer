@@ -7,19 +7,40 @@
 
 using OpenTK.Mathematics;
 using System;
+using System.ComponentModel;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects
 {
-    public class GameCamera : LevelObject
+    public class GameCamera : MatrixObject, IRenderable
     {
         public const int ELEMENTSIZE = 0x20;
 
-        public int id;
-        public int unk1;
-        public int unk2;
-        public int unk3;
-        public int id2;
+        [Category("Attributes"), DisplayName("ID")]
+        public int id { get; set; }
+        [Category("Attributes"), DisplayName("Pvar Index")]
+        public int pvarIndex { get; set; }
+
+        static readonly float[] CAM = {
+             0.000000f,-1.000000f, 1.333333f,
+             -1.000000f,-1.000000f, 0.600000f,
+             0.500000f,-1.000000f, 0.833333f,
+             1.000000f,-1.000000f, 0.600000f,
+             -0.500000f,-1.000000f, 0.833333f,
+             -1.000000f,-1.000000f, -0.600000f,
+              -0.001304f,2.050611f,-0.001558f,
+             1.000000f,-1.000000f, -0.600000f
+        };
+
+        public static readonly ushort[] CAM_ELEMENTS = {
+            2, 4, 0,
+            3, 1, 7,
+            1, 5, 7,
+            6, 7, 5,
+            7, 6, 3,
+            6, 1, 3,
+            5, 1, 6
+        };
 
         public GameCamera(byte[] cameraBlock, int num)
         {
@@ -29,28 +50,44 @@ namespace LibReplanetizer.LevelObjects
             float x = ReadFloat(cameraBlock, offset + 0x04);
             float y = ReadFloat(cameraBlock, offset + 0x08);
             float z = ReadFloat(cameraBlock, offset + 0x0C);
-            unk1 = ReadInt(cameraBlock, offset + 0x10);
-            unk2 = ReadInt(cameraBlock, offset + 0x14);
-            unk3 = ReadInt(cameraBlock, offset + 0x18);
-            id2 = ReadInt(cameraBlock, offset + 0x1C);
+            float rx = ReadFloat(cameraBlock, offset + 0x10);
+            float ry = ReadFloat(cameraBlock, offset + 0x14);
+            float rz = ReadFloat(cameraBlock, offset + 0x18);
+            pvarIndex = ReadInt(cameraBlock, offset + 0x1C);
 
             position = new Vector3(x, y, z);
+            rotation = Quaternion.FromEulerAngles(rx, ry, rz);
+            scale = new Vector3(1.0f, 1.0f, 1.0f);
+
+            UpdateTransformMatrix();
         }
 
         public override byte[] ToByteArray()
         {
             byte[] bytes = new byte[ELEMENTSIZE];
 
+            Vector3 rot = rotation.ToEulerAngles();
+
             WriteInt(bytes, 0x00, id);
             WriteFloat(bytes, 0x04, position.X);
             WriteFloat(bytes, 0x08, position.Y);
             WriteFloat(bytes, 0x0C, position.Z);
-            WriteInt(bytes, 0x10, unk1);
-            WriteInt(bytes, 0x14, unk2);
-            WriteInt(bytes, 0x18, unk3);
-            WriteInt(bytes, 0x1C, id2);
+            WriteFloat(bytes, 0x10, rot.X);
+            WriteFloat(bytes, 0x14, rot.Y);
+            WriteFloat(bytes, 0x18, rot.Z);
+            WriteInt(bytes, 0x1C, pvarIndex);
 
             return bytes;
+        }
+
+        public override void UpdateTransformMatrix()
+        {
+            Vector3 euler = rotation.ToEulerAngles();
+            Matrix4 rotZ = Matrix4.CreateFromAxisAngle(Vector3.UnitZ, euler.Z);
+            Matrix4 rotY = Matrix4.CreateFromAxisAngle(Vector3.UnitY, euler.Y);
+            Matrix4 rotX = Matrix4.CreateFromAxisAngle(Vector3.UnitX, euler.X);
+            Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
+            modelMatrix = rotX * rotY * rotZ * translationMatrix;
         }
 
         public override LevelObject Clone()
@@ -58,6 +95,19 @@ namespace LibReplanetizer.LevelObjects
             throw new NotImplementedException();
         }
 
+        public ushort[] GetIndices()
+        {
+            return CAM_ELEMENTS;
+        }
 
+        public float[] GetVertices()
+        {
+            return CAM;
+        }
+
+        public bool IsDynamic()
+        {
+            return false;
+        }
     }
 }

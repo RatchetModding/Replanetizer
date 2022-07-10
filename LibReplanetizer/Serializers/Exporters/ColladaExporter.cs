@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Copyright (C) 2018-2022, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -11,16 +11,27 @@ using LibReplanetizer.Models.Animations;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
-using System.Globalization;
 
 namespace LibReplanetizer
 {
-    public static class ModelWriter
+    public class ColladaExporter : Exporter
     {
-        private static readonly CultureInfo en_US = CultureInfo.CreateSpecificCulture("en-US");
-        private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
+        private ExporterModelSettings settings = new ExporterModelSettings();
+
+        public ColladaExporter()
+        {
+        }
+
+        public ColladaExporter(ExporterModelSettings settings)
+        {
+            this.settings = settings;
+        }
+
+        public override string GetFileEnding()
+        {
+            return ".dae";
+        }
 
         /*
          * Blender removes bones if their length is too small. However,
@@ -31,206 +42,7 @@ namespace LibReplanetizer
         private static readonly float BLENDER_BONE_MIN_LENGTH = 0.000001f;
         private static readonly float BLENDER_BONE_FIX = 0.001f;
 
-        private static void WriteObjectMaterial(StreamWriter mtlfs, string id)
-        {
-            mtlfs.WriteLine($"newmtl mtl_{id}");
-            mtlfs.WriteLine("Ns 1000");
-            mtlfs.WriteLine("Ka 1.000000 1.000000 1.000000");
-            mtlfs.WriteLine("Kd 1.000000 1.000000 1.000000");
-            mtlfs.WriteLine("Ni 1.000000");
-            mtlfs.WriteLine("d 1.000000");
-            mtlfs.WriteLine("illum 1");
-            mtlfs.WriteLine($"map_Kd {id}.png");
-        }
-
-        private static void WriteObjectMaterial(StreamWriter? mtlfs, Model? model, List<int> usedMtls)
-        {
-            if (mtlfs == null || model == null) return;
-
-            for (int i = 0; i < model.textureConfig.Count; i++)
-            {
-                int modelTextureID = model.textureConfig[i].id;
-                if (usedMtls.Contains(modelTextureID))
-                    continue;
-                WriteObjectMaterial(mtlfs, modelTextureID.ToString());
-                usedMtls.Add(modelTextureID);
-            }
-        }
-
-        /// <summary>
-        /// Writes a collision model into a stream using the .obj file format.
-        /// Every vertex contains 6 floats specifying position and color.
-        /// No normals or uvs are written.
-        /// </summary>
-        /// <returns>The number of vertices that were written to the stream.</returns>
-        private static int WriteObjectDataCollision(StreamWriter objfs, Collision coll, int faceOffset)
-        {
-            // Vertices
-            var vertexCount = coll.vertexBuffer.Length / 4;
-            for (int vertIdx = 0; vertIdx < vertexCount; vertIdx++)
-            {
-                var px = coll.vertexBuffer[vertIdx * 0x04 + 0x0] * coll.size;
-                var py = coll.vertexBuffer[vertIdx * 0x04 + 0x1] * coll.size;
-                var pz = coll.vertexBuffer[vertIdx * 0x04 + 0x2] * coll.size;
-                FloatColor fc = new FloatColor { r = 255, g = 0, b = 255, a = 255 }; ;
-                fc.value = coll.vertexBuffer[vertIdx * 0x04 + 0x3];
-                float red = fc.r / 255.0f;
-                float green = fc.g / 255.0f;
-                float blue = fc.b / 255.0f;
-                objfs.WriteLine($"v {px:F6} {py:F6} {pz:F6} {red:F6} {green:F6} {blue:F6}");
-            }
-
-            // Faces
-            var faceCount = coll.indBuff.Length / 3;
-            for (int faceIdx = 0; faceIdx < faceCount; faceIdx++)
-            {
-                int vertIdx = faceIdx * 3;
-
-                uint v1 = coll.indBuff[vertIdx + 0];
-                uint v2 = coll.indBuff[vertIdx + 1];
-                uint v3 = coll.indBuff[vertIdx + 2];
-
-                v1 += 1 + (uint) faceOffset;
-                v2 += 1 + (uint) faceOffset;
-                v3 += 1 + (uint) faceOffset;
-
-                objfs.WriteLine($"f {v1} {v2} {v3}");
-            }
-
-            return vertexCount;
-        }
-
-        private static int WriteObjectData(StreamWriter objfs, Model? model, int faceOffset, Matrix4 modelMatrix)
-        {
-            if (model == null) return 0;
-
-            // skybox model has no normals and does the vertex buffer has a different layout
-            // if we see other cases like this, it may be advisable to generalize this
-            bool skyboxModel = (model is SkyboxModel);
-
-            int bufferStride = (skyboxModel) ? 0x06 : 0x08;
-            int vOffset = 0x00;
-            int vnOffset = 0x03;
-            int vtOffset = (skyboxModel) ? 0x03 : 0x06;
-
-            int vertexCount = model.vertexBuffer.Length / bufferStride;
-
-            // Vertices
-            Vector3[] vertices = new Vector3[vertexCount];
-            for (int vertIdx = 0; vertIdx < vertexCount; vertIdx++)
-            {
-                var px = model.vertexBuffer[vertIdx * bufferStride + vOffset + 0x00];
-                var py = model.vertexBuffer[vertIdx * bufferStride + vOffset + 0x01];
-                var pz = model.vertexBuffer[vertIdx * bufferStride + vOffset + 0x02];
-                var pos = new Vector4(px, py, pz, 1.0f) * modelMatrix;
-                vertices[vertIdx] = pos.Xyz;
-                objfs.WriteLine($"v {pos.X:F6} {pos.Y:F6} {pos.Z:F6}");
-            }
-
-            // Normals
-            Vector3[]? normals = (skyboxModel) ? null : new Vector3[vertexCount];
-
-            if (normals != null)
-            {
-                for (var vertIdx = 0; vertIdx < vertexCount; vertIdx++)
-                {
-                    var nx = model.vertexBuffer[vertIdx * bufferStride + vnOffset + 0x00];
-                    var ny = model.vertexBuffer[vertIdx * bufferStride + vnOffset + 0x01];
-                    var nz = model.vertexBuffer[vertIdx * bufferStride + vnOffset + 0x02];
-                    var normal = (new Vector4(nx, ny, nz, 0.0f) * modelMatrix).Xyz;
-                    normal.Normalize();
-                    normals[vertIdx] = normal;
-                    objfs.WriteLine($"vn {normal.X:F6} {normal.Y:F6} {normal.Z:F6}");
-                }
-            }
-
-            // UVs
-            for (var vertIdx = 0; vertIdx < vertexCount; vertIdx++)
-            {
-                var tu = model.vertexBuffer[(vertIdx * bufferStride) + vtOffset + 0x00];
-                var tv = 1f - model.vertexBuffer[(vertIdx * bufferStride) + vtOffset + 0x01];
-                objfs.WriteLine($"vt {tu:F6} {tv:F6}");
-            }
-
-            // Faces
-            int textureNum = 0;
-            var faceCount = model.indexBuffer.Length / 3;
-            for (int faceIdx = 0; faceIdx < faceCount; faceIdx++)
-            {
-                int vertIdx = faceIdx * 3;
-                if (model.textureConfig != null && textureNum < model.textureConfig.Count &&
-                    vertIdx >= model.textureConfig[textureNum].start)
-                {
-                    string modelId = model.textureConfig[textureNum].id.ToString();
-                    objfs.WriteLine("usemtl mtl_" + modelId);
-                    objfs.WriteLine("g Texture_" + modelId);
-                    textureNum++;
-                }
-
-                int v1 = model.indexBuffer[vertIdx + 0];
-                int v2 = model.indexBuffer[vertIdx + 1];
-                int v3 = model.indexBuffer[vertIdx + 2];
-
-                if (ShouldReverseWinding(vertices, normals, v1, v2, v3))
-                    (v2, v3) = (v3, v2);
-
-                v1 += 1 + faceOffset;
-                v2 += 1 + faceOffset;
-                v3 += 1 + faceOffset;
-
-                if (skyboxModel)
-                {
-                    objfs.WriteLine($"f {v1}/{v1} {v2}/{v2} {v3}/{v3}");
-
-                }
-                else
-                {
-                    objfs.WriteLine($"f {v1}/{v1}/{v1} {v2}/{v2}/{v2} {v3}/{v3}/{v3}");
-                }
-
-            }
-
-            return vertexCount;
-        }
-
-        /// <summary>
-        /// Average a tri's vertex normals to get the target face normal, then
-        /// check whether the current winding order yields a normal facing
-        /// the target face normal
-        /// </summary>
-        /// <returns>whether to reverse the winding order</returns>
-        private static bool ShouldReverseWinding(
-            IReadOnlyList<Vector3> vertices, IReadOnlyList<Vector3>? vertexNormals, int v1, int v2, int v3)
-        {
-            if (vertexNormals == null) return false;
-
-            var targetFaceNormal = FaceNormalFromVertexNormals(vertexNormals, v1, v2, v3);
-            var p1 = vertices[v1];
-            var p2 = vertices[v2];
-            var p3 = vertices[v3];
-            return ShouldReverseWinding(p1, p2, p3, targetFaceNormal);
-        }
-
-        private static bool ShouldReverseWinding(
-            Vector3 p1, Vector3 p2, Vector3 p3, Vector3 targetFaceNormal)
-        {
-            p2 -= p1;
-            p3 -= p1;
-            var faceNormal = Vector3.Cross(p2, p3);
-            var dot = Vector3.Dot(faceNormal, targetFaceNormal);
-            return dot < 0f;
-        }
-
-        private static Vector3 FaceNormalFromVertexNormals(
-            IReadOnlyList<Vector3> normals, int v1, int v2, int v3)
-        {
-            var n1 = normals[v1];
-            var n2 = normals[v2];
-            var n3 = normals[v3];
-            return (n1 + n2 + n3) / 3;
-        }
-
-        private static void WriteSkeletonDae(StreamWriter colladaStream, Skeleton skeleton, float size, string indent = "")
+        private void WriteSkeleton(StreamWriter colladaStream, Skeleton skeleton, float size, string indent = "")
         {
             Matrix3x4 trans = skeleton.bone.transformation;
             Matrix3 orthoTrans = new Matrix3(trans.Row0.Xyz, trans.Row1.Xyz, trans.Row2.Xyz);
@@ -289,13 +101,13 @@ namespace LibReplanetizer
 
             foreach (Skeleton child in skeleton.children)
             {
-                WriteSkeletonDae(colladaStream, child, size, indent + "\t");
+                WriteSkeleton(colladaStream, child, size, indent + "\t");
             }
 
             colladaStream.WriteLine(indent + "</node>");
         }
 
-        private static void WriteDaeAnimation(StreamWriter colladaStream, Animation anim, int boneCount, string name, string indent = "")
+        private void WriteAnimation(StreamWriter colladaStream, Animation anim, int boneCount, string name, string indent = "")
         {
             colladaStream.WriteLine(indent + "<animation id=\"" + name + "\" name=\"" + name + "\">");
 
@@ -390,7 +202,7 @@ namespace LibReplanetizer
             colladaStream.WriteLine(indent + "</animation>");
         }
 
-        private static void WriteDaeAnimationSequential(StreamWriter colladaStream, List<Animation> anims, int boneCount, string name, string indent = "")
+        private void WriteAnimationSequential(StreamWriter colladaStream, List<Animation> anims, int boneCount, string name, MobyModel model, string indent = "")
         {
             colladaStream.WriteLine(indent + "<animation id=\"" + name + "\" name=\"" + name + "\">");
 
@@ -437,13 +249,15 @@ namespace LibReplanetizer
                 {
                     foreach (Frame frame in anim.frames)
                     {
-                        short[] rots = frame.rotations[k];
+                        Matrix4 animationMatrix = frame.GetInverseTransformation(k);
 
-                        Quaternion quat = new Quaternion((rots[0] / 32767f) * 180f, (rots[1] / 32767f) * 180f, (rots[2] / 32767f) * 180f, (-rots[3] / 32767f) * 180f);
+                        Vector3 offBone = new Vector3(model.boneDatas[k].translationX, model.boneDatas[k].translationY, model.boneDatas[k].translationZ);
 
-                        Matrix4 rotation = Matrix4.CreateFromQuaternion(quat);
-                        Matrix4 animationMatrix = rotation;
-                        animationMatrix.Transpose();
+                        offBone *= model.size / 1024f;
+
+                        animationMatrix.M14 += offBone.X;
+                        animationMatrix.M24 += offBone.Y;
+                        animationMatrix.M34 += offBone.Z;
 
                         colladaStream.Write((animationMatrix.M11).ToString("G", en_US) + " ");
                         colladaStream.Write((animationMatrix.M12).ToString("G", en_US) + " ");
@@ -495,7 +309,7 @@ namespace LibReplanetizer
             colladaStream.WriteLine(indent + "</animation>");
         }
 
-        private static void WriteModelDaeFile(string fileName, Level level, Model model, WriterModelSettings settings, bool includeSkeleton, int id)
+        private void WriteData(string fileName, Level level, Model model, bool includeSkeleton, int id)
         {
             using (StreamWriter colladaStream = new StreamWriter(fileName))
             {
@@ -858,7 +672,7 @@ namespace LibReplanetizer
                     colladaStream.WriteLine("\t\t</controller>");
                     colladaStream.WriteLine("\t</library_controllers>");
 
-                    if (settings.animationChoice != WriterModelAnimationChoice.None)
+                    if (settings.animationChoice != ExporterModelSettings.AnimationChoice.None)
                     {
                         //animations
                         List<Animation> anims;
@@ -875,51 +689,23 @@ namespace LibReplanetizer
                         colladaStream.WriteLine("\t<library_animations>");
                         if (id == -1)
                         {
-                            if (settings.animationChoice == WriterModelAnimationChoice.AllSequential)
+                            if (settings.animationChoice == ExporterModelSettings.AnimationChoice.AllSequential)
                             {
-                                WriteDaeAnimationSequential(colladaStream, anims, moby.boneCount, "Anim", "\t\t");
+                                WriteAnimationSequential(colladaStream, anims, moby.boneCount, "Anim", moby, "\t\t");
                             }
                             else
                             {
                                 for (int i = 0; i < anims.Count; i++)
                                 {
-                                    WriteDaeAnimation(colladaStream, anims[i], moby.boneCount, "Anim" + i.ToString(), "\t\t");
+                                    WriteAnimation(colladaStream, anims[i], moby.boneCount, "Anim" + i.ToString(), "\t\t");
                                 }
                             }
                         }
                         else
                         {
-                            WriteDaeAnimation(colladaStream, anims[id], moby.boneCount, "Anim" + id.ToString(), "\t\t");
+                            WriteAnimation(colladaStream, anims[id], moby.boneCount, "Anim" + id.ToString(), "\t\t");
                         }
                         colladaStream.WriteLine("\t</library_animations>");
-
-                        colladaStream.WriteLine("\t<library_animation_clips>");
-                        if (id == -1)
-                        {
-                            switch (settings.animationChoice)
-                            {
-                                case WriterModelAnimationChoice.AllSequential:
-                                    colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip\">");
-                                    colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim\"/>");
-                                    colladaStream.WriteLine("\t\t</animation_clip>");
-                                    break;
-                                case WriterModelAnimationChoice.All:
-                                    for (int i = 0; i < anims.Count; i++)
-                                    {
-                                        colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip" + i.ToString() + "\">");
-                                        colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim" + i.ToString() + "\"/>");
-                                        colladaStream.WriteLine("\t\t</animation_clip>");
-                                    }
-                                    break;
-                            }
-                        }
-                        else
-                        {
-                            colladaStream.WriteLine("\t\t<animation_clip id=\"AnimClip" + id.ToString() + "\">");
-                            colladaStream.WriteLine("\t\t\t<instance_animation url=\"#Anim" + id.ToString() + "\"/>");
-                            colladaStream.WriteLine("\t\t</animation_clip>");
-                        }
-                        colladaStream.WriteLine("\t</library_animation_clips>");
                     }
                 }
 
@@ -931,7 +717,7 @@ namespace LibReplanetizer
                     MobyModel moby = (MobyModel) model;
 
                     if (moby.skeleton != null)
-                        WriteSkeletonDae(colladaStream, moby.skeleton, model.size, "\t\t\t");
+                        WriteSkeleton(colladaStream, moby.skeleton, model.size, "\t\t\t");
                 }
                 colladaStream.WriteLine("\t\t\t<node id=\"Object\" name=\"Object\" type=\"NODE\">");
                 colladaStream.WriteLine("\t\t\t\t<matrix sid=\"transform\">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>");
@@ -973,13 +759,13 @@ namespace LibReplanetizer
             }
         }
 
-        private static void WriteModelDae(string fileName, Level level, Model model, WriterModelSettings settings)
+        public override void ExportModel(string fileName, Level level, Model model)
         {
             LOGGER.Trace(fileName);
 
             bool includeSkeleton = (model is MobyModel mobyModel && mobyModel.boneCount != 0);
 
-            if (includeSkeleton && (settings.animationChoice == WriterModelAnimationChoice.AllSeparate))
+            if (includeSkeleton && (settings.animationChoice == ExporterModelSettings.AnimationChoice.AllSeparate))
             {
                 string fileExt = Path.GetExtension(fileName);
                 string? dir = Path.GetDirectoryName(fileName);
@@ -993,549 +779,12 @@ namespace LibReplanetizer
                 {
                     string filePath = Path.Combine(dir, fileName + "_" + i.ToString() + fileExt);
 
-                    WriteModelDaeFile(filePath, level, model, settings, true, i);
+                    WriteData(filePath, level, model, true, i);
                 }
             }
             else
             {
-                WriteModelDaeFile(fileName, level, model, settings, includeSkeleton, -1);
-            }
-        }
-
-        private static void WriteModelObj(string fileName, Model model, WriterModelSettings settings)
-        {
-            string? pathName = Path.GetDirectoryName(fileName);
-            string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
-
-            if (settings.exportMtlFile)
-            {
-                using (StreamWriter mtlfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl"))
-                {
-                    // List used mtls to prevent it from making duplicate entries
-                    List<int> usedMtls = new List<int>();
-                    WriteObjectMaterial(mtlfs, model, usedMtls);
-                }
-            }
-
-
-            using (StreamWriter objfs = new StreamWriter(fileName))
-            {
-                objfs.WriteLine("o Object_" + model.id.ToString("X4"));
-                if (model.textureConfig != null && settings.exportMtlFile)
-                    objfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
-
-                Matrix4 scale = Matrix4.CreateScale(model.size);
-
-                WriteObjectData(objfs, model, 0, scale);
-            }
-        }
-
-        private static List<TerrainFragment> CollectTerrainFragments(Level level, WriterLevelSettings settings)
-        {
-            List<TerrainFragment> terrain = new List<TerrainFragment>();
-
-            if (level.terrainChunks.Count == 0)
-            {
-                if (settings.chunksSelected[0])
-                {
-                    terrain.AddRange(level.terrainEngine.fragments);
-                }
-            }
-            else
-            {
-                for (int i = 0; i < level.terrainChunks.Count; i++)
-                {
-                    if (settings.chunksSelected[i])
-                    {
-                        terrain.AddRange(level.terrainChunks[i].fragments);
-                    }
-                }
-            }
-
-            return terrain;
-        }
-
-        private static void WriteObjSeparate(string fileName, Level level, WriterLevelSettings settings)
-        {
-            string? pathName = Path.GetDirectoryName(fileName);
-            string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
-
-            List<TerrainFragment> terrain = CollectTerrainFragments(level, settings);
-
-            StreamWriter? mtlfs = null;
-
-            if (settings.exportMtlFile) mtlfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl");
-
-            using (StreamWriter objfs = new StreamWriter(fileName))
-            {
-                int faceOffset = 0;
-                List<int> usedMtls = new List<int>();
-
-                if (settings.exportMtlFile)
-                    objfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
-
-                foreach (TerrainFragment t in terrain)
-                {
-                    objfs.WriteLine("o Object_" + t.model?.id.ToString("X4"));
-                    faceOffset += WriteObjectData(objfs, t.model, faceOffset, Matrix4.Identity);
-                    if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
-                }
-
-                if (settings.writeTies)
-                {
-                    foreach (Tie t in level.ties)
-                    {
-                        objfs.WriteLine("o Object_" + t.model?.id.ToString("X4"));
-                        faceOffset += WriteObjectData(objfs, t.model, faceOffset, t.modelMatrix);
-                        if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
-                    }
-                }
-
-                if (settings.writeShrubs)
-                {
-                    foreach (Shrub t in level.shrubs)
-                    {
-                        objfs.WriteLine("o Object_" + t.model?.id.ToString("X4"));
-                        faceOffset += WriteObjectData(objfs, t.model, faceOffset, t.modelMatrix);
-                        if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
-                    }
-                }
-
-                if (settings.writeMobies)
-                {
-                    foreach (Moby t in level.mobs)
-                    {
-                        objfs.WriteLine("o Object_" + t.model?.id.ToString("X4"));
-                        faceOffset += WriteObjectData(objfs, t.model, faceOffset, t.modelMatrix);
-                        if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
-                    }
-                }
-            }
-
-            if (settings.exportMtlFile) mtlfs?.Dispose();
-        }
-
-        private static void WriteObjCombined(string fileName, Level level, WriterLevelSettings settings)
-        {
-            string? pathName = Path.GetDirectoryName(fileName);
-            string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
-
-            List<TerrainFragment> terrain = CollectTerrainFragments(level, settings);
-
-            StreamWriter? mtlfs = null;
-
-            if (settings.exportMtlFile) mtlfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl");
-
-            using (StreamWriter objfs = new StreamWriter(fileName))
-            {
-                if (settings.exportMtlFile)
-                    objfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
-
-                int faceOffset = 0;
-                List<int> usedMtls = new List<int>();
-
-                objfs.WriteLine("o Object_CombinedLevel");
-                foreach (TerrainFragment t in terrain)
-                {
-                    faceOffset += WriteObjectData(objfs, t.model, faceOffset, Matrix4.Identity);
-                    if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
-                }
-
-                if (settings.writeTies)
-                {
-                    foreach (Tie t in level.ties)
-                    {
-                        faceOffset += WriteObjectData(objfs, t.model, faceOffset, t.modelMatrix);
-                        if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
-                    }
-                }
-
-                if (settings.writeShrubs)
-                {
-                    foreach (Shrub t in level.shrubs)
-                    {
-                        faceOffset += WriteObjectData(objfs, t.model, faceOffset, t.modelMatrix);
-                        if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
-                    }
-                }
-
-                if (settings.writeMobies)
-                {
-                    foreach (Moby t in level.mobs)
-                    {
-                        faceOffset += WriteObjectData(objfs, t.model, faceOffset, t.modelMatrix);
-                        if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
-                    }
-                }
-            }
-
-            if (settings.exportMtlFile) mtlfs?.Dispose();
-        }
-
-        private static void WriteObjTypewise(string fileName, Level level, WriterLevelSettings settings)
-        {
-            string? pathName = Path.GetDirectoryName(fileName);
-            string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
-
-            List<TerrainFragment> terrain = CollectTerrainFragments(level, settings);
-
-            StreamWriter? mtlfs = null;
-
-            if (settings.exportMtlFile) mtlfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl");
-
-            using (StreamWriter objfs = new StreamWriter(fileName))
-            {
-                if (settings.exportMtlFile)
-                    objfs.WriteLine("mtllib " + fileNameNoExtension + ".mtl");
-
-                int faceOffset = 0;
-                List<int> usedMtls = new List<int>();
-
-                if (terrain.Count != 0)
-                {
-                    objfs.WriteLine("o Object_Terrain");
-                }
-
-                foreach (TerrainFragment t in terrain)
-                {
-                    faceOffset += WriteObjectData(objfs, t.model, faceOffset, Matrix4.Identity);
-                    if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
-                }
-
-                if (settings.writeTies)
-                {
-                    objfs.WriteLine("o Object_Ties");
-
-                    foreach (Tie t in level.ties)
-                    {
-                        faceOffset += WriteObjectData(objfs, t.model, faceOffset, t.modelMatrix);
-                        if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
-                    }
-                }
-
-                if (settings.writeShrubs)
-                {
-                    objfs.WriteLine("o Object_Shrubs");
-
-                    foreach (Shrub t in level.shrubs)
-                    {
-                        faceOffset += WriteObjectData(objfs, t.model, faceOffset, t.modelMatrix);
-                        if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
-                    }
-                }
-
-                if (settings.writeMobies)
-                {
-                    objfs.WriteLine("o Object_Mobies");
-
-                    foreach (Moby t in level.mobs)
-                    {
-                        faceOffset += WriteObjectData(objfs, t.model, faceOffset, t.modelMatrix);
-                        if (settings.exportMtlFile) WriteObjectMaterial(mtlfs, t.model, usedMtls);
-                    }
-                }
-            }
-
-            if (settings.exportMtlFile) mtlfs?.Dispose();
-        }
-
-        private static int SeparateModelObjectByMaterial(ModelObject t, List<Tuple<int, int, int>>[] faces, List<Vector3> vertices, List<Vector2> uvs, List<Vector3> normals, int faceOffset)
-        {
-            Model? model = t.model;
-
-            if (model == null) return 0;
-
-            int vertexCount = model.vertexBuffer.Length / 8;
-            var modelMatrix = t.modelMatrix;
-            // For correcting winding order we need proper indexing
-            var thisVertices = new Vector3[vertexCount];
-            var thisNormals = new Vector3[vertexCount];
-
-            for (int x = 0; x < vertexCount; x++)
-            {
-                Vector4 v = new Vector4(
-                    model.vertexBuffer[(x * 0x08) + 0x0],
-                    model.vertexBuffer[(x * 0x08) + 0x1],
-                    model.vertexBuffer[(x * 0x08) + 0x2],
-                    1.0f);
-                v *= modelMatrix;
-                vertices.Add(v.Xyz);
-                thisVertices[x] = v.Xyz;
-
-                var normal = new Vector4(
-                    model.vertexBuffer[(x * 0x08) + 0x3],
-                    model.vertexBuffer[(x * 0x08) + 0x4],
-                    model.vertexBuffer[(x * 0x08) + 0x5],
-                    0.0f);
-                normal *= modelMatrix;
-                normal.Normalize();
-                normals.Add(normal.Xyz);
-                thisNormals[x] = normal.Xyz;
-
-                uvs.Add(new Vector2(
-                    model.vertexBuffer[(x * 0x08) + 0x6],
-                    1f - model.vertexBuffer[(x * 0x08) + 0x7]));
-            }
-
-            int textureNum = 0;
-            for (int i = 0; i < model.indexBuffer.Length / 3; i++)
-            {
-                int triIndex = i * 3;
-                int materialID = 0;
-
-                if ((model.textureConfig != null) && (textureNum < model.textureConfig.Count))
-                {
-                    if ((textureNum + 1 < model.textureConfig.Count) && (triIndex >= model.textureConfig[textureNum + 1].start))
-                    {
-                        textureNum++;
-                    }
-
-                    materialID = model.textureConfig[textureNum].id;
-                }
-
-                if (materialID >= faces.Length || materialID < 0)
-                {
-                    materialID = 0;
-                }
-
-                var v1 = model.indexBuffer[triIndex + 0];
-                var v2 = model.indexBuffer[triIndex + 1];
-                var v3 = model.indexBuffer[triIndex + 2];
-
-                if (ShouldReverseWinding(thisVertices, thisNormals, v1, v2, v3))
-                    (v2, v3) = (v3, v2);
-
-                faces[materialID].Add(new Tuple<int, int, int>(
-                    v1 + 1 + faceOffset,
-                    v2 + 1 + faceOffset,
-                    v3 + 1 + faceOffset));
-            }
-
-            return vertexCount;
-        }
-
-        private static void WriteObjMaterialwise(string fileName, Level level, WriterLevelSettings settings)
-        {
-            string? pathName = Path.GetDirectoryName(fileName);
-            string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
-
-            List<TerrainFragment> terrain = CollectTerrainFragments(level, settings);
-
-            int materialCount = level.textures.Count;
-
-            List<Tuple<int, int, int>>[] faces = new List<Tuple<int, int, int>>[materialCount];
-
-            for (int i = 0; i < materialCount; i++)
-            {
-                faces[i] = new List<Tuple<int, int, int>>();
-            }
-
-            List<Vector3> vertices = new List<Vector3>();
-            List<Vector2> uvs = new List<Vector2>();
-            List<Vector3> normals = new List<Vector3>();
-
-            int faceOffset = 0;
-
-            foreach (TerrainFragment t in terrain)
-            {
-                faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, uvs, normals, faceOffset);
-            }
-
-            if (settings.writeTies)
-            {
-                foreach (Tie t in level.ties)
-                {
-                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, uvs, normals, faceOffset);
-                }
-            }
-
-            if (settings.writeShrubs)
-            {
-                foreach (Shrub t in level.shrubs)
-                {
-                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, uvs, normals, faceOffset);
-                }
-            }
-
-            if (settings.writeMobies)
-            {
-                foreach (Moby t in level.mobs)
-                {
-                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, uvs, normals, faceOffset);
-                }
-            }
-
-            if (settings.exportMtlFile)
-            {
-                using (StreamWriter mtlfs = new StreamWriter(pathName + "\\" + fileNameNoExtension + ".mtl"))
-                {
-                    for (int i = 0; i < materialCount; i++)
-                    {
-                        if (faces[i].Count != 0)
-                            WriteObjectMaterial(mtlfs, i.ToString());
-                    }
-                }
-            }
-
-
-            using (StreamWriter objfs = new StreamWriter(fileName))
-            {
-                if (settings.exportMtlFile)
-                    objfs.WriteLine($"mtllib {fileNameNoExtension}.mtl");
-
-                foreach (Vector3 v in vertices)
-                {
-                    objfs.WriteLine($"v {v.X:F6} {v.Y:F6} {v.Z:F6}");
-                }
-
-                foreach (Vector3 vn in normals)
-                {
-                    objfs.WriteLine($"vn {vn.X:F6} {vn.Y:F6} {vn.Z:F6}");
-                }
-
-                foreach (Vector2 vt in uvs)
-                {
-                    objfs.WriteLine($"vt {vt.X:F6} {vt.Y:F6}");
-                }
-
-                for (int i = 0; i < materialCount; i++)
-                {
-                    List<Tuple<int, int, int>> list = faces[i];
-
-                    if (list.Count == 0) continue;
-
-                    objfs.WriteLine("o Object_Material_" + i);
-
-                    if (settings.exportMtlFile)
-                    {
-                        objfs.WriteLine("usemtl mtl_" + i);
-                        objfs.WriteLine("g Texture_" + i);
-                    }
-
-                    foreach (var (v1, v2, v3) in list)
-                    {
-                        objfs.WriteLine(
-                            $"f {v1}/{v1}/{v1} {v2}/{v2}/{v2} {v3}/{v3}/{v3}"
-                        );
-                    }
-                }
-            }
-        }
-
-        public static void WriteModel(string fileName, Level level, Model model, WriterModelSettings settings)
-        {
-            switch (settings.format)
-            {
-                case WriterModelFormat.Wavefront:
-                    WriteModelObj(fileName, model, settings);
-                    break;
-                case WriterModelFormat.Collada:
-                    WriteModelDae(fileName, level, model, settings);
-                    break;
-            }
-        }
-
-        public static void WriteLevelObj(string fileName, Level level, WriterLevelSettings settings)
-        {
-            switch (settings.mode)
-            {
-                case WriterLevelMode.Separate:
-                    WriteObjSeparate(fileName, level, settings);
-                    return;
-                case WriterLevelMode.Combined:
-                    WriteObjCombined(fileName, level, settings);
-                    return;
-                case WriterLevelMode.Typewise:
-                    WriteObjTypewise(fileName, level, settings);
-                    return;
-                case WriterLevelMode.Materialwise:
-                    WriteObjMaterialwise(fileName, level, settings);
-                    return;
-            }
-        }
-
-        /*
-         * Different Modes for Level Export:
-         * - Separate: Exports every ModelObject as is
-         * - Combined: Combines all ModelObjects into one mesh
-         * - Typewise: Combines all ModelObjects of the same type (Tie, Shrubs etc.) into one mesh
-         * - Materialwise: Combines all faces using the same material/texture into one mesh
-         */
-        public enum WriterLevelMode
-        {
-            Separate,
-            Combined,
-            Typewise,
-            Materialwise
-        };
-
-        public class WriterLevelSettings
-        {
-            public WriterLevelMode mode = WriterLevelMode.Combined;
-            public bool writeTies = true;
-            public bool writeShrubs = true;
-            public bool writeMobies = true;
-            public bool[] chunksSelected = new bool[5];
-            public bool exportMtlFile = true;
-
-            public WriterLevelSettings()
-            {
-                for (int i = 0; i < 5; i++)
-                {
-                    chunksSelected[i] = false;
-                }
-            }
-        }
-
-        public static readonly string[] WRITER_MODEL_FORMAT_STRINGS = { "Wavefront (*.obj)", "Collada (*.dae)" };
-
-        public enum WriterModelFormat
-        {
-            Wavefront,
-            Collada
-        };
-
-        public static readonly string[] WRITER_MODEL_ANIMATION_CHOICE_STRINGS = { "No Animations", "All Animations", "Separate File for each Animation", "Concatenate Animations" };
-
-        public enum WriterModelAnimationChoice
-        {
-            None,
-            All,
-            AllSeparate,
-            AllSequential
-        };
-
-        public class WriterModelSettings
-        {
-            public WriterModelFormat format = WriterModelFormat.Collada;
-            public WriterModelAnimationChoice animationChoice = WriterModelAnimationChoice.None;
-            public bool exportMtlFile = true;
-
-            public WriterModelSettings()
-            {
-            }
-        }
-
-        public static void WriteCollisionObj(string fileName, Level level)
-        {
-            string? pathName = Path.GetDirectoryName(fileName);
-            string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
-
-            using (StreamWriter objfs = new StreamWriter(fileName))
-            {
-                if (level.collisionChunks.Count == 0)
-                {
-                    WriteObjectDataCollision(objfs, (Collision) level.collisionEngine, 0);
-                }
-                else
-                {
-                    int faceOffset = 0;
-
-                    foreach (Collision col in level.collisionChunks)
-                    {
-                        faceOffset += WriteObjectDataCollision(objfs, col, faceOffset);
-                    }
-                }
+                WriteData(fileName, level, model, includeSkeleton, -1);
             }
         }
     }

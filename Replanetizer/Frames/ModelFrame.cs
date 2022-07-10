@@ -25,8 +25,10 @@ namespace Replanetizer.Frames
     public class ModelFrame : LevelSubFrame
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
-        protected override string frameName { get; set; } = "Models";
+        protected override string frameName { get; set; } = "Model Viewer";
 
+        private string filter = "";
+        private string filterUpper = "";
         private FramebufferRenderer? renderer;
         private Level level => levelFrame.level;
         private Model? selectedModel;
@@ -37,7 +39,7 @@ namespace Replanetizer.Frames
         private List<Texture>? selectedTextureSet;
         private List<Texture>? modelTextureList;
 
-        private ModelWriter.WriterModelSettings exportSettings;
+        private ExporterModelSettings exportSettings;
 
         private readonly KeyHeldHandler KEY_HELD_HANDLER = new()
         {
@@ -88,7 +90,7 @@ namespace Replanetizer.Frames
             modelTextureList = new List<Texture>();
             propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
             this.shaderIDTable = shaderIDTable;
-            exportSettings = new ModelWriter.WriterModelSettings();
+            exportSettings = new ExporterModelSettings();
             UpdateWindowSize();
             OnResize();
             SelectModel(model);
@@ -106,11 +108,27 @@ namespace Replanetizer.Frames
 
         private void RenderModelEntry(Model mod, List<Texture> textureSet, string name)
         {
+            if (filter != null && filter != "")
+            {
+                if (!name.ToUpper().Contains(filterUpper)) return;
+            }
             if (ImGui.Selectable(name, selectedModel == mod))
             {
                 SelectModel(mod, textureSet);
                 PrepareForArrowInput();
             }
+        }
+
+        private string GetDisplayName(Model model)
+        {
+            string? modelName = ModelLists.ModelLists.GetModelName(model, level.game);
+            string displayName = $"0x{model.id:X3}";
+            if (modelName != null)
+            {
+                displayName += " (" + modelName + ")";
+            }
+
+            return displayName;
         }
 
         private void RenderSubTree(string name, List<Model> models, List<Texture> textureSet)
@@ -119,9 +137,8 @@ namespace Replanetizer.Frames
             {
                 for (int i = 0; i < models.Count; i++)
                 {
-                    Model mod = models[i];
-                    name = $"{mod.id:X}## {i}";
-                    RenderModelEntry(mod, textureSet, name);
+                    Model model = models[i];
+                    RenderModelEntry(model, textureSet, GetDisplayName(model));
                 }
                 ImGui.TreePop();
             }
@@ -130,7 +147,13 @@ namespace Replanetizer.Frames
         private void RenderTree()
         {
             var colW = ImGui.GetColumnWidth() - 10;
-            var childSize = new System.Numerics.Vector2(colW, height);
+            var childSize = new System.Numerics.Vector2(colW, height - 30);
+
+            if (ImGui.InputText("", ref filter, 256))
+            {
+                filterUpper = filter.ToUpper();
+            }
+
             if (ImGui.BeginChild("TreeView", childSize, false, ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {
                 RenderSubTree("Moby", level.mobyModels, level.textures);
@@ -164,15 +187,35 @@ namespace Replanetizer.Frames
             }
         }
 
+        private void UpdateWindowTitle()
+        {
+            if (selectedModel == null)
+            {
+                frameName = "Model Viewer";
+            }
+            else
+            {
+                frameName = "Model Viewer - " + GetDisplayName(selectedModel);
+            }
+
+            /*
+             * The ###Model Viewer tells ImGui that the Windows ID is "Model Viewer"
+             * This is necessary as otherwise every title change would create a new window
+             */
+            frameName += "###Model Viewer";
+        }
+
         public override void Render(float deltaTime)
         {
             UpdateWindowSize();
+            UpdateWindowTitle();
             if (!initialized) ModelViewer_Load();
             if (renderer == null) return;
 
             ImGui.Columns(3);
-            ImGui.SetColumnWidth(0, 200);
+            ImGui.SetColumnWidth(0, 250);
             ImGui.SetColumnWidth(1, (float) width);
+            ImGui.SetColumnWidth(2, 320);
             RenderTree();
             ImGui.NextColumn();
 
@@ -209,23 +252,26 @@ namespace Replanetizer.Frames
                         ImGui.Separator();
                     }
                     int fileFormat = (int) exportSettings.format;
-                    if (ImGui.Combo("File Format", ref fileFormat, ModelWriter.WRITER_MODEL_FORMAT_STRINGS, ModelWriter.WRITER_MODEL_FORMAT_STRINGS.Length))
+                    if (ImGui.Combo("File Format", ref fileFormat, ExporterModelSettings.FORMAT_STRINGS, ExporterModelSettings.FORMAT_STRINGS.Length))
                     {
-                        exportSettings.format = (ModelWriter.WriterModelFormat) fileFormat;
+                        exportSettings.format = (ExporterModelSettings.Format) fileFormat;
                     }
 
                     // Collada specific settings
-                    if (exportSettings.format == ModelWriter.WriterModelFormat.Collada)
+                    if (exportSettings.format == ExporterModelSettings.Format.Collada)
                     {
-                        int animationChoice = (int) exportSettings.animationChoice;
-                        if (ImGui.Combo("Animations", ref animationChoice, ModelWriter.WRITER_MODEL_ANIMATION_CHOICE_STRINGS, ModelWriter.WRITER_MODEL_ANIMATION_CHOICE_STRINGS.Length))
+                        if (selectedModel is MobyModel mobyModel && mobyModel.animations.Count > 0)
                         {
-                            exportSettings.animationChoice = (ModelWriter.WriterModelAnimationChoice) animationChoice;
+                            int animationChoice = (int) exportSettings.animationChoice;
+                            if (ImGui.Combo("Animations", ref animationChoice, ExporterModelSettings.ANIMATION_CHOICE_STRINGS, ExporterModelSettings.ANIMATION_CHOICE_STRINGS.Length))
+                            {
+                                exportSettings.animationChoice = (ExporterModelSettings.AnimationChoice) animationChoice;
+                            }
                         }
                     }
 
                     // Wavefront specific settings
-                    if (exportSettings.format == ModelWriter.WriterModelFormat.Wavefront)
+                    if (exportSettings.format == ExporterModelSettings.Format.Wavefront)
                     {
                         ImGui.Checkbox("Include MTL File", ref exportSettings.exportMtlFile);
                     }
@@ -250,8 +296,8 @@ namespace Replanetizer.Frames
             System.Numerics.Vector2 vMin = ImGui.GetWindowContentRegionMin();
             System.Numerics.Vector2 vMax = ImGui.GetWindowContentRegionMax();
 
-            vMin.X += 220;
-            vMax.X -= 300;
+            vMin.X += 250;
+            vMax.X -= 320;
 
             width = (int) (vMax.X - vMin.X);
             height = (int) (vMax.Y - vMin.Y);
@@ -525,23 +571,15 @@ namespace Replanetizer.Frames
             var model = selectedModel;
             if (model == null) return;
 
-            string filter = "";
-            switch (exportSettings.format)
-            {
-                case ModelWriter.WriterModelFormat.Wavefront:
-                    filter = ".obj";
-                    break;
-                case ModelWriter.WriterModelFormat.Collada:
-                    filter = ".dae";
-                    break;
-                default:
-                    filter = "*";
-                    break;
-            }
-            string fileName = CrossFileDialog.SaveFile(filter: filter);
+            Exporter? exporter = Exporter.GetExporter(exportSettings);
+            if (exporter == null) return;
+
+            string filter = exporter.GetFileEnding();
+
+            string fileName = CrossFileDialog.SaveFile("model" + filter, filter);
             if (fileName.Length == 0) return;
 
-            ModelWriter.WriteModel(fileName, level, model, exportSettings);
+            exporter.ExportModel(fileName, level, model);
         }
 
         private void ExportSelectedModelTextures()

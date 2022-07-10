@@ -172,7 +172,7 @@ csharp_space_between_parentheses = false
 csharp_space_between_square_brackets = false
 
 # License header
-file_header_template = Copyright (C) 2018-2021, The Replanetizer Contributors.\nReplanetizer is free software: you can redistribute it\nand/or modify it under the terms of the GNU General Public\nLicense as published by the Free Software Foundation,\neither version 3 of the License, or (at your option) any later version.\nPlease see the LICENSE.md file for more details.
+file_header_template = Copyright (C) 2018-2022, The Replanetizer Contributors.\nReplanetizer is free software: you can redistribute it\nand/or modify it under the terms of the GNU General Public\nLicense as published by the Free Software Foundation,\neither version 3 of the License, or (at your option) any later version.\nPlease see the LICENSE.md file for more details.
 
 # C++ Files
 [*.{cpp,h,in}]

@@ -1256,6 +1256,8 @@ namespace Replanetizer.Frames
                     }
                     InvalidateView();
                     return null;
+                case RenderedObjectType.Skybox:
+                    return null;
             }
 
             return null;

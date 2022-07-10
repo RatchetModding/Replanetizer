@@ -100,10 +100,19 @@ namespace Replanetizer.Frames
 
         public UpdateInfoFrame(Window wnd, string? url, DateTime? buildDate, DateTime? currVersionDate, string? newestReleaseTag) : base(wnd)
         {
-            aboutText = String.Format(@"Your Version: {0}
-Current Version: {1}
+            TimeSpan? diff = null;
+            if (buildDate != null && currVersionDate != null)
+            {
+                diff = currVersionDate - buildDate;
+            }
 
-Link: ", buildDate.ToString(), currVersionDate.ToString());
+
+            aboutText = String.Format(
+@"Your Version:    {0}
+Current Version: {1}
+Your version is {2} day(s) and {3} hour(s) behind.
+
+Link: ", buildDate.ToString(), currVersionDate.ToString(), diff?.Days, diff?.Hours);
 
             link = url;
 

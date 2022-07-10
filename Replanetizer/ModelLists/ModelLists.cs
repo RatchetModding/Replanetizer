@@ -19,6 +19,8 @@ namespace Replanetizer.ModelLists
     {
         private static Dictionary<int, string>? __RC1_MOB_NAMES = null;
         private static Dictionary<int, string>? __RC1_TIE_NAMES = null;
+        private static Dictionary<int, string>? __RC2_MOB_NAMES = null;
+
 
         public static Dictionary<int, string> RC1_MOB_NAMES
         {
@@ -43,6 +45,19 @@ namespace Replanetizer.ModelLists
                 return __RC1_TIE_NAMES;
             }
         }
+
+        public static Dictionary<int, string> RC2_MOB_NAMES
+        {
+            get
+            {
+                if (__RC2_MOB_NAMES == null)
+                {
+                    __RC2_MOB_NAMES = GetModelNames("MobyModelsRC2.txt");
+                }
+                return __RC2_MOB_NAMES;
+            }
+        }
+
 
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
 
@@ -90,6 +105,16 @@ namespace Replanetizer.ModelLists
                     else if (obj is TieModel)
                     {
                         if (!RC1_TIE_NAMES.TryGetValue(obj.id, out result)) return null;
+                        break;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                case 2:
+                    if (obj is MobyModel)
+                    {
+                        if (!RC2_MOB_NAMES.TryGetValue(obj.id, out result)) return null;
                         break;
                     }
                     else

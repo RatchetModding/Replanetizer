@@ -67,7 +67,7 @@ namespace Replanetizer.ModelLists
 
             try
             {
-                string? applicationFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                string? applicationFolder = System.AppContext.BaseDirectory;
                 string listFolder = Path.Join(applicationFolder, "ModelLists");
                 var fullPath = Path.Join(listFolder, fileName);
 

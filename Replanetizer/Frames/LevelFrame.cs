@@ -521,7 +521,7 @@ namespace Replanetizer.Frames
             GL.Enable(EnableCap.DepthTest);
             GL.LineWidth(5.0f);
 
-            string? applicationFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string? applicationFolder = System.AppContext.BaseDirectory;
             string shaderFolder = Path.Join(applicationFolder, "Shaders");
 
             shaderIDTable = new ShaderIDTable();

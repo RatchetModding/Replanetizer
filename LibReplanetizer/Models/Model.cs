@@ -37,7 +37,7 @@ namespace LibReplanetizer.Models
         [Category("Attributes"), DisplayName("Vertex Colors")]
         public byte[] rgbas { get; set; } = new byte[0];
 
-        [Category("Attributes"), DisplayName("Texture Configuration")]
+        [Category("Attributes"), DisplayName("Texture Configurations")]
         public List<TextureConfig> textureConfig { get; set; } = new List<TextureConfig>();
 
         public ushort[] GetIndices()

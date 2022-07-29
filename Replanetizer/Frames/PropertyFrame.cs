@@ -16,6 +16,7 @@ using System.Text;
 using System.Drawing;
 using ImGuiNET;
 using LibReplanetizer.LevelObjects;
+using LibReplanetizer;
 using Replanetizer.Utils;
 
 namespace Replanetizer.Frames
@@ -363,8 +364,39 @@ namespace Replanetizer.Frames
             else if (type is { IsGenericType: true } && type.GetGenericTypeDefinition() == typeof(List<>))
             {
                 ICollection list = (ICollection) val;
-                var genericType = type.GetGenericArguments()[0].Name;
-                ImGui.LabelText(propertyName, "List<" + genericType + ">[" + list.Count + "]");
+                Type genericType = type.GetGenericArguments()[0];
+                if (genericType == typeof(TextureConfig))
+                {
+                    if (ImGui.CollapsingHeader(propertyName))
+                    {
+                        List<TextureConfig> textureConfigs = (List<TextureConfig>) val;
+
+                        PropertyInfo[] texConfProps = typeof(TextureConfig).GetProperties();
+
+                        int i = 1;
+
+                        foreach (TextureConfig t in list)
+                        {
+                            ImGui.Text("Texture Config " + i);
+
+                            foreach (PropertyInfo prop in texConfProps)
+                            {
+                                string displayName =
+                                    prop.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName ?? prop.Name;
+
+                                object? o = prop.GetValue(t);
+                                ImGui.LabelText(displayName, (o == null) ? "Null" : o.ToString());
+                            }
+
+                            i++;
+                        }
+                    }
+                }
+                else
+                {
+                    string genericTypeName = type.GetGenericArguments()[0].Name;
+                    ImGui.LabelText(propertyName, "List<" + genericTypeName + ">[" + list.Count + "]");
+                }
             }
             else
                 ImGui.LabelText(propertyName, Convert.ToString(val));

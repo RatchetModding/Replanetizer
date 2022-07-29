@@ -5,6 +5,7 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using System.ComponentModel;
 using LibReplanetizer.Models.Animations;
 using System.Collections.Generic;
 using System.IO;
@@ -23,16 +24,22 @@ namespace LibReplanetizer.Models
 
         public int null1 { get; set; }
 
+        [Category("Attributes"), DisplayName("Bone Count")]
         public byte boneCount { get; set; }
+        [Category("Attributes"), DisplayName("Low Poly Bone Count")]
         public byte lpBoneCount { get; set; }            // Low poly bone count
         public byte count3 { get; set; }
         public byte count4 { get; set; }
+        [Category("Attributes"), DisplayName("Low Poly Render Distance")]
         public byte lpRenderDist { get; set; }            // Low poly render distance
         public byte count8 { get; set; }
 
         public int null2 { get; set; }
         public int null3 { get; set; }
 
+        /*
+         * These are not zero, yet setting them to 0 has no effect on Oozla (maybe test other levels?)
+         */
         public float unk1 { get; set; }
         public float unk2 { get; set; }
         public float unk3 { get; set; }
@@ -43,11 +50,17 @@ namespace LibReplanetizer.Models
 
         public ushort vertexCount2 { get; set; }
 
+        [Category("Attributes"), DisplayName("Animations")]
         public List<Animation> animations { get; set; } = new List<Animation>();
+        [Category("Attributes"), DisplayName("Sounds")]
         public List<ModelSound> modelSounds { get; set; } = new List<ModelSound>();
+        [Category("Attributes"), DisplayName("Attachments")]
         public List<Attachment> attachments { get; set; } = new List<Attachment>();
+        [Category("Attributes"), DisplayName("Index Attachments")]
         public List<byte> indexAttachments { get; set; } = new List<byte>();
+        [Category("Attributes"), DisplayName("Bone Matrices")]
         public List<BoneMatrix> boneMatrices { get; set; } = new List<BoneMatrix>();
+        [Category("Attributes"), DisplayName("Bone Datas")]
         public List<BoneData> boneDatas { get; set; } = new List<BoneData>();
 
 
@@ -55,7 +68,8 @@ namespace LibReplanetizer.Models
         public List<TextureConfig> otherTextureConfigs { get; set; } = new List<TextureConfig>();
         public List<ushort> otherIndexBuffer { get; set; } = new List<ushort>();
         public Skeleton? skeleton = null;
-        public bool isModel = true;
+        [Category("Attributes"), DisplayName("Is Model")]
+        public bool isModel { get; set; } = true;
 
 
         // Unparsed sections

@@ -5,6 +5,7 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using System.ComponentModel;
 using System.IO;
 using static LibReplanetizer.DataFunctions;
 
@@ -16,9 +17,13 @@ namespace LibReplanetizer.Models
         const int TIEVERTELEMSIZE = 0x18;
         const int TIEUVELEMSIZE = 0x08;
 
+        [Category("Culling Parameters"), DisplayName("Position X")]
         public float cullingX { get; set; }
+        [Category("Culling Parameters"), DisplayName("Position Y")]
         public float cullingY { get; set; }
+        [Category("Culling Parameters"), DisplayName("Position Z")]
         public float cullingZ { get; set; }
+        [Category("Culling Parameters"), DisplayName("Radius")]
         public float cullingRadius { get; set; }
 
         public uint off20 { get; set; }

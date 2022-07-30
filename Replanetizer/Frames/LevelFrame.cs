@@ -557,6 +557,8 @@ namespace Replanetizer.Frames
             shaderIDTable.uniformAmbientColor = GL.GetUniformLocation(shaderIDTable.shaderMain, "staticColor");
             shaderIDTable.uniformLightIndex = GL.GetUniformLocation(shaderIDTable.shaderMain, "lightIndex");
 
+            shaderIDTable.uniformUseTransparency = GL.GetUniformLocation(shaderIDTable.shaderMain, "useTransparency");
+
             shaderIDTable.uniformSkyTexAvailable = GL.GetUniformLocation(shaderIDTable.shaderSky, "texAvailable");
 
             shaderIDTable.uniformDissolvePattern = GL.GetUniformLocation(shaderIDTable.shaderMain, "dissolvePattern");

@@ -32,6 +32,7 @@ namespace Replanetizer.Utils
         public int uniformColorLevelObjectType { get; set; }
         public int uniformColorLevelObjectNumber { get; set; }
         public int uniformAmbientColor { get; set; }
+        public int uniformUseTransparency { get; set; }
 
         // Number of lights we allocate, if you change this, you need to change it in the shader aswell.
         public static readonly int ALLOCATED_LIGHTS = 20;

@@ -45,7 +45,13 @@ void main() {
         if (dissolvePattern[patternPos.x][patternPos.y] < alpha) discard;
     }
 
-	if (textureColor.w < 0.1f && levelObjectType >= 2) discard;
+    // we use dithering for transparency in everything that isnt mobies (it is simple thats why)
+    if ((levelObjectType == 1 || levelObjectType == 2 || levelObjectType == 3)) {
+        vec2 pixel = vec2(gl_FragCoord.x, gl_FragCoord.y);
+        float alpha = 1.0f - textureColor.w;
+        ivec2 patternPos = ivec2(int(mod(pixel.x,4.0f)),int(mod(pixel.y,4.0f)));
+        if (dissolvePattern[patternPos.x][patternPos.y] < alpha) discard;
+    }
 
 	color.xyz = textureColor.xyz * lightColor;
 	color.w = textureColor.w;

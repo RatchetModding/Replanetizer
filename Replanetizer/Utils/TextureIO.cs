@@ -10,12 +10,13 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using LibReplanetizer;
+using LibReplanetizer.Models;
 
 namespace Replanetizer.Utils
 {
     public static class TextureIO
     {
-        public static void ExportTexture(Texture texture, string path)
+        public static void ExportTexture(Texture texture, string path, bool includeTransparency)
         {
             string extension = Path.GetExtension(path).ToLower();
             ImageFormat imageFormat = ImageFormat.Png;
@@ -30,7 +31,7 @@ namespace Replanetizer.Utils
                     imageFormat = ImageFormat.Jpeg;
                     break;
             }
-            Bitmap? bitmap = texture.GetTextureImage();
+            Bitmap? bitmap = texture.GetTextureImage(includeTransparency);
 
             if (bitmap == null) return;
             bitmap.Save(path, imageFormat);
@@ -38,9 +39,35 @@ namespace Replanetizer.Utils
 
         public static void ExportAllTextures(Level level, string path)
         {
+            bool[] forcedOpaque = new bool[level.textures.Count];
+            if (level.game.num == 3)
+            {
+                foreach (TieModel model in level.tieModels)
+                {
+                    foreach (TextureConfig conf in model.textureConfig)
+                    {
+                        if (conf.IgnoresTransparency())
+                        {
+                            forcedOpaque[conf.id] = true;
+                        }
+                    }
+                }
+
+                foreach (MobyModel model in level.mobyModels)
+                {
+                    foreach (TextureConfig conf in model.textureConfig)
+                    {
+                        if (conf.IgnoresTransparency())
+                        {
+                            forcedOpaque[conf.id] = true;
+                        }
+                    }
+                }
+            }
+
             for (int i = 0; i < level.textures.Count; i++)
             {
-                Bitmap? image = level.textures[i].GetTextureImage();
+                Bitmap? image = level.textures[i].GetTextureImage(!forcedOpaque[i]);
                 if (image == null) continue;
                 image.Save(Path.Join(path, $"{i}.png"), ImageFormat.Png);
             }
@@ -50,7 +77,7 @@ namespace Replanetizer.Utils
                 List<Texture> textures = level.armorTextures[i];
                 for (int j = 0; j < textures.Count; j++)
                 {
-                    Bitmap? image = textures[j].GetTextureImage();
+                    Bitmap? image = textures[j].GetTextureImage(true);
                     if (image == null) continue;
                     image.Save(Path.Join(path, $"armor_{i}_{j}.png"), ImageFormat.Png);
                 }
@@ -58,7 +85,7 @@ namespace Replanetizer.Utils
 
             for (int i = 0; i < level.gadgetTextures.Count; i++)
             {
-                Bitmap? image = level.gadgetTextures[i].GetTextureImage();
+                Bitmap? image = level.gadgetTextures[i].GetTextureImage(true);
                 if (image == null) continue;
                 image.Save(Path.Join(path, $"gadget_{i}.png"), ImageFormat.Png);
             }
@@ -68,7 +95,7 @@ namespace Replanetizer.Utils
                 List<Texture> textures = level.missions[i].textures;
                 for (int j = 0; j < textures.Count; j++)
                 {
-                    Bitmap? image = textures[j].GetTextureImage();
+                    Bitmap? image = textures[j].GetTextureImage(true);
                     if (image == null) continue;
                     image.Save(Path.Join(path, $"mission_{i}_{j}.png"), ImageFormat.Png);
                 }

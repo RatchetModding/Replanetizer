@@ -19,5 +19,27 @@ namespace LibReplanetizer
         public int size { get; set; }
         [Category("Attributes"), DisplayName("Mode")]
         public int mode { get; set; }
+
+        /*
+         * The textureConfig modes in the following are probably bitmask but more testing is required
+         * to confirm that, until then simply add all modes that are observed.
+         * Ideally write the binary + the game in which this was observed as it could be that the
+         * bitmasks differ between the games.
+         */
+
+        public bool IgnoresTransparency()
+        {
+            switch (mode)
+            {
+                case 136311: /* 100001010001110111 (RaC 3) */
+                case 136279: /* 100001010001010111 (RaC 3) */
+                case 136277: /* 100001010001010101 (RaC 3) */
+                case 136533: /* 100001010101010101 (RaC 3) */
+                case 136447: /* 100001010011111111 (RaC 3) */
+                    return true;
+                default:
+                    return false;
+            }
+        }
     }
 }

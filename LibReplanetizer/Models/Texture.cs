@@ -98,13 +98,22 @@ namespace LibReplanetizer
             return outBytes;
         }
 
-        public Bitmap? GetTextureImage()
+        public Bitmap? GetTextureImage(bool includeTransparency)
         {
             if (img != null) return img;
 
             byte[]? imgData = DecompressDxt5(data, width, height);
+
             if (imgData != null)
             {
+                if (!includeTransparency)
+                {
+                    for (int i = 0; i < width * height; i++)
+                    {
+                        imgData[i * 4 + 3] = 255;
+                    }
+                }
+
                 img = new Bitmap(width, height, PixelFormat.Format32bppArgb);
                 BitmapData bmData = img.LockBits(new Rectangle(0, 0, img.Width, img.Height), ImageLockMode.ReadWrite, img.PixelFormat);
                 IntPtr pNative = bmData.Scan0;

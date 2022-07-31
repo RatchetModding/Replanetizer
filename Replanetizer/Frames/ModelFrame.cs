@@ -599,7 +599,10 @@ namespace Replanetizer.Frames
                 if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
 
                 var texture = selectedTextureSet[textureId];
-                TextureIO.ExportTexture(texture, Path.Combine(folder, $"{textureId}.png"));
+
+                bool includeTransparency = (config.IgnoresTransparency()) ? false : true;
+
+                TextureIO.ExportTexture(texture, Path.Combine(folder, $"{textureId}.png"), includeTransparency);
             }
         }
     }

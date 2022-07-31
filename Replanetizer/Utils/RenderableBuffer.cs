@@ -225,52 +225,25 @@ namespace Replanetizer.Utils
             }
         }
 
-        /*
-         * The textureConfig modes in the following are probably bitmask but more testing is required
-         * to confirm that, until then simply add all modes that are observed.
-         * Ideally write the binary + the game in which this was observed as it could be that the
-         * bitmasks differ between the games.
-         */
-
         /// <summary>
         /// Takes a textureConfig mode as input and sets the transparency mode based on that.
         /// </summary>
-        private void SetTransparencyMode(int mode)
+        private void SetTransparencyMode(TextureConfig config)
         {
             if (SHADER_ID_TABLE == null) return;
 
-            /*
-             * This seems to be a RaC 3 only behaviour.
-             */
-            switch (mode)
-            {
-                case 136311: /* 100001010001110111 (RaC 3) */
-                case 136279: /* 100001010001010111 (RaC 3) */
-                case 136277: /* 100001010001010101 (RaC 3) */
-                case 136533: /* 100001010101010101 (RaC 3) */
-                case 136447: /* 100001010011111111 (RaC 3) */
-                    GL.Uniform1(SHADER_ID_TABLE.uniformUseTransparency, 0);
-                    break;
-                default:
-                    GL.Uniform1(SHADER_ID_TABLE.uniformUseTransparency, 1);
-                    break;
-            }
+            GL.Uniform1(SHADER_ID_TABLE.uniformUseTransparency, (config.IgnoresTransparency()) ? 0 : 1);
         }
 
         /// <summary>
         /// Takes a textureConfig mode as input and sets the texture wrap mode based on that.
-        ///
-        /// Setting these every frame is quite expensive so consider predetermining this
-        /// by looping through all textureConfigs as it seems that all uses of a texture
-        /// use the same texture wrap mode.
         /// </summary>
         private void SetTextureWrapMode(int mode)
         {
             /*
-             * Reality is, it could be that the game always uses Repeat but the interpolation/sampling works differently
-             * which causes edges of transparent objects to not show these ugly edges, more testing is required
+             * There is an issue with opaque edges in some transparent objects
              * This can easily be observed on RaC 1 Kerwan where you have these ugly edges on some trees and the bottom
-             * of the fading out buildings, obviously to see this you need to turn this function here off
+             * of the fading out buildings
              */
             switch (mode)
             {
@@ -279,11 +252,10 @@ namespace Replanetizer.Utils
                 case 93: /* 1011101 (RaC 2)*/
                 case 95: /* 1011111 (RaC 2)*/
                 case 218103808: /* 1101000000000000000000000000 (RaC 1) */
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.MirroredRepeat);
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.MirroredRepeat);
-                    break;
                 case 117440512: /* 0111000000000000000000000000 (RaC 3) */
-                    // Something that doesn't seem to have an equivalent mode in OpenGL
+                    // RaC on PS2 probably used repeat texture wrap mode as there are practically only repeat and clamp on PS2
+                    // However, it seems that the sampling worked slightly different but I am not sure how to reproduce that
+                    // behaviour
                     break;
             }
         }
@@ -409,8 +381,7 @@ namespace Replanetizer.Utils
                     foreach (TextureConfig conf in modelObject.model.textureConfig)
                     {
                         GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[level.textures[conf.id]] : 0);
-                        SetTextureWrapMode(conf.mode);
-                        SetTransparencyMode(conf.mode);
+                        SetTransparencyMode(conf);
                         GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                     }
 

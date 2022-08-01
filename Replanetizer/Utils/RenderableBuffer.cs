@@ -245,17 +245,35 @@ namespace Replanetizer.Utils
              * This can easily be observed on RaC 1 Kerwan where you have these ugly edges on some trees and the bottom
              * of the fading out buildings
              */
-            switch (mode)
+            switch (type)
             {
-                case 13: /* 0001101 (RaC 1)*/
-                case 15: /* 0001111 (RaC 1)*/
-                case 93: /* 1011101 (RaC 2)*/
-                case 95: /* 1011111 (RaC 2)*/
-                case 218103808: /* 1101000000000000000000000000 (RaC 1) */
-                case 117440512: /* 0111000000000000000000000000 (RaC 3) */
-                    // RaC on PS2 probably used repeat texture wrap mode as there are practically only repeat and clamp on PS2
-                    // However, it seems that the sampling worked slightly different but I am not sure how to reproduce that
-                    // behaviour
+                case RenderedObjectType.Terrain:
+                case RenderedObjectType.Shrub:
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
+                    break;
+                case RenderedObjectType.Tie:
+                    switch (mode)
+                    {
+                        case 13: /* 0001101 (RaC 1)*/
+                        case 15: /* 0001111 (RaC 1)*/
+                        case 93: /* 1011101 (RaC 2)*/
+                        case 95: /* 1011111 (RaC 2)*/
+                        case 218103808: /* 1101000000000000000000000000 (RaC 1) */
+                        case 117440512: /* 0111000000000000000000000000 (RaC 3) */
+                            //GL_MIRROR_CLAMP_TO_EDGE = 0x8743
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, 0x8743);
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, 0x8743);
+                            break;
+                        default:
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
+                            break;
+                    }
+                    break;
+                case RenderedObjectType.Moby:
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
                     break;
             }
         }
@@ -382,6 +400,7 @@ namespace Replanetizer.Utils
                     {
                         GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[level.textures[conf.id]] : 0);
                         SetTransparencyMode(conf);
+                        SetTextureWrapMode(conf.mode);
                         GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                     }
 

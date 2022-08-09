@@ -98,7 +98,6 @@ namespace Replanetizer.Frames
 
         public override void RenderAsWindow(float deltaTime)
         {
-            ImGui.SetNextWindowSize(new System.Numerics.Vector2(1280, 720));
             if (ImGui.Begin(frameName, ref isOpen))
             {
                 Render(deltaTime);

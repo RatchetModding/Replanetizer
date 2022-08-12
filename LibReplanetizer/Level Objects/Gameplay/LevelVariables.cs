@@ -15,6 +15,8 @@ namespace LibReplanetizer.LevelObjects
 {
     public class LevelVariables
     {
+        private uint byteSize = 0x0;
+
         [Category("Attributes"), DisplayName("Background Color")]
         public Color backgroundColor { get; set; }
 
@@ -47,6 +49,14 @@ namespace LibReplanetizer.LevelObjects
 
         [Category("Attributes"), DisplayName("Ship Rotation")]
         public float shipRotation { get; set; }
+        [Category("Attributes"), DisplayName("Chunk 1 Plane")]
+        public Vector3 chunk1Plane { get; set; }
+        [Category("Attributes"), DisplayName("Chunk 2 Plane")]
+        public Vector3 chunk2Plane { get; set; }
+        [Category("Attributes"), DisplayName("Chunk 1 Plane Normal")]
+        public Vector3 chunk1PlaneNormal { get; set; }
+        [Category("Attributes"), DisplayName("Chunk 2 Plane Normal")]
+        public Vector3 chunk2PlaneNormal { get; set; }
 
         // These seem to be 3 pointers
         // First pointer points to path that ship takes when leaving
@@ -72,6 +82,10 @@ namespace LibReplanetizer.LevelObjects
         public int shipCameraStartID { get; set; }
         [Category("Attributes"), DisplayName("Ship Camera End Index")]
         public int shipCameraEndID { get; set; }
+        [Category("Attributes"), DisplayName("Chunk Count")]
+        public int chunkCount { get; set; }
+        [Category("Unknown"), DisplayName("Chunk 2 Number")]
+        public int unknownChunk2 { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_48: Always 0")]
         public int off48 { get; set; }
@@ -106,11 +120,21 @@ namespace LibReplanetizer.LevelObjects
         [Category("Unknown"), DisplayName("OFF_78")]
         public int off78 { get; set; }
 
+        /*
+         * RaC 2/3:
+         * OFF_7C is often non zero and probably corresponds to OFF_9C in case there are 2 chunks
+         */
         [Category("Unknown"), DisplayName("OFF_7C")]
         public int off7C { get; set; }
 
         [Category("Unknown"), DisplayName("OFF_80")]
         public int off80 { get; set; }
+        [Category("Unknown"), DisplayName("OFF_98")]
+        public int off98 { get; set; }
+        [Category("Unknown"), DisplayName("OFF_9C")]
+        public int off9C { get; set; }
+        [Category("Unknown"), DisplayName("OFF_100")]
+        public int off100 { get; set; }
 
         [Category("Unknown"), DisplayName("UnknownBytes")]
         public byte[] unknownBytes { get; set; } = new byte[0];
@@ -165,13 +189,6 @@ namespace LibReplanetizer.LevelObjects
             off48 = ReadInt(levelVarBlock, 0x48);
             off4C = ReadInt(levelVarBlock, 0x4C);
 
-            unknownBytes = new byte[levelVarBlock.Length - 0x50];
-
-            for (int i = 0; i < levelVarBlock.Length - 0x50; i++)
-            {
-                unknownBytes[i] = levelVarBlock[0x50 + i];
-            }
-
             backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
             fogColor = Color.FromArgb(r, g, b);
             sphereCentre = Vector3.Zero;
@@ -208,29 +225,49 @@ namespace LibReplanetizer.LevelObjects
             shipCameraStartID = ReadInt(levelVarBlock, 0x50);
             shipCameraEndID = ReadInt(levelVarBlock, 0x54);
             off58 = ReadInt(levelVarBlock, 0x58);
-            off5C = ReadInt(levelVarBlock, 0x5C);
+            float chunk1PlaneX = ReadFloat(levelVarBlock, 0x5C);
 
-            off60 = ReadInt(levelVarBlock, 0x60);
-            off64 = ReadFloat(levelVarBlock, 0x64);
-            off68 = ReadInt(levelVarBlock, 0x68);
-            off6C = ReadInt(levelVarBlock, 0x6C);
+            float chunk1PlaneY = ReadFloat(levelVarBlock, 0x60);
+            float chunk1PlaneZ = ReadFloat(levelVarBlock, 0x64);
+            chunkCount = ReadInt(levelVarBlock, 0x68);
+            float chunk1PlaneNormalX = ReadFloat(levelVarBlock, 0x6C);
 
-            off70 = ReadInt(levelVarBlock, 0x70);
-            off74 = ReadFloat(levelVarBlock, 0x74);
+            float chunk1PlaneNormalY = ReadFloat(levelVarBlock, 0x70);
+            float chunk1PlaneNormalZ = ReadFloat(levelVarBlock, 0x74);
             off78 = ReadInt(levelVarBlock, 0x78);
-            off7C = ReadInt(levelVarBlock, 0x7C);
 
-            unknownBytes = new byte[levelVarBlock.Length - 0x80];
-
-            for (int i = 0; i < levelVarBlock.Length - 0x80; i++)
+            if (chunkCount > 1)
             {
-                unknownBytes[i] = levelVarBlock[0x80 + i];
+                byteSize = 0x100;
+
+                float chunk2LimitX = ReadFloat(levelVarBlock, 0x7C);
+
+                float chunk2LimitY = ReadFloat(levelVarBlock, 0x80);
+                float chunk2LimitZ = ReadFloat(levelVarBlock, 0x84);
+                unknownChunk2 = ReadInt(levelVarBlock, 0x88);
+                float chunk2LimitOrientX = ReadFloat(levelVarBlock, 0x8C);
+
+                float chunk2LimitOrientY = ReadFloat(levelVarBlock, 0x90);
+                float chunk2LimitOrientZ = ReadFloat(levelVarBlock, 0x94);
+                off98 = ReadInt(levelVarBlock, 0x98);
+                off9C = ReadInt(levelVarBlock, 0x9C);
+
+                chunk2Plane = new Vector3(chunk2LimitX, chunk2LimitY, chunk2LimitZ);
+                chunk2PlaneNormal = new Vector3(chunk2LimitOrientX, chunk2LimitOrientY, chunk2LimitOrientZ);
+            }
+            else
+            {
+                byteSize = 0x80;
+
+                off7C = ReadInt(levelVarBlock, 0x7C);
             }
 
             backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
             fogColor = Color.FromArgb(r, g, b);
             sphereCentre = new Vector3(sphereCentreX, sphereCentreY, sphereCentreZ);
             shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
+            chunk1Plane = new Vector3(chunk1PlaneX, chunk1PlaneY, chunk1PlaneZ);
+            chunk1PlaneNormal = new Vector3(chunk1PlaneNormalX, chunk1PlaneNormalY, chunk1PlaneNormalZ);
         }
 
         private void GetRC3Vals(byte[] levelVarBlock)
@@ -263,31 +300,52 @@ namespace LibReplanetizer.LevelObjects
             shipCameraStartID = ReadInt(levelVarBlock, 0x50);
             shipCameraEndID = ReadInt(levelVarBlock, 0x54);
             off58 = ReadInt(levelVarBlock, 0x58);
-            off5C = ReadInt(levelVarBlock, 0x5C);
+            float chunk1PlaneX = ReadFloat(levelVarBlock, 0x5C);
 
-            off60 = ReadInt(levelVarBlock, 0x60);
-            off64 = ReadFloat(levelVarBlock, 0x64);
-            off68 = ReadInt(levelVarBlock, 0x68);
-            off6C = ReadInt(levelVarBlock, 0x6C);
+            float chunk1PlaneY = ReadFloat(levelVarBlock, 0x60);
+            float chunk1PlaneZ = ReadFloat(levelVarBlock, 0x64);
+            chunkCount = ReadInt(levelVarBlock, 0x68);
+            float chunk1PlaneNormalX = ReadFloat(levelVarBlock, 0x6C);
 
-            off70 = ReadInt(levelVarBlock, 0x70);
-            off74 = ReadFloat(levelVarBlock, 0x74);
+            float chunk1PlaneNormalY = ReadFloat(levelVarBlock, 0x70);
+            float chunk1PlaneNormalZ = ReadFloat(levelVarBlock, 0x74);
             off78 = ReadInt(levelVarBlock, 0x78);
-            off7C = ReadInt(levelVarBlock, 0x7C);
 
-            off80 = ReadInt(levelVarBlock, 0x80);
-
-            unknownBytes = new byte[levelVarBlock.Length - 0x84];
-
-            for (int i = 0; i < levelVarBlock.Length - 0x84; i++)
+            if (chunkCount > 1)
             {
-                unknownBytes[i] = levelVarBlock[0x84 + i];
+                byteSize = 0x104;
+
+                float chunk2LimitX = ReadFloat(levelVarBlock, 0x7C);
+
+                float chunk2LimitY = ReadFloat(levelVarBlock, 0x80);
+                float chunk2LimitZ = ReadFloat(levelVarBlock, 0x84);
+                unknownChunk2 = ReadInt(levelVarBlock, 0x88);
+                float chunk2LimitOrientX = ReadFloat(levelVarBlock, 0x8C);
+
+                float chunk2LimitOrientY = ReadFloat(levelVarBlock, 0x90);
+                float chunk2LimitOrientZ = ReadFloat(levelVarBlock, 0x94);
+                off98 = ReadInt(levelVarBlock, 0x98);
+                off9C = ReadInt(levelVarBlock, 0x9C);
+
+                off100 = ReadInt(levelVarBlock, 0x100);
+
+                chunk2Plane = new Vector3(chunk2LimitX, chunk2LimitY, chunk2LimitZ);
+                chunk2PlaneNormal = new Vector3(chunk2LimitOrientX, chunk2LimitOrientY, chunk2LimitOrientZ);
+            }
+            else
+            {
+                byteSize = 0x84;
+
+                off7C = ReadInt(levelVarBlock, 0x7C);
+                off80 = ReadInt(levelVarBlock, 0x80);
             }
 
             backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
             fogColor = Color.FromArgb(r, g, b);
             sphereCentre = new Vector3(sphereCentreX, sphereCentreY, sphereCentreZ);
             shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
+            chunk1Plane = new Vector3(chunk1PlaneX, chunk1PlaneY, chunk1PlaneZ);
+            chunk1PlaneNormal = new Vector3(chunk1PlaneNormalX, chunk1PlaneNormalY, chunk1PlaneNormalZ);
         }
 
         private void GetDLVals(byte[] levelVarBlock)
@@ -366,7 +424,7 @@ namespace LibReplanetizer.LevelObjects
 
         private byte[] SerializeRC1()
         {
-            byte[] bytes = new byte[0x50 + unknownBytes.Length];
+            byte[] bytes = new byte[0x50];
 
             WriteUint(bytes, 0x00, backgroundColor.R);
             WriteUint(bytes, 0x04, backgroundColor.G);
@@ -393,14 +451,12 @@ namespace LibReplanetizer.LevelObjects
             WriteInt(bytes, 0x48, off48);
             WriteInt(bytes, 0x4C, off4C);
 
-            unknownBytes.CopyTo(bytes, 0x50);
-
             return bytes;
         }
 
         private byte[] SerializeRC2()
         {
-            byte[] bytes = new byte[0x80 + unknownBytes.Length];
+            byte[] bytes = new byte[byteSize];
 
             WriteUint(bytes, 0x00, backgroundColor.R);
             WriteUint(bytes, 0x04, backgroundColor.G);
@@ -430,26 +486,42 @@ namespace LibReplanetizer.LevelObjects
             WriteInt(bytes, 0x50, shipCameraStartID);
             WriteInt(bytes, 0x54, shipCameraEndID);
             WriteInt(bytes, 0x58, off58);
-            WriteInt(bytes, 0x5C, off5C);
+            WriteFloat(bytes, 0x5C, chunk1Plane.X);
 
-            WriteInt(bytes, 0x60, off60);
-            WriteFloat(bytes, 0x64, off64);
-            WriteInt(bytes, 0x68, off68);
-            WriteInt(bytes, 0x6C, off6C);
+            WriteFloat(bytes, 0x60, chunk1Plane.Y);
+            WriteFloat(bytes, 0x64, chunk1Plane.Z);
+            WriteInt(bytes, 0x68, chunkCount);
+            WriteFloat(bytes, 0x6C, chunk1PlaneNormal.X);
 
-            WriteInt(bytes, 0x70, off70);
-            WriteFloat(bytes, 0x74, off74);
+            WriteFloat(bytes, 0x70, chunk1PlaneNormal.Y);
+            WriteFloat(bytes, 0x74, chunk1PlaneNormal.Z);
             WriteInt(bytes, 0x78, off78);
-            WriteInt(bytes, 0x7C, off7C);
 
-            unknownBytes.CopyTo(bytes, 0x80);
+            if (chunkCount > 1)
+            {
+                WriteFloat(bytes, 0x7C, chunk2Plane.X);
+
+                WriteFloat(bytes, 0x80, chunk2Plane.Y);
+                WriteFloat(bytes, 0x84, chunk2Plane.Z);
+                WriteInt(bytes, 0x88, unknownChunk2);
+                WriteFloat(bytes, 0x8C, chunk2PlaneNormal.X);
+
+                WriteFloat(bytes, 0x90, chunk2PlaneNormal.Y);
+                WriteFloat(bytes, 0x94, chunk2PlaneNormal.Z);
+                WriteInt(bytes, 0x98, off98);
+                WriteInt(bytes, 0x9C, off9C);
+            }
+            else
+            {
+                WriteInt(bytes, 0x7C, off7C);
+            }
 
             return bytes;
         }
 
         private byte[] SerializeRC3()
         {
-            byte[] bytes = new byte[0x84 + unknownBytes.Length];
+            byte[] bytes = new byte[byteSize];
 
             WriteUint(bytes, 0x00, backgroundColor.R);
             WriteUint(bytes, 0x04, backgroundColor.G);
@@ -479,21 +551,38 @@ namespace LibReplanetizer.LevelObjects
             WriteInt(bytes, 0x50, shipCameraStartID);
             WriteInt(bytes, 0x54, shipCameraEndID);
             WriteInt(bytes, 0x58, off58);
-            WriteInt(bytes, 0x5C, off5C);
+            WriteFloat(bytes, 0x5C, chunk1Plane.X);
 
-            WriteInt(bytes, 0x60, off60);
-            WriteFloat(bytes, 0x64, off64);
-            WriteInt(bytes, 0x68, off68);
-            WriteInt(bytes, 0x6C, off6C);
+            WriteFloat(bytes, 0x60, chunk1Plane.Y);
+            WriteFloat(bytes, 0x64, chunk1Plane.Z);
+            WriteInt(bytes, 0x68, chunkCount);
+            WriteFloat(bytes, 0x6C, chunk1PlaneNormal.X);
 
-            WriteInt(bytes, 0x70, off70);
-            WriteFloat(bytes, 0x74, off74);
+            WriteFloat(bytes, 0x70, chunk1PlaneNormal.Y);
+            WriteFloat(bytes, 0x74, chunk1PlaneNormal.Z);
             WriteInt(bytes, 0x78, off78);
-            WriteInt(bytes, 0x7C, off7C);
 
-            WriteInt(bytes, 0x80, off80);
+            if (chunkCount > 1)
+            {
+                WriteFloat(bytes, 0x7C, chunk2Plane.X);
 
-            unknownBytes.CopyTo(bytes, 0x84);
+                WriteFloat(bytes, 0x80, chunk2Plane.Y);
+                WriteFloat(bytes, 0x84, chunk2Plane.Z);
+                WriteInt(bytes, 0x88, unknownChunk2);
+                WriteFloat(bytes, 0x8C, chunk2PlaneNormal.X);
+
+                WriteFloat(bytes, 0x90, chunk2PlaneNormal.Y);
+                WriteFloat(bytes, 0x94, chunk2PlaneNormal.Z);
+                WriteInt(bytes, 0x98, off98);
+                WriteInt(bytes, 0x9C, off9C);
+
+                WriteInt(bytes, 0x100, off100);
+            }
+            else
+            {
+                WriteInt(bytes, 0x7C, off7C);
+                WriteInt(bytes, 0x80, off80);
+            }
 
             return bytes;
         }

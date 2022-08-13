@@ -36,7 +36,7 @@ Replanetizer is still in an early state of development. Its feature set entails:
    - Manipulation of variables
  - Export
    - Textures (`.png`)
-   - Rigged models (`.dae`, `.obj`)
+   - Rigged models including animations (`.dae`, `.obj`)
    - Level as a model (`.obj`)
    - Collision (`.obj`)
 
@@ -59,7 +59,7 @@ You can move around the world with keyboard and mouse:
 
 Dependencies:
 
- - .NET 5 tooling (dotnet host, runtime, sdk and targeting pack)
+ - .NET 6 tooling (dotnet host, runtime, sdk and targeting pack)
  - For Linux (and maybe other Unixes):
    - Zenity (or KDialog if you prefer KDE dialogs)
    - Basic OpenGL dependencies (most of these will be installed if you run any form of GUI).
@@ -75,7 +75,7 @@ Alternatively, open Replanetizer.sln in your favourite IDE, and use its tooling 
 
 The project is written in C#, and uses OpenTK4 for rendering. C# bindings for Dear ImGui are used for the UI.
 
-We currently target .NET 5 (net5.0-windows for the Windows builds, net5.0 on anything else).
+We currently target .NET 6 (net6.0-windows for the Windows builds, net6.0 on anything else).
 
 OpenGL 3.3 is used for the rendering.
 

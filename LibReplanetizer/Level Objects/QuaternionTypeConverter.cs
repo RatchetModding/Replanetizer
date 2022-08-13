@@ -16,12 +16,14 @@ namespace LibReplanetizer.Level_Objects
 {
     class QuaternionTypeConverter : TypeConverter
     {
-        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
+        public override bool CanConvertTo(ITypeDescriptorContext? context, Type? destinationType)
         {
+            if (destinationType == null) return false;
+
             return destinationType == typeof(string);
         }
 
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        public override object ConvertTo(ITypeDescriptorContext? context, CultureInfo? culture, object? value, Type destinationType)
         {
             if (destinationType == typeof(string) && value is Quaternion q)
             {
@@ -31,7 +33,9 @@ namespace LibReplanetizer.Level_Objects
                     z: (float) Math.Atan2(2.0 * (q.W * q.Z + q.X * q.Y), 1.0 - 2.0 * (q.Y * q.Y + q.Z * q.Z)));
                 return "(" + v.X + ". " + v.Y + ". " + v.Z + ")";
             }
-            return base.ConvertTo(context, culture, value, destinationType);
+            object? o = base.ConvertTo(context, culture, value, destinationType);
+
+            return (o == null) ? new object() : o;
         }
     }
 }

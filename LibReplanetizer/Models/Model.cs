@@ -5,6 +5,7 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using System.ComponentModel;
 using LibReplanetizer.LevelObjects;
 using System.Collections.Generic;
 using System.IO;
@@ -20,19 +21,23 @@ namespace LibReplanetizer.Models
     public abstract class Model : IRenderable
     {
         public short id { get; set; }
-        public float size = 1.0f;
+        [Category("Attributes"), DisplayName("Size")]
+        public float size { get; set; } = 1.0f;
         public float[] vertexBuffer = { };
         public ushort[] indexBuffer = { };
 
         // Every vertex can be assigned to at most 4 bones
         // weights contains 4 uint8 each being of weight (value / 255.0)
         // ids contains 4 uint8 each defining which bones we refer to
-        public uint[] weights = new uint[0];
-        public uint[] ids = new uint[0];
+        [Category("Attributes"), DisplayName("Bone Weights")]
+        public uint[] weights { get; set; } = new uint[0];
+        [Category("Attributes"), DisplayName("Vertex to Bone Map")]
+        public uint[] ids { get; set; } = new uint[0];
 
-        public byte[] rgbas = new byte[0];
+        [Category("Attributes"), DisplayName("Vertex Colors")]
+        public byte[] rgbas { get; set; } = new byte[0];
 
-
+        [Category("Attributes"), DisplayName("Texture Configurations")]
         public List<TextureConfig> textureConfig { get; set; } = new List<TextureConfig>();
 
         public ushort[] GetIndices()

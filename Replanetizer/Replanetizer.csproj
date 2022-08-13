@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <StartupObject>Replanetizer.Program</StartupObject>
     <LangVersion>9</LangVersion>
     <NeutralLanguage>en</NeutralLanguage>
@@ -17,11 +17,14 @@
     <VersionPrefix>2.0.0</VersionPrefix>
     <Nullable>enable</Nullable>
     <ApplicationIcon>ReplanetizerIcon48px.ico</ApplicationIcon>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <DefineConstants>_WINDOWS</DefineConstants>
   </PropertyGroup>

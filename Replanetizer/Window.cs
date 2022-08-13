@@ -37,7 +37,7 @@ namespace Replanetizer
 
             try
             {
-                System.Drawing.Icon? icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location);
+                System.Drawing.Icon? icon = System.Drawing.Icon.ExtractAssociatedIcon(System.AppContext.BaseDirectory + "Replanetizer.exe");
                 if (icon != null)
                 {
                     using (MemoryStream ms = new MemoryStream())
@@ -60,7 +60,7 @@ namespace Replanetizer
                     }
                 }
             }
-            catch (ArgumentException)
+            catch (Exception)
             {
             }
         }

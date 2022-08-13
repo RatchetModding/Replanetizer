@@ -226,6 +226,79 @@ namespace Replanetizer.Utils
         }
 
         /// <summary>
+        /// Takes a textureConfig mode as input and sets the transparency mode based on that.
+        /// </summary>
+        private void SetTransparencyMode(TextureConfig config)
+        {
+            if (SHADER_ID_TABLE == null) return;
+
+            GL.Uniform1(SHADER_ID_TABLE.uniformUseTransparency, (config.IgnoresTransparency()) ? 0 : 1);
+        }
+
+        /// <summary>
+        /// Takes a textureConfig mode as input and sets the texture wrap mode based on that.
+        /// </summary>
+        private void SetTextureWrapMode(int mode)
+        {
+            /*
+             * There is an issue with opaque edges in some transparent objects
+             * This can easily be observed on RaC 1 Kerwan where you have these ugly edges on some trees and the bottom
+             * of the fading out buildings
+             */
+            switch (type)
+            {
+                case RenderedObjectType.Shrub:
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
+                    break;
+                case RenderedObjectType.Tie:
+                    switch (mode)
+                    {
+                        case 13: /* 0001101 (RaC 1)*/
+                        case 15: /* 0001111 (RaC 1)*/
+                        case 93: /* 1011101 (RaC 2)*/
+                        case 95: /* 1011111 (RaC 2)*/
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.MirroredRepeat);
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.MirroredRepeat);
+                            break;
+                        case 117440512: /* 0111000000000000000000000000 (RaC 1 & 3) */
+                            //GL_MIRROR_CLAMP_TO_EDGE = 0x8743
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.ClampToEdge);
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.ClampToEdge);
+                            break;
+                        default:
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
+                            break;
+                    }
+                    break;
+                case RenderedObjectType.Terrain:
+                    switch (mode)
+                    {
+                        case 218103808: /* 1101000000000000000000000000 (RaC 1) */
+                            //GL_MIRROR_CLAMP_TO_EDGE = 0x8743
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.MirroredRepeat);
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.MirroredRepeat);
+                            break;
+                        case 83886080: /* 101000000000000000000000000 (RaC 3) */
+                            //GL_MIRROR_CLAMP_TO_EDGE = 0x8743
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
+                            break;
+                        default:
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
+                            break;
+                    }
+                    break;
+                case RenderedObjectType.Moby:
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
+                    break;
+            }
+        }
+
+        /// <summary>
         /// Sets an internal variable to true if the corresponding modelObject is equal to
         /// the selectedObject in which case an outline will be rendered.
         /// </summary>
@@ -346,6 +419,8 @@ namespace Replanetizer.Utils
                     foreach (TextureConfig conf in modelObject.model.textureConfig)
                     {
                         GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[level.textures[conf.id]] : 0);
+                        SetTransparencyMode(conf);
+                        //SetTextureWrapMode(conf.mode);
                         GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                     }
 

@@ -98,7 +98,6 @@ namespace Replanetizer.Frames
 
         public override void RenderAsWindow(float deltaTime)
         {
-            ImGui.SetNextWindowSize(new System.Numerics.Vector2(1280, 720));
             if (ImGui.Begin(frameName, ref isOpen))
             {
                 Render(deltaTime);
@@ -599,7 +598,10 @@ namespace Replanetizer.Frames
                 if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
 
                 var texture = selectedTextureSet[textureId];
-                TextureIO.ExportTexture(texture, Path.Combine(folder, $"{textureId}.png"));
+
+                bool includeTransparency = (config.IgnoresTransparency()) ? false : true;
+
+                TextureIO.ExportTexture(texture, Path.Combine(folder, $"{textureId}.png"), includeTransparency);
             }
         }
     }

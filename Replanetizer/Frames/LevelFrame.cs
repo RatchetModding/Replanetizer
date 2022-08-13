@@ -521,7 +521,7 @@ namespace Replanetizer.Frames
             GL.Enable(EnableCap.DepthTest);
             GL.LineWidth(5.0f);
 
-            string? applicationFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string? applicationFolder = System.AppContext.BaseDirectory;
             string shaderFolder = Path.Join(applicationFolder, "Shaders");
 
             shaderIDTable = new ShaderIDTable();
@@ -556,6 +556,8 @@ namespace Replanetizer.Frames
 
             shaderIDTable.uniformAmbientColor = GL.GetUniformLocation(shaderIDTable.shaderMain, "staticColor");
             shaderIDTable.uniformLightIndex = GL.GetUniformLocation(shaderIDTable.shaderMain, "lightIndex");
+
+            shaderIDTable.uniformUseTransparency = GL.GetUniformLocation(shaderIDTable.shaderMain, "useTransparency");
 
             shaderIDTable.uniformSkyTexAvailable = GL.GetUniformLocation(shaderIDTable.shaderSky, "texAvailable");
 
@@ -597,6 +599,8 @@ namespace Replanetizer.Frames
             GL.BindTexture(TextureTarget.Texture2D, texId);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float) TextureMinFilter.LinearMipmapLinear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (float) TextureMinFilter.LinearMipmapLinear);
             int offset = 0;
 
             if (t.mipMapCount > 1)
@@ -1387,13 +1391,6 @@ namespace Replanetizer.Frames
                 GL.DisableVertexAttribArray(3);
             }
 
-            if (enableShrub)
-            {
-                GL.Uniform1(shaderIDTable.uniformLevelObjectType, (int) RenderedObjectType.Shrub);
-                foreach (RenderableBuffer buffer in shrubsBuffers)
-                    RenderBuffer(buffer);
-            }
-
             if (enableTie)
             {
                 GL.EnableVertexAttribArray(3);
@@ -1401,6 +1398,13 @@ namespace Replanetizer.Frames
                 foreach (RenderableBuffer buffer in tiesBuffers)
                     RenderBuffer(buffer);
                 GL.DisableVertexAttribArray(3);
+            }
+
+            if (enableShrub)
+            {
+                GL.Uniform1(shaderIDTable.uniformLevelObjectType, (int) RenderedObjectType.Shrub);
+                foreach (RenderableBuffer buffer in shrubsBuffers)
+                    RenderBuffer(buffer);
             }
 
             if (enableMoby)

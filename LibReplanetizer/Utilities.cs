@@ -150,12 +150,12 @@ namespace LibReplanetizer
 
     public class Vector3Converter : TypeConverter
     {
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+        public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
         {
             return sourceType == typeof(string);
         }
 
-        public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
+        public override object ConvertFrom(ITypeDescriptorContext? context, System.Globalization.CultureInfo? culture, object value)
         {
             try
             {
@@ -168,12 +168,19 @@ namespace LibReplanetizer
             }
             catch
             {
-                return context.PropertyDescriptor.GetValue(context.Instance);
+                if (context == null)
+                {
+                    return new object();
+                }
+                object? o = context.PropertyDescriptor.GetValue(context.Instance);
+                return (o == null) ? new object() : o;
             }
         }
 
-        public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
+        public override object ConvertTo(ITypeDescriptorContext? context, System.Globalization.CultureInfo? culture, object? value, Type destinationType)
         {
+            if (value == null) return "0.0 0.0 0.0";
+
             Vector3 p = (Vector3) value;
             return String.Format(
                 "{0} {1} {2}",
@@ -185,12 +192,12 @@ namespace LibReplanetizer
     }
     public class Vector3RadiansConverter : TypeConverter
     {
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+        public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
         {
             return sourceType == typeof(string);
         }
 
-        public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
+        public override object ConvertFrom(ITypeDescriptorContext? context, System.Globalization.CultureInfo? culture, object value)
         {
             try
             {
@@ -203,12 +210,19 @@ namespace LibReplanetizer
             }
             catch
             {
-                return context.PropertyDescriptor.GetValue(context.Instance);
+                if (context == null)
+                {
+                    return new object();
+                }
+                object? o = context.PropertyDescriptor.GetValue(context.Instance);
+                return (o == null) ? new object() : o;
             }
         }
 
-        public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
+        public override object ConvertTo(ITypeDescriptorContext? context, System.Globalization.CultureInfo? culture, object? value, Type destinationType)
         {
+            if (value == null) return "0.0 0.0 0.0";
+
             Vector3 p = (Vector3) value;
             return String.Format(
                 "{0} {1} {2}",

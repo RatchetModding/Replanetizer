@@ -1391,13 +1391,6 @@ namespace Replanetizer.Frames
                 GL.DisableVertexAttribArray(3);
             }
 
-            if (enableShrub)
-            {
-                GL.Uniform1(shaderIDTable.uniformLevelObjectType, (int) RenderedObjectType.Shrub);
-                foreach (RenderableBuffer buffer in shrubsBuffers)
-                    RenderBuffer(buffer);
-            }
-
             if (enableTie)
             {
                 GL.EnableVertexAttribArray(3);
@@ -1405,6 +1398,13 @@ namespace Replanetizer.Frames
                 foreach (RenderableBuffer buffer in tiesBuffers)
                     RenderBuffer(buffer);
                 GL.DisableVertexAttribArray(3);
+            }
+
+            if (enableShrub)
+            {
+                GL.Uniform1(shaderIDTable.uniformLevelObjectType, (int) RenderedObjectType.Shrub);
+                foreach (RenderableBuffer buffer in shrubsBuffers)
+                    RenderBuffer(buffer);
             }
 
             if (enableMoby)

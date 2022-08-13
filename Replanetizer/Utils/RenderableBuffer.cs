@@ -247,7 +247,6 @@ namespace Replanetizer.Utils
              */
             switch (type)
             {
-                case RenderedObjectType.Terrain:
                 case RenderedObjectType.Shrub:
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
@@ -259,11 +258,32 @@ namespace Replanetizer.Utils
                         case 15: /* 0001111 (RaC 1)*/
                         case 93: /* 1011101 (RaC 2)*/
                         case 95: /* 1011111 (RaC 2)*/
-                        case 218103808: /* 1101000000000000000000000000 (RaC 1) */
-                        case 117440512: /* 0111000000000000000000000000 (RaC 3) */
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.MirroredRepeat);
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.MirroredRepeat);
+                            break;
+                        case 117440512: /* 0111000000000000000000000000 (RaC 1 & 3) */
                             //GL_MIRROR_CLAMP_TO_EDGE = 0x8743
-                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, 0x8743);
-                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, 0x8743);
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.ClampToEdge);
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.ClampToEdge);
+                            break;
+                        default:
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
+                            break;
+                    }
+                    break;
+                case RenderedObjectType.Terrain:
+                    switch (mode)
+                    {
+                        case 218103808: /* 1101000000000000000000000000 (RaC 1) */
+                            //GL_MIRROR_CLAMP_TO_EDGE = 0x8743
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.MirroredRepeat);
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.MirroredRepeat);
+                            break;
+                        case 83886080: /* 101000000000000000000000000 (RaC 3) */
+                            //GL_MIRROR_CLAMP_TO_EDGE = 0x8743
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
+                            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
                             break;
                         default:
                             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
@@ -400,7 +420,7 @@ namespace Replanetizer.Utils
                     {
                         GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[level.textures[conf.id]] : 0);
                         SetTransparencyMode(conf);
-                        SetTextureWrapMode(conf.mode);
+                        //SetTextureWrapMode(conf.mode);
                         GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                     }
 

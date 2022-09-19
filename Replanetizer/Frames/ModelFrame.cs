@@ -158,13 +158,21 @@ namespace Replanetizer.Frames
                 RenderSubTree("Moby", level.mobyModels, level.textures);
                 RenderSubTree("Tie", level.tieModels, level.textures);
                 RenderSubTree("Shrub", level.shrubModels, level.textures);
-                RenderSubTree("Gadget", level.gadgetModels, level.gadgetTextures);
+                if (ImGui.TreeNode("Gadget"))
+                {
+                    for (int i = 0; i < level.gadgetModels.Count; i++)
+                    {
+                        Model gadget = level.gadgetModels[i];
+                        RenderModelEntry(gadget, level.gadgetTextures, $"0x{i:X3}");
+                    }
+                    ImGui.TreePop();
+                }
                 if (ImGui.TreeNode("Armor"))
                 {
                     for (int i = 0; i < level.armorModels.Count; i++)
                     {
                         Model armor = level.armorModels[i];
-                        RenderModelEntry(armor, level.armorTextures[i], i.ToString("X"));
+                        RenderModelEntry(armor, level.armorTextures[i], $"0x{i:X3}");
                     }
                     ImGui.TreePop();
                 }

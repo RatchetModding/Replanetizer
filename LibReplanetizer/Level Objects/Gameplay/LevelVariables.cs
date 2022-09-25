@@ -327,7 +327,14 @@ namespace LibReplanetizer.LevelObjects
                 off98 = ReadInt(levelVarBlock, 0x98);
                 off9C = ReadInt(levelVarBlock, 0x9C);
 
-                off100 = ReadInt(levelVarBlock, 0x100);
+                if (levelVarBlock.Length < 0x104)
+                {
+                    byteSize = 0x100;
+                }
+                else
+                {
+                    off100 = ReadInt(levelVarBlock, 0x100);
+                }
 
                 chunk2Plane = new Vector3(chunk2LimitX, chunk2LimitY, chunk2LimitZ);
                 chunk2PlaneNormal = new Vector3(chunk2LimitOrientX, chunk2LimitOrientY, chunk2LimitOrientZ);

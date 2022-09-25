@@ -292,10 +292,24 @@ namespace LibReplanetizer
                 LOGGER.Debug("Looking for armor data in {0}", armor);
                 List<Texture> tex;
                 MobyModel? model;
+                MobyModel? ratchet = (MobyModel?) mobyModels?[0];
                 using (ArmorParser parser = new ArmorParser(game, armor))
                 {
                     tex = parser.GetTextures();
                     model = parser.GetArmor();
+
+                    if (model != null && ratchet != null)
+                    {
+                        /*
+                         * Armor models do not contain animations, instead they are stored in the ratchet model which itself does not contain a mesh.
+                         * For export purposes we assign these animations here.
+                         */
+                        model.animations = ratchet.animations;
+                        model.boneCount = ratchet.boneCount;
+                        model.boneDatas = ratchet.boneDatas;
+                        model.boneMatrices = ratchet.boneMatrices;
+                        model.skeleton = ratchet.skeleton;
+                    }
                 }
 
                 string vram = armor.Replace(".ps3", ".vram");

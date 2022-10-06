@@ -196,20 +196,17 @@ namespace Replanetizer.Frames
 
         private void UpdateWindowTitle()
         {
+            string newTitle;
             if (selectedModel == null)
             {
-                frameName = "Model Viewer";
+                newTitle = "Model Viewer";
             }
             else
             {
-                frameName = "Model Viewer - " + GetDisplayName(selectedModel);
+                newTitle = "Model Viewer - " + GetDisplayName(selectedModel);
             }
 
-            /*
-             * The ###Model Viewer tells ImGui that the Windows ID is "Model Viewer"
-             * This is necessary as otherwise every title change would create a new window
-             */
-            frameName += "###Model Viewer";
+            SetWindowTitle(newTitle);
         }
 
         public override void Render(float deltaTime)

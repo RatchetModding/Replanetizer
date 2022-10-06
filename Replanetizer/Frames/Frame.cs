@@ -14,11 +14,24 @@ namespace Replanetizer.Frames
         protected Window wnd;
         protected abstract string frameName { get; set; }
         public bool isOpen = true;
+        private uint frameID;
+        private static uint frameIDSource { get { return FRAME_ID_SOURCE++; } }
+        private static uint FRAME_ID_SOURCE = 0;
 
         public Frame(Window wnd)
         {
             this.wnd = wnd;
-            frameName += " ## " + this.GetHashCode().ToString();
+            frameID = frameIDSource;
+            SetWindowTitle(frameName);
+        }
+
+        protected void SetWindowTitle(string title)
+        {
+            /*
+             * The ###frameID tells ImGui that the Windows ID is "frameID"
+             * This is necessary as otherwise every title change would create a new window
+             */
+            frameName = title + " ###" + frameID;
         }
 
         public abstract void Render(float deltaTime);

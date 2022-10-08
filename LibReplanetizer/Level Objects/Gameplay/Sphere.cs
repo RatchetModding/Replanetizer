@@ -6,6 +6,7 @@
 // Please see the LICENSE.md file for more details.
 
 using System;
+using System.ComponentModel;
 using OpenTK.Mathematics;
 using static LibReplanetizer.DataFunctions;
 
@@ -15,7 +16,8 @@ namespace LibReplanetizer.LevelObjects
     {
         public const int ELEMENTSIZE = 0x80;
 
-        public int id;
+        [Category("Attributes"), DisplayName("ID")]
+        public int id { get; set; }
         public Matrix4 mat1;
         public Matrix4 mat2;
 
@@ -152,6 +154,7 @@ namespace LibReplanetizer.LevelObjects
 
         public Sphere(byte[] block, int num)
         {
+            id = num;
             int offset = num * ELEMENTSIZE;
 
             mat1 = ReadMatrix4(block, offset + 0x00);

@@ -13,7 +13,8 @@ namespace LibReplanetizer.LevelObjects
 {
     public class Spline : LevelObject, ITransformable, IRenderable
     {
-        public int name;
+        [Category("Attributes"), DisplayName("ID")]
+        public int id { get; set; }
         public float[] vertexBuffer = new float[0];
         public float[] wVals = new float[0];
 
@@ -48,7 +49,7 @@ namespace LibReplanetizer.LevelObjects
 
         public Spline(int name, float[] vertexBuffer)
         {
-            this.name = name;
+            this.id = name;
             this.vertexBuffer = new float[vertexBuffer.Length];
             for (int i = 0; i < vertexBuffer.Length; i++)
             {
@@ -69,7 +70,7 @@ namespace LibReplanetizer.LevelObjects
 
         public void LoadFromByteArray(byte[] splineBlock, int offset)
         {
-            name = CNT;
+            id = CNT;
             int count = ReadInt(splineBlock, offset);
             vertexBuffer = new float[count * 3];
             wVals = new float[count];
@@ -137,7 +138,7 @@ namespace LibReplanetizer.LevelObjects
 
         public override LevelObject Clone()
         {
-            return new Spline(name, vertexBuffer);
+            return new Spline(id, vertexBuffer);
         }
 
         /*public override void Translate(Vector3 vector)

@@ -62,7 +62,7 @@ namespace Replanetizer.Frames
         private Dictionary<string, Dictionary<string, PropertyInfo>> properties = new();
 
         public PropertyFrame(
-            Window wnd, LevelFrame? levelFrame = null, string? overrideFrameName = null,
+            Window wnd, LevelFrame? levelFrame = null, string? overrideFrameName = null, 
             bool listenToCallbacks = false, bool hideCallbackButton = false) : base(wnd)
         {
             if (overrideFrameName is { Length: > 0 })
@@ -143,6 +143,8 @@ namespace Replanetizer.Frames
                     listenToCallbacks = false;
                 }
             }
+
+            ImGui.Text(selectedObject.GetType().Name);
 
             foreach (var (categoryName, categoryItems) in properties)
             {

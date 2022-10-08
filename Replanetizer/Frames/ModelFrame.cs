@@ -232,7 +232,6 @@ namespace Replanetizer.Frames
                     //Setup openGL variables
                     GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
                     GL.Enable(EnableCap.DepthTest);
-                    GL.LineWidth(5.0f);
                     GL.Viewport(0, 0, width, height);
 
                     OnPaint();
@@ -330,7 +329,6 @@ namespace Replanetizer.Frames
             GL.ClearColor(Color.SkyBlue);
 
             GL.Enable(EnableCap.DepthTest);
-            GL.EnableClientState(ArrayCap.VertexArray);
 
             worldView = CreateWorldView();
             trans = Matrix4.CreateTranslation(0.0f, 0.0f, -5.0f);

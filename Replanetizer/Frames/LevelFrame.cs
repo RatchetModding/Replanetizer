@@ -491,7 +491,6 @@ namespace Replanetizer.Frames
                     //Setup openGL variables
                     GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
                     GL.Enable(EnableCap.DepthTest);
-                    GL.LineWidth(1.0f);
                     GL.Viewport(0, 0, width, height);
 
                     OnPaint();
@@ -519,7 +518,6 @@ namespace Replanetizer.Frames
             //Setup openGL variables
             GL.ClearColor(Color.SkyBlue);
             GL.Enable(EnableCap.DepthTest);
-            GL.LineWidth(5.0f);
 
             string? applicationFolder = System.AppContext.BaseDirectory;
             string shaderFolder = Path.Join(applicationFolder, "Shaders");
@@ -1157,7 +1155,6 @@ namespace Replanetizer.Frames
             // Render tool on top of everything
             GL.Clear(ClearBufferMask.DepthBufferBit);
             GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.Tool);
-            GL.LineWidth(5.0f);
 
             if (selectedObjects.TryGetOne(out var obj) && obj is Spline spline &&
                 toolbox.tool is VertexTranslationTool vertexTranslationTool)
@@ -1166,8 +1163,6 @@ namespace Replanetizer.Frames
             }
             else
                 toolbox.tool.Render(selectedObjects, this);
-
-            GL.LineWidth(1.0f);
         }
 
         private int LinkShader(string shaderFolder, string vsname, string fsname)
@@ -1541,7 +1536,6 @@ namespace Replanetizer.Frames
             if (enableCollision)
             {
                 GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.Null);
-                GL.LineWidth(5.0f);
 
                 GL.UseProgram(shaderIDTable.shaderColor);
                 GL.Uniform4(shaderIDTable.uniformColor, new Vector4(1, 1, 1, 1));
@@ -1571,8 +1565,6 @@ namespace Replanetizer.Frames
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                     GL.DrawElements(PrimitiveType.Triangles, col.indBuff.Length, DrawElementsType.UnsignedInt, 0);
                 }
-
-                GL.LineWidth(1.0f);
             }
 
             RenderTool();

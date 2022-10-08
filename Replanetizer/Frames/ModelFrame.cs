@@ -84,9 +84,12 @@ namespace Replanetizer.Frames
         private Vector2 mousePos;
         private int width, height;
         private PropertyFrame propertyFrame;
+        private bool firstFrame = true;
+        private Vector2 startSize;
 
         public ModelFrame(Window wnd, LevelFrame levelFrame, ShaderIDTable shaderIDTable, Model? model = null) : base(wnd, levelFrame)
         {
+            startSize = wnd.Size;
             modelTextureList = new List<Texture>();
             propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
             this.shaderIDTable = shaderIDTable;
@@ -98,10 +101,24 @@ namespace Replanetizer.Frames
 
         public override void RenderAsWindow(float deltaTime)
         {
-            if (ImGui.Begin(frameName, ref isOpen))
+            // Standard window size
+            // Is there a better way to do this in ImGui, this is ugly :(
+            if (firstFrame)
+            {
+                System.Numerics.Vector2 startSize = new System.Numerics.Vector2(this.startSize.X, this.startSize.Y);
+
+                startSize.X *= 0.75f;
+                startSize.Y *= 0.75f;
+
+                ImGui.SetNextWindowSize(startSize);
+            }
+                
+            if (ImGui.Begin(frameName, ref isOpen, ImGuiWindowFlags.NoSavedSettings))
             {
                 Render(deltaTime);
                 ImGui.End();
+
+                firstFrame = false;
             }
         }
 

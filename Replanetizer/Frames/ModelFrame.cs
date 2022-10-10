@@ -18,7 +18,7 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 using Replanetizer.Utils;
 using Texture = LibReplanetizer.Texture;
 using LibReplanetizer.Serializers;
-
+using LibReplanetizer.LevelObjects;
 
 namespace Replanetizer.Frames
 {
@@ -38,6 +38,8 @@ namespace Replanetizer.Frames
         private List<List<Texture>>? selectedModelArmorTexturesSet;
         private List<Texture>? selectedTextureSet;
         private List<Texture>? modelTextureList;
+
+        private List<ModelObject> selectedObjectInstances = new List<ModelObject>();
 
         private ExporterModelSettings exportSettings;
 
@@ -211,6 +213,24 @@ namespace Replanetizer.Frames
             }
         }
 
+        private void RenderInstanceList()
+        {
+            if (ImGui.CollapsingHeader("Instances"))
+            {
+                foreach (ModelObject obj in selectedObjectInstances)
+                {
+                    if (obj is Moby mob)
+                    {
+                        ImGui.Text($"Instance [0x{mob.mobyID:X3}]");
+                    }
+                    else
+                    {
+                        ImGui.Text("Instance");
+                    }
+                }
+            }
+        }
+
         private void UpdateWindowTitle()
         {
             string newTitle;
@@ -237,7 +257,7 @@ namespace Replanetizer.Frames
             ImGui.SetColumnWidth(0, 250);
             ImGui.SetColumnWidth(1, (float) width);
             ImGui.SetColumnWidth(2, 320);
-            RenderTree();
+            RenderTree();    
             ImGui.NextColumn();
 
             Tick(deltaTime);
@@ -303,6 +323,11 @@ namespace Replanetizer.Frames
                 }
 
                 ImGui.Separator();
+                if (selectedObjectInstances.Count > 0)
+                {
+                    RenderInstanceList();
+                    ImGui.Separator();
+                }
                 propertyFrame.Render(deltaTime);
             }
 
@@ -317,7 +342,7 @@ namespace Replanetizer.Frames
             System.Numerics.Vector2 vMax = ImGui.GetWindowContentRegionMax();
 
             vMin.X += 250;
-            vMax.X -= 320;
+            vMax.X -= 300;
 
             width = (int) (vMax.X - vMin.X);
             height = (int) (vMax.Y - vMin.Y);
@@ -354,6 +379,47 @@ namespace Replanetizer.Frames
             GL.BindVertexArray(vao);
         }
 
+        private void UpdateInstanceList()
+        {
+            selectedObjectInstances.Clear();
+
+            if (selectedModel == null)
+            { 
+                return;
+            }
+
+            if (selectedModel is MobyModel)
+            {
+                foreach (Moby mob in level.mobs)
+                {
+                    if (mob.modelID == selectedModel.id)
+                    {
+                        selectedObjectInstances.Add(mob);
+                    }
+                }
+            }
+            else if (selectedModel is TieModel)
+            {
+                foreach (Tie tie in level.ties)
+                {
+                    if (tie.modelID == selectedModel.id)
+                    {
+                        selectedObjectInstances.Add(tie);
+                    }
+                }
+            }
+            else if (selectedModel is ShrubModel)
+            {
+                foreach (Shrub shrub in level.shrubs)
+                {
+                    if (shrub.modelID == selectedModel.id)
+                    {
+                        selectedObjectInstances.Add(shrub);
+                    }
+                }
+            }
+        }
+
         public void UpdateModel()
         {
             if (selectedModel == null) return;
@@ -365,6 +431,8 @@ namespace Replanetizer.Frames
 
             container = BufferContainer.FromRenderable(selectedModel);
             container.Bind();
+
+            UpdateInstanceList();
         }
 
         private void UpdateTextures()

@@ -1089,9 +1089,9 @@ namespace Replanetizer.Frames
             return true;
         }
 
-        private bool HandleSelect(LevelObject? obj)
+        public bool HandleSelect(LevelObject? obj, bool externalCaller = false, bool pointCameraAtObject = false)
         {
-            if (wnd.MouseState.WasButtonDown(MouseButton.Left))
+            if (wnd.MouseState.WasButtonDown(MouseButton.Left) && !externalCaller)
                 return false;
 
             bool isMultiSelect = KEYMAP.IsDown(Keybinds.MultiSelectModifier);
@@ -1104,10 +1104,18 @@ namespace Replanetizer.Frames
             }
 
             if (isMultiSelect)
+            {
                 selectedObjects.Toggle(obj);
+            }   
             else
+            {
                 selectedObjects.ToggleOne(obj);
-
+                if (pointCameraAtObject)
+                {
+                    camera.MoveBehind(obj);
+                }
+            }
+                
             return true;
         }
 

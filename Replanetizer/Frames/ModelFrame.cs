@@ -219,13 +219,15 @@ namespace Replanetizer.Frames
             {
                 foreach (ModelObject obj in selectedObjectInstances)
                 {
+                    string objName = "Instance";
                     if (obj is Moby mob)
                     {
-                        ImGui.Text($"Instance [0x{mob.mobyID:X3}]");
+                        objName = $"Instance [0x{mob.mobyID:X3}]";
                     }
-                    else
+
+                    if (ImGui.Button(objName))
                     {
-                        ImGui.Text("Instance");
+                        levelFrame.HandleSelect(obj, true, true);
                     }
                 }
             }

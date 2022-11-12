@@ -7,6 +7,7 @@
 
 using OpenTK.Mathematics;
 using System;
+using System.ComponentModel;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects
@@ -15,7 +16,8 @@ namespace LibReplanetizer.LevelObjects
     {
         public const int ELEMENTSIZE = 0x80;
 
-        public int id;
+        [Category("Attributes"), DisplayName("ID")]
+        public int id { get; set; }
         public Matrix4 mat1;
         public Matrix4 mat2;
 

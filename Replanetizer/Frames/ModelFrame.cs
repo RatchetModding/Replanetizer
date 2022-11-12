@@ -18,7 +18,7 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 using Replanetizer.Utils;
 using Texture = LibReplanetizer.Texture;
 using LibReplanetizer.Serializers;
-
+using LibReplanetizer.LevelObjects;
 
 namespace Replanetizer.Frames
 {
@@ -39,6 +39,9 @@ namespace Replanetizer.Frames
         private List<Texture>? selectedTextureSet;
         private List<Texture>? modelTextureList;
 
+        private List<ModelObject> selectedObjectInstances = new List<ModelObject>();
+
+        private static ExporterModelSettings lastUsedExportSettings = new ExporterModelSettings();
         private ExporterModelSettings exportSettings;
 
         private readonly KeyHeldHandler KEY_HELD_HANDLER = new()
@@ -84,13 +87,16 @@ namespace Replanetizer.Frames
         private Vector2 mousePos;
         private int width, height;
         private PropertyFrame propertyFrame;
+        private bool firstFrame = true;
+        private Vector2 startSize;
 
         public ModelFrame(Window wnd, LevelFrame levelFrame, ShaderIDTable shaderIDTable, Model? model = null) : base(wnd, levelFrame)
         {
+            startSize = wnd.Size;
             modelTextureList = new List<Texture>();
             propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
             this.shaderIDTable = shaderIDTable;
-            exportSettings = new ExporterModelSettings();
+            exportSettings = new ExporterModelSettings(lastUsedExportSettings);
             UpdateWindowSize();
             OnResize();
             SelectModel(model);
@@ -98,10 +104,24 @@ namespace Replanetizer.Frames
 
         public override void RenderAsWindow(float deltaTime)
         {
-            if (ImGui.Begin(frameName, ref isOpen))
+            // Standard window size
+            // Is there a better way to do this in ImGui, this is ugly :(
+            if (firstFrame)
+            {
+                System.Numerics.Vector2 startSize = new System.Numerics.Vector2(this.startSize.X, this.startSize.Y);
+
+                startSize.X *= 0.75f;
+                startSize.Y *= 0.75f;
+
+                ImGui.SetNextWindowSize(startSize);
+            }
+                
+            if (ImGui.Begin(frameName, ref isOpen, ImGuiWindowFlags.NoSavedSettings))
             {
                 Render(deltaTime);
                 ImGui.End();
+
+                firstFrame = false;
             }
         }
 
@@ -194,22 +214,39 @@ namespace Replanetizer.Frames
             }
         }
 
+        private void RenderInstanceList()
+        {
+            if (ImGui.CollapsingHeader("Instances"))
+            {
+                foreach (ModelObject obj in selectedObjectInstances)
+                {
+                    string objName = "Instance";
+                    if (obj is Moby mob)
+                    {
+                        objName = $"Instance [0x{mob.mobyID:X3}]";
+                    }
+
+                    if (ImGui.Button(objName))
+                    {
+                        levelFrame.HandleSelect(obj, true, true);
+                    }
+                }
+            }
+        }
+
         private void UpdateWindowTitle()
         {
+            string newTitle;
             if (selectedModel == null)
             {
-                frameName = "Model Viewer";
+                newTitle = "Model Viewer";
             }
             else
             {
-                frameName = "Model Viewer - " + GetDisplayName(selectedModel);
+                newTitle = "Model Viewer - " + GetDisplayName(selectedModel);
             }
 
-            /*
-             * The ###Model Viewer tells ImGui that the Windows ID is "Model Viewer"
-             * This is necessary as otherwise every title change would create a new window
-             */
-            frameName += "###Model Viewer";
+            SetWindowTitle(newTitle);
         }
 
         public override void Render(float deltaTime)
@@ -223,7 +260,7 @@ namespace Replanetizer.Frames
             ImGui.SetColumnWidth(0, 250);
             ImGui.SetColumnWidth(1, (float) width);
             ImGui.SetColumnWidth(2, 320);
-            RenderTree();
+            RenderTree();    
             ImGui.NextColumn();
 
             Tick(deltaTime);
@@ -235,7 +272,6 @@ namespace Replanetizer.Frames
                     //Setup openGL variables
                     GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
                     GL.Enable(EnableCap.DepthTest);
-                    GL.LineWidth(5.0f);
                     GL.Viewport(0, 0, width, height);
 
                     OnPaint();
@@ -290,6 +326,11 @@ namespace Replanetizer.Frames
                 }
 
                 ImGui.Separator();
+                if (selectedObjectInstances.Count > 0)
+                {
+                    RenderInstanceList();
+                    ImGui.Separator();
+                }
                 propertyFrame.Render(deltaTime);
             }
 
@@ -304,7 +345,7 @@ namespace Replanetizer.Frames
             System.Numerics.Vector2 vMax = ImGui.GetWindowContentRegionMax();
 
             vMin.X += 250;
-            vMax.X -= 320;
+            vMax.X -= 300;
 
             width = (int) (vMax.X - vMin.X);
             height = (int) (vMax.Y - vMin.Y);
@@ -333,13 +374,53 @@ namespace Replanetizer.Frames
             GL.ClearColor(Color.SkyBlue);
 
             GL.Enable(EnableCap.DepthTest);
-            GL.EnableClientState(ArrayCap.VertexArray);
 
             worldView = CreateWorldView();
             trans = Matrix4.CreateTranslation(0.0f, 0.0f, -5.0f);
 
             GL.GenVertexArrays(1, out int vao);
             GL.BindVertexArray(vao);
+        }
+
+        private void UpdateInstanceList()
+        {
+            selectedObjectInstances.Clear();
+
+            if (selectedModel == null)
+            { 
+                return;
+            }
+
+            if (selectedModel is MobyModel)
+            {
+                foreach (Moby mob in level.mobs)
+                {
+                    if (mob.modelID == selectedModel.id)
+                    {
+                        selectedObjectInstances.Add(mob);
+                    }
+                }
+            }
+            else if (selectedModel is TieModel)
+            {
+                foreach (Tie tie in level.ties)
+                {
+                    if (tie.modelID == selectedModel.id)
+                    {
+                        selectedObjectInstances.Add(tie);
+                    }
+                }
+            }
+            else if (selectedModel is ShrubModel)
+            {
+                foreach (Shrub shrub in level.shrubs)
+                {
+                    if (shrub.modelID == selectedModel.id)
+                    {
+                        selectedObjectInstances.Add(shrub);
+                    }
+                }
+            }
         }
 
         public void UpdateModel()
@@ -353,6 +434,8 @@ namespace Replanetizer.Frames
 
             container = BufferContainer.FromRenderable(selectedModel);
             container.Bind();
+
+            UpdateInstanceList();
         }
 
         private void UpdateTextures()
@@ -585,6 +668,9 @@ namespace Replanetizer.Frames
 
             string fileName = CrossFileDialog.SaveFile("model" + filter, filter);
             if (fileName.Length == 0) return;
+
+            // Save the settings so that modelsframes created in the future start with these settings
+            lastUsedExportSettings = new ExporterModelSettings(exportSettings);
 
             exporter.ExportModel(fileName, level, model);
         }

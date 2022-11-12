@@ -52,6 +52,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="ModelLists\MobyModelsRC3.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="ModelLists\TieModelsRC2.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="ModelLists\TieModelsRC3.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Shaders\collisionshaderfs.glsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

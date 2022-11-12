@@ -158,5 +158,12 @@ namespace LibReplanetizer
         public ExporterModelSettings()
         {
         }
+
+        public ExporterModelSettings(ExporterModelSettings startValues)
+        {
+            format = startValues.format;
+            animationChoice = startValues.animationChoice;
+            exportMtlFile = startValues.exportMtlFile;
+        }
     }
 }

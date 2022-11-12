@@ -41,6 +41,7 @@ namespace Replanetizer.Frames
 
         private List<ModelObject> selectedObjectInstances = new List<ModelObject>();
 
+        private static ExporterModelSettings lastUsedExportSettings = new ExporterModelSettings();
         private ExporterModelSettings exportSettings;
 
         private readonly KeyHeldHandler KEY_HELD_HANDLER = new()
@@ -95,7 +96,7 @@ namespace Replanetizer.Frames
             modelTextureList = new List<Texture>();
             propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
             this.shaderIDTable = shaderIDTable;
-            exportSettings = new ExporterModelSettings();
+            exportSettings = new ExporterModelSettings(lastUsedExportSettings);
             UpdateWindowSize();
             OnResize();
             SelectModel(model);
@@ -667,6 +668,9 @@ namespace Replanetizer.Frames
 
             string fileName = CrossFileDialog.SaveFile("model" + filter, filter);
             if (fileName.Length == 0) return;
+
+            // Save the settings so that modelsframes created in the future start with these settings
+            lastUsedExportSettings = new ExporterModelSettings(exportSettings);
 
             exporter.ExportModel(fileName, level, model);
         }

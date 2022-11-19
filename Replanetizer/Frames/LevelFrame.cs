@@ -370,8 +370,8 @@ namespace Replanetizer.Frames
                 | ImGuiWindowFlags.NoMove;
 
             var viewport = ImGui.GetMainViewport();
-            var workPos = viewport.GetWorkPos();
-            var workSize = viewport.GetWorkSize();
+            var workPos = viewport.WorkPos;
+            var workSize = viewport.WorkSize;
             SysVector2 windowPos = new(
                 workPos.X + PAD,
                 workPos.Y + workSize.Y - PAD

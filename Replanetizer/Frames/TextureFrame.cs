@@ -30,7 +30,7 @@ namespace Replanetizer.Frames
 
         public static void RenderTextureList(List<Texture> textures, float itemSizeX, Dictionary<Texture, int> textureIds, string prefix = "", int additionalOffset = 0)
         {
-            var width = ImGui.GetWindowContentRegionWidth() - additionalOffset;
+            var width = ImGui.GetWindowContentRegionMax().X - ImGui.GetWindowContentRegionMin().X - additionalOffset;
             var itemsPerRow = (int) Math.Floor(width / itemSizeX);
 
             if (itemsPerRow == 0) return;

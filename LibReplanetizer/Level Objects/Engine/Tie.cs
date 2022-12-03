@@ -99,13 +99,12 @@ namespace LibReplanetizer.LevelObjects
             try
             {
                 attributes.Invert();
+                reflection = modelMatrix * attributes;
             }
             catch
             {
-                attributes = Matrix4.Identity;
+                reflection = Matrix4.Identity;
             }
-
-            reflection = modelMatrix * attributes;
         }
 
         public byte[] ToByteArray(int colorOffset)

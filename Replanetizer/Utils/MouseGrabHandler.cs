@@ -37,8 +37,7 @@ namespace Replanetizer.Utils
                     // Released click while cursor was being grabbed; unhide
                     // the cursor
                     isGrabbed = false;
-                    wnd.CursorVisible = true;
-                    wnd.CursorGrabbed = false;
+                    wnd.CursorState = OpenTK.Windowing.Common.CursorState.Normal;
                 }
                 return false;
             }
@@ -51,8 +50,7 @@ namespace Replanetizer.Utils
 
                 // Hide the cursor and allow it to move without any bounds
                 isGrabbed = true;
-                wnd.CursorVisible = false;
-                wnd.CursorGrabbed = true;
+                wnd.CursorState = OpenTK.Windowing.Common.CursorState.Grabbed;
             }
 
             return isGrabbed;

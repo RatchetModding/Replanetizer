@@ -39,7 +39,7 @@ namespace LibReplanetizer.Models.Animations
             if (animationOffset == 0 && !force)
                 return;
 
-            if (modelOffset == 0)
+            if (modelOffset <= 0)
                 return;
 
             // Header

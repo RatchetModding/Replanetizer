@@ -6,10 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NLog" Version="4.7.10" />
-    <PackageReference Include="OpenTK.Mathematics" Version="4.6.4" />
-    <PackageReference Include="System.Drawing.Common" Version="5.0.1" />
-    <PackageReference Include="System.Resources.Extensions" Version="5.0.0" />
+    <PackageReference Include="NLog" Version="5.0.5" />
+    <PackageReference Include="OpenTK.Mathematics" Version="4.7.5" />
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
+    <PackageReference Include="System.Resources.Extensions" Version="7.0.0" />
   </ItemGroup>
 
 </Project>

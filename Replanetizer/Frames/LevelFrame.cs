@@ -370,8 +370,8 @@ namespace Replanetizer.Frames
                 | ImGuiWindowFlags.NoMove;
 
             var viewport = ImGui.GetMainViewport();
-            var workPos = viewport.GetWorkPos();
-            var workSize = viewport.GetWorkSize();
+            var workPos = viewport.WorkPos;
+            var workSize = viewport.WorkSize;
             SysVector2 windowPos = new(
                 workPos.X + PAD,
                 workPos.Y + workSize.Y - PAD
@@ -599,12 +599,14 @@ namespace Replanetizer.Frames
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float) TextureMinFilter.LinearMipmapLinear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (float) TextureMinFilter.LinearMipmapLinear);
-            int offset = 0;
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBaseLevel, (float) 0);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, (float) (t.mipMapCount - 1));
 
             if (t.mipMapCount > 1)
             {
                 int mipWidth = t.width;
                 int mipHeight = t.height;
+                int offset = 0;
 
                 for (int mipLevel = 0; mipLevel < t.mipMapCount; mipLevel++)
                 {

@@ -101,6 +101,11 @@ namespace LibReplanetizer.Models.Animations
             sec0s = new List<FrameBoneScaling>();
             for (int i = 0; i < sec0Count; i++)
             {
+                if (sec0Pointer + (i + 1) * 0x08 > frameBlock.Length)
+                {
+                    // Custom MP levels may have a too large sec0Count
+                    break;
+                }
                 float x = ReadShort(frameBlock, sec0Pointer + i * 8 + 0x00) / 4096.0f;
                 float y = ReadShort(frameBlock, sec0Pointer + i * 8 + 0x02) / 4096.0f;
                 float z = ReadShort(frameBlock, sec0Pointer + i * 8 + 0x04) / 4096.0f;
@@ -112,6 +117,11 @@ namespace LibReplanetizer.Models.Animations
             translations = new List<FrameBoneTranslation>();
             for (int i = 0; i < translationCount; i++)
             {
+                if (translationPointer + (i + 1) * 0x08 > frameBlock.Length)
+                {
+                    // Custom MP levels may have a too large translationCount
+                    break;
+                }
                 float x = ReadShort(frameBlock, translationPointer + i * 8 + 0x00) / 1024.0f;
                 float y = ReadShort(frameBlock, translationPointer + i * 8 + 0x02) / 1024.0f;
                 float z = ReadShort(frameBlock, translationPointer + i * 8 + 0x04) / 1024.0f;

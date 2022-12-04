@@ -600,7 +600,9 @@ namespace Replanetizer.Frames
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float) TextureMinFilter.LinearMipmapLinear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (float) TextureMinFilter.LinearMipmapLinear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBaseLevel, (float) 0);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, (float) (t.mipMapCount - 1));
+
+            // Custom MP levels may have an incorrect number of mipmaps specified so we need to dynamically figure that out
+            int mipLevel = 0;
 
             if (t.mipMapCount > 1)
             {
@@ -608,11 +610,16 @@ namespace Replanetizer.Frames
                 int mipHeight = t.height;
                 int offset = 0;
 
-                for (int mipLevel = 0; mipLevel < t.mipMapCount; mipLevel++)
+                for (; mipLevel < t.mipMapCount; mipLevel++)
                 {
                     if (mipWidth > 0 && mipHeight > 0)
                     {
                         int size = ((mipWidth + 3) / 4) * ((mipHeight + 3) / 4) * 16;
+                        if (offset + size > t.data.Length)
+                        {
+                            LOGGER.Debug($"Texture {t.id} claims to have {t.mipMapCount} mipmaps but only has {mipLevel}!");
+                            break;
+                        }
                         byte[] texPart = new byte[size];
                         Array.Copy(t.data, offset, texPart, 0, size);
                         GL.CompressedTexImage2D(TextureTarget.Texture2D, mipLevel, InternalFormat.CompressedRgbaS3tcDxt5Ext, mipWidth, mipHeight, 0, size, texPart);
@@ -628,6 +635,8 @@ namespace Replanetizer.Frames
                 GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, InternalFormat.CompressedRgbaS3tcDxt5Ext, t.width, t.height, 0, size, t.data);
                 GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
             }
+
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, (float) (mipLevel - 1));
 
             textureIds.Add(t, texId);
         }

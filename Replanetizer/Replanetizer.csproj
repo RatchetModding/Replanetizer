@@ -39,7 +39,7 @@
 
   <ItemGroup>
     <PackageReference Include="ImGui.NET" Version="1.88.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="NLog" Version="5.0.5" />
     <PackageReference Include="OpenTK" Version="4.7.5" />
     <PackageReference Include="OpenTK.Mathematics" Version="4.7.5" />

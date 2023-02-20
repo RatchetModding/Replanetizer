@@ -70,17 +70,7 @@ namespace LibReplanetizer.Models.Animations
 
             if (exists)
             {
-                FrameBoneScaling scale = sec0s.First(s => s.bone == bone);
-                Vector3 s = scale.scale;
-
-                /*if (scale.unk == 128)
-                {
-                    s.X = MathF.Exp(s.X);
-                    s.Y = MathF.Exp(s.Y);
-                    s.Z = MathF.Exp(s.Z);
-                }*/
-
-                return s;
+                return sec0s.First(s => s.bone == bone).scale;
             } 
 
             return null;
@@ -92,9 +82,7 @@ namespace LibReplanetizer.Models.Animations
 
             if (exists)
             {
-                FrameBoneScaling scale = sec0s.First(s => s.bone == bone);
-
-                return scale.unk == 128;
+                return sec0s.First(s => s.bone == bone).unk == 128;
             }
 
             return false;

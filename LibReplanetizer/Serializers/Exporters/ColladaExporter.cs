@@ -238,12 +238,12 @@ namespace LibReplanetizer
                         Vector3? translation = frame.GetTranslation(k);
 
                         // Translations are meant to replace the offsetBone translation I guess
-                        Vector4 tranlationVector;
+                        Vector4 translationVector;
                         if (translation != null)
                         {
                             Vector3 t = (Vector3) translation;
 
-                            tranlationVector = new Vector4(t);
+                            translationVector = new Vector4(t * model.size);
                         }
                         else
                         {
@@ -251,7 +251,7 @@ namespace LibReplanetizer
 
                             offBone *= model.size / 1024f;
 
-                            tranlationVector = offBone;
+                            translationVector = offBone;
                         }
 
                         if (scaling != null)
@@ -268,9 +268,9 @@ namespace LibReplanetizer
                             animationMatrix.M33 *= s.Z;
                         }
 
-                        animationMatrix.M14 += tranlationVector.X;
-                        animationMatrix.M24 += tranlationVector.Y;
-                        animationMatrix.M34 += tranlationVector.Z;
+                        animationMatrix.M14 += translationVector.X;
+                        animationMatrix.M24 += translationVector.Y;
+                        animationMatrix.M34 += translationVector.Z;
 
                         colladaStream.Write((animationMatrix.M11).ToString("F6", en_US) + " ");
                         colladaStream.Write((animationMatrix.M12).ToString("F6", en_US) + " ");

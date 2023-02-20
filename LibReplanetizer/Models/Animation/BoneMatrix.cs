@@ -13,7 +13,7 @@ namespace LibReplanetizer.Models.Animations
     public class BoneMatrix
     {
         public Matrix3x4 transformation;
-        public float cumulativeOffsetX, cumulativeOffsetY, cumulativeOffsetZ;
+        public Vector3 cumulativeOffset;
         public short parent;
         public short id;
         public short unk0x3C;
@@ -27,9 +27,11 @@ namespace LibReplanetizer.Models.Animations
 
             transformation = ReadMatrix3x4(boneBlock, offset);
 
-            cumulativeOffsetX = ReadFloat(boneBlock, offset + 0x30);
-            cumulativeOffsetY = ReadFloat(boneBlock, offset + 0x34);
-            cumulativeOffsetZ = ReadFloat(boneBlock, offset + 0x38);
+            float cumulativeOffsetX = ReadFloat(boneBlock, offset + 0x30);
+            float cumulativeOffsetY = ReadFloat(boneBlock, offset + 0x34);
+            float cumulativeOffsetZ = ReadFloat(boneBlock, offset + 0x38);
+
+            cumulativeOffset = new Vector3(cumulativeOffsetX / 1024.0f, cumulativeOffsetY / 1024.0f, cumulativeOffsetZ / 1024.0f);
 
             //0 for root and some constant else (0b0111000000000000 = 0x7000 = 28672)
             unk0x3C = ReadShort(boneBlock, offset + 0x3C);
@@ -40,9 +42,9 @@ namespace LibReplanetizer.Models.Animations
         {
             byte[] outBytes = new byte[0x40];
             WriteMatrix3x4(outBytes, 0x00, transformation);
-            WriteFloat(outBytes, 0x30, cumulativeOffsetX);
-            WriteFloat(outBytes, 0x34, cumulativeOffsetY);
-            WriteFloat(outBytes, 0x38, cumulativeOffsetZ);
+            WriteFloat(outBytes, 0x30, cumulativeOffset.X * 1024.0f);
+            WriteFloat(outBytes, 0x34, cumulativeOffset.Y * 1024.0f);
+            WriteFloat(outBytes, 0x38, cumulativeOffset.Z * 1024.0f);
             WriteShort(outBytes, 0x3C, unk0x3C);
             WriteShort(outBytes, 0x3E, (short) (parent * 0x40));
 

@@ -84,7 +84,54 @@ namespace LibReplanetizer
             colladaStream.WriteLine(indent + "</node>");
         }
 
-        private void WriteAnimation(StreamWriter colladaStream, Animation anim, int boneCount, string name, string indent = "")
+        private void WriteAnimationFrameOfBone(StreamWriter colladaStream, Frame frame, int boneID, MobyModel model)
+        {
+            Matrix4 animationMatrix = frame.GetRotationMatrix(boneID);
+            animationMatrix.Transpose();
+            Vector3? scaling = frame.GetScaling(boneID);
+            Vector3? translation = frame.GetTranslation(boneID);
+
+            // Translations replace the bone data translation
+            Vector3 translationVector = (translation != null) ? (Vector3) translation : model.boneDatas[boneID].translation;
+            translationVector *= model.size;
+
+            animationMatrix.M14 = translationVector.X;
+            animationMatrix.M24 = translationVector.Y;
+            animationMatrix.M34 = translationVector.Z;
+
+            if (scaling != null)
+            {
+                Vector3 s = (Vector3) scaling;
+                animationMatrix.M11 *= s.X;
+                animationMatrix.M21 *= s.X;
+                animationMatrix.M31 *= s.X;
+                animationMatrix.M12 *= s.Y;
+                animationMatrix.M22 *= s.Y;
+                animationMatrix.M32 *= s.Y;
+                animationMatrix.M13 *= s.Z;
+                animationMatrix.M23 *= s.Z;
+                animationMatrix.M33 *= s.Z;
+            }
+
+            colladaStream.Write((animationMatrix.M11).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M12).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M13).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M14).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M21).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M22).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M23).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M24).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M31).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M32).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M33).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M34).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M41).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M42).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M43).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M44).ToString("F6", en_US) + " ");
+        }
+
+        private void WriteAnimation(StreamWriter colladaStream, Animation anim, int boneCount, string name, MobyModel model, string indent = "")
         {
             colladaStream.WriteLine(indent + "<animation id=\"" + name + "\" name=\"" + name + "\">");
 
@@ -126,30 +173,7 @@ namespace LibReplanetizer
                 colladaStream.Write(indent + "\t\t\t<float_array id=\"" + name + "_" + k.ToString() + "OutputArray\" count=\"" + 16 * anim.frames.Count + "\">");
                 foreach (Frame frame in anim.frames)
                 {
-                    short[] rots = frame.rotations[k];
-
-                    Quaternion quat = new Quaternion((rots[0] / 32767f) * 180f, (rots[1] / 32767f) * 180f, (rots[2] / 32767f) * 180f, (-rots[3] / 32767f) * 180f);
-
-                    Matrix4 rotation = Matrix4.CreateFromQuaternion(quat);
-                    Matrix4 animationMatrix = rotation;
-                    animationMatrix.Transpose();
-
-                    colladaStream.Write((animationMatrix.M11).ToString("G", en_US) + " ");
-                    colladaStream.Write((animationMatrix.M12).ToString("G", en_US) + " ");
-                    colladaStream.Write((animationMatrix.M13).ToString("G", en_US) + " ");
-                    colladaStream.Write((animationMatrix.M14).ToString("G", en_US) + " ");
-                    colladaStream.Write((animationMatrix.M21).ToString("G", en_US) + " ");
-                    colladaStream.Write((animationMatrix.M22).ToString("G", en_US) + " ");
-                    colladaStream.Write((animationMatrix.M23).ToString("G", en_US) + " ");
-                    colladaStream.Write((animationMatrix.M24).ToString("G", en_US) + " ");
-                    colladaStream.Write((animationMatrix.M31).ToString("G", en_US) + " ");
-                    colladaStream.Write((animationMatrix.M32).ToString("G", en_US) + " ");
-                    colladaStream.Write((animationMatrix.M33).ToString("G", en_US) + " ");
-                    colladaStream.Write((animationMatrix.M34).ToString("G", en_US) + " ");
-                    colladaStream.Write((animationMatrix.M41).ToString("G", en_US) + " ");
-                    colladaStream.Write((animationMatrix.M42).ToString("G", en_US) + " ");
-                    colladaStream.Write((animationMatrix.M43).ToString("G", en_US) + " ");
-                    colladaStream.Write((animationMatrix.M44).ToString("G", en_US) + " ");
+                    WriteAnimationFrameOfBone(colladaStream, frame, k, model);
                 }
                 colladaStream.WriteLine("</float_array>");
                 colladaStream.WriteLine(indent + "\t\t\t<technique_common>");
@@ -232,62 +256,7 @@ namespace LibReplanetizer
                 {
                     foreach (Frame frame in anim.frames)
                     {
-                        Matrix4 animationMatrix = frame.GetRotationMatrix(k);
-                        animationMatrix.Transpose();
-                        Vector3? scaling = frame.GetScaling(k);
-                        Vector3? translation = frame.GetTranslation(k);
-
-                        // Translations are meant to replace the offsetBone translation I guess
-                        Vector4 translationVector;
-                        if (translation != null)
-                        {
-                            Vector3 t = (Vector3) translation;
-
-                            translationVector = new Vector4(t * model.size);
-                        }
-                        else
-                        {
-                            Vector4 offBone = new Vector4(model.boneDatas[k].translationX, model.boneDatas[k].translationY, model.boneDatas[k].translationZ, 1.0f);
-
-                            offBone *= model.size / 1024f;
-
-                            translationVector = offBone;
-                        }
-
-                        if (scaling != null)
-                        {
-                            Vector3 s = (Vector3) scaling;
-                            animationMatrix.M11 *= s.X;
-                            animationMatrix.M21 *= s.X;
-                            animationMatrix.M31 *= s.X;
-                            animationMatrix.M12 *= s.Y;
-                            animationMatrix.M22 *= s.Y;
-                            animationMatrix.M32 *= s.Y;
-                            animationMatrix.M13 *= s.Z;
-                            animationMatrix.M23 *= s.Z;
-                            animationMatrix.M33 *= s.Z;
-                        }
-
-                        animationMatrix.M14 += translationVector.X;
-                        animationMatrix.M24 += translationVector.Y;
-                        animationMatrix.M34 += translationVector.Z;
-
-                        colladaStream.Write((animationMatrix.M11).ToString("F6", en_US) + " ");
-                        colladaStream.Write((animationMatrix.M12).ToString("F6", en_US) + " ");
-                        colladaStream.Write((animationMatrix.M13).ToString("F6", en_US) + " ");
-                        colladaStream.Write((animationMatrix.M14).ToString("F6", en_US) + " ");
-                        colladaStream.Write((animationMatrix.M21).ToString("F6", en_US) + " ");
-                        colladaStream.Write((animationMatrix.M22).ToString("F6", en_US) + " ");
-                        colladaStream.Write((animationMatrix.M23).ToString("F6", en_US) + " ");
-                        colladaStream.Write((animationMatrix.M24).ToString("F6", en_US) + " ");
-                        colladaStream.Write((animationMatrix.M31).ToString("F6", en_US) + " ");
-                        colladaStream.Write((animationMatrix.M32).ToString("F6", en_US) + " ");
-                        colladaStream.Write((animationMatrix.M33).ToString("F6", en_US) + " ");
-                        colladaStream.Write((animationMatrix.M34).ToString("F6", en_US) + " ");
-                        colladaStream.Write((animationMatrix.M41).ToString("F6", en_US) + " ");
-                        colladaStream.Write((animationMatrix.M42).ToString("F6", en_US) + " ");
-                        colladaStream.Write((animationMatrix.M43).ToString("F6", en_US) + " ");
-                        colladaStream.Write((animationMatrix.M44).ToString("F6", en_US) + " ");
+                        WriteAnimationFrameOfBone(colladaStream, frame, k, model);
                     }
                 }
                 colladaStream.WriteLine("</float_array>");
@@ -551,14 +520,14 @@ namespace LibReplanetizer
                     colladaStream.WriteLine("\t\t\t<skin source=\"#Model\">");
                     colladaStream.WriteLine("\t\t\t\t<bind_shape_matrix>1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</bind_shape_matrix>");
                     colladaStream.WriteLine("\t\t\t\t<source id=\"Joints\">");
-                    colladaStream.Write("\t\t\t\t\t<Name_array id=\"JointsArray\" count=\"" + moby.boneDatas.Count + "\">");
+                    colladaStream.Write("\t\t\t\t\t<Name_array id=\"JointsArray\" count=\"" + moby.boneCount + "\">");
                     for (int i = 0; i < moby.boneCount; i++)
                     {
                         colladaStream.Write("J" + moby.boneMatrices[i].id.ToString() + " ");
                     }
                     colladaStream.WriteLine("\t\t\t\t\t</Name_array>");
                     colladaStream.WriteLine("\t\t\t\t\t<technique_common>");
-                    colladaStream.WriteLine("\t\t\t\t\t\t<accessor source=\"#JointsArray\" count=\"" + moby.boneDatas.Count + "\" stride=\"1\">");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<accessor source=\"#JointsArray\" count=\"" + moby.boneCount + "\" stride=\"1\">");
                     colladaStream.WriteLine("\t\t\t\t\t\t\t<param name=\"JOINT\" type=\"Name\"/>");
                     colladaStream.WriteLine("\t\t\t\t\t\t</accessor>");
                     colladaStream.WriteLine("\t\t\t\t\t</technique_common>");
@@ -717,13 +686,13 @@ namespace LibReplanetizer
                             {
                                 for (int i = 0; i < anims.Count; i++)
                                 {
-                                    WriteAnimation(colladaStream, anims[i], moby.boneCount, "Anim" + i.ToString(), "\t\t");
+                                    WriteAnimation(colladaStream, anims[i], moby.boneCount, "Anim" + i.ToString(), moby, "\t\t");
                                 }
                             }
                         }
                         else
                         {
-                            WriteAnimation(colladaStream, anims[id], moby.boneCount, "Anim" + id.ToString(), "\t\t");
+                            WriteAnimation(colladaStream, anims[id], moby.boneCount, "Anim" + id.ToString(), moby, "\t\t");
                         }
                         colladaStream.WriteLine("\t</library_animations>");
                     }

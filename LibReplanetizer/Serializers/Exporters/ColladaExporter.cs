@@ -33,15 +33,6 @@ namespace LibReplanetizer
             return ".dae";
         }
 
-        /*
-         * Blender removes bones if their length is too small. However,
-         * in RaC bones may be of length 0 so we shift bones by some
-         * minimal amount to avoid the Blender behaviour while keeping
-         * the error small.
-         */
-        private static readonly float BLENDER_BONE_MIN_LENGTH = 0.000001f;
-        private static readonly float BLENDER_BONE_FIX = 0.001f;
-
         private void WriteSkeleton(StreamWriter colladaStream, Skeleton skeleton, float size, string indent = "")
         {
             Matrix3x4 trans = skeleton.bone.transformation;
@@ -113,22 +104,22 @@ namespace LibReplanetizer
                 animationMatrix.M33 *= s.Z;
             }
 
-            colladaStream.Write((animationMatrix.M11).ToString("F6", en_US) + " ");
-            colladaStream.Write((animationMatrix.M12).ToString("F6", en_US) + " ");
-            colladaStream.Write((animationMatrix.M13).ToString("F6", en_US) + " ");
-            colladaStream.Write((animationMatrix.M14).ToString("F6", en_US) + " ");
-            colladaStream.Write((animationMatrix.M21).ToString("F6", en_US) + " ");
-            colladaStream.Write((animationMatrix.M22).ToString("F6", en_US) + " ");
-            colladaStream.Write((animationMatrix.M23).ToString("F6", en_US) + " ");
-            colladaStream.Write((animationMatrix.M24).ToString("F6", en_US) + " ");
-            colladaStream.Write((animationMatrix.M31).ToString("F6", en_US) + " ");
-            colladaStream.Write((animationMatrix.M32).ToString("F6", en_US) + " ");
-            colladaStream.Write((animationMatrix.M33).ToString("F6", en_US) + " ");
-            colladaStream.Write((animationMatrix.M34).ToString("F6", en_US) + " ");
-            colladaStream.Write((animationMatrix.M41).ToString("F6", en_US) + " ");
-            colladaStream.Write((animationMatrix.M42).ToString("F6", en_US) + " ");
-            colladaStream.Write((animationMatrix.M43).ToString("F6", en_US) + " ");
-            colladaStream.Write((animationMatrix.M44).ToString("F6", en_US) + " ");
+            colladaStream.Write((animationMatrix.M11).ToString("G", en_US) + " ");
+            colladaStream.Write((animationMatrix.M12).ToString("G", en_US) + " ");
+            colladaStream.Write((animationMatrix.M13).ToString("G", en_US) + " ");
+            colladaStream.Write((animationMatrix.M14).ToString("G", en_US) + " ");
+            colladaStream.Write((animationMatrix.M21).ToString("G", en_US) + " ");
+            colladaStream.Write((animationMatrix.M22).ToString("G", en_US) + " ");
+            colladaStream.Write((animationMatrix.M23).ToString("G", en_US) + " ");
+            colladaStream.Write((animationMatrix.M24).ToString("G", en_US) + " ");
+            colladaStream.Write((animationMatrix.M31).ToString("G", en_US) + " ");
+            colladaStream.Write((animationMatrix.M32).ToString("G", en_US) + " ");
+            colladaStream.Write((animationMatrix.M33).ToString("G", en_US) + " ");
+            colladaStream.Write((animationMatrix.M34).ToString("G", en_US) + " ");
+            colladaStream.Write((animationMatrix.M41).ToString("G", en_US) + " ");
+            colladaStream.Write((animationMatrix.M42).ToString("G", en_US) + " ");
+            colladaStream.Write((animationMatrix.M43).ToString("G", en_US) + " ");
+            colladaStream.Write((animationMatrix.M44).ToString("G", en_US) + " ");
         }
 
         private void WriteAnimation(StreamWriter colladaStream, Animation anim, int boneCount, string name, MobyModel model, string indent = "")
@@ -562,24 +553,7 @@ namespace LibReplanetizer
                     {
                         BoneMatrix bmatrix = moby.boneMatrices[i];
 
-                        Vector3 off = new Vector3(bmatrix.cumulativeOffsetX, bmatrix.cumulativeOffsetY, bmatrix.cumulativeOffsetZ);
-
-                        off *= model.size / 1024f;
-
-                        int parent = bmatrix.parent;
-
-                        if (parent != i)
-                        {
-                            Vector3 poff = offsets[parent];
-
-                            if ((off - poff).LengthSquared < BLENDER_BONE_MIN_LENGTH)
-                            {
-                                off = poff;
-                                off.Z += BLENDER_BONE_FIX;
-                            }
-                        }
-
-                        offsets.Add(off);
+                        offsets.Add(bmatrix.cumulativeOffset * model.size);
                     }
 
                     for (int i = 0; i < moby.boneMatrices.Count; i++)

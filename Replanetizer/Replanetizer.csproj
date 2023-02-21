@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -38,9 +38,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ImGui.NET" Version="1.88.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="NLog" Version="5.0.5" />
+    <PackageReference Include="ImGui.NET" Version="1.89.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="NLog" Version="5.1.2" />
     <PackageReference Include="OpenTK" Version="4.7.5" />
     <PackageReference Include="OpenTK.Mathematics" Version="4.7.5" />
     <PackageReference Include="OpenTK.Windowing.GraphicsLibraryFramework" Version="4.7.5" />

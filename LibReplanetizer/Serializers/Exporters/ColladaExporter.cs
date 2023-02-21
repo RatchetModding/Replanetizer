@@ -141,8 +141,19 @@ namespace LibReplanetizer
                 }
             }
 
+            // Duplicate single frame animations so that they are visible in tools like Blender
+            if (anim.frames.Count == 1)
+            {
+                timeString += (frameStartTime).ToString("G", en_US) + " ";
+            }
+
             string interpString = "";
             for (int j = 0; j < anim.frames.Count; j++)
+            {
+                interpString += "LINEAR ";
+            }
+
+            if (anim.frames.Count == 1)
             {
                 interpString += "LINEAR ";
             }
@@ -165,6 +176,10 @@ namespace LibReplanetizer
                 foreach (Frame frame in anim.frames)
                 {
                     WriteAnimationFrameOfBone(colladaStream, frame, k, model);
+                }
+                if (anim.frames.Count == 1)
+                {
+                    WriteAnimationFrameOfBone(colladaStream, anim.frames[0], k, model);
                 }
                 colladaStream.WriteLine("</float_array>");
                 colladaStream.WriteLine(indent + "\t\t\t<technique_common>");
@@ -658,9 +673,15 @@ namespace LibReplanetizer
                             }
                             else
                             {
+                                int k = 0;
                                 for (int i = 0; i < anims.Count; i++)
                                 {
-                                    WriteAnimation(colladaStream, anims[i], moby.boneCount, "Anim" + i.ToString(), moby, "\t\t");
+                                    if (anims[i].frames.Count != 0)
+                                    {
+                                        WriteAnimation(colladaStream, anims[i], moby.boneCount, "Anim" + k.ToString(), moby, "\t\t");
+                                        k++;
+                                    }
+                                    
                                 }
                             }
                         }
@@ -736,13 +757,28 @@ namespace LibReplanetizer
 
                 if (dir == null) dir = "";
 
-                int numFilesExported = ((MobyModel) model).animations.Count;
+                List<Animation> anims;
+                if (model.id == 0)
+                {
+                    anims = level.playerAnimations;
+                }
+                else
+                {
+                    anims = ((MobyModel) model).animations;
+                }
 
-                for (int i = 0; i < numFilesExported; i++)
+                List<int> nonzeroAnimations = new List<int>();
+
+                for (int i = 0; i < anims.Count; i++)
+                {
+                    if (anims[i].frames.Count != 0) nonzeroAnimations.Add(i);
+                }
+
+                for (int i = 0; i < nonzeroAnimations.Count; i++)
                 {
                     string filePath = Path.Combine(dir, fileName + "_" + i.ToString() + fileExt);
 
-                    WriteData(filePath, level, model, true, i);
+                    WriteData(filePath, level, model, true, nonzeroAnimations[i]);
                 }
             }
             else

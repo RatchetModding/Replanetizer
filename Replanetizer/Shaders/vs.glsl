@@ -37,22 +37,7 @@ uniform float fogNearIntensity;
 uniform float fogFarIntensity;
 uniform vec4 staticColor;
 
-/*
- * Seems to correspond with the game, I don't know though I just tested random things.
- */
-float get_depth() {
-	return 0.5f * (gl_Position.z - gl_DepthRange.far) / gl_DepthRange.far;
-}
 
-/*
- * Degree 2 Taylor Expansion of exp function
- * Closest to what is used in the game that I could figure out
- */
-float quick_exp(float x) {
-	float y = x * x;
-	float z = y * x;
-	return 1.0f + x + 0.5f * y + 0.1666f * z;
-}
 
 void main() {
 	// Output position of the vertex, in clip space : MVP * position
@@ -87,8 +72,12 @@ void main() {
 	fogBlend = 0.0f;
 
 	if (useFog == 1 && levelObjectType >= 1 && levelObjectType <= 4) {
-		float depth = clamp((fogFarDistance - quick_exp(get_depth())) / (fogFarDistance - fogNearDistance), 0.0f, 1.0f);
+        // The magic numbers are from observations
+        // Maybe figure out where exactly they come from
+        float depth = gl_Position.z - fogNearDistance * 0.0009765625f;
 
-		fogBlend = 1.0f - clamp(mix(fogFarIntensity, fogNearIntensity, depth), 0.0f, 1.0f);
+        depth = clamp(depth * 1152.0f / fogFarDistance, 0.0f, 1.0f);
+
+		fogBlend = (1.0f - fogNearIntensity) + depth * (fogNearIntensity - fogFarIntensity);
 	}
 }

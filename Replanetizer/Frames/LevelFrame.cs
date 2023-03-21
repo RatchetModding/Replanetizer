@@ -595,11 +595,21 @@ namespace Replanetizer.Frames
             int texId;
             GL.GenTextures(1, out texId);
             GL.BindTexture(TextureTarget.Texture2D, texId);
+
+            // The game uses either Repeat or ClampToEdge
+            // The texture configuration determines which one is used
+            // Different modes may be used for S and T
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
+
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float) TextureMinFilter.LinearMipmapLinear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (float) TextureMinFilter.LinearMipmapLinear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBaseLevel, (float) 0);
+
+            // The game uses a negative LOD Bias, the value is taken from RenderDoc on RPCS3.
+            // The game may do this because of the low-res textures.
+            // NOTE: This data was gathered using RPCS3's strict rendering mode so it seems unlikely that it was introduced through RPCS3.
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureLodBias, (float) -1.5);
 
             // Custom MP levels may have an incorrect number of mipmaps specified so we need to dynamically figure that out
             int mipLevel = 0;
@@ -649,7 +659,7 @@ namespace Replanetizer.Frames
                 LoadTexture(t);
             }
 
-            // Skybox textures seem to not use repeat for texture wrapping
+            // Skybox textures use ClampToEdge
             foreach (TextureConfig conf in level.skybox.textureConfig) SetTextureWrapMode(conf, TextureWrapMode.ClampToEdge);
 
             foreach (List<Texture> list in level.armorTextures)
@@ -1117,7 +1127,7 @@ namespace Replanetizer.Frames
             if (isMultiSelect)
             {
                 selectedObjects.Toggle(obj);
-            }   
+            }
             else
             {
                 selectedObjects.ToggleOne(obj);
@@ -1126,7 +1136,7 @@ namespace Replanetizer.Frames
                     camera.MoveBehind(obj);
                 }
             }
-                
+
             return true;
         }
 
@@ -1347,6 +1357,9 @@ namespace Replanetizer.Frames
 
             GL.ClearColor(level.levelVariables.fogColor);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            GL.DepthFunc(DepthFunction.Lequal);
+            GL.Scissor(0, 0, width, height);
+            GL.Enable(EnableCap.ScissorTest);
 
             GL.EnableVertexAttribArray(0);
             GL.EnableVertexAttribArray(1);
@@ -1365,6 +1378,7 @@ namespace Replanetizer.Frames
                 GL.UseProgram(shaderIDTable.shaderSky);
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+                GL.BlendEquation(BlendEquationMode.FuncAdd);
                 GL.Disable(EnableCap.DepthTest);
                 Matrix4 mvp = view.ClearTranslation() * camera.GetProjectionMatrix();
                 GL.UniformMatrix4(shaderIDTable.uniformSkyWorldToViewMatrix, false, ref mvp);

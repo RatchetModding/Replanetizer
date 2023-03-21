@@ -55,10 +55,10 @@ void main() {
         }
     }
 
-	color.xyz = textureColor.xyz * lightColor;
+	color.xyz = textureColor.xyz * lightColor * 2.0f;
 	color.w = textureColor.w;
 
-	color.xyz = mix(color.xyz, fogColor.xyz, fogBlend);
+	color.xyz = (fogColor.xyz - color.xyz) * fogBlend + color.xyz;
 
 	id = (levelObjectType << 24) | levelObjectNumber;
 }

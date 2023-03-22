@@ -115,7 +115,7 @@ namespace Replanetizer.Frames
 
                 ImGui.SetNextWindowSize(startSize);
             }
-                
+
             if (ImGui.Begin(frameName, ref isOpen, ImGuiWindowFlags.NoSavedSettings))
             {
                 Render(deltaTime);
@@ -260,7 +260,7 @@ namespace Replanetizer.Frames
             ImGui.SetColumnWidth(0, 250);
             ImGui.SetColumnWidth(1, (float) width);
             ImGui.SetColumnWidth(2, 320);
-            RenderTree();    
+            RenderTree();
             ImGui.NextColumn();
 
             Tick(deltaTime);
@@ -387,7 +387,7 @@ namespace Replanetizer.Frames
             selectedObjectInstances.Clear();
 
             if (selectedModel == null)
-            { 
+            {
                 return;
             }
 
@@ -576,6 +576,7 @@ namespace Replanetizer.Frames
                 foreach (TextureConfig conf in selectedModel.textureConfig)
                 {
                     GL.BindTexture(TextureTarget.Texture2D, (conf.id >= 0 && conf.id < selectedTextureSet.Count) ? levelFrame.textureIds[selectedTextureSet[conf.id]] : 0);
+                    GL.Uniform1(shaderIDTable.uniformUseTransparency, (conf.IgnoresTransparency()) ? 0 : 1);
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
 

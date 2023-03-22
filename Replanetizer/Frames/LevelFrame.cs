@@ -1440,17 +1440,8 @@ namespace Replanetizer.Frames
                 if (hook != null) hook.UpdateMobys(level.mobs, level.mobyModels);
 
                 GL.Uniform1(shaderIDTable.uniformLevelObjectType, (int) RenderedObjectType.Moby);
-
-                if (enableTransparency)
-                {
-                    GL.Enable(EnableCap.Blend);
-                    GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-                }
-
                 foreach (RenderableBuffer buffer in mobiesBuffers)
                     RenderBuffer(buffer);
-
-                GL.Disable(EnableCap.Blend);
             }
 
             GL.UseProgram(shaderIDTable.shaderColor);

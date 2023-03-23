@@ -117,7 +117,7 @@ namespace LibReplanetizer
             return ".obj";
         }
 
-        private void WriteMaterial(StreamWriter mtlfs, string id)
+        private void WriteMaterial(StreamWriter mtlfs, string id, bool clampUV = false)
         {
             mtlfs.WriteLine($"newmtl mtl_{id}");
             mtlfs.WriteLine("Ns 1000");
@@ -126,19 +126,22 @@ namespace LibReplanetizer
             mtlfs.WriteLine("Ni 1.000000");
             mtlfs.WriteLine("d 1.000000");
             mtlfs.WriteLine("illum 1");
-            mtlfs.WriteLine($"map_Kd {id}.png");
+            // The Wavefront Obj standard only defines clamping on all or no axis.
+            mtlfs.WriteLine("map_Kd -clamp " + ((clampUV) ? "on" : "off") + " " + id + ".png");
         }
 
         private void WriteMaterial(StreamWriter? mtlfs, Model? model, List<int> usedMtls)
         {
             if (mtlfs == null || model == null) return;
 
-            for (int i = 0; i < model.textureConfig.Count; i++)
+            foreach (TextureConfig conf in model.textureConfig)
             {
-                int modelTextureID = model.textureConfig[i].id;
+                int modelTextureID = conf.id;
                 if (usedMtls.Contains(modelTextureID))
                     continue;
-                WriteMaterial(mtlfs, modelTextureID.ToString());
+
+                bool clampUV = (conf.GetWrapModeS() == TextureConfigWrapMode.ClampEdge && conf.GetWrapModeT() == TextureConfigWrapMode.ClampEdge);
+                WriteMaterial(mtlfs, modelTextureID.ToString(), clampUV);
                 usedMtls.Add(modelTextureID);
             }
         }
@@ -537,7 +540,7 @@ namespace LibReplanetizer
             if (levelSettings.exportMtlFile) mtlfs?.Dispose();
         }
 
-        private int SeparateModelObjectByMaterial(ModelObject t, List<Tuple<int, int, int>>[] faces, List<Vector3> vertices, List<Vector3> colors, List<Vector2> uvs, List<Vector3> normals, int faceOffset)
+        private int SeparateModelObjectByMaterial(ModelObject t, List<Tuple<int, int, int>>[] faces, List<Vector3> vertices, List<Vector3> colors, List<Vector2> uvs, List<Vector3> normals, bool[] clamp, int faceOffset)
         {
             Model? model = t.model;
 
@@ -585,6 +588,7 @@ namespace LibReplanetizer
             {
                 int triIndex = i * 3;
                 int materialID = 0;
+                bool clampMaterial = true;
 
                 if ((model.textureConfig != null) && (textureNum < model.textureConfig.Count))
                 {
@@ -593,7 +597,10 @@ namespace LibReplanetizer
                         textureNum++;
                     }
 
-                    materialID = model.textureConfig[textureNum].id;
+                    TextureConfig conf = model.textureConfig[textureNum];
+
+                    materialID = conf.id;
+                    clampMaterial = (conf.GetWrapModeS() == TextureConfigWrapMode.ClampEdge && conf.GetWrapModeS() == TextureConfigWrapMode.ClampEdge) ? true : false;
                 }
 
                 if (materialID >= faces.Length || materialID < 0)
@@ -612,6 +619,7 @@ namespace LibReplanetizer
                     v1 + 1 + faceOffset,
                     v2 + 1 + faceOffset,
                     v3 + 1 + faceOffset));
+                clamp[materialID] = (!clampMaterial) ? false : clamp[materialID];
             }
 
             return vertexCount;
@@ -628,9 +636,14 @@ namespace LibReplanetizer
 
             List<Tuple<int, int, int>>[] faces = new List<Tuple<int, int, int>>[materialCount];
 
+            // All materials are set to clamp by default, if a material is found to use REPEAT in any textureconfig
+            // then clamp will be turned off
+            bool[] clamp = new bool[materialCount];
+
             for (int i = 0; i < materialCount; i++)
             {
                 faces[i] = new List<Tuple<int, int, int>>();
+                clamp[i] = true;
             }
 
             List<Vector3> vertices = new List<Vector3>();
@@ -642,14 +655,14 @@ namespace LibReplanetizer
 
             foreach (TerrainFragment t in terrain)
             {
-                faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, colors, uvs, normals, faceOffset);
+                faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, colors, uvs, normals, clamp, faceOffset);
             }
 
             if (levelSettings.writeTies)
             {
                 foreach (Tie t in level.ties)
                 {
-                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, colors, uvs, normals, faceOffset);
+                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, colors, uvs, normals, clamp, faceOffset);
                 }
             }
 
@@ -657,7 +670,7 @@ namespace LibReplanetizer
             {
                 foreach (Shrub t in level.shrubs)
                 {
-                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, colors, uvs, normals, faceOffset);
+                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, colors, uvs, normals, clamp, faceOffset);
                 }
             }
 
@@ -665,7 +678,7 @@ namespace LibReplanetizer
             {
                 foreach (Moby t in level.mobs)
                 {
-                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, colors, uvs, normals, faceOffset);
+                    faceOffset += SeparateModelObjectByMaterial(t, faces, vertices, colors, uvs, normals, clamp, faceOffset);
                 }
             }
 
@@ -676,7 +689,7 @@ namespace LibReplanetizer
                     for (int i = 0; i < materialCount; i++)
                     {
                         if (faces[i].Count != 0)
-                            WriteMaterial(mtlfs, i.ToString());
+                            WriteMaterial(mtlfs, i.ToString(), clamp[i]);
                     }
                 }
             }

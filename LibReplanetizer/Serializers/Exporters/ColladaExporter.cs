@@ -33,6 +33,28 @@ namespace LibReplanetizer
             return ".dae";
         }
 
+        private enum ColladaFXSamplerWrapCommon
+        {
+            WRAP = 0, //GL_REPEAT
+            MIRROR = 1, // GL_MIRRORED_REPEAT
+            CLAMP = 2, // GL_CLAMP_TO_EDGE
+            BORDER = 3, // GL_CLAMP_TO_BORDER
+            NONE = 4 // GL_CLAMP_TO_BORDER
+        };
+
+        private ColladaFXSamplerWrapCommon GetFXSamplerWrapCommon(TextureConfigWrapMode wrapMode)
+        {
+            switch (wrapMode)
+            {
+                case TextureConfigWrapMode.Repeat:
+                    return ColladaFXSamplerWrapCommon.WRAP;
+                case TextureConfigWrapMode.ClampEdge:
+                    return ColladaFXSamplerWrapCommon.CLAMP;
+                default:
+                    return ColladaFXSamplerWrapCommon.NONE;
+            }
+        }
+
         private void WriteSkeleton(StreamWriter colladaStream, Skeleton skeleton, float size, string indent = "")
         {
             Matrix3x4 trans = skeleton.bone.transformation;
@@ -356,8 +378,8 @@ namespace LibReplanetizer
                     colladaStream.WriteLine("\t\t\t\t<newparam sid=\"sampler_" + config.id + "\">");
                     colladaStream.WriteLine("\t\t\t\t\t<sampler2D>");
                     colladaStream.WriteLine("\t\t\t\t\t\t<source>surface_" + config.id + "</source>");
-                    colladaStream.WriteLine("\t\t\t\t\t\t<wrap_s>WRAP</wrap_s>");
-                    colladaStream.WriteLine("\t\t\t\t\t\t<wrap_t>WRAP</wrap_t>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<wrap_s>" + GetFXSamplerWrapCommon(config.GetWrapModeS()).ToString() + "</wrap_s>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<wrap_t>" + GetFXSamplerWrapCommon(config.GetWrapModeT()).ToString() + "</wrap_t>");
                     colladaStream.WriteLine("\t\t\t\t\t\t<minfilter>LINEAR_MIPMAP_LINEAR</minfilter>");
                     colladaStream.WriteLine("\t\t\t\t\t\t<magfilter>LINEAR</magfilter>");
                     colladaStream.WriteLine("\t\t\t\t\t</sampler2D>");
@@ -681,7 +703,7 @@ namespace LibReplanetizer
                                         WriteAnimation(colladaStream, anims[i], moby.boneCount, "Anim" + k.ToString(), moby, "\t\t");
                                         k++;
                                     }
-                                    
+
                                 }
                             }
                         }

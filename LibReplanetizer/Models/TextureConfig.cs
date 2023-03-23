@@ -55,6 +55,7 @@ namespace LibReplanetizer
 
         // In the following are some observations of different modes and their corresponding wrap mode as reported by Renderdoc.
         // The ? just says that this has not yet been confirmed through Renderdoc.
+        // Mobies seem to be broken as they all use the repeat mode even when they clearly shouldn't based on the art.
 
         // A RaC 1 database of TextureWrapMode mappings
         // Terrain:

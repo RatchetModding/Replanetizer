@@ -246,27 +246,24 @@ namespace Replanetizer.Utils
              * of the fading out buildings.
              */
 
-            TextureConfigWrapMode wrapModeS = conf.GetWrapModeS();
-            TextureConfigWrapMode wrapModeT = conf.GetWrapModeT();
-
-            switch (wrapModeS)
+            switch (conf.wrapModeS)
             {
-                case TextureConfigWrapMode.Repeat:
+                case TextureConfig.WrapMode.Repeat:
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
                     break;
-                case TextureConfigWrapMode.ClampEdge:
+                case TextureConfig.WrapMode.ClampEdge:
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.ClampToEdge);
                     break;
                 default:
                     break;
             }
 
-            switch (wrapModeT)
+            switch (conf.wrapModeT)
             {
-                case TextureConfigWrapMode.Repeat:
+                case TextureConfig.WrapMode.Repeat:
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
                     break;
-                case TextureConfigWrapMode.ClampEdge:
+                case TextureConfig.WrapMode.ClampEdge:
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.ClampToEdge);
                     break;
                 default:

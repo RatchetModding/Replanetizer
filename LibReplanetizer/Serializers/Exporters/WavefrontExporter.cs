@@ -140,7 +140,7 @@ namespace LibReplanetizer
                 if (usedMtls.Contains(modelTextureID))
                     continue;
 
-                bool clampUV = (conf.GetWrapModeS() == TextureConfigWrapMode.ClampEdge && conf.GetWrapModeT() == TextureConfigWrapMode.ClampEdge);
+                bool clampUV = (conf.wrapModeS == TextureConfig.WrapMode.ClampEdge && conf.wrapModeT == TextureConfig.WrapMode.ClampEdge);
                 WriteMaterial(mtlfs, modelTextureID.ToString(), clampUV);
                 usedMtls.Add(modelTextureID);
             }
@@ -600,7 +600,7 @@ namespace LibReplanetizer
                     TextureConfig conf = model.textureConfig[textureNum];
 
                     materialID = conf.id;
-                    clampMaterial = (conf.GetWrapModeS() == TextureConfigWrapMode.ClampEdge && conf.GetWrapModeS() == TextureConfigWrapMode.ClampEdge) ? true : false;
+                    clampMaterial = (conf.wrapModeS == TextureConfig.WrapMode.ClampEdge && conf.wrapModeT == TextureConfig.WrapMode.ClampEdge) ? true : false;
                 }
 
                 if (materialID >= faces.Length || materialID < 0)

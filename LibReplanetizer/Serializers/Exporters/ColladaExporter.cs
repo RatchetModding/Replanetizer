@@ -42,13 +42,13 @@ namespace LibReplanetizer
             NONE = 4 // GL_CLAMP_TO_BORDER
         };
 
-        private ColladaFXSamplerWrapCommon GetFXSamplerWrapCommon(TextureConfigWrapMode wrapMode)
+        private ColladaFXSamplerWrapCommon GetFXSamplerWrapCommon(TextureConfig.WrapMode wrapMode)
         {
             switch (wrapMode)
             {
-                case TextureConfigWrapMode.Repeat:
+                case TextureConfig.WrapMode.Repeat:
                     return ColladaFXSamplerWrapCommon.WRAP;
-                case TextureConfigWrapMode.ClampEdge:
+                case TextureConfig.WrapMode.ClampEdge:
                     return ColladaFXSamplerWrapCommon.CLAMP;
                 default:
                     return ColladaFXSamplerWrapCommon.NONE;
@@ -378,8 +378,8 @@ namespace LibReplanetizer
                     colladaStream.WriteLine("\t\t\t\t<newparam sid=\"sampler_" + config.id + "\">");
                     colladaStream.WriteLine("\t\t\t\t\t<sampler2D>");
                     colladaStream.WriteLine("\t\t\t\t\t\t<source>surface_" + config.id + "</source>");
-                    colladaStream.WriteLine("\t\t\t\t\t\t<wrap_s>" + GetFXSamplerWrapCommon(config.GetWrapModeS()).ToString() + "</wrap_s>");
-                    colladaStream.WriteLine("\t\t\t\t\t\t<wrap_t>" + GetFXSamplerWrapCommon(config.GetWrapModeT()).ToString() + "</wrap_t>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<wrap_s>" + GetFXSamplerWrapCommon(config.wrapModeS).ToString() + "</wrap_s>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<wrap_t>" + GetFXSamplerWrapCommon(config.wrapModeT).ToString() + "</wrap_t>");
                     colladaStream.WriteLine("\t\t\t\t\t\t<minfilter>LINEAR_MIPMAP_LINEAR</minfilter>");
                     colladaStream.WriteLine("\t\t\t\t\t\t<magfilter>LINEAR</magfilter>");
                     colladaStream.WriteLine("\t\t\t\t\t</sampler2D>");

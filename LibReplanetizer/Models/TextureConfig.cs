@@ -10,17 +10,19 @@ using System.ComponentModel;
 namespace LibReplanetizer
 {
 
-    /*
-     * Only those two modes are used by the game.
-     */
-    public enum TextureConfigWrapMode
-    {
-        Repeat = 0,
-        ClampEdge = 1
-    }
-
     public class TextureConfig
     {
+        public static readonly string[] WRAP_MODE_STRINGS = { "Repeat", "ClampEdge" };
+
+        /*
+         * Only those two modes are used by the game.
+         */
+        public enum WrapMode
+        {
+            Repeat = 0,
+            ClampEdge = 1
+        }
+
         [Category("Attributes"), DisplayName("Texture ID")]
         public int id { get; set; }
         [Category("Attributes"), DisplayName("Vertex Start Index")]
@@ -29,13 +31,109 @@ namespace LibReplanetizer
         public int size { get; set; }
         [Category("Attributes"), DisplayName("Mode")]
         public int mode { get; set; }
+        public WrapMode wrapModeS
+        {
+            get
+            {
+                if ((mode & 0b01) > 0)
+                {
+                    return (((mode & 0b10) > 0)) ? WrapMode.ClampEdge : WrapMode.Repeat;
+                }
 
-        /*
-         * The textureConfig modes in the following are probably bitmask but more testing is required
-         * to confirm that, until then simply add all modes that are observed.
-         * Ideally write the binary + the game in which this was observed as it could be that the
-         * bitmasks differ between the games.
-         */
+                if (((mode >> 24) & 0b01) > 0)
+                {
+                    return ((((mode >> 24) & 0b10) > 0)) ? WrapMode.ClampEdge : WrapMode.Repeat;
+                }
+
+                return WrapMode.Repeat;
+            }
+            set
+            {
+                if ((mode & 0b01) > 0)
+                {
+                    switch (value)
+                    {
+                        case WrapMode.Repeat:
+                            mode = mode & (~0b10);
+                            break;
+                        case WrapMode.ClampEdge:
+                            mode = mode | 0b10;
+                            break;
+                        default:
+                            break;
+                    }
+                    return;
+                }
+
+                if (((mode >> 24) & 0b01) > 0)
+                {
+                    switch (value)
+                    {
+                        case WrapMode.Repeat:
+                            mode = mode & ~(0b10 << 24);
+                            break;
+                        case WrapMode.ClampEdge:
+                            mode = mode | (0b10 << 24);
+                            break;
+                        default:
+                            break;
+                    }
+                    return;
+                }
+            }
+        }
+
+        public WrapMode wrapModeT
+        {
+            get
+            {
+                if (((mode >> 2) & 0b01) > 0)
+                {
+                    return ((((mode >> 2) & 0b10) > 0)) ? WrapMode.ClampEdge : WrapMode.Repeat;
+                }
+
+                if (((mode >> 26) & 0b01) > 0)
+                {
+                    return ((((mode >> 26) & 0b10) > 0)) ? WrapMode.ClampEdge : WrapMode.Repeat;
+                }
+
+                return WrapMode.Repeat;
+            }
+            set
+            {
+                if (((mode >> 2) & 0b01) > 0)
+                {
+                    switch (value)
+                    {
+                        case WrapMode.Repeat:
+                            mode = mode & ~(0b10 << 2);
+                            break;
+                        case WrapMode.ClampEdge:
+                            mode = mode | (0b10 << 2);
+                            break;
+                        default:
+                            break;
+                    }
+                    return;
+                }
+
+                if (((mode >> 26) & 0b01) > 0)
+                {
+                    switch (value)
+                    {
+                        case WrapMode.Repeat:
+                            mode = mode & ~(0b10 << 26);
+                            break;
+                        case WrapMode.ClampEdge:
+                            mode = mode | (0b10 << 26);
+                            break;
+                        default:
+                            break;
+                    }
+                    return;
+                }
+            }
+        }
 
         public bool IgnoresTransparency()
         {
@@ -95,41 +193,5 @@ namespace LibReplanetizer
         // The higher bit is the value of the feature.
         // It remains to be identified what all these features are and why they are shifted by 24 bits sometimes.
         //
-
-        /// <summary>
-        /// Returns the texture wrapping mode for the S coordinate.
-        /// </summary>
-        public TextureConfigWrapMode GetWrapModeS()
-        {
-            if ((mode & 0b01) > 0)
-            {
-                return (((mode & 0b10) > 0)) ? TextureConfigWrapMode.ClampEdge : TextureConfigWrapMode.Repeat;
-            }
-
-            if (((mode >> 24) & 0b01) > 0)
-            {
-                return ((((mode >> 24) & 0b10) > 0)) ? TextureConfigWrapMode.ClampEdge : TextureConfigWrapMode.Repeat;
-            }
-
-            return TextureConfigWrapMode.Repeat;
-        }
-
-        /// <summary>
-        /// Returns the texture wrapping mode for the T coordinate.
-        /// </summary>
-        public TextureConfigWrapMode GetWrapModeT()
-        {
-            if (((mode >> 2) & 0b01) > 0)
-            {
-                return ((((mode >> 2) & 0b10) > 0)) ? TextureConfigWrapMode.ClampEdge : TextureConfigWrapMode.Repeat;
-            }
-
-            if (((mode >> 26) & 0b01) > 0)
-            {
-                return ((((mode >> 26) & 0b10) > 0)) ? TextureConfigWrapMode.ClampEdge : TextureConfigWrapMode.Repeat;
-            }
-
-            return TextureConfigWrapMode.Repeat;
-        }
     }
 }

@@ -78,7 +78,7 @@ namespace Replanetizer.Frames
         private const float CLIP_FAR = 100f;
         private const float FIELD_OF_VIEW = MathF.PI / 3;  // 60 degrees
 
-        private bool invalidate = true, initialized = false;
+        private bool initialized = false;
 
         private Matrix4 trans, scale, worldView, rot = Matrix4.Identity;
 
@@ -265,19 +265,16 @@ namespace Replanetizer.Frames
 
             Tick(deltaTime);
 
-            if (invalidate)
+            renderer.RenderToTexture(() =>
             {
-                renderer.RenderToTexture(() =>
-                {
-                    //Setup openGL variables
-                    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-                    GL.Enable(EnableCap.DepthTest);
-                    GL.Viewport(0, 0, width, height);
+                //Setup openGL variables
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+                GL.Enable(EnableCap.DepthTest);
+                GL.Viewport(0, 0, width, height);
 
-                    OnPaint();
-                });
-                invalidate = false;
-            }
+                OnPaint();
+            });
+
             ImGui.Image((IntPtr) renderer.outputTexture, new System.Numerics.Vector2(width, height),
                 System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
 
@@ -289,6 +286,7 @@ namespace Replanetizer.Frames
             {
                 if (selectedModel != null)
                 {
+                    UpdateTextures();
                     if (modelTextureList != null && modelTextureList.Count > 0)
                     {
                         TextureFrame.RenderTextureList(modelTextureList, 64, levelFrame.textureIds);
@@ -359,7 +357,6 @@ namespace Replanetizer.Frames
 
             if (width != prevWidth || height != prevHeight)
             {
-                invalidate = true;
                 OnResize();
             }
 
@@ -428,7 +425,6 @@ namespace Replanetizer.Frames
             if (selectedModel == null) return;
 
             scale = Matrix4.CreateScale(selectedModel.size);
-            invalidate = true;
             propertyFrame.selectedObject = selectedModel;
             UpdateTextures();
 
@@ -584,8 +580,6 @@ namespace Replanetizer.Frames
                 GL.DisableVertexAttribArray(1);
                 GL.DisableVertexAttribArray(0);
             }
-
-            invalidate = false;
         }
 
         private void Tick(float deltaTime)
@@ -625,7 +619,6 @@ namespace Replanetizer.Frames
                     zoom = prevZoom;
                 }
                 worldView = CreateWorldView();
-                invalidate = true;
             }
         }
 
@@ -644,14 +637,12 @@ namespace Replanetizer.Frames
 
             xDelta += wnd.MouseState.Delta.X * deltaTime;
             rot = Matrix4.CreateRotationZ(xDelta);
-            invalidate = true;
             return true;
         }
 
         private void OnResize()
         {
             worldView = CreateWorldView();
-            invalidate = true;
 
             renderer?.Dispose();
             renderer = new FramebufferRenderer(width, height);

@@ -62,7 +62,7 @@ namespace Replanetizer.Frames
         private Dictionary<string, Dictionary<string, PropertyInfo>> properties = new();
 
         public PropertyFrame(
-            Window wnd, LevelFrame? levelFrame = null, string? overrideFrameName = null, 
+            Window wnd, LevelFrame? levelFrame = null, string? overrideFrameName = null,
             bool listenToCallbacks = false, bool hideCallbackButton = false) : base(wnd)
         {
             if (overrideFrameName is { Length: > 0 })
@@ -371,24 +371,37 @@ namespace Replanetizer.Frames
                 {
                     if (ImGui.CollapsingHeader(propertyName))
                     {
-                        List<TextureConfig> textureConfigs = (List<TextureConfig>) val;
-
-                        PropertyInfo[] texConfProps = typeof(TextureConfig).GetProperties();
-
                         int i = 1;
 
                         foreach (TextureConfig t in list)
                         {
+                            ImGui.PushID("TextureConfig" + i);
+
                             ImGui.Text("Texture Config " + i);
 
-                            foreach (PropertyInfo prop in texConfProps)
+                            int id = t.id;
+                            if (ImGui.InputInt("Texture ID", ref id))
                             {
-                                string displayName =
-                                    prop.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName ?? prop.Name;
-
-                                object? o = prop.GetValue(t);
-                                ImGui.LabelText(displayName, (o == null) ? "Null" : o.ToString());
+                                t.id = id;
                             }
+
+                            ImGui.LabelText("Face Start", t.start.ToString());
+                            ImGui.LabelText("Face Count", t.size.ToString());
+                            ImGui.LabelText("Mode", t.mode.ToString());
+
+                            int wrapModeS = (int) t.wrapModeS;
+                            if (ImGui.Combo("Texture Wrap S" + " ###" + i, ref wrapModeS, TextureConfig.WRAP_MODE_STRINGS, TextureConfig.WRAP_MODE_STRINGS.Length))
+                            {
+                                t.wrapModeS = (TextureConfig.WrapMode) wrapModeS;
+                            }
+
+                            int wrapModeT = (int) t.wrapModeT;
+                            if (ImGui.Combo("Texture Wrap T", ref wrapModeT, TextureConfig.WRAP_MODE_STRINGS, TextureConfig.WRAP_MODE_STRINGS.Length))
+                            {
+                                t.wrapModeT = (TextureConfig.WrapMode) wrapModeT;
+                            }
+
+                            ImGui.PopID();
 
                             i++;
                         }

@@ -44,26 +44,29 @@ void main() {
 	UV = vertexUV;
 
     // Light color is precomputed on PS3 but we do it here instead.
-	lightColor = vec3(1.0f);
+	vec3 directionalLight = vec3(0.0f);
+    if (levelObjectType >= 1 && levelObjectType <= 4) {
+        int index = lightIndex;
 
-	int index = lightIndex;
-	vec3 diffuseColor = vec3(0.0f);
+        if (levelObjectType == 1) {
+            index = min(ALLOCATED_LIGHTS - 1, int(vertexTerrainLight));
+        }
 
-	if (levelObjectType == 1) {
-		index = min(ALLOCATED_LIGHTS - 1, int(vertexTerrainLight));
-	}
+        Light l = light[index];
 
-	Light l = light[index];
+        directionalLight += max(0.0f, -dot(l.direction1.xyz, normal)) * l.color1.xyz;
+        directionalLight += max(0.0f, -dot(l.direction2.xyz, normal)) * l.color2.xyz;
+    }
 
-	diffuseColor += max(0.0f, -dot(l.direction1.xyz, normal)) * l.color1.xyz;
-	diffuseColor += max(0.0f, -dot(l.direction2.xyz, normal)) * l.color2.xyz;
-
+    vec3 diffuseLight = vec3(1.0f);
 	if (levelObjectType == 1 || levelObjectType == 3) {
-		lightColor = mix(vertexRGBA.xyz, diffuseColor, 0.5f);
+        diffuseLight = vertexRGBA.xyz;
 	}
 	else if (levelObjectType == 2 || levelObjectType == 4) {
-		lightColor = mix(staticColor.xyz, diffuseColor, 0.5f);
+        diffuseLight = staticColor.xyz;
 	}
+
+    lightColor = mix(diffuseLight, directionalLight, 0.5f);
 
 	fogBlend = 0.0f;
 

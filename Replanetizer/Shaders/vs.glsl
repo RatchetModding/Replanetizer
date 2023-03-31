@@ -31,13 +31,8 @@ uniform mat4 ModelToWorld;
 uniform int levelObjectType;
 uniform int lightIndex;
 uniform int useFog;
-uniform float fogNearDistance;
-uniform float fogFarDistance;
-uniform float fogNearIntensity;
-uniform float fogFarIntensity;
+uniform vec4 fogParams;
 uniform vec4 staticColor;
-
-
 
 void main() {
 	// Output position of the vertex, in clip space : MVP * position
@@ -48,6 +43,7 @@ void main() {
 	// UV of the vertex. No special space for this one.
 	UV = vertexUV;
 
+    // Light color is precomputed on PS3 but we do it here instead.
 	lightColor = vec3(1.0f);
 
 	int index = lightIndex;
@@ -63,21 +59,19 @@ void main() {
 	diffuseColor += max(0.0f, -dot(l.direction2.xyz, normal)) * l.color2.xyz;
 
 	if (levelObjectType == 1 || levelObjectType == 3) {
-		lightColor = vertexRGBA.xyz + diffuseColor;
+		lightColor = mix(vertexRGBA.xyz, diffuseColor, 0.5f);
 	}
 	else if (levelObjectType == 2 || levelObjectType == 4) {
-		lightColor = staticColor.xyz + diffuseColor;
+		lightColor = mix(staticColor.xyz, diffuseColor, 0.5f);
 	}
 
 	fogBlend = 0.0f;
 
 	if (useFog == 1 && levelObjectType >= 1 && levelObjectType <= 4) {
-        // The magic numbers are from observations
-        // Maybe figure out where exactly they come from
-        float depth = gl_Position.z - fogNearDistance * 0.0009765625f;
+        float depth = gl_Position.w - fogParams.x;
 
-        depth = clamp(depth * 1152.0f / fogFarDistance, 0.0f, 1.0f);
+        depth = clamp(depth * fogParams.y, 0.0f, 1.0f);
 
-		fogBlend = (1.0f - fogNearIntensity) + depth * (fogNearIntensity - fogFarIntensity);
+		fogBlend = fogParams.z + depth * fogParams.w;
 	}
 }

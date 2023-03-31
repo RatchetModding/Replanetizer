@@ -539,10 +539,7 @@ namespace Replanetizer.Frames
             shaderIDTable.uniformColor = GL.GetUniformLocation(shaderIDTable.shaderColor, "incolor");
 
             shaderIDTable.uniformFogColor = GL.GetUniformLocation(shaderIDTable.shaderMain, "fogColor");
-            shaderIDTable.uniformFogNearDist = GL.GetUniformLocation(shaderIDTable.shaderMain, "fogNearDistance");
-            shaderIDTable.uniformFogFarDist = GL.GetUniformLocation(shaderIDTable.shaderMain, "fogFarDistance");
-            shaderIDTable.uniformFogNearIntensity = GL.GetUniformLocation(shaderIDTable.shaderMain, "fogNearIntensity");
-            shaderIDTable.uniformFogFarIntensity = GL.GetUniformLocation(shaderIDTable.shaderMain, "fogFarIntensity");
+            shaderIDTable.uniformFogParams = GL.GetUniformLocation(shaderIDTable.shaderMain, "fogParams");
             shaderIDTable.uniformUseFog = GL.GetUniformLocation(shaderIDTable.shaderMain, "useFog");
 
             shaderIDTable.uniformObjectBlendDistance = GL.GetUniformLocation(shaderIDTable.shaderMain, "objectBlendDistance");
@@ -1401,10 +1398,11 @@ namespace Replanetizer.Frames
             if (level.levelVariables != null)
             {
                 GL.Uniform4(shaderIDTable.uniformFogColor, level.levelVariables.fogColor);
-                GL.Uniform1(shaderIDTable.uniformFogNearDist, level.levelVariables.fogNearDistance);
-                GL.Uniform1(shaderIDTable.uniformFogFarDist, level.levelVariables.fogFarDistance);
-                GL.Uniform1(shaderIDTable.uniformFogNearIntensity, level.levelVariables.fogNearIntensity / 255.0f);
-                GL.Uniform1(shaderIDTable.uniformFogFarIntensity, level.levelVariables.fogFarIntensity / 255.0f);
+                GL.Uniform4(shaderIDTable.uniformFogParams,
+                            level.levelVariables.fogNearDistance / 1024.0f,
+                            1024.0f / (level.levelVariables.fogFarDistance - level.levelVariables.fogNearDistance),
+                            1.0f - level.levelVariables.fogNearIntensity / 255.0f,
+                            1.0f - level.levelVariables.fogFarIntensity / 255.0f);
                 GL.Uniform1(shaderIDTable.uniformUseFog, (enableFog) ? 1 : 0);
             }
 

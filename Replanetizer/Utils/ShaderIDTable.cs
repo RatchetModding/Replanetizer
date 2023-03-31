@@ -22,10 +22,7 @@ namespace Replanetizer.Utils
         public int uniformSkyWorldToViewMatrix { get; set; }
         public int uniformUseFog { get; set; }
         public int uniformFogColor { get; set; }
-        public int uniformFogFarDist { get; set; }
-        public int uniformFogNearDist { get; set; }
-        public int uniformFogFarIntensity { get; set; }
-        public int uniformFogNearIntensity { get; set; }
+        public int uniformFogParams { get; set; }
         public int uniformObjectBlendDistance { get; set; }
         public int uniformLevelObjectType { get; set; }
         public int uniformLevelObjectNumber { get; set; }

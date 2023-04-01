@@ -573,6 +573,8 @@ namespace Replanetizer.Frames
                 {
                     GL.BindTexture(TextureTarget.Texture2D, (conf.id >= 0 && conf.id < selectedTextureSet.Count) ? levelFrame.textureIds[selectedTextureSet[conf.id]] : 0);
                     GL.Uniform1(shaderIDTable.uniformUseTransparency, (conf.IgnoresTransparency()) ? 0 : 1);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) ((conf.wrapModeS == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge));
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) ((conf.wrapModeT == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge));
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
 

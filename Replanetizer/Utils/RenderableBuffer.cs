@@ -25,6 +25,8 @@ namespace Replanetizer.Utils
 
         private int loadedModelID = -1;
 
+        private bool emptyModel = false;
+
         private int ibo = 0;
         private int vbo = 0;
 
@@ -66,11 +68,15 @@ namespace Replanetizer.Utils
             if (iboAllocated)
             {
                 GL.DeleteBuffer(ibo);
+                ibo = 0;
+                iboAllocated = false;
             }
 
             if (vboAllocated)
             {
                 GL.DeleteBuffer(vbo);
+                vbo = 0;
+                vboAllocated = false;
             }
         }
 
@@ -81,6 +87,14 @@ namespace Replanetizer.Utils
         {
             DeleteBuffers();
             loadedModelID = modelObject.modelID;
+
+            if (modelObject.GetIndices().Length == 0)
+            {
+                emptyModel = true;
+                return;
+            }
+
+            emptyModel = false;
 
             BufferUsageHint hint = BufferUsageHint.StaticDraw;
             if (modelObject.IsDynamic())
@@ -296,6 +310,8 @@ namespace Replanetizer.Utils
         /// </summary>
         public void ComputeCulling(Camera camera, bool distanceCulling, bool frustumCulling)
         {
+            if (emptyModel) return;
+
             if (distanceCulling)
             {
                 float dist = (modelObject.position - camera.position).Length;
@@ -370,6 +386,7 @@ namespace Replanetizer.Utils
         public void Render()
         {
             if (SHADER_ID_TABLE == null) return;
+            if (emptyModel) return;
             if (culled) return;
             if (!BindIbo() || !BindVbo()) return;
             if (modelObject.model == null) return;

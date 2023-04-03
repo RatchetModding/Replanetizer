@@ -24,20 +24,108 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Mission ID"), Description("Every planet has a set of missions. If a moby is assigned to a mission, its spawning behaviour can be based on whether the mission is completed.")]
         public int missionID { get; set; }
 
+        [Category("Attributes"), DisplayName("Spawn Type Bitmask"), Description("Each bit corresponds to a spawn related boolean.")]
+        public int spawnType { get; set; }
+
         [Category("Attributes"), DisplayName("Spawn Before Mission Completion?"), Description("Moby will still spawn after mission completion if there was no interaction with it yet.")]
-        public bool spawnBeforeMissionCompletion { get; set; }
+        public bool spawnBeforeMissionCompletion
+        {
+            get
+            {
+                return (spawnType & 0b00001) > 0;
+            }
+            set
+            {
+                if (value)
+                {
+                    spawnType |= 0b00001;
+                }
+                else
+                {
+                    spawnType &= ~0b00001;
+                }
+            }
+        }
 
         [Category("Attributes"), DisplayName("Spawn After Mission Completion?")]
-        public bool spawnAfterMissionCompletion { get; set; }
+        public bool spawnAfterMissionCompletion
+        {
+            get
+            {
+                return (spawnType & 0b00010) > 0;
+            }
+            set
+            {
+                if (value)
+                {
+                    spawnType |= 0b00010;
+                }
+                else
+                {
+                    spawnType &= ~0b00010;
+                }
+            }
+        }
 
         [Category("Attributes"), DisplayName("Is Crate?")]
-        public bool isCrate { get; set; }
+        public bool isCrate
+        {
+            get
+            {
+                return (spawnType & 0b00100) > 0;
+            }
+            set
+            {
+                if (value)
+                {
+                    spawnType |= 0b00100;
+                }
+                else
+                {
+                    spawnType &= ~0b00100;
+                }
+            }
+        }
 
         [Category("Attributes"), DisplayName("Spawn Before Death?"), Description("Moby will still spawn after death if there was no interaction with it yet.")]
-        public bool spawnBeforeDeath { get; set; }
+        public bool spawnBeforeDeath
+        {
+            get
+            {
+                return (spawnType & 0b01000) > 0;
+            }
+            set
+            {
+                if (value)
+                {
+                    spawnType |= 0b01000;
+                }
+                else
+                {
+                    spawnType &= ~0b01000;
+                }
+            }
+        }
 
         [Category("Attributes"), DisplayName("Is Spawner?")]
-        public bool isSpawner { get; set; }
+        public bool isSpawner
+        {
+            get
+            {
+                return (spawnType & 0b10000) > 0;
+            }
+            set
+            {
+                if (value)
+                {
+                    spawnType |= 0b10000;
+                }
+                else
+                {
+                    spawnType &= ~0b10000;
+                }
+            }
+        }
 
         [Category("Unknowns"), DisplayName("Data Value")]
         public int dataval { get; set; }
@@ -194,11 +282,7 @@ namespace LibReplanetizer.LevelObjects
             this.dataval = referenceMoby.dataval;
             this.model = referenceMoby.model;
             this.modelID = referenceMoby.modelID;
-            this.spawnBeforeMissionCompletion = referenceMoby.spawnBeforeMissionCompletion;
-            this.spawnAfterMissionCompletion = referenceMoby.spawnAfterMissionCompletion;
-            this.isCrate = referenceMoby.isCrate;
-            this.spawnBeforeDeath = referenceMoby.spawnBeforeDeath;
-            this.isSpawner = referenceMoby.isSpawner;
+            this.spawnType = referenceMoby.spawnType;
             this.updateDistance = referenceMoby.updateDistance;
             this.light = referenceMoby.light;
             this.color = referenceMoby.color;
@@ -262,7 +346,7 @@ namespace LibReplanetizer.LevelObjects
         {
             int offset = num * game.mobyElemSize;
             missionID = ReadInt(mobyBlock, offset + 0x04);
-            int spawnType = ReadInt(mobyBlock, offset + 0x08);
+            spawnType = ReadInt(mobyBlock, offset + 0x08);
             mobyID = ReadInt(mobyBlock, offset + 0x0C);
 
             bolts = ReadInt(mobyBlock, offset + 0x10);
@@ -306,12 +390,6 @@ namespace LibReplanetizer.LevelObjects
             rotation = new Quaternion(rotx, roty, rotz);
             scale = new Vector3(scaleHolder, scaleHolder, scaleHolder);
 
-            spawnBeforeMissionCompletion = (spawnType & 0b00001) > 0;
-            spawnAfterMissionCompletion = (spawnType & 0b00010) > 0;
-            isCrate = (spawnType & 0b00100) > 0;
-            spawnBeforeDeath = (spawnType & 0b01000) > 0;
-            isSpawner = (spawnType & 0b10000) > 0;
-
             model = mobyModels.Find(mobyModel => mobyModel.id == modelID);
             UpdateTransformMatrix();
         }
@@ -322,7 +400,7 @@ namespace LibReplanetizer.LevelObjects
 
             missionID = ReadInt(mobyBlock, offset + 0x04);
             dataval = ReadInt(mobyBlock, offset + 0x08);
-            int spawnType = ReadInt(mobyBlock, offset + 0x0C);
+            spawnType = ReadInt(mobyBlock, offset + 0x0C);
 
             mobyID = ReadInt(mobyBlock, offset + 0x10);
             bolts = ReadInt(mobyBlock, offset + 0x14);
@@ -370,18 +448,6 @@ namespace LibReplanetizer.LevelObjects
             position = new Vector3(x, y, z);
             rotation = new Quaternion(rotx, roty, rotz);
             scale = new Vector3(scaleHolder); //Mobys only use the X axis of scale
-
-            spawnBeforeMissionCompletion = (spawnType & 0b00001) > 0;
-            spawnAfterMissionCompletion = (spawnType & 0b00010) > 0;
-            isCrate = (spawnType & 0b00100) > 0;
-            spawnBeforeDeath = (spawnType & 0b01000) > 0;
-            isSpawner = (spawnType & 0b10000) > 0;
-
-            spawnBeforeMissionCompletion = (spawnType & 0b00001) > 0;
-            spawnAfterMissionCompletion = (spawnType & 0b00010) > 0;
-            isCrate = (spawnType & 0b00100) > 0;
-            spawnBeforeDeath = (spawnType & 0b01000) > 0;
-            isSpawner = (spawnType & 0b10000) > 0;
 
             model = mobyModels.Find(mobyModel => mobyModel.id == modelID);
             UpdateTransformMatrix();
@@ -461,13 +527,6 @@ namespace LibReplanetizer.LevelObjects
         {
             Vector3 eulerAngles = rotation.ToEulerAngles();
 
-            int spawnType = 0;
-            spawnType += (spawnBeforeMissionCompletion) ? 0b00001 : 0;
-            spawnType += (spawnAfterMissionCompletion) ? 0b00010 : 0;
-            spawnType += (isCrate) ? 0b00100 : 0;
-            spawnType += (spawnBeforeDeath) ? 0b01000 : 0;
-            spawnType += (isSpawner) ? 0b10000 : 0;
-
             byte[] buffer = new byte[game.mobyElemSize];
 
             WriteInt(buffer, 0x00, game.mobyElemSize);
@@ -517,13 +576,6 @@ namespace LibReplanetizer.LevelObjects
         private byte[] ToByteArrayRC23()
         {
             Vector3 eulerAngles = rotation.ToEulerAngles();
-
-            int spawnType = 0;
-            spawnType += (spawnBeforeMissionCompletion) ? 0b00001 : 0;
-            spawnType += (spawnAfterMissionCompletion) ? 0b00010 : 0;
-            spawnType += (isCrate) ? 0b00100 : 0;
-            spawnType += (spawnBeforeDeath) ? 0b01000 : 0;
-            spawnType += (isSpawner) ? 0b10000 : 0;
 
             byte[] buffer = new byte[game.mobyElemSize];
 

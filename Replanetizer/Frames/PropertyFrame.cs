@@ -99,7 +99,7 @@ namespace Replanetizer.Frames
             if (selectedObject == null)
                 return;
 
-            var objProps = selectedObject.GetType().GetProperties();
+            PropertyInfo[] objProps = selectedObject.GetType().GetProperties();
             foreach (var prop in objProps)
             {
                 string category =
@@ -165,6 +165,7 @@ namespace Replanetizer.Frames
         {
             object? val = propertyInfo.GetValue(selectedObject);
             Type? type = propertyInfo.GetSetMethod() == null ? null : propertyInfo.PropertyType;
+            string? description = propertyInfo.GetCustomAttribute<DescriptionAttribute>()?.Description ?? null;
 
             if (val == null)
             {
@@ -223,6 +224,15 @@ namespace Replanetizer.Frames
             {
                 float v = (float) val;
                 if (ImGui.InputFloat(propertyName, ref v))
+                {
+                    propertyInfo.SetValue(selectedObject, v);
+                    UpdateLevelFrame();
+                }
+            }
+            else if (type == typeof(bool))
+            {
+                bool v = (bool) val;
+                if (ImGui.Checkbox(propertyName, ref v))
                 {
                     propertyInfo.SetValue(selectedObject, v);
                     UpdateLevelFrame();
@@ -414,7 +424,24 @@ namespace Replanetizer.Frames
                 }
             }
             else
+            {
                 ImGui.LabelText(propertyName, Convert.ToString(val));
+            }
+
+            if (description != null)
+            {
+                ImGui.SameLine();
+
+                ImGui.TextDisabled("(?)");
+                if (ImGui.IsItemHovered())
+                {
+                    ImGui.BeginTooltip();
+                    ImGui.PushTextWrapPos(ImGui.GetFontSize() * 40.0f);
+                    ImGui.TextUnformatted(description);
+                    ImGui.PopTextWrapPos();
+                    ImGui.EndTooltip();
+                }
+            }
         }
     }
 }

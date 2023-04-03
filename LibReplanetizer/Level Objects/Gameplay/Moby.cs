@@ -87,7 +87,7 @@ namespace LibReplanetizer.LevelObjects
             }
         }
 
-        [Category("Attributes"), DisplayName("Spawn Before Death?"), Description("Moby will still spawn after death if there was no interaction with it yet.")]
+        [Category("Attributes"), DisplayName("Spawn Before Death?"), Description("Moby will still spawn after death if there was no interaction with it yet. This moby will always spawn when the level is loaded.")]
         public bool spawnBeforeDeath
         {
             get
@@ -127,7 +127,7 @@ namespace LibReplanetizer.LevelObjects
             }
         }
 
-        [Category("Unknowns"), DisplayName("Data Value")]
+        [Category("Attributes"), DisplayName("Data Value"), Description("This value probably defines instance specific behaviour. The exact behaviour any value corresponds to probably depends on the specific moby class.")]
         public int dataval { get; set; }
 
         [Category("Attributes"), DisplayName("Bolt Drop")]

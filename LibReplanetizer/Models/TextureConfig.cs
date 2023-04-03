@@ -31,6 +31,7 @@ namespace LibReplanetizer
         public int size { get; set; }
         [Category("Attributes"), DisplayName("Mode")]
         public int mode { get; set; }
+        [Category("Attributes"), DisplayName("Texture Wrap S")]
         public WrapMode wrapModeS
         {
             get
@@ -83,6 +84,7 @@ namespace LibReplanetizer
             }
         }
 
+        [Category("Attributes"), DisplayName("Texture Wrap T")]
         public WrapMode wrapModeT
         {
             get

@@ -19,7 +19,7 @@ namespace LibReplanetizer.LevelObjects
     {
         public const int ELEMENTSIZE = 0x70;
 
-        [Category("Attributes"), DisplayName("Draw Distance")]
+        [Category("Attributes"), DisplayName("Draw Distance"), Description("The distance at which an object will start fading out. After a distance of 8 more units, the object will stop being drawn.")]
         public float drawDistance { get; set; }
         [Category("Unknowns"), DisplayName("OFF_58: Always 0")]
         public uint off58 { get; set; }
@@ -30,11 +30,11 @@ namespace LibReplanetizer.LevelObjects
         // Changing it to red will make the shrub be very red
         // the texture remains visible so cleary the visible
         // color is some blend between texture and this
-        [Category("Attributes"), DisplayName("Static Color")]
+        [Category("Attributes"), DisplayName("Static Color"), Description("Static diffuse lighting applied to the shrub.")]
         public Color color { get; set; }
         [Category("Unknowns"), DisplayName("OFF_64: Always 0")]
         public uint off64 { get; set; }
-        [Category("Attributes"), DisplayName("Light")]
+        [Category("Attributes"), DisplayName("Light"), Description("Index of the directional light that is applied to the shrub.")]
         public ushort light { get; set; }
         [Category("Unknowns"), DisplayName("OFF_6C: Always 0")]
         public uint off6C { get; set; }

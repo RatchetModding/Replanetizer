@@ -62,7 +62,7 @@ namespace Replanetizer.Frames
         private Dictionary<string, Dictionary<string, PropertyInfo>> properties = new();
 
         public PropertyFrame(
-            Window wnd, LevelFrame? levelFrame = null, string? overrideFrameName = null, 
+            Window wnd, LevelFrame? levelFrame = null, string? overrideFrameName = null,
             bool listenToCallbacks = false, bool hideCallbackButton = false) : base(wnd)
         {
             if (overrideFrameName is { Length: > 0 })
@@ -99,7 +99,7 @@ namespace Replanetizer.Frames
             if (selectedObject == null)
                 return;
 
-            var objProps = selectedObject.GetType().GetProperties();
+            PropertyInfo[] objProps = selectedObject.GetType().GetProperties();
             foreach (var prop in objProps)
             {
                 string category =
@@ -165,6 +165,7 @@ namespace Replanetizer.Frames
         {
             object? val = propertyInfo.GetValue(selectedObject);
             Type? type = propertyInfo.GetSetMethod() == null ? null : propertyInfo.PropertyType;
+            string? description = propertyInfo.GetCustomAttribute<DescriptionAttribute>()?.Description ?? null;
 
             if (val == null)
             {
@@ -223,6 +224,15 @@ namespace Replanetizer.Frames
             {
                 float v = (float) val;
                 if (ImGui.InputFloat(propertyName, ref v))
+                {
+                    propertyInfo.SetValue(selectedObject, v);
+                    UpdateLevelFrame();
+                }
+            }
+            else if (type == typeof(bool))
+            {
+                bool v = (bool) val;
+                if (ImGui.Checkbox(propertyName, ref v))
                 {
                     propertyInfo.SetValue(selectedObject, v);
                     UpdateLevelFrame();
@@ -371,24 +381,37 @@ namespace Replanetizer.Frames
                 {
                     if (ImGui.CollapsingHeader(propertyName))
                     {
-                        List<TextureConfig> textureConfigs = (List<TextureConfig>) val;
-
-                        PropertyInfo[] texConfProps = typeof(TextureConfig).GetProperties();
-
                         int i = 1;
 
                         foreach (TextureConfig t in list)
                         {
+                            ImGui.PushID("TextureConfig" + i);
+
                             ImGui.Text("Texture Config " + i);
 
-                            foreach (PropertyInfo prop in texConfProps)
+                            int id = t.id;
+                            if (ImGui.InputInt("Texture ID", ref id))
                             {
-                                string displayName =
-                                    prop.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName ?? prop.Name;
-
-                                object? o = prop.GetValue(t);
-                                ImGui.LabelText(displayName, (o == null) ? "Null" : o.ToString());
+                                t.id = id;
                             }
+
+                            ImGui.LabelText("Face Start", t.start.ToString());
+                            ImGui.LabelText("Face Count", t.size.ToString());
+                            ImGui.LabelText("Mode", t.mode.ToString());
+
+                            int wrapModeS = (int) t.wrapModeS;
+                            if (ImGui.Combo("Texture Wrap S" + " ###" + i, ref wrapModeS, TextureConfig.WRAP_MODE_STRINGS, TextureConfig.WRAP_MODE_STRINGS.Length))
+                            {
+                                t.wrapModeS = (TextureConfig.WrapMode) wrapModeS;
+                            }
+
+                            int wrapModeT = (int) t.wrapModeT;
+                            if (ImGui.Combo("Texture Wrap T", ref wrapModeT, TextureConfig.WRAP_MODE_STRINGS, TextureConfig.WRAP_MODE_STRINGS.Length))
+                            {
+                                t.wrapModeT = (TextureConfig.WrapMode) wrapModeT;
+                            }
+
+                            ImGui.PopID();
 
                             i++;
                         }
@@ -401,7 +424,24 @@ namespace Replanetizer.Frames
                 }
             }
             else
+            {
                 ImGui.LabelText(propertyName, Convert.ToString(val));
+            }
+
+            if (description != null)
+            {
+                ImGui.SameLine();
+
+                ImGui.TextDisabled("(?)");
+                if (ImGui.IsItemHovered())
+                {
+                    ImGui.BeginTooltip();
+                    ImGui.PushTextWrapPos(ImGui.GetFontSize() * 40.0f);
+                    ImGui.TextUnformatted(description);
+                    ImGui.PopTextWrapPos();
+                    ImGui.EndTooltip();
+                }
+            }
         }
     }
 }

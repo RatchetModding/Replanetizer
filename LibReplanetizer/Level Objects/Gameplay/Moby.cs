@@ -21,23 +21,113 @@ namespace LibReplanetizer.LevelObjects
 
         private static int MAX_ID = 0;
 
-        [Category("Attributes"), DisplayName("Mission ID")]
+        [Category("Attributes"), DisplayName("Mission ID"), Description("Every planet has a set of missions. If a moby is assigned to a mission, its spawning behaviour can be based on whether the mission is completed.")]
         public int missionID { get; set; }
 
-        public enum SpawnType
+        [Category("Attributes"), DisplayName("Spawn Type Bitmask"), Description("Each bit corresponds to a spawn related boolean. If this value is zero then the game determines through other means how to spawn this moby.")]
+        public int spawnType { get; set; }
+
+        [Category("Attributes"), DisplayName("Spawn Before Mission Completion?"), Description("Moby will still spawn after mission completion if there was no interaction with it yet.")]
+        public bool spawnBeforeMissionCompletion
         {
-            NoRespawn, NoRespawnAtRevisitAfterInteraction, OnlySpawnAtRevisit, AlwaysRespawn, CrateNoRespawnAfterBreaking,
-            CrateAlwaysRespawnAfterBreaking, UnknownType6, UnknownCrateType7, UnknownType8, UnknownType9,
-            UnknownType10, UnknownType11, CrateAlwaysRespawnAtRevisit, UnknownType13, UnknownType14, UnknownType15,
-            UnknownType16, UnknownType17, UnknownType18, UnknownType19, UnknownType20, UnknownType21, UnknownType22,
-            UnknownType23, UnknownType24, UnknownType25, UnknownType26, UnknownType27, UnknownType28, UnknownType29,
-            UnknownType30, UnknownType31, UnknownType32
+            get
+            {
+                return (spawnType & 0b00001) > 0;
+            }
+            set
+            {
+                if (value)
+                {
+                    spawnType |= 0b00001;
+                }
+                else
+                {
+                    spawnType &= ~0b00001;
+                }
+            }
         }
 
-        [Category("Unknowns"), DisplayName("Spawn Type")]
-        public SpawnType spawnType { get; set; }
+        [Category("Attributes"), DisplayName("Spawn After Mission Completion?")]
+        public bool spawnAfterMissionCompletion
+        {
+            get
+            {
+                return (spawnType & 0b00010) > 0;
+            }
+            set
+            {
+                if (value)
+                {
+                    spawnType |= 0b00010;
+                }
+                else
+                {
+                    spawnType &= ~0b00010;
+                }
+            }
+        }
 
-        [Category("Unknowns"), DisplayName("Data Value")]
+        [Category("Attributes"), DisplayName("Is Crate?")]
+        public bool isCrate
+        {
+            get
+            {
+                return (spawnType & 0b00100) > 0;
+            }
+            set
+            {
+                if (value)
+                {
+                    spawnType |= 0b00100;
+                }
+                else
+                {
+                    spawnType &= ~0b00100;
+                }
+            }
+        }
+
+        [Category("Attributes"), DisplayName("Spawn Before Death?"), Description("Moby will still spawn after death if there was no interaction with it yet. This moby will always spawn when the level is loaded.")]
+        public bool spawnBeforeDeath
+        {
+            get
+            {
+                return (spawnType & 0b01000) > 0;
+            }
+            set
+            {
+                if (value)
+                {
+                    spawnType |= 0b01000;
+                }
+                else
+                {
+                    spawnType &= ~0b01000;
+                }
+            }
+        }
+
+        [Category("Attributes"), DisplayName("Is Spawner?")]
+        public bool isSpawner
+        {
+            get
+            {
+                return (spawnType & 0b10000) > 0;
+            }
+            set
+            {
+                if (value)
+                {
+                    spawnType |= 0b10000;
+                }
+                else
+                {
+                    spawnType &= ~0b10000;
+                }
+            }
+        }
+
+        [Category("Attributes"), DisplayName("Data Value"), Description("This value probably defines instance specific behaviour. The exact behaviour any value corresponds to probably depends on the specific moby class.")]
         public int dataval { get; set; }
 
         [Category("Attributes"), DisplayName("Bolt Drop")]
@@ -46,7 +136,7 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Moby ID")]
         public int mobyID { get; set; }
 
-        [Category("Attributes"), DisplayName("Draw Distance")]
+        [Category("Attributes"), DisplayName("Draw Distance"), Description("The distance at which an object will start fading out. After a distance of 8 more units, the object will stop being drawn.")]
         public int drawDistance { get; set; }
 
         [Category("Attributes"), DisplayName("Update Distance")]
@@ -123,10 +213,10 @@ namespace LibReplanetizer.LevelObjects
         [Category("Unknowns"), DisplayName("aUnknown 9")]
         public int unk9 { get; set; }
 
-        [Category("Attributes"), DisplayName("Color")]
+        [Category("Attributes"), DisplayName("Color"), Description("Static diffuse lighting applied to the moby.")]
         public Color color { get; set; }
 
-        [Category("Attributes"), DisplayName("Light")]
+        [Category("Attributes"), DisplayName("Light"), Description("Index of the directional light that is applied to the moby.")]
         public int light { get; set; }
 
         [Category("Attributes"), DisplayName("Cutscene")]
@@ -135,7 +225,7 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("pVars")]
         public byte[] pVars { get; set; }
 
-        public long pVarMemoryAddress;
+        private long pVarMemoryAddress;
 
         [Category("Unknowns"), DisplayName("aUnknown 10")]
         public int unk10 { get; set; }
@@ -256,7 +346,7 @@ namespace LibReplanetizer.LevelObjects
         {
             int offset = num * game.mobyElemSize;
             missionID = ReadInt(mobyBlock, offset + 0x04);
-            spawnType = (SpawnType) ReadInt(mobyBlock, offset + 0x08);
+            spawnType = ReadInt(mobyBlock, offset + 0x08);
             mobyID = ReadInt(mobyBlock, offset + 0x0C);
 
             bolts = ReadInt(mobyBlock, offset + 0x10);
@@ -310,7 +400,7 @@ namespace LibReplanetizer.LevelObjects
 
             missionID = ReadInt(mobyBlock, offset + 0x04);
             dataval = ReadInt(mobyBlock, offset + 0x08);
-            spawnType = (SpawnType) ReadInt(mobyBlock, offset + 0x0C);
+            spawnType = ReadInt(mobyBlock, offset + 0x0C);
 
             mobyID = ReadInt(mobyBlock, offset + 0x10);
             bolts = ReadInt(mobyBlock, offset + 0x14);
@@ -441,7 +531,7 @@ namespace LibReplanetizer.LevelObjects
 
             WriteInt(buffer, 0x00, game.mobyElemSize);
             WriteInt(buffer, 0x04, missionID);
-            WriteInt(buffer, 0x08, (int) spawnType);
+            WriteInt(buffer, 0x08, spawnType);
             WriteInt(buffer, 0x0C, mobyID);
 
             WriteInt(buffer, 0x10, bolts);
@@ -492,7 +582,7 @@ namespace LibReplanetizer.LevelObjects
             WriteInt(buffer, 0x00, game.mobyElemSize);
             WriteInt(buffer, 0x04, missionID);
             WriteInt(buffer, 0x08, dataval);
-            WriteInt(buffer, 0x0C, (int) spawnType);
+            WriteInt(buffer, 0x0C, spawnType);
 
             WriteInt(buffer, 0x10, mobyID);
             WriteInt(buffer, 0x14, bolts);

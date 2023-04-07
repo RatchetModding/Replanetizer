@@ -9,6 +9,7 @@ using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Replanetizer.Frames;
+using Replanetizer.Utils;
 
 namespace Replanetizer.Tools
 {
@@ -19,57 +20,59 @@ namespace Replanetizer.Tools
         public TranslationTool(Toolbox toolbox) : base(toolbox)
         {
             const float length = 2.0f;
+            const float thickness = length / 2.0f;
+            const float thickness2 = length / 3.0f;
 
             vb = new[]{
-                length / 2,     - length / 3,   0,
-                length / 2,     length / 3,     0,
+                thickness,     -thickness2,   0,
+                thickness,     thickness2,     0,
                 length,         0,              0,
 
-                -length / 2,     - length / 3,   0,
-                -length / 2,     length / 3,     0,
+                -thickness,     - thickness2,   0,
+                -thickness,     thickness2,     0,
                 -length,         0,              0,
 
 
-                length / 2,     0,   - length / 3,
-                length / 2,     0,     length / 3,
+                thickness,     0,   - thickness2,
+                thickness,     0,     thickness2,
                 length,         0,              0,
 
-                -length / 2,     0,   - length / 3,
-                -length / 2,     0,     length / 3,
+                -thickness,     0,   - thickness2,
+                -thickness,     0,     thickness2,
                 -length,         0,              0,
 
 
-                -length / 3,    length / 2,     0,
-                length / 3,     length / 2,     0,
+                -thickness2,    thickness,     0,
+                thickness2,     thickness,     0,
                 0,              length,         0,
 
-                -length / 3,    -length / 2,    0,
-                length / 3,     -length / 2,    0,
+                -thickness2,    -thickness,    0,
+                thickness2,     -thickness,    0,
                 0,              -length,        0,
 
-                0,    length / 2,     -length / 3,
-                0,     length / 2,     length / 3,
+                0,    thickness,     -thickness2,
+                0,     thickness,     thickness2,
                 0,              length,         0,
 
-                0,    -length / 2,    -length / 3,
-                0,     -length / 2,    length / 3,
+                0,    -thickness,    -thickness2,
+                0,     -thickness,    thickness2,
                 0,              -length,        0,
 
 
-                -length / 3,    0,              -length / 2,
-                length / 3,     0,              -length / 2,
+                -thickness2,    0,              -thickness,
+                thickness2,     0,              -thickness,
                 0,              0,              -length,
 
-                -length / 3,    0,              length / 2,
-                length / 3,     0,              length / 2,
+                -thickness2,    0,              thickness,
+                thickness2,     0,              thickness,
                 0,              0,              length,
 
-                0,    -length / 3,              -length / 2,
-                0,     length / 3,              -length / 2,
+                0,    -thickness2,              -thickness,
+                0,     thickness2,              -thickness,
                 0,              0,              -length,
 
-                0,    -length / 3,              length / 2,
-                0,     length / 3,              length / 2,
+                0,    -thickness2,              thickness,
+                0,     thickness2,              thickness,
                 0,              0,              length,
             };
         }
@@ -102,20 +105,31 @@ namespace Replanetizer.Tools
             GL.DrawArrays(PrimitiveType.Triangles, 33, 3);
         }
 
-        public override void Transform(LevelObject obj, Vector3 vec, Vector3 pivot)
+        public override void Transform(LevelObject obj, Vector3 pivot, TransformToolData data)
         {
-            var mat = obj.modelMatrix;
+            Matrix4 mat = obj.modelMatrix;
 
             if (toolbox.transformSpace == TransformSpace.Global)
             {
-                var trans = Matrix4.CreateTranslation(vec);
+                float startDist = getLineIntersectionDist(data.cameraPos, data.mousePrevDir, pivot, data.axisDir);
+                Vector3 startPos = data.cameraPos + startDist * data.mousePrevDir;
+
+                float finalDist = getLineIntersectionDist(startPos, data.axisDir, data.cameraPos, data.mouseCurrDir);
+
+                Matrix4 trans = Matrix4.CreateTranslation(finalDist * data.axisDir);
                 mat = mat * trans;
             }
             else if (toolbox.transformSpace == TransformSpace.Local)
             {
-                // Compensate for scale diminishing the strength of the translation
-                var trans = Matrix4.CreateTranslation(vec/obj.scale.LengthFast);
-                mat = trans * mat;
+                Vector3 aDir = (mat.Inverted() * new Vector4(data.axisDir, 0.0f)).Xyz;
+
+                float startDist = getLineIntersectionDist(data.cameraPos, data.mousePrevDir, pivot, aDir);
+                Vector3 startPos = data.cameraPos + startDist * data.mousePrevDir;
+
+                float finalDist = getLineIntersectionDist(startPos, aDir, data.cameraPos, data.mouseCurrDir);
+
+                Matrix4 trans = Matrix4.CreateTranslation(finalDist * aDir);
+                mat = mat * trans;
             }
 
             obj.SetFromMatrix(mat);

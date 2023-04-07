@@ -63,9 +63,13 @@ namespace LibReplanetizer.Models
         [Category("Attributes"), DisplayName("Bone Datas")]
         public List<BoneData> boneDatas { get; set; } = new List<BoneData>();
 
-
+        [Category("Unknowns"), DisplayName("Other Buffer")]
         public List<byte> otherBuffer { get; set; } = new List<byte>();
+
+        [Category("Unknowns"), DisplayName("Other Texture Configurations")]
         public List<TextureConfig> otherTextureConfigs { get; set; } = new List<TextureConfig>();
+
+        [Category("Unknowns"), DisplayName("Other Index Buffer")]
         public List<ushort> otherIndexBuffer { get; set; } = new List<ushort>();
         public Skeleton? skeleton = null;
         [Category("Attributes"), DisplayName("Is Model")]

@@ -154,6 +154,7 @@ namespace LibReplanetizer
         public ExporterModelSettings.Format format = ExporterModelSettings.Format.Collada;
         public ExporterModelSettings.AnimationChoice animationChoice = ExporterModelSettings.AnimationChoice.None;
         public bool exportMtlFile = true;
+        public bool extendedFeatures = false;
 
         public ExporterModelSettings()
         {

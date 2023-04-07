@@ -78,7 +78,7 @@ namespace Replanetizer.Frames
         private const float CLIP_FAR = 100f;
         private const float FIELD_OF_VIEW = MathF.PI / 3;  // 60 degrees
 
-        private bool invalidate = true, initialized = false;
+        private bool initialized = false;
 
         private Matrix4 trans, scale, worldView, rot = Matrix4.Identity;
 
@@ -115,7 +115,7 @@ namespace Replanetizer.Frames
 
                 ImGui.SetNextWindowSize(startSize);
             }
-                
+
             if (ImGui.Begin(frameName, ref isOpen, ImGuiWindowFlags.NoSavedSettings))
             {
                 Render(deltaTime);
@@ -260,24 +260,21 @@ namespace Replanetizer.Frames
             ImGui.SetColumnWidth(0, 250);
             ImGui.SetColumnWidth(1, (float) width);
             ImGui.SetColumnWidth(2, 320);
-            RenderTree();    
+            RenderTree();
             ImGui.NextColumn();
 
             Tick(deltaTime);
 
-            if (invalidate)
+            renderer.RenderToTexture(() =>
             {
-                renderer.RenderToTexture(() =>
-                {
-                    //Setup openGL variables
-                    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-                    GL.Enable(EnableCap.DepthTest);
-                    GL.Viewport(0, 0, width, height);
+                //Setup openGL variables
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+                GL.Enable(EnableCap.DepthTest);
+                GL.Viewport(0, 0, width, height);
 
-                    OnPaint();
-                });
-                invalidate = false;
-            }
+                OnPaint();
+            });
+
             ImGui.Image((IntPtr) renderer.outputTexture, new System.Numerics.Vector2(width, height),
                 System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
 
@@ -289,6 +286,7 @@ namespace Replanetizer.Frames
             {
                 if (selectedModel != null)
                 {
+                    UpdateTextures();
                     if (modelTextureList != null && modelTextureList.Count > 0)
                     {
                         TextureFrame.RenderTextureList(modelTextureList, 64, levelFrame.textureIds);
@@ -317,6 +315,7 @@ namespace Replanetizer.Frames
                     if (exportSettings.format == ExporterModelSettings.Format.Wavefront)
                     {
                         ImGui.Checkbox("Include MTL File", ref exportSettings.exportMtlFile);
+                        ImGui.Checkbox("Extended Features", ref exportSettings.extendedFeatures);
                     }
 
                     if (ImGui.Button("Export model"))
@@ -359,7 +358,6 @@ namespace Replanetizer.Frames
 
             if (width != prevWidth || height != prevHeight)
             {
-                invalidate = true;
                 OnResize();
             }
 
@@ -387,7 +385,7 @@ namespace Replanetizer.Frames
             selectedObjectInstances.Clear();
 
             if (selectedModel == null)
-            { 
+            {
                 return;
             }
 
@@ -428,7 +426,6 @@ namespace Replanetizer.Frames
             if (selectedModel == null) return;
 
             scale = Matrix4.CreateScale(selectedModel.size);
-            invalidate = true;
             propertyFrame.selectedObject = selectedModel;
             UpdateTextures();
 
@@ -576,6 +573,9 @@ namespace Replanetizer.Frames
                 foreach (TextureConfig conf in selectedModel.textureConfig)
                 {
                     GL.BindTexture(TextureTarget.Texture2D, (conf.id >= 0 && conf.id < selectedTextureSet.Count) ? levelFrame.textureIds[selectedTextureSet[conf.id]] : 0);
+                    GL.Uniform1(shaderIDTable.uniformUseTransparency, (conf.IgnoresTransparency()) ? 0 : 1);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) ((conf.wrapModeS == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge));
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) ((conf.wrapModeT == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge));
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
 
@@ -583,8 +583,6 @@ namespace Replanetizer.Frames
                 GL.DisableVertexAttribArray(1);
                 GL.DisableVertexAttribArray(0);
             }
-
-            invalidate = false;
         }
 
         private void Tick(float deltaTime)
@@ -624,7 +622,6 @@ namespace Replanetizer.Frames
                     zoom = prevZoom;
                 }
                 worldView = CreateWorldView();
-                invalidate = true;
             }
         }
 
@@ -643,14 +640,12 @@ namespace Replanetizer.Frames
 
             xDelta += wnd.MouseState.Delta.X * deltaTime;
             rot = Matrix4.CreateRotationZ(xDelta);
-            invalidate = true;
             return true;
         }
 
         private void OnResize()
         {
             worldView = CreateWorldView();
-            invalidate = true;
 
             renderer?.Dispose();
             renderer = new FramebufferRenderer(width, height);

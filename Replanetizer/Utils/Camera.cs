@@ -21,7 +21,7 @@ namespace Replanetizer.Utils
         public float fovy { get; set; } = (float) 3 / MathF.PI;
         public float aspect { get; set; } = (float) 16 / 9;
         public float near { get; set; } = 0.1f;
-        public float far { get; set; } = 10000.0f;
+        public float far { get; set; } = 1024.0f;
 
         /// <summary>
         /// The frustum is defined by 6 planes which are each defined by a point and a normal.

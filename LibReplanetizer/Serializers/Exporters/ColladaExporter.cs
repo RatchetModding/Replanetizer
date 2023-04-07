@@ -33,6 +33,28 @@ namespace LibReplanetizer
             return ".dae";
         }
 
+        private enum ColladaFXSamplerWrapCommon
+        {
+            WRAP = 0, //GL_REPEAT
+            MIRROR = 1, // GL_MIRRORED_REPEAT
+            CLAMP = 2, // GL_CLAMP_TO_EDGE
+            BORDER = 3, // GL_CLAMP_TO_BORDER
+            NONE = 4 // GL_CLAMP_TO_BORDER
+        };
+
+        private ColladaFXSamplerWrapCommon GetFXSamplerWrapCommon(TextureConfig.WrapMode wrapMode)
+        {
+            switch (wrapMode)
+            {
+                case TextureConfig.WrapMode.Repeat:
+                    return ColladaFXSamplerWrapCommon.WRAP;
+                case TextureConfig.WrapMode.ClampEdge:
+                    return ColladaFXSamplerWrapCommon.CLAMP;
+                default:
+                    return ColladaFXSamplerWrapCommon.NONE;
+            }
+        }
+
         private void WriteSkeleton(StreamWriter colladaStream, Skeleton skeleton, float size, string indent = "")
         {
             Matrix3x4 trans = skeleton.bone.transformation;
@@ -141,8 +163,19 @@ namespace LibReplanetizer
                 }
             }
 
+            // Duplicate single frame animations so that they are visible in tools like Blender
+            if (anim.frames.Count == 1)
+            {
+                timeString += (frameStartTime).ToString("G", en_US) + " ";
+            }
+
             string interpString = "";
             for (int j = 0; j < anim.frames.Count; j++)
+            {
+                interpString += "LINEAR ";
+            }
+
+            if (anim.frames.Count == 1)
             {
                 interpString += "LINEAR ";
             }
@@ -165,6 +198,10 @@ namespace LibReplanetizer
                 foreach (Frame frame in anim.frames)
                 {
                     WriteAnimationFrameOfBone(colladaStream, frame, k, model);
+                }
+                if (anim.frames.Count == 1)
+                {
+                    WriteAnimationFrameOfBone(colladaStream, anim.frames[0], k, model);
                 }
                 colladaStream.WriteLine("</float_array>");
                 colladaStream.WriteLine(indent + "\t\t\t<technique_common>");
@@ -341,8 +378,8 @@ namespace LibReplanetizer
                     colladaStream.WriteLine("\t\t\t\t<newparam sid=\"sampler_" + config.id + "\">");
                     colladaStream.WriteLine("\t\t\t\t\t<sampler2D>");
                     colladaStream.WriteLine("\t\t\t\t\t\t<source>surface_" + config.id + "</source>");
-                    colladaStream.WriteLine("\t\t\t\t\t\t<wrap_s>WRAP</wrap_s>");
-                    colladaStream.WriteLine("\t\t\t\t\t\t<wrap_t>WRAP</wrap_t>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<wrap_s>" + GetFXSamplerWrapCommon(config.wrapModeS).ToString() + "</wrap_s>");
+                    colladaStream.WriteLine("\t\t\t\t\t\t<wrap_t>" + GetFXSamplerWrapCommon(config.wrapModeT).ToString() + "</wrap_t>");
                     colladaStream.WriteLine("\t\t\t\t\t\t<minfilter>LINEAR_MIPMAP_LINEAR</minfilter>");
                     colladaStream.WriteLine("\t\t\t\t\t\t<magfilter>LINEAR</magfilter>");
                     colladaStream.WriteLine("\t\t\t\t\t</sampler2D>");
@@ -658,9 +695,15 @@ namespace LibReplanetizer
                             }
                             else
                             {
+                                int k = 0;
                                 for (int i = 0; i < anims.Count; i++)
                                 {
-                                    WriteAnimation(colladaStream, anims[i], moby.boneCount, "Anim" + i.ToString(), moby, "\t\t");
+                                    if (anims[i].frames.Count != 0)
+                                    {
+                                        WriteAnimation(colladaStream, anims[i], moby.boneCount, "Anim" + k.ToString(), moby, "\t\t");
+                                        k++;
+                                    }
+
                                 }
                             }
                         }
@@ -736,13 +779,28 @@ namespace LibReplanetizer
 
                 if (dir == null) dir = "";
 
-                int numFilesExported = ((MobyModel) model).animations.Count;
+                List<Animation> anims;
+                if (model.id == 0)
+                {
+                    anims = level.playerAnimations;
+                }
+                else
+                {
+                    anims = ((MobyModel) model).animations;
+                }
 
-                for (int i = 0; i < numFilesExported; i++)
+                List<int> nonzeroAnimations = new List<int>();
+
+                for (int i = 0; i < anims.Count; i++)
+                {
+                    if (anims[i].frames.Count != 0) nonzeroAnimations.Add(i);
+                }
+
+                for (int i = 0; i < nonzeroAnimations.Count; i++)
                 {
                     string filePath = Path.Combine(dir, fileName + "_" + i.ToString() + fileExt);
 
-                    WriteData(filePath, level, model, true, i);
+                    WriteData(filePath, level, model, true, nonzeroAnimations[i]);
                 }
             }
             else

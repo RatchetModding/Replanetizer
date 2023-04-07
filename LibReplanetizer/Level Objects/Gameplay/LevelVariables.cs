@@ -23,23 +23,31 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Fog Color")]
         public Color fogColor { get; set; }
 
-        [Category("Attributes"), DisplayName("Fog Near Distance")]
+        [Category("Attributes"), DisplayName("Fog Near Distance"), Description("Distance at which fog has its near intensity. The actual distance is given by [FogNearDistance]/1024.")]
         public float fogNearDistance { get; set; }
 
-        [Category("Attributes"), DisplayName("Fog Far Distance")]
+        [Category("Attributes"), DisplayName("Fog Far Distance"), Description("Distance at which fog has its far intensity. The actual distance is given by 1024/([FogFarDistance]-[FogNearDistance]). ")]
         public float fogFarDistance { get; set; }
 
-        [Category("Attributes"), DisplayName("Fog Near Intensity")]
+        [Category("Attributes"), DisplayName("Fog Near Intensity"), Description("Intensity of the fog at its near distance. The actual intensity is given by 1-[FogNearIntensity]/255.")]
         public float fogNearIntensity { get; set; }
 
-        [Category("Attributes"), DisplayName("Fog Far Intensity")]
+        [Category("Attributes"), DisplayName("Fog Far Intensity"), Description("Intensity of the fog at its far distance. The actual intensity is given by 1-[FogFarIntensity]/255.")]
         public float fogFarIntensity { get; set; }
 
         [Category("Attributes"), DisplayName("Deathplane Z")]
         public float deathPlaneZ { get; set; }
 
+        private int _isSphericalWorld { get; set; }
         [Category("Attributes"), DisplayName("Is Spherical World?")]
-        public int isSphericalWorld { get; set; }
+        public bool isSphericalWorld
+        {
+            get { return _isSphericalWorld > 0; }
+            set
+            {
+                _isSphericalWorld = (value) ? 1 : 0;
+            }
+        }
 
         [Category("Attributes"), DisplayName("Sphere Center")]
         public Vector3 sphereCentre { get; set; }
@@ -210,7 +218,7 @@ namespace LibReplanetizer.LevelObjects
             fogNearIntensity = ReadFloat(levelVarBlock, 0x20);
             fogFarIntensity = ReadFloat(levelVarBlock, 0x24);
             deathPlaneZ = ReadFloat(levelVarBlock, 0x28);
-            isSphericalWorld = ReadInt(levelVarBlock, 0x2C);
+            _isSphericalWorld = ReadInt(levelVarBlock, 0x2C);
 
             float sphereCentreX = ReadFloat(levelVarBlock, 0x30);
             float sphereCentreY = ReadFloat(levelVarBlock, 0x34);
@@ -285,7 +293,7 @@ namespace LibReplanetizer.LevelObjects
             fogNearIntensity = ReadFloat(levelVarBlock, 0x20);
             fogFarIntensity = ReadFloat(levelVarBlock, 0x24);
             deathPlaneZ = ReadFloat(levelVarBlock, 0x28);
-            isSphericalWorld = ReadInt(levelVarBlock, 0x2C);
+            _isSphericalWorld = ReadInt(levelVarBlock, 0x2C);
 
             float sphereCentreX = ReadFloat(levelVarBlock, 0x30);
             float sphereCentreY = ReadFloat(levelVarBlock, 0x34);
@@ -370,7 +378,7 @@ namespace LibReplanetizer.LevelObjects
             fogNearIntensity = ReadFloat(levelVarBlock, 0x20);
             fogFarIntensity = ReadFloat(levelVarBlock, 0x24);
             deathPlaneZ = ReadFloat(levelVarBlock, 0x28);
-            isSphericalWorld = ReadInt(levelVarBlock, 0x2C);
+            _isSphericalWorld = ReadInt(levelVarBlock, 0x2C);
 
             float sphereCentreX = ReadFloat(levelVarBlock, 0x30);
             float sphereCentreY = ReadFloat(levelVarBlock, 0x34);
@@ -478,7 +486,7 @@ namespace LibReplanetizer.LevelObjects
             WriteFloat(bytes, 0x20, fogNearIntensity);
             WriteFloat(bytes, 0x24, fogFarIntensity);
             WriteFloat(bytes, 0x28, deathPlaneZ);
-            WriteInt(bytes, 0x2C, isSphericalWorld);
+            WriteInt(bytes, 0x2C, _isSphericalWorld);
 
             WriteFloat(bytes, 0x30, sphereCentre.X);
             WriteFloat(bytes, 0x34, sphereCentre.Y);
@@ -543,7 +551,7 @@ namespace LibReplanetizer.LevelObjects
             WriteFloat(bytes, 0x20, fogNearIntensity);
             WriteFloat(bytes, 0x24, fogFarIntensity);
             WriteFloat(bytes, 0x28, deathPlaneZ);
-            WriteInt(bytes, 0x2C, isSphericalWorld);
+            WriteInt(bytes, 0x2C, _isSphericalWorld);
 
             WriteFloat(bytes, 0x30, sphereCentre.X);
             WriteFloat(bytes, 0x34, sphereCentre.Y);
@@ -611,7 +619,7 @@ namespace LibReplanetizer.LevelObjects
             WriteFloat(bytes, 0x20, fogNearIntensity);
             WriteFloat(bytes, 0x24, fogFarIntensity);
             WriteFloat(bytes, 0x28, deathPlaneZ);
-            WriteInt(bytes, 0x2C, isSphericalWorld);
+            WriteInt(bytes, 0x2C, _isSphericalWorld);
 
             WriteFloat(bytes, 0x30, sphereCentre.X);
             WriteFloat(bytes, 0x34, sphereCentre.Y);

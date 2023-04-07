@@ -21,17 +21,10 @@ namespace Replanetizer.Tools
         //   and pivot throughout the entire user interaction. This can also
         //   help in optimizing matrix operations, as we can combine matrices
         //   once and reuse them.
-        public abstract void Transform(LevelObject obj, Vector3 vec, Vector3 pivot);
+        public abstract void Transform(LevelObject obj, Vector3 pivot, TransformToolData data);
 
-        public void Transform(
-            LevelObject obj, Vector3 direction, Vector3 magnitude, Vector3 pivot)
+        public void Transform(Selection selection, TransformToolData data)
         {
-            Transform(obj, ProcessVec(direction, magnitude), pivot);
-        }
-
-        public void Transform(Selection selection, Vector3 direction, Vector3 magnitude)
-        {
-            Vector3 vec = ProcessVec(direction, magnitude);
             Vector3 pivot = selection.mean;
             foreach (var obj in selection)
             {
@@ -39,7 +32,7 @@ namespace Replanetizer.Tools
 
                 if (toolbox.pivotPositioning == PivotPositioning.IndividualOrigins)
                     pivot = obj.position;
-                Transform(obj, vec, pivot);
+                Transform(obj, pivot, data);
             }
         }
     }

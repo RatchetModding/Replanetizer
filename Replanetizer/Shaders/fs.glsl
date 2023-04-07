@@ -46,19 +46,16 @@ void main() {
     }
 
     if (useTransparency == 1) {
-        // we use dithering for transparency in everything that isnt mobies (it is simple thats why)
-        if ((levelObjectType == 1 || levelObjectType == 2 || levelObjectType == 3)) {
-            vec2 pixel = vec2(gl_FragCoord.x, gl_FragCoord.y);
-            float alpha = 1.0f - textureColor.w;
-            ivec2 patternPos = ivec2(int(mod(pixel.x,4.0f)),int(mod(pixel.y,4.0f)));
-            if (dissolvePattern[patternPos.x][patternPos.y] < alpha) discard;
-        }
+        vec2 pixel = vec2(gl_FragCoord.x, gl_FragCoord.y);
+        float alpha = 1.0f - textureColor.w;
+        ivec2 patternPos = ivec2(int(mod(pixel.x + levelObjectNumber,4.0f)), int(mod(pixel.y,4.0f)));
+        if (dissolvePattern[patternPos.x][patternPos.y] < alpha) discard;
     }
 
-	color.xyz = textureColor.xyz * lightColor;
+	color.xyz = textureColor.xyz * lightColor * 2.0f;
 	color.w = textureColor.w;
 
-	color.xyz = mix(color.xyz, fogColor.xyz, fogBlend);
+	color.xyz = (fogColor.xyz - color.xyz) * fogBlend + color.xyz;
 
 	id = (levelObjectType << 24) | levelObjectNumber;
 }

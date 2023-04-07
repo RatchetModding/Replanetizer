@@ -28,7 +28,7 @@ namespace LibReplanetizer.LevelObjects
 
         [Category("Unknowns"), DisplayName("OFF_64: Always 0")]
         public uint off64 { get; set; }
-        [Category("Attributes"), DisplayName("Light")]
+        [Category("Attributes"), DisplayName("Light"), Description("Index of the directional light that is applied to the tie.")]
         public ushort light { get; set; }
         [Category("Unknowns"), DisplayName("OFF_6C: Always 0")]
         public uint off6C { get; set; }

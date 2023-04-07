@@ -19,5 +19,6 @@ void main() {
 	// UV of the vertex. No special space for this one.
 	UV = vertexUV;
 
-	lightColor = vertexRGBA;
+	lightColor.xyz = vertexRGBA.xyz * 0.5f;
+    lightColor.w = vertexRGBA.w;
 }

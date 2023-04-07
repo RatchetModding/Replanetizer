@@ -31,28 +31,8 @@ uniform mat4 ModelToWorld;
 uniform int levelObjectType;
 uniform int lightIndex;
 uniform int useFog;
-uniform float fogNearDistance;
-uniform float fogFarDistance;
-uniform float fogNearIntensity;
-uniform float fogFarIntensity;
+uniform vec4 fogParams;
 uniform vec4 staticColor;
-
-/*
- * Seems to correspond with the game, I don't know though I just tested random things.
- */
-float get_depth() {
-	return 0.5f * (gl_Position.z - gl_DepthRange.far) / gl_DepthRange.far;
-}
-
-/*
- * Degree 2 Taylor Expansion of exp function
- * Closest to what is used in the game that I could figure out
- */
-float quick_exp(float x) {
-	float y = x * x;
-	float z = y * x;
-	return 1.0f + x + 0.5f * y + 0.1666f * z;
-}
 
 void main() {
 	// Output position of the vertex, in clip space : MVP * position
@@ -63,32 +43,38 @@ void main() {
 	// UV of the vertex. No special space for this one.
 	UV = vertexUV;
 
-	lightColor = vec3(1.0f);
+    // Light color is precomputed on PS3 but we do it here instead.
+	vec3 directionalLight = vec3(0.0f);
+    if (levelObjectType >= 1 && levelObjectType <= 4) {
+        int index = lightIndex;
 
-	int index = lightIndex;
-	vec3 diffuseColor = vec3(0.0f);
+        if (levelObjectType == 1) {
+            index = min(ALLOCATED_LIGHTS - 1, int(vertexTerrainLight));
+        }
 
-	if (levelObjectType == 1) {
-		index = min(ALLOCATED_LIGHTS - 1, int(vertexTerrainLight));
-	}
+        Light l = light[index];
 
-	Light l = light[index];
+        directionalLight += max(0.0f, -dot(l.direction1.xyz, normal)) * l.color1.xyz;
+        directionalLight += max(0.0f, -dot(l.direction2.xyz, normal)) * l.color2.xyz;
+    }
 
-	diffuseColor += max(0.0f, -dot(l.direction1.xyz, normal)) * l.color1.xyz;
-	diffuseColor += max(0.0f, -dot(l.direction2.xyz, normal)) * l.color2.xyz;
-
+    vec3 diffuseLight = vec3(1.0f);
 	if (levelObjectType == 1 || levelObjectType == 3) {
-		lightColor = vertexRGBA.xyz + diffuseColor;
+        diffuseLight = vertexRGBA.xyz;
 	}
 	else if (levelObjectType == 2 || levelObjectType == 4) {
-		lightColor = staticColor.xyz + diffuseColor;
+        diffuseLight = staticColor.xyz;
 	}
+
+    lightColor = mix(diffuseLight, directionalLight, 0.5f);
 
 	fogBlend = 0.0f;
 
 	if (useFog == 1 && levelObjectType >= 1 && levelObjectType <= 4) {
-		float depth = clamp((fogFarDistance - quick_exp(get_depth())) / (fogFarDistance - fogNearDistance), 0.0f, 1.0f);
+        float depth = gl_Position.w - fogParams.x;
 
-		fogBlend = 1.0f - clamp(mix(fogFarIntensity, fogNearIntensity, depth), 0.0f, 1.0f);
+        depth = clamp(depth * fogParams.y, 0.0f, 1.0f);
+
+		fogBlend = fogParams.z + depth * fogParams.w;
 	}
 }

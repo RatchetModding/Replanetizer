@@ -20,57 +20,59 @@ namespace Replanetizer.Tools
         public TranslationTool(Toolbox toolbox) : base(toolbox)
         {
             const float length = 2.0f;
+            const float thickness = length / 2.0f;
+            const float thickness2 = length / 3.0f;
 
             vb = new[]{
-                length / 2,     - length / 3,   0,
-                length / 2,     length / 3,     0,
+                thickness,     -thickness2,   0,
+                thickness,     thickness2,     0,
                 length,         0,              0,
 
-                -length / 2,     - length / 3,   0,
-                -length / 2,     length / 3,     0,
+                -thickness,     - thickness2,   0,
+                -thickness,     thickness2,     0,
                 -length,         0,              0,
 
 
-                length / 2,     0,   - length / 3,
-                length / 2,     0,     length / 3,
+                thickness,     0,   - thickness2,
+                thickness,     0,     thickness2,
                 length,         0,              0,
 
-                -length / 2,     0,   - length / 3,
-                -length / 2,     0,     length / 3,
+                -thickness,     0,   - thickness2,
+                -thickness,     0,     thickness2,
                 -length,         0,              0,
 
 
-                -length / 3,    length / 2,     0,
-                length / 3,     length / 2,     0,
+                -thickness2,    thickness,     0,
+                thickness2,     thickness,     0,
                 0,              length,         0,
 
-                -length / 3,    -length / 2,    0,
-                length / 3,     -length / 2,    0,
+                -thickness2,    -thickness,    0,
+                thickness2,     -thickness,    0,
                 0,              -length,        0,
 
-                0,    length / 2,     -length / 3,
-                0,     length / 2,     length / 3,
+                0,    thickness,     -thickness2,
+                0,     thickness,     thickness2,
                 0,              length,         0,
 
-                0,    -length / 2,    -length / 3,
-                0,     -length / 2,    length / 3,
+                0,    -thickness,    -thickness2,
+                0,     -thickness,    thickness2,
                 0,              -length,        0,
 
 
-                -length / 3,    0,              -length / 2,
-                length / 3,     0,              -length / 2,
+                -thickness2,    0,              -thickness,
+                thickness2,     0,              -thickness,
                 0,              0,              -length,
 
-                -length / 3,    0,              length / 2,
-                length / 3,     0,              length / 2,
+                -thickness2,    0,              thickness,
+                thickness2,     0,              thickness,
                 0,              0,              length,
 
-                0,    -length / 3,              -length / 2,
-                0,     length / 3,              -length / 2,
+                0,    -thickness2,              -thickness,
+                0,     thickness2,              -thickness,
                 0,              0,              -length,
 
-                0,    -length / 3,              length / 2,
-                0,     length / 3,              length / 2,
+                0,    -thickness2,              thickness,
+                0,     thickness2,              thickness,
                 0,              0,              length,
             };
         }
@@ -103,36 +105,13 @@ namespace Replanetizer.Tools
             GL.DrawArrays(PrimitiveType.Triangles, 33, 3);
         }
 
-        /// <summary>
-        /// Computes the intersection of the lines x + a * dx and y + b * dy. The returned float f is such that x + f * dx is the intersection.
-        /// The function returns 0.0f is no intersection was found.
-        /// </summary>
-        private float getLineIntersectionDist(Vector3 x, Vector3 dx, Vector3 y, Vector3 dy)
-        {
-            Vector3 g = y - x;
-            Vector3 h = Vector3.Cross(dy, g);
-            Vector3 k = Vector3.Cross(dy, dx);
-
-            float ha = h.Length;
-            float ka = k.Length;
-
-            if (ha == 0.0f || ka == 0.0f)
-            {
-                return 0.0f;
-            }
-
-            float sign = (Vector3.Dot(h, k) >= 0.0f) ? 1.0f : -1.0f;
-
-            return (ha / ka) * sign;
-        }
-
         public override void Transform(LevelObject obj, Vector3 pivot, TransformToolData data)
         {
             Matrix4 mat = obj.modelMatrix;
 
             if (toolbox.transformSpace == TransformSpace.Global)
             {
-                float startDist = getLineIntersectionDist(data.cameraPos, data.mousePrevDir, obj.position, data.axisDir);
+                float startDist = getLineIntersectionDist(data.cameraPos, data.mousePrevDir, pivot, data.axisDir);
                 Vector3 startPos = data.cameraPos + startDist * data.mousePrevDir;
 
                 float finalDist = getLineIntersectionDist(startPos, data.axisDir, data.cameraPos, data.mouseCurrDir);
@@ -144,7 +123,7 @@ namespace Replanetizer.Tools
             {
                 Vector3 aDir = (mat.Inverted() * new Vector4(data.axisDir, 0.0f)).Xyz;
 
-                float startDist = getLineIntersectionDist(data.cameraPos, data.mousePrevDir, obj.position, aDir);
+                float startDist = getLineIntersectionDist(data.cameraPos, data.mousePrevDir, pivot, aDir);
                 Vector3 startPos = data.cameraPos + startDist * data.mousePrevDir;
 
                 float finalDist = getLineIntersectionDist(startPos, aDir, data.cameraPos, data.mouseCurrDir);

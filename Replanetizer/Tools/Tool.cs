@@ -106,6 +106,30 @@ namespace Replanetizer.Tools
             return direction * magnitude * transformMultiplier;
         }
 
+        /// <summary>
+        /// Computes the intersection of the lines x + a * dx and y + b * dy. The returned float f is such that x + f * dx is the intersection.
+        /// If no intersection is given then the corresponding value for the closest approach is returned.
+        /// Note: That last one is a happy coincidence, I did not verify this but it seems to work. :)
+        /// </summary>
+        protected float getLineIntersectionDist(Vector3 x, Vector3 dx, Vector3 y, Vector3 dy)
+        {
+            Vector3 g = y - x;
+            Vector3 h = Vector3.Cross(dy, g);
+            Vector3 k = Vector3.Cross(dy, dx);
+
+            float ha = h.Length;
+            float ka = k.Length;
+
+            if (ha == 0.0f || ka == 0.0f)
+            {
+                return 0.0f;
+            }
+
+            float sign = (Vector3.Dot(h, k) >= 0.0f) ? 1.0f : -1.0f;
+
+            return (ha / ka) * sign;
+        }
+
         public virtual void Reset()
         {
         }

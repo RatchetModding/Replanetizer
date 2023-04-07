@@ -24,7 +24,7 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Mission ID"), Description("Every planet has a set of missions. If a moby is assigned to a mission, its spawning behaviour can be based on whether the mission is completed.")]
         public int missionID { get; set; }
 
-        [Category("Attributes"), DisplayName("Spawn Type Bitmask"), Description("Each bit corresponds to a spawn related boolean.")]
+        [Category("Attributes"), DisplayName("Spawn Type Bitmask"), Description("Each bit corresponds to a spawn related boolean. If this value is zero then the game determines through other means how to spawn this moby.")]
         public int spawnType { get; set; }
 
         [Category("Attributes"), DisplayName("Spawn Before Mission Completion?"), Description("Moby will still spawn after mission completion if there was no interaction with it yet.")]
@@ -225,7 +225,7 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("pVars")]
         public byte[] pVars { get; set; }
 
-        public long pVarMemoryAddress;
+        private long pVarMemoryAddress;
 
         [Category("Unknowns"), DisplayName("aUnknown 10")]
         public int unk10 { get; set; }

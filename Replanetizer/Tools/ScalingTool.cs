@@ -9,6 +9,7 @@ using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Replanetizer.Frames;
+using Replanetizer.Utils;
 
 namespace Replanetizer.Tools
 {
@@ -49,10 +50,10 @@ namespace Replanetizer.Tools
             GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
         }
 
-        public override void Transform(LevelObject obj, Vector3 vec, Vector3 pivot)
+        public override void Transform(LevelObject obj, Vector3 pivot, TransformToolData data)
         {
             var mat = obj.modelMatrix;
-            var scale = Matrix4.CreateScale(vec);
+            var scale = Matrix4.CreateScale(data.vec);
 
             if (toolbox.transformSpace == TransformSpace.Global)
             {

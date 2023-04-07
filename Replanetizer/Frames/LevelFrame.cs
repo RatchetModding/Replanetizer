@@ -1027,12 +1027,14 @@ namespace Replanetizer.Frames
 
         private void HandleToolUpdates(Vector3 mouseRay, Vector3 direction)
         {
-            Vector3 magnitude = mouseRay - prevMouseRay;
-
             if (toolbox.tool is BasicTransformTool basicTool)
-                basicTool.Transform(selectedObjects, direction, magnitude);
+            {
+                TransformToolData toolData = new TransformToolData(camera, prevMouseRay, mouseRay, direction);
+                basicTool.Transform(selectedObjects, toolData);
+            }
             else if (toolbox.tool is VertexTranslationTool vertexTranslationTool)
             {
+                Vector3 magnitude = mouseRay - prevMouseRay;
                 vertexTranslationTool.Transform(selectedObjects, direction, magnitude);
                 if (hook is { hookWorking: true } &&
                     selectedObjects.TryGetOne(out var obj) && obj is Spline spline)

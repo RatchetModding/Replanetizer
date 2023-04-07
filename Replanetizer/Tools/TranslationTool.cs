@@ -9,6 +9,7 @@ using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Replanetizer.Frames;
+using Replanetizer.Utils;
 
 namespace Replanetizer.Tools
 {
@@ -102,20 +103,54 @@ namespace Replanetizer.Tools
             GL.DrawArrays(PrimitiveType.Triangles, 33, 3);
         }
 
-        public override void Transform(LevelObject obj, Vector3 vec, Vector3 pivot)
+        /// <summary>
+        /// Computes the intersection of the lines x + a * dx and y + b * dy. The returned float f is such that x + f * dx is the intersection.
+        /// The function returns 0.0f is no intersection was found.
+        /// </summary>
+        private float getLineIntersectionDist(Vector3 x, Vector3 dx, Vector3 y, Vector3 dy)
         {
-            var mat = obj.modelMatrix;
+            Vector3 g = y - x;
+            Vector3 h = Vector3.Cross(dy, g);
+            Vector3 k = Vector3.Cross(dy, dx);
+
+            float ha = h.Length;
+            float ka = k.Length;
+
+            if (ha == 0.0f || ka == 0.0f)
+            {
+                return 0.0f;
+            }
+
+            float sign = (Vector3.Dot(h, k) >= 0.0f) ? 1.0f : -1.0f;
+
+            return (ha / ka) * sign;
+        }
+
+        public override void Transform(LevelObject obj, Vector3 pivot, TransformToolData data)
+        {
+            Matrix4 mat = obj.modelMatrix;
 
             if (toolbox.transformSpace == TransformSpace.Global)
             {
-                var trans = Matrix4.CreateTranslation(vec);
+                float startDist = getLineIntersectionDist(data.cameraPos, data.mousePrevDir, obj.position, data.axisDir);
+                Vector3 startPos = data.cameraPos + startDist * data.mousePrevDir;
+
+                float finalDist = getLineIntersectionDist(startPos, data.axisDir, data.cameraPos, data.mouseCurrDir);
+
+                Matrix4 trans = Matrix4.CreateTranslation(finalDist * data.axisDir);
                 mat = mat * trans;
             }
             else if (toolbox.transformSpace == TransformSpace.Local)
             {
-                // Compensate for scale diminishing the strength of the translation
-                var trans = Matrix4.CreateTranslation(vec/obj.scale.LengthFast);
-                mat = trans * mat;
+                Vector3 aDir = (mat.Inverted() * new Vector4(data.axisDir, 0.0f)).Xyz;
+
+                float startDist = getLineIntersectionDist(data.cameraPos, data.mousePrevDir, obj.position, aDir);
+                Vector3 startPos = data.cameraPos + startDist * data.mousePrevDir;
+
+                float finalDist = getLineIntersectionDist(startPos, aDir, data.cameraPos, data.mouseCurrDir);
+
+                Matrix4 trans = Matrix4.CreateTranslation(finalDist * aDir);
+                mat = mat * trans;
             }
 
             obj.SetFromMatrix(mat);

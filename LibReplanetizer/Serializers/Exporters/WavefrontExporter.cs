@@ -127,7 +127,15 @@ namespace LibReplanetizer
             mtlfs.WriteLine("d 1.000000");
             mtlfs.WriteLine("illum 1");
             // The Wavefront Obj standard only defines clamping on all or no axis.
-            mtlfs.WriteLine("map_Kd -clamp " + ((clampUV) ? "on" : "off") + " " + id + ".png");
+            if (modelSettings.extendedFeatures)
+            {
+                mtlfs.WriteLine("map_Kd -clamp " + ((clampUV) ? "on" : "off") + " " + id + ".png");
+            }
+            else
+            {
+                mtlfs.WriteLine("map_Kd " + id + ".png");
+            }
+
         }
 
         private void WriteMaterial(StreamWriter? mtlfs, Model? model, List<int> usedMtls)

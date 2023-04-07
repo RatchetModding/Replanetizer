@@ -315,6 +315,7 @@ namespace Replanetizer.Frames
                     if (exportSettings.format == ExporterModelSettings.Format.Wavefront)
                     {
                         ImGui.Checkbox("Include MTL File", ref exportSettings.exportMtlFile);
+                        ImGui.Checkbox("Extended Features", ref exportSettings.extendedFeatures);
                     }
 
                     if (ImGui.Button("Export model"))

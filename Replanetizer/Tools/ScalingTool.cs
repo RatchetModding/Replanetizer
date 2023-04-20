@@ -108,30 +108,48 @@ namespace Replanetizer.Tools
 
         public override void Transform(LevelObject obj, Vector3 pivot, TransformToolData data)
         {
-            // TODO: For the global transformation space a different method could be used
-            // that scales along the correct axis
-            float prevDist = getLineIntersectionDist(pivot, data.axisDir, data.cameraPos, data.mousePrevDir);
-            float currDist = getLineIntersectionDist(pivot, data.axisDir, data.cameraPos, data.mouseCurrDir);
+            if (obj is Moby)
+            {
+                float dist = (pivot - data.cameraPos).Length;
 
-            float prevScale = MathF.Abs(prevDist);
-            float currScale = MathF.Abs(currDist);
+                Vector3 mousePrevPos = data.cameraPos + dist * data.mousePrevDir.Normalized();
+                Vector3 mouseCurrPos = data.cameraPos + dist * data.mouseCurrDir.Normalized();
 
-            float sign = MathF.Sign(prevDist * currDist);
-            float change = currScale - prevScale;
+                float prevDist = (pivot - mousePrevPos).Length;
+                float currDist = (pivot - mouseCurrPos).Length;
 
-            // Otherwise we flip signs on all axis
-            // It is a bit tricky, when should we flip and when shouldn't we?
-            // Also sometimes the signs flip for just one frame so we
-            // make sure that that only happens when we are close to 0
-            float signX = (obj.scale.X < 1.0f && data.axisDir.X != 0.0f) ? sign : 1.0f;
-            float signY = (obj.scale.Y < 1.0f && data.axisDir.Y != 0.0f) ? sign : 1.0f;
-            float signZ = (obj.scale.Z < 1.0f && data.axisDir.Z != 0.0f) ? sign : 1.0f;
+                float scale = currDist / MathF.Max(0.01f, prevDist);
 
-            float scaleX = signX * MathF.Max(0.01f, (data.axisDir.X * change / prevScale + 1.0f));
-            float scaleY = signY * MathF.Max(0.01f, (data.axisDir.Y * change / prevScale + 1.0f));
-            float scaleZ = signZ * MathF.Max(0.01f, (data.axisDir.Z * change / prevScale + 1.0f));
+                obj.scale *= new Vector3(scale, scale, scale);
+            }
+            else
+            {
+                // TODO: For the global transformation space a different method could be used
+                // that scales along the correct axis
+                float prevDist = getLineIntersectionDist(pivot, data.axisDir, data.cameraPos, data.mousePrevDir);
+                float currDist = getLineIntersectionDist(pivot, data.axisDir, data.cameraPos, data.mouseCurrDir);
 
-            obj.scale *= new Vector3(scaleX, scaleY, scaleZ);
+                float prevScale = MathF.Abs(prevDist);
+                float currScale = MathF.Abs(currDist);
+
+                float sign = MathF.Sign(prevDist * currDist);
+                float change = currScale - prevScale;
+
+                // Otherwise we flip signs on all axis
+                // It is a bit tricky, when should we flip and when shouldn't we?
+                // Also sometimes the signs flip for just one frame so we
+                // make sure that that only happens when we are close to 0
+                float signX = (obj.scale.X < 1.0f && data.axisDir.X != 0.0f) ? sign : 1.0f;
+                float signY = (obj.scale.Y < 1.0f && data.axisDir.Y != 0.0f) ? sign : 1.0f;
+                float signZ = (obj.scale.Z < 1.0f && data.axisDir.Z != 0.0f) ? sign : 1.0f;
+
+                float scaleX = signX * MathF.Max(0.01f, (data.axisDir.X * change / prevScale + 1.0f));
+                float scaleY = signY * MathF.Max(0.01f, (data.axisDir.Y * change / prevScale + 1.0f));
+                float scaleZ = signZ * MathF.Max(0.01f, (data.axisDir.Z * change / prevScale + 1.0f));
+
+                obj.scale *= new Vector3(scaleX, scaleY, scaleZ);
+            }
+
             obj.UpdateTransformMatrix();
         }
 

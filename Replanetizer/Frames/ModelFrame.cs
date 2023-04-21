@@ -29,6 +29,7 @@ namespace Replanetizer.Frames
 
         private string filter = "";
         private string filterUpper = "";
+        private bool showIDInHex = false;
         private FramebufferRenderer? renderer;
         private Level level => levelFrame.level;
         private Model? selectedModel;
@@ -138,10 +139,15 @@ namespace Replanetizer.Frames
             }
         }
 
+        private string GetStringFromID(int id)
+        {
+            return (showIDInHex) ? $"0x{id:X3}" : $"{id}";
+        }
+
         private string GetDisplayName(Model model)
         {
             string? modelName = ModelLists.ModelLists.GetModelName(model, level.game);
-            string displayName = $"0x{model.id:X3}";
+            string displayName = GetStringFromID(model.id);
             if (modelName != null)
             {
                 displayName += " (" + modelName + ")";
@@ -166,9 +172,11 @@ namespace Replanetizer.Frames
         private void RenderTree()
         {
             var colW = ImGui.GetColumnWidth() - 10;
-            var childSize = new System.Numerics.Vector2(colW, height - 30);
+            var childSize = new System.Numerics.Vector2(colW, height - 50);
 
-            if (ImGui.InputText("", ref filter, 256))
+            ImGui.Checkbox("Hexadecimals", ref showIDInHex);
+
+            if (ImGui.InputText("Search", ref filter, 256))
             {
                 filterUpper = filter.ToUpper();
             }
@@ -183,7 +191,7 @@ namespace Replanetizer.Frames
                     for (int i = 0; i < level.gadgetModels.Count; i++)
                     {
                         Model gadget = level.gadgetModels[i];
-                        RenderModelEntry(gadget, level.gadgetTextures, $"0x{i:X3}");
+                        RenderModelEntry(gadget, level.gadgetTextures, GetStringFromID(i));
                     }
                     ImGui.TreePop();
                 }
@@ -192,7 +200,7 @@ namespace Replanetizer.Frames
                     for (int i = 0; i < level.armorModels.Count; i++)
                     {
                         Model armor = level.armorModels[i];
-                        RenderModelEntry(armor, level.armorTextures[i], $"0x{i:X3}");
+                        RenderModelEntry(armor, level.armorTextures[i], GetStringFromID(i));
                     }
                     ImGui.TreePop();
                 }
@@ -223,7 +231,7 @@ namespace Replanetizer.Frames
                     string objName = "Instance";
                     if (obj is Moby mob)
                     {
-                        objName = $"Instance [0x{mob.mobyID:X3}]";
+                        objName = $"Instance [" + GetStringFromID(mob.mobyID) + "]";
                     }
 
                     if (ImGui.Button(objName))

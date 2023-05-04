@@ -243,7 +243,7 @@ namespace LibReplanetizer.LevelObjects
         // This should probably get removed, not enough information are available to construct a moby like that
         public Moby()
         {
-            this.game = new GameType(1);
+            this.game = GameType.RaC1;
             this.pVars = new byte[0];
             this.mobyID = MAX_ID++;
         }

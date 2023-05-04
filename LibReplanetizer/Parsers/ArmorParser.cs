@@ -32,7 +32,7 @@ namespace LibReplanetizer.Parsers
         {
             if (armorHead.modelPointer == 0) return null;
 
-            if (game.num == 4)
+            if (game == GameType.DL)
             {
                 return new MobyModel(fileStream, game, 0, armorHead.modelPointer);
             }

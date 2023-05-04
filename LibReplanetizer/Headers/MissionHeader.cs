@@ -43,11 +43,9 @@ namespace LibReplanetizer.Headers
 
             if (dir == null) return files;
 
-            switch (game.num)
+            if (game == GameType.DL)
             {
-                case 4:
-                    files.AddRange(Directory.GetFiles(dir, "gameplay_mission_classes[*].ps3"));
-                    break;
+                files.AddRange(Directory.GetFiles(dir, "gameplay_mission_classes[*].ps3"));
             }
 
             return files;

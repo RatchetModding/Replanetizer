@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -9,13 +9,17 @@ namespace LibReplanetizer
 {
     public class GameType
     {
-        public static readonly int[] MOBY_SIZES = { 0x78, 0x88, 0x88, 0x70 };
+        private static readonly int[] MOBY_SIZES = { 0x78, 0x88, 0x88, 0x70 };
 
-        public int num;
-        public int mobyElemSize;
-        public int engineSize;
+        public readonly static GameType RaC1 = new GameType(1);
+        public readonly static GameType RaC2 = new GameType(2);
+        public readonly static GameType RaC3 = new GameType(3);
+        public readonly static GameType DL = new GameType(4);
 
-        public GameType(int gameNum)
+        public int num { get; private set; }
+        public int mobyElemSize { get; private set; }
+
+        private GameType(int gameNum)
         {
             num = gameNum;
 

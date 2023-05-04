@@ -81,7 +81,7 @@ namespace LibReplanetizer.Parsers
 
         public List<Animation> GetPlayerAnimations(MobyModel ratchet)
         {
-            if (engineHead.game.num == 4) return new List<Animation>();
+            if (engineHead.game == GameType.DL) return new List<Animation>();
 
             return GetPlayerAnimations(engineHead.playerAnimationPointer, ratchet);
         }
@@ -122,7 +122,7 @@ namespace LibReplanetizer.Parsers
         {
             if (engineHead.collisionPointer > 0)
             {
-                if (engineHead.game.num == 1)
+                if (engineHead.game == GameType.RaC1)
                 {
                     return ReadBlock(fileStream, engineHead.collisionPointer, engineHead.mobyModelPointer - engineHead.collisionPointer);
                 }
@@ -139,29 +139,25 @@ namespace LibReplanetizer.Parsers
 
         public byte[] GetBillboardBytes()
         {
-            switch (engineHead.game.num)
+            if (engineHead.game == GameType.RaC1)
             {
-                case 1:
-                    return ReadArbBytes(engineHead.texture2dPointer, engineHead.soundConfigPointer - engineHead.texture2dPointer);
-                case 2:
-                case 3:
-                case 4:
-                default:
-                    return ReadArbBytes(engineHead.texture2dPointer, engineHead.mobyModelPointer - engineHead.texture2dPointer);
+                return ReadArbBytes(engineHead.texture2dPointer, engineHead.soundConfigPointer - engineHead.texture2dPointer);
+            }
+            else
+            {
+                return ReadArbBytes(engineHead.texture2dPointer, engineHead.mobyModelPointer - engineHead.texture2dPointer);
             }
         }
 
         public byte[] GetSoundConfigBytes()
         {
-            switch (engineHead.game.num)
+            if (engineHead.game == GameType.RaC1)
             {
-                case 1:
-                    return ReadArbBytes(engineHead.soundConfigPointer, engineHead.lightPointer - engineHead.soundConfigPointer);
-                case 2:
-                case 3:
-                case 4:
-                default:
-                    return ReadArbBytes(engineHead.soundConfigPointer, engineHead.playerAnimationPointer - engineHead.soundConfigPointer);
+                return ReadArbBytes(engineHead.soundConfigPointer, engineHead.lightPointer - engineHead.soundConfigPointer);
+            }
+            else
+            {
+                return ReadArbBytes(engineHead.soundConfigPointer, engineHead.playerAnimationPointer - engineHead.soundConfigPointer);
             }
         }
 

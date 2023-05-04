@@ -15,7 +15,7 @@ namespace LibReplanetizer.Headers
         const int RAC123_ENGINE_SIZE = 0x84;
         const int DL_ENGINE_SIZE = 0x98;
 
-        public GameType game = new GameType(1);
+        public GameType game = GameType.RaC1;
 
         public int mobyModelPointer;
         public int renderDefPointer;            // TODO
@@ -89,15 +89,15 @@ namespace LibReplanetizer.Headers
             switch (magic)
             {
                 case 0x00000001:
-                    return new GameType(1);
+                    return GameType.RaC1;
                 case 0xEAA90001:
-                    return new GameType(2);
+                    return GameType.RaC2;
                 case 0xEAA60001:
-                    return new GameType(3);
+                    return GameType.RaC3;
                 case 0x008E008D:
-                    return new GameType(4);
+                    return GameType.DL;
                 default:
-                    return new GameType(3);
+                    return GameType.RaC3;
             }
         }
 

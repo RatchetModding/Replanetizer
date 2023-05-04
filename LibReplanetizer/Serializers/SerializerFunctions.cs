@@ -64,7 +64,7 @@ namespace LibReplanetizer.Serializers
 
             byte[] tfragHeads = new byte[0x30 * tFrags.Count];
 
-            int headerSize = (game.num == 4) ? 0x70 : 0x60;
+            int headerSize = (game == GameType.DL) ? 0x70 : 0x60;
 
             ushort chunk = 0;
 
@@ -156,7 +156,7 @@ namespace LibReplanetizer.Serializers
                 WriteInt(outByteArr, 0x18 + i * 4, rgbaOffsets[i]);
                 WriteInt(outByteArr, 0x28 + i * 4, uvOffsets[i]);
                 WriteInt(outByteArr, 0x38 + i * 4, indexOffsets[i]);
-                if (game.num == 4)
+                if (game == GameType.DL)
                     WriteInt(outByteArr, 0x48 + i * 4, unkOffsets[i]);
             }
 

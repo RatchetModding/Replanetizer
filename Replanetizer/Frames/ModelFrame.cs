@@ -191,7 +191,7 @@ namespace Replanetizer.Frames
                     for (int i = 0; i < level.gadgetModels.Count; i++)
                     {
                         Model gadget = level.gadgetModels[i];
-                        RenderModelEntry(gadget, (level.game.num == 1) ? level.textures : level.gadgetTextures, GetStringFromID(i));
+                        RenderModelEntry(gadget, (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures, GetStringFromID(i));
                     }
                     ImGui.TreePop();
                 }
@@ -493,7 +493,7 @@ namespace Replanetizer.Frames
                 selectedModelTexturesSet = null;
                 selectedModelArmorTexturesSet = null;
                 if (ReferenceEquals(models, level.gadgetModels))
-                    selectedModelTexturesSet = (level.game.num == 1) ? level.textures : level.gadgetTextures;
+                    selectedModelTexturesSet = (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures;
                 else if (ReferenceEquals(models, level.armorModels))
                     selectedModelArmorTexturesSet = level.armorTextures;
                 else

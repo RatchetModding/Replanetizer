@@ -447,15 +447,13 @@ namespace LibReplanetizer.Parsers
         {
             if (gameplayHeader.tiePointer == 0) { return new byte[0]; }
 
-            switch (game.num)
+            if (game == GameType.RaC1)
             {
-                case 1:
-                    return ReadBlock(fileStream, gameplayHeader.tiePointer, 0x10 + 0xE0 * tieCount);
-                case 2:
-                case 3:
-                case 4:
-                default:
-                    return ReadBlock(fileStream, gameplayHeader.tiePointer, gameplayHeader.tieGroupsPointer - gameplayHeader.tiePointer);
+                return ReadBlock(fileStream, gameplayHeader.tiePointer, 0x10 + 0xE0 * tieCount);
+            }
+            else
+            {
+                return ReadBlock(fileStream, gameplayHeader.tiePointer, gameplayHeader.tieGroupsPointer - gameplayHeader.tiePointer);
             }
         }
 

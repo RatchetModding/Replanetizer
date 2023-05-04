@@ -76,7 +76,7 @@ namespace Replanetizer.Frames
 
         // Projection matrix settings
         private const float CLIP_NEAR = 0.1f;
-        private const float CLIP_FAR = 100f;
+        private const float CLIP_FAR = 1024.0f;
         private const float FIELD_OF_VIEW = MathF.PI / 3;  // 60 degrees
 
         private bool initialized = false;

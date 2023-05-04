@@ -317,6 +317,15 @@ namespace Replanetizer.Frames
                                 exportSettings.animationChoice = (ExporterModelSettings.AnimationChoice) animationChoice;
                             }
                         }
+                        else
+                        {
+                            ImGui.BeginDisabled();
+                            int animationChoice = 0;
+                            if (ImGui.Combo("Animations", ref animationChoice, ExporterModelSettings.ANIMATION_CHOICE_STRINGS, ExporterModelSettings.ANIMATION_CHOICE_STRINGS.Length))
+                            {
+                            }
+                            ImGui.EndDisabled();
+                        }
                     }
 
                     // Wavefront specific settings

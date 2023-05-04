@@ -16,6 +16,7 @@ using System.Text;
 using System.Drawing;
 using ImGuiNET;
 using LibReplanetizer.LevelObjects;
+using LibReplanetizer.Models;
 using LibReplanetizer;
 using Replanetizer.Utils;
 
@@ -142,9 +143,11 @@ namespace Replanetizer.Frames
                 {
                     listenToCallbacks = false;
                 }
+                ImGui.Separator();
             }
 
             ImGui.Text(selectedObject.GetType().Name);
+            ImGui.Separator();
 
             foreach (var (categoryName, categoryItems) in properties)
             {
@@ -158,6 +161,8 @@ namespace Replanetizer.Frames
             {
                 foreach (var (key, value) in categoryItems)
                     RenderCategoryItem(key, value);
+
+                ImGui.Separator();
             }
         }
 
@@ -373,6 +378,8 @@ namespace Replanetizer.Frames
 
                     foreach (object o in array)
                         ImGui.Text(Convert.ToString(o));
+
+                    ImGui.Separator();
                 }
             }
             else if (type is { IsEnum: true })
@@ -436,6 +443,44 @@ namespace Replanetizer.Frames
 
                             i++;
                         }
+
+                        ImGui.Separator();
+                    }
+                }
+                else if (genericType == typeof(Attachment))
+                {
+                    if (ImGui.CollapsingHeader(propertyName))
+                    {
+                        int i = 1;
+
+                        foreach (Attachment a in list)
+                        {
+                            ImGui.PushID("Attachment" + i);
+
+                            ImGui.Text("Attachment " + i);
+
+                            if (ImGui.CollapsingHeader("Bones A"))
+                            {
+                                foreach (byte b in a.aBones)
+                                {
+                                    ImGui.Text(b.ToString());
+                                }
+                            }
+
+                            if (ImGui.CollapsingHeader("Bones B"))
+                            {
+                                foreach (byte b in a.bBones)
+                                {
+                                    ImGui.Text(b.ToString());
+                                }
+                            }
+
+                            ImGui.PopID();
+
+                            i++;
+                        }
+
+                        ImGui.Separator();
                     }
                 }
                 else

@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -191,7 +191,7 @@ namespace Replanetizer.Frames
                     for (int i = 0; i < level.gadgetModels.Count; i++)
                     {
                         Model gadget = level.gadgetModels[i];
-                        RenderModelEntry(gadget, level.gadgetTextures, GetStringFromID(i));
+                        RenderModelEntry(gadget, (level.game.num == 1) ? level.textures : level.gadgetTextures, GetStringFromID(i));
                     }
                     ImGui.TreePop();
                 }
@@ -493,7 +493,7 @@ namespace Replanetizer.Frames
                 selectedModelTexturesSet = null;
                 selectedModelArmorTexturesSet = null;
                 if (ReferenceEquals(models, level.gadgetModels))
-                    selectedModelTexturesSet = level.gadgetTextures;
+                    selectedModelTexturesSet = (level.game.num == 1) ? level.textures : level.gadgetTextures;
                 else if (ReferenceEquals(models, level.armorModels))
                     selectedModelArmorTexturesSet = level.armorTextures;
                 else

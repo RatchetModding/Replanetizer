@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -235,6 +235,27 @@ namespace Replanetizer.Frames
                 if (ImGui.Checkbox(propertyName, ref v))
                 {
                     propertyInfo.SetValue(selectedObject, v);
+                    UpdateLevelFrame();
+                }
+            }
+            else if (type == typeof(Bitmask))
+            {
+                int v = (int) ((Bitmask) val);
+
+                string binary = Convert.ToString(v, 2);
+                binary = binary.PadLeft(8, '0');
+
+                if (ImGui.InputText(propertyName, ref binary, (uint) binary.Length))
+                {
+                    try
+                    {
+                        propertyInfo.SetValue(selectedObject, (Bitmask) Convert.ToInt32(binary, 2));
+                    }
+                    catch
+                    {
+                        // Nothing
+                    }
+
                     UpdateLevelFrame();
                 }
             }

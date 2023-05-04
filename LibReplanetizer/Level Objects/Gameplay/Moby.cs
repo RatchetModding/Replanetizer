@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -25,7 +25,7 @@ namespace LibReplanetizer.LevelObjects
         public int missionID { get; set; }
 
         [Category("Attributes"), DisplayName("Spawn Type Bitmask"), Description("Each bit corresponds to a spawn related boolean. If this value is zero then the game determines through other means how to spawn this moby.")]
-        public int spawnType { get; set; }
+        public Bitmask spawnType { get; set; } = 0;
 
         [Category("Attributes"), DisplayName("Spawn Before Mission Completion?"), Description("Moby will still spawn after mission completion if there was no interaction with it yet.")]
         public bool spawnBeforeMissionCompletion
@@ -160,11 +160,8 @@ namespace LibReplanetizer.LevelObjects
         [Category("Unknowns"), DisplayName("aUnknown 3B")]
         public short unk3B { get; set; }
 
-        /*
-         * 1 or 0 (possibly a has animation flag? or has AI?)
-         */
-        [Category("Unknowns"), DisplayName("aUnknown 4")]
-        public int unk4 { get; set; }
+        [Category("Unknowns"), DisplayName("Occlusion")]
+        public bool occlusion { get; set; }
 
         [Category("Attributes"), DisplayName("Group Index")]
         public int groupIndex { get; set; }
@@ -177,9 +174,6 @@ namespace LibReplanetizer.LevelObjects
 
         [Category("Unknowns"), DisplayName("aUnknown 6")]
         public int unk6 { get; set; }
-
-        [Category("Attributes"), DisplayName("Secondary Z")]
-        public float z2 { get; set; }
 
         /*
          * Unknown7A
@@ -227,12 +221,6 @@ namespace LibReplanetizer.LevelObjects
 
         private long pVarMemoryAddress;
 
-        [Category("Unknowns"), DisplayName("aUnknown 10")]
-        public int unk10 { get; set; }
-
-        [Category("Unknowns"), DisplayName("aUnknown 11")]
-        public int unk11 { get; set; }
-
         /*
          * Unknown12A
          * Always 256
@@ -246,11 +234,11 @@ namespace LibReplanetizer.LevelObjects
         [Category("Unknowns"), DisplayName("12B: Always 0")]
         public short unk12B { get; set; }
 
-        [Category("Unknowns"), DisplayName("aUnknown 13")]
-        public int unk13 { get; set; }
+        [Category("Attributes"), DisplayName("EXP value")]
+        public int exp { get; set; }
 
-        [Category("Unknowns"), DisplayName("aUnknown 14")]
-        public int unk14 { get; set; }
+        [Category("Attributes"), DisplayName("Mode Bits")]
+        public Bitmask mode { get; set; } = 0;
 
         // This should probably get removed, not enough information are available to construct a moby like that
         public Moby()
@@ -290,14 +278,15 @@ namespace LibReplanetizer.LevelObjects
             this.rotation = referenceMoby.rotation;
             this.scale = referenceMoby.scale;
             this.drawDistance = referenceMoby.drawDistance;
-            this.z2 = referenceMoby.z2;
             this.groupIndex = referenceMoby.groupIndex;
             this.pvarIndex = referenceMoby.pvarIndex;
             this.pVars = referenceMoby.pVars;
+            this.isRooted = referenceMoby.isRooted;
+            this.rootedDistance = referenceMoby.rootedDistance;
             this.mobyID = MAX_ID++;
 
             this.unk3B = referenceMoby.unk3B;
-            this.unk4 = referenceMoby.unk4;
+            this.occlusion = referenceMoby.occlusion;
             this.unk7A = referenceMoby.unk7A;
             this.unk8A = referenceMoby.unk8A;
             this.unk9 = referenceMoby.unk9;
@@ -369,15 +358,15 @@ namespace LibReplanetizer.LevelObjects
             float roty = ReadFloat(mobyBlock, offset + 0x40);
             float rotz = ReadFloat(mobyBlock, offset + 0x44);
             groupIndex = ReadInt(mobyBlock, offset + 0x48);
-            unk6 = ReadInt(mobyBlock, offset + 0x4C); //Enables Z2
+            isRooted = ReadInt(mobyBlock, offset + 0x4C);
 
-            z2 = ReadFloat(mobyBlock, offset + 0x50);
+            rootedDistance = ReadFloat(mobyBlock, offset + 0x50);
             unk12A = ReadShort(mobyBlock, offset + 0x54);
             unk12B = ReadShort(mobyBlock, offset + 0x56);
             pvarIndex = ReadInt(mobyBlock, offset + 0x58);
-            unk4 = ReadInt(mobyBlock, offset + 0x5C);
+            occlusion = ReadInt(mobyBlock, offset + 0x5C) > 0;
 
-            unk9 = ReadInt(mobyBlock, offset + 0x60);  //Breakability?
+            mode = ReadInt(mobyBlock, offset + 0x60);
             int r = ReadInt(mobyBlock, offset + 0x64);
             int g = ReadInt(mobyBlock, offset + 0x68);
             int b = ReadInt(mobyBlock, offset + 0x6C);
@@ -406,7 +395,7 @@ namespace LibReplanetizer.LevelObjects
             bolts = ReadInt(mobyBlock, offset + 0x14);
             unk3A = ReadShort(mobyBlock, offset + 0x18);
             unk3B = ReadShort(mobyBlock, offset + 0x1A);
-            unk13 = ReadInt(mobyBlock, offset + 0x1C);
+            exp = ReadInt(mobyBlock, offset + 0x1C);
 
             unk9 = ReadInt(mobyBlock, offset + 0x20);
             unk6 = ReadInt(mobyBlock, offset + 0x24); //Enables Z2
@@ -428,15 +417,15 @@ namespace LibReplanetizer.LevelObjects
             float roty = ReadFloat(mobyBlock, offset + 0x50);
             float rotz = ReadFloat(mobyBlock, offset + 0x54);
             groupIndex = ReadInt(mobyBlock, offset + 0x58);
-            unk10 = ReadInt(mobyBlock, offset + 0x5C);
+            isRooted = ReadInt(mobyBlock, offset + 0x5C);
 
-            unk11 = ReadInt(mobyBlock, offset + 0x60);
+            rootedDistance = ReadFloat(mobyBlock, offset + 0x60);
             unk12A = ReadShort(mobyBlock, offset + 0x64);
             unk12B = ReadShort(mobyBlock, offset + 0x66);
             pvarIndex = ReadInt(mobyBlock, offset + 0x68);
-            unk4 = ReadInt(mobyBlock, offset + 0x6C);
+            occlusion = ReadInt(mobyBlock, offset + 0x6C) > 0;
 
-            unk14 = ReadInt(mobyBlock, offset + 0x70);
+            mode = ReadInt(mobyBlock, offset + 0x70);
             int r = ReadInt(mobyBlock, offset + 0x74);
             int g = ReadInt(mobyBlock, offset + 0x78);
             int b = ReadInt(mobyBlock, offset + 0x7C);
@@ -487,16 +476,15 @@ namespace LibReplanetizer.LevelObjects
             pvarIndex = ReadInt(mobyBlock, offset + 0x50);
             unk3A = ReadShort(mobyBlock, offset + 0x54);
             unk3B = ReadShort(mobyBlock, offset + 0x56);
-            unk9 = ReadInt(mobyBlock, offset + 0x58);  //Breakability?
+            mode = ReadInt(mobyBlock, offset + 0x58);
             int r = ReadInt(mobyBlock, offset + 0x5C);
 
             int g = ReadInt(mobyBlock, offset + 0x60);
             int b = ReadInt(mobyBlock, offset + 0x64);
             light = ReadInt(mobyBlock, offset + 0x68);
-            unk14 = ReadInt(mobyBlock, offset + 0x6C);
+            unk9 = ReadInt(mobyBlock, offset + 0x6C);
 
             cutscene = 0;
-            z2 = 0;
 
             color = Color.FromArgb(r, g, b);
             position = new Vector3(x, y, z);
@@ -554,15 +542,15 @@ namespace LibReplanetizer.LevelObjects
             WriteFloat(buffer, 0x40, eulerAngles.Y);
             WriteFloat(buffer, 0x44, eulerAngles.Z);
             WriteInt(buffer, 0x48, groupIndex);
-            WriteInt(buffer, 0x4C, unk6);
+            WriteInt(buffer, 0x4C, isRooted);
 
-            WriteFloat(buffer, 0x50, z2);
+            WriteFloat(buffer, 0x50, rootedDistance);
             WriteShort(buffer, 0x54, unk12A);
             WriteShort(buffer, 0x56, unk12B);
             WriteInt(buffer, 0x58, pvarIndex);
-            WriteInt(buffer, 0x5C, unk4);
+            WriteInt(buffer, 0x5C, occlusion ? 1 : 0);
 
-            WriteInt(buffer, 0x60, unk9);
+            WriteInt(buffer, 0x60, mode);
             WriteUint(buffer, 0x64, color.R);
             WriteUint(buffer, 0x68, color.G);
             WriteUint(buffer, 0x6C, color.B);
@@ -588,7 +576,7 @@ namespace LibReplanetizer.LevelObjects
             WriteInt(buffer, 0x14, bolts);
             WriteShort(buffer, 0x18, unk3A);
             WriteShort(buffer, 0x1A, unk3B);
-            WriteInt(buffer, 0x1C, unk13);
+            WriteInt(buffer, 0x1C, exp);
 
             WriteInt(buffer, 0x20, unk9);
             WriteInt(buffer, 0x24, unk6);
@@ -610,15 +598,15 @@ namespace LibReplanetizer.LevelObjects
             WriteFloat(buffer, 0x50, eulerAngles.Y);
             WriteFloat(buffer, 0x54, eulerAngles.Z);
             WriteInt(buffer, 0x58, groupIndex);
-            WriteInt(buffer, 0x5C, unk10);
+            WriteInt(buffer, 0x5C, isRooted);
 
-            WriteInt(buffer, 0x60, unk11);
+            WriteFloat(buffer, 0x60, rootedDistance);
             WriteShort(buffer, 0x64, unk12A);
             WriteShort(buffer, 0x66, unk12B);
             WriteInt(buffer, 0x68, pvarIndex);
-            WriteInt(buffer, 0x6C, unk4);
+            WriteInt(buffer, 0x6C, occlusion ? 1 : 0);
 
-            WriteInt(buffer, 0x70, unk14);
+            WriteInt(buffer, 0x70, mode);
             WriteUint(buffer, 0x74, color.R);
             WriteUint(buffer, 0x78, color.G);
             WriteUint(buffer, 0x7C, color.B);
@@ -666,13 +654,13 @@ namespace LibReplanetizer.LevelObjects
             WriteInt(buffer, 0x50, pvarIndex);
             WriteShort(buffer, 0x54, unk3A);
             WriteShort(buffer, 0x56, unk3B);
-            WriteInt(buffer, 0x58, unk9);
+            WriteInt(buffer, 0x58, mode);
             WriteInt(buffer, 0x5C, color.R);
 
             WriteInt(buffer, 0x60, color.G);
             WriteInt(buffer, 0x64, color.B);
             WriteInt(buffer, 0x68, light);
-            WriteInt(buffer, 0x6C, unk14);
+            WriteInt(buffer, 0x6C, unk9);
 
             return buffer;
         }

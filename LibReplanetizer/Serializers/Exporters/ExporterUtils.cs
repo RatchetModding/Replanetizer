@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2022, The Replanetizer Contributors.
+// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -78,6 +78,8 @@ namespace LibReplanetizer
                     return new WavefrontExporter(settings);
                 case ExporterModelSettings.Format.Collada:
                     return new ColladaExporter(settings);
+                case ExporterModelSettings.Format.glTF:
+                    return new GLTFExporter(settings);
             }
 
             return null;
@@ -136,7 +138,8 @@ namespace LibReplanetizer
         public enum Format
         {
             Wavefront = 0,
-            Collada = 1
+            Collada = 1,
+            glTF = 2
         };
 
 
@@ -148,10 +151,10 @@ namespace LibReplanetizer
             AllSequential = 3
         };
 
-        public static readonly string[] FORMAT_STRINGS = { "Wavefront (*.obj)", "Collada (*.dae)" };
+        public static readonly string[] FORMAT_STRINGS = { "Wavefront (*.obj)", "Collada (*.dae)", "glTF 2.0 (*.gltf)" };
         public static readonly string[] ANIMATION_CHOICE_STRINGS = { "No Animations", "All Animations", "Separate File for each Animation", "Concatenate Animations" };
 
-        public ExporterModelSettings.Format format = ExporterModelSettings.Format.Collada;
+        public ExporterModelSettings.Format format = ExporterModelSettings.Format.glTF;
         public ExporterModelSettings.AnimationChoice animationChoice = ExporterModelSettings.AnimationChoice.None;
         public bool exportMtlFile = true;
         public bool extendedFeatures = false;

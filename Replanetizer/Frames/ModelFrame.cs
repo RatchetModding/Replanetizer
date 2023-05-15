@@ -335,6 +335,18 @@ namespace Replanetizer.Frames
                         ImGui.Checkbox("Extended Features", ref exportSettings.extendedFeatures);
                     }
 
+                    // glTF specific settings
+                    if (exportSettings.format == ExporterModelSettings.Format.glTF)
+                    {
+                        bool embedTextures = false;
+                        bool includeAnimations = false;
+
+                        ImGui.BeginDisabled();
+                        ImGui.Checkbox("Embed Textures", ref embedTextures);
+                        ImGui.Checkbox("Include Animations", ref includeAnimations);
+                        ImGui.EndDisabled();
+                    }
+
                     if (ImGui.Button("Export model"))
                         ExportSelectedModel();
                     if (ImGui.Button("Export textures"))

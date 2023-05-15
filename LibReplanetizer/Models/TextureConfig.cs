@@ -25,9 +25,9 @@ namespace LibReplanetizer
 
         [Category("Attributes"), DisplayName("Texture ID")]
         public int id { get; set; }
-        [Category("Attributes"), DisplayName("Vertex Start Index")]
+        [Category("Attributes"), DisplayName("Face Start Index")]
         public int start { get; set; }
-        [Category("Attributes"), DisplayName("Number of Vertices")]
+        [Category("Attributes"), DisplayName("Number of Faces")]
         public int size { get; set; }
         [Category("Attributes"), DisplayName("Mode")]
         public int mode { get; set; }

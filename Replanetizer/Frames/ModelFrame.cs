@@ -333,6 +333,11 @@ namespace Replanetizer.Frames
                     {
                         ImGui.Checkbox("Include MTL File", ref exportSettings.exportMtlFile);
                         ImGui.Checkbox("Extended Features", ref exportSettings.extendedFeatures);
+                        int orientation = (int) exportSettings.orientation;
+                        if (ImGui.Combo("Orientation", ref orientation, ExporterModelSettings.ORIENTATION_STRINGS, ExporterModelSettings.ORIENTATION_STRINGS.Length))
+                        {
+                            exportSettings.orientation = (ExporterModelSettings.Orientation) orientation;
+                        }
                     }
 
                     // glTF specific settings

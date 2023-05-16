@@ -418,8 +418,9 @@ namespace LibReplanetizer
                     float px = model.vertexBuffer[(x * bufferStride) + vOffset + 0x0] * model.size;
                     float py = model.vertexBuffer[(x * bufferStride) + vOffset + 0x1] * model.size;
                     float pz = model.vertexBuffer[(x * bufferStride) + vOffset + 0x2] * model.size;
-                    vertices[x] = new Vector3(px, py, pz);
-                    colladaStream.Write(px.ToString("G", en_US) + " " + py.ToString("G", en_US) + " " + pz.ToString("G", en_US) + " ");
+                    Vector3 pos = new Vector3(px, py, pz);
+                    vertices[x] = pos;
+                    colladaStream.Write(pos.X.ToString("G", en_US) + " " + pos.Y.ToString("G", en_US) + " " + pos.Z.ToString("G", en_US) + " ");
                 }
                 colladaStream.WriteLine("</float_array>");
                 colladaStream.WriteLine("\t\t\t\t\t<technique_common>");
@@ -440,8 +441,9 @@ namespace LibReplanetizer
                         float nx = model.vertexBuffer[(x * bufferStride) + vnOffset + 0x00];
                         float ny = model.vertexBuffer[(x * bufferStride) + vnOffset + 0x01];
                         float nz = model.vertexBuffer[(x * bufferStride) + vnOffset + 0x02];
-                        normals[x] = new Vector3(nx, ny, nz);
-                        colladaStream.Write(nx.ToString("G", en_US) + " " + ny.ToString("G", en_US) + " " + nz.ToString("G", en_US) + " ");
+                        Vector3 normal = new Vector3(nx, ny, nz);
+                        normals[x] = normal;
+                        colladaStream.Write(normal.X.ToString("G", en_US) + " " + normal.Y.ToString("G", en_US) + " " + normal.Z.ToString("G", en_US) + " ");
                     }
                     colladaStream.WriteLine("</float_array>");
                     colladaStream.WriteLine("\t\t\t\t\t<technique_common>");

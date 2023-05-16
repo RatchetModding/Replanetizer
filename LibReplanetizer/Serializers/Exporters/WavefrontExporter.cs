@@ -219,8 +219,9 @@ namespace LibReplanetizer
                 var px = model.vertexBuffer[vertIdx * bufferStride + vOffset + 0x00];
                 var py = model.vertexBuffer[vertIdx * bufferStride + vOffset + 0x01];
                 var pz = model.vertexBuffer[vertIdx * bufferStride + vOffset + 0x02];
-                var pos = new Vector4(px, py, pz, 1.0f) * modelMatrix;
-                vertices[vertIdx] = pos.Xyz;
+                Vector3 pos = (new Vector4(px, py, pz, 1.0f) * modelMatrix).Xyz;
+                ChangeOrientation(ref pos, modelSettings.orientation);
+                vertices[vertIdx] = pos;
                 if (levelSettings.writeColors && vColors != null)
                 {
                     Vector3 color = vColors.GetColor(vertIdx);
@@ -243,8 +244,8 @@ namespace LibReplanetizer
                     var nx = model.vertexBuffer[vertIdx * bufferStride + vnOffset + 0x00];
                     var ny = model.vertexBuffer[vertIdx * bufferStride + vnOffset + 0x01];
                     var nz = model.vertexBuffer[vertIdx * bufferStride + vnOffset + 0x02];
-                    var normal = (new Vector4(nx, ny, nz, 0.0f) * modelMatrix).Xyz;
-                    normal.Normalize();
+                    Vector3 normal = (new Vector4(nx, ny, nz, 0.0f) * modelMatrix).Xyz;
+                    ChangeOrientation(ref normal, modelSettings.orientation);
                     normals[vertIdx] = normal;
                     objfs.WriteLine($"vn " + normal.X.ToString("G", en_US) + " " + normal.Y.ToString("G", en_US) + " " + normal.Z.ToString("G", en_US));
                 }
@@ -564,27 +565,27 @@ namespace LibReplanetizer
 
             for (int x = 0; x < vertexCount; x++)
             {
-                Vector4 v = new Vector4(
+                Vector3 v = new Vector3(
                     model.vertexBuffer[(x * 0x08) + 0x0],
                     model.vertexBuffer[(x * 0x08) + 0x1],
-                    model.vertexBuffer[(x * 0x08) + 0x2],
-                    1.0f);
-                v *= modelMatrix;
-                vertices.Add(v.Xyz);
-                thisVertices[x] = v.Xyz;
+                    model.vertexBuffer[(x * 0x08) + 0x2]);
+                v = (new Vector4(v, 1.0f) * modelMatrix).Xyz;
+                ChangeOrientation(ref v, modelSettings.orientation);
+                vertices.Add(v);
+                thisVertices[x] = v;
 
                 if (levelSettings.writeColors)
                     colors.Add(vColors.GetColor(x));
 
-                var normal = new Vector4(
+                Vector3 normal = new Vector3(
                     model.vertexBuffer[(x * 0x08) + 0x3],
                     model.vertexBuffer[(x * 0x08) + 0x4],
-                    model.vertexBuffer[(x * 0x08) + 0x5],
-                    0.0f);
-                normal *= modelMatrix;
+                    model.vertexBuffer[(x * 0x08) + 0x5]);
+                normal = (new Vector4(normal, 0.0f) * modelMatrix).Xyz;
+                ChangeOrientation(ref normal, modelSettings.orientation);
                 normal.Normalize();
-                normals.Add(normal.Xyz);
-                thisNormals[x] = normal.Xyz;
+                normals.Add(normal);
+                thisNormals[x] = normal;
 
                 uvs.Add(new Vector2(
                     model.vertexBuffer[(x * 0x08) + 0x6],

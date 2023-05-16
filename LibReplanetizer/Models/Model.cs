@@ -26,20 +26,6 @@ namespace LibReplanetizer.Models
         public float[] vertexBuffer = { };
         public ushort[] indexBuffer = { };
 
-        // Every vertex can be assigned to at most 4 bones
-        // weights contains 4 uint8 each being of weight (value / 255.0)
-        // ids contains 4 uint8 each defining which bones we refer to
-        [Category("Attributes"), DisplayName("Bone Weights")]
-        public uint[] weights { get; set; } = new uint[0];
-        [Category("Attributes"), DisplayName("Vertex to Bone Map")]
-        public uint[] ids { get; set; } = new uint[0];
-
-        [Category("Attributes"), DisplayName("Vertex Colors")]
-        public byte[] rgbas { get; set; } = new byte[0];
-
-        [Category("Attributes"), DisplayName("Texture Configurations")]
-        public List<TextureConfig> textureConfig { get; set; } = new List<TextureConfig>();
-
         public int vertexStride { get; protected set; } = 8;
 
         [Category("Attributes"), DisplayName("Vertex Count")]
@@ -59,6 +45,20 @@ namespace LibReplanetizer.Models
                 return indexBuffer.Length / 3;
             }
         }
+
+        // Every vertex can be assigned to at most 4 bones
+        // weights contains 4 uint8 each being of weight (value / 255.0)
+        // ids contains 4 uint8 each defining which bones we refer to
+        [Category("Attributes"), DisplayName("Bone Weights")]
+        public uint[] weights { get; set; } = new uint[0];
+        [Category("Attributes"), DisplayName("Vertex to Bone Map")]
+        public uint[] ids { get; set; } = new uint[0];
+
+        [Category("Attributes"), DisplayName("Vertex Colors")]
+        public byte[] rgbas { get; set; } = new byte[0];
+
+        [Category("Attributes"), DisplayName("Texture Configurations")]
+        public List<TextureConfig> textureConfig { get; set; } = new List<TextureConfig>();
 
         public ushort[] GetIndices()
         {

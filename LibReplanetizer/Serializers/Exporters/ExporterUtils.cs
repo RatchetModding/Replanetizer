@@ -55,6 +55,42 @@ namespace LibReplanetizer
         }
 
         /// <summary>
+        /// Converts world space vectors from the game's Z Up format into the
+        /// specified orientation.
+        /// </summary>
+        protected static void ChangeOrientation(ref Vector3[] v, ExporterModelSettings.Orientation orientation)
+        {
+            for (int i = 0; i < v.Length; i++)
+            {
+                ChangeOrientation(ref v[i], orientation);
+            }
+        }
+
+        protected static void ChangeOrientation(ref Vector3 v, ExporterModelSettings.Orientation orientation)
+        {
+            switch (orientation)
+            {
+                case ExporterModelSettings.Orientation.Y_UP:
+                    {
+                        float temp = v.Y;
+                        v.Y = v.Z;
+                        v.Z = -temp;
+                        return;
+                    }
+                case ExporterModelSettings.Orientation.X_UP:
+                    {
+                        float temp = v.X;
+                        v.X = v.Z;
+                        v.X = -temp;
+                        return;
+                    }
+                case ExporterModelSettings.Orientation.Z_UP:
+                default:
+                    return;
+            }
+        }
+
+        /// <summary>
         /// Export a model to a file.
         /// </summary>
         public abstract void ExportModel(string fileName, Level level, Model model);
@@ -151,11 +187,20 @@ namespace LibReplanetizer
             AllSequential = 3
         };
 
+        public enum Orientation
+        {
+            Z_UP = 0,
+            Y_UP = 1,
+            X_UP = 2
+        }
+
         public static readonly string[] FORMAT_STRINGS = { "Wavefront (*.obj)", "Collada (*.dae)", "glTF 2.0 (*.gltf)" };
         public static readonly string[] ANIMATION_CHOICE_STRINGS = { "No Animations", "All Animations", "Separate File for each Animation", "Concatenate Animations" };
+        public static readonly string[] ORIENTATION_STRINGS = { "Z Up", "Y Up", "X Up" };
 
         public ExporterModelSettings.Format format = ExporterModelSettings.Format.glTF;
         public ExporterModelSettings.AnimationChoice animationChoice = ExporterModelSettings.AnimationChoice.None;
+        public ExporterModelSettings.Orientation orientation = ExporterModelSettings.Orientation.Z_UP;
         public bool exportMtlFile = true;
         public bool extendedFeatures = false;
 

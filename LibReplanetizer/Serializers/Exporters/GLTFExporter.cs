@@ -69,7 +69,8 @@ namespace LibReplanetizer
                         }
                     }
 
-                    public GLTFMaterialPBRValuesBaseColorTexture baseColorTexture;
+                    public GLTFMaterialPBRValuesBaseColorTexture? baseColorTexture;
+                    public float[]? baseColorFactor;
 
                     // Metallic and Roughness are hardcoded, change this if support for exporting
                     // special moby rendering models is implemented.
@@ -81,9 +82,16 @@ namespace LibReplanetizer
                         this.baseColorTexture = baseColorTexture;
                     }
 
-                    public GLTFMaterialPBRValues(int baseColorTextureIndex)
+                    public GLTFMaterialPBRValues(int baseColorTextureIndex, int texID)
                     {
-                        this.baseColorTexture = new GLTFMaterialPBRValuesBaseColorTexture(baseColorTextureIndex);
+                        if (texID == 0)
+                        {
+                            this.baseColorFactor = new float[] { 0.0f, 0.0f, 0.0f, 1.0f };
+                        }
+                        else
+                        {
+                            this.baseColorTexture = new GLTFMaterialPBRValuesBaseColorTexture(baseColorTextureIndex);
+                        }
                     }
                 }
 
@@ -103,8 +111,8 @@ namespace LibReplanetizer
                 public GLTFMaterialEntry(TextureConfig conf, int texOffset)
                 {
                     this.name = "Material_" + texOffset + "_" + conf.id;
-                    this.alphaMode = (conf.IgnoresTransparency()) ? GLTFMaterialEntry.OPAQUE : GLTFMaterialEntry.BLEND;
-                    this.pbrMetallicRoughness = new GLTFMaterialEntry.GLTFMaterialPBRValues(texOffset);
+                    this.alphaMode = (conf.IgnoresTransparency() || conf.id == 0) ? GLTFMaterialEntry.OPAQUE : GLTFMaterialEntry.BLEND;
+                    this.pbrMetallicRoughness = new GLTFMaterialEntry.GLTFMaterialPBRValues(texOffset, conf.id);
                 }
             }
 
@@ -116,13 +124,28 @@ namespace LibReplanetizer
                     {
                         public int POSITION;
                         public int TEXCOORD_0;
-                        public int NORMAL;
+                        public int? NORMAL;
+                        public int? COLOR_n;
+
+                        public GLTFMeshPrimitivesEntryAttributes(int POSITION, int TEXCOORD_0)
+                        {
+                            this.POSITION = POSITION;
+                            this.TEXCOORD_0 = TEXCOORD_0;
+                        }
 
                         public GLTFMeshPrimitivesEntryAttributes(int POSITION, int TEXCOORD_0, int NORMAL)
                         {
                             this.POSITION = POSITION;
                             this.TEXCOORD_0 = TEXCOORD_0;
                             this.NORMAL = NORMAL;
+                        }
+
+                        public GLTFMeshPrimitivesEntryAttributes(int POSITION, int TEXCOORD_0, int NORMAL, int COLOR_n)
+                        {
+                            this.POSITION = POSITION;
+                            this.TEXCOORD_0 = TEXCOORD_0;
+                            this.NORMAL = NORMAL;
+                            this.COLOR_n = COLOR_n;
                         }
                     }
 
@@ -433,6 +456,13 @@ namespace LibReplanetizer
                     }
                 }
 
+                // Change orientation, glTF enforces an orientation of Y Up
+                ChangeOrientation(ref vertices, ExporterModelSettings.Orientation.Y_UP);
+                if (hasNormals)
+                {
+                    ChangeOrientation(ref normals, ExporterModelSettings.Orientation.Y_UP);
+                }
+
                 // Construct Vertex Buffer for glTF export
                 int gltfVertexBufferStride = 3 + 2;
                 int gltfVertexPosOffset = 0;
@@ -558,7 +588,15 @@ namespace LibReplanetizer
                 }
                 this.materials = listMaterials.ToArray();
 
-                GLTFMeshEntry.GLTFMeshPrimitivesEntry.GLTFMeshPrimitivesEntryAttributes vertexAttribs = new GLTFMeshEntry.GLTFMeshPrimitivesEntry.GLTFMeshPrimitivesEntryAttributes(0, 1, 2);
+                GLTFMeshEntry.GLTFMeshPrimitivesEntry.GLTFMeshPrimitivesEntryAttributes vertexAttribs = new GLTFMeshEntry.GLTFMeshPrimitivesEntry.GLTFMeshPrimitivesEntryAttributes(0, 1);
+                if (hasNormals)
+                {
+                    vertexAttribs.NORMAL = 2;
+                }
+                if (hasVertexColors)
+                {
+                    vertexAttribs.COLOR_n = 3;
+                }
 
                 List<GLTFMeshEntry.GLTFMeshPrimitivesEntry> listMeshPrimitives = new List<GLTFMeshEntry.GLTFMeshPrimitivesEntry>();
                 for (int i = 0; i < model.textureConfig.Count; i++)

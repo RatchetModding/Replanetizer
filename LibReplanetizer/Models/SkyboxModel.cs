@@ -36,6 +36,9 @@ namespace LibReplanetizer.Models
 
             int headSize = (game == GameType.DL) ? 0x20 : 0x1C;
 
+            // skybox model has no normals and thus the vertex buffer has a different layout
+            this.vertexStride = 6;
+
             size = 1.0f;
             byte[] skyBlockHead = ReadBlock(fs, offset, headSize);
 

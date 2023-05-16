@@ -99,6 +99,13 @@ namespace LibReplanetizer
                     this.alphaMode = alphaMode;
                     this.pbrMetallicRoughness = pbrMetallicRoughness;
                 }
+
+                public GLTFMaterialEntry(TextureConfig conf, int texOffset)
+                {
+                    this.name = "Material_" + texOffset + "_" + conf.id;
+                    this.alphaMode = (conf.IgnoresTransparency()) ? GLTFMaterialEntry.OPAQUE : GLTFMaterialEntry.BLEND;
+                    this.pbrMetallicRoughness = new GLTFMaterialEntry.GLTFMaterialPBRValues(texOffset);
+                }
             }
 
             public class GLTFMeshEntry
@@ -325,19 +332,8 @@ namespace LibReplanetizer
                 {
                     this.name = name;
 
-                    MemoryStream ms = new MemoryStream();
-                    StreamWriter sw = new StreamWriter(ms);
-
-                    foreach (object obj in arr)
-                    {
-                        sw.Write(obj);
-                    }
-                    sw.Flush();
-
-                    byte[] data = ms.GetBuffer();
-
-                    sw.Close();
-                    ms.Close();
+                    byte[] data = new byte[Buffer.ByteLength(arr)];
+                    Buffer.BlockCopy(arr, 0, data, 0, Buffer.ByteLength(arr));
 
                     this.byteLength = data.Length;
                     this.uri = "data:application/octet-stream;base64," + Convert.ToBase64String(data, Base64FormattingOptions.None);
@@ -360,56 +356,197 @@ namespace LibReplanetizer
 
             public GLTFDataObject(Level level, Model model, bool includeSkeleton)
             {
+                // skybox model has no normals and thus the vertex buffer has a different layout
+                // if we see other cases like this, it may be advisable to generalize this
+                bool skyboxModel = (model is SkyboxModel);
+
+                bool hasNormals = !(skyboxModel);
+                bool hasVertexColors = (skyboxModel) || (model is TerrainModel);
+
+                int vOffset = 0x00;
+                int vnOffset = 0x03;
+                int vtOffset = (skyboxModel) ? 0x03 : 0x06;
+                int vcOffset = 0x05;
+
+                // Separate vertex buffer into components
+                Vector3[] vertices = new Vector3[model.vertexCount];
+                Vector3[] normals = new Vector3[model.vertexCount];
+                Vector2[] UVs = new Vector2[model.vertexCount];
+                Vector4[] vertexColors = new Vector4[model.vertexCount];
+
+                for (int i = 0; i < model.vertexCount; i++)
+                {
+                    float px = model.vertexBuffer[(i * model.vertexStride) + vOffset + 0x0] * model.size;
+                    float py = model.vertexBuffer[(i * model.vertexStride) + vOffset + 0x1] * model.size;
+                    float pz = model.vertexBuffer[(i * model.vertexStride) + vOffset + 0x2] * model.size;
+                    vertices[i] = new Vector3(px, py, pz);
+                }
+
+                for (int i = 0; i < model.vertexCount; i++)
+                {
+                    float u = model.vertexBuffer[(i * model.vertexStride) + vtOffset + 0x0];
+                    float v = model.vertexBuffer[(i * model.vertexStride) + vtOffset + 0x1];
+                    UVs[i] = new Vector2(u, v);
+                }
+
+                if (hasNormals)
+                {
+                    for (int i = 0; i < model.vertexCount; i++)
+                    {
+                        float nx = model.vertexBuffer[(i * model.vertexStride) + vnOffset + 0x0];
+                        float ny = model.vertexBuffer[(i * model.vertexStride) + vnOffset + 0x1];
+                        float nz = model.vertexBuffer[(i * model.vertexStride) + vnOffset + 0x2];
+                        normals[i] = new Vector3(nx, ny, nz);
+                    }
+                }
+
+                if (hasVertexColors)
+                {
+                    for (int i = 0; i < model.vertexCount; i++)
+                    {
+                        byte[] colors = BitConverter.GetBytes(model.vertexBuffer[(i * model.vertexStride) + vcOffset + 0x00]);
+                        float a = ((float) colors[0]) / 255.0f;
+                        float b = ((float) colors[1]) / 255.0f;
+                        float g = ((float) colors[2]) / 255.0f;
+                        float r = ((float) colors[3]) / 255.0f;
+                        vertexColors[i] = new Vector4(r, g, b, a);
+                    }
+                }
+
+                ushort[] gltfIndexBuffer = new ushort[model.faceCount * 3];
+                model.indexBuffer.CopyTo(gltfIndexBuffer, 0);
+
+                // Correct face orientation
+                if (hasNormals)
+                {
+                    for (int i = 0; i < model.faceCount; i++)
+                    {
+                        ushort f1 = gltfIndexBuffer[i * 3 + 0];
+                        ushort f2 = gltfIndexBuffer[i * 3 + 1];
+                        ushort f3 = gltfIndexBuffer[i * 3 + 2];
+
+                        if (ShouldReverseWinding(vertices, normals, f1, f2, f3))
+                        {
+                            gltfIndexBuffer[i * 3 + 1] = f3;
+                            gltfIndexBuffer[i * 3 + 2] = f2;
+                        }
+                    }
+                }
+
+                // Construct Vertex Buffer for glTF export
+                int gltfVertexBufferStride = 3 + 2;
+                int gltfVertexPosOffset = 0;
+                int gltfVertexUVOffset = 3;
+                int gltfVertexNormalOffset = 0;
+                int gltfVertexColorOffset = 0;
+                if (hasNormals)
+                {
+                    gltfVertexNormalOffset = gltfVertexBufferStride;
+                    gltfVertexBufferStride += 3;
+                }
+                if (hasVertexColors)
+                {
+                    gltfVertexColorOffset = gltfVertexBufferStride;
+                    gltfVertexBufferStride += 4;
+                }
+
+                int gltfVertexBufferByteStride = gltfVertexBufferStride * 4;
+                int gltfVertexPosByteOffset = gltfVertexPosOffset * 4;
+                int gltfVertexUVByteOffset = gltfVertexUVOffset * 4;
+                int gltfVertexNormalByteOffset = gltfVertexNormalOffset * 4;
+                int gltfVertexColorByteOffset = gltfVertexColorOffset * 4;
+
+                float[] gltfVertexBuffer = new float[gltfVertexBufferStride * model.vertexCount];
+
+                for (int i = 0; i < model.vertexCount; i++)
+                {
+                    gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexPosOffset + 0x0] = vertices[i].X;
+                    gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexPosOffset + 0x1] = vertices[i].Y;
+                    gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexPosOffset + 0x2] = vertices[i].Z;
+                }
+
+                for (int i = 0; i < model.vertexCount; i++)
+                {
+                    gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexUVOffset + 0x0] = UVs[i].X;
+                    gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexUVOffset + 0x1] = UVs[i].Y;
+                }
+
+                if (hasNormals)
+                {
+                    for (int i = 0; i < model.vertexCount; i++)
+                    {
+                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexNormalOffset + 0x0] = normals[i].X;
+                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexNormalOffset + 0x1] = normals[i].Y;
+                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexNormalOffset + 0x2] = normals[i].Z;
+                    }
+                }
+
+                if (hasVertexColors)
+                {
+                    for (int i = 0; i < model.vertexCount; i++)
+                    {
+                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexColorOffset + 0x0] = vertexColors[i].X;
+                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexColorOffset + 0x1] = vertexColors[i].Y;
+                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexColorOffset + 0x2] = vertexColors[i].Z;
+                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexColorOffset + 0x3] = vertexColors[i].W;
+                    }
+                }
+
+                Dictionary<int, int> texIDToImageOffset = new Dictionary<int, int>();
+
                 List<GLTFImageEntry> listImages = new List<GLTFImageEntry>();
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
                     TextureConfig conf = model.textureConfig[i];
-                    listImages.Add(new GLTFImageEntry(conf));
+                    if (!texIDToImageOffset.ContainsKey(conf.id))
+                    {
+                        texIDToImageOffset.Add(conf.id, listImages.Count);
+                        listImages.Add(new GLTFImageEntry(conf));
+                    }
                 }
                 this.images = listImages.ToArray();
 
                 List<GLTFSamplerEntry> listSamplers = new List<GLTFSamplerEntry>();
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
-                    TextureConfig conf = model.textureConfig[i];
-                    listSamplers.Add(new GLTFSamplerEntry(conf));
+                    listSamplers.Add(new GLTFSamplerEntry(model.textureConfig[i]));
                 }
                 this.samplers = listSamplers.ToArray();
 
                 List<GLTFTextureEntry> listTextures = new List<GLTFTextureEntry>();
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
-                    listTextures.Add(new GLTFTextureEntry(i, i));
+                    TextureConfig conf = model.textureConfig[i];
+                    listTextures.Add(new GLTFTextureEntry(i, texIDToImageOffset[conf.id]));
                 }
                 this.textures = listTextures.ToArray();
 
                 List<GLTFBufferEntry> listBuffers = new List<GLTFBufferEntry>();
-                listBuffers.Add(new GLTFBufferEntry("VertexBuffer", model.vertexBuffer));
-                listBuffers.Add(new GLTFBufferEntry("IndexBuffer", model.indexBuffer));
+                listBuffers.Add(new GLTFBufferEntry("VertexBuffer", gltfVertexBuffer));
+                listBuffers.Add(new GLTFBufferEntry("IndexBuffer", gltfIndexBuffer));
                 this.buffers = listBuffers.ToArray();
 
                 List<GLTFBufferViewEntry> listBufferViews = new List<GLTFBufferViewEntry>();
-                listBufferViews.Add(new GLTFBufferViewEntry("VertexBufferView", 0, 32 * model.vertexCount, 0, 32, GLTFBufferViewEntry.ARRAY_BUFFER));
+                listBufferViews.Add(new GLTFBufferViewEntry("VertexBufferView", 0, gltfVertexBufferByteStride * model.vertexCount, 0, gltfVertexBufferByteStride, GLTFBufferViewEntry.ARRAY_BUFFER));
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
                     TextureConfig conf = model.textureConfig[i];
-                    int strideIndex = 6;
-                    int byteOffsetIndex = strideIndex * conf.start;
-                    int byteLengthIndex = strideIndex * conf.size;
+                    int stride = 2;
+                    int byteOffset = stride * conf.start;
+                    int byteLength = stride * conf.size;
 
-                    listBufferViews.Add(new GLTFBufferViewEntry("IndexBufferView" + i, 1, byteLengthIndex, byteOffsetIndex, strideIndex, GLTFBufferViewEntry.ELEMENT_ARRAY_BUFFER));
+                    listBufferViews.Add(new GLTFBufferViewEntry("IndexBufferView" + i, 1, byteLength, byteOffset, stride, GLTFBufferViewEntry.ELEMENT_ARRAY_BUFFER));
                 }
                 this.bufferViews = listBufferViews.ToArray();
 
                 List<GLTFAccessorEntry> listAccessors = new List<GLTFAccessorEntry>();
-                listAccessors.Add(new GLTFAccessorEntry("VertexPosAccessor", 0, GLTFAccessorEntry.FLOAT, model.vertexCount, 0, GLTFAccessorEntry.VEC3));
-                listAccessors.Add(new GLTFAccessorEntry("VertexNormalAccessor", 0, GLTFAccessorEntry.FLOAT, model.vertexCount, 12, GLTFAccessorEntry.VEC3));
-                listAccessors.Add(new GLTFAccessorEntry("VertexUVAccessor", 0, GLTFAccessorEntry.FLOAT, model.vertexCount, 24, GLTFAccessorEntry.VEC2));
+                listAccessors.Add(new GLTFAccessorEntry("VertexPosAccessor", 0, GLTFAccessorEntry.FLOAT, model.vertexCount, gltfVertexPosByteOffset, GLTFAccessorEntry.VEC3));
+                listAccessors.Add(new GLTFAccessorEntry("VertexUVAccessor", 0, GLTFAccessorEntry.FLOAT, model.vertexCount, gltfVertexUVByteOffset, GLTFAccessorEntry.VEC2));
+                listAccessors.Add(new GLTFAccessorEntry("VertexNormalAccessor", 0, GLTFAccessorEntry.FLOAT, model.vertexCount, gltfVertexNormalByteOffset, GLTFAccessorEntry.VEC3));
+                listAccessors.Add(new GLTFAccessorEntry("VertexColorAccessor", 0, GLTFAccessorEntry.FLOAT, model.vertexCount, gltfVertexColorByteOffset, GLTFAccessorEntry.VEC4));
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
-                    TextureConfig conf = model.textureConfig[i];
-
-                    listAccessors.Add(new GLTFAccessorEntry("IndexAccessor" + i, i + 1, GLTFAccessorEntry.UNSIGNED_SHORT, conf.size, 0, GLTFAccessorEntry.VEC3));
+                    listAccessors.Add(new GLTFAccessorEntry("IndexAccessor" + i, i + 1, GLTFAccessorEntry.UNSIGNED_SHORT, model.textureConfig[i].size, 0, GLTFAccessorEntry.SCALAR));
                 }
 
                 this.accessors = listAccessors.ToArray();
@@ -417,21 +554,16 @@ namespace LibReplanetizer
                 List<GLTFMaterialEntry> listMaterials = new List<GLTFMaterialEntry>();
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
-                    TextureConfig conf = model.textureConfig[i];
-
-                    String alphaMode = (conf.IgnoresTransparency()) ? GLTFMaterialEntry.OPAQUE : GLTFMaterialEntry.BLEND;
-                    GLTFMaterialEntry.GLTFMaterialPBRValues pbrValues = new GLTFMaterialEntry.GLTFMaterialPBRValues(i);
-
-                    listMaterials.Add(new GLTFMaterialEntry("Material" + i, alphaMode, pbrValues));
+                    listMaterials.Add(new GLTFMaterialEntry(model.textureConfig[i], i));
                 }
                 this.materials = listMaterials.ToArray();
 
-                GLTFMeshEntry.GLTFMeshPrimitivesEntry.GLTFMeshPrimitivesEntryAttributes vertexAttribs = new GLTFMeshEntry.GLTFMeshPrimitivesEntry.GLTFMeshPrimitivesEntryAttributes(0, 2, 1);
+                GLTFMeshEntry.GLTFMeshPrimitivesEntry.GLTFMeshPrimitivesEntryAttributes vertexAttribs = new GLTFMeshEntry.GLTFMeshPrimitivesEntry.GLTFMeshPrimitivesEntryAttributes(0, 1, 2);
 
                 List<GLTFMeshEntry.GLTFMeshPrimitivesEntry> listMeshPrimitives = new List<GLTFMeshEntry.GLTFMeshPrimitivesEntry>();
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
-                    listMeshPrimitives.Add(new GLTFMeshEntry.GLTFMeshPrimitivesEntry(vertexAttribs, 3 + i, i));
+                    listMeshPrimitives.Add(new GLTFMeshEntry.GLTFMeshPrimitivesEntry(vertexAttribs, 4 + i, i));
                 }
 
                 List<GLTFMeshEntry> listMeshes = new List<GLTFMeshEntry>();

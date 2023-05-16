@@ -40,14 +40,18 @@ namespace LibReplanetizer.Models
         [Category("Attributes"), DisplayName("Texture Configurations")]
         public List<TextureConfig> textureConfig { get; set; } = new List<TextureConfig>();
 
+        public int vertexStride { get; protected set; } = 8;
+
+        [Category("Attributes"), DisplayName("Vertex Count")]
         public int vertexCount
         {
             get
             {
-                return vertexBuffer.Length / 8;
+                return vertexBuffer.Length / vertexStride;
             }
         }
 
+        [Category("Attributes"), DisplayName("Face Count")]
         public int faceCount
         {
             get

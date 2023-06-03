@@ -100,10 +100,10 @@ namespace LibReplanetizer
         public List<DirectionalLight> directionalLights;
         public List<PointLight> pointLights;
         public List<EnvSample> envSamples;
+        public List<EnvTransition> envTransitions;
         public List<Type0C> type0Cs;
         public List<GlobalPvarBlock> type4Cs;
         public List<Type7C> type7Cs;
-        public List<Type80> type80s;
 
         public List<byte[]> pVars;
         public List<Cuboid> cuboids;
@@ -243,11 +243,11 @@ namespace LibReplanetizer
                 directionalLights = gameplayParser.GetDirectionalLights();
                 pointLights = gameplayParser.GetPointLights();
                 envSamples = gameplayParser.GetEnvSamples();
+                envTransitions = gameplayParser.GetEnvTransitions();
 
                 type0Cs = gameplayParser.GetType0Cs();
                 type4Cs = gameplayParser.GetType4Cs();
                 type7Cs = gameplayParser.GetType7Cs();
-                type80s = gameplayParser.GetType80();
                 type50s = gameplayParser.GetType50s();
                 type5Cs = gameplayParser.GetType5Cs();
 

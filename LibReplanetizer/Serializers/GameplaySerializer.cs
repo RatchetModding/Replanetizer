@@ -62,7 +62,7 @@ namespace LibReplanetizer.Serializers
                 japanesePointer = SeekWrite(fs, GetLangBytes(level.japanese)),
                 koreanPointer = SeekWrite(fs, GetLangBytes(level.korean)),
                 lightsPointer = SeekWrite(fs, SerializeLevelObjects(level.directionalLights, DirectionalLight.ELEMENTSIZE)),
-                envTransitionsPointer = SeekWrite(fs, GetType80Bytes(level.type80s)),
+                envTransitionsPointer = SeekWrite(fs, GetEnvTransitionBytes(level.envTransitions)),
                 cameraPointer = SeekWrite(fs, SerializeLevelObjects(level.gameCameras, GameCamera.ELEMENTSIZE)),
                 soundPointer = SeekWrite(fs, SerializeLevelObjects(level.type0Cs, Type0C.ELEMENTSIZE)),
                 mobyIdPointer = SeekWrite(fs, GetIdBytes(level.mobyIds)),
@@ -113,7 +113,7 @@ namespace LibReplanetizer.Serializers
                 japanesePointer = SeekWrite(fs, GetLangBytes(level.japanese)),
                 koreanPointer = SeekWrite(fs, GetLangBytes(level.korean)),
                 lightsPointer = SeekWrite(fs, SerializeLevelObjects(level.directionalLights, DirectionalLight.ELEMENTSIZE)),
-                envTransitionsPointer = SeekWrite(fs, GetType80Bytes(level.type80s)),
+                envTransitionsPointer = SeekWrite(fs, GetEnvTransitionBytes(level.envTransitions)),
                 cameraPointer = SeekWrite(fs, SerializeLevelObjects(level.gameCameras, GameCamera.ELEMENTSIZE)),
                 soundPointer = SeekWrite(fs, SerializeLevelObjects(level.type0Cs, Type0C.ELEMENTSIZE)),
                 mobyIdPointer = SeekWrite(fs, GetIdBytes(level.mobyIds)),
@@ -166,7 +166,7 @@ namespace LibReplanetizer.Serializers
                 japanesePointer = SeekWrite4(fs, GetLangBytes(level.japanese)),
                 koreanPointer = SeekWrite4(fs, GetLangBytes(level.korean)),
                 lightsPointer = SeekWrite4(fs, SerializeLevelObjects(level.directionalLights, DirectionalLight.ELEMENTSIZE)),
-                envTransitionsPointer = SeekWrite4(fs, GetType80Bytes(level.type80s)),
+                envTransitionsPointer = SeekWrite4(fs, GetEnvTransitionBytes(level.envTransitions)),
                 cameraPointer = SeekWrite4(fs, SerializeLevelObjects(level.gameCameras, GameCamera.ELEMENTSIZE)),
                 soundPointer = SeekWrite4(fs, SerializeLevelObjects(level.type0Cs, Type0C.ELEMENTSIZE)),
                 mobyIdPointer = SeekWrite4(fs, GetIdBytes(level.mobyIds)),
@@ -218,7 +218,7 @@ namespace LibReplanetizer.Serializers
                 japanesePointer = SeekWrite4(fs, GetLangBytes(level.japanese)),
                 koreanPointer = SeekWrite4(fs, GetLangBytes(level.korean)),
                 lightsPointer = SeekWrite4(fs, SerializeLevelObjects(level.directionalLights, DirectionalLight.ELEMENTSIZE)),
-                envTransitionsPointer = SeekWrite4(fs, GetType80Bytes(level.type80s)),
+                envTransitionsPointer = SeekWrite4(fs, GetEnvTransitionBytes(level.envTransitions)),
                 cameraPointer = SeekWrite4(fs, SerializeLevelObjects(level.gameCameras, GameCamera.ELEMENTSIZE)),
                 soundPointer = SeekWrite4(fs, SerializeLevelObjects(level.type0Cs, Type0C.ELEMENTSIZE)),
                 mobyIdPointer = SeekWrite4(fs, GetIdBytes(level.mobyIds)),
@@ -332,6 +332,24 @@ namespace LibReplanetizer.Serializers
             return bytes;
         }
 
+        public byte[] GetEnvTransitionBytes(List<EnvTransition> envTransitions)
+        {
+            if (envTransitions == null) return new byte[0x10];
+
+            byte[] bytes = new byte[0x10 + envTransitions.Count * (EnvTransition.HEADSIZE + EnvTransition.ELEMENTSIZE)];
+
+            //Header
+            WriteInt(bytes, 0, envTransitions.Count);
+
+            for (int i = 0; i < envTransitions.Count; i++)
+            {
+                envTransitions[i].ToByteArrayHead().CopyTo(bytes, 0x10 + i * EnvTransition.HEADSIZE);
+                envTransitions[i].ToByteArrayMain().CopyTo(bytes, 0x10 + envTransitions.Count * EnvTransition.HEADSIZE + i * EnvTransition.ELEMENTSIZE);
+            }
+
+            return bytes;
+        }
+
         public byte[] GetType4CBytes(List<GlobalPvarBlock> type4Cs)
         {
             if (type4Cs == null) return new byte[0x10];
@@ -364,26 +382,6 @@ namespace LibReplanetizer.Serializers
                 type7Cs[i].Serialize().CopyTo(bytes, 0x10 + i * Type7C.ELEMENTSIZE);
             }
 
-            return bytes;
-        }
-
-        public byte[] GetType80Bytes(List<Type80> type80s)
-        {
-            if (type80s == null) return new byte[0x10];
-
-            byte[] bytes = new byte[0x10 + type80s.Count * (Type80.HEADSIZE + Type80.DATASIZE)];
-
-            //Header
-            WriteInt(bytes, 0, type80s.Count);
-
-            for (int i = 0; i < type80s.Count; i++)
-            {
-                byte[] headBytes = type80s[i].SerializeHead();
-                byte[] dataBytes = type80s[i].SerializeData();
-
-                headBytes.CopyTo(bytes, 0x10 + i * Type80.HEADSIZE);
-                dataBytes.CopyTo(bytes, 0x10 + Type80.HEADSIZE * type80s.Count + i * Type80.DATASIZE);
-            }
             return bytes;
         }
 

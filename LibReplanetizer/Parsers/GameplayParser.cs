@@ -253,21 +253,21 @@ namespace LibReplanetizer.Parsers
             return type7Cs;
         }
 
-        public List<Type80> GetType80()
+        public List<EnvTransition> GetEnvTransitions()
         {
-            var type80s = new List<Type80>();
-            if (gameplayHeader.envTransitionsPointer == 0) { return type80s; }
+            List<EnvTransition> envTransitions = new List<EnvTransition>();
+            if (gameplayHeader.envTransitionsPointer == 0) { return envTransitions; }
 
             int count = ReadInt(ReadBlock(fileStream, gameplayHeader.envTransitionsPointer, 4), 0);
-            byte[] headBlock = ReadBlock(fileStream, gameplayHeader.envTransitionsPointer + 0x10, Type80.HEADSIZE * count);
-            byte[] dataBlock = ReadBlock(fileStream, gameplayHeader.envTransitionsPointer + 0x10 + Type80.HEADSIZE * count, Type80.DATASIZE * count);
+            byte[] headBlock = ReadBlock(fileStream, gameplayHeader.envTransitionsPointer + 0x10, EnvTransition.HEADSIZE * count);
+            byte[] mainBlock = ReadBlock(fileStream, gameplayHeader.envTransitionsPointer + 0x10 + EnvTransition.HEADSIZE * count, EnvTransition.ELEMENTSIZE * count);
 
             for (int i = 0; i < count; i++)
             {
-                type80s.Add(new Type80(headBlock, dataBlock, i));
+                envTransitions.Add(new EnvTransition(headBlock, mainBlock, i));
             }
 
-            return type80s;
+            return envTransitions;
         }
 
         public byte[] GetUnk6()

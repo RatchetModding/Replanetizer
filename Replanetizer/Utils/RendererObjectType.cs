@@ -18,9 +18,10 @@ namespace Replanetizer.Utils
         Cuboid = 6,
         Sphere = 7,
         Cylinder = 8,
-        Type0C = 9,
-        GameCamera = 10,
-        Tool = 11,
-        Skybox = 12
+        Pill = 9,
+        Type0C = 10,
+        GameCamera = 11,
+        Tool = 12,
+        Skybox = 13
     }
 }

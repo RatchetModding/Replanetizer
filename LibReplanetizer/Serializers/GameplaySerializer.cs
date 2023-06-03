@@ -51,7 +51,7 @@ namespace LibReplanetizer.Serializers
 
             GameplayHeader gameplayHeader = new GameplayHeader
             {
-                type88Pointer = SeekWrite(fs, SerializeLevelObjects(level.type88s, Type88.ELEMENTSIZE)),
+                envSamplesPointer = SeekWrite(fs, SerializeLevelObjects(level.envSamples, EnvSample.GetElementSize(GameType.RaC1))),
                 levelVarPointer = SeekWrite(fs, level.levelVariables.Serialize(level.game)),
                 englishPointer = SeekWrite(fs, GetLangBytes(level.english)),
                 ukenglishPointer = SeekWrite(fs, GetLangBytes(level.ukenglish)),
@@ -62,17 +62,17 @@ namespace LibReplanetizer.Serializers
                 japanesePointer = SeekWrite(fs, GetLangBytes(level.japanese)),
                 koreanPointer = SeekWrite(fs, GetLangBytes(level.korean)),
                 lightsPointer = SeekWrite(fs, SerializeLevelObjects(level.directionalLights, DirectionalLight.ELEMENTSIZE)),
-                type80Pointer = SeekWrite(fs, GetType80Bytes(level.type80s)),
+                envTransitionsPointer = SeekWrite(fs, GetType80Bytes(level.type80s)),
                 cameraPointer = SeekWrite(fs, SerializeLevelObjects(level.gameCameras, GameCamera.ELEMENTSIZE)),
                 soundPointer = SeekWrite(fs, SerializeLevelObjects(level.type0Cs, Type0C.ELEMENTSIZE)),
                 mobyIdPointer = SeekWrite(fs, GetIdBytes(level.mobyIds)),
                 mobyPointer = SeekWrite(fs, GetMobyBytes(level.mobs, level.game)),
                 pvarSizePointer = SeekWrite(fs, GetPvarSizeBytes(level.pVars)),
                 pvarPointer = SeekWrite(fs, GetPvarBytes(level.pVars)),
-                type50Pointer = SeekWrite(fs, GetKeyValueBytes(level.type50s)),
-                type5CPointer = SeekWrite(fs, GetKeyValueBytes(level.type5Cs)),
+                pvarScratchPadPointer = SeekWrite(fs, GetKeyValueBytes(level.type50s)),
+                pvarRewirePointer = SeekWrite(fs, GetKeyValueBytes(level.type5Cs)),
                 mobyGroupsPointer = SeekWrite(fs, level.unk6),
-                type4CPointer = SeekWrite(fs, GetType4CBytes(level.type4Cs)),
+                globalPvarPointer = SeekWrite(fs, GetType4CBytes(level.type4Cs)),
                 tieIdPointer = SeekWrite(fs, GetIdBytes(level.tieIds)),
                 tiePointer = SeekWrite(fs, level.tieData),
                 shrubIdPointer = SeekWrite(fs, GetIdBytes(level.shrubIds)),
@@ -81,10 +81,10 @@ namespace LibReplanetizer.Serializers
                 cuboidPointer = SeekWrite(fs, SerializeLevelObjects(level.cuboids, Cuboid.ELEMENTSIZE)),
                 spherePointer = SeekWrite(fs, SerializeLevelObjects(level.spheres, Sphere.ELEMENTSIZE)),
                 cylinderPointer = SeekWrite(fs, SerializeLevelObjects(level.cylinders, Cylinder.ELEMENTSIZE)),
-                unkPointer12 = SeekWrite(fs, new byte[0x10]),
-                unkPointer17 = SeekWrite(fs, level.unk17),
-                type7CPointer = SeekWrite(fs, GetType7CBytes(level.type7Cs)),
-                unkPointer14 = SeekWrite(fs, level.unk14),
+                pillPointer = SeekWrite(fs, new byte[0x10]),
+                camCollisionPointer = SeekWrite(fs, level.unk17),
+                pointLightPointer = SeekWrite(fs, GetType7CBytes(level.type7Cs)),
+                pointLightGridPointer = SeekWrite(fs, level.unk14),
                 grindPathsPointer = SeekWrite(fs, level.unk13),
                 occlusionPointer = SeekWrite(fs, GetOcclusionBytes(level.occlusionData))
             };
@@ -102,7 +102,7 @@ namespace LibReplanetizer.Serializers
 
             GameplayHeader gameplayHeader = new GameplayHeader
             {
-                unkPointer18 = SeekWrite(fs, level.unk18),
+                envSamplesPointer = SeekWrite(fs, SerializeLevelObjects(level.envSamples, EnvSample.GetElementSize(GameType.RaC2))),
                 levelVarPointer = SeekWrite(fs, level.levelVariables.Serialize(level.game)),
                 englishPointer = SeekWrite(fs, GetLangBytes(level.english)),
                 ukenglishPointer = SeekWrite(fs, GetLangBytes(level.ukenglish)),
@@ -113,17 +113,17 @@ namespace LibReplanetizer.Serializers
                 japanesePointer = SeekWrite(fs, GetLangBytes(level.japanese)),
                 koreanPointer = SeekWrite(fs, GetLangBytes(level.korean)),
                 lightsPointer = SeekWrite(fs, SerializeLevelObjects(level.directionalLights, DirectionalLight.ELEMENTSIZE)),
-                type80Pointer = SeekWrite(fs, GetType80Bytes(level.type80s)),
+                envTransitionsPointer = SeekWrite(fs, GetType80Bytes(level.type80s)),
                 cameraPointer = SeekWrite(fs, SerializeLevelObjects(level.gameCameras, GameCamera.ELEMENTSIZE)),
                 soundPointer = SeekWrite(fs, SerializeLevelObjects(level.type0Cs, Type0C.ELEMENTSIZE)),
                 mobyIdPointer = SeekWrite(fs, GetIdBytes(level.mobyIds)),
                 mobyPointer = SeekWrite(fs, GetMobyBytes(level.mobs, level.game)),
                 pvarSizePointer = SeekWrite(fs, GetPvarSizeBytes(level.pVars)),
                 pvarPointer = SeekWrite(fs, GetPvarBytes(level.pVars)),
-                type50Pointer = SeekWrite(fs, GetKeyValueBytes(level.type50s)),
-                type5CPointer = SeekWrite(fs, GetKeyValueBytes(level.type5Cs)),
+                pvarScratchPadPointer = SeekWrite(fs, GetKeyValueBytes(level.type50s)),
+                pvarRewirePointer = SeekWrite(fs, GetKeyValueBytes(level.type5Cs)),
                 mobyGroupsPointer = SeekWrite(fs, level.unk6),
-                type4CPointer = SeekWrite(fs, level.unk7),
+                globalPvarPointer = SeekWrite(fs, level.unk7),
                 tieIdPointer = SeekWrite(fs, GetIdBytes(level.tieIds)),
                 tiePointer = SeekWrite(fs, level.tieData),
                 tieGroupsPointer = SeekWrite(fs, level.tieGroupData),
@@ -134,9 +134,9 @@ namespace LibReplanetizer.Serializers
                 cuboidPointer = SeekWrite(fs, SerializeLevelObjects(level.cuboids, Cuboid.ELEMENTSIZE)),
                 spherePointer = SeekWrite(fs, SerializeLevelObjects(level.spheres, Sphere.ELEMENTSIZE)),
                 cylinderPointer = SeekWrite(fs, SerializeLevelObjects(level.cylinders, Cylinder.ELEMENTSIZE)),
-                unkPointer12 = SeekWrite(fs, new byte[0x10]),
-                unkPointer17 = SeekWrite(fs, level.unk17),
-                unkPointer16 = SeekWrite(fs, level.unk16),
+                pillPointer = SeekWrite(fs, new byte[0x10]),
+                camCollisionPointer = SeekWrite(fs, level.unk17),
+                pointLightPointer = SeekWrite4(fs, SerializeLevelObjects(level.pointLights, PointLight.ELEMENTSIZE)),
                 grindPathsPointer = SeekWrite(fs, level.unk13),
                 areasPointer = SeekWrite(fs, level.areasData),
                 occlusionPointer = SeekWrite(fs, GetOcclusionBytes(level.occlusionData))
@@ -155,7 +155,7 @@ namespace LibReplanetizer.Serializers
 
             GameplayHeader gameplayHeader = new GameplayHeader
             {
-                unkPointer18 = SeekWrite4(fs, level.unk18),
+                envSamplesPointer = SeekWrite(fs, SerializeLevelObjects(level.envSamples, EnvSample.GetElementSize(GameType.RaC3))),
                 levelVarPointer = SeekWrite4(fs, level.levelVariables.Serialize(level.game)),
                 englishPointer = SeekWrite4(fs, GetLangBytes(level.english)),
                 ukenglishPointer = SeekWrite4(fs, GetLangBytes(level.ukenglish)),
@@ -166,17 +166,17 @@ namespace LibReplanetizer.Serializers
                 japanesePointer = SeekWrite4(fs, GetLangBytes(level.japanese)),
                 koreanPointer = SeekWrite4(fs, GetLangBytes(level.korean)),
                 lightsPointer = SeekWrite4(fs, SerializeLevelObjects(level.directionalLights, DirectionalLight.ELEMENTSIZE)),
-                type80Pointer = SeekWrite4(fs, GetType80Bytes(level.type80s)),
+                envTransitionsPointer = SeekWrite4(fs, GetType80Bytes(level.type80s)),
                 cameraPointer = SeekWrite4(fs, SerializeLevelObjects(level.gameCameras, GameCamera.ELEMENTSIZE)),
                 soundPointer = SeekWrite4(fs, SerializeLevelObjects(level.type0Cs, Type0C.ELEMENTSIZE)),
                 mobyIdPointer = SeekWrite4(fs, GetIdBytes(level.mobyIds)),
                 mobyPointer = SeekWrite4(fs, GetMobyBytes(level.mobs, level.game)),
                 pvarSizePointer = SeekWrite4(fs, GetPvarSizeBytes(level.pVars)),
                 pvarPointer = SeekWrite4(fs, GetPvarBytes(level.pVars)),
-                type50Pointer = SeekWrite4(fs, GetKeyValueBytes(level.type50s)),
-                type5CPointer = SeekWrite4(fs, GetKeyValueBytes(level.type5Cs)),
+                pvarScratchPadPointer = SeekWrite4(fs, GetKeyValueBytes(level.type50s)),
+                pvarRewirePointer = SeekWrite4(fs, GetKeyValueBytes(level.type5Cs)),
                 mobyGroupsPointer = SeekWrite4(fs, level.unk6),
-                type4CPointer = SeekWrite4(fs, level.unk7),
+                globalPvarPointer = SeekWrite4(fs, level.unk7),
                 tieIdPointer = SeekWrite4(fs, GetIdBytes(level.tieIds)),
                 tiePointer = SeekWrite4(fs, level.tieData),
                 tieGroupsPointer = SeekWrite4(fs, level.tieGroupData),
@@ -187,9 +187,9 @@ namespace LibReplanetizer.Serializers
                 cuboidPointer = SeekWrite4(fs, SerializeLevelObjects(level.cuboids, Cuboid.ELEMENTSIZE)),
                 spherePointer = SeekWrite4(fs, SerializeLevelObjects(level.spheres, Sphere.ELEMENTSIZE)),
                 cylinderPointer = SeekWrite4(fs, SerializeLevelObjects(level.cylinders, Cylinder.ELEMENTSIZE)),
-                unkPointer12 = SeekWrite4(fs, new byte[0x10]),
-                unkPointer17 = SeekWrite4(fs, level.unk17),
-                unkPointer16 = SeekWrite4(fs, level.unk16),
+                pillPointer = SeekWrite4(fs, new byte[0x10]),
+                camCollisionPointer = SeekWrite4(fs, level.unk17),
+                pointLightPointer = SeekWrite4(fs, SerializeLevelObjects(level.pointLights, PointLight.ELEMENTSIZE)),
                 grindPathsPointer = SeekWrite4(fs, level.unk13),
                 areasPointer = SeekWrite4(fs, level.areasData),
                 occlusionPointer = SeekWrite4(fs, GetOcclusionBytes(level.occlusionData))
@@ -218,17 +218,17 @@ namespace LibReplanetizer.Serializers
                 japanesePointer = SeekWrite4(fs, GetLangBytes(level.japanese)),
                 koreanPointer = SeekWrite4(fs, GetLangBytes(level.korean)),
                 lightsPointer = SeekWrite4(fs, SerializeLevelObjects(level.directionalLights, DirectionalLight.ELEMENTSIZE)),
-                type80Pointer = SeekWrite4(fs, GetType80Bytes(level.type80s)),
+                envTransitionsPointer = SeekWrite4(fs, GetType80Bytes(level.type80s)),
                 cameraPointer = SeekWrite4(fs, SerializeLevelObjects(level.gameCameras, GameCamera.ELEMENTSIZE)),
                 soundPointer = SeekWrite4(fs, SerializeLevelObjects(level.type0Cs, Type0C.ELEMENTSIZE)),
                 mobyIdPointer = SeekWrite4(fs, GetIdBytes(level.mobyIds)),
                 mobyPointer = SeekWrite4(fs, GetMobyBytes(level.mobs, level.game)),
                 pvarSizePointer = SeekWrite4(fs, GetPvarSizeBytes(level.pVars)),
                 pvarPointer = SeekWrite4(fs, GetPvarBytes(level.pVars)),
-                type50Pointer = SeekWrite4(fs, GetKeyValueBytes(level.type50s)),
-                type5CPointer = SeekWrite4(fs, GetKeyValueBytes(level.type5Cs)),
+                pvarScratchPadPointer = SeekWrite4(fs, GetKeyValueBytes(level.type50s)),
+                pvarRewirePointer = SeekWrite4(fs, GetKeyValueBytes(level.type5Cs)),
                 mobyGroupsPointer = SeekWrite4(fs, level.unk6),
-                type4CPointer = SeekWrite4(fs, level.unk7),
+                globalPvarPointer = SeekWrite4(fs, level.unk7),
                 tieIdPointer = SeekWrite4(fs, GetIdBytes(level.tieIds)),
                 tiePointer = SeekWrite4(fs, level.tieData),
                 tieGroupsPointer = SeekWrite4(fs, level.tieGroupData),
@@ -239,9 +239,9 @@ namespace LibReplanetizer.Serializers
                 cuboidPointer = SeekWrite4(fs, SerializeLevelObjects(level.cuboids, Cuboid.ELEMENTSIZE)),
                 spherePointer = SeekWrite4(fs, SerializeLevelObjects(level.spheres, Sphere.ELEMENTSIZE)),
                 cylinderPointer = SeekWrite4(fs, SerializeLevelObjects(level.cylinders, Cylinder.ELEMENTSIZE)),
-                unkPointer12 = SeekWrite4(fs, new byte[0x10]),
-                unkPointer17 = SeekWrite4(fs, level.unk17),
-                unkPointer16 = SeekWrite4(fs, level.unk16),
+                pillPointer = SeekWrite4(fs, new byte[0x10]),
+                camCollisionPointer = SeekWrite4(fs, level.unk17),
+                pointLightPointer = SeekWrite4(fs, SerializeLevelObjects(level.pointLights, PointLight.ELEMENTSIZE)),
                 grindPathsPointer = SeekWrite4(fs, level.unk13),
                 areasPointer = SeekWrite4(fs, level.areasData),
                 occlusionPointer = SeekWrite4(fs, GetOcclusionBytes(level.occlusionData))
@@ -332,11 +332,11 @@ namespace LibReplanetizer.Serializers
             return bytes;
         }
 
-        public byte[] GetType4CBytes(List<Type4C> type4Cs)
+        public byte[] GetType4CBytes(List<GlobalPvarBlock> type4Cs)
         {
             if (type4Cs == null) return new byte[0x10];
 
-            byte[] bytes = new byte[0x10 + 0x10 + type4Cs.Count * Type4C.ELEMENTSIZE];
+            byte[] bytes = new byte[0x10 + 0x10 + type4Cs.Count * GlobalPvarBlock.ELEMENTSIZE];
 
             //Header
             WriteInt(bytes, 0x00, 0x10);
@@ -344,7 +344,7 @@ namespace LibReplanetizer.Serializers
 
             for (int i = 0; i < type4Cs.Count; i++)
             {
-                type4Cs[i].ToByteArray().CopyTo(bytes, 0x10 + 0x10 + i * Type4C.ELEMENTSIZE);
+                type4Cs[i].ToByteArray().CopyTo(bytes, 0x10 + 0x10 + i * GlobalPvarBlock.ELEMENTSIZE);
             }
 
             return bytes;

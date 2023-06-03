@@ -20,9 +20,9 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Position")]
         public Vector3 position { get; set; } = new Vector3();
         [Category("Attributes"), DisplayName("Scale")]
-        public Vector3 scale { get; set; } = new Vector3();
+        public Vector3 scale { get; set; } = new Vector3(1.0f);
         [Category("Attributes"), DisplayName("Rotation"), TypeConverter(typeof(Level_Objects.QuaternionTypeConverter))]
-        public Quaternion rotation { get; set; } = new Quaternion();
+        public Quaternion rotation { get; set; } = Quaternion.Identity;
         [Category("Attributes"), DisplayName("Reflection")]
         public Matrix4 reflection { get; set; } = Matrix4.Identity;
 

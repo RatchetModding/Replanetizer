@@ -80,12 +80,9 @@ namespace LibReplanetizer
         public byte[] unk7;
         public byte[] unk8;
         public byte[] unk9;
-        public byte[] unk12;
         public byte[] unk13;
         public byte[] unk14;
-        public byte[] unk16;
         public byte[] unk17;
-        public byte[] unk18;
 
         public LightConfig lightConfig;
 
@@ -101,16 +98,18 @@ namespace LibReplanetizer
         public byte[] areasData;
 
         public List<DirectionalLight> directionalLights;
+        public List<PointLight> pointLights;
+        public List<EnvSample> envSamples;
         public List<Type0C> type0Cs;
-        public List<Type4C> type4Cs;
+        public List<GlobalPvarBlock> type4Cs;
         public List<Type7C> type7Cs;
         public List<Type80> type80s;
-        public List<Type88> type88s;
 
         public List<byte[]> pVars;
         public List<Cuboid> cuboids;
         public List<Sphere> spheres;
         public List<Cylinder> cylinders;
+        public List<Pill> pills;
         public List<GameCamera> gameCameras;
 
         public List<int> mobyIds;
@@ -229,12 +228,9 @@ namespace LibReplanetizer
                 LOGGER.Debug("Parsing other gameplay assets...");
                 unk6 = gameplayParser.GetUnk6();
                 unk7 = gameplayParser.GetUnk7();
-                unk12 = gameplayParser.GetUnk12();
                 unk13 = gameplayParser.GetUnk13();
                 unk14 = gameplayParser.GetUnk14();
-                unk16 = gameplayParser.GetUnk16();
                 unk17 = gameplayParser.GetUnk17();
-                unk18 = gameplayParser.GetUnk18();
 
                 tieData = gameplayParser.GetTieData(ties.Count);
                 shrubData = gameplayParser.GetShrubData(shrubs.Count);
@@ -245,18 +241,20 @@ namespace LibReplanetizer
                 areasData = gameplayParser.GetAreasData();
 
                 directionalLights = gameplayParser.GetDirectionalLights();
+                pointLights = gameplayParser.GetPointLights();
+                envSamples = gameplayParser.GetEnvSamples();
 
                 type0Cs = gameplayParser.GetType0Cs();
                 type4Cs = gameplayParser.GetType4Cs();
                 type7Cs = gameplayParser.GetType7Cs();
                 type80s = gameplayParser.GetType80();
-                type88s = gameplayParser.GetType88s();
                 type50s = gameplayParser.GetType50s();
                 type5Cs = gameplayParser.GetType5Cs();
 
                 cuboids = gameplayParser.GetCuboids();
                 spheres = gameplayParser.GetSpheres();
                 cylinders = gameplayParser.GetCylinders();
+                pills = gameplayParser.GetPills();
 
                 gameCameras = gameplayParser.GetGameCameras();
 

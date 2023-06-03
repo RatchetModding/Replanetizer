@@ -80,10 +80,10 @@ namespace Replanetizer.Frames
         public bool initialized, invalidate;
         public bool[] selectedChunks = new bool[0];
         public bool enableMoby = true, enableTie = true, enableShrub = true, enableSpline = false,
-            enableCuboid = false, enableSpheres = false, enableCylinders = false, enableType0C = false,
+            enableCuboid = false, enableSpheres = false, enableCylinders = false, enablePills = false,
             enableSkybox = true, enableTerrain = true, enableCollision = false, enableTransparency = true,
             enableDistanceCulling = true, enableFrustumCulling = true, enableFog = true, enableCameraInfo = true,
-            enableGameCameras = false;
+            enableGameCameras = false, enableType0C = false;
 
         public Camera camera;
 
@@ -274,6 +274,7 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Cuboid", ref enableCuboid)) InvalidateView();
                     if (ImGui.Checkbox("Spheres", ref enableSpheres)) InvalidateView();
                     if (ImGui.Checkbox("Cylinders", ref enableCylinders)) InvalidateView();
+                    if (ImGui.Checkbox("Pills", ref enablePills)) InvalidateView();
                     if (ImGui.Checkbox("Type0C", ref enableType0C)) InvalidateView();
                     if (ImGui.Checkbox("Cameras", ref enableGameCameras)) InvalidateView();
                     if (ImGui.Checkbox("Skybox", ref enableSkybox)) InvalidateView();
@@ -1509,6 +1510,23 @@ namespace Replanetizer.Frames
                     GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref cylinder.modelMatrix);
                     GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(cylinder) ? SELECTED_COLOR : NORMAL_COLOR);
                     ActivateBuffersForModel(cylinder);
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+                    GL.DrawElements(PrimitiveType.Triangles, Cylinder.CYLINDER_TRIS.Length, DrawElementsType.UnsignedShort, 0);
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                }
+            }
+
+            if (enablePills)
+            {
+                GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.Pill);
+                for (int i = 0; i < level.pills.Count; i++)
+                {
+                    Pill pill = level.pills[i];
+                    GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                    GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref pill.modelMatrix);
+                    GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(pill) ? SELECTED_COLOR : NORMAL_COLOR);
+                    ActivateBuffersForModel(pill);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
                     GL.DrawElements(PrimitiveType.Triangles, Cylinder.CYLINDER_TRIS.Length, DrawElementsType.UnsignedShort, 0);
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);

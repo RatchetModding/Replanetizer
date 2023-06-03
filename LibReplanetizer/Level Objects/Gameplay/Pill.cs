@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -12,14 +12,14 @@ using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects
 {
-    public class Cylinder : MatrixObject, IRenderable
+    public class Pill : MatrixObject, IRenderable
     {
         public const int ELEMENTSIZE = 0x80;
 
         [Category("Attributes"), DisplayName("ID")]
         public int id { get; set; }
 
-        static readonly float[] CYLINDER_VERTS = {
+        static readonly float[] PILL_VERTS = {
             0.0f, 0.0f, 0.0f,
             0.000000f, -1.000000f, -1.000000f,
             0.000000f, -1.000000f, 1.000000f,
@@ -47,7 +47,7 @@ namespace LibReplanetizer.LevelObjects
             -0.500001f, -0.866025f, 1.000000f
         };
 
-        public static readonly ushort[] CYLINDER_TRIS = {
+        public static readonly ushort[] PILL_TRIS = {
             2, 3, 1,
             4, 5, 3,
             6, 7, 5,
@@ -94,7 +94,7 @@ namespace LibReplanetizer.LevelObjects
             15, 19, 7
         };
 
-        public Cylinder(byte[] block, int num)
+        public Pill(byte[] block, int num)
         {
             id = num;
             int offset = num * ELEMENTSIZE;
@@ -117,12 +117,12 @@ namespace LibReplanetizer.LevelObjects
 
         public ushort[] GetIndices()
         {
-            return CYLINDER_TRIS;
+            return PILL_TRIS;
         }
 
         public float[] GetVertices()
         {
-            return CYLINDER_VERTS;
+            return PILL_VERTS;
         }
 
         public bool IsDynamic()

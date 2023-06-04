@@ -83,7 +83,8 @@ namespace Replanetizer.Frames
             enableCuboid = false, enableSpheres = false, enableCylinders = false, enablePills = false,
             enableSkybox = true, enableTerrain = true, enableCollision = false, enableTransparency = true,
             enableDistanceCulling = true, enableFrustumCulling = true, enableFog = true, enableCameraInfo = true,
-            enableGameCameras = false, enableType0C = false;
+            enableGameCameras = false, enablePointLights = false, enableEnvSamples = false, enableEnvTransitions = false,
+            enableType0C = false;
 
         public Camera camera;
 
@@ -94,6 +95,8 @@ namespace Replanetizer.Frames
 
         public List<RenderableBuffer> mobiesBuffers = new List<RenderableBuffer>(), tiesBuffers = new List<RenderableBuffer>(),
         shrubsBuffers = new List<RenderableBuffer>(), terrainBuffers = new List<RenderableBuffer>();
+
+        private BillboardRenderer? billboardRenderer;
 
         MemoryHook.MemoryHook? hook;
 
@@ -277,6 +280,9 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Pills", ref enablePills)) InvalidateView();
                     if (ImGui.Checkbox("Type0C", ref enableType0C)) InvalidateView();
                     if (ImGui.Checkbox("Cameras", ref enableGameCameras)) InvalidateView();
+                    if (ImGui.Checkbox("Pointlights", ref enablePointLights)) InvalidateView();
+                    if (ImGui.Checkbox("EnvSamples", ref enableEnvSamples)) InvalidateView();
+                    if (ImGui.Checkbox("EnvTransitions", ref enableEnvTransitions)) InvalidateView();
                     if (ImGui.Checkbox("Skybox", ref enableSkybox)) InvalidateView();
                     if (ImGui.Checkbox("Terrain", ref enableTerrain)) InvalidateView();
                     if (ImGui.Checkbox("Collision", ref enableCollision)) InvalidateView();
@@ -529,6 +535,7 @@ namespace Replanetizer.Frames
             shaderIDTable.shaderColor = LinkShader(shaderFolder, "colorshadervs.glsl", "colorshaderfs.glsl");
             shaderIDTable.shaderCollision = LinkShader(shaderFolder, "collisionshadervs.glsl", "collisionshaderfs.glsl");
             shaderIDTable.shaderSky = LinkShader(shaderFolder, "skyvs.glsl", "skyfs.glsl");
+            shaderIDTable.shaderBillboard = LinkShader(shaderFolder, "billboardvs.glsl", "billboardfs.glsl");
 
             shaderIDTable.uniformWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.shaderMain, "WorldToView");
             shaderIDTable.uniformModelToWorldMatrix = GL.GetUniformLocation(shaderIDTable.shaderMain, "ModelToWorld");
@@ -536,6 +543,10 @@ namespace Replanetizer.Frames
             shaderIDTable.uniformColorModelToWorldMatrix = GL.GetUniformLocation(shaderIDTable.shaderColor, "ModelToWorld");
             shaderIDTable.uniformCollisionWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.shaderCollision, "WorldToView");
             shaderIDTable.uniformSkyWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.shaderSky, "WorldToView");
+            shaderIDTable.uniformBillboardWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.shaderBillboard, "WorldToView");
+
+            shaderIDTable.uniformBillboardRightBase = GL.GetUniformLocation(shaderIDTable.shaderBillboard, "right");
+            shaderIDTable.uniformBillboardUpBase = GL.GetUniformLocation(shaderIDTable.shaderBillboard, "up");
 
             shaderIDTable.uniformColor = GL.GetUniformLocation(shaderIDTable.shaderColor, "incolor");
 
@@ -549,6 +560,8 @@ namespace Replanetizer.Frames
             shaderIDTable.uniformLevelObjectNumber = GL.GetUniformLocation(shaderIDTable.shaderMain, "levelObjectNumber");
             shaderIDTable.uniformColorLevelObjectType = GL.GetUniformLocation(shaderIDTable.shaderColor, "levelObjectType");
             shaderIDTable.uniformColorLevelObjectNumber = GL.GetUniformLocation(shaderIDTable.shaderColor, "levelObjectNumber");
+            shaderIDTable.uniformBillboardLevelObjectType = GL.GetUniformLocation(shaderIDTable.shaderBillboard, "levelObjectType");
+            shaderIDTable.uniformBillboardLevelObjectNumber = GL.GetUniformLocation(shaderIDTable.shaderBillboard, "levelObjectNumber");
 
             shaderIDTable.uniformAmbientColor = GL.GetUniformLocation(shaderIDTable.shaderMain, "staticColor");
             shaderIDTable.uniformLightIndex = GL.GetUniformLocation(shaderIDTable.shaderMain, "lightIndex");
@@ -558,6 +571,8 @@ namespace Replanetizer.Frames
             shaderIDTable.uniformSkyTexAvailable = GL.GetUniformLocation(shaderIDTable.shaderSky, "texAvailable");
 
             shaderIDTable.uniformDissolvePattern = GL.GetUniformLocation(shaderIDTable.shaderMain, "dissolvePattern");
+
+            shaderIDTable.uniformBillboardPosition = GL.GetUniformLocation(shaderIDTable.shaderBillboard, "position");
 
             RenderableBuffer.SHADER_ID_TABLE = shaderIDTable;
 
@@ -572,6 +587,8 @@ namespace Replanetizer.Frames
                                         4.0f / 17.0f, 12.0f / 17.0f, 2.0f / 17.0f, 10.0f / 17.0f,
                                         16.0f / 17.0f, 8.0f / 17.0f, 14.0f / 17.0f, 6.0f / 17.0f);
             GL.UniformMatrix4(shaderIDTable.uniformDissolvePattern, false, ref dissolvePattern);
+
+            billboardRenderer = new BillboardRenderer(shaderIDTable);
 
             initialized = true;
 
@@ -1275,6 +1292,12 @@ namespace Replanetizer.Frames
                     return level.type0Cs[hitId];
                 case RenderedObjectType.GameCamera:
                     return level.gameCameras[hitId];
+                case RenderedObjectType.PointLight:
+                    return level.pointLights[hitId];
+                case RenderedObjectType.EnvSample:
+                    return level.envSamples[hitId];
+                case RenderedObjectType.EnvTransition:
+                    return level.envTransitions[hitId];
                 case RenderedObjectType.Tool:
                     switch (hitId)
                     {
@@ -1372,6 +1395,8 @@ namespace Replanetizer.Frames
             GL.UniformMatrix4(shaderIDTable.uniformColorWorldToViewMatrix, false, ref worldView);
             GL.UseProgram(shaderIDTable.shaderMain);
             GL.UniformMatrix4(shaderIDTable.uniformWorldToViewMatrix, false, ref worldView);
+
+            billboardRenderer?.UpdateCameraMatrix(ref worldView);
 
             if (enableSkybox)
             {
@@ -1574,6 +1599,15 @@ namespace Replanetizer.Frames
                 }
             }
 
+            if (billboardRenderer != null)
+            {
+                if (enablePointLights)
+                    billboardRenderer.RenderObjects(level.pointLights, RenderedObjectType.PointLight);
+                if (enableEnvSamples)
+                    billboardRenderer.RenderObjects(level.envSamples, RenderedObjectType.EnvSample);
+                if (enableEnvTransitions)
+                    billboardRenderer.RenderObjects(level.envTransitions, RenderedObjectType.EnvTransition);
+            }
 
             if (enableCollision)
             {

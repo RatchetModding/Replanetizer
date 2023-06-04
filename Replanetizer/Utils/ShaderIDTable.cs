@@ -13,6 +13,7 @@ namespace Replanetizer.Utils
         public int shaderColor { get; set; }
         public int shaderCollision { get; set; }
         public int shaderSky { get; set; }
+        public int shaderBillboard { get; set; }
         public int uniformColor { get; set; }
         public int uniformWorldToViewMatrix { get; set; }
         public int uniformModelToWorldMatrix { get; set; }
@@ -20,6 +21,10 @@ namespace Replanetizer.Utils
         public int uniformColorModelToWorldMatrix { get; set; }
         public int uniformCollisionWorldToViewMatrix { get; set; }
         public int uniformSkyWorldToViewMatrix { get; set; }
+        public int uniformBillboardWorldToViewMatrix { get; set; }
+        public int uniformBillboardPosition { get; set; }
+        public int uniformBillboardRightBase { get; set; }
+        public int uniformBillboardUpBase { get; set; }
         public int uniformUseFog { get; set; }
         public int uniformFogColor { get; set; }
         public int uniformFogParams { get; set; }
@@ -28,6 +33,8 @@ namespace Replanetizer.Utils
         public int uniformLevelObjectNumber { get; set; }
         public int uniformColorLevelObjectType { get; set; }
         public int uniformColorLevelObjectNumber { get; set; }
+        public int uniformBillboardLevelObjectType { get; set; }
+        public int uniformBillboardLevelObjectNumber { get; set; }
         public int uniformAmbientColor { get; set; }
         public int uniformUseTransparency { get; set; }
 

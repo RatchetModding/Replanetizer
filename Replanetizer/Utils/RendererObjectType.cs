@@ -21,7 +21,10 @@ namespace Replanetizer.Utils
         Pill = 9,
         Type0C = 10,
         GameCamera = 11,
-        Tool = 12,
-        Skybox = 13
+        PointLight = 12,
+        EnvSample = 13,
+        EnvTransition = 14,
+        Tool = 15,
+        Skybox = 16
     }
 }

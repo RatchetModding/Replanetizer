@@ -61,6 +61,12 @@
     <None Update="ModelLists\TieModelsRC3.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Shaders\billboardfs.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Shaders\billboardvs.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Shaders\collisionshaderfs.glsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

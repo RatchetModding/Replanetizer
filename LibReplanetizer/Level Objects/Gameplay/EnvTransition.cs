@@ -53,6 +53,7 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Fog Far Intensity 2")]
         public float fogFarIntensity2 { get; set; }
 
+        // Probably related to how a transition is triggered
         [Category("Unknowns"), DisplayName("Position")]
         public Vector4 unkPos { get; set; }
 

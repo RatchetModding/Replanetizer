@@ -108,7 +108,7 @@ namespace Replanetizer.Utils
             {
                 GL.GenBuffers(1, out ibo);
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
-                GL.BufferData(BufferTarget.ElementArrayBuffer, iboLength * sizeof(ushort), IntPtr.Zero, hint);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, iboLength, IntPtr.Zero, hint);
                 iboAllocated = true;
             }
 

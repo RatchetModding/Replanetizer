@@ -16,10 +16,10 @@ namespace Replanetizer.Utils
     public class BillboardRenderer : IDisposable
     {
         private static float[] VERTICES = new float[] {
-            -1.0f, -1.0f, 0.0f,
-            1.0f, -1.0f, 0.0f,
-            -1.0f, 1.0f, 0.0f,
-            1.0f, 1.0f, 0.0f,
+            -1.0f, -1.0f,
+            1.0f, -1.0f,
+            -1.0f, 1.0f,
+            1.0f, 1.0f
         };
 
         private static readonly ushort[] INDICES = {
@@ -78,7 +78,7 @@ namespace Replanetizer.Utils
 
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(float) * 2, 0);
             GL.DrawElements(PrimitiveType.Triangles, INDICES.Length, DrawElementsType.UnsignedShort, 0);
         }
 

@@ -101,7 +101,7 @@ namespace LibReplanetizer
         public List<PointLight> pointLights;
         public List<EnvSample> envSamples;
         public List<EnvTransition> envTransitions;
-        public List<Type0C> type0Cs;
+        public List<SoundInstance> soundInstances;
         public List<GlobalPvarBlock> type4Cs;
         public List<Type7C> type7Cs;
 
@@ -244,8 +244,8 @@ namespace LibReplanetizer
                 pointLights = gameplayParser.GetPointLights();
                 envSamples = gameplayParser.GetEnvSamples();
                 envTransitions = gameplayParser.GetEnvTransitions();
+                soundInstances = gameplayParser.GetSoundInstances();
 
-                type0Cs = gameplayParser.GetType0Cs();
                 type4Cs = gameplayParser.GetType4Cs();
                 type7Cs = gameplayParser.GetType7Cs();
                 type50s = gameplayParser.GetType50s();

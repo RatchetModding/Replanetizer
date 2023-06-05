@@ -177,19 +177,19 @@ namespace LibReplanetizer.Parsers
             return dirLights;
         }
 
-        public List<Type0C> GetType0Cs()
+        public List<SoundInstance> GetSoundInstances()
         {
-            var type0Cs = new List<Type0C>();
-            if (gameplayHeader.soundPointer == 0) { return type0Cs; }
+            List<SoundInstance> soundInstances = new List<SoundInstance>();
+            if (gameplayHeader.soundPointer == 0) { return soundInstances; }
 
             int count = ReadInt(ReadBlock(fileStream, gameplayHeader.soundPointer, 4), 0);
-            byte[] type0CBlock = ReadBlock(fileStream, gameplayHeader.soundPointer + 0x10, Type0C.ELEMENTSIZE * count);
+            byte[] soundInstanceBlock = ReadBlock(fileStream, gameplayHeader.soundPointer + 0x10, SoundInstance.ELEMENTSIZE * count);
             for (int i = 0; i < count; i++)
             {
-                type0Cs.Add(new Type0C(type0CBlock, i));
+                soundInstances.Add(new SoundInstance(soundInstanceBlock, i));
             }
 
-            return type0Cs;
+            return soundInstances;
         }
 
         public List<Sphere> GetSpheres()
@@ -348,10 +348,10 @@ namespace LibReplanetizer.Parsers
             if (gameplayHeader.pointLightPointer == 0) { return pointLights; }
 
             int count = ReadInt(ReadBlock(fileStream, gameplayHeader.pointLightPointer, 4), 0);
-            byte[] pointLightBlock = ReadBlock(fileStream, gameplayHeader.pointLightPointer + 0x10, PointLight.ELEMENTSIZE * count);
+            byte[] pointLightBlock = ReadBlock(fileStream, gameplayHeader.pointLightPointer + 0x10, PointLight.GetElementSize(game) * count);
             for (int i = 0; i < count; i++)
             {
-                pointLights.Add(new PointLight(pointLightBlock, i));
+                pointLights.Add(new PointLight(game, pointLightBlock, i));
             }
 
             return pointLights;

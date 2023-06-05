@@ -19,7 +19,7 @@ namespace Replanetizer.Utils
         Sphere = 7,
         Cylinder = 8,
         Pill = 9,
-        Type0C = 10,
+        SoundInstance = 10,
         GameCamera = 11,
         PointLight = 12,
         EnvSample = 13,

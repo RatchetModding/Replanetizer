@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -12,7 +12,7 @@ using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects
 {
-    public class Type0C : MatrixObject, IRenderable
+    public class SoundInstance : LevelObject
     {
         //Looks like 0C can be some sort of trigger that is tripped off when you go near them. They're generally placed in rivers with current and in front of unlockable doors.
         public const int ELEMENTSIZE = 0x90;
@@ -28,21 +28,7 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Update Distance")]
         public float updateDistance { get; set; }
 
-        static readonly float[] CUBE = new float[]
-        {
-            -1.0f, -1.0f,  1.0f,
-            1.0f, -1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            -1.0f,  1.0f,  1.0f,
-            // back
-            -1.0f, -1.0f, -1.0f,
-            1.0f, -1.0f, -1.0f,
-            1.0f,  1.0f, -1.0f,
-            -1.0f,  1.0f, -1.0f
-        };
-        public static readonly ushort[] CUBE_ELEMENTS = new ushort[] { 0, 1, 2, 2, 3, 0, 1, 5, 6, 6, 2, 1, 7, 6, 5, 5, 4, 7, 4, 0, 3, 3, 7, 4, 4, 5, 1, 1, 0, 4, 3, 2, 6, 6, 7, 3 };
-
-        public Type0C(byte[] block, int num)
+        public SoundInstance(byte[] block, int num)
         {
             int offset = num * ELEMENTSIZE;
             id = ReadUshort(block, offset + 0x00);
@@ -80,16 +66,6 @@ namespace LibReplanetizer.LevelObjects
         public override LevelObject Clone()
         {
             throw new NotImplementedException();
-        }
-
-        public ushort[] GetIndices()
-        {
-            return CUBE_ELEMENTS;
-        }
-
-        public float[] GetVertices()
-        {
-            return CUBE;
         }
 
         public bool IsDynamic()

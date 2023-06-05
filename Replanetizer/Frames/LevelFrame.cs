@@ -84,7 +84,7 @@ namespace Replanetizer.Frames
             enableSkybox = true, enableTerrain = true, enableCollision = false, enableTransparency = true,
             enableDistanceCulling = true, enableFrustumCulling = true, enableFog = true, enableCameraInfo = true,
             enableGameCameras = false, enablePointLights = false, enableEnvSamples = false, enableEnvTransitions = false,
-            enableType0C = false;
+            enableSoundInstances = false;
 
         public Camera camera;
 
@@ -278,7 +278,7 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Spheres", ref enableSpheres)) InvalidateView();
                     if (ImGui.Checkbox("Cylinders", ref enableCylinders)) InvalidateView();
                     if (ImGui.Checkbox("Pills", ref enablePills)) InvalidateView();
-                    if (ImGui.Checkbox("Type0C", ref enableType0C)) InvalidateView();
+                    if (ImGui.Checkbox("SoundInstances", ref enableSoundInstances)) InvalidateView();
                     if (ImGui.Checkbox("Cameras", ref enableGameCameras)) InvalidateView();
                     if (ImGui.Checkbox("Pointlights", ref enablePointLights)) InvalidateView();
                     if (ImGui.Checkbox("EnvSamples", ref enableEnvSamples)) InvalidateView();
@@ -944,8 +944,8 @@ namespace Replanetizer.Frames
                 case Cuboid cuboid:
                     level.cuboids.Remove(cuboid);
                     break;
-                case Type0C type0C:
-                    level.type0Cs.Remove(type0C);
+                case SoundInstance soundInstance:
+                    level.soundInstances.Remove(soundInstance);
                     break;
             }
 
@@ -1288,8 +1288,8 @@ namespace Replanetizer.Frames
                     return level.spheres[hitId];
                 case RenderedObjectType.Cylinder:
                     return level.cylinders[hitId];
-                case RenderedObjectType.Type0C:
-                    return level.type0Cs[hitId];
+                case RenderedObjectType.SoundInstance:
+                    return level.soundInstances[hitId];
                 case RenderedObjectType.GameCamera:
                     return level.gameCameras[hitId];
                 case RenderedObjectType.PointLight:
@@ -1558,27 +1558,6 @@ namespace Replanetizer.Frames
                 }
             }
 
-
-            if (enableType0C)
-            {
-                GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.Type0C);
-                for (int i = 0; i < level.type0Cs.Count; i++)
-                {
-                    Type0C type0C = level.type0Cs[i];
-                    GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                    GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref type0C.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(type0C) ? SELECTED_COLOR : NORMAL_COLOR);
-
-                    ActivateBuffersForModel(type0C);
-
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-
-                    GL.DrawElements(PrimitiveType.Triangles, Type0C.CUBE_ELEMENTS.Length, DrawElementsType.UnsignedShort, 0);
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                }
-            }
-
             if (enableGameCameras)
             {
                 GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.GameCamera);
@@ -1601,6 +1580,8 @@ namespace Replanetizer.Frames
 
             if (billboardRenderer != null)
             {
+                if (enableSoundInstances)
+                    billboardRenderer.RenderObjects(level.soundInstances, RenderedObjectType.SoundInstance);
                 if (enablePointLights)
                     billboardRenderer.RenderObjects(level.pointLights, RenderedObjectType.PointLight);
                 if (enableEnvSamples)

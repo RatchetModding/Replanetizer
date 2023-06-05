@@ -79,9 +79,11 @@ namespace Replanetizer.Tools
 
         public override void Render(Matrix4 mat, LevelFrame frame)
         {
+            GL.UseProgram(frame.shaderIDTable.shaderColor);
+
             GetVbo();
 
-            GL.UniformMatrix4(frame.shaderIDTable.uniformModelToWorldMatrix, false, ref mat);
+            GL.UniformMatrix4(frame.shaderIDTable.uniformColorModelToWorldMatrix, false, ref mat);
 
             GL.Uniform1(frame.shaderIDTable.uniformColorLevelObjectNumber, 0);
             GL.Uniform4(frame.shaderIDTable.uniformColor, new Vector4(1, 0, 0, 1));

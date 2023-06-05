@@ -52,10 +52,8 @@ namespace LibReplanetizer.LevelObjects
         public float fogNearIntensity2 { get; set; }
         [Category("Attributes"), DisplayName("Fog Far Intensity 2")]
         public float fogFarIntensity2 { get; set; }
-
-        // Probably related to how a transition is triggered
-        [Category("Unknowns"), DisplayName("Position")]
-        public Vector4 unkPos { get; set; }
+        [Category("Attributes"), DisplayName("Radius")]
+        public float radius { get; set; }
 
         public EnvTransition(byte[] headBlock, byte[] mainBlock, int num)
         {
@@ -65,9 +63,9 @@ namespace LibReplanetizer.LevelObjects
             float x = ReadFloat(headBlock, offsetHead + 0x00);
             float y = ReadFloat(headBlock, offsetHead + 0x04);
             float z = ReadFloat(headBlock, offsetHead + 0x08);
-            float w = ReadFloat(headBlock, offsetHead + 0x0C);
+            radius = ReadFloat(headBlock, offsetHead + 0x0C);
 
-            unkPos = new Vector4(x, y, z, w);
+            position = new Vector3(x, y, z);
 
             int offset = num * ELEMENTSIZE;
 
@@ -117,10 +115,10 @@ namespace LibReplanetizer.LevelObjects
         {
             byte[] block = new byte[HEADSIZE];
 
-            WriteFloat(block, 0x00, unkPos.X);
-            WriteFloat(block, 0x04, unkPos.Y);
-            WriteFloat(block, 0x08, unkPos.Z);
-            WriteFloat(block, 0x0C, unkPos.W);
+            WriteFloat(block, 0x00, position.X);
+            WriteFloat(block, 0x04, position.Y);
+            WriteFloat(block, 0x08, position.Z);
+            WriteFloat(block, 0x0C, radius);
 
             return block;
         }

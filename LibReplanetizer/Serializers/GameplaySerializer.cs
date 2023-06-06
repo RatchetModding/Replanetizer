@@ -85,7 +85,7 @@ namespace LibReplanetizer.Serializers
                 camCollisionPointer = SeekWrite(fs, level.unk17),
                 pointLightPointer = SeekWrite(fs, SerializeLevelObjects(level.pointLights, PointLight.GetElementSize(GameType.RaC1))),
                 pointLightGridPointer = SeekWrite(fs, level.unk14),
-                grindPathsPointer = SeekWrite(fs, level.unk13),
+                grindPathsPointer = SeekWrite(fs, GetGrindPathsBytes(level.grindPaths)),
                 occlusionPointer = SeekWrite(fs, GetOcclusionBytes(level.occlusionData))
             };
 
@@ -137,7 +137,7 @@ namespace LibReplanetizer.Serializers
                 pillPointer = SeekWrite(fs, new byte[0x10]),
                 camCollisionPointer = SeekWrite(fs, level.unk17),
                 pointLightPointer = SeekWrite4(fs, SerializeLevelObjects(level.pointLights, PointLight.GetElementSize(GameType.RaC2))),
-                grindPathsPointer = SeekWrite(fs, level.unk13),
+                grindPathsPointer = SeekWrite(fs, GetGrindPathsBytes(level.grindPaths)),
                 areasPointer = SeekWrite(fs, level.areasData),
                 occlusionPointer = SeekWrite(fs, GetOcclusionBytes(level.occlusionData))
             };
@@ -190,7 +190,7 @@ namespace LibReplanetizer.Serializers
                 pillPointer = SeekWrite4(fs, new byte[0x10]),
                 camCollisionPointer = SeekWrite4(fs, level.unk17),
                 pointLightPointer = SeekWrite4(fs, SerializeLevelObjects(level.pointLights, PointLight.GetElementSize(GameType.RaC3))),
-                grindPathsPointer = SeekWrite4(fs, level.unk13),
+                grindPathsPointer = SeekWrite4(fs, GetGrindPathsBytes(level.grindPaths)),
                 areasPointer = SeekWrite4(fs, level.areasData),
                 occlusionPointer = SeekWrite4(fs, GetOcclusionBytes(level.occlusionData))
             };
@@ -242,7 +242,7 @@ namespace LibReplanetizer.Serializers
                 pillPointer = SeekWrite4(fs, new byte[0x10]),
                 camCollisionPointer = SeekWrite4(fs, level.unk17),
                 pointLightPointer = SeekWrite4(fs, SerializeLevelObjects(level.pointLights, PointLight.GetElementSize(GameType.DL))),
-                grindPathsPointer = SeekWrite4(fs, level.unk13),
+                grindPathsPointer = SeekWrite4(fs, GetGrindPathsBytes(level.grindPaths)),
                 areasPointer = SeekWrite4(fs, level.areasData),
                 occlusionPointer = SeekWrite4(fs, GetOcclusionBytes(level.occlusionData))
             };
@@ -328,6 +328,48 @@ namespace LibReplanetizer.Serializers
             {
                 levelobjects[i].ToByteArray().CopyTo(bytes, 0x10 + i * elementSize);
             }
+
+            return bytes;
+        }
+
+        public byte[] GetGrindPathsBytes(List<GrindPath> grindPaths)
+        {
+            if (grindPaths == null) return new byte[0x10];
+
+            List<byte> splineData = new List<byte>();
+            List<int> offsets = new List<int>();
+
+            int offset = 0;
+            for (int i = 0; i < grindPaths.Count; i++)
+            {
+                byte[] splineBytes = grindPaths[i].spline.ToByteArray();
+                splineData.AddRange(splineBytes);
+                offsets.Add(offset);
+                offset += splineBytes.Length;
+            }
+
+            byte[] bytes = new byte[0x10 + grindPaths.Count * GrindPath.ELEMENTSIZE];
+
+            for (int i = 0; i < grindPaths.Count; i++)
+            {
+                grindPaths[i].ToByteArray().CopyTo(bytes, 0x10 + i * GrindPath.ELEMENTSIZE);
+            }
+
+            byte[] offsetBytes = new byte[0x04 * grindPaths.Count];
+            for (int i = 0; i < grindPaths.Count; i++)
+            {
+                WriteInt(bytes, i * 0x04, offsets[i]);
+            }
+
+            //Header
+            WriteInt(bytes, 0x00, grindPaths.Count);
+            WriteInt(bytes, 0x04, bytes.Length + offsetBytes.Length);
+            WriteInt(bytes, 0x08, splineData.Count);
+
+            List<byte> block = new List<byte>();
+            block.AddRange(bytes);
+            block.AddRange(offsetBytes);
+            block.AddRange(splineData);
 
             return bytes;
         }

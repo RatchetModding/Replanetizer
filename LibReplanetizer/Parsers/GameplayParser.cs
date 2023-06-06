@@ -329,17 +329,34 @@ namespace LibReplanetizer.Parsers
         }
 
 
-        public byte[] GetUnk13()
+        public List<GrindPath> GetGrindPaths()
         {
+            List<GrindPath> grindPaths = new List<GrindPath>();
+            if (gameplayHeader.grindPathsPointer == 0) { return grindPaths; }
 
             byte[] head = ReadBlock(fileStream, gameplayHeader.grindPathsPointer, 0x10);
             int count = ReadInt(head, 0x00);
-            int unk1 = ReadInt(head, 0x04);
-            int unk2 = ReadInt(head, 0x08);
+            int splineOffset = ReadInt(head, 0x04);
+            int splineSize = ReadInt(head, 0x08);
 
-            byte[] block = ReadBlock(fileStream, gameplayHeader.grindPathsPointer, count * 0x20 + 0x10);
+            byte[] grindPathBlock = ReadBlock(fileStream, gameplayHeader.grindPathsPointer + 0x10, count * GrindPath.ELEMENTSIZE);
+            byte[] splineHeadBlock = ReadBlock(fileStream, gameplayHeader.grindPathsPointer + 0x10 + count * GrindPath.ELEMENTSIZE, count * 0x04);
+            byte[] splineBlock = ReadBlock(fileStream, gameplayHeader.grindPathsPointer + splineOffset, splineSize);
 
-            return block;
+            List<Spline> splines = new List<Spline>();
+
+            for (int i = 0; i < count; i++)
+            {
+                int offset = ReadInt(splineHeadBlock, i * 0x04);
+                splines.Add(new Spline(splineBlock, offset));
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                grindPaths.Add(new GrindPath(grindPathBlock, i, splines[i]));
+            }
+
+            return grindPaths;
         }
 
         public List<PointLight> GetPointLights()

@@ -80,7 +80,6 @@ namespace LibReplanetizer
         public byte[] unk7;
         public byte[] unk8;
         public byte[] unk9;
-        public byte[] unk13;
         public byte[] unk14;
         public byte[] unk17;
 
@@ -102,6 +101,7 @@ namespace LibReplanetizer
         public List<EnvSample> envSamples;
         public List<EnvTransition> envTransitions;
         public List<SoundInstance> soundInstances;
+        public List<GrindPath> grindPaths;
         public List<GlobalPvarBlock> type4Cs;
         public List<Type7C> type7Cs;
 
@@ -228,7 +228,6 @@ namespace LibReplanetizer
                 LOGGER.Debug("Parsing other gameplay assets...");
                 unk6 = gameplayParser.GetUnk6();
                 unk7 = gameplayParser.GetUnk7();
-                unk13 = gameplayParser.GetUnk13();
                 unk14 = gameplayParser.GetUnk14();
                 unk17 = gameplayParser.GetUnk17();
 
@@ -245,6 +244,7 @@ namespace LibReplanetizer
                 envSamples = gameplayParser.GetEnvSamples();
                 envTransitions = gameplayParser.GetEnvTransitions();
                 soundInstances = gameplayParser.GetSoundInstances();
+                grindPaths = gameplayParser.GetGrindPaths();
 
                 type4Cs = gameplayParser.GetType4Cs();
                 type7Cs = gameplayParser.GetType7Cs();

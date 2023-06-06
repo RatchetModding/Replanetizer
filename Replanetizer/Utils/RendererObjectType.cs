@@ -24,7 +24,8 @@ namespace Replanetizer.Utils
         PointLight = 12,
         EnvSample = 13,
         EnvTransition = 14,
-        Tool = 15,
-        Skybox = 16
+        GrindPath = 15,
+        Tool = 16,
+        Skybox = 999
     }
 }

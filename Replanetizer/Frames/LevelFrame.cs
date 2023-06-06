@@ -84,7 +84,7 @@ namespace Replanetizer.Frames
             enableSkybox = true, enableTerrain = true, enableCollision = false, enableTransparency = true,
             enableDistanceCulling = true, enableFrustumCulling = true, enableFog = true, enableCameraInfo = true,
             enableGameCameras = false, enablePointLights = false, enableEnvSamples = false, enableEnvTransitions = false,
-            enableSoundInstances = false;
+            enableSoundInstances = false, enableGrindPaths = false;
 
         public Camera camera;
 
@@ -283,6 +283,7 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Pointlights", ref enablePointLights)) InvalidateView();
                     if (ImGui.Checkbox("EnvSamples", ref enableEnvSamples)) InvalidateView();
                     if (ImGui.Checkbox("EnvTransitions", ref enableEnvTransitions)) InvalidateView();
+                    if (ImGui.Checkbox("GrindPaths", ref enableGrindPaths)) InvalidateView();
                     if (ImGui.Checkbox("Skybox", ref enableSkybox)) InvalidateView();
                     if (ImGui.Checkbox("Terrain", ref enableTerrain)) InvalidateView();
                     if (ImGui.Checkbox("Collision", ref enableCollision)) InvalidateView();
@@ -1298,6 +1299,8 @@ namespace Replanetizer.Frames
                     return level.envSamples[hitId];
                 case RenderedObjectType.EnvTransition:
                     return level.envTransitions[hitId];
+                case RenderedObjectType.GrindPath:
+                    return level.grindPaths[hitId];
                 case RenderedObjectType.Tool:
                     switch (hitId)
                     {
@@ -1588,6 +1591,25 @@ namespace Replanetizer.Frames
                     billboardRenderer.RenderObjects(level.envSamples, RenderedObjectType.EnvSample);
                 if (enableEnvTransitions)
                     billboardRenderer.RenderObjects(level.envTransitions, RenderedObjectType.EnvTransition);
+
+                if (enableGrindPaths)
+                {
+                    billboardRenderer.RenderObjects(level.grindPaths, RenderedObjectType.GrindPath);
+
+                    GL.UseProgram(shaderIDTable.shaderColor);
+
+                    GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.GrindPath);
+                    for (int i = 0; i < level.grindPaths.Count; i++)
+                    {
+                        Spline spline = level.grindPaths[i].spline;
+                        GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
+                        GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref spline.modelMatrix);
+                        GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(spline) ? SELECTED_COLOR : NORMAL_COLOR);
+                        ActivateBuffersForModel(spline);
+                        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
+                        GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
+                    }
+                }
             }
 
             if (enableCollision)

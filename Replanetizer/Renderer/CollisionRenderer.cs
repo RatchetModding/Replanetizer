@@ -21,6 +21,7 @@ namespace Replanetizer.Renderer
         private readonly ShaderTable shaderTable;
         private List<int> ibos = new List<int>();
         private List<int> vbos = new List<int>();
+        private List<int> vaos = new List<int>();
         private List<int> indexCount = new List<int>();
         private int numCollisions = 0;
 
@@ -29,7 +30,47 @@ namespace Replanetizer.Renderer
             this.shaderTable = shaderTable;
         }
 
-        public override void Include<T>(T obj) => throw new NotImplementedException();
+        public override void Include<T>(T obj)
+        {
+            if (obj is Collision collision)
+            {
+                uint[] indexBuffer = collision.indBuff;
+                float[] vertexBuffer = collision.vertexBuffer;
+
+                int vao;
+                GL.GenVertexArrays(1, out vao);
+                GL.BindVertexArray(vao);
+
+                vaos.Add(vao);
+
+                int vbo;
+                GL.GenBuffers(1, out vbo);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+                GL.BufferData(BufferTarget.ArrayBuffer, vertexBuffer.Length * sizeof(float), vertexBuffer, BufferUsageHint.StaticDraw);
+
+                vbos.Add(vbo);
+
+                int ibo;
+                GL.GenBuffers(1, out ibo);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, indexBuffer.Length * sizeof(int), indexBuffer, BufferUsageHint.StaticDraw);
+
+                GLState.ChangeNumberOfVertexAttribArrays(2);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
+                GL.VertexAttribPointer(1, 4, VertexAttribPointerType.UnsignedByte, false, sizeof(float) * 4, sizeof(float) * 3);
+
+                GL.BindVertexArray(0);
+
+                ibos.Add(ibo);
+                indexCount.Add(indexBuffer.Length);
+
+                numCollisions++;
+
+                return;
+            }
+
+            throw new NotImplementedException();
+        }
 
         public override void Include<T>(List<T> list)
         {
@@ -39,27 +80,13 @@ namespace Replanetizer.Renderer
             {
                 for (int i = 0; i < collisionChunks.Count; i++)
                 {
-                    uint[] indexBuffer = collisionChunks[i].indBuff;
-                    float[] vertexBuffer = collisionChunks[i].vertexBuffer;
-
-                    int vbo;
-                    GL.GenBuffers(1, out vbo);
-                    GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-                    GL.BufferData(BufferTarget.ArrayBuffer, vertexBuffer.Length * sizeof(float), vertexBuffer, BufferUsageHint.StaticDraw);
-
-                    vbos.Add(vbo);
-
-                    int ibo;
-                    GL.GenBuffers(1, out ibo);
-                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
-                    GL.BufferData(BufferTarget.ElementArrayBuffer, indexBuffer.Length * sizeof(int), indexBuffer, BufferUsageHint.StaticDraw);
-
-                    ibos.Add(ibo);
-                    indexCount.Add(indexBuffer.Length);
-
-                    numCollisions++;
+                    Include(collisionChunks[i]);
                 }
+
+                return;
             }
+
+            throw new NotImplementedException();
         }
 
         public override void Render(RendererPayload payload)
@@ -77,15 +104,12 @@ namespace Replanetizer.Renderer
             shaderTable.collisionShader.SetUniformMatrix4("worldToView", false, ref worldToView);
 
             GLState.ChangeNumberOfVertexAttribArrays(2);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
-            GL.VertexAttribPointer(1, 4, VertexAttribPointerType.UnsignedByte, false, sizeof(float) * 4, sizeof(float) * 3);
 
             for (int i = 0; i < numCollisions; i++)
             {
                 if (!payload.visibility.chunks[i]) continue;
 
-                GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibos[i]);
-                GL.BindBuffer(BufferTarget.ArrayBuffer, vbos[i]);
+                GL.BindVertexArray(vaos[i]);
 
                 shaderTable.collisionShader.UseShader();
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
@@ -95,6 +119,9 @@ namespace Replanetizer.Renderer
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                 GL.DrawElements(PrimitiveType.Triangles, indexCount[i], DrawElementsType.UnsignedInt, 0);
             }
+
+            GL.BindVertexArray(0);
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
         }
 
         public override void Dispose()
@@ -103,6 +130,7 @@ namespace Replanetizer.Renderer
             {
                 GL.DeleteBuffer(ibos[i]);
                 GL.DeleteBuffer(vbos[i]);
+                GL.DeleteVertexArray(vaos[i]);
             }
         }
     }

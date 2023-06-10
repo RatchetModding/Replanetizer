@@ -595,9 +595,7 @@ namespace Replanetizer.Frames
                 shaderTable.meshShader.SetUniformMatrix4("worldToView", false, ref worldView);
                 shaderTable.meshShader.SetUniform1("levelObjectType", (int) RenderedObjectType.Null);
 
-                GL.EnableVertexAttribArray(0);
-                GL.EnableVertexAttribArray(1);
-                GL.EnableVertexAttribArray(2);
+                GLState.ChangeNumberOfVertexAttribArrays(3);
 
                 container.Bind();
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
@@ -613,10 +611,6 @@ namespace Replanetizer.Frames
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) ((conf.wrapModeT == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge));
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
-
-                GL.DisableVertexAttribArray(2);
-                GL.DisableVertexAttribArray(1);
-                GL.DisableVertexAttribArray(0);
             }
         }
 

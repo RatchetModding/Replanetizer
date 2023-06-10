@@ -22,12 +22,14 @@ namespace Replanetizer.Renderer
             public readonly BufferContainer container;
             public readonly List<LevelObject> levelObjects;
             public readonly RenderedObjectType type;
+            public readonly bool isSpline;
 
             public WireframeCollection(BufferContainer container, List<LevelObject> levelObjects, RenderedObjectType type)
             {
                 this.container = container;
                 this.levelObjects = levelObjects;
                 this.type = type;
+                this.isSpline = (type == RenderedObjectType.Spline || type == RenderedObjectType.GrindPath);
             }
         }
 
@@ -72,35 +74,35 @@ namespace Replanetizer.Renderer
             switch (list)
             {
                 case List<Cuboid> cuboids:
-                    BufferContainer.FromRenderable(cuboids[0]);
+                    container = BufferContainer.FromRenderable(cuboids[0]);
                     type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(cuboids[0]);
                     listLevelObjects.AddRange(cuboids);
-                    return;
+                    break;
                 case List<Sphere> spheres:
-                    BufferContainer.FromRenderable(spheres[0]);
+                    container = BufferContainer.FromRenderable(spheres[0]);
                     type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(spheres[0]);
                     listLevelObjects.AddRange(spheres);
-                    return;
+                    break;
                 case List<Cylinder> cylinders:
-                    BufferContainer.FromRenderable(cylinders[0]);
+                    container = BufferContainer.FromRenderable(cylinders[0]);
                     type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(cylinders[0]);
                     listLevelObjects.AddRange(cylinders);
-                    return;
+                    break;
                 case List<Pill> pills:
-                    BufferContainer.FromRenderable(pills[0]);
+                    container = BufferContainer.FromRenderable(pills[0]);
                     type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(pills[0]);
                     listLevelObjects.AddRange(pills);
-                    return;
+                    break;
                 case List<GameCamera> gameCameras:
-                    BufferContainer.FromRenderable(gameCameras[0]);
+                    container = BufferContainer.FromRenderable(gameCameras[0]);
                     type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(gameCameras[0]);
                     listLevelObjects.AddRange(gameCameras);
-                    return;
+                    break;
                 case List<Spline> splines:
-                    BufferContainer.FromRenderable(splines[0]);
+                    container = BufferContainer.FromRenderable(splines[0]);
                     type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(splines[0]);
                     listLevelObjects.AddRange(splines);
-                    return;
+                    break;
             }
 
             if (container != null)
@@ -125,15 +127,32 @@ namespace Replanetizer.Renderer
                 shaderTable.colorShader.SetUniform1("levelObjectType", (int) wireframe.type);
                 wireframe.container.Bind();
                 GLState.ChangeNumberOfVertexAttribArrays(1);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
 
-                foreach (LevelObject obj in wireframe.levelObjects)
+                if (wireframe.isSpline)
                 {
-                    shaderTable.colorShader.SetUniform1("levelObjectNumber", obj.globalID);
-                    shaderTable.colorShader.SetUniformMatrix4("modelToWorld", false, ref obj.modelMatrix);
-                    shaderTable.colorShader.SetUniform4("incolor", payload.selection.Contains(obj) ? SELECTED_COLOR : DEFAULT_COLOR);
-                    GL.DrawElements(PrimitiveType.Triangles, Cuboid.CUBE_ELEMENTS.Length, DrawElementsType.UnsignedShort, 0);
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
+
+                    foreach (LevelObject obj in wireframe.levelObjects)
+                    {
+                        shaderTable.colorShader.SetUniform1("levelObjectNumber", obj.globalID);
+                        shaderTable.colorShader.SetUniformMatrix4("modelToWorld", false, ref obj.modelMatrix);
+                        shaderTable.colorShader.SetUniform4("incolor", payload.selection.Contains(obj) ? SELECTED_COLOR : DEFAULT_COLOR);
+                        GL.DrawArrays(PrimitiveType.LineStrip, 0, wireframe.container.GetVertexBufferLength() / 3);
+                    }
                 }
+                else
+                {
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+
+                    foreach (LevelObject obj in wireframe.levelObjects)
+                    {
+                        shaderTable.colorShader.SetUniform1("levelObjectNumber", obj.globalID);
+                        shaderTable.colorShader.SetUniformMatrix4("modelToWorld", false, ref obj.modelMatrix);
+                        shaderTable.colorShader.SetUniform4("incolor", payload.selection.Contains(obj) ? SELECTED_COLOR : DEFAULT_COLOR);
+                        GL.DrawElements(PrimitiveType.Triangles, wireframe.container.GetIndexBufferLength(), DrawElementsType.UnsignedShort, 0);
+                    }
+                }
+
             }
 
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);

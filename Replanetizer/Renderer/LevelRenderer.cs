@@ -65,7 +65,14 @@ namespace Replanetizer.Renderer
             skyRenderer.Include(level.skybox);
 
             collisionRenderer = new CollisionRenderer(shaderTable);
-            collisionRenderer.Include(level.collisionChunks);
+            if (level.collisionChunks.Count > 0)
+            {
+                collisionRenderer.Include(level.collisionChunks);
+            }
+            else
+            {
+                collisionRenderer.Include(level.collisionEngine);
+            }
 
             foreach (Moby mob in level.mobs)
             {
@@ -88,10 +95,24 @@ namespace Replanetizer.Renderer
                 tieRenderers.Add(tieRenderer);
             }
 
-            foreach (Terrain terrainChunk in level.terrainChunks)
+            if (level.terrainChunks.Count > 0)
+            {
+                foreach (Terrain terrainChunk in level.terrainChunks)
+                {
+                    List<MeshRenderer> terrainRenderer = new List<MeshRenderer>();
+                    foreach (TerrainFragment fragment in terrainChunk.fragments)
+                    {
+                        MeshRenderer fragmentRenderer = new MeshRenderer(shaderTable, textures, textureIDs);
+                        fragmentRenderer.Include(fragment);
+                        terrainRenderer.Add(fragmentRenderer);
+                    }
+                    terrainRenderers.Add(terrainRenderer);
+                }
+            }
+            else
             {
                 List<MeshRenderer> terrainRenderer = new List<MeshRenderer>();
-                foreach (TerrainFragment fragment in terrainChunk.fragments)
+                foreach (TerrainFragment fragment in level.terrainEngine.fragments)
                 {
                     MeshRenderer fragmentRenderer = new MeshRenderer(shaderTable, textures, textureIDs);
                     fragmentRenderer.Include(fragment);

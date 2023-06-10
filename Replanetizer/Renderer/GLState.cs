@@ -28,7 +28,11 @@ namespace Replanetizer.Renderer
 
         public static void ChangeNumberOfVertexAttribArrays(int num)
         {
-            if (num != numEnabledVertexAttribArrays && num >= 0)
+            for (int i = 0; i < num; i++)
+            {
+                GL.EnableVertexAttribArray(i);
+            }
+            /*if (num != numEnabledVertexAttribArrays && num >= 0)
             {
                 if (num > numEnabledVertexAttribArrays)
                 {
@@ -46,7 +50,7 @@ namespace Replanetizer.Renderer
                 }
 
                 numEnabledVertexAttribArrays = num;
-            }
+            }*/
         }
     }
 }

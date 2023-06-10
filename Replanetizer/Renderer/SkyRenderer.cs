@@ -56,7 +56,7 @@ namespace Replanetizer.Renderer
             GL.BlendEquation(BlendEquationMode.FuncAdd);
             GL.Disable(EnableCap.DepthTest);
 
-            Matrix4 mvp = payload.camera.GetWorldViewMatrix();
+            Matrix4 mvp = payload.camera.GetViewMatrix().ClearTranslation() * payload.camera.GetProjectionMatrix();
             shaderTable.skyShader.SetUniformMatrix4("worldToView", false, ref mvp);
             container.Bind();
             GLState.ChangeNumberOfVertexAttribArrays(3);

@@ -68,7 +68,7 @@ namespace Replanetizer.Frames
         public readonly Keymap KEYMAP;
 
         public bool initialized, invalidate;
-        public bool[] selectedChunks = new bool[0];
+        private int chunkCount = 0;
 
         public Camera camera;
 
@@ -304,10 +304,10 @@ namespace Replanetizer.Frames
                     ImGui.EndMenu();
                 }
 
-                if (selectedChunks.Length > 0 && ImGui.BeginMenu("Chunks"))
+                if (chunkCount > 0 && ImGui.BeginMenu("Chunks"))
                 {
-                    for (int i = 0; i < selectedChunks.Length; i++)
-                        if (ImGui.Checkbox($"Chunk {i}", ref selectedChunks[i]))
+                    for (int i = 0; i < chunkCount; i++)
+                        if (ImGui.Checkbox($"Chunk {i}", ref rendererPayload.visibility.chunks[i]))
                             InvalidateView();
                     ImGui.EndMenu();
                 }
@@ -631,14 +631,10 @@ namespace Replanetizer.Frames
 
             LoadLevelTextures();
 
+            chunkCount = level.terrainChunks.Count;
+
             levelRenderer = new LevelRenderer(shaderTable, textureIds);
             levelRenderer.Include(this.level);
-
-            Array.Resize(ref selectedChunks, level.collisionChunks.Count);
-            for (int i = 0; i < level.collisionChunks.Count; i++)
-            {
-                selectedChunks[i] = true;
-            }
 
             if (level.mobs.Count > 0)
             {

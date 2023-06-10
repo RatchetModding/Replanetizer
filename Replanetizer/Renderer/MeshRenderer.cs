@@ -466,12 +466,12 @@ namespace Replanetizer.Renderer
             if (emptyModel) return;
             if (modelObject == null || modelObject.model == null) return;
 
-            if (ComputeCulling(payload.camera, payload.visibility.distanceCulling, payload.visibility.frustumCulling)) return;
+            UpdateVars();
+            if (ComputeCulling(payload.camera, payload.visibility.enableDistanceCulling, payload.visibility.enableFrustumCulling)) return;
 
             if (!BindIbo() || !BindVbo()) return;
 
             Select(payload.selection);
-            UpdateVars();
 
             SetupVertexAttribPointers();
 
@@ -509,6 +509,7 @@ namespace Replanetizer.Renderer
                         shaderTable.colorShader.SetUniformMatrix4("worldToView", false, ref worldToView);
                         shaderTable.colorShader.SetUniform1("levelObjectNumber", modelObject.globalID);
                         shaderTable.colorShader.SetUniform1("levelObjectType", (int) type);
+                        shaderTable.colorShader.SetUniform4("incolor", 1.0f, 1.0f, 1.0f, 1.0f);
 
                         GL.Enable(EnableCap.LineSmooth);
                         GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);

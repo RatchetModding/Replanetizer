@@ -58,7 +58,7 @@ namespace Replanetizer.Frames
             mouseButton = MouseButton.Right
         };
 
-        private ShaderTable shaderIDTable = new ShaderTable();
+        private ShaderTable shaderTable;
 
         private float xDelta;
 
@@ -97,7 +97,7 @@ namespace Replanetizer.Frames
             startSize = wnd.Size;
             modelTextureList = new List<Texture>();
             propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
-            this.shaderIDTable = shaderIDTable;
+            this.shaderTable = shaderIDTable;
             exportSettings = new ExporterModelSettings(lastUsedExportSettings);
             UpdateWindowSize();
             OnResize();
@@ -590,10 +590,10 @@ namespace Replanetizer.Frames
                 // Has to be done in this order to work correctly
                 Matrix4 mvp = trans * scale * rot;
 
-                shaderIDTable.meshShader.UseShader();
-                shaderIDTable.meshShader.SetUniformMatrix4("modelToWorld", false, ref mvp);
-                shaderIDTable.meshShader.SetUniformMatrix4("worldToView", false, ref worldView);
-                shaderIDTable.meshShader.SetUniform1("levelObjectType", (int) RenderedObjectType.Null);
+                shaderTable.meshShader.UseShader();
+                shaderTable.meshShader.SetUniformMatrix4("modelToWorld", false, ref mvp);
+                shaderTable.meshShader.SetUniformMatrix4("worldToView", false, ref worldView);
+                shaderTable.meshShader.SetUniform1("levelObjectType", (int) RenderedObjectType.Null);
 
                 GL.EnableVertexAttribArray(0);
                 GL.EnableVertexAttribArray(1);
@@ -608,7 +608,7 @@ namespace Replanetizer.Frames
                 foreach (TextureConfig conf in selectedModel.textureConfig)
                 {
                     GL.BindTexture(TextureTarget.Texture2D, (conf.id >= 0 && conf.id < selectedTextureSet.Count) ? levelFrame.textureIds[selectedTextureSet[conf.id]] : 0);
-                    shaderIDTable.meshShader.SetUniform1("useTransparency", (conf.IgnoresTransparency()) ? 0 : 1);
+                    shaderTable.meshShader.SetUniform1("useTransparency", (conf.IgnoresTransparency()) ? 0 : 1);
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) ((conf.wrapModeS == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge));
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) ((conf.wrapModeT == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge));
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));

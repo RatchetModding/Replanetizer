@@ -490,7 +490,7 @@ namespace Replanetizer.Renderer
                     shaderTable.meshShader.SetUniform1("levelObjectType", (int) type);
                     shaderTable.meshShader.SetUniform4("staticColor", ambient);
                     shaderTable.meshShader.SetUniform1("lightIndex", light);
-                    shaderTable.meshShader.SetUniform1("blendDistance", blendDistance);
+                    shaderTable.meshShader.SetUniform1("objectBlendDistance", blendDistance);
 
                     //Bind textures one by one, applying it to the relevant vertices based on the index array
                     foreach (TextureConfig conf in modelObject.model.textureConfig)

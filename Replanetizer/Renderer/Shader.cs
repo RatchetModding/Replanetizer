@@ -8,6 +8,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Runtime.CompilerServices;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
@@ -41,6 +42,20 @@ namespace Replanetizer.Renderer
                 (ShaderType.FragmentShader, fragmentShader),
             };
             program = CreateProgram(name, FILES);
+        }
+
+        public static Shader GetShaderFromFiles(string name, string pathVS, string pathFS)
+        {
+            Shader shader;
+            using (StreamReader vs = new StreamReader(pathVS))
+            {
+                using (StreamReader fs = new StreamReader(pathFS))
+                {
+                    shader = new Shader(name, vs.ReadToEnd(), fs.ReadToEnd());
+                }
+            }
+
+            return shader;
         }
 
         public void UseShader()

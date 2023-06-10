@@ -43,22 +43,73 @@ namespace Replanetizer.Renderer
             this.shaderTable = shaderTable;
         }
 
-        public override void Include<T>(T obj) => throw new NotImplementedException();
+        public override void Include<T>(T obj)
+        {
+            if (obj is LevelObject levelObject && obj is IRenderable renderable)
+            {
+                BufferContainer container = BufferContainer.FromRenderable(renderable);
+                RenderedObjectType type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(levelObject);
+
+                List<LevelObject> listLevelObjects = new List<LevelObject>();
+                listLevelObjects.Add(levelObject);
+
+                wireframes.Add(new WireframeCollection(container, listLevelObjects, type));
+
+                return;
+            }
+
+            throw new NotImplementedException();
+        }
 
         public override void Include<T>(List<T> list)
         {
             if (list.Count == 0) return;
 
-            if (list is List<LevelObject> levelObjects && list is List<IRenderable> renderables)
+            BufferContainer? container = null;
+            RenderedObjectType type = RenderedObjectType.Null;
+            List<LevelObject> listLevelObjects = new List<LevelObject>();
+
+            switch (list)
             {
-                BufferContainer container = BufferContainer.FromRenderable(renderables[0]);
-                RenderedObjectType type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(levelObjects[0]);
-
-                List<LevelObject> listLevelObjects = new List<LevelObject>();
-                listLevelObjects.AddRange(levelObjects);
-
-                wireframes.Add(new WireframeCollection(container, listLevelObjects, type));
+                case List<Cuboid> cuboids:
+                    BufferContainer.FromRenderable(cuboids[0]);
+                    type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(cuboids[0]);
+                    listLevelObjects.AddRange(cuboids);
+                    return;
+                case List<Sphere> spheres:
+                    BufferContainer.FromRenderable(spheres[0]);
+                    type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(spheres[0]);
+                    listLevelObjects.AddRange(spheres);
+                    return;
+                case List<Cylinder> cylinders:
+                    BufferContainer.FromRenderable(cylinders[0]);
+                    type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(cylinders[0]);
+                    listLevelObjects.AddRange(cylinders);
+                    return;
+                case List<Pill> pills:
+                    BufferContainer.FromRenderable(pills[0]);
+                    type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(pills[0]);
+                    listLevelObjects.AddRange(pills);
+                    return;
+                case List<GameCamera> gameCameras:
+                    BufferContainer.FromRenderable(gameCameras[0]);
+                    type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(gameCameras[0]);
+                    listLevelObjects.AddRange(gameCameras);
+                    return;
+                case List<Spline> splines:
+                    BufferContainer.FromRenderable(splines[0]);
+                    type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(splines[0]);
+                    listLevelObjects.AddRange(splines);
+                    return;
             }
+
+            if (container != null)
+            {
+                wireframes.Add(new WireframeCollection(container, listLevelObjects, type));
+                return;
+            }
+
+            throw new NotImplementedException();
         }
 
         public override void Render(RendererPayload payload)

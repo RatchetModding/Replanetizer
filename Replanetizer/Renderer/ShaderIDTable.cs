@@ -5,6 +5,8 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using System.IO;
+
 namespace Replanetizer.Renderer
 {
     public class ShaderTable
@@ -15,13 +17,13 @@ namespace Replanetizer.Renderer
         public Shader billboardShader;
         public Shader collisionShader;
 
-        public ShaderTable(string directory = "")
+        public ShaderTable(string directory)
         {
-            meshShader = new Shader("MeshShader", directory + "vs.glsl", directory + "fs.glsl");
-            colorShader = new Shader("colorShader", directory + "colorshadervs.glsl", directory + "colorshaderfs.glsl");
-            skyShader = new Shader("skyShader", directory + "skyvs.glsl", directory + "skyfs.glsl");
-            billboardShader = new Shader("billboardShader", directory + "billboardvs.glsl", directory + "billboardfs.glsl");
-            collisionShader = new Shader("collisionShader", directory + "collisionshadervs.glsl", directory + "collisionshaderfs.glsl");
+            meshShader = Shader.GetShaderFromFiles("MeshShader", Path.Join(directory, "vs.glsl"), Path.Join(directory, "fs.glsl"));
+            colorShader = Shader.GetShaderFromFiles("colorShader", Path.Join(directory, "colorshadervs.glsl"), Path.Join(directory, "colorshaderfs.glsl"));
+            skyShader = Shader.GetShaderFromFiles("skyShader", Path.Join(directory, "skyvs.glsl"), Path.Join(directory, "skyfs.glsl"));
+            billboardShader = Shader.GetShaderFromFiles("billboardShader", Path.Join(directory, "billboardvs.glsl"), Path.Join(directory, "billboardfs.glsl"));
+            collisionShader = Shader.GetShaderFromFiles("collisionShader", Path.Join(directory, "collisionshadervs.glsl"), Path.Join(directory, "collisionshaderfs.glsl"));
         }
     }
 }

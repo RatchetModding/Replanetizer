@@ -10,11 +10,11 @@ out vec2 UV;
 out vec4 lightColor;
 
 // Values that stay constant for the whole mesh.
-uniform mat4 WorldToView;
+uniform mat4 worldToView;
 
 void main() {
 	// Output position of the vertex, in clip space : MVP * position
-	gl_Position = WorldToView * vec4(vertexPosition, 1.0f);
+	gl_Position = worldToView * vec4(vertexPosition, 1.0f);
 
 	// UV of the vertex. No special space for this one.
 	UV = vertexUV;

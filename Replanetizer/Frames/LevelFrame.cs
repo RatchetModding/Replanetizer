@@ -40,7 +40,7 @@ namespace Replanetizer.Frames
         private RendererPayload rendererPayload;
         public Level level { get; set; }
         private bool enableCameraInfo = true;
-        public ShaderTable shaderTable = new ShaderTable();
+        public ShaderTable shaderTable;
 
         private Clipboard clipboard = new Clipboard();
 
@@ -87,6 +87,10 @@ namespace Replanetizer.Frames
             level = new Level(res);
             subFrames = new List<Frame>();
             camera = new Camera();
+
+            string? applicationFolder = System.AppContext.BaseDirectory;
+            string shaderFolder = Path.Join(applicationFolder, "Shaders");
+            shaderTable = new ShaderTable(shaderFolder);
 
             maxAntialiasing = (int) Math.Log2((double) GL.GetInteger(GetPName.MaxSamples));
 
@@ -504,11 +508,6 @@ namespace Replanetizer.Frames
             //Setup openGL variables
             GL.ClearColor(Color.SkyBlue);
             GL.Enable(EnableCap.DepthTest);
-
-            string? applicationFolder = System.AppContext.BaseDirectory;
-            string shaderFolder = Path.Join(applicationFolder, "Shaders");
-
-            shaderTable = new ShaderTable(shaderFolder);
 
             shaderTable.meshShader.UseShader();
             Matrix4 dissolvePattern = new Matrix4(1.0f / 17.0f, 9.0f / 17.0f, 3.0f / 17.0f, 11.0f / 17.0f,

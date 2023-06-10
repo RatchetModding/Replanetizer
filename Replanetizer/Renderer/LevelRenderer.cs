@@ -36,13 +36,13 @@ namespace Replanetizer.Renderer
         private WireframeRenderer? cylinderRenderer;
         private WireframeRenderer? pillRenderer;
         private WireframeRenderer? gameCameraRenderer;
-        private List<WireframeRenderer> splineRenderers = new List<WireframeRenderer>();
+        private WireframeRenderer? splineRenderer;
         private BillboardRenderer? soundInstanceRenderer;
         private BillboardRenderer? pointLightRenderer;
         private BillboardRenderer? envSamplesRenderer;
         private BillboardRenderer? envTransitionRenderer;
         private BillboardRenderer? grindPathRenderer;
-        private List<WireframeRenderer> grindPathSplineRenderers = new List<WireframeRenderer>();
+        private WireframeRenderer? grindPathSplineRenderer;
         private ToolRenderer toolRenderer;
         private DirectionalLightsBuffer dirLightsBuffer;
 
@@ -115,11 +115,10 @@ namespace Replanetizer.Renderer
             gameCameraRenderer = new WireframeRenderer(shaderTable);
             gameCameraRenderer.Include(level.gameCameras);
 
+            splineRenderer = new WireframeRenderer(shaderTable);
             foreach (Spline spline in level.splines)
             {
-                WireframeRenderer splineRenderer = new WireframeRenderer(shaderTable);
                 splineRenderer.Include(spline);
-                grindPathSplineRenderers.Add(splineRenderer);
             }
 
             soundInstanceRenderer = new BillboardRenderer(shaderTable);
@@ -137,11 +136,10 @@ namespace Replanetizer.Renderer
             grindPathRenderer = new BillboardRenderer(shaderTable);
             grindPathRenderer.Include(level.grindPaths);
 
+            grindPathSplineRenderer = new WireframeRenderer(shaderTable);
             foreach (GrindPath path in level.grindPaths)
             {
-                WireframeRenderer grindPathSplineRenderer = new WireframeRenderer(shaderTable);
                 grindPathSplineRenderer.Include(path.spline);
-                grindPathSplineRenderers.Add(grindPathSplineRenderer);
             }
         }
 
@@ -284,12 +282,7 @@ namespace Replanetizer.Renderer
                 gameCameraRenderer?.Render(payload);
 
             if (payload.visibility.enableSpline)
-            {
-                foreach (WireframeRenderer wireframe in splineRenderers)
-                {
-                    wireframe.Render(payload);
-                }
-            }
+                splineRenderer?.Render(payload);
 
             if (payload.visibility.enableSoundInstances)
                 soundInstanceRenderer?.Render(payload);
@@ -306,10 +299,7 @@ namespace Replanetizer.Renderer
             if (payload.visibility.enableGrindPaths)
             {
                 grindPathRenderer?.Render(payload);
-                foreach (WireframeRenderer wireframe in grindPathSplineRenderers)
-                {
-                    wireframe.Render(payload);
-                }
+                grindPathSplineRenderer?.Render(payload);
             }
 
             toolRenderer.Render(payload);

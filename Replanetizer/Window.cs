@@ -16,6 +16,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using Replanetizer.Frames;
 using Replanetizer.Utils;
+using Replanetizer.Renderer;
 
 namespace Replanetizer
 {
@@ -127,7 +128,7 @@ namespace Replanetizer
             if (controller != null)
                 controller.Render();
 
-            Util.CheckGlError("End of frame");
+            GLUtil.CheckGlError("End of frame");
             SwapBuffers();
         }
 

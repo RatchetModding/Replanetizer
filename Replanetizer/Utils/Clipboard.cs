@@ -9,6 +9,7 @@ using LibReplanetizer.LevelObjects;
 using LibReplanetizer;
 using System.Collections.Generic;
 using Replanetizer.Frames;
+using Replanetizer.Renderer;
 
 namespace Replanetizer.Utils
 {
@@ -58,29 +59,27 @@ namespace Replanetizer.Utils
 
                 if (o2 is Moby mob)
                 {
-                    level.mobs.Add(mob);
-
                     if (mob.pvarIndex != -1)
                     {
                         mob.pvarIndex = level.pVars.Count;
                         level.pVars.Add(mob.pVars);
                     }
 
-                    levelFrame.mobiesBuffers.Add(new RenderableBuffer(mob, RenderedObjectType.Moby, level.mobs.Count - 1, level, levelFrame.textureIds));
+                    level.mobs.Add(mob);
                     levelFrame.selectedObjects.Add(mob);
                 }
                 else if (o2 is Shrub shrub)
                 {
                     level.shrubs.Add(shrub);
-                    levelFrame.shrubsBuffers.Add(new RenderableBuffer(shrub, RenderedObjectType.Shrub, level.shrubs.Count - 1, level, levelFrame.textureIds));
                     levelFrame.selectedObjects.Add(shrub);
                 }
                 else if (o2 is Tie tie)
                 {
                     level.ties.Add(tie);
-                    levelFrame.tiesBuffers.Add(new RenderableBuffer(tie, RenderedObjectType.Tie, level.ties.Count - 1, level, levelFrame.textureIds));
                     levelFrame.selectedObjects.Add(tie);
                 }
+
+                levelFrame.levelRenderer?.Include(o2);
             }
         }
     }

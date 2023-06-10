@@ -222,7 +222,7 @@ namespace LibReplanetizer.Parsers
             return textureConfigMenuList;
         }
 
-        protected Model GetCollisionModel(int collisionOffset)
+        protected Collision GetCollisionModel(int collisionOffset)
         {
             return new Collision(fileStream, collisionOffset);
         }

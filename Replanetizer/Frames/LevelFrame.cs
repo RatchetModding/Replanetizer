@@ -23,6 +23,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Replanetizer.Tools;
 using Replanetizer.Utils;
+using Replanetizer.Renderer;
 using static LibReplanetizer.DataFunctions;
 using static LibReplanetizer.Utilities;
 using Texture = LibReplanetizer.Texture;
@@ -35,20 +36,11 @@ namespace Replanetizer.Frames
         protected override string frameName { get; set; } = "Level";
 
         private FramebufferRenderer? renderer;
+        public LevelRenderer? levelRenderer;
+        private RendererPayload rendererPayload;
         public Level level { get; set; }
-
-        private List<TerrainFragment> terrains = new List<TerrainFragment>();
-        private List<Tuple<Model, int, int>> collisions = new List<Tuple<Model, int, int>>();
-
-        private static Vector4 NORMAL_COLOR = new Vector4(1, 1, 1, 1); // White
-        private static Vector4 SELECTED_COLOR = new Vector4(1, 0, 1, 1); // Purple
-
-        public Matrix4 worldView;
-
-        public ShaderIDTable shaderIDTable = new ShaderIDTable();
-
-        private int lightsBufferObject;
-        private float[][]? lightsData;
+        private bool enableCameraInfo = true;
+        public ShaderTable shaderTable = new ShaderTable();
 
         private Clipboard clipboard = new Clipboard();
 
@@ -56,14 +48,12 @@ namespace Replanetizer.Frames
 
         private float movingAvgFrametime = 1.0f;
 
-        private Matrix4 view { get; set; }
-
         public readonly Selection selectedObjects;
-        private string[] selectionPositioningOptions = { PivotPositioning.Mean.HUMAN_NAME, PivotPositioning.IndividualOrigins.HUMAN_NAME };
-        private string[] selectionSpaceOptions = { TransformSpace.Global.HUMAN_NAME, TransformSpace.Local.HUMAN_NAME };
+        private readonly string[] selectionPositioningOptions = { PivotPositioning.Mean.HUMAN_NAME, PivotPositioning.IndividualOrigins.HUMAN_NAME };
+        private readonly string[] selectionSpaceOptions = { TransformSpace.Global.HUMAN_NAME, TransformSpace.Local.HUMAN_NAME };
 
         private int antialiasing = 1;
-        private string[] antialiasingOptions = { "Off", "2x MSAA", "4x MSAA", "8x MSAA", "16x MSAA", "32x MSAA", "64x MSAA", "128x MSAA", "256x MSAA", "512x MSAA" };
+        private readonly string[] antialiasingOptions = { "Off", "2x MSAA", "4x MSAA", "8x MSAA", "16x MSAA", "32x MSAA", "64x MSAA", "128x MSAA", "256x MSAA", "512x MSAA" };
         private int maxAntialiasing = 4;
 
         private Vector2 mousePos;
@@ -79,29 +69,14 @@ namespace Replanetizer.Frames
 
         public bool initialized, invalidate;
         public bool[] selectedChunks = new bool[0];
-        public bool enableMoby = true, enableTie = true, enableShrub = true, enableSpline = false,
-            enableCuboid = false, enableSpheres = false, enableCylinders = false, enablePills = false,
-            enableSkybox = true, enableTerrain = true, enableCollision = false, enableTransparency = true,
-            enableDistanceCulling = true, enableFrustumCulling = true, enableFog = true, enableCameraInfo = true,
-            enableGameCameras = false, enablePointLights = false, enableEnvSamples = false, enableEnvTransitions = false,
-            enableSoundInstances = false, enableGrindPaths = false;
 
         public Camera camera;
 
         private Toolbox toolbox = new();
 
-        private ConditionalWeakTable<IRenderable, BufferContainer> bufferTable;
         public Dictionary<Texture, int> textureIds = new Dictionary<Texture, int>();
 
-        public List<RenderableBuffer> mobiesBuffers = new List<RenderableBuffer>(), tiesBuffers = new List<RenderableBuffer>(),
-        shrubsBuffers = new List<RenderableBuffer>(), terrainBuffers = new List<RenderableBuffer>();
-
-        private BillboardRenderer? billboardRenderer;
-
         MemoryHook.MemoryHook? hook;
-
-        private List<int> collisionVbo = new List<int>();
-        private List<int> collisionIbo = new List<int>();
 
         private int width, height;
 
@@ -111,7 +86,6 @@ namespace Replanetizer.Frames
         {
             level = new Level(res);
             subFrames = new List<Frame>();
-            bufferTable = new ConditionalWeakTable<IRenderable, BufferContainer>();
             camera = new Camera();
 
             maxAntialiasing = (int) Math.Log2((double) GL.GetInteger(GetPName.MaxSamples));
@@ -122,6 +96,8 @@ namespace Replanetizer.Frames
             selectedObjects.CollectionChanged += SelectedObjectsOnCollectionChanged;
 
             toolbox.ToolChanged += (_, _) => InvalidateView();
+
+            rendererPayload = new RendererPayload(camera, selectedObjects, toolbox);
 
             UpdateWindowSize();
             OnResize();
@@ -241,11 +217,11 @@ namespace Replanetizer.Frames
                     {
                         if (selectedObjects.newestObject != null && selectedObjects.newestObject is ModelObject obj)
                         {
-                            subFrames.Add(new ModelFrame(this.wnd, this, this.shaderIDTable, obj.model));
+                            subFrames.Add(new ModelFrame(this.wnd, this, this.shaderTable, obj.model));
                         }
                         else
                         {
-                            subFrames.Add(new ModelFrame(this.wnd, this, this.shaderIDTable));
+                            subFrames.Add(new ModelFrame(this.wnd, this, this.shaderTable));
                         }
                     }
                     if (ImGui.MenuItem("Texture viewer"))
@@ -270,28 +246,28 @@ namespace Replanetizer.Frames
 
                 if (ImGui.BeginMenu("Render"))
                 {
-                    if (ImGui.Checkbox("Moby", ref enableMoby)) InvalidateView();
-                    if (ImGui.Checkbox("Tie", ref enableTie)) InvalidateView();
-                    if (ImGui.Checkbox("Shrub", ref enableShrub)) InvalidateView();
-                    if (ImGui.Checkbox("Spline", ref enableSpline)) InvalidateView();
-                    if (ImGui.Checkbox("Cuboid", ref enableCuboid)) InvalidateView();
-                    if (ImGui.Checkbox("Spheres", ref enableSpheres)) InvalidateView();
-                    if (ImGui.Checkbox("Cylinders", ref enableCylinders)) InvalidateView();
-                    if (ImGui.Checkbox("Pills", ref enablePills)) InvalidateView();
-                    if (ImGui.Checkbox("SoundInstances", ref enableSoundInstances)) InvalidateView();
-                    if (ImGui.Checkbox("Cameras", ref enableGameCameras)) InvalidateView();
-                    if (ImGui.Checkbox("Pointlights", ref enablePointLights)) InvalidateView();
-                    if (ImGui.Checkbox("EnvSamples", ref enableEnvSamples)) InvalidateView();
-                    if (ImGui.Checkbox("EnvTransitions", ref enableEnvTransitions)) InvalidateView();
-                    if (ImGui.Checkbox("GrindPaths", ref enableGrindPaths)) InvalidateView();
-                    if (ImGui.Checkbox("Skybox", ref enableSkybox)) InvalidateView();
-                    if (ImGui.Checkbox("Terrain", ref enableTerrain)) InvalidateView();
-                    if (ImGui.Checkbox("Collision", ref enableCollision)) InvalidateView();
+                    if (ImGui.Checkbox("Moby", ref rendererPayload.visibility.enableMoby)) InvalidateView();
+                    if (ImGui.Checkbox("Tie", ref rendererPayload.visibility.enableTie)) InvalidateView();
+                    if (ImGui.Checkbox("Shrub", ref rendererPayload.visibility.enableShrub)) InvalidateView();
+                    if (ImGui.Checkbox("Spline", ref rendererPayload.visibility.enableSpline)) InvalidateView();
+                    if (ImGui.Checkbox("Cuboid", ref rendererPayload.visibility.enableCuboid)) InvalidateView();
+                    if (ImGui.Checkbox("Spheres", ref rendererPayload.visibility.enableSpheres)) InvalidateView();
+                    if (ImGui.Checkbox("Cylinders", ref rendererPayload.visibility.enableCylinders)) InvalidateView();
+                    if (ImGui.Checkbox("Pills", ref rendererPayload.visibility.enablePills)) InvalidateView();
+                    if (ImGui.Checkbox("SoundInstances", ref rendererPayload.visibility.enableSoundInstances)) InvalidateView();
+                    if (ImGui.Checkbox("Cameras", ref rendererPayload.visibility.enableGameCameras)) InvalidateView();
+                    if (ImGui.Checkbox("Pointlights", ref rendererPayload.visibility.enablePointLights)) InvalidateView();
+                    if (ImGui.Checkbox("EnvSamples", ref rendererPayload.visibility.enableEnvSamples)) InvalidateView();
+                    if (ImGui.Checkbox("EnvTransitions", ref rendererPayload.visibility.enableEnvTransitions)) InvalidateView();
+                    if (ImGui.Checkbox("GrindPaths", ref rendererPayload.visibility.enableGrindPaths)) InvalidateView();
+                    if (ImGui.Checkbox("Skybox", ref rendererPayload.visibility.enableSkybox)) InvalidateView();
+                    if (ImGui.Checkbox("Terrain", ref rendererPayload.visibility.enableTerrain)) InvalidateView();
+                    if (ImGui.Checkbox("Collision", ref rendererPayload.visibility.enableCollision)) InvalidateView();
                     ImGui.Separator();
-                    if (ImGui.Checkbox("Transparency", ref enableTransparency)) InvalidateView();
-                    if (ImGui.Checkbox("Distance Culling", ref enableDistanceCulling)) InvalidateView();
-                    if (ImGui.Checkbox("Frustum Culling", ref enableFrustumCulling)) InvalidateView();
-                    if (ImGui.Checkbox("Fog", ref enableFog)) InvalidateView();
+                    if (ImGui.Checkbox("Transparency", ref rendererPayload.visibility.enableTransparency)) InvalidateView();
+                    if (ImGui.Checkbox("Distance Culling", ref rendererPayload.visibility.enableDistanceCulling)) InvalidateView();
+                    if (ImGui.Checkbox("Frustum Culling", ref rendererPayload.visibility.enableFrustumCulling)) InvalidateView();
+                    if (ImGui.Checkbox("Fog", ref rendererPayload.visibility.enableFog)) InvalidateView();
                     ImGui.PushItemWidth(90.0f);
                     if (ImGui.Combo("Antialiasing", ref antialiasing, antialiasingOptions, 1 + maxAntialiasing))
                     {
@@ -328,7 +304,7 @@ namespace Replanetizer.Frames
                 {
                     for (int i = 0; i < selectedChunks.Length; i++)
                         if (ImGui.Checkbox($"Chunk {i}", ref selectedChunks[i]))
-                            SetSelectedChunks();
+                            InvalidateView();
                     ImGui.EndMenu();
                 }
 
@@ -500,6 +476,8 @@ namespace Replanetizer.Frames
                     GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
                     GL.Enable(EnableCap.DepthTest);
                     GL.Viewport(0, 0, width, height);
+                    GL.Scissor(0, 0, width, height);
+                    GL.Enable(EnableCap.ScissorTest);
 
                     OnPaint();
                 });
@@ -530,66 +508,14 @@ namespace Replanetizer.Frames
             string? applicationFolder = System.AppContext.BaseDirectory;
             string shaderFolder = Path.Join(applicationFolder, "Shaders");
 
-            shaderIDTable = new ShaderIDTable();
+            shaderTable = new ShaderTable(shaderFolder);
 
-            shaderIDTable.shaderMain = LinkShader(shaderFolder, "vs.glsl", "fs.glsl");
-            shaderIDTable.shaderColor = LinkShader(shaderFolder, "colorshadervs.glsl", "colorshaderfs.glsl");
-            shaderIDTable.shaderCollision = LinkShader(shaderFolder, "collisionshadervs.glsl", "collisionshaderfs.glsl");
-            shaderIDTable.shaderSky = LinkShader(shaderFolder, "skyvs.glsl", "skyfs.glsl");
-            shaderIDTable.shaderBillboard = LinkShader(shaderFolder, "billboardvs.glsl", "billboardfs.glsl");
-
-            shaderIDTable.uniformWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.shaderMain, "WorldToView");
-            shaderIDTable.uniformModelToWorldMatrix = GL.GetUniformLocation(shaderIDTable.shaderMain, "ModelToWorld");
-            shaderIDTable.uniformColorWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.shaderColor, "WorldToView");
-            shaderIDTable.uniformColorModelToWorldMatrix = GL.GetUniformLocation(shaderIDTable.shaderColor, "ModelToWorld");
-            shaderIDTable.uniformCollisionWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.shaderCollision, "WorldToView");
-            shaderIDTable.uniformSkyWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.shaderSky, "WorldToView");
-            shaderIDTable.uniformBillboardWorldToViewMatrix = GL.GetUniformLocation(shaderIDTable.shaderBillboard, "WorldToView");
-
-            shaderIDTable.uniformBillboardRightBase = GL.GetUniformLocation(shaderIDTable.shaderBillboard, "right");
-            shaderIDTable.uniformBillboardUpBase = GL.GetUniformLocation(shaderIDTable.shaderBillboard, "up");
-
-            shaderIDTable.uniformColor = GL.GetUniformLocation(shaderIDTable.shaderColor, "incolor");
-
-            shaderIDTable.uniformFogColor = GL.GetUniformLocation(shaderIDTable.shaderMain, "fogColor");
-            shaderIDTable.uniformFogParams = GL.GetUniformLocation(shaderIDTable.shaderMain, "fogParams");
-            shaderIDTable.uniformUseFog = GL.GetUniformLocation(shaderIDTable.shaderMain, "useFog");
-
-            shaderIDTable.uniformObjectBlendDistance = GL.GetUniformLocation(shaderIDTable.shaderMain, "objectBlendDistance");
-
-            shaderIDTable.uniformLevelObjectType = GL.GetUniformLocation(shaderIDTable.shaderMain, "levelObjectType");
-            shaderIDTable.uniformLevelObjectNumber = GL.GetUniformLocation(shaderIDTable.shaderMain, "levelObjectNumber");
-            shaderIDTable.uniformColorLevelObjectType = GL.GetUniformLocation(shaderIDTable.shaderColor, "levelObjectType");
-            shaderIDTable.uniformColorLevelObjectNumber = GL.GetUniformLocation(shaderIDTable.shaderColor, "levelObjectNumber");
-            shaderIDTable.uniformBillboardLevelObjectType = GL.GetUniformLocation(shaderIDTable.shaderBillboard, "levelObjectType");
-            shaderIDTable.uniformBillboardLevelObjectNumber = GL.GetUniformLocation(shaderIDTable.shaderBillboard, "levelObjectNumber");
-
-            shaderIDTable.uniformAmbientColor = GL.GetUniformLocation(shaderIDTable.shaderMain, "staticColor");
-            shaderIDTable.uniformLightIndex = GL.GetUniformLocation(shaderIDTable.shaderMain, "lightIndex");
-
-            shaderIDTable.uniformUseTransparency = GL.GetUniformLocation(shaderIDTable.shaderMain, "useTransparency");
-
-            shaderIDTable.uniformSkyTexAvailable = GL.GetUniformLocation(shaderIDTable.shaderSky, "texAvailable");
-
-            shaderIDTable.uniformDissolvePattern = GL.GetUniformLocation(shaderIDTable.shaderMain, "dissolvePattern");
-
-            shaderIDTable.uniformBillboardPosition = GL.GetUniformLocation(shaderIDTable.shaderBillboard, "position");
-
-            RenderableBuffer.SHADER_ID_TABLE = shaderIDTable;
-
-            LoadDirectionalLights(level.lights);
-
-            camera.ComputeProjectionMatrix();
-            view = camera.GetViewMatrix();
-
-            GL.UseProgram(shaderIDTable.shaderMain);
+            shaderTable.meshShader.UseShader();
             Matrix4 dissolvePattern = new Matrix4(1.0f / 17.0f, 9.0f / 17.0f, 3.0f / 17.0f, 11.0f / 17.0f,
                                         13.0f / 17.0f, 5.0f / 17.0f, 15.0f / 17.0f, 7.0f / 17.0f,
                                         4.0f / 17.0f, 12.0f / 17.0f, 2.0f / 17.0f, 10.0f / 17.0f,
                                         16.0f / 17.0f, 8.0f / 17.0f, 14.0f / 17.0f, 6.0f / 17.0f);
-            GL.UniformMatrix4(shaderIDTable.uniformDissolvePattern, false, ref dissolvePattern);
-
-            billboardRenderer = new BillboardRenderer(shaderIDTable);
+            shaderTable.meshShader.SetUniformMatrix4("dissolvePattern", false, ref dissolvePattern);
 
             initialized = true;
 
@@ -700,139 +626,20 @@ namespace Replanetizer.Frames
             }
         }
 
-        private void LoadSingleCollisionBo(Collision col)
-        {
-            int id;
-            GL.GenBuffers(1, out id);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, id);
-            GL.BufferData(BufferTarget.ArrayBuffer, col.vertexBuffer.Length * sizeof(float), col.vertexBuffer, BufferUsageHint.StaticDraw);
-
-            collisionVbo.Add(id);
-
-            GL.GenBuffers(1, out id);
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, id);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, col.indBuff.Length * sizeof(int), col.indBuff, BufferUsageHint.StaticDraw);
-
-            collisionIbo.Add(id);
-        }
-
-        void LoadCollisionBOs()
-        {
-            foreach (int id in collisionIbo)
-            {
-                GL.DeleteBuffer(id);
-            }
-
-            foreach (int id in collisionVbo)
-            {
-                GL.DeleteBuffer(id);
-            }
-
-            collisionVbo.Clear();
-            collisionIbo.Clear();
-
-            if (level.collisionChunks.Count == 0)
-            {
-                LoadSingleCollisionBo((Collision) level.collisionEngine);
-            }
-            else
-            {
-                foreach (Model collisionModel in level.collisionChunks)
-                {
-                    LoadSingleCollisionBo((Collision) collisionModel);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Updates the buffers of the lights.
-        /// </summary>
-        private void UpdateDirectionalLights(List<Light> lights)
-        {
-            if (lightsData == null) return;
-            GL.BindBuffer(BufferTarget.UniformBuffer, lightsBufferObject);
-            int lightSize = sizeof(float) * 16;
-
-            for (int i = 0; i < lights.Count; i++)
-            {
-                lightsData[i][0] = lights[i].color1.X;
-                lightsData[i][1] = lights[i].color1.Y;
-                lightsData[i][2] = lights[i].color1.Z;
-                lightsData[i][3] = lights[i].color1.W;
-                lightsData[i][4] = lights[i].direction1.X;
-                lightsData[i][5] = lights[i].direction1.Y;
-                lightsData[i][6] = lights[i].direction1.Z;
-                lightsData[i][7] = lights[i].direction1.W;
-                lightsData[i][8] = lights[i].color2.X;
-                lightsData[i][9] = lights[i].color2.Y;
-                lightsData[i][10] = lights[i].color2.Z;
-                lightsData[i][11] = lights[i].color2.W;
-                lightsData[i][12] = lights[i].direction2.X;
-                lightsData[i][13] = lights[i].direction2.Y;
-                lightsData[i][14] = lights[i].direction2.Z;
-                lightsData[i][15] = lights[i].direction2.W;
-                GL.BufferSubData(BufferTarget.UniformBuffer, new IntPtr(sizeof(float) * 16 * i), lightSize, lightsData[i]);
-            }
-
-            GL.BindBuffer(BufferTarget.UniformBuffer, 0);
-        }
-
-        /// <summary>
-        /// Initializes buffers for the directional lights to be used in the shaders.
-        /// An all black light is added additionally for all objects with out of bounds light indices.
-        /// </summary>
-        private void LoadDirectionalLights(List<Light> lights)
-        {
-            int loc = GL.GetUniformBlockIndex(shaderIDTable.shaderMain, "lights");
-            GL.UniformBlockBinding(shaderIDTable.shaderMain, loc, 0);
-
-            lightsBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.UniformBuffer, lightsBufferObject);
-            GL.BufferData(BufferTarget.UniformBuffer, sizeof(float) * 16 * ShaderIDTable.ALLOCATED_LIGHTS, IntPtr.Zero, BufferUsageHint.StaticRead);
-            GL.BindBuffer(BufferTarget.UniformBuffer, 0);
-
-            lightsData = new float[ShaderIDTable.ALLOCATED_LIGHTS][];
-
-            for (int i = 0; i < ShaderIDTable.ALLOCATED_LIGHTS; i++)
-            {
-                lightsData[i] = new float[16];
-
-                // Upload the all black light, all unused ones will remain black.
-                GL.BufferSubData(BufferTarget.UniformBuffer, new IntPtr(sizeof(float) * 16 * i), sizeof(float) * 16, lightsData[i]);
-            }
-
-            UpdateDirectionalLights(lights);
-        }
-
-        /// <summary>
-        /// Returns a list of RenderableBuffers for a collection objects with each object of the same type.
-        /// </summary>
-        private List<RenderableBuffer> GetRenderableBuffer(IEnumerable<ModelObject> objects, RenderedObjectType type)
-        {
-            List<RenderableBuffer> buffers = new List<RenderableBuffer>();
-            for (int i = 0; i < objects.Count(); i++)
-            {
-                buffers.Add(new RenderableBuffer(objects.ElementAt(i), type, i, level, textureIds));
-            }
-            return buffers;
-        }
-
         private void LoadLevel(Level level)
         {
             this.level = level;
 
-            GL.ClearColor(level.levelVariables.fogColor);
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
             LoadLevelTextures();
-            LoadCollisionBOs();
+
+            levelRenderer = new LevelRenderer(shaderTable, textureIds);
+            levelRenderer.Include(this.level);
 
             Array.Resize(ref selectedChunks, level.collisionChunks.Count);
             for (int i = 0; i < level.collisionChunks.Count; i++)
             {
                 selectedChunks[i] = true;
             }
-
 
             if (level.mobs.Count > 0)
             {
@@ -845,44 +652,7 @@ namespace Replanetizer.Frames
                 camera.SetRotation(0, 0);
             }
             selectedObjects.Clear();
-            SetSelectedChunks();
-            shrubsBuffers = GetRenderableBuffer(level.shrubs, RenderedObjectType.Shrub);
-            tiesBuffers = GetRenderableBuffer(level.ties, RenderedObjectType.Tie);
-            mobiesBuffers = GetRenderableBuffer(level.mobs, RenderedObjectType.Moby);
 
-            InvalidateView();
-        }
-
-        public void SetSelectedChunks()
-        {
-            if (level.terrainChunks.Count == 0)
-            {
-                terrains.Clear();
-                terrains.AddRange(level.terrainEngine.fragments);
-                collisions.Clear();
-                collisions.Add(new Tuple<Model, int, int>(level.collisionEngine, collisionVbo[0], collisionIbo[0]));
-            }
-            else
-            {
-                terrains.Clear();
-                collisions.Clear();
-
-                for (int i = 0; i < level.terrainChunks.Count; i++)
-                {
-                    if (selectedChunks[i])
-                        terrains.AddRange(level.terrainChunks[i].fragments);
-                }
-
-                for (int i = 0; i < level.collisionChunks.Count; i++)
-                {
-                    if (selectedChunks[i])
-                        collisions.Add(new Tuple<Model, int, int>(level.collisionChunks[i], collisionVbo[i], collisionIbo[i]));
-                }
-            }
-
-            if (terrainBuffers != null) foreach (RenderableBuffer buffer in terrainBuffers) buffer.Dispose();
-
-            terrainBuffers = GetRenderableBuffer(terrains, RenderedObjectType.Terrain);
             InvalidateView();
         }
 
@@ -901,7 +671,7 @@ namespace Replanetizer.Frames
 
         public void DeleteObject(LevelObject levelObject)
         {
-            selectedObjects.Remove(levelObject);
+            /*selectedObjects.Remove(levelObject);
             switch (levelObject)
             {
                 case Moby moby:
@@ -913,7 +683,7 @@ namespace Replanetizer.Frames
                     }
 
                     // Reinitializing the buffers is simple but slow
-                    if (mobiesBuffers != null) foreach (RenderableBuffer buffer in mobiesBuffers) buffer.Dispose();
+                    if (mobiesBuffers != null) foreach (MeshRenderer buffer in mobiesBuffers) buffer.Dispose();
                     mobiesBuffers = GetRenderableBuffer(level.mobs, RenderedObjectType.Moby);
                     break;
                 case Tie tie:
@@ -924,7 +694,7 @@ namespace Replanetizer.Frames
                     //level.ties.Clear();
 
                     // Reinitializing the buffers is simple but slow
-                    if (tiesBuffers != null) foreach (RenderableBuffer buffer in tiesBuffers) buffer.Dispose();
+                    if (tiesBuffers != null) foreach (MeshRenderer buffer in tiesBuffers) buffer.Dispose();
                     tiesBuffers = GetRenderableBuffer(level.ties, RenderedObjectType.Tie);
                     break;
                 case Shrub shrub:
@@ -934,7 +704,7 @@ namespace Replanetizer.Frames
                     //level.shrubModels.RemoveRange(5, level.shrubModels.Count - 5);
 
                     // Reinitializing the buffers is simple but slow
-                    if (shrubsBuffers != null) foreach (RenderableBuffer buffer in shrubsBuffers) buffer.Dispose();
+                    if (shrubsBuffers != null) foreach (MeshRenderer buffer in shrubsBuffers) buffer.Dispose();
                     shrubsBuffers = GetRenderableBuffer(level.shrubs, RenderedObjectType.Shrub);
                     break;
                 case TerrainFragment tFrag:
@@ -950,7 +720,7 @@ namespace Replanetizer.Frames
                     break;
             }
 
-            InvalidateView();
+            InvalidateView();*/
         }
 
         private void HandleMouseWheelChanges()
@@ -1085,9 +855,7 @@ namespace Replanetizer.Frames
             HandleKeyboardShortcuts();
             CheckForMovementInput(deltaTime);
 
-            view = camera.GetViewMatrix();
-
-            Vector3 mouseRay = MouseToWorldRay(camera.GetProjectionMatrix(), view, new Size(width, height), mousePos);
+            Vector3 mouseRay = MouseToWorldRay(camera.GetProjectionMatrix(), camera.GetViewMatrix(), new Size(width, height), mousePos);
 
             if (!HandleLeftMouseDown(mouseRay))
             {
@@ -1188,52 +956,6 @@ namespace Replanetizer.Frames
             return inputAxes;
         }
 
-        public void ActivateBuffersForModel(IRenderable renderable)
-        {
-            BufferContainer container = bufferTable.GetValue(renderable, BufferContainer.FromRenderable);
-            container.Bind();
-        }
-
-        public void RenderTool()
-        {
-            if (toolbox.tool == null || selectedObjects.Count == 0)
-                return;
-
-            // Render tool on top of everything
-            GL.Clear(ClearBufferMask.DepthBufferBit);
-            GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.Tool);
-
-            if (selectedObjects.TryGetOne(out var obj) && obj is Spline spline &&
-                toolbox.tool is VertexTranslationTool vertexTranslationTool)
-            {
-                vertexTranslationTool.Render(spline, this);
-            }
-            else
-                toolbox.tool.Render(selectedObjects, this);
-        }
-
-        private int LinkShader(string shaderFolder, string vsname, string fsname)
-        {
-            int shaderID = GL.CreateProgram();
-            LoadShader(Path.Join(shaderFolder, vsname), ShaderType.VertexShader, shaderID);
-            LoadShader(Path.Join(shaderFolder, fsname), ShaderType.FragmentShader, shaderID);
-            GL.LinkProgram(shaderID);
-
-            return shaderID;
-        }
-
-        private void LoadShader(string filename, ShaderType type, int program)
-        {
-            int address = GL.CreateShader(type);
-            using (StreamReader sr = new StreamReader(filename))
-            {
-                GL.ShaderSource(address, sr.ReadToEnd());
-            }
-            GL.CompileShader(address);
-            GL.AttachShader(program, address);
-            LOGGER.Debug("Compiled shader from {0}, log: {1}", filename, GL.GetShaderInfoLog(address));
-        }
-
         private void UpdateAaLevel()
         {
             if (antialiasing == 0)
@@ -1248,8 +970,6 @@ namespace Replanetizer.Frames
         {
             if (!initialized) return;
             GL.Viewport(0, 0, width, height);
-            camera.ComputeProjectionMatrix();
-            view = camera.GetViewMatrix();
 
             renderer?.Dispose();
             renderer = new FramebufferRenderer(width, height);
@@ -1274,33 +994,40 @@ namespace Replanetizer.Frames
                 case RenderedObjectType.Null:
                     return null;
                 case RenderedObjectType.Terrain:
-                    return terrains[hitId];
+                    foreach (Terrain terrain in level.terrainChunks)
+                    {
+                        foreach (TerrainFragment fragment in terrain.fragments)
+                        {
+                            if (fragment.globalID == hitId) return fragment;
+                        }
+                    }
+                    return null;
                 case RenderedObjectType.Shrub:
-                    return level.shrubs[hitId];
+                    return level.shrubs.Find(x => x.globalID == hitId);
                 case RenderedObjectType.Tie:
-                    return level.ties[hitId];
+                    return level.ties.Find(x => x.globalID == hitId);
                 case RenderedObjectType.Moby:
-                    return level.mobs[hitId];
+                    return level.mobs.Find(x => x.globalID == hitId);
                 case RenderedObjectType.Spline:
-                    return level.splines[hitId];
+                    return level.splines.Find(x => x.globalID == hitId);
                 case RenderedObjectType.Cuboid:
-                    return level.cuboids[hitId];
+                    return level.cuboids.Find(x => x.globalID == hitId);
                 case RenderedObjectType.Sphere:
-                    return level.spheres[hitId];
+                    return level.spheres.Find(x => x.globalID == hitId);
                 case RenderedObjectType.Cylinder:
-                    return level.cylinders[hitId];
+                    return level.cylinders.Find(x => x.globalID == hitId);
                 case RenderedObjectType.SoundInstance:
-                    return level.soundInstances[hitId];
+                    return level.soundInstances.Find(x => x.globalID == hitId);
                 case RenderedObjectType.GameCamera:
-                    return level.gameCameras[hitId];
+                    return level.gameCameras.Find(x => x.globalID == hitId);
                 case RenderedObjectType.PointLight:
-                    return level.pointLights[hitId];
+                    return level.pointLights.Find(x => x.globalID == hitId);
                 case RenderedObjectType.EnvSample:
-                    return level.envSamples[hitId];
+                    return level.envSamples.Find(x => x.globalID == hitId);
                 case RenderedObjectType.EnvTransition:
-                    return level.envTransitions[hitId];
+                    return level.envTransitions.Find(x => x.globalID == hitId);
                 case RenderedObjectType.GrindPath:
-                    return level.grindPaths[hitId];
+                    return level.grindPaths.Find(x => x.globalID == hitId);
                 case RenderedObjectType.Tool:
                     switch (hitId)
                     {
@@ -1366,291 +1093,9 @@ namespace Replanetizer.Frames
             }
         }
 
-        private void RenderBuffer(RenderableBuffer buffer)
-        {
-            buffer.UpdateVars();
-            buffer.ComputeCulling(camera, enableDistanceCulling, enableFrustumCulling);
-            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, 0, lightsBufferObject);
-            buffer.Select(selectedObjects);
-            buffer.Render();
-        }
-
         protected void OnPaint()
         {
-            worldView = camera.GetViewMatrix() * camera.GetProjectionMatrix();
-
-            camera.ComputeFrustum();
-
-            GL.ClearColor(level.levelVariables.fogColor);
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            GL.DepthFunc(DepthFunction.Lequal);
-            GL.Scissor(0, 0, width, height);
-            GL.Enable(EnableCap.ScissorTest);
-
-            GL.EnableVertexAttribArray(0);
-            GL.EnableVertexAttribArray(1);
-            GL.EnableVertexAttribArray(2);
-
-            UpdateDirectionalLights(level.lights);
-
-            GL.UseProgram(shaderIDTable.shaderColor);
-            GL.Uniform4(shaderIDTable.uniformColor, new Vector4(1, 1, 1, 1));
-            GL.UniformMatrix4(shaderIDTable.uniformColorWorldToViewMatrix, false, ref worldView);
-            GL.UseProgram(shaderIDTable.shaderMain);
-            GL.UniformMatrix4(shaderIDTable.uniformWorldToViewMatrix, false, ref worldView);
-
-            billboardRenderer?.UpdateCameraMatrix(ref worldView);
-
-            if (enableSkybox)
-            {
-                GL.UseProgram(shaderIDTable.shaderSky);
-                GL.Enable(EnableCap.Blend);
-                GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-                GL.BlendEquation(BlendEquationMode.FuncAdd);
-                GL.Disable(EnableCap.DepthTest);
-                Matrix4 mvp = view.ClearTranslation() * camera.GetProjectionMatrix();
-                GL.UniformMatrix4(shaderIDTable.uniformSkyWorldToViewMatrix, false, ref mvp);
-                ActivateBuffersForModel(level.skybox);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 6, 0);
-                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 6, sizeof(float) * 3);
-                GL.VertexAttribPointer(2, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 6, sizeof(float) * 5);
-                for (int i = 0; i < level.skybox.textureConfig.Count; i++)
-                {
-                    TextureConfig conf = level.skybox.textureConfig[i];
-                    GL.Uniform1(shaderIDTable.uniformSkyTexAvailable, (conf.id > 0) ? 1.0f : 0.0f);
-                    GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[level.textures[conf.id]] : 0);
-                    GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
-                }
-                GL.Enable(EnableCap.DepthTest);
-                GL.Disable(EnableCap.Blend);
-                GL.UseProgram(shaderIDTable.shaderMain);
-            }
-
-            if (level.levelVariables != null)
-            {
-                GL.Uniform4(shaderIDTable.uniformFogColor, level.levelVariables.fogColor);
-                GL.Uniform4(shaderIDTable.uniformFogParams,
-                            level.levelVariables.fogNearDistance / 1024.0f,
-                            1024.0f / (level.levelVariables.fogFarDistance - level.levelVariables.fogNearDistance),
-                            1.0f - level.levelVariables.fogNearIntensity / 255.0f,
-                            1.0f - level.levelVariables.fogFarIntensity / 255.0f);
-                GL.Uniform1(shaderIDTable.uniformUseFog, (enableFog) ? 1 : 0);
-            }
-
-            if (enableTerrain)
-            {
-                GL.EnableVertexAttribArray(3);
-                GL.EnableVertexAttribArray(4);
-                GL.Uniform1(shaderIDTable.uniformLevelObjectType, (int) RenderedObjectType.Terrain);
-                foreach (RenderableBuffer buffer in terrainBuffers)
-                    RenderBuffer(buffer);
-                GL.DisableVertexAttribArray(4);
-                GL.DisableVertexAttribArray(3);
-            }
-
-            if (enableTie)
-            {
-                GL.EnableVertexAttribArray(3);
-                GL.Uniform1(shaderIDTable.uniformLevelObjectType, (int) RenderedObjectType.Tie);
-                foreach (RenderableBuffer buffer in tiesBuffers)
-                    RenderBuffer(buffer);
-                GL.DisableVertexAttribArray(3);
-            }
-
-            if (enableShrub)
-            {
-                GL.Uniform1(shaderIDTable.uniformLevelObjectType, (int) RenderedObjectType.Shrub);
-                foreach (RenderableBuffer buffer in shrubsBuffers)
-                    RenderBuffer(buffer);
-            }
-
-            if (enableMoby)
-            {
-                if (hook != null) hook.UpdateMobys(level.mobs, level.mobyModels);
-
-                GL.Uniform1(shaderIDTable.uniformLevelObjectType, (int) RenderedObjectType.Moby);
-                foreach (RenderableBuffer buffer in mobiesBuffers)
-                    RenderBuffer(buffer);
-            }
-
-            GL.UseProgram(shaderIDTable.shaderColor);
-
-            if (enableSpline)
-            {
-                GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.Spline);
-                for (int i = 0; i < level.splines.Count; i++)
-                {
-                    Spline spline = level.splines[i];
-                    GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
-                    GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref spline.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(spline) ? SELECTED_COLOR : NORMAL_COLOR);
-                    ActivateBuffersForModel(spline);
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
-                    GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
-                }
-            }
-
-
-            if (enableCuboid)
-            {
-                GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.Cuboid);
-                for (int i = 0; i < level.cuboids.Count; i++)
-                {
-                    Cuboid cuboid = level.cuboids[i];
-                    GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                    GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref cuboid.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(cuboid) ? SELECTED_COLOR : NORMAL_COLOR);
-                    ActivateBuffersForModel(cuboid);
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-                    GL.DrawElements(PrimitiveType.Triangles, Cuboid.CUBE_ELEMENTS.Length, DrawElementsType.UnsignedShort, 0);
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                }
-            }
-
-
-            if (enableSpheres)
-            {
-                GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.Sphere);
-                for (int i = 0; i < level.spheres.Count; i++)
-                {
-                    Sphere sphere = level.spheres[i];
-                    GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                    GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref sphere.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(sphere) ? SELECTED_COLOR : NORMAL_COLOR);
-                    ActivateBuffersForModel(sphere);
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-                    GL.DrawElements(PrimitiveType.Triangles, Sphere.SPHERE_TRIS.Length, DrawElementsType.UnsignedShort, 0);
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                }
-            }
-
-
-            if (enableCylinders)
-            {
-                GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.Cylinder);
-                for (int i = 0; i < level.cylinders.Count; i++)
-                {
-                    Cylinder cylinder = level.cylinders[i];
-                    GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                    GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref cylinder.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(cylinder) ? SELECTED_COLOR : NORMAL_COLOR);
-                    ActivateBuffersForModel(cylinder);
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-                    GL.DrawElements(PrimitiveType.Triangles, Cylinder.CYLINDER_TRIS.Length, DrawElementsType.UnsignedShort, 0);
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                }
-            }
-
-            if (enablePills)
-            {
-                GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.Pill);
-                for (int i = 0; i < level.pills.Count; i++)
-                {
-                    Pill pill = level.pills[i];
-                    GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                    GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref pill.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(pill) ? SELECTED_COLOR : NORMAL_COLOR);
-                    ActivateBuffersForModel(pill);
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-                    GL.DrawElements(PrimitiveType.Triangles, Cylinder.CYLINDER_TRIS.Length, DrawElementsType.UnsignedShort, 0);
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                }
-            }
-
-            if (enableGameCameras)
-            {
-                GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.GameCamera);
-                for (int i = 0; i < level.gameCameras.Count; i++)
-                {
-                    GameCamera cam = level.gameCameras[i];
-                    GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                    GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref cam.modelMatrix);
-                    GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(cam) ? SELECTED_COLOR : NORMAL_COLOR);
-
-                    ActivateBuffersForModel(cam);
-
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-
-                    GL.DrawElements(PrimitiveType.Triangles, GameCamera.CAM_ELEMENTS.Length, DrawElementsType.UnsignedShort, 0);
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                }
-            }
-
-            if (billboardRenderer != null)
-            {
-                if (enableSoundInstances)
-                    billboardRenderer.RenderObjects(level.soundInstances, RenderedObjectType.SoundInstance);
-                if (enablePointLights)
-                    billboardRenderer.RenderObjects(level.pointLights, RenderedObjectType.PointLight);
-                if (enableEnvSamples)
-                    billboardRenderer.RenderObjects(level.envSamples, RenderedObjectType.EnvSample);
-                if (enableEnvTransitions)
-                    billboardRenderer.RenderObjects(level.envTransitions, RenderedObjectType.EnvTransition);
-
-                if (enableGrindPaths)
-                {
-                    billboardRenderer.RenderObjects(level.grindPaths, RenderedObjectType.GrindPath);
-
-                    GL.UseProgram(shaderIDTable.shaderColor);
-
-                    GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.GrindPath);
-                    for (int i = 0; i < level.grindPaths.Count; i++)
-                    {
-                        Spline spline = level.grindPaths[i].spline;
-                        GL.Uniform1(shaderIDTable.uniformColorLevelObjectNumber, i);
-                        GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref spline.modelMatrix);
-                        GL.Uniform4(shaderIDTable.uniformColor, selectedObjects.Contains(spline) ? SELECTED_COLOR : NORMAL_COLOR);
-                        ActivateBuffersForModel(spline);
-                        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
-                        GL.DrawArrays(PrimitiveType.LineStrip, 0, spline.vertexBuffer.Length / 3);
-                    }
-                }
-            }
-
-            if (enableCollision)
-            {
-                GL.Uniform1(shaderIDTable.uniformColorLevelObjectType, (int) RenderedObjectType.Null);
-
-                GL.UseProgram(shaderIDTable.shaderColor);
-                GL.Uniform4(shaderIDTable.uniformColor, new Vector4(1, 1, 1, 1));
-                GL.UniformMatrix4(shaderIDTable.uniformColorWorldToViewMatrix, false, ref worldView);
-                Matrix4 modelWorld = Matrix4.Identity;
-                GL.UniformMatrix4(shaderIDTable.uniformColorModelToWorldMatrix, false, ref modelWorld);
-                GL.UseProgram(shaderIDTable.shaderCollision);
-                GL.UniformMatrix4(shaderIDTable.uniformCollisionWorldToViewMatrix, false, ref worldView);
-
-                for (int i = 0; i < collisions.Count; i++)
-                {
-                    Collision col = (Collision) collisions[i].Item1;
-                    int vbo = collisions[i].Item2;
-                    int ibo = collisions[i].Item3;
-
-                    if (col.indBuff.Length == 0) continue;
-
-                    GL.UseProgram(shaderIDTable.shaderColor);
-                    GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
-                    GL.VertexAttribPointer(1, 4, VertexAttribPointerType.UnsignedByte, false, sizeof(float) * 4, sizeof(float) * 3);
-                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
-
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                    GL.DrawElements(PrimitiveType.Triangles, col.indBuff.Length, DrawElementsType.UnsignedInt, 0);
-                    GL.UseProgram(shaderIDTable.shaderCollision);
-                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                    GL.DrawElements(PrimitiveType.Triangles, col.indBuff.Length, DrawElementsType.UnsignedInt, 0);
-                }
-            }
-
-            RenderTool();
-
-            GL.DisableVertexAttribArray(0);
-            GL.DisableVertexAttribArray(1);
-            GL.DisableVertexAttribArray(2);
+            levelRenderer?.Render(rendererPayload);
         }
 
         public void AddSubFrame(Frame frame)

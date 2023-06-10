@@ -34,7 +34,7 @@ namespace LibReplanetizer
         public List<Model> gadgetModels;
         public List<Model> armorModels;
         public Model collisionEngine;
-        public List<Model> collisionChunks;
+        public List<Collision> collisionChunks;
         public List<Texture> textures;
         public List<List<Texture>> armorTextures;
         public List<Texture> gadgetTextures;
@@ -265,7 +265,7 @@ namespace LibReplanetizer
             }
 
             terrainChunks = new List<Terrain>();
-            collisionChunks = new List<Model>();
+            collisionChunks = new List<Collision>();
             collBytesChunks = new List<byte[]>();
 
             for (int i = 0; i < 5; i++)

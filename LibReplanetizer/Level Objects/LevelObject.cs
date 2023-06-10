@@ -12,8 +12,9 @@ namespace LibReplanetizer.LevelObjects
 {
     public abstract class LevelObject : ITransformable, ISerializable
     {
-        public static Vector4 NORMAL_COLOR = new Vector4(1, 1, 1, 1); // White
-        public static Vector4 SELECTED_COLOR = new Vector4(1, 0, 1, 1); // Purple
+        private static int GLOBAL_ID_POOL = 0;
+        // Every level object in Replanetizer gets an ID for referencing
+        public readonly int globalID = GLOBAL_ID_POOL++;
 
         public Matrix4 modelMatrix = Matrix4.Identity;
 

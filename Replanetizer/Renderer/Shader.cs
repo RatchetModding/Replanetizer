@@ -7,12 +7,14 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
 
-namespace Replanetizer.Utils
+namespace Replanetizer.Renderer
 {
-    struct UniformFieldInfo
+    public struct UniformFieldInfo
     {
         public int location;
         public string name;
@@ -20,7 +22,7 @@ namespace Replanetizer.Utils
         public ActiveUniformType type;
     }
 
-    class Shader
+    public class Shader
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
 
@@ -40,9 +42,10 @@ namespace Replanetizer.Utils
             };
             program = CreateProgram(name, FILES);
         }
+
         public void UseShader()
         {
-            GL.UseProgram(program);
+            GLState.UseProgram(program);
         }
 
         public void Dispose()
@@ -95,7 +98,7 @@ namespace Replanetizer.Utils
 
         private int CreateProgram(string name, params (ShaderType Type, string source)[] shaderPaths)
         {
-            Util.CreateProgram(name, out int program);
+            GLUtil.CreateProgram(name, out int program);
 
             int[] shaders = new int[shaderPaths.Length];
             for (int i = 0; i < shaderPaths.Length; i++)
@@ -128,7 +131,7 @@ namespace Replanetizer.Utils
 
         private int CompileShader(string name, ShaderType type, string source)
         {
-            Util.CreateShader(type, name, out int shader);
+            GLUtil.CreateShader(type, name, out int shader);
             GL.ShaderSource(shader, source);
             GL.CompileShader(shader);
 
@@ -140,6 +143,78 @@ namespace Replanetizer.Utils
             }
 
             return shader;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniformMatrix4(string uniform, bool transpose, ref Matrix4 mat)
+        {
+            int location = GetUniformLocation(uniform);
+
+            if (location != -1)
+            {
+                GL.UniformMatrix4(location, transpose, ref mat);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniform1(string uniform, float v)
+        {
+            int location = GetUniformLocation(uniform);
+
+            if (location != -1)
+            {
+                GL.Uniform1(location, v);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniform1(string uniform, int v)
+        {
+            int location = GetUniformLocation(uniform);
+
+            if (location != -1)
+            {
+                GL.Uniform1(location, v);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniform3(string uniform, float v0, float v1, float v2)
+        {
+            int location = GetUniformLocation(uniform);
+
+            if (location != -1)
+            {
+                GL.Uniform3(location, v0, v1, v2);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniform4(string uniform, Color color)
+        {
+            int location = GetUniformLocation(uniform);
+
+            if (location != -1)
+            {
+                GL.Uniform4(location, color);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniform4(string uniform, float v0, float v1, float v2, float v3)
+        {
+            int location = GetUniformLocation(uniform);
+
+            if (location != -1)
+            {
+                GL.Uniform4(location, v0, v1, v2, v3);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniform4(string uniform, Vector4 v)
+        {
+            SetUniform4(uniform, v.X, v.Y, v.Z, v.W);
         }
     }
 }

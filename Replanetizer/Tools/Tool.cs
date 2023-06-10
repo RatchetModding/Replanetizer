@@ -8,6 +8,7 @@
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Replanetizer.Frames;
+using Replanetizer.Renderer;
 using Replanetizer.Utils;
 
 namespace Replanetizer.Tools
@@ -47,24 +48,25 @@ namespace Replanetizer.Tools
                 GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             }
 
+            GLState.ChangeNumberOfVertexAttribArrays(1);
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
         }
 
         /// <summary>
         /// Get the model matrix, scaled by camera distance
         /// </summary>
-        protected static Matrix4 GetModelMatrix(Vector3 position, LevelFrame frame)
+        protected static Matrix4 GetModelMatrix(Vector3 position, Camera camera)
         {
-            float camDist = (frame.camera.position - position).LengthFast;
+            float camDist = (camera.position - position).LengthFast;
             return Matrix4.CreateScale(camDist * SCREEN_SPACE_SCALE) * Matrix4.CreateTranslation(position);
         }
 
         /// <summary>
         /// Get the model matrix, scaled by camera distance
         /// </summary>
-        protected static Matrix4 GetModelMatrix(Vector3 position, Quaternion rotation, LevelFrame frame)
+        protected static Matrix4 GetModelMatrix(Vector3 position, Quaternion rotation, Camera camera)
         {
-            float camDist = (frame.camera.position - position).LengthFast;
+            float camDist = (camera.position - position).LengthFast;
             return
                 Matrix4.CreateScale(camDist * SCREEN_SPACE_SCALE) *
                 Matrix4.CreateFromQuaternion(rotation) *
@@ -72,32 +74,32 @@ namespace Replanetizer.Tools
         }
 
         public abstract ToolType toolType { get; }
-        public abstract void Render(Matrix4 mat, LevelFrame frame);
+        public abstract void Render(Matrix4 mat, ShaderTable table);
 
-        public void Render(Vector3 position, LevelFrame frame)
+        public void Render(Vector3 position, Camera camera, ShaderTable table)
         {
-            var mat = GetModelMatrix(position, frame);
-            Render(mat, frame);
+            var mat = GetModelMatrix(position, camera);
+            Render(mat, table);
         }
 
-        public void Render(Vector3 position, Quaternion rotation, LevelFrame frame)
+        public void Render(Vector3 position, Quaternion rotation, Camera camera, ShaderTable table)
         {
-            var mat = GetModelMatrix(position, rotation, frame);
-            Render(mat, frame);
+            var mat = GetModelMatrix(position, rotation, camera);
+            Render(mat, table);
         }
 
-        public void Render(Selection selection, LevelFrame frame)
+        public void Render(Selection selection, Camera camera, ShaderTable table)
         {
             if (toolbox.transformSpace == TransformSpace.Global)
             {
-                Render(selection.mean, frame);
+                Render(selection.mean, camera, table);
             }
             else if (toolbox.transformSpace == TransformSpace.Local)
             {
                 if (selection.newestObject != null)
-                    Render(selection.mean, selection.newestObject.rotation, frame);
+                    Render(selection.mean, selection.newestObject.rotation, camera, table);
                 else
-                    Render(selection.mean, frame);
+                    Render(selection.mean, camera, table);
             }
         }
 

@@ -8,15 +8,18 @@
 using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
 
-namespace Replanetizer.Utils
+namespace Replanetizer.Renderer
 {
     /*
      * A container to store IBO and VBO references for a Model
      */
     public class BufferContainer
     {
-        public int ibo = 0;
-        public int vbo = 0;
+        private int ibo = 0;
+        private int vbo = 0;
+
+        private int iboLength = 0;
+        private int vboLength = 0;
 
         public BufferContainer() { }
 
@@ -37,15 +40,17 @@ namespace Replanetizer.Utils
                 GL.GenBuffers(1, out container.ibo);
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, container.ibo);
                 GL.BufferData(BufferTarget.ElementArrayBuffer, iboData.Length * sizeof(ushort), iboData, hint);
+                container.iboLength = iboData.Length;
             }
 
-            // VBO 
+            // VBO
             float[] vboData = renderable.GetVertices();
             if (vboData.Length > 0)
             {
                 GL.GenBuffers(1, out container.vbo);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, container.vbo);
                 GL.BufferData(BufferTarget.ArrayBuffer, vboData.Length * sizeof(float), vboData, hint);
+                container.vboLength = vboData.Length;
             }
 
             return container;
@@ -62,6 +67,16 @@ namespace Replanetizer.Utils
             {
                 GL.BindBuffer(BufferTarget.ArrayBuffer, this.vbo);
             }
+        }
+
+        public int GetIndexBufferLength()
+        {
+            return iboLength;
+        }
+
+        public int GetVertexBufferLength()
+        {
+            return vboLength;
         }
     }
 }

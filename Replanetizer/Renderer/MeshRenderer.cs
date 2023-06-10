@@ -13,15 +13,21 @@ using System;
 using System.Collections.Generic;
 using LibReplanetizer.Models;
 using System.Drawing;
+using Replanetizer.Renderer;
+using Replanetizer.Utils;
 
-namespace Replanetizer.Utils
+namespace Replanetizer.Renderer
 {
+
     /*
      * A container to store IBO and VBO references for a Model
      */
-    public class RenderableBuffer : IDisposable
+    public class MeshRenderer : Renderer
     {
-        private ModelObject modelObject;
+
+        private static readonly int ALLOCATED_LIGHTS = 20;
+
+        private ModelObject? modelObject;
 
         private int loadedModelID = -1;
 
@@ -33,32 +39,38 @@ namespace Replanetizer.Utils
         private bool iboAllocated = false;
         private bool vboAllocated = false;
 
-        public int id { get; }
-        public RenderedObjectType type { get; }
+        public RenderedObjectType type { get; private set; }
         public int light { get; set; }
         public Color ambient { get; set; }
         public float renderDistance { get; set; }
 
         private bool selected;
-        private bool culled;
         private float blendDistance = 0.0f;
 
-        private Level level;
+        private List<Texture> textures;
         private Dictionary<Texture, int> textureIds;
+        private ShaderTable shaderTable;
 
-        public static ShaderIDTable? SHADER_ID_TABLE { get; set; }
-
-        public RenderableBuffer(ModelObject modelObject, RenderedObjectType type, int id, Level level, Dictionary<Texture, int> textureIds)
+        public MeshRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, int> textureIds)
         {
-            this.modelObject = modelObject;
-            this.id = id;
-            this.type = type;
+            this.shaderTable = shaderTable;
             this.textureIds = textureIds;
-            this.level = level;
-
-            GenerateBuffers();
-            UpdateVars();
+            this.textures = textures;
         }
+
+        public override void Include<T>(T obj)
+        {
+            if (obj is ModelObject mObj)
+            {
+                this.modelObject = mObj;
+                this.type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(mObj);
+
+                GenerateBuffers();
+                UpdateVars();
+            }
+        }
+
+        public override void Include<T>(List<T> list) => throw new NotImplementedException();
 
         /// <summary>
         /// Deletes IBO and VBO if they are allocated.
@@ -78,6 +90,8 @@ namespace Replanetizer.Utils
                 vbo = 0;
                 vboAllocated = false;
             }
+
+            loadedModelID = -1;
         }
 
         /// <summary>
@@ -86,6 +100,10 @@ namespace Replanetizer.Utils
         private void GenerateBuffers()
         {
             DeleteBuffers();
+
+            if (modelObject == null)
+                return;
+
             loadedModelID = modelObject.modelID;
 
             if (modelObject.GetIndices().Length == 0)
@@ -140,8 +158,11 @@ namespace Replanetizer.Utils
         /// <summary>
         /// Updates the buffers. This is not actually needed as long as mesh manipulations are not possible.
         /// </summary>
-        public void UpdateBuffers()
+        private void UpdateBuffers()
         {
+            if (modelObject == null)
+                return;
+
             if (BindIbo())
             {
                 ushort[] iboData = modelObject.GetIndices();
@@ -206,28 +227,31 @@ namespace Replanetizer.Utils
         /// Updates the light and ambient variables which can then be used to update the shader. Check if the modelID
         /// has changed and update the buffers if necessary.
         /// </summary>
-        public void UpdateVars()
+        private void UpdateVars()
         {
+            if (modelObject == null)
+                return;
+
             switch (type)
             {
                 case RenderedObjectType.Terrain:
-                    light = ShaderIDTable.ALLOCATED_LIGHTS;
+                    light = ALLOCATED_LIGHTS;
                     renderDistance = float.MaxValue;
                     break;
                 case RenderedObjectType.Moby:
                     Moby mob = (Moby) modelObject;
-                    light = Math.Max(0, Math.Min(ShaderIDTable.ALLOCATED_LIGHTS, mob.light));
+                    light = Math.Max(0, Math.Min(ALLOCATED_LIGHTS, mob.light));
                     ambient = mob.color;
                     renderDistance = mob.drawDistance;
                     break;
                 case RenderedObjectType.Tie:
                     Tie tie = (Tie) modelObject;
-                    light = Math.Max(0, Math.Min(ShaderIDTable.ALLOCATED_LIGHTS, tie.light));
+                    light = Math.Max(0, Math.Min(ALLOCATED_LIGHTS, tie.light));
                     renderDistance = float.MaxValue;
                     break;
                 case RenderedObjectType.Shrub:
                     Shrub shrub = (Shrub) modelObject;
-                    light = Math.Max(0, Math.Min(ShaderIDTable.ALLOCATED_LIGHTS, shrub.light));
+                    light = Math.Max(0, Math.Min(ALLOCATED_LIGHTS, shrub.light));
                     ambient = shrub.color;
                     renderDistance = shrub.drawDistance;
                     break;
@@ -244,9 +268,7 @@ namespace Replanetizer.Utils
         /// </summary>
         private void SetTransparencyMode(TextureConfig config)
         {
-            if (SHADER_ID_TABLE == null) return;
-
-            GL.Uniform1(SHADER_ID_TABLE.uniformUseTransparency, (config.IgnoresTransparency()) ? 0 : 1);
+            shaderTable.meshShader.SetUniform1("useTransparency", (config.IgnoresTransparency()) ? 0 : 1);
         }
 
         /// <summary>
@@ -289,7 +311,7 @@ namespace Replanetizer.Utils
         /// Sets an internal variable to true if the corresponding modelObject is equal to
         /// the selectedObject in which case an outline will be rendered.
         /// </summary>
-        public void Select(LevelObject selectedObject)
+        private void Select(LevelObject selectedObject)
         {
             selected = modelObject == selectedObject;
         }
@@ -298,19 +320,22 @@ namespace Replanetizer.Utils
         /// Sets an internal variable to true if the corresponding modelObject is a member
         /// of selectedObjects in which case an outline will be rendered.
         /// </summary>
-        public void Select(ICollection<LevelObject> selectedObjects)
+        private void Select(ICollection<LevelObject> selectedObjects)
         {
+            if (modelObject == null) return;
+
             selected = selectedObjects.Contains(modelObject);
         }
 
         /// <summary>
-        /// Sets an internal variable to true if the object is to be culled.
+        /// Returns true if the object is to be culled.
         /// Mobies and shrubs are culled by their drawDistance.
         /// Ties, terrain and shrubs are culled by frustum culling.
         /// </summary>
-        public void ComputeCulling(Camera camera, bool distanceCulling, bool frustumCulling)
+        private bool ComputeCulling(Camera camera, bool distanceCulling, bool frustumCulling)
         {
-            if (emptyModel) return;
+            if (emptyModel) return true;
+            if (modelObject == null) return true;
 
             if (distanceCulling)
             {
@@ -320,8 +345,7 @@ namespace Replanetizer.Utils
 
                 if (dist > renderDistance + 8.0f)
                 {
-                    culled = true;
-                    return;
+                    return true;
                 }
             }
             else
@@ -363,73 +387,22 @@ namespace Replanetizer.Utils
                             break;
                     }
 
+                    Camera.Frustum frustum = camera.GetFrustum();
+
                     for (int i = 0; i < 6; i++)
                     {
-                        Vector3 planeNormal = camera.frustumPlaneNormals[i];
-                        Vector3 planePoint = camera.frustumPlanePoints[i];
+                        Vector3 planeNormal = frustum.planeNormals[i];
+                        Vector3 planePoint = frustum.planePoints[i];
 
                         if (Vector3.Dot(center - planePoint, planeNormal) < -size)
                         {
-                            culled = true;
-                            return;
+                            return true;
                         }
                     }
                 }
             }
 
-            culled = false;
-        }
-
-        /// <summary>
-        /// Renders an object based on the buffers.
-        /// </summary>
-        public void Render()
-        {
-            if (SHADER_ID_TABLE == null) return;
-            if (emptyModel) return;
-            if (culled) return;
-            if (!BindIbo() || !BindVbo()) return;
-            if (modelObject.model == null) return;
-
-            SetupVertexAttribPointers();
-
-            switch (type)
-            {
-                case RenderedObjectType.Terrain:
-                case RenderedObjectType.Shrub:
-                case RenderedObjectType.Tie:
-                case RenderedObjectType.Moby:
-                    GL.UniformMatrix4(SHADER_ID_TABLE.uniformModelToWorldMatrix, false, ref modelObject.modelMatrix);
-                    GL.Uniform1(SHADER_ID_TABLE.uniformLevelObjectNumber, id);
-                    GL.Uniform4(SHADER_ID_TABLE.uniformAmbientColor, ambient);
-                    GL.Uniform1(SHADER_ID_TABLE.uniformLightIndex, light);
-                    GL.Uniform1(SHADER_ID_TABLE.uniformObjectBlendDistance, blendDistance);
-
-                    //Bind textures one by one, applying it to the relevant vertices based on the index array
-                    foreach (TextureConfig conf in modelObject.model.textureConfig)
-                    {
-                        GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[level.textures[conf.id]] : 0);
-                        SetTransparencyMode(conf);
-                        SetTextureWrapMode(conf);
-                        GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
-                    }
-
-                    if (selected)
-                    {
-                        GL.UseProgram(SHADER_ID_TABLE.shaderColor);
-                        GL.Uniform1(SHADER_ID_TABLE.uniformColorLevelObjectType, (int) type);
-                        GL.Uniform1(SHADER_ID_TABLE.uniformColorLevelObjectNumber, id);
-                        GL.Enable(EnableCap.LineSmooth);
-                        GL.UniformMatrix4(SHADER_ID_TABLE.uniformColorModelToWorldMatrix, false, ref modelObject.modelMatrix);
-                        GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                        GL.DrawElements(PrimitiveType.Triangles, modelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
-                        GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                        GL.UseProgram(SHADER_ID_TABLE.shaderMain);
-                        GL.Disable(EnableCap.LineSmooth);
-                    }
-                    break;
-            }
-
+            return false;
         }
 
         /// <summary>
@@ -464,6 +437,7 @@ namespace Replanetizer.Utils
             switch (type)
             {
                 case RenderedObjectType.Terrain:
+                    GLState.ChangeNumberOfVertexAttribArrays(5);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 10, 0);
                     GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 3);
                     GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 6);
@@ -471,6 +445,7 @@ namespace Replanetizer.Utils
                     GL.VertexAttribPointer(4, 1, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 9);
                     break;
                 case RenderedObjectType.Tie:
+                    GLState.ChangeNumberOfVertexAttribArrays(4);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, 0);
                     GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 3);
                     GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 6);
@@ -478,6 +453,7 @@ namespace Replanetizer.Utils
                     break;
                 case RenderedObjectType.Shrub:
                 case RenderedObjectType.Moby:
+                    GLState.ChangeNumberOfVertexAttribArrays(3);
                     GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
                     GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
                     GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
@@ -485,10 +461,71 @@ namespace Replanetizer.Utils
             }
         }
 
-        public void Dispose()
+        public override void Render(RendererPayload payload)
+        {
+            if (emptyModel) return;
+            if (modelObject == null || modelObject.model == null) return;
+
+            if (ComputeCulling(payload.camera, payload.visibility.distanceCulling, payload.visibility.frustumCulling)) return;
+
+            if (!BindIbo() || !BindVbo()) return;
+
+            Select(payload.selection);
+            UpdateVars();
+
+            SetupVertexAttribPointers();
+
+            switch (type)
+            {
+                case RenderedObjectType.Terrain:
+                case RenderedObjectType.Shrub:
+                case RenderedObjectType.Tie:
+                case RenderedObjectType.Moby:
+                    shaderTable.meshShader.UseShader();
+
+                    Matrix4 worldToView = (payload == null) ? Matrix4.Identity : payload.camera.GetWorldViewMatrix();
+                    shaderTable.meshShader.SetUniformMatrix4("modelToWorld", false, ref modelObject.modelMatrix);
+                    shaderTable.meshShader.SetUniformMatrix4("worldToView", false, ref worldToView);
+                    shaderTable.meshShader.SetUniform1("levelObjectNumber", modelObject.globalID);
+                    shaderTable.meshShader.SetUniform1("levelObjectType", (int) type);
+                    shaderTable.meshShader.SetUniform4("staticColor", ambient);
+                    shaderTable.meshShader.SetUniform1("lightIndex", light);
+                    shaderTable.meshShader.SetUniform1("blendDistance", blendDistance);
+
+                    //Bind textures one by one, applying it to the relevant vertices based on the index array
+                    foreach (TextureConfig conf in modelObject.model.textureConfig)
+                    {
+                        GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[textures[conf.id]] : 0);
+                        SetTransparencyMode(conf);
+                        SetTextureWrapMode(conf);
+                        GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+                    }
+
+                    if (selected)
+                    {
+                        shaderTable.colorShader.UseShader();
+
+                        shaderTable.colorShader.SetUniformMatrix4("modelToWorld", false, ref modelObject.modelMatrix);
+                        shaderTable.colorShader.SetUniformMatrix4("worldToView", false, ref worldToView);
+                        shaderTable.colorShader.SetUniform1("levelObjectNumber", modelObject.globalID);
+                        shaderTable.colorShader.SetUniform1("levelObjectType", (int) type);
+
+                        GL.Enable(EnableCap.LineSmooth);
+                        GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                        GL.DrawElements(PrimitiveType.Triangles, modelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
+                        GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                        GL.Disable(EnableCap.LineSmooth);
+                    }
+                    break;
+            }
+        }
+
+        public override void Dispose()
         {
             GL.DeleteBuffer(ibo);
             GL.DeleteBuffer(vbo);
         }
+
+
     }
 }

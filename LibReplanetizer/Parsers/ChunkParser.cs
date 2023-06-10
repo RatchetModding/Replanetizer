@@ -32,7 +32,7 @@ namespace LibReplanetizer.Parsers
             return GetTerrainModels(chunkHeader.terrainPointer, game);
         }
 
-        public Model GetCollisionModel()
+        public Collision GetCollisionModel()
         {
             return GetCollisionModel(chunkHeader.collisionPointer);
         }

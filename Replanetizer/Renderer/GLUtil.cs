@@ -10,9 +10,9 @@ using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 using OpenTK.Graphics.OpenGL;
 
-namespace Replanetizer.Utils
+namespace Replanetizer.Renderer
 {
-    static class Util
+    static class GLUtil
     {
         [Pure]
         public static float Clamp(float value, float min, float max)

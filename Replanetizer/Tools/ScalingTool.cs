@@ -10,6 +10,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Replanetizer.Frames;
 using Replanetizer.Utils;
+using Replanetizer.Renderer;
 using System;
 
 namespace Replanetizer.Tools
@@ -78,30 +79,30 @@ namespace Replanetizer.Tools
             };
         }
 
-        public override void Render(Matrix4 mat, LevelFrame frame)
+        public override void Render(Matrix4 mat, ShaderTable table)
         {
-            GL.UseProgram(frame.shaderIDTable.shaderColor);
+            table.colorShader.UseShader();
 
             GetVbo();
 
-            GL.UniformMatrix4(frame.shaderIDTable.uniformColorModelToWorldMatrix, false, ref mat);
+            table.colorShader.SetUniformMatrix4("modelToWorld", false, ref mat);
 
-            GL.Uniform1(frame.shaderIDTable.uniformColorLevelObjectNumber, 0);
-            GL.Uniform4(frame.shaderIDTable.uniformColor, new Vector4(1, 0, 0, 1));
+            table.colorShader.SetUniform1("levelObjectNumber", 0);
+            table.colorShader.SetUniform4("incolor", 1.0f, 0.0f, 0.0f, 1.0f);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
             GL.DrawArrays(PrimitiveType.Triangles, 3, 3);
             GL.DrawArrays(PrimitiveType.Triangles, 6, 3);
             GL.DrawArrays(PrimitiveType.Triangles, 9, 3);
 
-            GL.Uniform1(frame.shaderIDTable.uniformColorLevelObjectNumber, 1);
-            GL.Uniform4(frame.shaderIDTable.uniformColor, new Vector4(0, 1, 0, 1));
+            table.colorShader.SetUniform1("levelObjectNumber", 1);
+            table.colorShader.SetUniform4("incolor", 0.0f, 1.0f, 0.0f, 1.0f);
             GL.DrawArrays(PrimitiveType.Triangles, 12, 3);
             GL.DrawArrays(PrimitiveType.Triangles, 15, 3);
             GL.DrawArrays(PrimitiveType.Triangles, 18, 3);
             GL.DrawArrays(PrimitiveType.Triangles, 21, 3);
 
-            GL.Uniform1(frame.shaderIDTable.uniformColorLevelObjectNumber, 2);
-            GL.Uniform4(frame.shaderIDTable.uniformColor, new Vector4(0, 0, 1, 1));
+            table.colorShader.SetUniform1("levelObjectNumber", 2);
+            table.colorShader.SetUniform4("incolor", 0.0f, 0.0f, 1.0f, 1.0f);
             GL.DrawArrays(PrimitiveType.Triangles, 24, 3);
             GL.DrawArrays(PrimitiveType.Triangles, 27, 3);
             GL.DrawArrays(PrimitiveType.Triangles, 30, 3);

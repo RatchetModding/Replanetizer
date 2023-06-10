@@ -16,6 +16,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Replanetizer.Utils;
+using Replanetizer.Renderer;
 using Texture = LibReplanetizer.Texture;
 using LibReplanetizer.Serializers;
 using LibReplanetizer.LevelObjects;
@@ -57,7 +58,7 @@ namespace Replanetizer.Frames
             mouseButton = MouseButton.Right
         };
 
-        private ShaderIDTable shaderIDTable = new ShaderIDTable();
+        private ShaderTable shaderIDTable = new ShaderTable();
 
         private float xDelta;
 
@@ -91,7 +92,7 @@ namespace Replanetizer.Frames
         private bool firstFrame = true;
         private Vector2 startSize;
 
-        public ModelFrame(Window wnd, LevelFrame levelFrame, ShaderIDTable shaderIDTable, Model? model = null) : base(wnd, levelFrame)
+        public ModelFrame(Window wnd, LevelFrame levelFrame, ShaderTable shaderIDTable, Model? model = null) : base(wnd, levelFrame)
         {
             startSize = wnd.Size;
             modelTextureList = new List<Texture>();
@@ -589,10 +590,10 @@ namespace Replanetizer.Frames
                 // Has to be done in this order to work correctly
                 Matrix4 mvp = trans * scale * rot;
 
-                GL.UseProgram(shaderIDTable.shaderMain);
-                GL.UniformMatrix4(shaderIDTable.uniformModelToWorldMatrix, false, ref mvp);
-                GL.UniformMatrix4(shaderIDTable.uniformWorldToViewMatrix, false, ref worldView);
-                GL.Uniform1(shaderIDTable.uniformLevelObjectType, (int) RenderedObjectType.Null);
+                shaderIDTable.meshShader.UseShader();
+                shaderIDTable.meshShader.SetUniformMatrix4("modelToWorld", false, ref mvp);
+                shaderIDTable.meshShader.SetUniformMatrix4("worldToView", false, ref worldView);
+                shaderIDTable.meshShader.SetUniform1("levelObjectType", (int) RenderedObjectType.Null);
 
                 GL.EnableVertexAttribArray(0);
                 GL.EnableVertexAttribArray(1);
@@ -607,7 +608,7 @@ namespace Replanetizer.Frames
                 foreach (TextureConfig conf in selectedModel.textureConfig)
                 {
                     GL.BindTexture(TextureTarget.Texture2D, (conf.id >= 0 && conf.id < selectedTextureSet.Count) ? levelFrame.textureIds[selectedTextureSet[conf.id]] : 0);
-                    GL.Uniform1(shaderIDTable.uniformUseTransparency, (conf.IgnoresTransparency()) ? 0 : 1);
+                    shaderIDTable.meshShader.SetUniform1("useTransparency", (conf.IgnoresTransparency()) ? 0 : 1);
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) ((conf.wrapModeS == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge));
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) ((conf.wrapModeT == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge));
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));

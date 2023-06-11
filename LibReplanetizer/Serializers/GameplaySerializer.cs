@@ -410,23 +410,6 @@ namespace LibReplanetizer.Serializers
             return bytes;
         }
 
-        public byte[] GetType7CBytes(List<Type7C> type7Cs)
-        {
-            if (type7Cs == null) return new byte[0x10];
-
-            byte[] bytes = new byte[0x10 + type7Cs.Count * Type7C.ELEMENTSIZE];
-
-            //Header
-            WriteInt(bytes, 0, type7Cs.Count);
-
-            for (int i = 0; i < type7Cs.Count; i++)
-            {
-                type7Cs[i].Serialize().CopyTo(bytes, 0x10 + i * Type7C.ELEMENTSIZE);
-            }
-
-            return bytes;
-        }
-
         public byte[] GetKeyValueBytes(List<KeyValuePair<int, int>> type50s)
         {
             if (type50s == null) return new byte[0x10];

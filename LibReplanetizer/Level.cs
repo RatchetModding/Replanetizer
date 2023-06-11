@@ -103,7 +103,6 @@ namespace LibReplanetizer
         public List<SoundInstance> soundInstances;
         public List<GrindPath> grindPaths;
         public List<GlobalPvarBlock> type4Cs;
-        public List<Type7C> type7Cs;
 
         public List<byte[]> pVars;
         public List<Cuboid> cuboids;
@@ -247,7 +246,6 @@ namespace LibReplanetizer
                 grindPaths = gameplayParser.GetGrindPaths();
 
                 type4Cs = gameplayParser.GetType4Cs();
-                type7Cs = gameplayParser.GetType7Cs();
                 type50s = gameplayParser.GetType50s();
                 type5Cs = gameplayParser.GetType5Cs();
 

@@ -238,21 +238,6 @@ namespace LibReplanetizer.Parsers
             return type4Cs;
         }
 
-        public List<Type7C> GetType7Cs()
-        {
-            var type7Cs = new List<Type7C>();
-            if (gameplayHeader.pointLightPointer == 0) { return type7Cs; }
-
-            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.pointLightPointer, 4), 0);
-            byte[] type7CBlock = ReadBlock(fileStream, gameplayHeader.pointLightPointer + 0x10, Type7C.ELEMENTSIZE * count);
-            for (int i = 0; i < count; i++)
-            {
-                type7Cs.Add(new Type7C(type7CBlock, i));
-            }
-
-            return type7Cs;
-        }
-
         public List<EnvTransition> GetEnvTransitions()
         {
             List<EnvTransition> envTransitions = new List<EnvTransition>();
@@ -363,6 +348,9 @@ namespace LibReplanetizer.Parsers
         {
             List<PointLight> pointLights = new List<PointLight>();
             if (gameplayHeader.pointLightPointer == 0) { return pointLights; }
+
+            // Pointlights are not used in the PS3 remasters, only RaC 1 contains valid information.
+            if (game != GameType.RaC1) { return pointLights; }
 
             int count = ReadInt(ReadBlock(fileStream, gameplayHeader.pointLightPointer, 4), 0);
             byte[] pointLightBlock = ReadBlock(fileStream, gameplayHeader.pointLightPointer + 0x10, PointLight.GetElementSize(game) * count);

@@ -5,6 +5,7 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using System;
 using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
 
@@ -13,60 +14,61 @@ namespace Replanetizer.Renderer
     /*
      * A container to store IBO and VBO references for a Model
      */
-    public class BufferContainer
+    public class BufferContainer : IDisposable
     {
         private int ibo = 0;
         private int vbo = 0;
+        private int vao = 0;
 
         private int iboLength = 0;
         private int vboLength = 0;
 
-        public BufferContainer() { }
-
-        public static BufferContainer FromRenderable(IRenderable renderable)
+        public BufferContainer(IRenderable renderable, Action action)
         {
-            BufferContainer container = new BufferContainer();
-
             BufferUsageHint hint = BufferUsageHint.StaticDraw;
             if (renderable.IsDynamic())
             {
                 hint = BufferUsageHint.DynamicDraw;
             }
 
+            GL.GenVertexArrays(1, out vao);
+            GL.BindVertexArray(vao);
+
             // IBO
             ushort[] iboData = renderable.GetIndices();
             if (iboData.Length > 0)
             {
-                GL.GenBuffers(1, out container.ibo);
-                GL.BindBuffer(BufferTarget.ElementArrayBuffer, container.ibo);
+                GL.GenBuffers(1, out ibo);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
                 GL.BufferData(BufferTarget.ElementArrayBuffer, iboData.Length * sizeof(ushort), iboData, hint);
-                container.iboLength = iboData.Length;
+                iboLength = iboData.Length;
             }
 
             // VBO
             float[] vboData = renderable.GetVertices();
             if (vboData.Length > 0)
             {
-                GL.GenBuffers(1, out container.vbo);
-                GL.BindBuffer(BufferTarget.ArrayBuffer, container.vbo);
+                GL.GenBuffers(1, out vbo);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
                 GL.BufferData(BufferTarget.ArrayBuffer, vboData.Length * sizeof(float), vboData, hint);
-                container.vboLength = vboData.Length;
+                vboLength = vboData.Length;
             }
 
-            return container;
+            action();
+
+            GL.BindVertexArray(0);
+
         }
 
         public void Bind()
         {
-            // IBO
-            if (ibo != 0)
-                GL.BindBuffer(BufferTarget.ElementArrayBuffer, this.ibo);
+            if (vao != 0)
+                GL.BindVertexArray(vao);
+        }
 
-            // VBO
-            if (vbo != 0)
-            {
-                GL.BindBuffer(BufferTarget.ArrayBuffer, this.vbo);
-            }
+        public void Unbind()
+        {
+            GL.BindVertexArray(0);
         }
 
         public int GetIndexBufferLength()
@@ -77,6 +79,13 @@ namespace Replanetizer.Renderer
         public int GetVertexBufferLength()
         {
             return vboLength;
+        }
+
+        public void Dispose()
+        {
+            GL.DeleteBuffer(ibo);
+            GL.DeleteBuffer(vbo);
+            GL.DeleteVertexArray(vao);
         }
     }
 }

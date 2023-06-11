@@ -5,6 +5,7 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using System;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Replanetizer.Frames;
@@ -13,13 +14,14 @@ using Replanetizer.Utils;
 
 namespace Replanetizer.Tools
 {
-    public abstract class Tool
+    public abstract class Tool : IDisposable
     {
         public float transformMultiplier { get; set; } = 50f;
 
         protected Toolbox toolbox { get; set; }
 
         protected int vbo;
+        protected int vao;
         protected float[] vb = new[]{
                 0.0f,    0.0f,    0.0f,
                 0.0f,    0.0f,    0.0f,
@@ -35,21 +37,36 @@ namespace Replanetizer.Tools
             this.toolbox = toolbox;
         }
 
-        protected void GetVbo()
+        protected void BindVao()
         {
-            if (vbo == 0)
+            if (vao == 0)
             {
-                GL.GenBuffers(1, out vbo);
-                GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-                GL.BufferData(BufferTarget.ArrayBuffer, vb.Length * sizeof(float), vb, BufferUsageHint.StaticDraw);
+                GL.GenVertexArrays(1, out vao);
+                GL.BindVertexArray(vao);
+
+                if (vbo == 0)
+                {
+                    GL.GenBuffers(1, out vbo);
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+                    GL.BufferData(BufferTarget.ArrayBuffer, vb.Length * sizeof(float), vb, BufferUsageHint.StaticDraw);
+                }
+                else
+                {
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+                }
+
+                GLUtil.ActivateNumberOfVertexAttribArrays(1);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
             }
             else
             {
-                GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+                GL.BindVertexArray(vao);
             }
+        }
 
-            GLState.ChangeNumberOfVertexAttribArrays(1);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
+        protected void UnbindVao()
+        {
+            GL.BindVertexArray(0);
         }
 
         /// <summary>
@@ -134,6 +151,12 @@ namespace Replanetizer.Tools
 
         public virtual void Reset()
         {
+        }
+
+        public void Dispose()
+        {
+            GL.DeleteBuffer(vbo);
+            GL.DeleteVertexArray(vao);
         }
     }
 }

@@ -15,7 +15,6 @@ namespace Replanetizer.Renderer
     static class GLState
     {
         private static int activeProgram = -1;
-        private static int numEnabledVertexAttribArrays = 0;
 
         public static void UseProgram(int program)
         {
@@ -24,33 +23,6 @@ namespace Replanetizer.Renderer
                 GL.UseProgram(program);
                 activeProgram = program;
             }
-        }
-
-        public static void ChangeNumberOfVertexAttribArrays(int num)
-        {
-            for (int i = 0; i < num; i++)
-            {
-                GL.EnableVertexAttribArray(i);
-            }
-            /*if (num != numEnabledVertexAttribArrays && num >= 0)
-            {
-                if (num > numEnabledVertexAttribArrays)
-                {
-                    for (int i = numEnabledVertexAttribArrays; i < num; i++)
-                    {
-                        GL.EnableVertexAttribArray(i);
-                    }
-                }
-                else
-                {
-                    for (int i = numEnabledVertexAttribArrays - 1; i >= num; i--)
-                    {
-                        GL.DisableVertexAttribArray(i);
-                    }
-                }
-
-                numEnabledVertexAttribArrays = num;
-            }*/
         }
     }
 }

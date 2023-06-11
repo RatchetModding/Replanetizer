@@ -35,6 +35,7 @@ namespace Replanetizer.Renderer
 
         private int ibo = 0;
         private int vbo = 0;
+        private int vao = 0;
 
         private bool iboAllocated = false;
         private bool vboAllocated = false;
@@ -91,7 +92,41 @@ namespace Replanetizer.Renderer
                 vboAllocated = false;
             }
 
+            GL.DeleteVertexArray(vao);
+
             loadedModelID = -1;
+        }
+
+        /// <summary>
+        /// Sets up the vertex attribute pointers according to the type.
+        /// </summary>
+        private void SetupVertexAttribPointers()
+        {
+            switch (type)
+            {
+                case RenderedObjectType.Terrain:
+                    GLUtil.ActivateNumberOfVertexAttribArrays(5);
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 10, 0);
+                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 3);
+                    GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 6);
+                    GL.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 10, sizeof(float) * 8);
+                    GL.VertexAttribPointer(4, 1, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 9);
+                    break;
+                case RenderedObjectType.Tie:
+                    GLUtil.ActivateNumberOfVertexAttribArrays(4);
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, 0);
+                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 3);
+                    GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 6);
+                    GL.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 9, sizeof(float) * 8);
+                    break;
+                case RenderedObjectType.Shrub:
+                case RenderedObjectType.Moby:
+                    GLUtil.ActivateNumberOfVertexAttribArrays(3);
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
+                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
+                    GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
+                    break;
+            }
         }
 
         /// <summary>
@@ -119,6 +154,9 @@ namespace Replanetizer.Renderer
             {
                 hint = BufferUsageHint.DynamicDraw;
             }
+
+            GL.GenVertexArrays(1, out vao);
+            GL.BindVertexArray(vao);
 
             // IBO
             int iboLength = modelObject.GetIndices().Length * sizeof(ushort);
@@ -152,6 +190,10 @@ namespace Replanetizer.Renderer
                 vboAllocated = true;
             }
 
+            SetupVertexAttribPointers();
+
+            GL.BindVertexArray(0);
+
             UpdateBuffers();
         }
 
@@ -163,64 +205,60 @@ namespace Replanetizer.Renderer
             if (modelObject == null)
                 return;
 
-            if (BindIbo())
-            {
-                ushort[] iboData = modelObject.GetIndices();
-                GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, iboData.Length * sizeof(ushort), iboData);
-                GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
-            }
+            GL.BindVertexArray(vao);
 
-            if (BindVbo())
+            ushort[] iboData = modelObject.GetIndices();
+            GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, iboData.Length * sizeof(ushort), iboData);
+
+            float[] vboData = modelObject.GetVertices();
+            switch (type)
             {
-                float[] vboData = modelObject.GetVertices();
-                switch (type)
-                {
-                    case RenderedObjectType.Terrain:
+                case RenderedObjectType.Terrain:
+                    {
+                        byte[] rgbas = modelObject.GetAmbientRgbas();
+                        TerrainModel? terrainModel = (TerrainModel?) modelObject.model;
+                        if (terrainModel == null) break;
+                        int[] lights = terrainModel.lights.ToArray();
+                        float[] fullData = new float[vboData.Length + rgbas.Length / 4 + lights.Length];
+                        for (int i = 0; i < vboData.Length / 8; i++)
                         {
-                            byte[] rgbas = modelObject.GetAmbientRgbas();
-                            TerrainModel? terrainModel = (TerrainModel?) modelObject.model;
-                            if (terrainModel == null) break;
-                            int[] lights = terrainModel.lights.ToArray();
-                            float[] fullData = new float[vboData.Length + rgbas.Length / 4 + lights.Length];
-                            for (int i = 0; i < vboData.Length / 8; i++)
-                            {
-                                fullData[10 * i + 0] = vboData[8 * i + 0];
-                                fullData[10 * i + 1] = vboData[8 * i + 1];
-                                fullData[10 * i + 2] = vboData[8 * i + 2];
-                                fullData[10 * i + 3] = vboData[8 * i + 3];
-                                fullData[10 * i + 4] = vboData[8 * i + 4];
-                                fullData[10 * i + 5] = vboData[8 * i + 5];
-                                fullData[10 * i + 6] = vboData[8 * i + 6];
-                                fullData[10 * i + 7] = vboData[8 * i + 7];
-                                fullData[10 * i + 8] = BitConverter.ToSingle(rgbas, i * 4);
-                                fullData[10 * i + 9] = (float) lights[i];
-                            }
-                            vboData = fullData;
-                            break;
+                            fullData[10 * i + 0] = vboData[8 * i + 0];
+                            fullData[10 * i + 1] = vboData[8 * i + 1];
+                            fullData[10 * i + 2] = vboData[8 * i + 2];
+                            fullData[10 * i + 3] = vboData[8 * i + 3];
+                            fullData[10 * i + 4] = vboData[8 * i + 4];
+                            fullData[10 * i + 5] = vboData[8 * i + 5];
+                            fullData[10 * i + 6] = vboData[8 * i + 6];
+                            fullData[10 * i + 7] = vboData[8 * i + 7];
+                            fullData[10 * i + 8] = BitConverter.ToSingle(rgbas, i * 4);
+                            fullData[10 * i + 9] = (float) lights[i];
                         }
-                    case RenderedObjectType.Tie:
+                        vboData = fullData;
+                        break;
+                    }
+                case RenderedObjectType.Tie:
+                    {
+                        byte[] rgbas = modelObject.GetAmbientRgbas();
+                        float[] fullData = new float[vboData.Length + rgbas.Length / 4];
+                        for (int i = 0; i < vboData.Length / 8; i++)
                         {
-                            byte[] rgbas = modelObject.GetAmbientRgbas();
-                            float[] fullData = new float[vboData.Length + rgbas.Length / 4];
-                            for (int i = 0; i < vboData.Length / 8; i++)
-                            {
-                                fullData[9 * i + 0] = vboData[8 * i + 0];
-                                fullData[9 * i + 1] = vboData[8 * i + 1];
-                                fullData[9 * i + 2] = vboData[8 * i + 2];
-                                fullData[9 * i + 3] = vboData[8 * i + 3];
-                                fullData[9 * i + 4] = vboData[8 * i + 4];
-                                fullData[9 * i + 5] = vboData[8 * i + 5];
-                                fullData[9 * i + 6] = vboData[8 * i + 6];
-                                fullData[9 * i + 7] = vboData[8 * i + 7];
-                                fullData[9 * i + 8] = BitConverter.ToSingle(rgbas, i * 4);
-                            }
-                            vboData = fullData;
-                            break;
+                            fullData[9 * i + 0] = vboData[8 * i + 0];
+                            fullData[9 * i + 1] = vboData[8 * i + 1];
+                            fullData[9 * i + 2] = vboData[8 * i + 2];
+                            fullData[9 * i + 3] = vboData[8 * i + 3];
+                            fullData[9 * i + 4] = vboData[8 * i + 4];
+                            fullData[9 * i + 5] = vboData[8 * i + 5];
+                            fullData[9 * i + 6] = vboData[8 * i + 6];
+                            fullData[9 * i + 7] = vboData[8 * i + 7];
+                            fullData[9 * i + 8] = BitConverter.ToSingle(rgbas, i * 4);
                         }
-                }
-                GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, vboData.Length * sizeof(float), vboData);
-                GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+                        vboData = fullData;
+                        break;
+                    }
             }
+            GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, vboData.Length * sizeof(float), vboData);
+
+            GL.BindVertexArray(0);
         }
 
         /// <summary>
@@ -429,37 +467,7 @@ namespace Replanetizer.Renderer
             return success;
         }
 
-        /// <summary>
-        /// Sets up the vertex attribute pointers according to the type.
-        /// </summary>
-        private void SetupVertexAttribPointers()
-        {
-            switch (type)
-            {
-                case RenderedObjectType.Terrain:
-                    GLState.ChangeNumberOfVertexAttribArrays(5);
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 10, 0);
-                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 3);
-                    GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 6);
-                    GL.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 10, sizeof(float) * 8);
-                    GL.VertexAttribPointer(4, 1, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 9);
-                    break;
-                case RenderedObjectType.Tie:
-                    GLState.ChangeNumberOfVertexAttribArrays(4);
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, 0);
-                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 3);
-                    GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 6);
-                    GL.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 9, sizeof(float) * 8);
-                    break;
-                case RenderedObjectType.Shrub:
-                case RenderedObjectType.Moby:
-                    GLState.ChangeNumberOfVertexAttribArrays(3);
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
-                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
-                    GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
-                    break;
-            }
-        }
+
 
         public override void Render(RendererPayload payload)
         {
@@ -469,11 +477,9 @@ namespace Replanetizer.Renderer
             UpdateVars();
             if (ComputeCulling(payload.camera, payload.visibility.enableDistanceCulling, payload.visibility.enableFrustumCulling)) return;
 
-            if (!BindIbo() || !BindVbo()) return;
+            GL.BindVertexArray(vao);
 
             Select(payload.selection);
-
-            SetupVertexAttribPointers();
 
             switch (type)
             {
@@ -520,6 +526,7 @@ namespace Replanetizer.Renderer
                     break;
             }
 
+            GL.BindVertexArray(0);
             GLUtil.CheckGlError("MeshRenderer");
         }
 
@@ -527,6 +534,7 @@ namespace Replanetizer.Renderer
         {
             GL.DeleteBuffer(ibo);
             GL.DeleteBuffer(vbo);
+            GL.DeleteVertexArray(vao);
         }
     }
 }

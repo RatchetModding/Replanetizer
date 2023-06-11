@@ -36,9 +36,9 @@ namespace Replanetizer.Tools
 
         public override void Render(Matrix4 mat, ShaderTable table)
         {
-            table.colorShader.UseShader();
+            BindVao();
 
-            GetVbo();
+            table.colorShader.UseShader();
 
             table.colorShader.SetUniformMatrix4("modelToWorld", false, ref mat);
 
@@ -53,6 +53,8 @@ namespace Replanetizer.Tools
             table.colorShader.SetUniform1("levelObjectNumber", 2);
             table.colorShader.SetUniform4("incolor", 0.0f, 0.0f, 1.0f, 1.0f);
             GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
+
+            UnbindVao();
         }
 
         public void Render(Spline spline, Camera camera, ShaderTable table)

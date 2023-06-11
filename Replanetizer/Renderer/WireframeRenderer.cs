@@ -31,6 +31,11 @@ namespace Replanetizer.Renderer
                 this.type = type;
                 this.isSpline = (type == RenderedObjectType.Spline || type == RenderedObjectType.GrindPath);
             }
+
+            public void Bind()
+            {
+                container.Bind();
+            }
         }
 
         private static readonly Vector4 DEFAULT_COLOR = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -45,11 +50,17 @@ namespace Replanetizer.Renderer
             this.shaderTable = shaderTable;
         }
 
+        private static void VertexAttribPointerSetup()
+        {
+            GLUtil.ActivateNumberOfVertexAttribArrays(1);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
+        }
+
         public override void Include<T>(T obj)
         {
             if (obj is LevelObject levelObject && obj is IRenderable renderable)
             {
-                BufferContainer container = BufferContainer.FromRenderable(renderable);
+                BufferContainer container = new BufferContainer(renderable, VertexAttribPointerSetup);
                 RenderedObjectType type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(levelObject);
 
                 List<LevelObject> listLevelObjects = new List<LevelObject>();
@@ -74,32 +85,32 @@ namespace Replanetizer.Renderer
             switch (list)
             {
                 case List<Cuboid> cuboids:
-                    container = BufferContainer.FromRenderable(cuboids[0]);
+                    container = new BufferContainer(cuboids[0], VertexAttribPointerSetup);
                     type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(cuboids[0]);
                     listLevelObjects.AddRange(cuboids);
                     break;
                 case List<Sphere> spheres:
-                    container = BufferContainer.FromRenderable(spheres[0]);
+                    container = new BufferContainer(spheres[0], VertexAttribPointerSetup);
                     type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(spheres[0]);
                     listLevelObjects.AddRange(spheres);
                     break;
                 case List<Cylinder> cylinders:
-                    container = BufferContainer.FromRenderable(cylinders[0]);
+                    container = new BufferContainer(cylinders[0], VertexAttribPointerSetup);
                     type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(cylinders[0]);
                     listLevelObjects.AddRange(cylinders);
                     break;
                 case List<Pill> pills:
-                    container = BufferContainer.FromRenderable(pills[0]);
+                    container = new BufferContainer(pills[0], VertexAttribPointerSetup);
                     type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(pills[0]);
                     listLevelObjects.AddRange(pills);
                     break;
                 case List<GameCamera> gameCameras:
-                    container = BufferContainer.FromRenderable(gameCameras[0]);
+                    container = new BufferContainer(gameCameras[0], VertexAttribPointerSetup);
                     type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(gameCameras[0]);
                     listLevelObjects.AddRange(gameCameras);
                     break;
                 case List<Spline> splines:
-                    container = BufferContainer.FromRenderable(splines[0]);
+                    container = new BufferContainer(splines[0], VertexAttribPointerSetup);
                     type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(splines[0]);
                     listLevelObjects.AddRange(splines);
                     break;
@@ -125,9 +136,7 @@ namespace Replanetizer.Renderer
             foreach (WireframeCollection wireframe in wireframes)
             {
                 shaderTable.colorShader.SetUniform1("levelObjectType", (int) wireframe.type);
-                wireframe.container.Bind();
-                GLState.ChangeNumberOfVertexAttribArrays(1);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
+                wireframe.Bind();
 
                 if (wireframe.isSpline)
                 {
@@ -149,8 +158,9 @@ namespace Replanetizer.Renderer
                         GL.DrawElements(PrimitiveType.Triangles, wireframe.container.GetIndexBufferLength(), DrawElementsType.UnsignedShort, 0);
                     }
                 }
-
             }
+
+            GL.BindVertexArray(0);
 
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             GLUtil.CheckGlError("WireframeRenderer");

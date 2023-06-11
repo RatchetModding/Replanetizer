@@ -21,6 +21,7 @@ namespace Replanetizer.Renderer
     {
         private SkyboxModel? sky;
         private BufferContainer? container;
+        private int vao;
         private readonly ShaderTable shaderTable;
         private List<Texture> textures;
         private Dictionary<Texture, int> textureIds;
@@ -37,7 +38,14 @@ namespace Replanetizer.Renderer
             if (obj is SkyboxModel sky)
             {
                 this.sky = sky;
-                container = BufferContainer.FromRenderable(sky);
+                container = new BufferContainer(sky, () =>
+                {
+                    GLUtil.ActivateNumberOfVertexAttribArrays(3);
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 6, 0);
+                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 6, sizeof(float) * 3);
+                    GL.VertexAttribPointer(2, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 6, sizeof(float) * 5);
+                });
+
                 return;
             }
             throw new NotImplementedException();
@@ -58,12 +66,8 @@ namespace Replanetizer.Renderer
 
             Matrix4 mvp = payload.camera.GetViewMatrix().ClearTranslation() * payload.camera.GetProjectionMatrix();
             shaderTable.skyShader.SetUniformMatrix4("worldToView", false, ref mvp);
-            container.Bind();
-            GLState.ChangeNumberOfVertexAttribArrays(3);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 6, 0);
-            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 6, sizeof(float) * 3);
-            GL.VertexAttribPointer(2, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 6, sizeof(float) * 5);
 
+            container.Bind();
             for (int i = 0; i < sky.textureConfig.Count; i++)
             {
                 TextureConfig conf = sky.textureConfig[i];
@@ -71,6 +75,8 @@ namespace Replanetizer.Renderer
                 GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[textures[conf.id]] : 0);
                 GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
             }
+            container.Unbind();
+
             GL.Enable(EnableCap.DepthTest);
             GL.Disable(EnableCap.Blend);
             GLUtil.CheckGlError("SkyRenderer");

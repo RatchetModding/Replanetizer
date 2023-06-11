@@ -80,9 +80,9 @@ namespace Replanetizer.Tools
 
         public override void Render(Matrix4 mat, ShaderTable table)
         {
-            table.colorShader.UseShader();
+            BindVao();
 
-            GetVbo();
+            table.colorShader.UseShader();
 
             table.colorShader.SetUniformMatrix4("modelToWorld", false, ref mat);
 
@@ -106,6 +106,8 @@ namespace Replanetizer.Tools
             GL.DrawArrays(PrimitiveType.Triangles, 27, 3);
             GL.DrawArrays(PrimitiveType.Triangles, 30, 3);
             GL.DrawArrays(PrimitiveType.Triangles, 33, 3);
+
+            UnbindVao();
         }
 
         public override void Transform(LevelObject obj, Vector3 pivot, TransformToolData data)

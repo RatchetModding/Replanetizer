@@ -84,7 +84,7 @@ namespace Replanetizer.Frames
 
         private Matrix4 trans, scale, worldView, rot = Matrix4.Identity;
 
-        private BufferContainer container = new BufferContainer();
+        private BufferContainer? container;
         private Rectangle contentRegion;
         private Vector2 mousePos;
         private int width, height;
@@ -464,7 +464,13 @@ namespace Replanetizer.Frames
             propertyFrame.selectedObject = selectedModel;
             UpdateTextures();
 
-            container = BufferContainer.FromRenderable(selectedModel);
+            container = new BufferContainer(selectedModel, () =>
+            {
+                GLUtil.ActivateNumberOfVertexAttribArrays(3);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
+                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
+                GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
+            });
             container.Bind();
 
             UpdateInstanceList();
@@ -585,7 +591,7 @@ namespace Replanetizer.Frames
             GL.ClearColor(Color.SkyBlue);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            if (selectedModel != null && selectedTextureSet != null && !(selectedModel is SkyboxModel))
+            if (selectedModel != null && selectedTextureSet != null && !(selectedModel is SkyboxModel) && container != null)
             {
                 // Has to be done in this order to work correctly
                 Matrix4 mvp = trans * scale * rot;
@@ -595,12 +601,7 @@ namespace Replanetizer.Frames
                 shaderTable.meshShader.SetUniformMatrix4("worldToView", false, ref worldView);
                 shaderTable.meshShader.SetUniform1("levelObjectType", (int) RenderedObjectType.Null);
 
-                GLState.ChangeNumberOfVertexAttribArrays(3);
-
                 container.Bind();
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
-                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
-                GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
 
                 //Bind textures one by one, applying it to the relevant vertices based on the index array
                 foreach (TextureConfig conf in selectedModel.textureConfig)

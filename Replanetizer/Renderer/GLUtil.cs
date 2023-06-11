@@ -78,5 +78,14 @@ namespace Replanetizer.Renderer
             GL.CreateVertexArrays(1, out vao);
             LabelObject(ObjectLabelIdentifier.VertexArray, vao, $"VAO: {name}");
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ActivateNumberOfVertexAttribArrays(int num)
+        {
+            for (int i = 0; i < num; i++)
+            {
+                GL.EnableVertexAttribArray(i);
+            }
+        }
     }
 }

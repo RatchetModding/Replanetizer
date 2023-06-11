@@ -31,12 +31,16 @@ namespace Replanetizer.Renderer
         private readonly ShaderTable shaderTable;
         private int ibo;
         private int vbo;
+        private int vao;
         private List<LevelObject> objects = new List<LevelObject>();
         private List<RenderedObjectType> types = new List<RenderedObjectType>();
 
         public BillboardRenderer(ShaderTable shaderTable)
         {
             this.shaderTable = shaderTable;
+
+            GL.GenVertexArrays(1, out vao);
+            GL.BindVertexArray(vao);
 
             int iboLength = INDICES.Length * sizeof(ushort);
             GL.GenBuffers(1, out ibo);
@@ -47,6 +51,11 @@ namespace Replanetizer.Renderer
             GL.GenBuffers(1, out vbo);
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.BufferData(BufferTarget.ArrayBuffer, vboLength, VERTICES, BufferUsageHint.StaticDraw);
+
+            GLUtil.ActivateNumberOfVertexAttribArrays(1);
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(float) * 2, 0);
+
+            GL.BindVertexArray(0);
         }
 
         public override void Include<T>(T obj)
@@ -83,10 +92,7 @@ namespace Replanetizer.Renderer
             shaderTable.billboardShader.SetUniform3("right", right.X, right.Y, right.Z);
             shaderTable.billboardShader.SetUniform3("up", up.X, up.Y, up.Z);
 
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GLState.ChangeNumberOfVertexAttribArrays(1);
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(float) * 2, 0);
+            GL.BindVertexArray(vao);
 
             for (int i = 0; i < objects.Count; i++)
             {
@@ -96,6 +102,8 @@ namespace Replanetizer.Renderer
                 shaderTable.billboardShader.SetUniform1("levelObjectType", (int) types[i]);
                 GL.DrawElements(PrimitiveType.Triangles, INDICES.Length, DrawElementsType.UnsignedShort, 0);
             }
+
+            GL.BindVertexArray(0);
             GLUtil.CheckGlError("BillboardRenderer");
         }
 
@@ -103,6 +111,7 @@ namespace Replanetizer.Renderer
         {
             GL.DeleteBuffer(ibo);
             GL.DeleteBuffer(vbo);
+            GL.DeleteVertexArray(vao);
         }
     }
 }

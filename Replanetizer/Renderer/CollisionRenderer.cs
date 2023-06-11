@@ -55,7 +55,7 @@ namespace Replanetizer.Renderer
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
                 GL.BufferData(BufferTarget.ElementArrayBuffer, indexBuffer.Length * sizeof(int), indexBuffer, BufferUsageHint.StaticDraw);
 
-                GLState.ChangeNumberOfVertexAttribArrays(2);
+                GLUtil.ActivateNumberOfVertexAttribArrays(2);
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
                 GL.VertexAttribPointer(1, 4, VertexAttribPointerType.UnsignedByte, false, sizeof(float) * 4, sizeof(float) * 3);
 
@@ -102,8 +102,6 @@ namespace Replanetizer.Renderer
 
             shaderTable.collisionShader.UseShader();
             shaderTable.collisionShader.SetUniformMatrix4("worldToView", false, ref worldToView);
-
-            GLState.ChangeNumberOfVertexAttribArrays(2);
 
             shaderTable.colorShader.UseShader();
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);

@@ -993,6 +993,10 @@ namespace Replanetizer.Frames
                             if (fragment.globalID == hitId) return fragment;
                         }
                     }
+                    foreach (TerrainFragment fragment in level.terrainEngine.fragments)
+                    {
+                        if (fragment.globalID == hitId) return fragment;
+                    }
                     return null;
                 case RenderedObjectType.Shrub:
                     return level.shrubs.Find(x => x.globalID == hitId);

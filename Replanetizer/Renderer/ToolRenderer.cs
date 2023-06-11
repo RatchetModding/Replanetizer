@@ -34,6 +34,7 @@ namespace Replanetizer.Renderer
                 return;
 
             GL.Disable(EnableCap.DepthTest);
+            shaderTable.colorShader.UseShader();
             shaderTable.colorShader.SetUniform1("levelObjectType", (int) RenderedObjectType.Tool);
 
             if (payload.selection.TryGetOne(out var obj) && obj is Spline spline &&
@@ -45,7 +46,7 @@ namespace Replanetizer.Renderer
                 payload.toolbox.tool.Render(payload.selection, payload.camera, shaderTable);
 
             GL.Enable(EnableCap.DepthTest);
-
+            GLUtil.CheckGlError("ToolRenderer");
         }
     }
 }

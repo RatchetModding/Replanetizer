@@ -5,6 +5,7 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using System.IO;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
@@ -21,12 +22,13 @@ namespace Replanetizer.Renderer
         }
 
         [Conditional("DEBUG")]
-        public static void CheckGlError(string title)
+        public static void CheckGlError(string title, [CallerLineNumber] int lineNumber = 0, [CallerFilePath] string caller = "")
         {
             var error = GL.GetError();
             if (error != ErrorCode.NoError)
             {
-                Debug.Print($"{title}: {error}");
+                string fileName = Path.GetFileName(caller);
+                Debug.Print($"[{fileName}:{lineNumber}] {title}: {error}");
             }
         }
 

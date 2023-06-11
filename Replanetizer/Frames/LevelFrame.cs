@@ -477,11 +477,11 @@ namespace Replanetizer.Frames
                 renderer.RenderToTexture(() =>
                 {
                     //Setup openGL variables
-                    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+                    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
                     GL.Enable(EnableCap.DepthTest);
                     GL.Viewport(0, 0, width, height);
-                    GL.Scissor(0, 0, width, height);
                     GL.Enable(EnableCap.ScissorTest);
+                    GL.Scissor(0, 0, width, height);
 
                     OnPaint();
                 });
@@ -502,11 +502,7 @@ namespace Replanetizer.Frames
 
         private void CustomGLControl_Load()
         {
-            GL.GenVertexArrays(1, out int vao);
-            GL.BindVertexArray(vao);
-
             //Setup openGL variables
-            GL.ClearColor(Color.SkyBlue);
             GL.Enable(EnableCap.DepthTest);
 
             shaderTable.meshShader.UseShader();
@@ -544,13 +540,13 @@ namespace Replanetizer.Frames
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
 
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float) TextureMinFilter.LinearMipmapLinear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (float) TextureMinFilter.LinearMipmapLinear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBaseLevel, (float) 0);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (float) TextureMagFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBaseLevel, 0);
 
             // The game uses a negative LOD Bias, the value is taken from RenderDoc on RPCS3.
             // The game may do this because of the low-res textures.
             // NOTE: This data was gathered using RPCS3's strict rendering mode so it seems unlikely that it was introduced through RPCS3.
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureLodBias, (float) -1.5);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureLodBias, -1.5f);
 
             // Custom MP levels may have an incorrect number of mipmaps specified so we need to dynamically figure that out
             int mipLevel = 0;
@@ -579,6 +575,8 @@ namespace Replanetizer.Frames
                         mipHeight /= 2;
                     }
                 }
+
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, mipLevel - 1);
             }
             else
             {
@@ -587,9 +585,8 @@ namespace Replanetizer.Frames
                 GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
             }
 
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, (float) (mipLevel - 1));
-
             textureIds.Add(t, texId);
+            GLUtil.CheckGlError("Texture " + t.id);
         }
 
         void LoadLevelTextures()

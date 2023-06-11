@@ -96,6 +96,7 @@ namespace Replanetizer.Renderer
                 shaderTable.billboardShader.SetUniform1("levelObjectType", (int) types[i]);
                 GL.DrawElements(PrimitiveType.Triangles, INDICES.Length, DrawElementsType.UnsignedShort, 0);
             }
+            GLUtil.CheckGlError("BillboardRenderer");
         }
 
         public override void Dispose()

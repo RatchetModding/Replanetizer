@@ -519,6 +519,8 @@ namespace Replanetizer.Renderer
                     }
                     break;
             }
+
+            GLUtil.CheckGlError("MeshRenderer");
         }
 
         public override void Dispose()
@@ -526,7 +528,5 @@ namespace Replanetizer.Renderer
             GL.DeleteBuffer(ibo);
             GL.DeleteBuffer(vbo);
         }
-
-
     }
 }

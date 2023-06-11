@@ -73,6 +73,7 @@ namespace Replanetizer.Renderer
             }
             GL.Enable(EnableCap.DepthTest);
             GL.Disable(EnableCap.Blend);
+            GLUtil.CheckGlError("SkyRenderer");
         }
 
         public override void Dispose()

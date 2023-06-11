@@ -105,23 +105,30 @@ namespace Replanetizer.Renderer
 
             GLState.ChangeNumberOfVertexAttribArrays(2);
 
+            shaderTable.colorShader.UseShader();
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+
             for (int i = 0; i < numCollisions; i++)
             {
                 if (!payload.visibility.chunks[i]) continue;
 
                 GL.BindVertexArray(vaos[i]);
-
-                shaderTable.collisionShader.UseShader();
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 GL.DrawElements(PrimitiveType.Triangles, indexCount[i], DrawElementsType.UnsignedInt, 0);
+            }
 
-                shaderTable.colorShader.UseShader();
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+            shaderTable.collisionShader.UseShader();
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+
+            for (int i = 0; i < numCollisions; i++)
+            {
+                if (!payload.visibility.chunks[i]) continue;
+
+                GL.BindVertexArray(vaos[i]);
                 GL.DrawElements(PrimitiveType.Triangles, indexCount[i], DrawElementsType.UnsignedInt, 0);
             }
 
             GL.BindVertexArray(0);
-            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            GLUtil.CheckGlError("CollisionRenderer");
         }
 
         public override void Dispose()

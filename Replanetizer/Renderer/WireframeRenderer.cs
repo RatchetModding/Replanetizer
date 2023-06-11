@@ -127,11 +127,10 @@ namespace Replanetizer.Renderer
                 shaderTable.colorShader.SetUniform1("levelObjectType", (int) wireframe.type);
                 wireframe.container.Bind();
                 GLState.ChangeNumberOfVertexAttribArrays(1);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
 
                 if (wireframe.isSpline)
                 {
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
-
                     foreach (LevelObject obj in wireframe.levelObjects)
                     {
                         shaderTable.colorShader.SetUniform1("levelObjectNumber", obj.globalID);
@@ -142,8 +141,6 @@ namespace Replanetizer.Renderer
                 }
                 else
                 {
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-
                     foreach (LevelObject obj in wireframe.levelObjects)
                     {
                         shaderTable.colorShader.SetUniform1("levelObjectNumber", obj.globalID);
@@ -156,6 +153,7 @@ namespace Replanetizer.Renderer
             }
 
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            GLUtil.CheckGlError("WireframeRenderer");
         }
 
         public override void Dispose()

@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -10,7 +10,7 @@ using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects
 {
-    public class Type4C : LevelObject
+    public class GlobalPvarBlock : LevelObject
     {
         public const int ELEMENTSIZE = 0x08;
 
@@ -19,7 +19,7 @@ namespace LibReplanetizer.LevelObjects
         public ushort off04;
         public ushort off06;
 
-        public Type4C(byte[] block, int num)
+        public GlobalPvarBlock(byte[] block, int num)
         {
             int offset = num * ELEMENTSIZE;
 

@@ -57,7 +57,7 @@ namespace LibReplanetizer.Headers
             {
                 files.AddRange(Directory.GetFiles(armorFolder, "armor*.ps3"));
 
-                if (game.num == 4)
+                if (game == GameType.DL)
                 {
                     files.AddRange(Directory.GetFiles(armorFolder, "bot_tex*.ps3"));
                     files.AddRange(Directory.GetFiles(armorFolder, "dropship*.ps3"));

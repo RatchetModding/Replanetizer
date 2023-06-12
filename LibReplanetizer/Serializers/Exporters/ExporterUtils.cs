@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2022, The Replanetizer Contributors.
+// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -55,6 +55,42 @@ namespace LibReplanetizer
         }
 
         /// <summary>
+        /// Converts world space vectors from the game's Z Up format into the
+        /// specified orientation.
+        /// </summary>
+        protected static void ChangeOrientation(ref Vector3[] v, ExporterModelSettings.Orientation orientation)
+        {
+            for (int i = 0; i < v.Length; i++)
+            {
+                ChangeOrientation(ref v[i], orientation);
+            }
+        }
+
+        protected static void ChangeOrientation(ref Vector3 v, ExporterModelSettings.Orientation orientation)
+        {
+            switch (orientation)
+            {
+                case ExporterModelSettings.Orientation.Y_UP:
+                    {
+                        float temp = v.Y;
+                        v.Y = v.Z;
+                        v.Z = -temp;
+                        return;
+                    }
+                case ExporterModelSettings.Orientation.X_UP:
+                    {
+                        float temp = v.X;
+                        v.X = v.Z;
+                        v.X = -temp;
+                        return;
+                    }
+                case ExporterModelSettings.Orientation.Z_UP:
+                default:
+                    return;
+            }
+        }
+
+        /// <summary>
         /// Export a model to a file.
         /// </summary>
         public abstract void ExportModel(string fileName, Level level, Model model);
@@ -78,6 +114,8 @@ namespace LibReplanetizer
                     return new WavefrontExporter(settings);
                 case ExporterModelSettings.Format.Collada:
                     return new ColladaExporter(settings);
+                case ExporterModelSettings.Format.glTF:
+                    return new GLTFExporter(settings);
             }
 
             return null;
@@ -136,7 +174,8 @@ namespace LibReplanetizer
         public enum Format
         {
             Wavefront = 0,
-            Collada = 1
+            Collada = 1,
+            glTF = 2
         };
 
 
@@ -148,11 +187,20 @@ namespace LibReplanetizer
             AllSequential = 3
         };
 
-        public static readonly string[] FORMAT_STRINGS = { "Wavefront (*.obj)", "Collada (*.dae)" };
-        public static readonly string[] ANIMATION_CHOICE_STRINGS = { "No Animations", "All Animations", "Separate File for each Animation", "Concatenate Animations" };
+        public enum Orientation
+        {
+            Z_UP = 0,
+            Y_UP = 1,
+            X_UP = 2
+        }
 
-        public ExporterModelSettings.Format format = ExporterModelSettings.Format.Collada;
+        public static readonly string[] FORMAT_STRINGS = { "Wavefront (*.obj)", "Collada (*.dae)", "glTF 2.0 (*.gltf)" };
+        public static readonly string[] ANIMATION_CHOICE_STRINGS = { "No Animations", "All Animations", "Separate File for each Animation", "Concatenate Animations" };
+        public static readonly string[] ORIENTATION_STRINGS = { "Z Up", "Y Up", "X Up" };
+
+        public ExporterModelSettings.Format format = ExporterModelSettings.Format.glTF;
         public ExporterModelSettings.AnimationChoice animationChoice = ExporterModelSettings.AnimationChoice.None;
+        public ExporterModelSettings.Orientation orientation = ExporterModelSettings.Orientation.Z_UP;
         public bool exportMtlFile = true;
         public bool extendedFeatures = false;
 

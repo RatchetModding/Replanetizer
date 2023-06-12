@@ -26,8 +26,8 @@ out vec3 lightColor;
 out float fogBlend;
 
 // Values that stay constant for the whole mesh.
-uniform mat4 WorldToView;
-uniform mat4 ModelToWorld;
+uniform mat4 worldToView;
+uniform mat4 modelToWorld;
 uniform int levelObjectType;
 uniform int lightIndex;
 uniform int useFog;
@@ -36,9 +36,9 @@ uniform vec4 staticColor;
 
 void main() {
 	// Output position of the vertex, in clip space : MVP * position
-	gl_Position = WorldToView * (ModelToWorld * vec4(vertexPosition_modelspace, 1.0f));
+	gl_Position = worldToView * (modelToWorld * vec4(vertexPosition_modelspace, 1.0f));
 
-	vec3 normal = normalize((ModelToWorld * vec4(vertexNormal, 0.0f)).xyz);
+	vec3 normal = normalize((modelToWorld * vec4(vertexNormal, 0.0f)).xyz);
 
 	// UV of the vertex. No special space for this one.
 	UV = vertexUV;

@@ -177,19 +177,19 @@ namespace LibReplanetizer.Parsers
             return dirLights;
         }
 
-        public List<Type0C> GetType0Cs()
+        public List<SoundInstance> GetSoundInstances()
         {
-            var type0Cs = new List<Type0C>();
-            if (gameplayHeader.soundPointer == 0) { return type0Cs; }
+            List<SoundInstance> soundInstances = new List<SoundInstance>();
+            if (gameplayHeader.soundPointer == 0) { return soundInstances; }
 
             int count = ReadInt(ReadBlock(fileStream, gameplayHeader.soundPointer, 4), 0);
-            byte[] type0CBlock = ReadBlock(fileStream, gameplayHeader.soundPointer + 0x10, Type0C.ELEMENTSIZE * count);
+            byte[] soundInstanceBlock = ReadBlock(fileStream, gameplayHeader.soundPointer + 0x10, SoundInstance.ELEMENTSIZE * count);
             for (int i = 0; i < count; i++)
             {
-                type0Cs.Add(new Type0C(type0CBlock, i));
+                soundInstances.Add(new SoundInstance(soundInstanceBlock, i));
             }
 
-            return type0Cs;
+            return soundInstances;
         }
 
         public List<Sphere> GetSpheres()
@@ -222,66 +222,37 @@ namespace LibReplanetizer.Parsers
             return cylinders;
         }
 
-        public List<Type88> GetType88s()
+        public List<GlobalPvarBlock> GetType4Cs()
         {
-            var type88s = new List<Type88>();
-            if (gameplayHeader.type88Pointer == 0) { return type88s; }
+            List<GlobalPvarBlock> type4Cs = new List<GlobalPvarBlock>();
+            if (gameplayHeader.globalPvarPointer == 0) { return type4Cs; }
 
-            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.type88Pointer, 4), 0);
-            byte[] type88Block = ReadBlock(fileStream, gameplayHeader.type88Pointer + 0x10, Type88.ELEMENTSIZE * count);
+            int offset = ReadInt(ReadBlock(fileStream, gameplayHeader.globalPvarPointer, 4), 0);
+            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.globalPvarPointer + 4, 4), 0);
+            byte[] type4CBlock = ReadBlock(fileStream, gameplayHeader.globalPvarPointer + 0x10 + offset, GlobalPvarBlock.ELEMENTSIZE * count);
             for (int i = 0; i < count; i++)
             {
-                type88s.Add(new Type88(type88Block, i));
-            }
-            return type88s;
-        }
-
-        public List<Type4C> GetType4Cs()
-        {
-            List<Type4C> type4Cs = new List<Type4C>();
-            if (gameplayHeader.type4CPointer == 0) { return type4Cs; }
-
-            int offset = ReadInt(ReadBlock(fileStream, gameplayHeader.type4CPointer, 4), 0);
-            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.type4CPointer + 4, 4), 0);
-            byte[] type4CBlock = ReadBlock(fileStream, gameplayHeader.type4CPointer + 0x10 + offset, Type4C.ELEMENTSIZE * count);
-            for (int i = 0; i < count; i++)
-            {
-                type4Cs.Add(new Type4C(type4CBlock, i));
+                type4Cs.Add(new GlobalPvarBlock(type4CBlock, i));
             }
 
             return type4Cs;
         }
 
-        public List<Type7C> GetType7Cs()
+        public List<EnvTransition> GetEnvTransitions()
         {
-            var type7Cs = new List<Type7C>();
-            if (gameplayHeader.type7CPointer == 0) { return type7Cs; }
+            List<EnvTransition> envTransitions = new List<EnvTransition>();
+            if (gameplayHeader.envTransitionsPointer == 0) { return envTransitions; }
 
-            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.type7CPointer, 4), 0);
-            byte[] type7CBlock = ReadBlock(fileStream, gameplayHeader.type7CPointer + 0x10, Type7C.ELEMENTSIZE * count);
-            for (int i = 0; i < count; i++)
-            {
-                type7Cs.Add(new Type7C(type7CBlock, i));
-            }
-
-            return type7Cs;
-        }
-
-        public List<Type80> GetType80()
-        {
-            var type80s = new List<Type80>();
-            if (gameplayHeader.type80Pointer == 0) { return type80s; }
-
-            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.type80Pointer, 4), 0);
-            byte[] headBlock = ReadBlock(fileStream, gameplayHeader.type80Pointer + 0x10, Type80.HEADSIZE * count);
-            byte[] dataBlock = ReadBlock(fileStream, gameplayHeader.type80Pointer + 0x10 + Type80.HEADSIZE * count, Type80.DATASIZE * count);
+            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.envTransitionsPointer, 4), 0);
+            byte[] headBlock = ReadBlock(fileStream, gameplayHeader.envTransitionsPointer + 0x10, EnvTransition.HEADSIZE * count);
+            byte[] mainBlock = ReadBlock(fileStream, gameplayHeader.envTransitionsPointer + 0x10 + EnvTransition.HEADSIZE * count, EnvTransition.ELEMENTSIZE * count);
 
             for (int i = 0; i < count; i++)
             {
-                type80s.Add(new Type80(headBlock, dataBlock, i));
+                envTransitions.Add(new EnvTransition(headBlock, mainBlock, i));
             }
 
-            return type80s;
+            return envTransitions;
         }
 
         public byte[] GetUnk6()
@@ -294,26 +265,32 @@ namespace LibReplanetizer.Parsers
 
         public byte[] GetUnk7()
         {
-            if (gameplayHeader.type4CPointer == 0) { return new byte[0]; }
-            int count1 = ReadInt(ReadBlock(fileStream, gameplayHeader.type4CPointer, 4), 0);
-            int count2 = ReadInt(ReadBlock(fileStream, gameplayHeader.type4CPointer + 4, 4), 0);
-            return ReadBlock(fileStream, gameplayHeader.type4CPointer, count1 + count2 * 8 + 0x10);
+            if (gameplayHeader.globalPvarPointer == 0) { return new byte[0]; }
+            int count1 = ReadInt(ReadBlock(fileStream, gameplayHeader.globalPvarPointer, 4), 0);
+            int count2 = ReadInt(ReadBlock(fileStream, gameplayHeader.globalPvarPointer + 4, 4), 0);
+            return ReadBlock(fileStream, gameplayHeader.globalPvarPointer, count1 + count2 * 8 + 0x10);
         }
 
-        public byte[] GetUnk12()
+        public List<Pill> GetPills()
         {
-            if (gameplayHeader.unkPointer12 == 0) { return new byte[0]; }
-            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer12, 4), 0);
-            byte[] block = ReadBlock(fileStream, gameplayHeader.unkPointer12, count * 0x90 + 0x10);
+            List<Pill> pills = new List<Pill>();
+            if (gameplayHeader.pillPointer == 0) { return pills; }
 
-            return block;
+            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.pillPointer, 4), 0);
+            byte[] pillBlock = ReadBlock(fileStream, gameplayHeader.pillPointer + 0x10, Pill.ELEMENTSIZE * count);
+            for (int i = 0; i < count; i++)
+            {
+                pills.Add(new Pill(pillBlock, i));
+            }
+
+            return pills;
         }
 
         public List<KeyValuePair<int, int>> GetType5Cs()
         {
             var keyValuePairs = new List<KeyValuePair<int, int>>();
             byte[] bytes;
-            for (int i = 0; (bytes = ReadBlock(fileStream, gameplayHeader.type5CPointer + i * 8, 8))[0] != 0xFF; i++)
+            for (int i = 0; (bytes = ReadBlock(fileStream, gameplayHeader.pvarRewirePointer + i * 8, 8))[0] != 0xFF; i++)
             {
                 int id = ReadInt(bytes, 0);
                 int value = ReadInt(bytes, 4);
@@ -327,7 +304,7 @@ namespace LibReplanetizer.Parsers
         {
             var keyValuePairs = new List<KeyValuePair<int, int>>();
             byte[] bytes;
-            for (int i = 0; (bytes = ReadBlock(fileStream, gameplayHeader.type50Pointer + i * 8, 8))[0] != 0xFF; i++)
+            for (int i = 0; (bytes = ReadBlock(fileStream, gameplayHeader.pvarScratchPadPointer + i * 8, 8))[0] != 0xFF; i++)
             {
                 int id = ReadInt(bytes, 0);
                 int value = ReadInt(bytes, 4);
@@ -337,44 +314,81 @@ namespace LibReplanetizer.Parsers
         }
 
 
-        public byte[] GetUnk13()
+        public List<GrindPath> GetGrindPaths()
         {
+            List<GrindPath> grindPaths = new List<GrindPath>();
+            if (gameplayHeader.grindPathsPointer == 0) { return grindPaths; }
 
             byte[] head = ReadBlock(fileStream, gameplayHeader.grindPathsPointer, 0x10);
             int count = ReadInt(head, 0x00);
-            int unk1 = ReadInt(head, 0x04);
-            int unk2 = ReadInt(head, 0x08);
+            int splineOffset = ReadInt(head, 0x04);
+            int splineSize = ReadInt(head, 0x08);
 
-            byte[] block = ReadBlock(fileStream, gameplayHeader.grindPathsPointer, count * 0x20 + 0x10);
+            byte[] grindPathBlock = ReadBlock(fileStream, gameplayHeader.grindPathsPointer + 0x10, count * GrindPath.ELEMENTSIZE);
+            byte[] splineHeadBlock = ReadBlock(fileStream, gameplayHeader.grindPathsPointer + 0x10 + count * GrindPath.ELEMENTSIZE, count * 0x04);
+            byte[] splineBlock = ReadBlock(fileStream, gameplayHeader.grindPathsPointer + splineOffset, splineSize);
 
-            return block;
+            List<Spline> splines = new List<Spline>();
+
+            for (int i = 0; i < count; i++)
+            {
+                int offset = ReadInt(splineHeadBlock, i * 0x04);
+                splines.Add(new Spline(splineBlock, offset));
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                grindPaths.Add(new GrindPath(grindPathBlock, i, splines[i]));
+            }
+
+            return grindPaths;
+        }
+
+        public List<PointLight> GetPointLights()
+        {
+            List<PointLight> pointLights = new List<PointLight>();
+            if (gameplayHeader.pointLightPointer == 0) { return pointLights; }
+
+            // Pointlights are not used in the PS3 remasters, only RaC 1 contains valid information.
+            if (game != GameType.RaC1) { return pointLights; }
+
+            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.pointLightPointer, 4), 0);
+            byte[] pointLightBlock = ReadBlock(fileStream, gameplayHeader.pointLightPointer + 0x10, PointLight.GetElementSize(game) * count);
+            for (int i = 0; i < count; i++)
+            {
+                pointLights.Add(new PointLight(game, pointLightBlock, i));
+            }
+
+            return pointLights;
         }
 
         public byte[] GetUnk14()
         {
-            if (gameplayHeader.unkPointer14 == 0) { return new byte[0]; }
-            int sectionLength = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer14, 4), 0);
-            return ReadBlock(fileStream, gameplayHeader.unkPointer14, sectionLength);
-        }
-
-        public byte[] GetUnk16()
-        {
-            if (gameplayHeader.unkPointer16 == 0) { return new byte[0]; }
-            return ReadBlock(fileStream, gameplayHeader.unkPointer16, gameplayHeader.grindPathsPointer - gameplayHeader.unkPointer16);
+            if (gameplayHeader.pointLightGridPointer == 0) { return new byte[0]; }
+            int sectionLength = ReadInt(ReadBlock(fileStream, gameplayHeader.pointLightGridPointer, 4), 0);
+            return ReadBlock(fileStream, gameplayHeader.pointLightGridPointer, sectionLength);
         }
 
         public byte[] GetUnk17()
         {
-            if (gameplayHeader.unkPointer17 == 0) { return new byte[0]; }
-            int sectionLength = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer17, 4), 0);
-            return ReadBlock(fileStream, gameplayHeader.unkPointer17, sectionLength);
+            if (gameplayHeader.camCollisionPointer == 0) { return new byte[0]; }
+            int sectionLength = ReadInt(ReadBlock(fileStream, gameplayHeader.camCollisionPointer, 4), 0);
+            return ReadBlock(fileStream, gameplayHeader.camCollisionPointer, sectionLength);
         }
 
-        public byte[] GetUnk18()
+        public List<EnvSample> GetEnvSamples()
         {
-            if (gameplayHeader.unkPointer18 == 0) { return new byte[0]; }
-            int amount = ReadInt(ReadBlock(fileStream, gameplayHeader.unkPointer18, 4), 0);
-            return ReadBlock(fileStream, gameplayHeader.unkPointer18, 0x10 + amount * 0x20);
+            List<EnvSample> envSamples = new List<EnvSample>();
+            if (gameplayHeader.envSamplesPointer == 0) { return envSamples; }
+
+            int count = ReadInt(ReadBlock(fileStream, gameplayHeader.envSamplesPointer, 4), 0);
+            Byte[] envSamplesBlock = ReadBlock(fileStream, gameplayHeader.envSamplesPointer + 0x10, count * EnvSample.GetElementSize(game));
+            for (int i = 0; i < count; i++)
+            {
+                envSamples.Add(new EnvSample(game, envSamplesBlock, i));
+            }
+
+            return envSamples;
         }
 
         public List<int> GetMobyIds()
@@ -447,15 +461,13 @@ namespace LibReplanetizer.Parsers
         {
             if (gameplayHeader.tiePointer == 0) { return new byte[0]; }
 
-            switch (game.num)
+            if (game == GameType.RaC1)
             {
-                case 1:
-                    return ReadBlock(fileStream, gameplayHeader.tiePointer, 0x10 + 0xE0 * tieCount);
-                case 2:
-                case 3:
-                case 4:
-                default:
-                    return ReadBlock(fileStream, gameplayHeader.tiePointer, gameplayHeader.tieGroupsPointer - gameplayHeader.tiePointer);
+                return ReadBlock(fileStream, gameplayHeader.tiePointer, 0x10 + 0xE0 * tieCount);
+            }
+            else
+            {
+                return ReadBlock(fileStream, gameplayHeader.tiePointer, gameplayHeader.tieGroupsPointer - gameplayHeader.tiePointer);
             }
         }
 

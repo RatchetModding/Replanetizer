@@ -41,28 +41,26 @@ namespace LibReplanetizer.Headers
         public int mobyPointer;
 
         public int mobyGroupsPointer;
-        public int type4CPointer;
-        public int type50Pointer;
+        public int globalPvarPointer;
+        public int pvarScratchPadPointer;
         public int pvarSizePointer;
 
         public int pvarPointer;
-        public int type5CPointer;
+        public int pvarRewirePointer;
         public int cuboidPointer;
         public int spherePointer;
 
         public int cylinderPointer;
-        public int unkPointer12;
+        public int pillPointer;
         public int splinePointer;
         public int grindPathsPointer;
 
-        public int unkPointer16;
-        public int unkPointer14;
-        public int type7CPointer;
-        public int type80Pointer;
+        public int pointLightGridPointer;
+        public int pointLightPointer;
+        public int envTransitionsPointer;
 
-        public int unkPointer17;
-        public int unkPointer18;
-        public int type88Pointer;
+        public int camCollisionPointer;
+        public int envSamplesPointer;
         public int occlusionPointer;
 
         public int tieAmbientPointer;
@@ -118,26 +116,26 @@ namespace LibReplanetizer.Headers
             mobyIdPointer = ReadInt(gameplayHeadBlock, 0x40);
             mobyPointer = ReadInt(gameplayHeadBlock, 0x44);
             mobyGroupsPointer = ReadInt(gameplayHeadBlock, 0x48);
-            type4CPointer = ReadInt(gameplayHeadBlock, 0x4C);
+            globalPvarPointer = ReadInt(gameplayHeadBlock, 0x4C);
 
-            type50Pointer = ReadInt(gameplayHeadBlock, 0x50);
+            pvarScratchPadPointer = ReadInt(gameplayHeadBlock, 0x50);
             pvarSizePointer = ReadInt(gameplayHeadBlock, 0x54);
             pvarPointer = ReadInt(gameplayHeadBlock, 0x58);
-            type5CPointer = ReadInt(gameplayHeadBlock, 0x5C);
+            pvarRewirePointer = ReadInt(gameplayHeadBlock, 0x5C);
 
             cuboidPointer = ReadInt(gameplayHeadBlock, 0x60);
             spherePointer = ReadInt(gameplayHeadBlock, 0x64);
             cylinderPointer = ReadInt(gameplayHeadBlock, 0x68);
-            unkPointer12 = ReadInt(gameplayHeadBlock, 0x6C);
+            pillPointer = ReadInt(gameplayHeadBlock, 0x6C);
 
             splinePointer = ReadInt(gameplayHeadBlock, 0x70);
             grindPathsPointer = ReadInt(gameplayHeadBlock, 0x74);
-            unkPointer14 = ReadInt(gameplayHeadBlock, 0x78);
-            type7CPointer = ReadInt(gameplayHeadBlock, 0x7C);
+            pointLightGridPointer = ReadInt(gameplayHeadBlock, 0x78);
+            pointLightPointer = ReadInt(gameplayHeadBlock, 0x7C);
 
-            type80Pointer = ReadInt(gameplayHeadBlock, 0x80);
-            unkPointer17 = ReadInt(gameplayHeadBlock, 0x84);
-            type88Pointer = ReadInt(gameplayHeadBlock, 0x88);
+            envTransitionsPointer = ReadInt(gameplayHeadBlock, 0x80);
+            camCollisionPointer = ReadInt(gameplayHeadBlock, 0x84);
+            envSamplesPointer = ReadInt(gameplayHeadBlock, 0x88);
             occlusionPointer = ReadInt(gameplayHeadBlock, 0x8C);
         }
 
@@ -169,24 +167,24 @@ namespace LibReplanetizer.Headers
             mobyPointer = ReadInt(gameplayHeadBlock, 0x4C);
 
             mobyGroupsPointer = ReadInt(gameplayHeadBlock, 0x50);
-            type4CPointer = ReadInt(gameplayHeadBlock, 0x54);
-            type50Pointer = ReadInt(gameplayHeadBlock, 0x58);
+            globalPvarPointer = ReadInt(gameplayHeadBlock, 0x54);
+            pvarScratchPadPointer = ReadInt(gameplayHeadBlock, 0x58);
             pvarSizePointer = ReadInt(gameplayHeadBlock, 0x5C);
 
             pvarPointer = ReadInt(gameplayHeadBlock, 0x60);
-            type5CPointer = ReadInt(gameplayHeadBlock, 0x64);
+            pvarRewirePointer = ReadInt(gameplayHeadBlock, 0x64);
             cuboidPointer = ReadInt(gameplayHeadBlock, 0x68);
             spherePointer = ReadInt(gameplayHeadBlock, 0x6C);
 
             cylinderPointer = ReadInt(gameplayHeadBlock, 0x70);
-            unkPointer12 = ReadInt(gameplayHeadBlock, 0x74);
+            pillPointer = ReadInt(gameplayHeadBlock, 0x74);
             splinePointer = ReadInt(gameplayHeadBlock, 0x78);
             grindPathsPointer = ReadInt(gameplayHeadBlock, 0x7C);
 
-            unkPointer16 = ReadInt(gameplayHeadBlock, 0x80);
-            type80Pointer = ReadInt(gameplayHeadBlock, 0x84);
-            unkPointer17 = ReadInt(gameplayHeadBlock, 0x88);
-            unkPointer18 = ReadInt(gameplayHeadBlock, 0x8C);
+            pointLightPointer = ReadInt(gameplayHeadBlock, 0x80);
+            envTransitionsPointer = ReadInt(gameplayHeadBlock, 0x84);
+            camCollisionPointer = ReadInt(gameplayHeadBlock, 0x88);
+            envSamplesPointer = ReadInt(gameplayHeadBlock, 0x8C);
 
             occlusionPointer = ReadInt(gameplayHeadBlock, 0x90);
             tieAmbientPointer = ReadInt(gameplayHeadBlock, 0x94);
@@ -211,38 +209,27 @@ namespace LibReplanetizer.Headers
             mobyIdPointer = ReadInt(gameplayHeadBlock, 0x2C);
 
             mobyPointer = ReadInt(gameplayHeadBlock, 0x30);
+            mobyGroupsPointer = ReadInt(gameplayHeadBlock, 0x34);
+            globalPvarPointer = ReadInt(gameplayHeadBlock, 0x38);
+            pvarScratchPadPointer = ReadInt(gameplayHeadBlock, 0x3C);
 
             pvarSizePointer = ReadInt(gameplayHeadBlock, 0x40);
             pvarPointer = ReadInt(gameplayHeadBlock, 0x44);
+            pvarRewirePointer = ReadInt(gameplayHeadBlock, 0x48);
             cuboidPointer = ReadInt(gameplayHeadBlock, 0x4C);
 
             spherePointer = ReadInt(gameplayHeadBlock, 0x50);
             cylinderPointer = ReadInt(gameplayHeadBlock, 0x54);
+            pillPointer = ReadInt(gameplayHeadBlock, 0x58);
             splinePointer = ReadInt(gameplayHeadBlock, 0x5C);
-            /*
-            type04Pointer = ReadInt(gameplayHeadBlock, 0x04);
-            
-            
-            lang2Pointer = ReadInt(gameplayHeadBlock, 0x14);
-            tieIdPointer = ReadInt(gameplayHeadBlock, 0x30);
-            // = ReadInt(gameplayHeadBlock, 0x34);
-            // = ReadInt(gameplayHeadBlock, 0x38);
-            shrubIdPointer = ReadInt(gameplayHeadBlock, 0x3C);
-            shrubPointer = ReadInt(gameplayHeadBlock, 0x40);
-            // = ReadInt(gameplayHeadBlock, 0x44);
-            unkPointer6 = ReadInt(gameplayHeadBlock, 0x50);
-            unkPointer7 = ReadInt(gameplayHeadBlock, 0x54);
-            type50Pointer = ReadInt(gameplayHeadBlock, 0x58);
-            type5CPointer = ReadInt(gameplayHeadBlock, 0x64);
-            type64Pointer = ReadInt(gameplayHeadBlock, 0x6C);
-            type68Pointer = ReadInt(gameplayHeadBlock, 0x70);
-            unkPointer12 = ReadInt(gameplayHeadBlock, 0x74);
-            unkPointer13 = ReadInt(gameplayHeadBlock, 0x7C);
-            // = ReadInt(gameplayHeadBlock, 0x80);
-            type80Pointer = ReadInt(gameplayHeadBlock, 0x84);
-            unkPointer17 = ReadInt(gameplayHeadBlock, 0x88);
-            // = ReadInt(gameplayHeadBlock, 0x8C);
-            occlusionPointer = ReadInt(gameplayHeadBlock, 0x90);*/
+
+            grindPathsPointer = ReadInt(gameplayHeadBlock, 0x60);
+            pointLightPointer = ReadInt(gameplayHeadBlock, 0x64);
+            // = ReadInt(gameplayHeadBlock, 0x68);
+            camCollisionPointer = ReadInt(gameplayHeadBlock, 0x6C);
+
+            envSamplesPointer = ReadInt(gameplayHeadBlock, 0x70);
+            areasPointer = ReadInt(gameplayHeadBlock, 0x74);
         }
 
         public byte[] Serialize(GameType game)
@@ -288,26 +275,26 @@ namespace LibReplanetizer.Headers
             WriteInt(bytes, 0x40, mobyIdPointer);
             WriteInt(bytes, 0x44, mobyPointer);
             WriteInt(bytes, 0x48, mobyGroupsPointer);
-            WriteInt(bytes, 0x4C, type4CPointer);
+            WriteInt(bytes, 0x4C, globalPvarPointer);
 
-            WriteInt(bytes, 0x50, type50Pointer);
+            WriteInt(bytes, 0x50, pvarScratchPadPointer);
             WriteInt(bytes, 0x54, pvarSizePointer);
             WriteInt(bytes, 0x58, pvarPointer);
-            WriteInt(bytes, 0x5C, type5CPointer);
+            WriteInt(bytes, 0x5C, pvarRewirePointer);
 
             WriteInt(bytes, 0x60, cuboidPointer);
             WriteInt(bytes, 0x64, spherePointer);
             WriteInt(bytes, 0x68, cylinderPointer);
-            WriteInt(bytes, 0x6C, unkPointer12);
+            WriteInt(bytes, 0x6C, pillPointer);
 
             WriteInt(bytes, 0x70, splinePointer);
             WriteInt(bytes, 0x74, grindPathsPointer);
-            WriteInt(bytes, 0x78, unkPointer14);
-            WriteInt(bytes, 0x7C, type7CPointer);
+            WriteInt(bytes, 0x78, pointLightGridPointer);
+            WriteInt(bytes, 0x7C, pointLightPointer);
 
-            WriteInt(bytes, 0x80, type80Pointer);
-            WriteInt(bytes, 0x84, unkPointer17);
-            WriteInt(bytes, 0x88, type88Pointer);
+            WriteInt(bytes, 0x80, envTransitionsPointer);
+            WriteInt(bytes, 0x84, camCollisionPointer);
+            WriteInt(bytes, 0x88, envSamplesPointer);
             WriteInt(bytes, 0x8C, occlusionPointer);
 
             return bytes;
@@ -343,24 +330,24 @@ namespace LibReplanetizer.Headers
             WriteInt(bytes, 0x4C, mobyPointer);
 
             WriteInt(bytes, 0x50, mobyGroupsPointer);
-            WriteInt(bytes, 0x54, type4CPointer);
-            WriteInt(bytes, 0x58, type50Pointer);
+            WriteInt(bytes, 0x54, globalPvarPointer);
+            WriteInt(bytes, 0x58, pvarScratchPadPointer);
             WriteInt(bytes, 0x5C, pvarSizePointer);
 
             WriteInt(bytes, 0x60, pvarPointer);
-            WriteInt(bytes, 0x64, type5CPointer);
+            WriteInt(bytes, 0x64, pvarRewirePointer);
             WriteInt(bytes, 0x68, cuboidPointer);
             WriteInt(bytes, 0x6C, spherePointer);
 
             WriteInt(bytes, 0x70, cylinderPointer);
-            WriteInt(bytes, 0x74, unkPointer12);
+            WriteInt(bytes, 0x74, pillPointer);
             WriteInt(bytes, 0x78, splinePointer);
             WriteInt(bytes, 0x7C, grindPathsPointer);
 
-            WriteInt(bytes, 0x80, unkPointer16);
-            WriteInt(bytes, 0x84, type80Pointer);
-            WriteInt(bytes, 0x88, unkPointer17);
-            WriteInt(bytes, 0x8C, unkPointer18);
+            WriteInt(bytes, 0x80, pointLightPointer);
+            WriteInt(bytes, 0x84, envTransitionsPointer);
+            WriteInt(bytes, 0x88, camCollisionPointer);
+            WriteInt(bytes, 0x8C, envSamplesPointer);
 
             WriteInt(bytes, 0x90, occlusionPointer);
             WriteInt(bytes, 0x94, tieAmbientPointer);
@@ -389,15 +376,27 @@ namespace LibReplanetizer.Headers
             WriteInt(bytes, 0x2C, mobyIdPointer);
 
             WriteInt(bytes, 0x30, mobyPointer);
+            WriteInt(bytes, 0x34, mobyGroupsPointer);
+            WriteInt(bytes, 0x38, globalPvarPointer);
+            WriteInt(bytes, 0x3C, pvarScratchPadPointer);
 
             WriteInt(bytes, 0x40, pvarSizePointer);
             WriteInt(bytes, 0x44, pvarPointer);
-            //
+            WriteInt(bytes, 0x48, pvarRewirePointer);
             WriteInt(bytes, 0x4C, cuboidPointer);
 
             WriteInt(bytes, 0x50, spherePointer);
             WriteInt(bytes, 0x54, cylinderPointer);
+            WriteInt(bytes, 0x58, pillPointer);
             WriteInt(bytes, 0x5C, splinePointer);
+
+            WriteInt(bytes, 0x60, grindPathsPointer);
+            WriteInt(bytes, 0x64, pointLightPointer);
+            WriteInt(bytes, 0x68, 0);
+            WriteInt(bytes, 0x6C, camCollisionPointer);
+
+            WriteInt(bytes, 0x70, envSamplesPointer);
+            WriteInt(bytes, 0x74, areasPointer);
 
             return bytes;
         }

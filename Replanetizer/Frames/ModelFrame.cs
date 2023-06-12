@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -16,6 +16,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Replanetizer.Utils;
+using Replanetizer.Renderer;
 using Texture = LibReplanetizer.Texture;
 using LibReplanetizer.Serializers;
 using LibReplanetizer.LevelObjects;
@@ -29,6 +30,7 @@ namespace Replanetizer.Frames
 
         private string filter = "";
         private string filterUpper = "";
+        private bool showIDInHex = false;
         private FramebufferRenderer? renderer;
         private Level level => levelFrame.level;
         private Model? selectedModel;
@@ -56,7 +58,7 @@ namespace Replanetizer.Frames
             mouseButton = MouseButton.Right
         };
 
-        private ShaderIDTable shaderIDTable = new ShaderIDTable();
+        private ShaderTable shaderTable;
 
         private float xDelta;
 
@@ -75,14 +77,14 @@ namespace Replanetizer.Frames
 
         // Projection matrix settings
         private const float CLIP_NEAR = 0.1f;
-        private const float CLIP_FAR = 100f;
+        private const float CLIP_FAR = 1024.0f;
         private const float FIELD_OF_VIEW = MathF.PI / 3;  // 60 degrees
 
         private bool initialized = false;
 
         private Matrix4 trans, scale, worldView, rot = Matrix4.Identity;
 
-        private BufferContainer container = new BufferContainer();
+        private BufferContainer? container;
         private Rectangle contentRegion;
         private Vector2 mousePos;
         private int width, height;
@@ -90,12 +92,12 @@ namespace Replanetizer.Frames
         private bool firstFrame = true;
         private Vector2 startSize;
 
-        public ModelFrame(Window wnd, LevelFrame levelFrame, ShaderIDTable shaderIDTable, Model? model = null) : base(wnd, levelFrame)
+        public ModelFrame(Window wnd, LevelFrame levelFrame, ShaderTable shaderIDTable, Model? model = null) : base(wnd, levelFrame)
         {
             startSize = wnd.Size;
             modelTextureList = new List<Texture>();
             propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
-            this.shaderIDTable = shaderIDTable;
+            this.shaderTable = shaderIDTable;
             exportSettings = new ExporterModelSettings(lastUsedExportSettings);
             UpdateWindowSize();
             OnResize();
@@ -138,10 +140,15 @@ namespace Replanetizer.Frames
             }
         }
 
+        private string GetStringFromID(int id)
+        {
+            return (showIDInHex) ? $"0x{id:X3}" : $"{id}";
+        }
+
         private string GetDisplayName(Model model)
         {
             string? modelName = ModelLists.ModelLists.GetModelName(model, level.game);
-            string displayName = $"0x{model.id:X3}";
+            string displayName = GetStringFromID(model.id);
             if (modelName != null)
             {
                 displayName += " (" + modelName + ")";
@@ -166,9 +173,11 @@ namespace Replanetizer.Frames
         private void RenderTree()
         {
             var colW = ImGui.GetColumnWidth() - 10;
-            var childSize = new System.Numerics.Vector2(colW, height - 30);
+            var childSize = new System.Numerics.Vector2(colW, height - 50);
 
-            if (ImGui.InputText("", ref filter, 256))
+            ImGui.Checkbox("Hexadecimals", ref showIDInHex);
+
+            if (ImGui.InputText("Search", ref filter, 256))
             {
                 filterUpper = filter.ToUpper();
             }
@@ -183,7 +192,7 @@ namespace Replanetizer.Frames
                     for (int i = 0; i < level.gadgetModels.Count; i++)
                     {
                         Model gadget = level.gadgetModels[i];
-                        RenderModelEntry(gadget, level.gadgetTextures, $"0x{i:X3}");
+                        RenderModelEntry(gadget, (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures, GetStringFromID(i));
                     }
                     ImGui.TreePop();
                 }
@@ -192,7 +201,7 @@ namespace Replanetizer.Frames
                     for (int i = 0; i < level.armorModels.Count; i++)
                     {
                         Model armor = level.armorModels[i];
-                        RenderModelEntry(armor, level.armorTextures[i], $"0x{i:X3}");
+                        RenderModelEntry(armor, level.armorTextures[i], GetStringFromID(i));
                     }
                     ImGui.TreePop();
                 }
@@ -223,7 +232,7 @@ namespace Replanetizer.Frames
                     string objName = "Instance";
                     if (obj is Moby mob)
                     {
-                        objName = $"Instance [0x{mob.mobyID:X3}]";
+                        objName = $"Instance [" + GetStringFromID(mob.mobyID) + "]";
                     }
 
                     if (ImGui.Button(objName))
@@ -309,6 +318,15 @@ namespace Replanetizer.Frames
                                 exportSettings.animationChoice = (ExporterModelSettings.AnimationChoice) animationChoice;
                             }
                         }
+                        else
+                        {
+                            ImGui.BeginDisabled();
+                            int animationChoice = 0;
+                            if (ImGui.Combo("Animations", ref animationChoice, ExporterModelSettings.ANIMATION_CHOICE_STRINGS, ExporterModelSettings.ANIMATION_CHOICE_STRINGS.Length))
+                            {
+                            }
+                            ImGui.EndDisabled();
+                        }
                     }
 
                     // Wavefront specific settings
@@ -316,6 +334,23 @@ namespace Replanetizer.Frames
                     {
                         ImGui.Checkbox("Include MTL File", ref exportSettings.exportMtlFile);
                         ImGui.Checkbox("Extended Features", ref exportSettings.extendedFeatures);
+                        int orientation = (int) exportSettings.orientation;
+                        if (ImGui.Combo("Orientation", ref orientation, ExporterModelSettings.ORIENTATION_STRINGS, ExporterModelSettings.ORIENTATION_STRINGS.Length))
+                        {
+                            exportSettings.orientation = (ExporterModelSettings.Orientation) orientation;
+                        }
+                    }
+
+                    // glTF specific settings
+                    if (exportSettings.format == ExporterModelSettings.Format.glTF)
+                    {
+                        bool embedTextures = false;
+                        bool includeAnimations = false;
+
+                        ImGui.BeginDisabled();
+                        ImGui.Checkbox("Embed Textures", ref embedTextures);
+                        ImGui.Checkbox("Include Animations", ref includeAnimations);
+                        ImGui.EndDisabled();
                     }
 
                     if (ImGui.Button("Export model"))
@@ -429,7 +464,13 @@ namespace Replanetizer.Frames
             propertyFrame.selectedObject = selectedModel;
             UpdateTextures();
 
-            container = BufferContainer.FromRenderable(selectedModel);
+            container = new BufferContainer(selectedModel, () =>
+            {
+                GLUtil.ActivateNumberOfVertexAttribArrays(3);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
+                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
+                GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
+            });
             container.Bind();
 
             UpdateInstanceList();
@@ -476,7 +517,7 @@ namespace Replanetizer.Frames
                 selectedModelTexturesSet = null;
                 selectedModelArmorTexturesSet = null;
                 if (ReferenceEquals(models, level.gadgetModels))
-                    selectedModelTexturesSet = level.gadgetTextures;
+                    selectedModelTexturesSet = (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures;
                 else if (ReferenceEquals(models, level.armorModels))
                     selectedModelArmorTexturesSet = level.armorTextures;
                 else
@@ -550,38 +591,27 @@ namespace Replanetizer.Frames
             GL.ClearColor(Color.SkyBlue);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            if (selectedModel != null && selectedTextureSet != null && !(selectedModel is SkyboxModel))
+            if (selectedModel != null && selectedTextureSet != null && !(selectedModel is SkyboxModel) && container != null)
             {
                 // Has to be done in this order to work correctly
                 Matrix4 mvp = trans * scale * rot;
 
-                GL.UseProgram(shaderIDTable.shaderMain);
-                GL.UniformMatrix4(shaderIDTable.uniformModelToWorldMatrix, false, ref mvp);
-                GL.UniformMatrix4(shaderIDTable.uniformWorldToViewMatrix, false, ref worldView);
-                GL.Uniform1(shaderIDTable.uniformLevelObjectType, (int) RenderedObjectType.Null);
-
-                GL.EnableVertexAttribArray(0);
-                GL.EnableVertexAttribArray(1);
-                GL.EnableVertexAttribArray(2);
+                shaderTable.meshShader.UseShader();
+                shaderTable.meshShader.SetUniformMatrix4("modelToWorld", false, ref mvp);
+                shaderTable.meshShader.SetUniformMatrix4("worldToView", false, ref worldView);
+                shaderTable.meshShader.SetUniform1("levelObjectType", (int) RenderedObjectType.Null);
 
                 container.Bind();
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
-                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
-                GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
 
                 //Bind textures one by one, applying it to the relevant vertices based on the index array
                 foreach (TextureConfig conf in selectedModel.textureConfig)
                 {
                     GL.BindTexture(TextureTarget.Texture2D, (conf.id >= 0 && conf.id < selectedTextureSet.Count) ? levelFrame.textureIds[selectedTextureSet[conf.id]] : 0);
-                    GL.Uniform1(shaderIDTable.uniformUseTransparency, (conf.IgnoresTransparency()) ? 0 : 1);
+                    shaderTable.meshShader.SetUniform1("useTransparency", (conf.IgnoresTransparency()) ? 0 : 1);
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) ((conf.wrapModeS == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge));
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) ((conf.wrapModeT == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge));
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
-
-                GL.DisableVertexAttribArray(2);
-                GL.DisableVertexAttribArray(1);
-                GL.DisableVertexAttribArray(0);
             }
         }
 

@@ -13,6 +13,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using Replanetizer.Renderer;
 
 namespace Replanetizer.Utils
 {
@@ -79,13 +80,13 @@ namespace Replanetizer.Utils
 
         public void CreateDeviceResources()
         {
-            Util.CreateVertexArray("ImGui", out vertexArray);
+            GLUtil.CreateVertexArray("ImGui", out vertexArray);
 
             vertexBufferSize = 10000;
             indexBufferSize = 2000;
 
-            Util.CreateVertexBuffer("ImGui", out vertexBuffer);
-            Util.CreateElementBuffer("ImGui", out indexBuffer);
+            GLUtil.CreateVertexBuffer("ImGui", out vertexBuffer);
+            GLUtil.CreateElementBuffer("ImGui", out indexBuffer);
             GL.NamedBufferData(vertexBuffer, vertexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
             GL.NamedBufferData(indexBuffer, indexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
 
@@ -138,7 +139,7 @@ void main()
             GL.VertexArrayAttribBinding(vertexArray, 2, 0);
             GL.VertexArrayAttribFormat(vertexArray, 2, 4, VertexAttribType.UnsignedByte, true, 16);
 
-            Util.CheckGlError("End of ImGui setup");
+            GLUtil.CheckGlError("End of ImGui setup");
         }
 
         /// <summary>
@@ -342,10 +343,10 @@ void main()
             shader.UseShader();
             GL.UniformMatrix4(shader.GetUniformLocation("projection_matrix"), false, ref mvp);
             GL.Uniform1(shader.GetUniformLocation("in_fontTexture"), 0);
-            Util.CheckGlError("Projection");
+            GLUtil.CheckGlError("Projection");
 
             GL.BindVertexArray(vertexArray);
-            Util.CheckGlError("VAO");
+            GLUtil.CheckGlError("VAO");
 
             drawData.ScaleClipRects(io.DisplayFramebufferScale);
 
@@ -362,10 +363,10 @@ void main()
                 ImDrawListPtr cmdList = drawData.CmdListsRange[n];
 
                 GL.NamedBufferSubData(vertexBuffer, IntPtr.Zero, cmdList.VtxBuffer.Size * Unsafe.SizeOf<ImDrawVert>(), cmdList.VtxBuffer.Data);
-                Util.CheckGlError($"Data Vert {n}");
+                GLUtil.CheckGlError($"Data Vert {n}");
 
                 GL.NamedBufferSubData(indexBuffer, IntPtr.Zero, cmdList.IdxBuffer.Size * sizeof(ushort), cmdList.IdxBuffer.Data);
-                Util.CheckGlError($"Data Idx {n}");
+                GLUtil.CheckGlError($"Data Idx {n}");
 
                 int vtxOffset = 0;
                 int idxOffset = 0;
@@ -381,12 +382,12 @@ void main()
                     {
                         GL.ActiveTexture(TextureUnit.Texture0);
                         GL.BindTexture(TextureTarget.Texture2D, (int) pcmd.TextureId);
-                        Util.CheckGlError("Texture");
+                        GLUtil.CheckGlError("Texture");
 
                         // We do _windowHeight - (int)clip.W instead of (int)clip.Y because gl has flipped Y when it comes to these coordinates
                         var clip = pcmd.ClipRect;
                         GL.Scissor((int) clip.X, windowHeight - (int) clip.W, (int) (clip.Z - clip.X), (int) (clip.W - clip.Y));
-                        Util.CheckGlError("Scissor");
+                        GLUtil.CheckGlError("Scissor");
 
                         if ((io.BackendFlags & ImGuiBackendFlags.RendererHasVtxOffset) != 0)
                         {
@@ -396,7 +397,7 @@ void main()
                         {
                             GL.DrawElements(BeginMode.Triangles, (int) pcmd.ElemCount, DrawElementsType.UnsignedShort, (int) pcmd.IdxOffset * sizeof(ushort));
                         }
-                        Util.CheckGlError("Draw");
+                        GLUtil.CheckGlError("Draw");
                     }
 
                     idxOffset += (int) pcmd.ElemCount;

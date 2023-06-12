@@ -130,7 +130,7 @@ namespace LibReplanetizer.Models
             unk6 = ReadUint(headBlock, 0x44);
 
             // Animation block
-            if (game.num != 4)
+            if (game != GameType.DL)
             {
                 byte[] animationPointerBlock = ReadBlock(fs, offset + 0x48, animationCount * 0x04);
 

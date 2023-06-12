@@ -129,7 +129,7 @@ namespace LibReplanetizer.Parsers
             List<TerrainFragment> tFrags = new List<TerrainFragment>();
 
             //Read the whole terrain header
-            int headerSize = (game.num == 4) ? 0x70 : 0x60;
+            int headerSize = (game == GameType.DL) ? 0x70 : 0x60;
             byte[] terrainBlock = ReadBlock(fileStream, terrainModelPointer, headerSize);
 
             TerrainHead head = new TerrainHead(terrainBlock, game);
@@ -222,7 +222,7 @@ namespace LibReplanetizer.Parsers
             return textureConfigMenuList;
         }
 
-        protected Model GetCollisionModel(int collisionOffset)
+        protected Collision GetCollisionModel(int collisionOffset)
         {
             return new Collision(fileStream, collisionOffset);
         }

@@ -18,8 +18,6 @@ namespace LibReplanetizer.LevelObjects
 
         [Category("Attributes"), DisplayName("ID")]
         public int id { get; set; }
-        public Matrix4 mat1;
-        public Matrix4 mat2;
 
         // Sphere with 80 verts made in Blender
         // the first vertex is a dummy so I didnt have to apply -1 to the triangle indices
@@ -157,10 +155,10 @@ namespace LibReplanetizer.LevelObjects
             id = num;
             int offset = num * ELEMENTSIZE;
 
-            mat1 = ReadMatrix4(block, offset + 0x00);
-            mat2 = ReadMatrix4(block, offset + 0x40);
+            Matrix4 transformMatrix = ReadMatrix4(block, offset + 0x00);
+            Matrix4 inverseRotationMatrix = ReadMatrix4(block, offset + 0x40);
 
-            modelMatrix = mat1;
+            modelMatrix = transformMatrix;
             rotation = modelMatrix.ExtractRotation();
             position = modelMatrix.ExtractTranslation();
             scale = modelMatrix.ExtractScale();
@@ -172,8 +170,8 @@ namespace LibReplanetizer.LevelObjects
         {
             byte[] bytes = new byte[ELEMENTSIZE];
 
-            WriteMatrix4(bytes, 0x00, mat1);
-            WriteMatrix4(bytes, 0x40, mat2);
+            WriteMatrix4(bytes, 0x00, modelMatrix);
+            WriteMatrix4(bytes, 0x40, Matrix4.CreateFromQuaternion(rotation).Inverted());
 
             return bytes;
         }

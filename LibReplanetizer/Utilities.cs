@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -12,6 +12,14 @@ using System.Drawing;
 
 namespace LibReplanetizer
 {
+    public class Bitmask
+    {
+        private int _v;
+
+        public static implicit operator Bitmask(int value) => new Bitmask { _v = value };
+        public static implicit operator int(Bitmask value) => value._v;
+    }
+
     public static class Utilities
     {
         public static float ToDegreesF(float radians)

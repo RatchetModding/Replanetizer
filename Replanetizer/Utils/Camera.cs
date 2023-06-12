@@ -13,6 +13,12 @@ namespace Replanetizer.Utils
 {
     public class Camera : ITransformable
     {
+        public class Frustum
+        {
+            public Vector3[] planePoints = new Vector3[6];
+            public Vector3[] planeNormals = new Vector3[6];
+        }
+
         //Camera variables
         public float speed = 0.2f;
         public Vector3 position = new Vector3();
@@ -27,12 +33,15 @@ namespace Replanetizer.Utils
         /// The frustum is defined by 6 planes which are each defined by a point and a normal.
         /// The order of the planes is Near, Far, Right, Left, Up, Down.
         /// </summary>
-        public Vector3[] frustumPlanePoints = new Vector3[6];
-        public Vector3[] frustumPlaneNormals = new Vector3[6];
+        private bool frustumDirty = true;
+        private Frustum frustum = new Frustum();
 
-        private Matrix4 projectionMatrix;
+        private bool matrixDirty = true;
+        private Matrix4 projectionMatrix = new Matrix4();
+        private Matrix4 viewMatrix = new Matrix4();
+        private Matrix4 worldViewMatrix = new Matrix4();
 
-        public Matrix3 GetRotationMatrix()
+        private Matrix3 GetRotationMatrix()
         {
             return Matrix3.CreateRotationX(rotation.X) * Matrix3.CreateRotationY(rotation.Y) * Matrix3.CreateRotationZ(rotation.Z);
         }
@@ -46,25 +55,54 @@ namespace Replanetizer.Utils
             return result;
         }
 
-        public Matrix4 GetViewMatrix()
-        {
-            Vector3 forward = LegacyTransform(Vector3.UnitY, GetRotationMatrix());
-            return Matrix4.LookAt(position, position + forward, Vector3.UnitZ);
-        }
-
-        public void ComputeProjectionMatrix()
+        private void UpdateMatrices()
         {
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(fovy, aspect, near, far);
+
+            Vector3 forward = LegacyTransform(Vector3.UnitY, GetRotationMatrix());
+            viewMatrix = Matrix4.LookAt(position, position + forward, Vector3.UnitZ);
+
+            worldViewMatrix = viewMatrix * projectionMatrix;
+        }
+
+        public Matrix4 GetViewMatrix()
+        {
+            if (matrixDirty)
+            {
+                UpdateMatrices();
+                matrixDirty = false;
+            }
+
+            return viewMatrix;
         }
 
         public Matrix4 GetProjectionMatrix()
         {
+            if (matrixDirty)
+            {
+                UpdateMatrices();
+                matrixDirty = false;
+            }
+
             return projectionMatrix;
+        }
+
+        public Matrix4 GetWorldViewMatrix()
+        {
+            if (matrixDirty)
+            {
+                UpdateMatrices();
+                matrixDirty = false;
+            }
+
+            return worldViewMatrix;
         }
 
         public void SetPosition(Vector3 position)
         {
             this.position = position;
+            matrixDirty = true;
+            frustumDirty = true;
         }
 
         public void SetPosition(float x, float y, float z)
@@ -72,13 +110,16 @@ namespace Replanetizer.Utils
             SetPosition(new Vector3(x, y, z));
         }
 
-        public void SetRotation(float pitch, float yaw)
-        {
-            SetRotation(new Vector3(pitch, 0, yaw));
-        }
         public void SetRotation(Vector3 rotation)
         {
             this.rotation = rotation;
+            matrixDirty = true;
+            frustumDirty = true;
+        }
+
+        public void SetRotation(float pitch, float yaw)
+        {
+            SetRotation(new Vector3(pitch, 0, yaw));
         }
 
         public void MoveBehind(LevelObject levelObject, float distanceToObject = 5)
@@ -107,29 +148,35 @@ namespace Replanetizer.Utils
             ));
         }
 
+        public void Translate(Vector3 vector)
+        {
+            position += vector;
+            matrixDirty = true;
+            frustumDirty = true;
+        }
+
         public void Translate(float x, float y, float z)
         {
             Translate(new Vector3(x, y, z));
         }
 
-        public void Translate(Vector3 vector)
-        {
-            position += vector;
-        }
-
         public void TransformedTranslate(Vector3 vector)
         {
             position += LegacyTransform(vector, GetRotationMatrix());
-        }
-
-        public void Rotate(float x, float y, float z)
-        {
-            Rotate(new Vector3(x, y, z));
+            matrixDirty = true;
+            frustumDirty = true;
         }
 
         public void Rotate(Vector3 vector)
         {
             rotation += vector;
+            matrixDirty = true;
+            frustumDirty = true;
+        }
+
+        public void Rotate(float x, float y, float z)
+        {
+            Rotate(new Vector3(x, y, z));
         }
 
         public void Rotate(Vector2 rot)
@@ -138,6 +185,9 @@ namespace Replanetizer.Utils
             rotation.X -= rot.Y;
             rotation.X = MathHelper.Clamp(rotation.X,
                 MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
+
+            matrixDirty = true;
+            frustumDirty = true;
         }
 
         public void Scale(Vector3 scale)
@@ -150,10 +200,9 @@ namespace Replanetizer.Utils
             //Not used
         }
 
-        public void ComputeFrustum()
+        private void ComputeFrustum()
         {
-            frustumPlanePoints = new Vector3[6];
-            frustumPlaneNormals = new Vector3[6];
+            frustum = new Frustum();
 
             float hfar = MathF.Tan(fovy) * far;
             float wfar = hfar * aspect;
@@ -167,33 +216,43 @@ namespace Replanetizer.Utils
             Vector3 right = Vector3.Cross(forward, up);
 
             Vector3 nc = position + forward * near;
-            frustumPlanePoints[0] = nc;
-            frustumPlaneNormals[0] = forward;
+            frustum.planePoints[0] = nc;
+            frustum.planeNormals[0] = forward;
 
             Vector3 fc = position + forward * far;
-            frustumPlanePoints[1] = fc;
-            frustumPlaneNormals[1] = -forward;
+            frustum.planePoints[1] = fc;
+            frustum.planeNormals[1] = -forward;
 
             Vector3 a = (fc + right * wfar) - position;
             a.Normalize();
-            frustumPlanePoints[2] = position;
-            frustumPlaneNormals[2] = Vector3.Cross(up, a);
+            frustum.planePoints[2] = position;
+            frustum.planeNormals[2] = Vector3.Cross(up, a);
 
             Vector3 b = (fc - right * wfar) - position;
             b.Normalize();
-            frustumPlanePoints[3] = position;
-            frustumPlaneNormals[3] = Vector3.Cross(b, up);
+            frustum.planePoints[3] = position;
+            frustum.planeNormals[3] = Vector3.Cross(b, up);
 
             Vector3 c = (fc + up * hfar) - position;
             c.Normalize();
-            frustumPlanePoints[4] = position;
-            frustumPlaneNormals[4] = Vector3.Cross(c, right);
+            frustum.planePoints[4] = position;
+            frustum.planeNormals[4] = Vector3.Cross(c, right);
 
             Vector3 d = (fc - up * hfar) - position;
             d.Normalize();
-            frustumPlanePoints[5] = position;
-            frustumPlaneNormals[5] = Vector3.Cross(right, d);
+            frustum.planePoints[5] = position;
+            frustum.planeNormals[5] = Vector3.Cross(right, d);
+        }
 
+        public Frustum GetFrustum()
+        {
+            if (frustumDirty)
+            {
+                ComputeFrustum();
+                frustumDirty = false;
+            }
+
+            return frustum;
         }
     }
 }

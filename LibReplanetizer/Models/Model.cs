@@ -26,6 +26,26 @@ namespace LibReplanetizer.Models
         public float[] vertexBuffer = { };
         public ushort[] indexBuffer = { };
 
+        public int vertexStride { get; protected set; } = 8;
+
+        [Category("Attributes"), DisplayName("Vertex Count")]
+        public int vertexCount
+        {
+            get
+            {
+                return vertexBuffer.Length / vertexStride;
+            }
+        }
+
+        [Category("Attributes"), DisplayName("Face Count")]
+        public int faceCount
+        {
+            get
+            {
+                return indexBuffer.Length / 3;
+            }
+        }
+
         // Every vertex can be assigned to at most 4 bones
         // weights contains 4 uint8 each being of weight (value / 255.0)
         // ids contains 4 uint8 each defining which bones we refer to

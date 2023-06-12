@@ -18,10 +18,12 @@ namespace Replanetizer.Frames
         private Level? level => levelFrame.level;
 
         private ExporterLevelSettings settings;
+        private ExporterModelSettings modelSettings;
 
         public LevelExportFrame(Window wnd, LevelFrame levelFrame) : base(wnd, levelFrame)
         {
             settings = new ExporterLevelSettings();
+            modelSettings = new ExporterModelSettings();
 
             if (level != null)
             {
@@ -62,6 +64,11 @@ namespace Replanetizer.Frames
                     {
                         settings.mode = (ExporterLevelSettings.Mode) meshMode;
                     }
+                    int orientation = (int) modelSettings.orientation;
+                    if (ImGui.Combo("Orientation", ref orientation, ExporterModelSettings.ORIENTATION_STRINGS, ExporterModelSettings.ORIENTATION_STRINGS.Length))
+                    {
+                        modelSettings.orientation = (ExporterModelSettings.Orientation) orientation;
+                    }
                     ImGui.TreePop();
                 }
 
@@ -100,7 +107,7 @@ namespace Replanetizer.Frames
                     var res = CrossFileDialog.SaveFile("Level.obj", ".obj");
                     if (res.Length > 0)
                     {
-                        WavefrontExporter exporter = new WavefrontExporter(settings);
+                        WavefrontExporter exporter = new WavefrontExporter(modelSettings, settings);
                         exporter.ExportLevel(res, level);
                         isOpen = false;
                     }

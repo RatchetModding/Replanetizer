@@ -9,6 +9,7 @@ using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Replanetizer.Frames;
+using Replanetizer.Renderer;
 using Replanetizer.Utils;
 
 namespace Replanetizer.Tools
@@ -33,28 +34,32 @@ namespace Replanetizer.Tools
             };
         }
 
-        public override void Render(Matrix4 mat, LevelFrame frame)
+        public override void Render(Matrix4 mat, ShaderTable table)
         {
-            GetVbo();
+            BindVao();
 
-            GL.UniformMatrix4(frame.shaderIDTable.uniformModelToWorldMatrix, false, ref mat);
+            table.colorShader.UseShader();
 
-            GL.Uniform1(frame.shaderIDTable.uniformColorLevelObjectNumber, 0);
-            GL.Uniform4(frame.shaderIDTable.uniformColor, new Vector4(1, 0, 0, 1));
+            table.colorShader.SetUniformMatrix4("modelToWorld", false, ref mat);
+
+            table.colorShader.SetUniform1("levelObjectNumber", 0);
+            table.colorShader.SetUniform4("incolor", 1.0f, 0.0f, 0.0f, 1.0f);
             GL.DrawArrays(PrimitiveType.LineStrip, 0, 2);
 
-            GL.Uniform1(frame.shaderIDTable.uniformColorLevelObjectNumber, 1);
-            GL.Uniform4(frame.shaderIDTable.uniformColor, new Vector4(0, 1, 0, 1));
+            table.colorShader.SetUniform1("levelObjectNumber", 1);
+            table.colorShader.SetUniform4("incolor", 0.0f, 1.0f, 0.0f, 1.0f);
             GL.DrawArrays(PrimitiveType.LineStrip, 2, 2);
 
-            GL.Uniform1(frame.shaderIDTable.uniformColorLevelObjectNumber, 2);
-            GL.Uniform4(frame.shaderIDTable.uniformColor, new Vector4(0, 0, 1, 1));
+            table.colorShader.SetUniform1("levelObjectNumber", 2);
+            table.colorShader.SetUniform4("incolor", 0.0f, 0.0f, 1.0f, 1.0f);
             GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
+
+            UnbindVao();
         }
 
-        public void Render(Spline spline, LevelFrame frame)
+        public void Render(Spline spline, Camera camera, ShaderTable table)
         {
-            Render(spline.GetVertex(currentVertex), frame);
+            Render(spline.GetVertex(currentVertex), camera, table);
         }
 
         public override void Reset()

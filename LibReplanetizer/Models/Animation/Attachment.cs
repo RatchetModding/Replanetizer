@@ -13,8 +13,8 @@ namespace LibReplanetizer.Models
 {
     public class Attachment
     {
-        List<byte> aBones;
-        List<byte> bBones;
+        public List<byte> aBones;
+        public List<byte> bBones;
 
         public Attachment(FileStream fs, int offset)
         {

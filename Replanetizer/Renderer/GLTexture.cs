@@ -11,7 +11,7 @@ using System.Drawing.Imaging;
 using OpenTK.Graphics.OpenGL;
 using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
 
-namespace Replanetizer.Utils
+namespace Replanetizer.Renderer
 {
     public enum TextureCoordinate
     {
@@ -58,30 +58,30 @@ namespace Replanetizer.Utils
                 MIPMAP_LEVELS = 1;
             }
 
-            Util.CheckGlError("Clear");
+            GLUtil.CheckGlError("Clear");
 
-            Util.CreateTexture(TextureTarget.Texture2D, NAME, out TEXTURE);
+            GLUtil.CreateTexture(TextureTarget.Texture2D, NAME, out TEXTURE);
             GL.TextureStorage2D(TEXTURE, MIPMAP_LEVELS, INTERNAL_FORMAT, WIDTH, HEIGHT);
-            Util.CheckGlError("Storage2d");
+            GLUtil.CheckGlError("Storage2d");
 
             BitmapData data = image.LockBits(new Rectangle(0, 0, WIDTH, HEIGHT),
                 ImageLockMode.ReadOnly, global::System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
             GL.TextureSubImage2D(TEXTURE, 0, 0, 0, WIDTH, HEIGHT, PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
-            Util.CheckGlError("SubImage");
+            GLUtil.CheckGlError("SubImage");
 
             image.UnlockBits(data);
 
             if (generateMipmaps) GL.GenerateTextureMipmap(TEXTURE);
 
             GL.TextureParameter(TEXTURE, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
-            Util.CheckGlError("WrapS");
+            GLUtil.CheckGlError("WrapS");
             GL.TextureParameter(TEXTURE, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
-            Util.CheckGlError("WrapT");
+            GLUtil.CheckGlError("WrapT");
 
             GL.TextureParameter(TEXTURE, TextureParameterName.TextureMinFilter, (int) (generateMipmaps ? TextureMinFilter.Linear : TextureMinFilter.LinearMipmapLinear));
             GL.TextureParameter(TEXTURE, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Linear);
-            Util.CheckGlError("Filtering");
+            GLUtil.CheckGlError("Filtering");
 
             GL.TextureParameter(TEXTURE, TextureParameterName.TextureMaxLevel, MIPMAP_LEVELS - 1);
 
@@ -107,7 +107,7 @@ namespace Replanetizer.Utils
             INTERNAL_FORMAT = srgb ? SRGB8_ALPHA8 : SizedInternalFormat.Rgba8;
             MIPMAP_LEVELS = generateMipmaps == false ? 1 : (int) Math.Floor(Math.Log(Math.Max(WIDTH, HEIGHT), 2));
 
-            Util.CreateTexture(TextureTarget.Texture2D, NAME, out TEXTURE);
+            GLUtil.CreateTexture(TextureTarget.Texture2D, NAME, out TEXTURE);
             GL.TextureStorage2D(TEXTURE, MIPMAP_LEVELS, INTERNAL_FORMAT, WIDTH, HEIGHT);
 
             GL.TextureSubImage2D(TEXTURE, 0, 0, 0, WIDTH, HEIGHT, PixelFormat.Bgra, PixelType.UnsignedByte, data);
@@ -118,6 +118,11 @@ namespace Replanetizer.Utils
             SetWrap(TextureCoordinate.T, TextureWrapMode.Repeat);
 
             GL.TextureParameter(TEXTURE, TextureParameterName.TextureMaxLevel, MIPMAP_LEVELS - 1);
+        }
+
+        public void Bind()
+        {
+            GL.BindTexture(TextureTarget.Texture2D, TEXTURE);
         }
 
         public void SetMinFilter(TextureMinFilter filter)
@@ -133,7 +138,7 @@ namespace Replanetizer.Utils
         public void SetAnisotropy(float level)
         {
             const TextureParameterName TEXTURE_MAX_ANISOTROPY = (TextureParameterName) 0x84FE;
-            GL.TextureParameter(TEXTURE, TEXTURE_MAX_ANISOTROPY, Util.Clamp(level, 1, MAX_ANISO));
+            GL.TextureParameter(TEXTURE, TEXTURE_MAX_ANISOTROPY, GLUtil.Clamp(level, 1, MAX_ANISO));
         }
 
         public void SetLod(int @base, int min, int max)

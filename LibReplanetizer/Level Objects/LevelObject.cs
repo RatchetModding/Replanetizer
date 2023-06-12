@@ -12,17 +12,18 @@ namespace LibReplanetizer.LevelObjects
 {
     public abstract class LevelObject : ITransformable, ISerializable
     {
-        public static Vector4 NORMAL_COLOR = new Vector4(1, 1, 1, 1); // White
-        public static Vector4 SELECTED_COLOR = new Vector4(1, 0, 1, 1); // Purple
+        private static int GLOBAL_ID_POOL = 0;
+        // Every level object in Replanetizer gets an ID for referencing
+        public readonly int globalID = GLOBAL_ID_POOL++;
 
         public Matrix4 modelMatrix = Matrix4.Identity;
 
         [Category("Attributes"), DisplayName("Position")]
         public Vector3 position { get; set; } = new Vector3();
         [Category("Attributes"), DisplayName("Scale")]
-        public Vector3 scale { get; set; } = new Vector3();
+        public Vector3 scale { get; set; } = new Vector3(1.0f);
         [Category("Attributes"), DisplayName("Rotation"), TypeConverter(typeof(Level_Objects.QuaternionTypeConverter))]
-        public Quaternion rotation { get; set; } = new Quaternion();
+        public Quaternion rotation { get; set; } = Quaternion.Identity;
         [Category("Attributes"), DisplayName("Reflection")]
         public Matrix4 reflection { get; set; } = Matrix4.Identity;
 

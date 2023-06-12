@@ -34,7 +34,10 @@ namespace LibReplanetizer.Models
 
             if (offset == 0) return;
 
-            int headSize = (game.num == 4) ? 0x20 : 0x1C;
+            int headSize = (game == GameType.DL) ? 0x20 : 0x1C;
+
+            // skybox model has no normals and thus the vertex buffer has a different layout
+            this.vertexStride = 6;
 
             size = 1.0f;
             byte[] skyBlockHead = ReadBlock(fs, offset, headSize);
@@ -77,7 +80,7 @@ namespace LibReplanetizer.Models
 
         public byte[] Serialize(int startOffset)
         {
-            int headSize = (game.num == 4) ? 0x20 : 0x1C;
+            int headSize = (game == GameType.DL) ? 0x20 : 0x1C;
 
             int faceStart = GetLength(headSize + textureConfigs.Count * 4);
             int faceLength = textureConfigs.Count * 0x10;

@@ -40,7 +40,7 @@ namespace Replanetizer.Utils
         public static void ExportAllTextures(Level level, string path)
         {
             bool[] forcedOpaque = new bool[level.textures.Count];
-            if (level.game.num == 3)
+            if (level.game == GameType.RaC3)
             {
                 foreach (TieModel model in level.tieModels)
                 {

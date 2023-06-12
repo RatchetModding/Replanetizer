@@ -37,19 +37,21 @@ void main() {
 	//color of the texture at the specified UV
 	vec4 textureColor = texture(myTextureSampler, UV);
 
+    float alpha = 1.0f;
+
     // If the object is further than renderDistance we blend out over distance using a dissolve pattern
     if ((levelObjectType == 2 || levelObjectType == 4) && objectBlendDistance > 0.0f) {
-        vec2 pixel = vec2(gl_FragCoord.x, gl_FragCoord.y);
-        float alpha = objectBlendDistance;
-        ivec2 patternPos = ivec2(int(mod(pixel.x,4.0f)),int(mod(pixel.y,4.0f)));
-        if (dissolvePattern[patternPos.x][patternPos.y] < alpha) discard;
+        alpha *= 1.0f - objectBlendDistance;
     }
 
     if (useTransparency == 1) {
+        alpha *= textureColor.w;
+    }
+
+    if (alpha < 1.0f) {
         vec2 pixel = vec2(gl_FragCoord.x, gl_FragCoord.y);
-        float alpha = 1.0f - textureColor.w;
         ivec2 patternPos = ivec2(int(mod(pixel.x + levelObjectNumber,4.0f)), int(mod(pixel.y,4.0f)));
-        if (dissolvePattern[patternPos.x][patternPos.y] < alpha) discard;
+        if (dissolvePattern[patternPos.x][patternPos.y] > alpha) discard;
     }
 
 	color.xyz = textureColor.xyz * lightColor * 2.0f;

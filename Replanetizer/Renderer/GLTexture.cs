@@ -120,6 +120,11 @@ namespace Replanetizer.Renderer
             GL.TextureParameter(TEXTURE, TextureParameterName.TextureMaxLevel, MIPMAP_LEVELS - 1);
         }
 
+        public void Bind()
+        {
+            GL.BindTexture(TextureTarget.Texture2D, TEXTURE);
+        }
+
         public void SetMinFilter(TextureMinFilter filter)
         {
             GL.TextureParameter(TEXTURE, TextureParameterName.TextureMinFilter, (int) filter);

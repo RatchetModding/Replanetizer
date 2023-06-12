@@ -7,6 +7,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
@@ -17,10 +19,10 @@ namespace Replanetizer.Renderer
     public class BillboardRenderer : Renderer
     {
         private static float[] VERTICES = new float[] {
-            -1.0f, -1.0f,
-            1.0f, -1.0f,
-            -1.0f, 1.0f,
-            1.0f, 1.0f
+            -1.0f, -1.0f, 0.0f, 1.0f,
+            1.0f, -1.0f, 1.0f, 1.0f,
+            -1.0f, 1.0f, 0.0f, 0.0f,
+            1.0f, 1.0f, 1.0f, 0.0f
         };
 
         private static readonly byte[] INDICES = {
@@ -34,6 +36,8 @@ namespace Replanetizer.Renderer
         private int vao;
         private List<LevelObject> objects = new List<LevelObject>();
         private List<RenderedObjectType> types = new List<RenderedObjectType>();
+
+        private GLTexture texture;
 
         public BillboardRenderer(ShaderTable shaderTable)
         {
@@ -52,10 +56,18 @@ namespace Replanetizer.Renderer
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.BufferData(BufferTarget.ArrayBuffer, vboLength, VERTICES, BufferUsageHint.StaticDraw);
 
-            GLUtil.ActivateNumberOfVertexAttribArrays(1);
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(float) * 2, 0);
+            GLUtil.ActivateNumberOfVertexAttribArrays(2);
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
+            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 4, sizeof(float) * 2);
 
             GL.BindVertexArray(0);
+
+            string? applicationFolder = System.AppContext.BaseDirectory;
+            string billboardsFolder = Path.Join(applicationFolder, "Billboards");
+            Image image = Image.FromFile(Path.Join(billboardsFolder, "Placeholder.png"), true);
+            Bitmap bitmap = new Bitmap(image);
+
+            texture = new GLTexture("BillboardTexture", bitmap, true, true);
         }
 
         public override void Include<T>(T obj)
@@ -95,6 +107,7 @@ namespace Replanetizer.Renderer
             shaderTable.billboardShader.SetUniform3("up", up.X, up.Y, up.Z);
 
             GL.BindVertexArray(vao);
+            texture.Bind();
 
             for (int i = 0; i < objects.Count; i++)
             {

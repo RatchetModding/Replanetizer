@@ -44,6 +44,7 @@ namespace Replanetizer.Frames
         private List<Model> sortedMobyModels;
         private List<Model> sortedTieModels;
         private List<Model> sortedShrubModels;
+        private List<Model> sortedGadgetModels;
         private List<List<Model>> sortedMissionModels;
 
         private List<ModelObject> selectedObjectInstances = new List<ModelObject>();
@@ -108,6 +109,7 @@ namespace Replanetizer.Frames
             sortedMobyModels = new List<Model>(level.mobyModels);
             sortedTieModels = new List<Model>(level.tieModels);
             sortedShrubModels = new List<Model>(level.shrubModels);
+            sortedGadgetModels = new List<Model>(level.gadgetModels);
             sortedMissionModels = new List<List<Model>>();
             for (int i = 0; i < level.missions.Count; i++)
             {
@@ -117,6 +119,7 @@ namespace Replanetizer.Frames
             sortedMobyModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
             sortedTieModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
             sortedShrubModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+            sortedGadgetModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
             foreach (List<Model> list in sortedMissionModels)
             {
                 list.Sort((x, y) => (x.id < y.id) ? -1 : 1);
@@ -210,21 +213,13 @@ namespace Replanetizer.Frames
                 RenderSubTree("Moby", sortedMobyModels, level.textures);
                 RenderSubTree("Tie", sortedTieModels, level.textures);
                 RenderSubTree("Shrub", sortedShrubModels, level.textures);
-                if (ImGui.TreeNode("Gadget"))
-                {
-                    for (int i = 0; i < level.gadgetModels.Count; i++)
-                    {
-                        Model gadget = level.gadgetModels[i];
-                        RenderModelEntry(gadget, (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures, GetStringFromID(i));
-                    }
-                    ImGui.TreePop();
-                }
+                RenderSubTree("Gadget", sortedGadgetModels, (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures);
                 if (ImGui.TreeNode("Armor"))
                 {
                     for (int i = 0; i < level.armorModels.Count; i++)
                     {
                         Model armor = level.armorModels[i];
-                        RenderModelEntry(armor, level.armorTextures[i], GetStringFromID(i));
+                        RenderModelEntry(armor, level.armorTextures[i], GetDisplayName(armor));
                     }
                     ImGui.TreePop();
                 }
@@ -522,7 +517,7 @@ namespace Replanetizer.Frames
         {
             List<Model>[] modelLists = {
                 sortedMobyModels, sortedTieModels, sortedShrubModels,
-                level.gadgetModels, level.armorModels
+                sortedGadgetModels, level.armorModels
             };
             foreach (var models in modelLists)
             {
@@ -536,7 +531,7 @@ namespace Replanetizer.Frames
                 // of a list of textures -- one list per armor set.
                 selectedModelTexturesSet = null;
                 selectedModelArmorTexturesSet = null;
-                if (ReferenceEquals(models, level.gadgetModels))
+                if (ReferenceEquals(models, sortedGadgetModels))
                     selectedModelTexturesSet = (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures;
                 else if (ReferenceEquals(models, level.armorModels))
                     selectedModelArmorTexturesSet = level.armorTextures;

@@ -40,9 +40,9 @@ namespace Replanetizer.MemoryHook
         public bool hookWorking { get; private set; } = false;
         private string errorMessage = "";
 
-        public MemoryHookHandle(GameType game)
+        public MemoryHookHandle(Level level)
         {
-            switch (game.num)
+            switch (level.game.num)
             {
                 case 1:
                     ADDRESSES = new MemoryAddresses
@@ -71,6 +71,11 @@ namespace Replanetizer.MemoryHook
             {
                 hookWorking = false;
                 errorMessage = "Failed to find a running RPCS3 process.";
+            }
+
+            if (hookWorking)
+            {
+                level.EmplaceCommonData();
             }
         }
 

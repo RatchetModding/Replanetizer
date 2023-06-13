@@ -14,17 +14,27 @@ namespace Replanetizer.Frames
     public class MemoryHookFrame : LevelSubFrame
     {
         private string informationText;
+        private string warningText;
         private string lastReturnMessage = "";
         private bool attempted = false;
         private bool success = false;
         private static readonly Vector4 SUCCESS_COLOR = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
         private static readonly Vector4 FAILURE_COLOR = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+        private static readonly Vector4 WARNING_COLOR = new Vector4(1.0f, 1.0f, 0.0f, 1.0f);
         protected override string frameName { get; set; } = "RPCS3 Memory Hook";
 
         public MemoryHookFrame(Window wnd, LevelFrame frame) : base(wnd, frame)
         {
             informationText = String.Format(
-@"Text to be added!
+@"The memory hook reads from a running instance of Ratchet and Clank on RPCS3
+and applies the data to the level in Replanetizer. Note that no data is ever sent
+to the game.
+"
+            );
+
+            warningText = String.Format(
+@"Currently, only Ratchet and Clank 1 is supported. Once the memory hook is
+engaged you will no longer be able to save the level in Replanetizer.
 "
             );
         }
@@ -42,6 +52,7 @@ namespace Replanetizer.Frames
         public override void Render(float deltaTime)
         {
             ImGui.Text(informationText);
+            ImGui.TextColored(WARNING_COLOR, warningText);
 
             if (success)
             {

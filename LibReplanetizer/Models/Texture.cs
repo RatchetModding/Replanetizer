@@ -42,6 +42,7 @@ namespace LibReplanetizer
 
         public Texture(int id, short width, short height, byte[] data)
         {
+            this.id = id;
             this.width = width;
             this.height = height;
             this.data = data;

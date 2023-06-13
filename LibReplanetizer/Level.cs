@@ -380,6 +380,29 @@ namespace LibReplanetizer
             valid = true;
         }
 
+        // Copies data like gadget models from gadget files etc into engine data.
+        public void EmplaceCommonData()
+        {
+            int gadgetTextureOffset = textures.Count;
+
+            textures.AddRange(gadgetTextures);
+
+            foreach (Model model in gadgetModels)
+            {
+                if (game != GameType.RaC1)
+                {
+                    foreach (TextureConfig conf in model.textureConfig)
+                    {
+                        conf.id += gadgetTextureOffset;
+                    }
+                }
+
+                mobyModels.RemoveAll(x => x.id == model.id);
+            }
+
+            mobyModels.AddRange(gadgetModels);
+        }
+
         public void Save(string outputFile)
         {
             string? directory;

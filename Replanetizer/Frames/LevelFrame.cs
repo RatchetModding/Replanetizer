@@ -1084,9 +1084,7 @@ namespace Replanetizer.Frames
 
         public bool StartMemoryHook(ref string message)
         {
-            if (level == null || level.game == null) return false;
-
-            hook = new MemoryHook.MemoryHookHandle(level.game);
+            hook = new MemoryHook.MemoryHookHandle(level);
 
             message = hook.GetLastErrorMessage();
 

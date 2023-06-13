@@ -12,18 +12,16 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using SysVector2 = System.Numerics.Vector2;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using ImGuiNET;
 using LibReplanetizer;
 using LibReplanetizer.LevelObjects;
-using LibReplanetizer.Models;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Replanetizer.Tools;
 using Replanetizer.Utils;
 using Replanetizer.Renderer;
+using Replanetizer.MemoryHook;
 using static LibReplanetizer.DataFunctions;
 using static LibReplanetizer.Utilities;
 using Texture = LibReplanetizer.Texture;
@@ -76,7 +74,11 @@ namespace Replanetizer.Frames
 
         public Dictionary<Texture, int> textureIds = new Dictionary<Texture, int>();
 
-        MemoryHook.MemoryHook? hook;
+        private MemoryHookHandle? hook = null;
+        private bool interactiveSession = false;
+        private bool hookLiveUpdate = true;
+        private bool hookUpdateCamera = false;
+
 
         private int width, height;
 
@@ -120,6 +122,10 @@ namespace Replanetizer.Frames
             {
                 if (ImGui.BeginMenu("Level"))
                 {
+                    if (interactiveSession)
+                    {
+                        ImGui.BeginDisabled();
+                    }
                     if (ImGui.MenuItem("Save as"))
                     {
                         var res = CrossFileDialog.SaveFile();
@@ -127,6 +133,10 @@ namespace Replanetizer.Frames
                         {
                             level.Save(res);
                         }
+                    }
+                    if (interactiveSession)
+                    {
+                        ImGui.EndDisabled();
                     }
 
                     if (ImGui.BeginMenu("Export"))
@@ -245,6 +255,10 @@ namespace Replanetizer.Frames
                             }
                         );
                     }
+                    if (ImGui.MenuItem("Memory Hook"))
+                    {
+                        subFrames.Add(new MemoryHookFrame(this.wnd, this));
+                    }
                     ImGui.EndMenu();
                 }
 
@@ -314,6 +328,13 @@ namespace Replanetizer.Frames
 
                 ImGui.Separator();
 
+                if (interactiveSession)
+                {
+                    ImGui.Checkbox("Hook Update", ref hookLiveUpdate);
+                    ImGui.Checkbox("Hook Camera", ref hookUpdateCamera);
+                    ImGui.Separator();
+                }
+
                 if (selectedObjects != null && selectedObjects.Count != 0)
                 {
                     if (ImGui.BeginMenu("Selection"))
@@ -337,7 +358,6 @@ namespace Replanetizer.Frames
 
                         ImGui.EndMenu();
                     }
-
                 }
 
                 ImGui.EndMenuBar();
@@ -830,6 +850,16 @@ namespace Replanetizer.Frames
 
         public void Tick(float deltaTime)
         {
+            if (interactiveSession && hookLiveUpdate)
+            {
+                hook?.UpdateMobys(level.mobs, level.mobyModels);
+                if (hookUpdateCamera)
+                {
+                    hook?.UpdateCamera(camera);
+                }
+                InvalidateView();
+            }
+
             Point absoluteMousePos = new Point((int) wnd.MousePosition.X, (int) wnd.MousePosition.Y);
             var isWindowHovered = ImGui.IsWindowHovered();
             var isMouseInContentRegion = contentRegion.Contains(absoluteMousePos);
@@ -1046,25 +1076,20 @@ namespace Replanetizer.Frames
             invalidate = true;
         }
 
-        public bool TryRpcs3Hook()
+        public bool StartMemoryHook(ref string message)
         {
             if (level == null || level.game == null) return false;
 
-            hook = new MemoryHook.MemoryHook(level.game.num);
+            hook = new MemoryHook.MemoryHookHandle(level.game);
+
+            message = hook.GetLastErrorMessage();
+
+            if (hook.hookWorking)
+            {
+                interactiveSession = true;
+            }
 
             return hook.hookWorking;
-        }
-
-        public bool Rpcs3HookStatus()
-        {
-            if (hook != null && hook.hookWorking) return true;
-
-            return false;
-        }
-
-        public void RemoveRpcs3Hook()
-        {
-            hook = null;
         }
 
         /// <summary>

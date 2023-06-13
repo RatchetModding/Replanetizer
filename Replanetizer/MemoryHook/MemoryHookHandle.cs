@@ -18,12 +18,7 @@ using static LibReplanetizer.DataFunctions;
 
 namespace Replanetizer.MemoryHook
 {
-
-    public struct MemoryAdresses
-    {
-        public long moby;
-    }
-    class MemoryHook
+    public class MemoryHookHandle
     {
         // Read and write acceess
         const int PROCESS_WM_READ = 0x38;
@@ -41,11 +36,12 @@ namespace Replanetizer.MemoryHook
         private readonly IntPtr PROCESS_HANDLE;
         private readonly MemoryAddresses? ADDRESSES;
 
-        public bool hookWorking = false;
+        public bool hookWorking { get; private set; } = false;
+        private string errorMessage = "";
 
-        public MemoryHook(int gameNum)
+        public MemoryHookHandle(GameType game)
         {
-            switch (gameNum)
+            switch (game.num)
             {
                 case 1:
                     ADDRESSES = new MemoryAddresses
@@ -56,6 +52,7 @@ namespace Replanetizer.MemoryHook
                     break;
                 default:
                     hookWorking = false;
+                    errorMessage = "Memory hooks are only supported for RaC 1.";
                     return;
             }
 
@@ -66,7 +63,18 @@ namespace Replanetizer.MemoryHook
                 PROCESS_HANDLE = OpenProcess(PROCESS_WM_READ, false, PROCESS.Id);
 
                 hookWorking = true;
+                errorMessage = "Success!";
             }
+            else
+            {
+                hookWorking = false;
+                errorMessage = "Failed to find a running RPCS3 process.";
+            }
+        }
+
+        public string GetLastErrorMessage()
+        {
+            return errorMessage;
         }
 
         public void UpdateCamera(Camera camera)

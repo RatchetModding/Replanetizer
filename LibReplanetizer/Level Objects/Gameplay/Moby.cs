@@ -683,20 +683,90 @@ namespace LibReplanetizer.LevelObjects
             modelMatrix = scaleMatrix * rotX * rotY * rotZ * translationMatrix;
         }
 
+        private class IngameMobyMemory
+        {
+            public Vector4 collPos;
+            public Vector4 position;
+            public byte state;
+            public byte group;
+            public byte mClass;
+            public byte alpha;
+            public float scale;
+            public byte updateDistance;
+            public byte visible;
+            public short drawDistance;
+            public Color color;
+            public int light;
+            public Vector4 rotation;
+            public byte animationFrame;
+            public byte updateID;
+            public byte animationID;
+            public uint pVars;
+            public ushort oClass;
+            public ushort UID;
+
+            public IngameMobyMemory(byte[] memory, int offset)
+            {
+                float collX = ReadFloat(memory, offset + 0x00);
+                float collY = ReadFloat(memory, offset + 0x04);
+                float collZ = ReadFloat(memory, offset + 0x08);
+                float collW = ReadFloat(memory, offset + 0x0C);
+
+                float X = ReadFloat(memory, offset + 0x10);
+                float Y = ReadFloat(memory, offset + 0x14);
+                float Z = ReadFloat(memory, offset + 0x18);
+                float W = ReadFloat(memory, offset + 0x1C);
+
+                state = memory[offset + 0x20];
+                group = memory[offset + 0x21];
+                mClass = memory[offset + 0x22];
+                alpha = memory[offset + 0x23];
+                scale = ReadFloat(memory, offset + 0x2C);
+
+                updateDistance = memory[offset + 0x30];
+                visible = memory[offset + 0x31];
+                drawDistance = ReadShort(memory, offset + 0x32);
+                byte red = memory[offset + 0x39];
+                byte green = memory[offset + 0x3A];
+                byte blue = memory[offset + 0x3B];
+                light = ReadInt(memory, offset + 0x3C);
+
+                float rotX = ReadFloat(memory, offset + 0x40);
+                float rotY = ReadFloat(memory, offset + 0x44);
+                float rotZ = ReadFloat(memory, offset + 0x48);
+                float rotW = ReadFloat(memory, offset + 0x4C);
+
+                animationFrame = memory[offset + 0x51];
+                updateID = memory[offset + 0x52];
+                animationID = memory[offset + 0x53];
+
+                pVars = ReadUint(memory, offset + 0x78);
+
+                oClass = ReadUshort(memory, offset + 0xA6);
+
+                UID = ReadUshort(memory, offset + 0xB2);
+
+                collPos = new Vector4(collX, collY, collZ, collW);
+                position = new Vector4(X, Y, Z, W);
+                rotation = new Vector4(rotX, rotY, rotZ, rotW);
+                color = Color.FromArgb(red, green, blue);
+            }
+        }
+
         public void UpdateFromMemory(byte[] mobyMemory, int offset, List<Model> models)
         {
-            pVarMemoryAddress = 0x300000000 + ReadUint(mobyMemory, offset + 0x78);
+            IngameMobyMemory vals = new IngameMobyMemory(mobyMemory, offset);
+
+            pVarMemoryAddress = 0x300000000 + vals.pVars;
 
             // If dead
-            if (mobyMemory[offset + 0x20] > 0x7F)
+            if (vals.state > 0x7F)
             {
                 model = null;
                 return;
             }
 
-            ushort modId = ReadUshort(mobyMemory, offset + 0xA6);
-            float mobScale = ReadFloat(mobyMemory, offset + 0x2C);
-            Model? mod = models.Find(x => x.id == modId);
+            Model? mod = models.Find(x => x.id == vals.oClass);
 
             if (mod == null)
             {
@@ -705,12 +775,17 @@ namespace LibReplanetizer.LevelObjects
 
             if (mod == null) return;
 
+            mobyID = vals.UID;
             model = mod;
-            position = new Vector3(ReadFloat(mobyMemory, offset + 0x10), ReadFloat(mobyMemory, offset + 0x14), ReadFloat(mobyMemory, offset + 0x18));
-            rotation = Quaternion.FromEulerAngles(ReadFloat(mobyMemory, offset + 0x40), ReadFloat(mobyMemory, offset + 0x44), ReadFloat(mobyMemory, offset + 0x48));
-            scale = new Vector3(mobScale / model.size);
+            modelID = mod.id;
+            groupIndex = vals.group;
+            position = vals.position.Xyz;
+            rotation = Quaternion.FromEulerAngles(vals.rotation.Xyz);
+            scale = new Vector3(vals.scale / model.size);
+            color = vals.color;
+            light = vals.light;
+
             UpdateTransformMatrix();
-            modelID = modId;
         }
     }
 }

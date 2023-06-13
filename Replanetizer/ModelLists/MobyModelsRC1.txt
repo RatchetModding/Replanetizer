@@ -405,11 +405,12 @@
 03D6=UNKNOWN | Plane
 03D8=Television
 03E1=R.Y.N.O.
+03E5=Garage Door
 03E6=Taxi
 03EA=Platinum Zoomerator
 03ED=Tresspasser
 03EE=Blaster Ammo
-03E5=Garage Door
+03EF=Camera Object
 03F4=Taxi
 03F7=Door
 03F8=Hydrodisplacer

@@ -425,6 +425,11 @@ namespace Replanetizer.Frames
                 }
                 ImGui.Text("FPS: " + fps + " (" + frametime + " ms)");
                 ImGui.PopStyleColor();
+                if (interactiveSession)
+                {
+                    ImGui.Text("Game Frame Number: " + hook?.GetLevelFrameNumber());
+                }
+
             }
             ImGui.End();
         }
@@ -852,7 +857,7 @@ namespace Replanetizer.Frames
         {
             if (interactiveSession && hookLiveUpdate)
             {
-                hook?.UpdateMobys(level.mobs, level.mobyModels);
+                hook?.UpdateMobys(level.mobs, level.mobyModels, this);
                 if (hookUpdateCamera)
                 {
                     hook?.UpdateCamera(camera);

@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -13,6 +13,7 @@ using LibReplanetizer;
 using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
 using OpenTK.Mathematics;
+using Replanetizer.Frames;
 using Replanetizer.Utils;
 using static LibReplanetizer.DataFunctions;
 
@@ -47,7 +48,8 @@ namespace Replanetizer.MemoryHook
                     ADDRESSES = new MemoryAddresses
                     {
                         moby = 0x300A390A0,
-                        camera = 0x300951500
+                        camera = 0x300951500,
+                        levelFrames = 0x300a10710
                     };
                     break;
                 default:
@@ -88,7 +90,7 @@ namespace Replanetizer.MemoryHook
             camera.rotation = new Vector3(ReadFloat(camBfr, 0x10), ReadFloat(camBfr, 0x14), ReadFloat(camBfr, 0x18) - (float) (Math.PI / 2));
         }
 
-        public void UpdateMobys(List<Moby> levelMobs, List<Model> models)
+        public void UpdateMobys(List<Moby> levelMobs, List<Model> models, LevelFrame frame)
         {
             if (!hookWorking) return;
             if (ADDRESSES == null) return;
@@ -107,13 +109,28 @@ namespace Replanetizer.MemoryHook
 
             while (levelMobs.Count < mobys.Length / 0x100)
             {
-                levelMobs.Add(new Moby());
+                Moby mob = new Moby();
+                levelMobs.Add(mob);
+                frame.levelRenderer?.Include(mob);
             }
 
             for (int i = 0; i < mobys.Length / 0x100; i++)
             {
                 levelMobs[i].UpdateFromMemory(mobys, i * 0x100, models);
             }
+        }
+
+        public int GetLevelFrameNumber()
+        {
+            if (!hookWorking) return -1;
+            if (ADDRESSES == null) return -1;
+
+            int bytesRead = 0;
+            byte[] buffer = new byte[0x4];
+
+            ReadProcessMemory(PROCESS_HANDLE, ADDRESSES.levelFrames, buffer, buffer.Length, ref bytesRead);
+
+            return ReadInt(buffer, 0);
         }
 
         private bool IsX64()

@@ -147,6 +147,15 @@ namespace Replanetizer.Renderer
                 return;
             }
 
+            // This is a camera object that only exist at runtime and blocks vision in interactive mode.
+            // We simply don't draw it.
+            if (modelObject.modelID == 0x3EF)
+            {
+                loadedModelID = -1;
+                emptyModel = true;
+                return;
+            }
+
             emptyModel = false;
 
             BufferUsageHint hint = BufferUsageHint.StaticDraw;

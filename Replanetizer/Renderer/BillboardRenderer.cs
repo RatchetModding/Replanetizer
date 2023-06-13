@@ -31,18 +31,15 @@ namespace Replanetizer.Renderer
         };
 
         private readonly ShaderTable shaderTable;
-        private int ibo;
-        private int vbo;
-        private int vao;
+        private static readonly int ibo;
+        private static readonly int vbo;
+        private static readonly int vao;
+        private static readonly Dictionary<RenderedObjectType, GLTexture> billboardTextures;
         private List<LevelObject> objects = new List<LevelObject>();
         private List<RenderedObjectType> types = new List<RenderedObjectType>();
 
-        private GLTexture texture;
-
-        public BillboardRenderer(ShaderTable shaderTable)
+        static BillboardRenderer()
         {
-            this.shaderTable = shaderTable;
-
             GL.GenVertexArrays(1, out vao);
             GL.BindVertexArray(vao);
 
@@ -62,10 +59,38 @@ namespace Replanetizer.Renderer
 
             string? applicationFolder = System.AppContext.BaseDirectory;
             string billboardsFolder = Path.Join(applicationFolder, "Billboards");
+
+            // Only a single placeholder texture currently.
+
             Image image = Image.FromFile(Path.Join(billboardsFolder, "Placeholder.png"), true);
             Bitmap bitmap = new Bitmap(image);
 
-            texture = new GLTexture("BillboardTexture", bitmap, true, true);
+            GLTexture placeholderTex = new GLTexture("BillboardTexture", bitmap, true, true);
+
+            billboardTextures = new Dictionary<RenderedObjectType, GLTexture>();
+            billboardTextures.Add(RenderedObjectType.Null, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.Terrain, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.Shrub, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.Tie, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.Moby, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.Spline, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.Cuboid, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.Sphere, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.Cylinder, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.Pill, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.SoundInstance, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.GameCamera, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.PointLight, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.EnvSample, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.EnvTransition, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.GrindPath, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.Tool, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.Skybox, placeholderTex);
+        }
+
+        public BillboardRenderer(ShaderTable shaderTable)
+        {
+            this.shaderTable = shaderTable;
         }
 
         public override void Include<T>(T obj)
@@ -105,11 +130,11 @@ namespace Replanetizer.Renderer
             shaderTable.billboardShader.SetUniform3("up", up.X, up.Y, up.Z);
 
             GL.BindVertexArray(vao);
-            texture.Bind();
 
             for (int i = 0; i < objects.Count; i++)
             {
                 LevelObject obj = objects[i];
+                billboardTextures[types[i]].Bind();
                 shaderTable.billboardShader.SetUniform3("position", obj.position.X, obj.position.Y, obj.position.Z);
                 shaderTable.billboardShader.SetUniform1("levelObjectNumber", obj.globalID);
                 shaderTable.billboardShader.SetUniform1("levelObjectType", (int) types[i]);

@@ -87,7 +87,7 @@ namespace Replanetizer.MemoryHook
             byte[] camBfr = new byte[0x20];
             ReadProcessMemory(PROCESS_HANDLE, ADDRESSES.camera, camBfr, camBfr.Length, ref bytesRead);
             camera.position = new Vector3(ReadFloat(camBfr, 0x00), ReadFloat(camBfr, 0x04), ReadFloat(camBfr, 0x08));
-            camera.rotation = new Vector3(ReadFloat(camBfr, 0x10), ReadFloat(camBfr, 0x14), ReadFloat(camBfr, 0x18) - (float) (Math.PI / 2));
+            camera.rotation = new Vector3(-ReadFloat(camBfr, 0x14), ReadFloat(camBfr, 0x10), ReadFloat(camBfr, 0x18) - (float) (Math.PI / 2));
         }
 
         public void UpdateMobys(List<Moby> levelMobs, List<Model> models, LevelFrame frame)

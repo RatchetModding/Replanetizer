@@ -769,11 +769,6 @@ namespace LibReplanetizer.LevelObjects
 
             Model? mod = models.Find(x => x.id == vals.oClass);
 
-            if (mod == null)
-            {
-                mod = models.Find(x => x.id == 500);
-            }
-
             if (mod == null) return;
 
             mobyID = vals.UID;

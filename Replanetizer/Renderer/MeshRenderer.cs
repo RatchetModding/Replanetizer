@@ -51,16 +51,20 @@ namespace Replanetizer.Renderer
         private List<Texture> textures;
         private Dictionary<Texture, int> textureIds;
         private ShaderTable shaderTable;
+        private BillboardRenderer fallback;
 
         public MeshRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, int> textureIds)
         {
             this.shaderTable = shaderTable;
             this.textureIds = textureIds;
             this.textures = textures;
+            this.fallback = new BillboardRenderer(shaderTable);
         }
 
         public override void Include<T>(T obj)
         {
+            fallback.Include(obj);
+
             if (obj is ModelObject mObj)
             {
                 this.modelObject = mObj;
@@ -68,7 +72,11 @@ namespace Replanetizer.Renderer
 
                 GenerateBuffers();
                 UpdateVars();
+
+                return;
             }
+
+            throw new NotImplementedException();
         }
 
         public override void Include<T>(List<T> list) => throw new NotImplementedException();
@@ -153,6 +161,7 @@ namespace Replanetizer.Renderer
             {
                 loadedModelID = -1;
                 emptyModel = true;
+                modelObject = null;
                 return;
             }
 
@@ -476,8 +485,13 @@ namespace Replanetizer.Renderer
 
         public override void Render(RendererPayload payload)
         {
-            if (emptyModel) return;
             if (modelObject == null || modelObject.model == null) return;
+
+            if (emptyModel)
+            {
+                fallback.Render(payload);
+                return;
+            }
 
             UpdateVars();
             if (ComputeCulling(payload.camera, payload.visibility.enableDistanceCulling, payload.visibility.enableFrustumCulling)) return;

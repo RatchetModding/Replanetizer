@@ -41,6 +41,11 @@ namespace Replanetizer.Frames
         private List<Texture>? selectedTextureSet;
         private List<Texture>? modelTextureList;
 
+        private List<Model> sortedMobyModels;
+        private List<Model> sortedTieModels;
+        private List<Model> sortedShrubModels;
+        private List<List<Model>> sortedMissionModels;
+
         private List<ModelObject> selectedObjectInstances = new List<ModelObject>();
 
         private static ExporterModelSettings lastUsedExportSettings = new ExporterModelSettings();
@@ -99,6 +104,24 @@ namespace Replanetizer.Frames
             propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
             this.shaderTable = shaderIDTable;
             exportSettings = new ExporterModelSettings(lastUsedExportSettings);
+
+            sortedMobyModels = new List<Model>(level.mobyModels);
+            sortedTieModels = new List<Model>(level.tieModels);
+            sortedShrubModels = new List<Model>(level.shrubModels);
+            sortedMissionModels = new List<List<Model>>();
+            for (int i = 0; i < level.missions.Count; i++)
+            {
+                sortedMissionModels.Add(new List<Model>(level.missions[i].models));
+            }
+
+            sortedMobyModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+            sortedTieModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+            sortedShrubModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+            foreach (List<Model> list in sortedMissionModels)
+            {
+                list.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+            }
+
             UpdateWindowSize();
             OnResize();
             SelectModel(model);
@@ -184,9 +207,9 @@ namespace Replanetizer.Frames
 
             if (ImGui.BeginChild("TreeView", childSize, false, ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {
-                RenderSubTree("Moby", level.mobyModels, level.textures);
-                RenderSubTree("Tie", level.tieModels, level.textures);
-                RenderSubTree("Shrub", level.shrubModels, level.textures);
+                RenderSubTree("Moby", sortedMobyModels, level.textures);
+                RenderSubTree("Tie", sortedTieModels, level.textures);
+                RenderSubTree("Shrub", sortedShrubModels, level.textures);
                 if (ImGui.TreeNode("Gadget"))
                 {
                     for (int i = 0; i < level.gadgetModels.Count; i++)
@@ -207,10 +230,10 @@ namespace Replanetizer.Frames
                 }
                 if (ImGui.TreeNode("Missions"))
                 {
-                    for (int i = 0; i < level.missions.Count; i++)
+                    for (int i = 0; i < sortedMissionModels.Count; i++)
                     {
                         var mission = level.missions[i];
-                        RenderSubTree("Mission " + i, mission.models, mission.textures);
+                        RenderSubTree("Mission " + i, sortedMissionModels[i], mission.textures);
                     }
                     ImGui.TreePop();
                 }
@@ -501,7 +524,7 @@ namespace Replanetizer.Frames
         private void PrepareForArrowInput()
         {
             List<Model>[] modelLists = {
-                level.mobyModels, level.tieModels, level.shrubModels,
+                sortedMobyModels, sortedTieModels, sortedShrubModels,
                 level.gadgetModels, level.armorModels
             };
             foreach (var models in modelLists)

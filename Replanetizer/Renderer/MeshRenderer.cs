@@ -489,7 +489,10 @@ namespace Replanetizer.Renderer
 
             if (emptyModel)
             {
-                fallback.Render(payload);
+                if (payload.visibility.enableMeshlessModels)
+                {
+                    fallback.Render(payload);
+                }
                 return;
             }
 

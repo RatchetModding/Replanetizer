@@ -286,6 +286,7 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Distance Culling", ref rendererPayload.visibility.enableDistanceCulling)) InvalidateView();
                     if (ImGui.Checkbox("Frustum Culling", ref rendererPayload.visibility.enableFrustumCulling)) InvalidateView();
                     if (ImGui.Checkbox("Fog", ref rendererPayload.visibility.enableFog)) InvalidateView();
+                    if (ImGui.Checkbox("Meshless Models", ref rendererPayload.visibility.enableMeshlessModels)) InvalidateView();
                     ImGui.PushItemWidth(90.0f);
                     if (ImGui.Combo("Antialiasing", ref antialiasing, antialiasingOptions, 1 + maxAntialiasing))
                     {

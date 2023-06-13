@@ -160,8 +160,6 @@ namespace Replanetizer.Renderer
                 }
             }
 
-            GL.BindVertexArray(0);
-
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             GLUtil.CheckGlError("WireframeRenderer");
         }

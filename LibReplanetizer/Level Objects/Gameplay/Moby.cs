@@ -726,9 +726,10 @@ namespace LibReplanetizer.LevelObjects
                 updateDistance = memory[offset + 0x30];
                 visible = memory[offset + 0x31];
                 drawDistance = ReadShort(memory, offset + 0x32);
-                byte red = memory[offset + 0x39];
+                byte colorPadding = memory[offset + 0x38];
+                byte blue = memory[offset + 0x39];
                 byte green = memory[offset + 0x3A];
-                byte blue = memory[offset + 0x3B];
+                byte red = memory[offset + 0x3B];
                 light = ReadInt(memory, offset + 0x3C);
 
                 float rotX = ReadFloat(memory, offset + 0x40);

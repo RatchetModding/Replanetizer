@@ -59,8 +59,6 @@ namespace Replanetizer.Renderer
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
                 GL.VertexAttribPointer(1, 4, VertexAttribPointerType.UnsignedByte, false, sizeof(float) * 4, sizeof(float) * 3);
 
-                GL.BindVertexArray(0);
-
                 ibos.Add(ibo);
                 indexCount.Add(indexBuffer.Length);
 
@@ -125,7 +123,6 @@ namespace Replanetizer.Renderer
                 GL.DrawElements(PrimitiveType.Triangles, indexCount[i], DrawElementsType.UnsignedInt, 0);
             }
 
-            GL.BindVertexArray(0);
             GLUtil.CheckGlError("CollisionRenderer");
         }
 

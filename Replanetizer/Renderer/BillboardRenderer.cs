@@ -60,8 +60,6 @@ namespace Replanetizer.Renderer
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 4, sizeof(float) * 2);
 
-            GL.BindVertexArray(0);
-
             string? applicationFolder = System.AppContext.BaseDirectory;
             string billboardsFolder = Path.Join(applicationFolder, "Billboards");
             Image image = Image.FromFile(Path.Join(billboardsFolder, "Placeholder.png"), true);
@@ -119,7 +117,6 @@ namespace Replanetizer.Renderer
                 GL.DrawElements(PrimitiveType.Triangles, INDICES.Length, DrawElementsType.UnsignedByte, 0);
             }
 
-            GL.BindVertexArray(0);
             GLUtil.CheckGlError("BillboardRenderer");
         }
 

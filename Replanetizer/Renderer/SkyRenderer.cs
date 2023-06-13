@@ -75,7 +75,6 @@ namespace Replanetizer.Renderer
                 GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[textures[conf.id]] : 0);
                 GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
             }
-            container.Unbind();
 
             GL.Enable(EnableCap.DepthTest);
             GL.Disable(EnableCap.Blend);

@@ -55,20 +55,12 @@ namespace Replanetizer.Renderer
             }
 
             action();
-
-            GL.BindVertexArray(0);
-
         }
 
         public void Bind()
         {
             if (vao != 0)
                 GL.BindVertexArray(vao);
-        }
-
-        public void Unbind()
-        {
-            GL.BindVertexArray(0);
         }
 
         public int GetIndexBufferLength()

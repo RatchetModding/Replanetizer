@@ -53,8 +53,6 @@ namespace Replanetizer.Tools
             table.colorShader.SetUniform1("levelObjectNumber", 2);
             table.colorShader.SetUniform4("incolor", 0.0f, 0.0f, 1.0f, 1.0f);
             GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
-
-            UnbindVao();
         }
 
         public void Render(Spline spline, Camera camera, ShaderTable table)

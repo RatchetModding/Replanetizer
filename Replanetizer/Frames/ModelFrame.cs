@@ -433,9 +433,6 @@ namespace Replanetizer.Frames
 
             worldView = CreateWorldView();
             trans = Matrix4.CreateTranslation(0.0f, 0.0f, -5.0f);
-
-            GL.GenVertexArrays(1, out int vao);
-            GL.BindVertexArray(vao);
         }
 
         private void UpdateInstanceList()

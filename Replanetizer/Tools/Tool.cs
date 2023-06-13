@@ -64,11 +64,6 @@ namespace Replanetizer.Tools
             }
         }
 
-        protected void UnbindVao()
-        {
-            GL.BindVertexArray(0);
-        }
-
         /// <summary>
         /// Get the model matrix, scaled by camera distance
         /// </summary>

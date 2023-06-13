@@ -201,8 +201,6 @@ namespace Replanetizer.Renderer
 
             SetupVertexAttribPointers();
 
-            GL.BindVertexArray(0);
-
             UpdateBuffers();
         }
 
@@ -266,8 +264,6 @@ namespace Replanetizer.Renderer
                     }
             }
             GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, vboData.Length * sizeof(float), vboData);
-
-            GL.BindVertexArray(0);
         }
 
         /// <summary>
@@ -535,7 +531,6 @@ namespace Replanetizer.Renderer
                     break;
             }
 
-            GL.BindVertexArray(0);
             GLUtil.CheckGlError("MeshRenderer");
         }
 

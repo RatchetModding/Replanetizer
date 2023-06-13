@@ -106,8 +106,6 @@ namespace Replanetizer.Tools
             GL.DrawArrays(PrimitiveType.Triangles, 27, 3);
             GL.DrawArrays(PrimitiveType.Triangles, 30, 3);
             GL.DrawArrays(PrimitiveType.Triangles, 33, 3);
-
-            UnbindVao();
         }
 
         public override void Transform(LevelObject obj, Vector3 pivot, TransformToolData data)

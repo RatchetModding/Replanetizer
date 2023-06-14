@@ -79,10 +79,6 @@ namespace Replanetizer.Renderer
                 {
                     animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds);
                     animationRenderer.Include(mob);
-                    if (!animationRenderer.IsValid())
-                    {
-                        animationRenderer = null;
-                    }
                 }
 
                 return;
@@ -490,8 +486,11 @@ namespace Replanetizer.Renderer
 
             if (payload.visibility.enableAnimations && animationRenderer != null)
             {
-                animationRenderer.Render(payload);
-                return;
+                if (animationRenderer.IsValid())
+                {
+                    animationRenderer.Render(payload);
+                    return;
+                }
             }
 
             UpdateVars();

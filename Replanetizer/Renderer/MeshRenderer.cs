@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -39,11 +39,12 @@ namespace Replanetizer.Renderer
 
         private bool iboAllocated = false;
         private bool vboAllocated = false;
+        private bool vaoAllocated = false;
 
-        public RenderedObjectType type { get; private set; }
-        public int light { get; set; }
-        public Color ambient { get; set; }
-        public float renderDistance { get; set; }
+        private RenderedObjectType type { get; set; }
+        private int light { get; set; }
+        private Color ambient { get; set; }
+        private float renderDistance { get; set; }
 
         private bool selected;
         private float blendDistance = 0.0f;
@@ -52,6 +53,7 @@ namespace Replanetizer.Renderer
         private Dictionary<Texture, int> textureIds;
         private ShaderTable shaderTable;
         private BillboardRenderer fallback;
+        private AnimationRenderer? animationRenderer = null;
 
         public MeshRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, int> textureIds)
         {
@@ -72,6 +74,16 @@ namespace Replanetizer.Renderer
 
                 GenerateBuffers();
                 UpdateVars();
+
+                if (mObj is Moby mob)
+                {
+                    animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds);
+                    animationRenderer.Include(mob);
+                    if (!animationRenderer.IsValid())
+                    {
+                        animationRenderer = null;
+                    }
+                }
 
                 return;
             }
@@ -100,7 +112,12 @@ namespace Replanetizer.Renderer
                 vboAllocated = false;
             }
 
-            GL.DeleteVertexArray(vao);
+            if (vaoAllocated)
+            {
+                GL.DeleteVertexArray(vao);
+                vao = 0;
+                vaoAllocated = false;
+            }
 
             loadedModelID = -1;
         }
@@ -175,6 +192,7 @@ namespace Replanetizer.Renderer
 
             GL.GenVertexArrays(1, out vao);
             GL.BindVertexArray(vao);
+            vaoAllocated = true;
 
             // IBO
             int iboLength = modelObject.GetIndices().Length * sizeof(ushort);
@@ -457,42 +475,22 @@ namespace Replanetizer.Renderer
             return false;
         }
 
-        /// <summary>
-        /// Attempts to bind the index buffer object. Returns true on success, false else.
-        /// </summary>
-        public bool BindIbo()
-        {
-            bool success = ibo != 0;
-            if (success)
-                GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
-
-            return success;
-        }
-
-        /// <summary>
-        /// Attempts to bind the vertex buffer object. Returns true on success, false else.
-        /// </summary>
-        public bool BindVbo()
-        {
-            bool success = vbo != 0;
-            if (success)
-                GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-
-            return success;
-        }
-
-
-
         public override void Render(RendererPayload payload)
         {
-            if (modelObject == null || modelObject.model == null) return;
+            if (modelObject == null) return;
 
-            if (emptyModel)
+            if (emptyModel || modelObject.model == null)
             {
                 if (payload.visibility.enableMeshlessModels)
                 {
                     fallback.Render(payload);
                 }
+                return;
+            }
+
+            if (payload.visibility.enableAnimations && animationRenderer != null)
+            {
+                animationRenderer.Render(payload);
                 return;
             }
 
@@ -553,9 +551,7 @@ namespace Replanetizer.Renderer
 
         public override void Dispose()
         {
-            GL.DeleteBuffer(ibo);
-            GL.DeleteBuffer(vbo);
-            GL.DeleteVertexArray(vao);
+            DeleteBuffers();
         }
     }
 }

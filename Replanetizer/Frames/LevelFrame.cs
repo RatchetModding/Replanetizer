@@ -333,6 +333,7 @@ namespace Replanetizer.Frames
                 {
                     ImGui.Checkbox("Hook Update", ref hookLiveUpdate);
                     ImGui.Checkbox("Hook Camera", ref hookUpdateCamera);
+                    ImGui.Checkbox("Animations", ref rendererPayload.visibility.enableAnimations);
                     ImGui.Separator();
                 }
 

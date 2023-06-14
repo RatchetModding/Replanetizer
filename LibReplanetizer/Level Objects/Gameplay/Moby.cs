@@ -21,6 +21,9 @@ namespace LibReplanetizer.LevelObjects
 
         private static int MAX_ID = 0;
 
+        [Category("Attributes"), DisplayName("Ingame Memory"), Description("This field contains the current variable state if the memory hook is active.")]
+        public IngameMobyMemory? memory { get; set; } = null;
+
         [Category("Attributes"), DisplayName("Mission ID"), Description("Every planet has a set of missions. If a moby is assigned to a mission, its spawning behaviour can be based on whether the mission is completed.")]
         public int missionID { get; set; }
 
@@ -683,7 +686,7 @@ namespace LibReplanetizer.LevelObjects
             modelMatrix = scaleMatrix * rotX * rotY * rotZ * translationMatrix;
         }
 
-        private class IngameMobyMemory
+        public class IngameMobyMemory
         {
             public Vector4 collPos;
             public Vector4 position;
@@ -705,7 +708,11 @@ namespace LibReplanetizer.LevelObjects
             public ushort oClass;
             public ushort UID;
 
-            public IngameMobyMemory(byte[] memory, int offset)
+            public IngameMobyMemory()
+            {
+            }
+
+            public void Update(byte[] memory, int offset)
             {
                 float collX = ReadFloat(memory, offset + 0x00);
                 float collY = ReadFloat(memory, offset + 0x04);
@@ -756,30 +763,35 @@ namespace LibReplanetizer.LevelObjects
 
         public void UpdateFromMemory(byte[] mobyMemory, int offset, List<Model> models)
         {
-            IngameMobyMemory vals = new IngameMobyMemory(mobyMemory, offset);
+            if (memory == null)
+            {
+                memory = new IngameMobyMemory();
+            }
 
-            pVarMemoryAddress = 0x300000000 + vals.pVars;
+            memory.Update(mobyMemory, offset);
+
+            pVarMemoryAddress = 0x300000000 + memory.pVars;
 
             // If dead
-            if (vals.state > 0x7F)
+            if (memory.state > 0x7F)
             {
                 model = null;
                 return;
             }
 
-            Model? mod = models.Find(x => x.id == vals.oClass);
+            Model? mod = models.Find(x => x.id == memory.oClass);
 
             if (mod == null) return;
 
-            mobyID = vals.UID;
+            mobyID = memory.UID;
             model = mod;
             modelID = mod.id;
-            groupIndex = vals.group;
-            position = vals.position.Xyz;
-            rotation = Quaternion.FromEulerAngles(vals.rotation.Xyz);
-            scale = new Vector3(vals.scale / model.size);
-            color = vals.color;
-            light = vals.light;
+            groupIndex = memory.group;
+            position = memory.position.Xyz;
+            rotation = Quaternion.FromEulerAngles(memory.rotation.Xyz);
+            scale = new Vector3(memory.scale / model.size);
+            color = memory.color;
+            light = memory.light;
 
             UpdateTransformMatrix();
         }

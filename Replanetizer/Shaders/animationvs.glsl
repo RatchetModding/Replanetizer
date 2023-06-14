@@ -4,7 +4,7 @@
 layout(location = 0) in vec3 vertexPosition_modelspace;
 layout(location = 1) in vec3 vertexNormal;
 layout(location = 2) in vec2 vertexUV;
-layout(location = 3) in ivec4 vertexBoneIndex;
+layout(location = 3) in vec4 vertexBoneIndex; //ivec4 and uvec4 does not work, OpenGL always converts the bytes into floats
 layout(location = 4) in vec4 vertexBoneWeight;
 
 struct Light {
@@ -28,14 +28,22 @@ out float fogBlend;
 // Values that stay constant for the whole mesh.
 uniform mat4 worldToView;
 uniform mat4 modelToWorld;
+uniform mat4 bones[128];
 uniform int lightIndex;
 uniform int useFog;
 uniform vec4 fogParams;
 uniform vec4 staticColor;
 
 void main() {
+    vec4 position = vec4(0.0f);
+    vec4 baseVertexPos = vec4(vertexPosition_modelspace, 1.0f);
+    for (int i = 0; i < 4; i++) {
+        int index = int(vertexBoneIndex[i]);
+        position += (bones[index] * baseVertexPos) * vertexBoneWeight[i];
+    }
+
 	// Output position of the vertex, in clip space : MVP * position
-	gl_Position = worldToView * (modelToWorld * vec4(vertexPosition_modelspace, 1.0f));
+	gl_Position = worldToView * (modelToWorld * position);
 
 	vec3 normal = normalize((modelToWorld * vec4(vertexNormal, 0.0f)).xyz);
 

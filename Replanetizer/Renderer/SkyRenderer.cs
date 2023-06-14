@@ -21,7 +21,6 @@ namespace Replanetizer.Renderer
     {
         private SkyboxModel? sky;
         private BufferContainer? container;
-        private int vao;
         private readonly ShaderTable shaderTable;
         private List<Texture> textures;
         private Dictionary<Texture, int> textureIds;

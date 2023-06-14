@@ -401,6 +401,14 @@ namespace LibReplanetizer
             }
 
             mobyModels.AddRange(gadgetModels);
+
+            mobyModels.ForEach(x =>
+            {
+                if (x.id == 0 && x is MobyModel mobyModel)
+                {
+                    mobyModel.animations = playerAnimations;
+                }
+            });
         }
 
         public void Save(string outputFile)

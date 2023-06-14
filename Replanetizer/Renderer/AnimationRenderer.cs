@@ -15,6 +15,7 @@ using LibReplanetizer.Models;
 using System.Drawing;
 using Replanetizer.Renderer;
 using Replanetizer.Utils;
+using LibReplanetizer.Models.Animations;
 
 namespace Replanetizer.Renderer
 {
@@ -24,7 +25,6 @@ namespace Replanetizer.Renderer
      */
     public class AnimationRenderer : Renderer
     {
-
         private static readonly int ALLOCATED_LIGHTS = 20;
 
         private Moby? mob;
@@ -351,7 +351,7 @@ namespace Replanetizer.Renderer
 
         public override void Render(RendererPayload payload)
         {
-            if (mob == null || mob.model == null) return;
+            if (mob == null || model == null || mob.memory == null) return;
 
             if (emptyModel)
             {
@@ -382,8 +382,75 @@ namespace Replanetizer.Renderer
             shaderTable.animationShader.SetUniform1("lightIndex", light);
             shaderTable.animationShader.SetUniform1("objectBlendDistance", blendDistance);
 
+            int animationID = mob.memory.animationID;
+            int animationFrame = mob.memory.animationFrame;
+
+            Frame frame = model.animations[animationID].frames[animationFrame];
+
+            int boneCount = model.boneCount;
+            Matrix4[] boneMatrices = new Matrix4[boneCount];
+
+            for (int i = 0; i < boneCount; i++)
+            {
+                BoneMatrix boneMatrix = model.boneMatrices[i];
+
+                Matrix3x4 origTrans = boneMatrix.transformation;
+                Matrix3 mat = new Matrix3(origTrans.Row0.Xyz, origTrans.Row1.Xyz, origTrans.Row2.Xyz);
+                mat.Transpose();
+
+                Matrix4 invBindMatrix = new Matrix4();
+                invBindMatrix.M11 = mat.M11;
+                invBindMatrix.M12 = mat.M12;
+                invBindMatrix.M13 = mat.M13;
+                invBindMatrix.M14 = boneMatrix.transformation.M14 * model.size / 1024.0f;
+                invBindMatrix.M21 = mat.M21;
+                invBindMatrix.M22 = mat.M22;
+                invBindMatrix.M23 = mat.M23;
+                invBindMatrix.M24 = boneMatrix.transformation.M24 * model.size / 1024.0f;
+                invBindMatrix.M31 = mat.M31;
+                invBindMatrix.M32 = mat.M32;
+                invBindMatrix.M33 = mat.M33;
+                invBindMatrix.M34 = boneMatrix.transformation.M34 * model.size / 1024.0f;
+                invBindMatrix.M41 = 0.0f;
+                invBindMatrix.M42 = 0.0f;
+                invBindMatrix.M43 = 0.0f;
+                invBindMatrix.M44 = 1.0f;
+
+
+                Matrix4 animationMatrix = frame.GetRotationMatrix(i);
+                animationMatrix.Transpose();
+                Vector3? scaling = frame.GetScaling(i);
+                Vector3? translation = frame.GetTranslation(i);
+
+                // Translations replace the bone data translation
+                Vector3 translationVector = (translation != null) ? (Vector3) translation : model.boneDatas[i].translation;
+                translationVector *= model.size;
+
+                animationMatrix.M14 = translationVector.X;
+                animationMatrix.M24 = translationVector.Y;
+                animationMatrix.M34 = translationVector.Z;
+
+                if (scaling != null)
+                {
+                    Vector3 s = (Vector3) scaling;
+                    animationMatrix.M11 *= s.X;
+                    animationMatrix.M21 *= s.X;
+                    animationMatrix.M31 *= s.X;
+                    animationMatrix.M12 *= s.Y;
+                    animationMatrix.M22 *= s.Y;
+                    animationMatrix.M32 *= s.Y;
+                    animationMatrix.M13 *= s.Z;
+                    animationMatrix.M23 *= s.Z;
+                    animationMatrix.M33 *= s.Z;
+                }
+
+                boneMatrices[i] = animationMatrix * invBindMatrix;
+            }
+
+            shaderTable.animationShader.SetUniformMatrix4("bones", boneCount, true, ref boneMatrices[0].Row0.X);
+
             //Bind textures one by one, applying it to the relevant vertices based on the index array
-            foreach (TextureConfig conf in mob.model.textureConfig)
+            foreach (TextureConfig conf in model.textureConfig)
             {
                 GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[textures[conf.id]] : 0);
                 SetTransparencyMode(conf);

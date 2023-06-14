@@ -172,6 +172,28 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniformMatrix4(string uniform, int count, bool transpose, float[] mat)
+        {
+            int location = GetUniformLocation(uniform);
+
+            if (location != -1)
+            {
+                GL.UniformMatrix4(location, count, transpose, mat);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniformMatrix4(string uniform, int count, bool transpose, ref float mat)
+        {
+            int location = GetUniformLocation(uniform);
+
+            if (location != -1)
+            {
+                GL.UniformMatrix4(location, count, transpose, ref mat);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetUniform1(string uniform, float v)
         {
             int location = GetUniformLocation(uniform);

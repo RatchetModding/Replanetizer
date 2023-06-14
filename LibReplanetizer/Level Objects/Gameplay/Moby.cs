@@ -779,17 +779,21 @@ namespace LibReplanetizer.LevelObjects
                 return;
             }
 
-            Model? mod = models.Find(x => x.id == memory.oClass);
+            if (memory.oClass != modelID)
+            {
+                Model? mod = models.Find(x => x.id == memory.oClass);
 
-            if (mod == null) return;
+                model = mod;
+                modelID = memory.oClass;
+            }
+
+            float modelSize = (model != null) ? model.size : 1.0f;
 
             mobyID = memory.UID;
-            model = mod;
-            modelID = mod.id;
             groupIndex = memory.group;
             position = memory.position.Xyz;
             rotation = Quaternion.FromEulerAngles(memory.rotation.Xyz);
-            scale = new Vector3(memory.scale / model.size);
+            scale = new Vector3(memory.scale / modelSize);
             color = memory.color;
             light = memory.light;
 

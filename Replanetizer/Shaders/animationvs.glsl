@@ -1,7 +1,7 @@
 ﻿#version 330 core
 
 // Input vertex data, different for all executions of this shader.
-layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 0) in vec3 vertexPosition;
 layout(location = 1) in vec3 vertexNormal;
 layout(location = 2) in vec2 vertexUV;
 layout(location = 3) in vec4 vertexBoneIndex; //ivec4 and uvec4 does not work, OpenGL always converts the bytes into floats
@@ -36,16 +36,19 @@ uniform vec4 staticColor;
 
 void main() {
     vec4 position = vec4(0.0f);
-    vec4 baseVertexPos = vec4(vertexPosition_modelspace, 1.0f);
+    vec4 normal = vec4(0.0f);
+    vec4 basePosition = vec4(vertexPosition, 1.0f);
+    vec4 baseNormal = vec4(vertexNormal, 0.0f);
     for (int i = 0; i < 4; i++) {
         int index = int(vertexBoneIndex[i]);
-        position += (bones[index] * baseVertexPos) * vertexBoneWeight[i];
+        position += (bones[index] * basePosition) * vertexBoneWeight[i];
+        normal += (bones[index] * baseNormal) * vertexBoneWeight[i];
     }
 
 	// Output position of the vertex, in clip space : MVP * position
 	gl_Position = worldToView * (modelToWorld * position);
 
-	vec3 normal = normalize((modelToWorld * vec4(vertexNormal, 0.0f)).xyz);
+	normal = normalize(modelToWorld * normal);
 
 	// UV of the vertex. No special space for this one.
 	UV = vertexUV;
@@ -54,8 +57,8 @@ void main() {
     Light l = light[lightIndex];
 
     vec3 directionalLight = vec3(0.0f);
-    directionalLight += max(0.0f, -dot(l.direction1.xyz, normal)) * l.color1.xyz;
-    directionalLight += max(0.0f, -dot(l.direction2.xyz, normal)) * l.color2.xyz;
+    directionalLight += max(0.0f, -dot(l.direction1, normal)) * l.color1.xyz;
+    directionalLight += max(0.0f, -dot(l.direction2, normal)) * l.color2.xyz;
 
     vec3 diffuseLight = staticColor.xyz;
 

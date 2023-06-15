@@ -53,6 +53,8 @@ namespace Replanetizer.Renderer
         private Dictionary<Texture, int> textureIds;
         private ShaderTable shaderTable;
 
+        private Frame? previousFrame = null;
+
         public AnimationRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, int> textureIds)
         {
             this.shaderTable = shaderTable;
@@ -260,6 +262,7 @@ namespace Replanetizer.Renderer
 
             if (loadedModelID != mob.modelID)
             {
+                previousFrame = null;
                 GenerateBuffers();
             }
         }
@@ -397,21 +400,21 @@ namespace Replanetizer.Renderer
 
             Matrix4[] boneMatrices = new Matrix4[mobyModel.boneCount];
 
-            if (animationID >= 0 && animationID < mobyModel.animations.Count)
+            Animation? anim = (animationID >= 0 && animationID < mobyModel.animations.Count) ? mobyModel.animations[animationID] : null;
+
+            int animationFrame = mob.memory.animationFrame;
+
+            Frame? frame = (anim != null && anim.frames.Count > animationFrame) ? anim.frames[animationFrame] : null;
+
+            if (frame != null && previousFrame != null)
             {
-                Animation anim = mobyModel.animations[animationID];
-
-                int animationFrame = mob.memory.animationFrame;
-                int nextAnimationFrame = (animationFrame + 1 >= anim.frames.Count) ? 0 : animationFrame + 1;
-
-                Frame frame = anim.frames[animationFrame];
-                Frame nextFrame = anim.frames[nextAnimationFrame];
+                float blend = mob.memory.animationBlending;
 
                 for (int i = 0; i < mobyModel.boneCount; i++)
                 {
-                    Matrix4 animationMatrix = frame.GetRotationMatrix(i, nextFrame, mob.memory.animationBlending);
-                    Vector3? scaling = frame.GetScaling(i, nextFrame, mob.memory.animationBlending);
-                    Vector3? translation = frame.GetTranslation(i, nextFrame, mob.memory.animationBlending);
+                    Matrix4 animationMatrix = previousFrame.GetRotationMatrix(i, frame, blend);
+                    Vector3? scaling = previousFrame.GetScaling(i, frame, blend);
+                    Vector3? translation = previousFrame.GetTranslation(i, frame, blend);
 
                     // Translations replace the bone data translation
                     Vector3 translationVector = (translation != null) ? (Vector3) translation : mobyModel.boneDatas[i].translation;
@@ -436,8 +439,6 @@ namespace Replanetizer.Renderer
 
                     Matrix4 parentMatrix = (i == 0) ? Matrix4.Identity : boneMatrices[mobyModel.boneDatas[i].parent];
 
-                    // This is correct! It transforms each bone from root space to its correct modelspace position
-                    // The only thing that is missing is transforming from default modelspace position to root space
                     boneMatrices[i] = animationMatrix * parentMatrix;
                 }
 
@@ -480,6 +481,8 @@ namespace Replanetizer.Renderer
                     boneMatrices[i] = Matrix4.Identity;
                 }
             }
+
+            previousFrame = frame;
 
             shaderTable.animationShader.SetUniformMatrix4("bones", mobyModel.boneCount, false, ref boneMatrices[0].Row0.X);
 

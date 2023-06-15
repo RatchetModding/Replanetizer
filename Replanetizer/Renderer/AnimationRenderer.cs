@@ -392,62 +392,69 @@ namespace Replanetizer.Renderer
 
             for (int i = 0; i < boneCount; i++)
             {
-                BoneMatrix boneMatrix = model.boneMatrices[i];
-
-                Matrix3x4 origTrans = boneMatrix.transformation;
-                Matrix3 mat = new Matrix3(origTrans.Row0.Xyz, origTrans.Row1.Xyz, origTrans.Row2.Xyz);
-                mat.Transpose();
-
-                Matrix4 invBindMatrix = new Matrix4();
-                invBindMatrix.M11 = mat.M11;
-                invBindMatrix.M12 = mat.M12;
-                invBindMatrix.M13 = mat.M13;
-                invBindMatrix.M14 = boneMatrix.transformation.M14 * model.size / 1024.0f;
-                invBindMatrix.M21 = mat.M21;
-                invBindMatrix.M22 = mat.M22;
-                invBindMatrix.M23 = mat.M23;
-                invBindMatrix.M24 = boneMatrix.transformation.M24 * model.size / 1024.0f;
-                invBindMatrix.M31 = mat.M31;
-                invBindMatrix.M32 = mat.M32;
-                invBindMatrix.M33 = mat.M33;
-                invBindMatrix.M34 = boneMatrix.transformation.M34 * model.size / 1024.0f;
-                invBindMatrix.M41 = 0.0f;
-                invBindMatrix.M42 = 0.0f;
-                invBindMatrix.M43 = 0.0f;
-                invBindMatrix.M44 = 1.0f;
-
-
                 Matrix4 animationMatrix = frame.GetRotationMatrix(i);
-                animationMatrix.Transpose();
                 Vector3? scaling = frame.GetScaling(i);
                 Vector3? translation = frame.GetTranslation(i);
 
                 // Translations replace the bone data translation
                 Vector3 translationVector = (translation != null) ? (Vector3) translation : model.boneDatas[i].translation;
-                translationVector *= model.size;
 
-                animationMatrix.M14 = translationVector.X;
-                animationMatrix.M24 = translationVector.Y;
-                animationMatrix.M34 = translationVector.Z;
+                animationMatrix.M41 = translationVector.X;
+                animationMatrix.M42 = translationVector.Y;
+                animationMatrix.M43 = translationVector.Z;
 
                 if (scaling != null)
                 {
                     Vector3 s = (Vector3) scaling;
                     animationMatrix.M11 *= s.X;
-                    animationMatrix.M21 *= s.X;
-                    animationMatrix.M31 *= s.X;
-                    animationMatrix.M12 *= s.Y;
+                    animationMatrix.M12 *= s.X;
+                    animationMatrix.M13 *= s.X;
+                    animationMatrix.M21 *= s.Y;
                     animationMatrix.M22 *= s.Y;
-                    animationMatrix.M32 *= s.Y;
-                    animationMatrix.M13 *= s.Z;
-                    animationMatrix.M23 *= s.Z;
+                    animationMatrix.M23 *= s.Y;
+                    animationMatrix.M31 *= s.Z;
+                    animationMatrix.M32 *= s.Z;
                     animationMatrix.M33 *= s.Z;
                 }
 
-                boneMatrices[i] = animationMatrix * invBindMatrix;
+                Matrix4 parentMatrix = (i == 0) ? Matrix4.Identity : boneMatrices[model.boneDatas[i].parent];
+
+                // This is correct! It transforms each bone from root space to its correct modelspace position
+                // The only thing that is missing is transforming from default modelspace position to root space
+                boneMatrices[i] = animationMatrix * parentMatrix;
             }
 
-            shaderTable.animationShader.SetUniformMatrix4("bones", boneCount, true, ref boneMatrices[0].Row0.X);
+            for (int i = 0; i < boneCount; i++)
+            {
+                BoneMatrix boneMatrix = model.boneMatrices[i];
+
+                Vector3 off = boneMatrix.cumulativeOffset;
+
+                Matrix3x4 origTrans = boneMatrix.transformation;
+                Matrix3 mat = new Matrix3(origTrans.Row0.Xyz, origTrans.Row1.Xyz, origTrans.Row2.Xyz);
+
+                Matrix4 invBindMatrix = new Matrix4();
+                invBindMatrix.M11 = mat.M11;
+                invBindMatrix.M12 = mat.M12;
+                invBindMatrix.M13 = mat.M13;
+                invBindMatrix.M14 = 0.0f;
+                invBindMatrix.M21 = mat.M21;
+                invBindMatrix.M22 = mat.M22;
+                invBindMatrix.M23 = mat.M23;
+                invBindMatrix.M24 = 0.0f;
+                invBindMatrix.M31 = mat.M31;
+                invBindMatrix.M32 = mat.M32;
+                invBindMatrix.M33 = mat.M33;
+                invBindMatrix.M34 = 0.0f;
+                invBindMatrix.M41 = off.X;
+                invBindMatrix.M42 = off.Y;
+                invBindMatrix.M43 = off.Z;
+                invBindMatrix.M44 = 1.0f;
+
+                boneMatrices[i] = invBindMatrix * boneMatrices[i];
+            }
+
+            shaderTable.animationShader.SetUniformMatrix4("bones", boneCount, false, ref boneMatrices[0].Row0.X);
 
             //Bind textures one by one, applying it to the relevant vertices based on the index array
             foreach (TextureConfig conf in model.textureConfig)

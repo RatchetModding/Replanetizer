@@ -394,74 +394,91 @@ namespace Replanetizer.Renderer
             shaderTable.animationShader.SetUniform1("objectBlendDistance", blendDistance);
 
             int animationID = mob.memory.animationID;
-            int animationFrame = mob.memory.animationFrame;
-
-            Frame frame = mobyModel.animations[animationID].frames[animationFrame];
 
             Matrix4[] boneMatrices = new Matrix4[mobyModel.boneCount];
 
-            for (int i = 0; i < mobyModel.boneCount; i++)
+            if (animationID >= 0 && animationID < mobyModel.animations.Count)
             {
-                Matrix4 animationMatrix = frame.GetRotationMatrix(i);
-                Vector3? scaling = frame.GetScaling(i);
-                Vector3? translation = frame.GetTranslation(i);
+                Animation anim = mobyModel.animations[animationID];
 
-                // Translations replace the bone data translation
-                Vector3 translationVector = (translation != null) ? (Vector3) translation : mobyModel.boneDatas[i].translation;
+                int animationFrame = mob.memory.animationFrame;
+                int nextAnimationFrame = (animationFrame + 1 >= anim.frames.Count) ? 0 : animationFrame + 1;
 
-                animationMatrix.M41 = translationVector.X;
-                animationMatrix.M42 = translationVector.Y;
-                animationMatrix.M43 = translationVector.Z;
+                Frame frame = anim.frames[animationFrame];
+                Frame nextFrame = anim.frames[nextAnimationFrame];
 
-                if (scaling != null)
+                for (int i = 0; i < mobyModel.boneCount; i++)
                 {
-                    Vector3 s = (Vector3) scaling;
-                    animationMatrix.M11 *= s.X;
-                    animationMatrix.M12 *= s.X;
-                    animationMatrix.M13 *= s.X;
-                    animationMatrix.M21 *= s.Y;
-                    animationMatrix.M22 *= s.Y;
-                    animationMatrix.M23 *= s.Y;
-                    animationMatrix.M31 *= s.Z;
-                    animationMatrix.M32 *= s.Z;
-                    animationMatrix.M33 *= s.Z;
+                    Matrix4 animationMatrix = frame.GetRotationMatrix(i, nextFrame, mob.memory.animationBlending);
+                    Vector3? scaling = frame.GetScaling(i, nextFrame, mob.memory.animationBlending);
+                    Vector3? translation = frame.GetTranslation(i, nextFrame, mob.memory.animationBlending);
+
+                    // Translations replace the bone data translation
+                    Vector3 translationVector = (translation != null) ? (Vector3) translation : mobyModel.boneDatas[i].translation;
+
+                    animationMatrix.M41 = translationVector.X;
+                    animationMatrix.M42 = translationVector.Y;
+                    animationMatrix.M43 = translationVector.Z;
+
+                    if (scaling != null)
+                    {
+                        Vector3 s = (Vector3) scaling;
+                        animationMatrix.M11 *= s.X;
+                        animationMatrix.M12 *= s.X;
+                        animationMatrix.M13 *= s.X;
+                        animationMatrix.M21 *= s.Y;
+                        animationMatrix.M22 *= s.Y;
+                        animationMatrix.M23 *= s.Y;
+                        animationMatrix.M31 *= s.Z;
+                        animationMatrix.M32 *= s.Z;
+                        animationMatrix.M33 *= s.Z;
+                    }
+
+                    Matrix4 parentMatrix = (i == 0) ? Matrix4.Identity : boneMatrices[mobyModel.boneDatas[i].parent];
+
+                    // This is correct! It transforms each bone from root space to its correct modelspace position
+                    // The only thing that is missing is transforming from default modelspace position to root space
+                    boneMatrices[i] = animationMatrix * parentMatrix;
                 }
 
-                Matrix4 parentMatrix = (i == 0) ? Matrix4.Identity : boneMatrices[mobyModel.boneDatas[i].parent];
+                for (int i = 0; i < mobyModel.boneCount; i++)
+                {
+                    BoneMatrix boneMatrix = mobyModel.boneMatrices[i];
 
-                // This is correct! It transforms each bone from root space to its correct modelspace position
-                // The only thing that is missing is transforming from default modelspace position to root space
-                boneMatrices[i] = animationMatrix * parentMatrix;
+                    Vector3 off = boneMatrix.cumulativeOffset;
+
+                    Matrix3x4 origTrans = boneMatrix.transformation;
+                    Matrix3 mat = new Matrix3(origTrans.Row0.Xyz, origTrans.Row1.Xyz, origTrans.Row2.Xyz);
+
+                    Matrix4 invBindMatrix = new Matrix4();
+                    invBindMatrix.M11 = mat.M11;
+                    invBindMatrix.M12 = mat.M12;
+                    invBindMatrix.M13 = mat.M13;
+                    invBindMatrix.M14 = 0.0f;
+                    invBindMatrix.M21 = mat.M21;
+                    invBindMatrix.M22 = mat.M22;
+                    invBindMatrix.M23 = mat.M23;
+                    invBindMatrix.M24 = 0.0f;
+                    invBindMatrix.M31 = mat.M31;
+                    invBindMatrix.M32 = mat.M32;
+                    invBindMatrix.M33 = mat.M33;
+                    invBindMatrix.M34 = 0.0f;
+                    invBindMatrix.M41 = off.X;
+                    invBindMatrix.M42 = off.Y;
+                    invBindMatrix.M43 = off.Z;
+                    invBindMatrix.M44 = 1.0f;
+
+                    boneMatrices[i] = invBindMatrix * boneMatrices[i];
+                }
             }
-
-            for (int i = 0; i < mobyModel.boneCount; i++)
+            else
             {
-                BoneMatrix boneMatrix = mobyModel.boneMatrices[i];
+                // Animation is not present in Replanetizer (like in Cutscenes)
 
-                Vector3 off = boneMatrix.cumulativeOffset;
-
-                Matrix3x4 origTrans = boneMatrix.transformation;
-                Matrix3 mat = new Matrix3(origTrans.Row0.Xyz, origTrans.Row1.Xyz, origTrans.Row2.Xyz);
-
-                Matrix4 invBindMatrix = new Matrix4();
-                invBindMatrix.M11 = mat.M11;
-                invBindMatrix.M12 = mat.M12;
-                invBindMatrix.M13 = mat.M13;
-                invBindMatrix.M14 = 0.0f;
-                invBindMatrix.M21 = mat.M21;
-                invBindMatrix.M22 = mat.M22;
-                invBindMatrix.M23 = mat.M23;
-                invBindMatrix.M24 = 0.0f;
-                invBindMatrix.M31 = mat.M31;
-                invBindMatrix.M32 = mat.M32;
-                invBindMatrix.M33 = mat.M33;
-                invBindMatrix.M34 = 0.0f;
-                invBindMatrix.M41 = off.X;
-                invBindMatrix.M42 = off.Y;
-                invBindMatrix.M43 = off.Z;
-                invBindMatrix.M44 = 1.0f;
-
-                boneMatrices[i] = invBindMatrix * boneMatrices[i];
+                for (int i = 0; i < mobyModel.boneCount; i++)
+                {
+                    boneMatrices[i] = Matrix4.Identity;
+                }
             }
 
             shaderTable.animationShader.SetUniformMatrix4("bones", mobyModel.boneCount, false, ref boneMatrices[0].Row0.X);

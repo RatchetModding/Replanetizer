@@ -51,38 +51,41 @@ namespace LibReplanetizer.Models.Animations
         public ushort frameIndex { get; set; }
         public ushort frameLength { get; set; }
 
-        public List<short[]> rotations { get; set; }
-        private List<FrameBoneScaling> sec0s { get; set; }
+        private List<short[]> rotations { get; set; }
+        private List<FrameBoneScaling> scalings { get; set; }
         private List<FrameBoneTranslation> translations { get; set; }
+
+        public Quaternion GetRotationQuaternion(int bone)
+        {
+            short[] rots = rotations[bone];
+            return new Quaternion((rots[0] / 32767f) * 180f, (rots[1] / 32767f) * 180f, (rots[2] / 32767f) * 180f, (-rots[3] / 32767f) * 180f);
+        }
 
         public Matrix4 GetRotationMatrix(int bone)
         {
-            short[] rots = rotations[bone];
-            Quaternion rot = new Quaternion((rots[0] / 32767f) * 180f, (rots[1] / 32767f) * 180f, (rots[2] / 32767f) * 180f, (-rots[3] / 32767f) * 180f);
-            Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(rot);
-
-            return rotationMatrix;
+            Quaternion rotation = GetRotationQuaternion(bone);
+            return Matrix4.CreateFromQuaternion(rotation);
         }
 
         public Vector3? GetScaling(int bone)
         {
-            bool exists = sec0s.Exists(s => s.bone == bone);
+            bool exists = scalings.Exists(s => s.bone == bone);
 
             if (exists)
             {
-                return sec0s.First(s => s.bone == bone).scale;
-            } 
+                return scalings.First(s => s.bone == bone).scale;
+            }
 
             return null;
         }
 
         public bool GetScalingUnk(int bone)
         {
-            bool exists = sec0s.Exists(s => s.bone == bone);
+            bool exists = scalings.Exists(s => s.bone == bone);
 
             if (exists)
             {
-                return sec0s.First(s => s.bone == bone).unk == 128;
+                return scalings.First(s => s.bone == bone).unk == 128;
             }
 
             return false;
@@ -98,6 +101,38 @@ namespace LibReplanetizer.Models.Animations
             }
 
             return null;
+        }
+
+        public Matrix4 GetRotationMatrix(int bone, Frame nextFrame, float blend)
+        {
+            Quaternion baseRotation = GetRotationQuaternion(bone);
+            Quaternion nextRotation = nextFrame.GetRotationQuaternion(bone);
+
+            Quaternion rotation = Quaternion.Slerp(baseRotation, nextRotation, blend);
+
+            Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(rotation);
+
+            return rotationMatrix;
+        }
+
+        public Vector3? GetScaling(int bone, Frame nextFrame, float blend)
+        {
+            Vector3? baseScale = GetScaling(bone);
+            Vector3? nextScale = nextFrame.GetScaling(bone);
+
+            if (baseScale == null || nextScale == null) return null;
+
+            return (1.0f - blend) * baseScale + blend * nextScale;
+        }
+
+        public Vector3? GetTranslation(int bone, Frame nextFrame, float blend)
+        {
+            Vector3? baseTranslation = GetTranslation(bone);
+            Vector3? nextTranslation = nextFrame.GetTranslation(bone);
+
+            if (baseTranslation == null || nextTranslation == null) return null;
+
+            return (1.0f - blend) * baseTranslation + blend * nextTranslation;
         }
 
         public Frame(FileStream fs, int offset, int boneCount)
@@ -123,7 +158,7 @@ namespace LibReplanetizer.Models.Animations
                 rotations.Add(rot);
             }
 
-            sec0s = new List<FrameBoneScaling>();
+            scalings = new List<FrameBoneScaling>();
             for (int i = 0; i < sec0Count; i++)
             {
                 if (sec0Pointer + (i + 1) * 0x08 > frameBlock.Length)
@@ -136,7 +171,7 @@ namespace LibReplanetizer.Models.Animations
                 float z = ReadShort(frameBlock, sec0Pointer + i * 8 + 0x04) / 4096.0f;
                 byte bone = frameBlock[sec0Pointer + i * 8 + 0x06];
                 byte unk = frameBlock[sec0Pointer + i * 8 + 0x07];
-                sec0s.Add(new FrameBoneScaling(x, y, z, bone, unk));
+                scalings.Add(new FrameBoneScaling(x, y, z, bone, unk));
             }
 
             translations = new List<FrameBoneTranslation>();
@@ -168,14 +203,14 @@ namespace LibReplanetizer.Models.Animations
                 WriteShort(rotationBytes, i * 8 + 0x06, rotations[i][3]);
             }
 
-            byte[] sec0Bytes = new byte[sec0s.Count * 0x08];
-            for (int i = 0; i < sec0s.Count; i++)
+            byte[] sec0Bytes = new byte[scalings.Count * 0x08];
+            for (int i = 0; i < scalings.Count; i++)
             {
-                WriteShort(sec0Bytes, i * 8 + 0x00, (short) (sec0s[i].scale.X * 4096.0f));
-                WriteShort(sec0Bytes, i * 8 + 0x02, (short) (sec0s[i].scale.Y * 4096.0f));
-                WriteShort(sec0Bytes, i * 8 + 0x04, (short) (sec0s[i].scale.Z * 4096.0f));
-                sec0Bytes[i * 8 + 0x06] = sec0s[i].bone;
-                sec0Bytes[i * 8 + 0x07] = sec0s[i].unk;
+                WriteShort(sec0Bytes, i * 8 + 0x00, (short) (scalings[i].scale.X * 4096.0f));
+                WriteShort(sec0Bytes, i * 8 + 0x02, (short) (scalings[i].scale.Y * 4096.0f));
+                WriteShort(sec0Bytes, i * 8 + 0x04, (short) (scalings[i].scale.Z * 4096.0f));
+                sec0Bytes[i * 8 + 0x06] = scalings[i].bone;
+                sec0Bytes[i * 8 + 0x07] = scalings[i].unk;
             }
 
             byte[] translationBytes = new byte[translations.Count * 0x08];
@@ -196,7 +231,7 @@ namespace LibReplanetizer.Models.Animations
             WriteUshort(header, 0x04, frameIndex);
             WriteUshort(header, 0x06, frameLength);
             WriteUshort(header, 0x08, sec0Pointer);
-            WriteUshort(header, 0x0A, (ushort) sec0s.Count);
+            WriteUshort(header, 0x0A, (ushort) scalings.Count);
             WriteUshort(header, 0x0C, translationPointer);
             WriteUshort(header, 0x0E, (ushort) translations.Count);
 

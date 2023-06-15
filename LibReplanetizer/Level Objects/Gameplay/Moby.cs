@@ -688,25 +688,37 @@ namespace LibReplanetizer.LevelObjects
 
         public class IngameMobyMemory
         {
-            public Vector4 collPos;
-            public Vector4 position;
-            public byte state;
-            public byte group;
-            public byte mClass;
-            public byte alpha;
-            public float scale;
-            public byte updateDistance;
-            public byte visible;
-            public short drawDistance;
-            public Color color;
-            public int light;
-            public Vector4 rotation;
-            public byte animationFrame;
-            public byte updateID;
-            public byte animationID;
-            public uint pVars;
-            public ushort oClass;
-            public ushort UID;
+            public Vector4 collPos { get; set; }
+            public Vector4 position { get; set; }
+            public byte state { get; set; }
+            public byte group { get; set; }
+            public byte mClass { get; set; }
+            public byte alpha { get; set; }
+            public float scale { get; set; }
+            public byte updateDistance { get; set; }
+            public byte visible { get; set; }
+            public short drawDistance { get; set; }
+            public ushort modeBits { get; set; }
+            public ushort unk36 { get; set; }
+            public Color color { get; set; }
+            public int light { get; set; }
+            public Vector4 rotation { get; set; }
+            public byte animationFrame { get; set; }
+            public byte updateID { get; set; }
+            public byte animationID { get; set; }
+            public float animationBlending { get; set; }
+            public float unk58 { get; set; }
+            public float unk5C { get; set; }
+            public uint pVars { get; set; }
+            public byte unk7C { get; set; }
+            public byte unk7D { get; set; }
+            public byte unk7E { get; set; }
+            public byte animState { get; set; }
+            public uint unk80 { get; set; }
+            public int unk84 { get; set; }
+            public int unk88 { get; set; }
+            public ushort oClass { get; set; }
+            public ushort UID { get; set; }
 
             public IngameMobyMemory()
             {
@@ -733,6 +745,8 @@ namespace LibReplanetizer.LevelObjects
                 updateDistance = memory[offset + 0x30];
                 visible = memory[offset + 0x31];
                 drawDistance = ReadShort(memory, offset + 0x32);
+                modeBits = ReadUshort(memory, offset + 0x34);
+                unk36 = ReadUshort(memory, offset + 0x36);
                 byte colorPadding = memory[offset + 0x38];
                 byte blue = memory[offset + 0x39];
                 byte green = memory[offset + 0x3A];
@@ -747,8 +761,19 @@ namespace LibReplanetizer.LevelObjects
                 animationFrame = memory[offset + 0x51];
                 updateID = memory[offset + 0x52];
                 animationID = memory[offset + 0x53];
+                animationBlending = ReadFloat(memory, offset + 0x54);
+                unk58 = ReadFloat(memory, offset + 0x58);
+                unk5C = ReadFloat(memory, offset + 0x5C);
 
                 pVars = ReadUint(memory, offset + 0x78);
+                unk7C = memory[offset + 0x7C];
+                unk7D = memory[offset + 0x7D];
+                unk7E = memory[offset + 0x7E];
+                animState = memory[offset + 0x7F];
+
+                unk80 = ReadUint(memory, offset + 0x80);
+                unk84 = ReadInt(memory, offset + 0x84);
+                unk88 = ReadInt(memory, offset + 0x88);
 
                 oClass = ReadUshort(memory, offset + 0xA6);
 

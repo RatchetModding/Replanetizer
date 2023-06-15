@@ -54,7 +54,7 @@ void main() {
         if (dissolvePattern[patternPos.x][patternPos.y] > alpha) discard;
     }
 
-	color.xyz = textureColor.xyz * lightColor * 2.0f;
+	color.xyz = 1.5f * textureColor.xyz * lightColor * 2.0f;
 	color.w = textureColor.w;
 
 	color.xyz = (fogColor.xyz - color.xyz) * fogBlend + color.xyz;

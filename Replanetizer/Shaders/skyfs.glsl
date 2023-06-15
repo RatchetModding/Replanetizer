@@ -15,7 +15,7 @@ uniform float texAvailable;
 void main() {
 	vec4 textureColor = texture(myTextureSampler, UV);
 
-	color.xyz = mix(lightColor.xyz, textureColor.xyz, texAvailable);
+	color.xyz = 1.5f * mix(lightColor.xyz, textureColor.xyz, texAvailable);
 	color.w = textureColor.w * lightColor.w * 2.0f;
 
 	id = (999 << 24);

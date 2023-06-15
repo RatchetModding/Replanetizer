@@ -54,18 +54,25 @@ engaged you will no longer be able to save the level in Replanetizer.
             ImGui.Text(informationText);
             ImGui.TextColored(WARNING_COLOR, warningText);
 
+            bool attemptSucceeded = false;
+
             if (success)
             {
                 ImGui.BeginDisabled();
             }
             if (ImGui.Button("Activate Hook"))
             {
-                success = levelFrame.StartMemoryHook(ref lastReturnMessage);
+                attemptSucceeded = levelFrame.StartMemoryHook(ref lastReturnMessage);
                 attempted = true;
             }
             if (success)
             {
                 ImGui.EndDisabled();
+            }
+
+            if (attemptSucceeded)
+            {
+                success = attemptSucceeded;
             }
 
             if (attempted)

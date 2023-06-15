@@ -28,7 +28,6 @@ namespace Replanetizer.Renderer
         private static readonly int ALLOCATED_LIGHTS = 20;
 
         private Moby? mob;
-        private MobyModel? model;
 
         private int loadedModelID = -1;
 
@@ -109,6 +108,7 @@ namespace Replanetizer.Renderer
 
         public bool IsValid()
         {
+            UpdateVars();
             return (emptyModel) ? false : true;
         }
 
@@ -146,9 +146,15 @@ namespace Replanetizer.Renderer
                 return;
             }
 
-            model = (MobyModel?) mob.model;
+            if (mob.model == null)
+            {
+                emptyModel = true;
+                return;
+            }
 
-            if (model == null || model.boneCount == 0)
+            MobyModel mobyModel = (MobyModel) mob.model;
+
+            if (mobyModel.boneCount == 0)
             {
                 emptyModel = true;
                 return;
@@ -187,8 +193,8 @@ namespace Replanetizer.Renderer
 
             // VBO
             int vboLength = mob.GetVertices().Length * sizeof(float);
-            vboLength += model.ids.Length * sizeof(uint);
-            vboLength += model.weights.Length * sizeof(uint);
+            vboLength += mobyModel.ids.Length * sizeof(uint);
+            vboLength += mobyModel.weights.Length * sizeof(uint);
             if (vboLength > 0)
             {
                 GL.GenBuffers(1, out vbo);
@@ -207,8 +213,10 @@ namespace Replanetizer.Renderer
         /// </summary>
         private void UpdateBuffers()
         {
-            if (mob == null || model == null)
+            if (mob == null || mob.model == null)
                 return;
+
+            MobyModel mobyModel = (MobyModel) mob.model;
 
             GL.BindVertexArray(vao);
 
@@ -216,8 +224,8 @@ namespace Replanetizer.Renderer
             GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, iboData.Length * sizeof(ushort), iboData);
 
             float[] vboData = mob.GetVertices();
-            uint[] boneIDs = model.ids;
-            uint[] boneWeights = model.weights;
+            uint[] boneIDs = mobyModel.ids;
+            uint[] boneWeights = mobyModel.weights;
 
             float[] fullData = new float[vboData.Length + boneIDs.Length + boneWeights.Length];
 
@@ -351,15 +359,18 @@ namespace Replanetizer.Renderer
 
         public override void Render(RendererPayload payload)
         {
-            if (mob == null || model == null || mob.memory == null) return;
+            if (mob == null || mob.model == null || mob.memory == null) return;
+
+            UpdateVars();
 
             if (emptyModel)
             {
                 return;
             }
 
-            UpdateVars();
             if (ComputeCulling(payload.camera, payload.visibility.enableDistanceCulling)) return;
+
+            MobyModel mobyModel = (MobyModel) mob.model;
 
             GL.BindVertexArray(vao);
 
@@ -385,19 +396,18 @@ namespace Replanetizer.Renderer
             int animationID = mob.memory.animationID;
             int animationFrame = mob.memory.animationFrame;
 
-            Frame frame = model.animations[animationID].frames[animationFrame];
+            Frame frame = mobyModel.animations[animationID].frames[animationFrame];
 
-            int boneCount = model.boneCount;
-            Matrix4[] boneMatrices = new Matrix4[boneCount];
+            Matrix4[] boneMatrices = new Matrix4[mobyModel.boneCount];
 
-            for (int i = 0; i < boneCount; i++)
+            for (int i = 0; i < mobyModel.boneCount; i++)
             {
                 Matrix4 animationMatrix = frame.GetRotationMatrix(i);
                 Vector3? scaling = frame.GetScaling(i);
                 Vector3? translation = frame.GetTranslation(i);
 
                 // Translations replace the bone data translation
-                Vector3 translationVector = (translation != null) ? (Vector3) translation : model.boneDatas[i].translation;
+                Vector3 translationVector = (translation != null) ? (Vector3) translation : mobyModel.boneDatas[i].translation;
 
                 animationMatrix.M41 = translationVector.X;
                 animationMatrix.M42 = translationVector.Y;
@@ -417,16 +427,16 @@ namespace Replanetizer.Renderer
                     animationMatrix.M33 *= s.Z;
                 }
 
-                Matrix4 parentMatrix = (i == 0) ? Matrix4.Identity : boneMatrices[model.boneDatas[i].parent];
+                Matrix4 parentMatrix = (i == 0) ? Matrix4.Identity : boneMatrices[mobyModel.boneDatas[i].parent];
 
                 // This is correct! It transforms each bone from root space to its correct modelspace position
                 // The only thing that is missing is transforming from default modelspace position to root space
                 boneMatrices[i] = animationMatrix * parentMatrix;
             }
 
-            for (int i = 0; i < boneCount; i++)
+            for (int i = 0; i < mobyModel.boneCount; i++)
             {
-                BoneMatrix boneMatrix = model.boneMatrices[i];
+                BoneMatrix boneMatrix = mobyModel.boneMatrices[i];
 
                 Vector3 off = boneMatrix.cumulativeOffset;
 
@@ -454,10 +464,10 @@ namespace Replanetizer.Renderer
                 boneMatrices[i] = invBindMatrix * boneMatrices[i];
             }
 
-            shaderTable.animationShader.SetUniformMatrix4("bones", boneCount, false, ref boneMatrices[0].Row0.X);
+            shaderTable.animationShader.SetUniformMatrix4("bones", mobyModel.boneCount, false, ref boneMatrices[0].Row0.X);
 
             //Bind textures one by one, applying it to the relevant vertices based on the index array
-            foreach (TextureConfig conf in model.textureConfig)
+            foreach (TextureConfig conf in mobyModel.textureConfig)
             {
                 GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[textures[conf.id]] : 0);
                 SetTransparencyMode(conf);

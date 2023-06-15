@@ -475,6 +475,8 @@ namespace Replanetizer.Renderer
         {
             if (modelObject == null) return;
 
+            UpdateVars();
+
             if (emptyModel || modelObject.model == null)
             {
                 if (payload.visibility.enableMeshlessModels)
@@ -493,7 +495,6 @@ namespace Replanetizer.Renderer
                 }
             }
 
-            UpdateVars();
             if (ComputeCulling(payload.camera, payload.visibility.enableDistanceCulling, payload.visibility.enableFrustumCulling)) return;
 
             GL.BindVertexArray(vao);

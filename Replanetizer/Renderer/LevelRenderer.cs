@@ -19,7 +19,7 @@ namespace Replanetizer.Renderer
     public class LevelRenderer : Renderer
     {
         private readonly ShaderTable shaderTable;
-        private Dictionary<Texture, int> textureIDs;
+        private Dictionary<Texture, GLTexture> textureIDs;
 
         private LevelVariables? levelVariables;
         private List<Light>? lights;
@@ -46,7 +46,7 @@ namespace Replanetizer.Renderer
         private ToolRenderer toolRenderer;
         private DirectionalLightsBuffer dirLightsBuffer;
 
-        public LevelRenderer(ShaderTable shaderTable, Dictionary<Texture, int> textureIDs)
+        public LevelRenderer(ShaderTable shaderTable, Dictionary<Texture, GLTexture> textureIDs)
         {
             this.shaderTable = shaderTable;
             this.textureIDs = textureIDs;

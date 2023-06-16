@@ -125,7 +125,7 @@ namespace Replanetizer.Renderer
             Vector3 up = new Vector3(worldToView[0, 1], worldToView[1, 1], worldToView[2, 1]).Normalized();
 
             shaderTable.billboardShader.UseShader();
-            shaderTable.billboardShader.SetUniformMatrix4("worldToView", false, ref worldToView);
+            shaderTable.billboardShader.SetUniformMatrix4("worldToView", ref worldToView);
             shaderTable.billboardShader.SetUniform3("right", right.X, right.Y, right.Z);
             shaderTable.billboardShader.SetUniform3("up", up.X, up.Y, up.Z);
 

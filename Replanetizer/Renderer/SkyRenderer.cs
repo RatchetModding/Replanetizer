@@ -23,9 +23,9 @@ namespace Replanetizer.Renderer
         private BufferContainer? container;
         private readonly ShaderTable shaderTable;
         private List<Texture> textures;
-        private Dictionary<Texture, int> textureIds;
+        private Dictionary<Texture, GLTexture> textureIds;
 
-        public SkyRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, int> textureIds)
+        public SkyRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, GLTexture> textureIds)
         {
             this.shaderTable = shaderTable;
             this.textureIds = textureIds;
@@ -64,14 +64,24 @@ namespace Replanetizer.Renderer
             GL.Disable(EnableCap.DepthTest);
 
             Matrix4 mvp = payload.camera.GetViewMatrix().ClearTranslation() * payload.camera.GetProjectionMatrix();
-            shaderTable.skyShader.SetUniformMatrix4("worldToView", false, ref mvp);
+            shaderTable.skyShader.SetUniformMatrix4("worldToView", ref mvp);
 
             container.Bind();
             for (int i = 0; i < sky.textureConfig.Count; i++)
             {
                 TextureConfig conf = sky.textureConfig[i];
                 shaderTable.skyShader.SetUniform1("texAvailable", (conf.id > 0) ? 1.0f : 0.0f);
-                GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[textures[conf.id]] : 0);
+                if (conf.id > 0)
+                {
+                    GLTexture tex = textureIds[textures[conf.id]];
+                    tex.SetWrapModes(TextureWrapMode.ClampToEdge, TextureWrapMode.ClampToEdge);
+                    tex.Bind();
+                }
+                else
+                {
+                    GLTexture.BindNull();
+                }
+
                 GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
             }
 

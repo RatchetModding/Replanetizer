@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using ImGuiNET;
 using LibReplanetizer;
+using Replanetizer.Renderer;
 using Replanetizer.Utils;
 
 
@@ -28,7 +29,7 @@ namespace Replanetizer.Frames
             itemSizeX = IMAGE_SIZE.X + ImGui.GetStyle().ItemSpacing.X;
         }
 
-        public static void RenderTextureList(List<Texture> textures, float itemSizeX, Dictionary<Texture, int> textureIds, string prefix = "", int additionalOffset = 0)
+        public static void RenderTextureList(List<Texture> textures, float itemSizeX, Dictionary<Texture, GLTexture> textureIds, string prefix = "", int additionalOffset = 0)
         {
             var width = ImGui.GetWindowContentRegionMax().X - ImGui.GetWindowContentRegionMin().X - additionalOffset;
             var itemsPerRow = (int) Math.Floor(width / itemSizeX);
@@ -41,7 +42,7 @@ namespace Replanetizer.Frames
                 Texture t = textures[i];
 
                 ImGui.BeginChild("imageChild_" + prefix + i, ITEM_SIZE, false);
-                ImGui.Image((IntPtr) textureIds[t], IMAGE_SIZE);
+                ImGui.Image((IntPtr) textureIds[t].textureID, IMAGE_SIZE);
                 string idText = prefix + t.id;
                 float idWidth = ImGui.CalcTextSize(idText).X;
                 ImGui.SetCursorPosX(ITEM_SIZE.X - idWidth);
@@ -63,7 +64,7 @@ namespace Replanetizer.Frames
                 else if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Image((IntPtr) textureIds[t], new System.Numerics.Vector2(t.width, t.height));
+                    ImGui.Image((IntPtr) textureIds[t].textureID, new System.Numerics.Vector2(t.width, t.height));
                     string resolutionText = $"{t.width}x{t.height}";
                     float resolutionWidth = ImGui.CalcTextSize(resolutionText).X;
                     ImGui.SetCursorPosX(t.width - resolutionWidth);

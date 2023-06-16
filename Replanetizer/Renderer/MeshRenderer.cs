@@ -50,12 +50,12 @@ namespace Replanetizer.Renderer
         private float blendDistance = 0.0f;
 
         private List<Texture> textures;
-        private Dictionary<Texture, int> textureIds;
+        private Dictionary<Texture, GLTexture> textureIds;
         private ShaderTable shaderTable;
         private BillboardRenderer fallback;
         private AnimationRenderer? animationRenderer = null;
 
-        public MeshRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, int> textureIds)
+        public MeshRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, GLTexture> textureIds)
         {
             this.shaderTable = shaderTable;
             this.textureIds = textureIds;
@@ -340,7 +340,7 @@ namespace Replanetizer.Renderer
         /// <summary>
         /// Takes a textureConfig as input and sets the texture wrap modes based on that.
         /// </summary>
-        private void SetTextureWrapMode(TextureConfig conf)
+        private void SetTextureWrapMode(TextureConfig conf, GLTexture tex)
         {
             /*
              * There is an issue with opaque edges in some transparent objects
@@ -348,29 +348,31 @@ namespace Replanetizer.Renderer
              * of the fading out buildings.
              */
 
+            TextureWrapMode wrapS, wrapT;
+
             switch (conf.wrapModeS)
             {
-                case TextureConfig.WrapMode.Repeat:
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
-                    break;
                 case TextureConfig.WrapMode.ClampEdge:
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.ClampToEdge);
+                    wrapS = TextureWrapMode.ClampToEdge;
                     break;
+                case TextureConfig.WrapMode.Repeat:
                 default:
+                    wrapS = TextureWrapMode.Repeat;
                     break;
             }
 
             switch (conf.wrapModeT)
             {
-                case TextureConfig.WrapMode.Repeat:
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
-                    break;
                 case TextureConfig.WrapMode.ClampEdge:
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.ClampToEdge);
+                    wrapT = TextureWrapMode.ClampToEdge;
                     break;
+                case TextureConfig.WrapMode.Repeat:
                 default:
+                    wrapT = TextureWrapMode.Repeat;
                     break;
             }
+
+            tex.SetWrapModes(wrapS, wrapT);
         }
 
         /// <summary>
@@ -510,8 +512,8 @@ namespace Replanetizer.Renderer
                     shaderTable.meshShader.UseShader();
 
                     Matrix4 worldToView = (payload == null) ? Matrix4.Identity : payload.camera.GetWorldViewMatrix();
-                    shaderTable.meshShader.SetUniformMatrix4("modelToWorld", false, ref modelObject.modelMatrix);
-                    shaderTable.meshShader.SetUniformMatrix4("worldToView", false, ref worldToView);
+                    shaderTable.meshShader.SetUniformMatrix4("modelToWorld", ref modelObject.modelMatrix);
+                    shaderTable.meshShader.SetUniformMatrix4("worldToView", ref worldToView);
                     shaderTable.meshShader.SetUniform1("levelObjectNumber", modelObject.globalID);
                     shaderTable.meshShader.SetUniform1("levelObjectType", (int) type);
                     shaderTable.meshShader.SetUniform4("staticColor", ambient);
@@ -521,9 +523,17 @@ namespace Replanetizer.Renderer
                     //Bind textures one by one, applying it to the relevant vertices based on the index array
                     foreach (TextureConfig conf in modelObject.model.textureConfig)
                     {
-                        GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[textures[conf.id]] : 0);
+                        if (conf.id > 0)
+                        {
+                            GLTexture tex = textureIds[textures[conf.id]];
+                            tex.Bind();
+                            SetTextureWrapMode(conf, tex);
+                        }
+                        else
+                        {
+                            GLTexture.BindNull();
+                        }
                         SetTransparencyMode(conf);
-                        SetTextureWrapMode(conf);
                         GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                     }
 
@@ -531,8 +541,8 @@ namespace Replanetizer.Renderer
                     {
                         shaderTable.colorShader.UseShader();
 
-                        shaderTable.colorShader.SetUniformMatrix4("modelToWorld", false, ref modelObject.modelMatrix);
-                        shaderTable.colorShader.SetUniformMatrix4("worldToView", false, ref worldToView);
+                        shaderTable.colorShader.SetUniformMatrix4("modelToWorld", ref modelObject.modelMatrix);
+                        shaderTable.colorShader.SetUniformMatrix4("worldToView", ref worldToView);
                         shaderTable.colorShader.SetUniform1("levelObjectNumber", modelObject.globalID);
                         shaderTable.colorShader.SetUniform1("levelObjectType", (int) type);
                         shaderTable.colorShader.SetUniform4("incolor", 1.0f, 1.0f, 1.0f, 1.0f);

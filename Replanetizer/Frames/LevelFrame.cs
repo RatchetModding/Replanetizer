@@ -72,7 +72,7 @@ namespace Replanetizer.Frames
 
         private Toolbox toolbox = new();
 
-        public Dictionary<Texture, int> textureIds = new Dictionary<Texture, int>();
+        public Dictionary<Texture, GLTexture> textureIds = new Dictionary<Texture, GLTexture>();
 
         private MemoryHookHandle? hook = null;
         private bool interactiveSession = false;
@@ -537,116 +537,41 @@ namespace Replanetizer.Frames
                                         4.0f / 17.0f, 12.0f / 17.0f, 2.0f / 17.0f, 10.0f / 17.0f,
                                         16.0f / 17.0f, 8.0f / 17.0f, 14.0f / 17.0f, 6.0f / 17.0f);
             shaderTable.meshShader.UseShader();
-            shaderTable.meshShader.SetUniformMatrix4("dissolvePattern", false, ref dissolvePattern);
+            shaderTable.meshShader.SetUniformMatrix4("dissolvePattern", ref dissolvePattern);
             shaderTable.animationShader.UseShader();
-            shaderTable.animationShader.SetUniformMatrix4("dissolvePattern", false, ref dissolvePattern);
+            shaderTable.animationShader.SetUniformMatrix4("dissolvePattern", ref dissolvePattern);
 
             initialized = true;
 
             OnResize();
         }
 
-        private void SetTextureWrapMode(TextureConfig conf, TextureWrapMode wrapMode)
-        {
-            if (conf.id > 0)
-            {
-                GL.BindTexture(TextureTarget.Texture2D, textureIds[level.textures[conf.id]]);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) wrapMode);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) wrapMode);
-            }
-        }
-
-        private void LoadTexture(Texture t)
-        {
-            int texId;
-            GL.GenTextures(1, out texId);
-            GL.BindTexture(TextureTarget.Texture2D, texId);
-
-            // The game uses either Repeat or ClampToEdge
-            // The texture configuration determines which one is used
-            // Different modes may be used for S and T
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
-
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float) TextureMinFilter.LinearMipmapLinear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (float) TextureMagFilter.Linear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBaseLevel, 0);
-
-            // The game uses a negative LOD Bias, the value is taken from RenderDoc on RPCS3.
-            // The game may do this because of the low-res textures.
-            // NOTE: This data was gathered using RPCS3's strict rendering mode so it seems unlikely that it was introduced through RPCS3.
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureLodBias, -1.5f);
-
-            // Custom MP levels may have an incorrect number of mipmaps specified so we need to dynamically figure that out
-            int mipLevel = 0;
-
-            if (t.mipMapCount > 1)
-            {
-                int mipWidth = t.width;
-                int mipHeight = t.height;
-                int offset = 0;
-
-                for (; mipLevel < t.mipMapCount; mipLevel++)
-                {
-                    if (mipWidth > 0 && mipHeight > 0)
-                    {
-                        int size = ((mipWidth + 3) / 4) * ((mipHeight + 3) / 4) * 16;
-                        if (offset + size > t.data.Length)
-                        {
-                            LOGGER.Debug($"Texture {t.id} claims to have {t.mipMapCount} mipmaps but only has {mipLevel}!");
-                            break;
-                        }
-                        byte[] texPart = new byte[size];
-                        Array.Copy(t.data, offset, texPart, 0, size);
-                        GL.CompressedTexImage2D(TextureTarget.Texture2D, mipLevel, InternalFormat.CompressedRgbaS3tcDxt5Ext, mipWidth, mipHeight, 0, size, texPart);
-                        offset += size;
-                        mipWidth /= 2;
-                        mipHeight /= 2;
-                    }
-                }
-
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, mipLevel - 1);
-            }
-            else
-            {
-                int size = ((t.width + 3) / 4) * ((t.height + 3) / 4) * 16;
-                GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, InternalFormat.CompressedRgbaS3tcDxt5Ext, t.width, t.height, 0, size, t.data);
-                GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-            }
-
-            textureIds.Add(t, texId);
-            GLUtil.CheckGlError("Texture " + t.id);
-        }
-
         void LoadLevelTextures()
         {
-            textureIds = new Dictionary<Texture, int>();
+            textureIds = new Dictionary<Texture, GLTexture>();
             foreach (Texture t in level.textures)
             {
-                LoadTexture(t);
+                textureIds.Add(t, new GLTexture(t));
             }
-
-            // Skybox textures use ClampToEdge
-            foreach (TextureConfig conf in level.skybox.textureConfig) SetTextureWrapMode(conf, TextureWrapMode.ClampToEdge);
 
             foreach (List<Texture> list in level.armorTextures)
             {
                 foreach (Texture t in list)
                 {
-                    LoadTexture(t);
+                    textureIds.Add(t, new GLTexture(t));
                 }
             }
 
             foreach (Texture t in level.gadgetTextures)
             {
-                LoadTexture(t);
+                textureIds.Add(t, new GLTexture(t));
             }
 
             foreach (Mission mission in level.missions)
             {
                 foreach (Texture t in mission.textures)
                 {
-                    LoadTexture(t);
+                    textureIds.Add(t, new GLTexture(t));
                 }
             }
         }

@@ -612,8 +612,8 @@ namespace Replanetizer.Frames
                 Matrix4 mvp = trans * scale * rot;
 
                 shaderTable.meshShader.UseShader();
-                shaderTable.meshShader.SetUniformMatrix4("modelToWorld", false, ref mvp);
-                shaderTable.meshShader.SetUniformMatrix4("worldToView", false, ref worldView);
+                shaderTable.meshShader.SetUniformMatrix4("modelToWorld", ref mvp);
+                shaderTable.meshShader.SetUniformMatrix4("worldToView", ref worldView);
                 shaderTable.meshShader.SetUniform1("levelObjectType", (int) RenderedObjectType.Null);
 
                 container.Bind();
@@ -621,10 +621,17 @@ namespace Replanetizer.Frames
                 //Bind textures one by one, applying it to the relevant vertices based on the index array
                 foreach (TextureConfig conf in selectedModel.textureConfig)
                 {
-                    GL.BindTexture(TextureTarget.Texture2D, (conf.id >= 0 && conf.id < selectedTextureSet.Count) ? levelFrame.textureIds[selectedTextureSet[conf.id]] : 0);
+                    if (conf.id >= 0 && conf.id < selectedTextureSet.Count)
+                    {
+                        GLTexture tex = levelFrame.textureIds[selectedTextureSet[conf.id]];
+                        tex.Bind();
+                        tex.SetWrapModes((conf.wrapModeS == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge, (conf.wrapModeT == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge);
+                    }
+                    else
+                    {
+                        GLTexture.BindNull();
+                    }
                     shaderTable.meshShader.SetUniform1("useTransparency", (conf.IgnoresTransparency()) ? 0 : 1);
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) ((conf.wrapModeS == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge));
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) ((conf.wrapModeT == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge));
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
             }

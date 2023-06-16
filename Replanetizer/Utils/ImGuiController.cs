@@ -154,7 +154,7 @@ void main()
             fontGlTexture.SetMagFilter(TextureMagFilter.Linear);
             fontGlTexture.SetMinFilter(TextureMinFilter.Linear);
 
-            io.Fonts.SetTexID((IntPtr) fontGlTexture.TEXTURE);
+            io.Fonts.SetTexID((IntPtr) fontGlTexture.textureID);
             io.Fonts.ClearTexData();
         }
 
@@ -341,8 +341,8 @@ void main()
                 1.0f);
 
             shader.UseShader();
-            GL.UniformMatrix4(shader.GetUniformLocation("projection_matrix"), false, ref mvp);
-            GL.Uniform1(shader.GetUniformLocation("in_fontTexture"), 0);
+            shader.SetUniformMatrix4("projection_matrix", ref mvp);
+            shader.SetUniform1("in_fontTexture", 0);
             GLUtil.CheckGlError("Projection");
 
             GL.BindVertexArray(vertexArray);

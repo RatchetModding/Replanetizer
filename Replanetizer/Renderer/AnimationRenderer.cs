@@ -50,12 +50,12 @@ namespace Replanetizer.Renderer
         private float blendDistance = 0.0f;
 
         private List<Texture> textures;
-        private Dictionary<Texture, int> textureIds;
+        private Dictionary<Texture, GLTexture> textureIds;
         private ShaderTable shaderTable;
 
         private Frame? previousFrame = null;
 
-        public AnimationRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, int> textureIds)
+        public AnimationRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, GLTexture> textureIds)
         {
             this.shaderTable = shaderTable;
             this.textureIds = textureIds;
@@ -278,7 +278,7 @@ namespace Replanetizer.Renderer
         /// <summary>
         /// Takes a textureConfig as input and sets the texture wrap modes based on that.
         /// </summary>
-        private void SetTextureWrapMode(TextureConfig conf)
+        private void SetTextureWrapMode(TextureConfig conf, GLTexture tex)
         {
             /*
              * There is an issue with opaque edges in some transparent objects
@@ -286,30 +286,33 @@ namespace Replanetizer.Renderer
              * of the fading out buildings.
              */
 
+            TextureWrapMode wrapS, wrapT;
+
             switch (conf.wrapModeS)
             {
-                case TextureConfig.WrapMode.Repeat:
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
-                    break;
                 case TextureConfig.WrapMode.ClampEdge:
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.ClampToEdge);
+                    wrapS = TextureWrapMode.ClampToEdge;
                     break;
+                case TextureConfig.WrapMode.Repeat:
                 default:
+                    wrapS = TextureWrapMode.Repeat;
                     break;
             }
 
             switch (conf.wrapModeT)
             {
-                case TextureConfig.WrapMode.Repeat:
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
-                    break;
                 case TextureConfig.WrapMode.ClampEdge:
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.ClampToEdge);
+                    wrapT = TextureWrapMode.ClampToEdge;
                     break;
+                case TextureConfig.WrapMode.Repeat:
                 default:
+                    wrapT = TextureWrapMode.Repeat;
                     break;
             }
+
+            tex.SetWrapModes(wrapS, wrapT);
         }
+
 
         /// <summary>
         /// Sets an internal variable to true if the corresponding modelObject is equal to
@@ -382,8 +385,8 @@ namespace Replanetizer.Renderer
             shaderTable.animationShader.UseShader();
 
             Matrix4 worldToView = (payload == null) ? Matrix4.Identity : payload.camera.GetWorldViewMatrix();
-            shaderTable.animationShader.SetUniformMatrix4("modelToWorld", false, ref mob.modelMatrix);
-            shaderTable.animationShader.SetUniformMatrix4("worldToView", false, ref worldToView);
+            shaderTable.animationShader.SetUniformMatrix4("modelToWorld", ref mob.modelMatrix);
+            shaderTable.animationShader.SetUniformMatrix4("worldToView", ref worldToView);
             shaderTable.animationShader.SetUniform1("levelObjectNumber", mob.globalID);
             if (selected)
             {
@@ -484,14 +487,22 @@ namespace Replanetizer.Renderer
 
             previousFrame = frame;
 
-            shaderTable.animationShader.SetUniformMatrix4("bones", mobyModel.boneCount, false, ref boneMatrices[0].Row0.X);
+            shaderTable.animationShader.SetUniformMatrix4("bones", mobyModel.boneCount, ref boneMatrices[0].Row0.X);
 
             //Bind textures one by one, applying it to the relevant vertices based on the index array
             foreach (TextureConfig conf in mobyModel.textureConfig)
             {
-                GL.BindTexture(TextureTarget.Texture2D, (conf.id > 0) ? textureIds[textures[conf.id]] : 0);
+                if (conf.id > 0)
+                {
+                    GLTexture tex = textureIds[textures[conf.id]];
+                    tex.Bind();
+                    SetTextureWrapMode(conf, tex);
+                }
+                else
+                {
+                    GLTexture.BindNull();
+                }
                 SetTransparencyMode(conf);
-                SetTextureWrapMode(conf);
                 GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
             }
 

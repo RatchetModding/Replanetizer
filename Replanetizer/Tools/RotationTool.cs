@@ -84,7 +84,7 @@ namespace Replanetizer.Tools
 
             table.colorShader.UseShader();
 
-            table.colorShader.SetUniformMatrix4("modelToWorld", false, ref mat);
+            table.colorShader.SetUniformMatrix4("modelToWorld", ref mat);
 
             table.colorShader.SetUniform1("levelObjectNumber", 0);
             table.colorShader.SetUniform4("incolor", 1.0f, 0.0f, 0.0f, 1.0f);

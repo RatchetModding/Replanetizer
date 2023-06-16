@@ -29,7 +29,7 @@ namespace Replanetizer.Renderer
 
         public readonly string NAME;
         public int program { get; private set; }
-        private readonly Dictionary<string, int> UNIFORM_TO_LOCATION = new Dictionary<string, int>();
+        private readonly Dictionary<string, GLUniform> uniforms = new Dictionary<string, GLUniform>();
         private bool initialized = false;
 
         private readonly (ShaderType Type, string Path)[] FILES;
@@ -82,33 +82,44 @@ namespace Replanetizer.Renderer
             {
                 string name = GL.GetActiveUniform(program, i, out int size, out ActiveUniformType type);
 
-                UniformFieldInfo fieldInfo;
-                fieldInfo.location = GetUniformLocation(name);
-                fieldInfo.name = name;
-                fieldInfo.size = size;
-                fieldInfo.type = type;
+                GLUniform? uniform = GetUniformLocation(name);
 
-                uniforms[i] = fieldInfo;
+                if (uniform != null)
+                {
+                    UniformFieldInfo fieldInfo;
+                    fieldInfo.location = uniform.GetLocation();
+                    fieldInfo.name = name;
+                    fieldInfo.size = size;
+                    fieldInfo.type = type;
+
+                    uniforms[i] = fieldInfo;
+                }
             }
 
             return uniforms;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int GetUniformLocation(string uniform)
+        public GLUniform? GetUniformLocation(string name)
         {
-            if (UNIFORM_TO_LOCATION.TryGetValue(uniform, out int location) == false)
+            uniforms.TryGetValue(name, out GLUniform? uniform);
+
+            if (uniform == null)
             {
-                location = GL.GetUniformLocation(program, uniform);
-                UNIFORM_TO_LOCATION.Add(uniform, location);
+                int location = GL.GetUniformLocation(program, name);
 
                 if (location == -1)
                 {
-                    Debug.Print($"The uniform '{uniform}' does not exist in the shader '{NAME}'!");
+                    Debug.Print($"The uniform '{name}' does not exist in the shader '{NAME}'!");
+                }
+                else
+                {
+                    uniform = new GLUniform(name, location);
+                    uniforms.Add(name, uniform);
                 }
             }
 
-            return location;
+            return uniform;
         }
 
         private int CreateProgram(string name, params (ShaderType Type, string source)[] shaderPaths)
@@ -161,97 +172,123 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniformMatrix4(string uniform, bool transpose, ref Matrix4 mat)
+        public void SetUniformMatrix4(string uniformName, ref Matrix4 mat)
         {
-            int location = GetUniformLocation(uniform);
+            GLUniform? uniform = GetUniformLocation(uniformName);
 
-            if (location != -1)
+            if (uniform != null)
             {
-                GL.UniformMatrix4(location, transpose, ref mat);
+                UseShader();
+                uniform.SetMatrix4(ref mat);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniformMatrix4(string uniform, int count, bool transpose, float[] mat)
+        public void SetUniformMatrix4(string uniformName, int count, float[] mat)
         {
-            int location = GetUniformLocation(uniform);
+            GLUniform? uniform = GetUniformLocation(uniformName);
 
-            if (location != -1)
+            if (uniform != null)
             {
-                GL.UniformMatrix4(location, count, transpose, mat);
+                UseShader();
+                uniform.SetMatrix4(count, mat);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniformMatrix4(string uniform, int count, bool transpose, ref float mat)
+        public void SetUniformMatrix4(string uniformName, int count, ref float mat)
         {
-            int location = GetUniformLocation(uniform);
+            GLUniform? uniform = GetUniformLocation(uniformName);
 
-            if (location != -1)
+            if (uniform != null)
             {
-                GL.UniformMatrix4(location, count, transpose, ref mat);
+                UseShader();
+                uniform.SetMatrix4(count, ref mat);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform1(string uniform, float v)
+        public void SetUniform1(string uniformName, float v)
         {
-            int location = GetUniformLocation(uniform);
+            GLUniform? uniform = GetUniformLocation(uniformName);
 
-            if (location != -1)
+            if (uniform != null)
             {
-                GL.Uniform1(location, v);
+                UseShader();
+                uniform.Set1(v);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform1(string uniform, int v)
+        public void SetUniform1(string uniformName, int v)
         {
-            int location = GetUniformLocation(uniform);
+            GLUniform? uniform = GetUniformLocation(uniformName);
 
-            if (location != -1)
+            if (uniform != null)
             {
-                GL.Uniform1(location, v);
+                UseShader();
+                uniform.Set1(v);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform3(string uniform, float v0, float v1, float v2)
+        public void SetUniform3(string uniformName, Vector3 v)
         {
-            int location = GetUniformLocation(uniform);
+            GLUniform? uniform = GetUniformLocation(uniformName);
 
-            if (location != -1)
+            if (uniform != null)
             {
-                GL.Uniform3(location, v0, v1, v2);
+                UseShader();
+                uniform.Set3(v);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform4(string uniform, Color color)
+        public void SetUniform3(string uniformName, float v0, float v1, float v2)
         {
-            int location = GetUniformLocation(uniform);
+            GLUniform? uniform = GetUniformLocation(uniformName);
 
-            if (location != -1)
+            if (uniform != null)
             {
-                GL.Uniform4(location, color);
+                UseShader();
+                uniform.Set3(v0, v1, v2);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform4(string uniform, float v0, float v1, float v2, float v3)
+        public void SetUniform4(string uniformName, Color color)
         {
-            int location = GetUniformLocation(uniform);
+            GLUniform? uniform = GetUniformLocation(uniformName);
 
-            if (location != -1)
+            if (uniform != null)
             {
-                GL.Uniform4(location, v0, v1, v2, v3);
+                UseShader();
+                uniform.Set4(color);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform4(string uniform, Vector4 v)
+        public void SetUniform4(string uniformName, float v0, float v1, float v2, float v3)
         {
-            SetUniform4(uniform, v.X, v.Y, v.Z, v.W);
+            GLUniform? uniform = GetUniformLocation(uniformName);
+
+            if (uniform != null)
+            {
+                UseShader();
+                uniform.Set4(v0, v1, v2, v3);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniform4(string uniformName, Vector4 v)
+        {
+            GLUniform? uniform = GetUniformLocation(uniformName);
+
+            if (uniform != null)
+            {
+                UseShader();
+                uniform.Set4(v);
+            }
         }
     }
 }

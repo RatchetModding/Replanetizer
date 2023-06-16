@@ -477,6 +477,11 @@ namespace Replanetizer.Renderer
         {
             if (modelObject == null) return;
 
+            if (modelObject is Moby mob && mob.memory != null && mob.memory.IsDead())
+            {
+                return;
+            }
+
             UpdateVars();
 
             if (emptyModel || modelObject.model == null)

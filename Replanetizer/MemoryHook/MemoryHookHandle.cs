@@ -107,19 +107,28 @@ namespace Replanetizer.MemoryHook
             ReadProcessMemory(PROCESS_HANDLE, ADDRESSES.moby, ptrbuf, ptrbuf.Length, ref bytesRead);
             int firstMoby = ReadInt(ptrbuf, 0x00);
             int lastMoby = ReadInt(ptrbuf, 0x08);
+            int numMobs = (lastMoby - firstMoby) / 0x100 + 1;
 
-            byte[] mobys = new byte[lastMoby - firstMoby + 0x100];
+            byte[] mobys = new byte[numMobs * 0x100];
 
             ReadProcessMemory(PROCESS_HANDLE, 0x300000000 + firstMoby, mobys, mobys.Length, ref bytesRead);
 
-            while (levelMobs.Count < mobys.Length / 0x100)
+            while (levelMobs.Count < numMobs)
             {
                 Moby mob = new Moby();
                 levelMobs.Add(mob);
                 frame.levelRenderer?.Include(mob);
             }
 
-            for (int i = 0; i < mobys.Length / 0x100; i++)
+            if (numMobs < levelMobs.Count)
+            {
+                for (int i = numMobs; i < levelMobs.Count; i++)
+                {
+                    levelMobs[i].SetDead();
+                }
+            }
+
+            for (int i = 0; i < numMobs; i++)
             {
                 levelMobs[i].UpdateFromMemory(mobys, i * 0x100, models);
             }

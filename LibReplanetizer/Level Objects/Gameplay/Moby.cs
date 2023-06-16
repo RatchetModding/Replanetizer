@@ -724,6 +724,16 @@ namespace LibReplanetizer.LevelObjects
             {
             }
 
+            public bool IsDead()
+            {
+                return (state & 0x80) > 0;
+            }
+
+            public void SetDead()
+            {
+                state |= 0x80;
+            }
+
             public void Update(byte[] memory, int offset)
             {
                 float collX = ReadFloat(memory, offset + 0x00);
@@ -786,6 +796,16 @@ namespace LibReplanetizer.LevelObjects
             }
         }
 
+        public void SetDead()
+        {
+            if (memory == null)
+            {
+                memory = new IngameMobyMemory();
+            }
+
+            memory.SetDead();
+        }
+
         public void UpdateFromMemory(byte[] mobyMemory, int offset, List<Model> models)
         {
             if (memory == null)
@@ -798,7 +818,7 @@ namespace LibReplanetizer.LevelObjects
             pVarMemoryAddress = 0x300000000 + memory.pVars;
 
             // If dead
-            if (memory.state > 0x7F)
+            if (memory.IsDead())
             {
                 model = null;
                 return;

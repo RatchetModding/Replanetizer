@@ -64,13 +64,13 @@ namespace Replanetizer.Renderer
             GL.Disable(EnableCap.DepthTest);
 
             Matrix4 mvp = payload.camera.GetViewMatrix().ClearTranslation() * payload.camera.GetProjectionMatrix();
-            shaderTable.skyShader.SetUniformMatrix4("worldToView", ref mvp);
+            shaderTable.skyShader.SetUniformMatrix4(UniformName.worldToView, ref mvp);
 
             container.Bind();
             for (int i = 0; i < sky.textureConfig.Count; i++)
             {
                 TextureConfig conf = sky.textureConfig[i];
-                shaderTable.skyShader.SetUniform1("texAvailable", (conf.id > 0) ? 1.0f : 0.0f);
+                shaderTable.skyShader.SetUniform1(UniformName.texAvailable, (conf.id > 0) ? 1.0f : 0.0f);
                 if (conf.id > 0)
                 {
                     GLTexture tex = textureIds[textures[conf.id]];

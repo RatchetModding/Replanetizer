@@ -35,7 +35,7 @@ namespace Replanetizer.Renderer
 
             GL.Disable(EnableCap.DepthTest);
             shaderTable.colorShader.UseShader();
-            shaderTable.colorShader.SetUniform1("levelObjectType", (int) RenderedObjectType.Tool);
+            shaderTable.colorShader.SetUniform1(UniformName.levelObjectType, (int) RenderedObjectType.Tool);
 
             if (payload.selection.TryGetOne(out var obj) && obj is Spline spline &&
                 payload.toolbox.tool is VertexTranslationTool vertexTranslationTool)

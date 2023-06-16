@@ -5,6 +5,7 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -27,9 +28,11 @@ namespace Replanetizer.Renderer
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
 
+        private static readonly int TOTAL_NUM_UNIFORMS = Enum.GetNames(typeof(UniformName)).Length;
+
         public readonly string NAME;
         public int program { get; private set; }
-        private readonly Dictionary<string, GLUniform> uniforms = new Dictionary<string, GLUniform>();
+        private readonly GLUniform[] uniforms = new GLUniform[TOTAL_NUM_UNIFORMS];
         private bool initialized = false;
 
         private readonly (ShaderType Type, string Path)[] FILES;
@@ -72,50 +75,23 @@ namespace Replanetizer.Renderer
             }
         }
 
-        public UniformFieldInfo[] GetUniforms()
-        {
-            GL.GetProgram(program, GetProgramParameterName.ActiveUniforms, out int uniformCount);
-
-            UniformFieldInfo[] uniforms = new UniformFieldInfo[uniformCount];
-
-            for (int i = 0; i < uniformCount; i++)
-            {
-                string name = GL.GetActiveUniform(program, i, out int size, out ActiveUniformType type);
-
-                GLUniform? uniform = GetUniformLocation(name);
-
-                if (uniform != null)
-                {
-                    UniformFieldInfo fieldInfo;
-                    fieldInfo.location = uniform.GetLocation();
-                    fieldInfo.name = name;
-                    fieldInfo.size = size;
-                    fieldInfo.type = type;
-
-                    uniforms[i] = fieldInfo;
-                }
-            }
-
-            return uniforms;
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public GLUniform? GetUniformLocation(string name)
+        public GLUniform? GetUniformLocation(UniformName name)
         {
-            uniforms.TryGetValue(name, out GLUniform? uniform);
+            GLUniform? uniform = uniforms[(int) name];
 
             if (uniform == null)
             {
-                int location = GL.GetUniformLocation(program, name);
+                int location = GL.GetUniformLocation(program, name.ToString());
 
                 if (location == -1)
                 {
-                    Debug.Print($"The uniform '{name}' does not exist in the shader '{NAME}'!");
+                    Debug.Print($"The uniform '{name.ToString()}' does not exist in the shader '{NAME}'!");
                 }
                 else
                 {
-                    uniform = new GLUniform(name, location);
-                    uniforms.Add(name, uniform);
+                    uniform = new GLUniform(location);
+                    uniforms[(int) name] = uniform;
                 }
             }
 
@@ -172,7 +148,7 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniformMatrix4(string uniformName, ref Matrix4 mat)
+        public void SetUniformMatrix4(UniformName uniformName, ref Matrix4 mat)
         {
             GLUniform? uniform = GetUniformLocation(uniformName);
 
@@ -184,7 +160,7 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniformMatrix4(string uniformName, int count, float[] mat)
+        public void SetUniformMatrix4(UniformName uniformName, int count, float[] mat)
         {
             GLUniform? uniform = GetUniformLocation(uniformName);
 
@@ -196,7 +172,7 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniformMatrix4(string uniformName, int count, ref float mat)
+        public void SetUniformMatrix4(UniformName uniformName, int count, ref float mat)
         {
             GLUniform? uniform = GetUniformLocation(uniformName);
 
@@ -208,7 +184,7 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform1(string uniformName, float v)
+        public void SetUniform1(UniformName uniformName, float v)
         {
             GLUniform? uniform = GetUniformLocation(uniformName);
 
@@ -220,7 +196,7 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform1(string uniformName, int v)
+        public void SetUniform1(UniformName uniformName, int v)
         {
             GLUniform? uniform = GetUniformLocation(uniformName);
 
@@ -232,7 +208,7 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform3(string uniformName, Vector3 v)
+        public void SetUniform3(UniformName uniformName, Vector3 v)
         {
             GLUniform? uniform = GetUniformLocation(uniformName);
 
@@ -244,7 +220,7 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform3(string uniformName, float v0, float v1, float v2)
+        public void SetUniform3(UniformName uniformName, float v0, float v1, float v2)
         {
             GLUniform? uniform = GetUniformLocation(uniformName);
 
@@ -256,7 +232,7 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform4(string uniformName, Color color)
+        public void SetUniform4(UniformName uniformName, Color color)
         {
             GLUniform? uniform = GetUniformLocation(uniformName);
 
@@ -268,7 +244,7 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform4(string uniformName, float v0, float v1, float v2, float v3)
+        public void SetUniform4(UniformName uniformName, float v0, float v1, float v2, float v3)
         {
             GLUniform? uniform = GetUniformLocation(uniformName);
 
@@ -280,7 +256,7 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform4(string uniformName, Vector4 v)
+        public void SetUniform4(UniformName uniformName, Vector4 v)
         {
             GLUniform? uniform = GetUniformLocation(uniformName);
 

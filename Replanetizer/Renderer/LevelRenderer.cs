@@ -233,24 +233,24 @@ namespace Replanetizer.Renderer
             bool useFog = payload.visibility.enableFog && levelVariables != null;
 
             shaderTable.animationShader.UseShader();
-            shaderTable.animationShader.SetUniform1("useFog", (useFog) ? 1 : 0);
+            shaderTable.animationShader.SetUniform1(UniformName.useFog, (useFog) ? 1 : 0);
 
             if (useFog && levelVariables != null)
             {
-                shaderTable.animationShader.SetUniform4("fogColor", levelVariables.fogColor);
-                shaderTable.animationShader.SetUniform4("fogParams", levelVariables.fogNearDistance / 1024.0f,
+                shaderTable.animationShader.SetUniform4(UniformName.fogColor, levelVariables.fogColor);
+                shaderTable.animationShader.SetUniform4(UniformName.fogParams, levelVariables.fogNearDistance / 1024.0f,
                         1024.0f / (levelVariables.fogFarDistance - levelVariables.fogNearDistance),
                         1.0f - levelVariables.fogNearIntensity / 255.0f,
                         1.0f - levelVariables.fogFarIntensity / 255.0f);
             }
 
             shaderTable.meshShader.UseShader();
-            shaderTable.meshShader.SetUniform1("useFog", (useFog) ? 1 : 0);
+            shaderTable.meshShader.SetUniform1(UniformName.useFog, (useFog) ? 1 : 0);
 
             if (useFog && levelVariables != null)
             {
-                shaderTable.meshShader.SetUniform4("fogColor", levelVariables.fogColor);
-                shaderTable.meshShader.SetUniform4("fogParams", levelVariables.fogNearDistance / 1024.0f,
+                shaderTable.meshShader.SetUniform4(UniformName.fogColor, levelVariables.fogColor);
+                shaderTable.meshShader.SetUniform4(UniformName.fogParams, levelVariables.fogNearDistance / 1024.0f,
                         1024.0f / (levelVariables.fogFarDistance - levelVariables.fogNearDistance),
                         1.0f - levelVariables.fogNearIntensity / 255.0f,
                         1.0f - levelVariables.fogFarIntensity / 255.0f);

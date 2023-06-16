@@ -537,9 +537,9 @@ namespace Replanetizer.Frames
                                         4.0f / 17.0f, 12.0f / 17.0f, 2.0f / 17.0f, 10.0f / 17.0f,
                                         16.0f / 17.0f, 8.0f / 17.0f, 14.0f / 17.0f, 6.0f / 17.0f);
             shaderTable.meshShader.UseShader();
-            shaderTable.meshShader.SetUniformMatrix4("dissolvePattern", ref dissolvePattern);
+            shaderTable.meshShader.SetUniformMatrix4(UniformName.dissolvePattern, ref dissolvePattern);
             shaderTable.animationShader.UseShader();
-            shaderTable.animationShader.SetUniformMatrix4("dissolvePattern", ref dissolvePattern);
+            shaderTable.animationShader.SetUniformMatrix4(UniformName.dissolvePattern, ref dissolvePattern);
 
             initialized = true;
 

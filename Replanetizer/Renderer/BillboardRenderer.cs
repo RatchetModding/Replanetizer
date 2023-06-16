@@ -125,9 +125,9 @@ namespace Replanetizer.Renderer
             Vector3 up = new Vector3(worldToView[0, 1], worldToView[1, 1], worldToView[2, 1]).Normalized();
 
             shaderTable.billboardShader.UseShader();
-            shaderTable.billboardShader.SetUniformMatrix4("worldToView", ref worldToView);
-            shaderTable.billboardShader.SetUniform3("right", right.X, right.Y, right.Z);
-            shaderTable.billboardShader.SetUniform3("up", up.X, up.Y, up.Z);
+            shaderTable.billboardShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
+            shaderTable.billboardShader.SetUniform3(UniformName.right, right.X, right.Y, right.Z);
+            shaderTable.billboardShader.SetUniform3(UniformName.up, up.X, up.Y, up.Z);
 
             GL.BindVertexArray(vao);
 
@@ -135,10 +135,10 @@ namespace Replanetizer.Renderer
             {
                 LevelObject obj = objects[i];
                 billboardTextures[types[i]].Bind();
-                shaderTable.billboardShader.SetUniform3("position", obj.position.X, obj.position.Y, obj.position.Z);
-                shaderTable.billboardShader.SetUniform1("levelObjectNumber", obj.globalID);
-                shaderTable.billboardShader.SetUniform1("levelObjectType", (int) types[i]);
-                shaderTable.billboardShader.SetUniform1("selected", (payload.selection.Contains(obj) ? 1 : 0));
+                shaderTable.billboardShader.SetUniform3(UniformName.position, obj.position.X, obj.position.Y, obj.position.Z);
+                shaderTable.billboardShader.SetUniform1(UniformName.levelObjectNumber, obj.globalID);
+                shaderTable.billboardShader.SetUniform1(UniformName.levelObjectType, (int) types[i]);
+                shaderTable.billboardShader.SetUniform1(UniformName.selected, (payload.selection.Contains(obj) ? 1 : 0));
                 GL.DrawElements(PrimitiveType.Triangles, INDICES.Length, DrawElementsType.UnsignedByte, 0);
             }
 

@@ -18,7 +18,6 @@ namespace Replanetizer.Renderer
     public class GLUniform
     {
         private int location;
-        private string name;
 
 
         private Matrix4 matrix4Value = new Matrix4(float.NaN, float.NaN, float.NaN, float.NaN,
@@ -30,10 +29,9 @@ namespace Replanetizer.Renderer
         private Vector3 vec3Value = new Vector3(float.NaN);
         private Vector4 vec4Value = new Vector4(float.NaN);
 
-        public GLUniform(string name, int location)
+        public GLUniform(int location)
         {
             this.location = location;
-            this.name = name;
         }
 
         public int GetLocation()

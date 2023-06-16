@@ -93,13 +93,13 @@ namespace Replanetizer.Renderer
             Matrix4 modelToWorld = Matrix4.Identity;
 
             shaderTable.colorShader.UseShader();
-            shaderTable.colorShader.SetUniform1("levelObjectType", (int) RenderedObjectType.Null);
-            shaderTable.colorShader.SetUniform4("incolor", 1.0f, 1.0f, 1.0f, 1.0f);
-            shaderTable.colorShader.SetUniformMatrix4("worldToView", ref worldToView);
-            shaderTable.colorShader.SetUniformMatrix4("modelToWorld", ref modelToWorld);
+            shaderTable.colorShader.SetUniform1(UniformName.levelObjectType, (int) RenderedObjectType.Null);
+            shaderTable.colorShader.SetUniform4(UniformName.incolor, 1.0f, 1.0f, 1.0f, 1.0f);
+            shaderTable.colorShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
+            shaderTable.colorShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelToWorld);
 
             shaderTable.collisionShader.UseShader();
-            shaderTable.collisionShader.SetUniformMatrix4("worldToView", ref worldToView);
+            shaderTable.collisionShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
 
             shaderTable.colorShader.UseShader();
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);

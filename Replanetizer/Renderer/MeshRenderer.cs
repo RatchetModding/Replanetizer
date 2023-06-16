@@ -334,7 +334,7 @@ namespace Replanetizer.Renderer
         /// </summary>
         private void SetTransparencyMode(TextureConfig config)
         {
-            shaderTable.meshShader.SetUniform1("useTransparency", (config.IgnoresTransparency()) ? 0 : 1);
+            shaderTable.meshShader.SetUniform1(UniformName.useTransparency, (config.IgnoresTransparency()) ? 0 : 1);
         }
 
         /// <summary>
@@ -512,13 +512,13 @@ namespace Replanetizer.Renderer
                     shaderTable.meshShader.UseShader();
 
                     Matrix4 worldToView = (payload == null) ? Matrix4.Identity : payload.camera.GetWorldViewMatrix();
-                    shaderTable.meshShader.SetUniformMatrix4("modelToWorld", ref modelObject.modelMatrix);
-                    shaderTable.meshShader.SetUniformMatrix4("worldToView", ref worldToView);
-                    shaderTable.meshShader.SetUniform1("levelObjectNumber", modelObject.globalID);
-                    shaderTable.meshShader.SetUniform1("levelObjectType", (int) type);
-                    shaderTable.meshShader.SetUniform4("staticColor", ambient);
-                    shaderTable.meshShader.SetUniform1("lightIndex", light);
-                    shaderTable.meshShader.SetUniform1("objectBlendDistance", blendDistance);
+                    shaderTable.meshShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelObject.modelMatrix);
+                    shaderTable.meshShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
+                    shaderTable.meshShader.SetUniform1(UniformName.levelObjectNumber, modelObject.globalID);
+                    shaderTable.meshShader.SetUniform1(UniformName.levelObjectType, (int) type);
+                    shaderTable.meshShader.SetUniform4(UniformName.staticColor, ambient);
+                    shaderTable.meshShader.SetUniform1(UniformName.lightIndex, light);
+                    shaderTable.meshShader.SetUniform1(UniformName.objectBlendDistance, blendDistance);
 
                     //Bind textures one by one, applying it to the relevant vertices based on the index array
                     foreach (TextureConfig conf in modelObject.model.textureConfig)
@@ -541,11 +541,11 @@ namespace Replanetizer.Renderer
                     {
                         shaderTable.colorShader.UseShader();
 
-                        shaderTable.colorShader.SetUniformMatrix4("modelToWorld", ref modelObject.modelMatrix);
-                        shaderTable.colorShader.SetUniformMatrix4("worldToView", ref worldToView);
-                        shaderTable.colorShader.SetUniform1("levelObjectNumber", modelObject.globalID);
-                        shaderTable.colorShader.SetUniform1("levelObjectType", (int) type);
-                        shaderTable.colorShader.SetUniform4("incolor", 1.0f, 1.0f, 1.0f, 1.0f);
+                        shaderTable.colorShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelObject.modelMatrix);
+                        shaderTable.colorShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
+                        shaderTable.colorShader.SetUniform1(UniformName.levelObjectNumber, modelObject.globalID);
+                        shaderTable.colorShader.SetUniform1(UniformName.levelObjectType, (int) type);
+                        shaderTable.colorShader.SetUniform4(UniformName.incolor, 1.0f, 1.0f, 1.0f, 1.0f);
 
                         GL.Enable(EnableCap.LineSmooth);
                         GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);

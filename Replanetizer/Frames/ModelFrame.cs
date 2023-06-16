@@ -612,9 +612,9 @@ namespace Replanetizer.Frames
                 Matrix4 mvp = trans * scale * rot;
 
                 shaderTable.meshShader.UseShader();
-                shaderTable.meshShader.SetUniformMatrix4("modelToWorld", ref mvp);
-                shaderTable.meshShader.SetUniformMatrix4("worldToView", ref worldView);
-                shaderTable.meshShader.SetUniform1("levelObjectType", (int) RenderedObjectType.Null);
+                shaderTable.meshShader.SetUniformMatrix4(UniformName.modelToWorld, ref mvp);
+                shaderTable.meshShader.SetUniformMatrix4(UniformName.worldToView, ref worldView);
+                shaderTable.meshShader.SetUniform1(UniformName.levelObjectType, (int) RenderedObjectType.Null);
 
                 container.Bind();
 
@@ -631,7 +631,7 @@ namespace Replanetizer.Frames
                     {
                         GLTexture.BindNull();
                     }
-                    shaderTable.meshShader.SetUniform1("useTransparency", (conf.IgnoresTransparency()) ? 0 : 1);
+                    shaderTable.meshShader.SetUniform1(UniformName.useTransparency, (conf.IgnoresTransparency()) ? 0 : 1);
                     GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
                 }
             }

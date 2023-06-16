@@ -272,7 +272,7 @@ namespace Replanetizer.Renderer
         /// </summary>
         private void SetTransparencyMode(TextureConfig config)
         {
-            shaderTable.animationShader.SetUniform1("useTransparency", (config.IgnoresTransparency()) ? 0 : 1);
+            shaderTable.animationShader.SetUniform1(UniformName.useTransparency, (config.IgnoresTransparency()) ? 0 : 1);
         }
 
         /// <summary>
@@ -385,19 +385,19 @@ namespace Replanetizer.Renderer
             shaderTable.animationShader.UseShader();
 
             Matrix4 worldToView = (payload == null) ? Matrix4.Identity : payload.camera.GetWorldViewMatrix();
-            shaderTable.animationShader.SetUniformMatrix4("modelToWorld", ref mob.modelMatrix);
-            shaderTable.animationShader.SetUniformMatrix4("worldToView", ref worldToView);
-            shaderTable.animationShader.SetUniform1("levelObjectNumber", mob.globalID);
+            shaderTable.animationShader.SetUniformMatrix4(UniformName.modelToWorld, ref mob.modelMatrix);
+            shaderTable.animationShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
+            shaderTable.animationShader.SetUniform1(UniformName.levelObjectNumber, mob.globalID);
             if (selected)
             {
-                shaderTable.animationShader.SetUniform4("staticColor", SELECTED_COLOR);
+                shaderTable.animationShader.SetUniform4(UniformName.staticColor, SELECTED_COLOR);
             }
             else
             {
-                shaderTable.animationShader.SetUniform4("staticColor", ambient);
+                shaderTable.animationShader.SetUniform4(UniformName.staticColor, ambient);
             }
-            shaderTable.animationShader.SetUniform1("lightIndex", light);
-            shaderTable.animationShader.SetUniform1("objectBlendDistance", blendDistance);
+            shaderTable.animationShader.SetUniform1(UniformName.lightIndex, light);
+            shaderTable.animationShader.SetUniform1(UniformName.objectBlendDistance, blendDistance);
 
             int animationID = mob.memory.animationID;
 
@@ -487,7 +487,7 @@ namespace Replanetizer.Renderer
 
             previousFrame = frame;
 
-            shaderTable.animationShader.SetUniformMatrix4("bones", mobyModel.boneCount, ref boneMatrices[0].Row0.X);
+            shaderTable.animationShader.SetUniformMatrix4(UniformName.bones, mobyModel.boneCount, ref boneMatrices[0].Row0.X);
 
             //Bind textures one by one, applying it to the relevant vertices based on the index array
             foreach (TextureConfig conf in mobyModel.textureConfig)

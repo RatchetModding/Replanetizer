@@ -784,12 +784,14 @@ namespace Replanetizer.Frames
 
         public void Tick(float deltaTime)
         {
-            if (interactiveSession && hookLiveUpdate)
+            rendererPayload.deltaTime = deltaTime;
+
+            if (interactiveSession && hookLiveUpdate && hook != null)
             {
-                hook?.UpdateMobys(level.mobs, level.mobyModels, this);
+                hook.UpdateMobys(level.mobs, level.mobyModels, this);
                 if (hookUpdateCamera)
                 {
-                    hook?.UpdateCamera(camera);
+                    hook.UpdateCamera(camera);
                 }
                 InvalidateView();
             }

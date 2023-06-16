@@ -53,7 +53,9 @@ namespace Replanetizer.Renderer
         private Dictionary<Texture, GLTexture> textureIds;
         private ShaderTable shaderTable;
 
+        private Frame? currentFrame = null;
         private Frame? previousFrame = null;
+        private float frameBlend = 0.0f;
 
         public AnimationRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, GLTexture> textureIds)
         {
@@ -384,7 +386,7 @@ namespace Replanetizer.Renderer
 
             shaderTable.animationShader.UseShader();
 
-            Matrix4 worldToView = (payload == null) ? Matrix4.Identity : payload.camera.GetWorldViewMatrix();
+            Matrix4 worldToView = payload.camera.GetWorldViewMatrix();
             shaderTable.animationShader.SetUniformMatrix4(UniformName.modelToWorld, ref mob.modelMatrix);
             shaderTable.animationShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
             shaderTable.animationShader.SetUniform1(UniformName.levelObjectNumber, mob.globalID);
@@ -407,11 +409,22 @@ namespace Replanetizer.Renderer
 
             int animationFrame = mob.memory.animationFrame;
 
-            Frame? frame = (anim != null && anim.frames.Count > animationFrame) ? anim.frames[animationFrame] : null;
+            Frame? frame = (anim != null && animationFrame >= 0 && animationFrame < anim.frames.Count) ? anim.frames[animationFrame] : null;
+
+            if (frame != currentFrame)
+            {
+                frameBlend = 0.0f;
+                previousFrame = (currentFrame != null) ? currentFrame : frame;
+                currentFrame = frame;
+            }
 
             if (frame != null && previousFrame != null)
             {
-                float blend = mob.memory.animationBlending;
+                frameBlend += frame.speed * (payload.deltaTime * 1000.0f / 60.0f);
+                float blend = frameBlend;
+
+                if (blend > 1.0f) blend = 1.0f;
+                if (blend < 0.0f) blend = 0.0f;
 
                 for (int i = 0; i < mobyModel.boneCount; i++)
                 {
@@ -484,8 +497,6 @@ namespace Replanetizer.Renderer
                     boneMatrices[i] = Matrix4.Identity;
                 }
             }
-
-            previousFrame = frame;
 
             shaderTable.animationShader.SetUniformMatrix4(UniformName.bones, mobyModel.boneCount, ref boneMatrices[0].Row0.X);
 

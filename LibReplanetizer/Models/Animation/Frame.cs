@@ -55,16 +55,22 @@ namespace LibReplanetizer.Models.Animations
         private List<FrameBoneScaling> scalings { get; set; }
         private List<FrameBoneTranslation> translations { get; set; }
 
-        public Quaternion GetRotationQuaternion(int bone)
+        public Quaternion? GetRotationQuaternion(int bone)
         {
+            if (bone >= rotations.Count)
+            {
+                return null;
+            }
+
             short[] rots = rotations[bone];
             return new Quaternion((rots[0] / 32767f) * 180f, (rots[1] / 32767f) * 180f, (rots[2] / 32767f) * 180f, (-rots[3] / 32767f) * 180f);
         }
 
         public Matrix4 GetRotationMatrix(int bone)
         {
-            Quaternion rotation = GetRotationQuaternion(bone);
-            return Matrix4.CreateFromQuaternion(rotation);
+            Quaternion? rotation = GetRotationQuaternion(bone);
+
+            return (rotation != null) ? Matrix4.CreateFromQuaternion((Quaternion) rotation) : Matrix4.Identity;
         }
 
         public Vector3? GetScaling(int bone)
@@ -105,14 +111,28 @@ namespace LibReplanetizer.Models.Animations
 
         public Matrix4 GetRotationMatrix(int bone, Frame nextFrame, float blend)
         {
-            Quaternion baseRotation = GetRotationQuaternion(bone);
-            Quaternion nextRotation = nextFrame.GetRotationQuaternion(bone);
+            Quaternion? baseRotation = GetRotationQuaternion(bone);
+            Quaternion? nextRotation = nextFrame.GetRotationQuaternion(bone);
 
-            Quaternion rotation = Quaternion.Slerp(baseRotation, nextRotation, blend);
+            if (baseRotation == null || nextRotation == null)
+            {
+                if (baseRotation != null)
+                {
+                    return Matrix4.CreateFromQuaternion((Quaternion) baseRotation);
+                }
+                else if (nextRotation != null)
+                {
+                    return Matrix4.CreateFromQuaternion((Quaternion) nextRotation);
+                }
+                else
+                {
+                    return Matrix4.Identity;
+                }
+            }
 
-            Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(rotation);
+            Quaternion rotation = Quaternion.Slerp((Quaternion) baseRotation, (Quaternion) nextRotation, blend);
 
-            return rotationMatrix;
+            return Matrix4.CreateFromQuaternion(rotation);
         }
 
         public Vector3? GetScaling(int bone, Frame nextFrame, float blend)

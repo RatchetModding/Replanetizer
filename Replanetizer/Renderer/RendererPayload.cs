@@ -33,6 +33,8 @@ namespace Replanetizer.Renderer
         public Selection selection;
         public Toolbox toolbox;
         public VisibilitySettings visibility = new VisibilitySettings();
+        // This is used for animations.
+        public float deltaTime = 1.0f;
 
         public RendererPayload(Camera camera, Selection selection, Toolbox toolbox)
         {

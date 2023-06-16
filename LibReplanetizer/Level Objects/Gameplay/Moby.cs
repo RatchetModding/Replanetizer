@@ -706,9 +706,9 @@ namespace LibReplanetizer.LevelObjects
             public byte animationFrame { get; set; }
             public byte updateID { get; set; }
             public byte animationID { get; set; }
-            public float animationBlending { get; set; }
+            public float unk54 { get; set; }
             public float unk58 { get; set; }
-            public float unk5C { get; set; }
+            public float framerate { get; set; }
             public uint pVars { get; set; }
             public byte unk7C { get; set; }
             public byte unk7D { get; set; }
@@ -771,9 +771,9 @@ namespace LibReplanetizer.LevelObjects
                 animationFrame = memory[offset + 0x51];
                 updateID = memory[offset + 0x52];
                 animationID = memory[offset + 0x53];
-                animationBlending = ReadFloat(memory, offset + 0x54);
+                unk54 = ReadFloat(memory, offset + 0x54);
                 unk58 = ReadFloat(memory, offset + 0x58);
-                unk5C = ReadFloat(memory, offset + 0x5C);
+                framerate = ReadFloat(memory, offset + 0x5C);
 
                 pVars = ReadUint(memory, offset + 0x78);
                 unk7C = memory[offset + 0x7C];

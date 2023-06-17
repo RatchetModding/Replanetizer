@@ -130,7 +130,15 @@ namespace LibReplanetizer.Models.Animations
                 }
             }
 
-            Quaternion rotation = Quaternion.Slerp((Quaternion) baseRotation, (Quaternion) nextRotation, blend);
+            Quaternion rot1 = (Quaternion) baseRotation;
+            Quaternion rot2 = (Quaternion) nextRotation;
+
+            // Quaternion.Slerp does not work for some reason, it always returns the first operand.
+            Quaternion rotation = new Quaternion(
+                rot1.X + (rot2.X - rot1.X) * blend,
+                rot1.Y + (rot2.Y - rot1.Y) * blend,
+                rot1.Z + (rot2.Z - rot1.Z) * blend,
+                rot1.W + (rot2.W - rot1.W) * blend);
 
             return Matrix4.CreateFromQuaternion(rotation);
         }

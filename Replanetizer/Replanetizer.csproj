@@ -52,7 +52,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Billboards\Placeholder.png">
+    <None Update="Icons\Placeholder.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Icons\Replanetizer.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="ModelLists\MobyModelsRC3.txt">

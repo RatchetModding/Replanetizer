@@ -1026,6 +1026,11 @@ namespace Replanetizer.Frames
             return hook.hookWorking;
         }
 
+        public bool HasValidHook()
+        {
+            return interactiveSession;
+        }
+
         /// <summary>
         /// Export all distinct values of a select property found in a list of objects as a text file.
         /// </summary>

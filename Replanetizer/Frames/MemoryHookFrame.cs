@@ -37,6 +37,11 @@ to the game.
 engaged you will no longer be able to save the level in Replanetizer.
 "
             );
+
+            if (frame.HasValidHook())
+            {
+                success = true;
+            }
         }
 
         public override void RenderAsWindow(float deltaTime)

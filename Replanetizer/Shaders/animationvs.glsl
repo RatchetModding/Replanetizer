@@ -54,11 +54,13 @@ void main() {
 	UV = vertexUV;
 
     // Light color is precomputed on PS3 but we do it here instead.
-    Light l = light[lightIndex];
-
     vec3 directionalLight = vec3(0.0f);
-    directionalLight += max(0.0f, -dot(l.direction1, normal)) * l.color1.xyz;
-    directionalLight += max(0.0f, -dot(l.direction2, normal)) * l.color2.xyz;
+
+    if (lightIndex >= 0) {
+        Light l = light[lightIndex];
+        directionalLight += max(0.0f, -dot(l.direction1, normal)) * l.color1.xyz;
+        directionalLight += max(0.0f, -dot(l.direction2, normal)) * l.color2.xyz;
+    }
 
     vec3 diffuseLight = staticColor.xyz;
 

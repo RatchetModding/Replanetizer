@@ -31,15 +31,19 @@ namespace Replanetizer.Renderer
 
         public Camera camera;
         public Selection selection;
-        public Toolbox toolbox;
+        public Toolbox? toolbox;
         public VisibilitySettings visibility = new VisibilitySettings();
+
         // This is used for animations.
         public float deltaTime = 1.0f;
 
-        public RendererPayload(Camera camera, Selection selection, Toolbox toolbox)
+        // This is used for the model viewer.
+        public int forcedAnimationID = 0;
+
+        public RendererPayload(Camera camera, Selection? selection = null, Toolbox? toolbox = null)
         {
             this.camera = camera;
-            this.selection = selection;
+            this.selection = (selection != null) ? selection : new Selection();
             this.toolbox = toolbox;
         }
     }

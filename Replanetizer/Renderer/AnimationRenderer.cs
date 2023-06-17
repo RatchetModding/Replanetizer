@@ -11,6 +11,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using LibReplanetizer.Models;
 using Replanetizer.Renderer;
@@ -28,6 +29,7 @@ namespace Replanetizer.Renderer
         private static readonly int ALLOCATED_LIGHTS = 20;
 
         private Moby? mob;
+        private MobyModel? mobyModelStandalone;
 
         private int loadedModelID = -1;
 
@@ -53,6 +55,8 @@ namespace Replanetizer.Renderer
         private Dictionary<Texture, GLTexture> textureIds;
         private ShaderTable shaderTable;
 
+        private int currentFrameID = 0;
+        private int currentAnimationID = 0;
         private Frame? currentFrame = null;
         private Frame? previousFrame = null;
         private float frameBlend = 0.0f;
@@ -64,11 +68,34 @@ namespace Replanetizer.Renderer
             this.textures = textures;
         }
 
+        public void ChangeTextures(List<Texture> textures, Dictionary<Texture, GLTexture>? textureIds = null)
+        {
+            this.textures = textures;
+
+            if (textureIds != null)
+            {
+                this.textureIds = textureIds;
+            }
+        }
+
         public override void Include<T>(T obj)
         {
-            if (obj is Moby mob)
+            mob = null;
+            mobyModelStandalone = null;
+
+            if (obj is Moby moby)
             {
-                this.mob = mob;
+                mob = moby;
+
+                GenerateBuffers();
+                UpdateVars();
+
+                return;
+            }
+
+            if (obj is MobyModel mobyModel)
+            {
+                mobyModelStandalone = mobyModel;
 
                 GenerateBuffers();
                 UpdateVars();
@@ -136,27 +163,34 @@ namespace Replanetizer.Renderer
         {
             DeleteBuffers();
 
-            if (mob == null)
+            if (mob == null && mobyModelStandalone == null)
             {
                 emptyModel = true;
                 return;
             }
 
-            loadedModelID = mob.modelID;
+            MobyModel? mobyModel = (MobyModel?) mob?.model ?? mobyModelStandalone;
 
-            if (mob.GetIndices().Length == 0)
+            if (mob != null)
+            {
+                loadedModelID = mob.modelID;
+            }
+            else if (mobyModelStandalone != null)
+            {
+                loadedModelID = mobyModelStandalone.id;
+            }
+
+            if (mobyModel == null)
             {
                 emptyModel = true;
                 return;
             }
 
-            if (mob.model == null)
+            if (mobyModel.GetIndices().Length == 0)
             {
                 emptyModel = true;
                 return;
             }
-
-            MobyModel mobyModel = (MobyModel) mob.model;
 
             if (mobyModel.boneCount == 0)
             {
@@ -166,7 +200,7 @@ namespace Replanetizer.Renderer
 
             // This is a camera object that only exist at runtime and blocks vision in interactive mode.
             // We simply don't draw it.
-            if (mob.modelID == 0x3EF)
+            if (loadedModelID == 0x3EF)
             {
                 loadedModelID = -1;
                 emptyModel = true;
@@ -176,34 +210,28 @@ namespace Replanetizer.Renderer
 
             emptyModel = false;
 
-            BufferUsageHint hint = BufferUsageHint.StaticDraw;
-            if (mob.IsDynamic())
-            {
-                hint = BufferUsageHint.DynamicDraw;
-            }
-
             GL.GenVertexArrays(1, out vao);
             GL.BindVertexArray(vao);
 
             // IBO
-            int iboLength = mob.GetIndices().Length * sizeof(ushort);
+            int iboLength = mobyModel.GetIndices().Length * sizeof(ushort);
             if (iboLength > 0)
             {
                 GL.GenBuffers(1, out ibo);
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
-                GL.BufferData(BufferTarget.ElementArrayBuffer, iboLength, IntPtr.Zero, hint);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, iboLength, IntPtr.Zero, BufferUsageHint.StaticDraw);
                 iboAllocated = true;
             }
 
             // VBO
-            int vboLength = mob.GetVertices().Length * sizeof(float);
+            int vboLength = mobyModel.GetVertices().Length * sizeof(float);
             vboLength += mobyModel.ids.Length * sizeof(uint);
             vboLength += mobyModel.weights.Length * sizeof(uint);
             if (vboLength > 0)
             {
                 GL.GenBuffers(1, out vbo);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-                GL.BufferData(BufferTarget.ArrayBuffer, vboLength, IntPtr.Zero, hint);
+                GL.BufferData(BufferTarget.ArrayBuffer, vboLength, IntPtr.Zero, BufferUsageHint.StaticDraw);
                 vboAllocated = true;
             }
 
@@ -217,17 +245,16 @@ namespace Replanetizer.Renderer
         /// </summary>
         private void UpdateBuffers()
         {
-            if (mob == null || mob.model == null)
-                return;
+            MobyModel? mobyModel = (MobyModel?) mob?.model ?? mobyModelStandalone;
 
-            MobyModel mobyModel = (MobyModel) mob.model;
+            if (mobyModel == null) return;
 
             GL.BindVertexArray(vao);
 
-            ushort[] iboData = mob.GetIndices();
+            ushort[] iboData = mobyModel.GetIndices();
             GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, iboData.Length * sizeof(ushort), iboData);
 
-            float[] vboData = mob.GetVertices();
+            float[] vboData = mobyModel.GetVertices();
             uint[] boneIDs = mobyModel.ids;
             uint[] boneWeights = mobyModel.weights;
 
@@ -255,17 +282,28 @@ namespace Replanetizer.Renderer
         /// </summary>
         private void UpdateVars()
         {
-            if (mob == null)
-                return;
-
-            light = Math.Max(0, Math.Min(ALLOCATED_LIGHTS, mob.light));
-            ambient = mob.color;
-            renderDistance = mob.drawDistance;
-
-            if (loadedModelID != mob.modelID)
+            if (mob != null)
             {
-                previousFrame = null;
-                GenerateBuffers();
+                light = Math.Max(0, Math.Min(ALLOCATED_LIGHTS, mob.light)); ;
+                ambient = mob.color;
+                renderDistance = mob.drawDistance;
+
+                if (loadedModelID != mob.modelID)
+                {
+                    previousFrame = null;
+                    GenerateBuffers();
+                }
+            }
+            else if (mobyModelStandalone != null)
+            {
+                light = -1;
+                ambient = Color.FromRgb(255, 255, 255).ToPixel<Rgb24>();
+
+                if (loadedModelID != mobyModelStandalone.id)
+                {
+                    previousFrame = null;
+                    GenerateBuffers();
+                }
             }
         }
 
@@ -344,6 +382,7 @@ namespace Replanetizer.Renderer
         private bool ComputeCulling(Camera camera, bool distanceCulling)
         {
             if (emptyModel) return true;
+            if (mobyModelStandalone != null) return false;
             if (mob == null) return true;
 
             if (distanceCulling)
@@ -367,7 +406,7 @@ namespace Replanetizer.Renderer
 
         public override void Render(RendererPayload payload)
         {
-            if (mob == null || mob.model == null || mob.memory == null) return;
+            if (((mob == null || mob.model == null || mob.memory == null) && mobyModelStandalone == null)) return;
 
             UpdateVars();
 
@@ -378,7 +417,9 @@ namespace Replanetizer.Renderer
 
             if (ComputeCulling(payload.camera, payload.visibility.enableDistanceCulling)) return;
 
-            MobyModel mobyModel = (MobyModel) mob.model;
+            MobyModel? mobyModel = (MobyModel?) mob?.model ?? mobyModelStandalone;
+
+            if (mobyModel == null) return;
 
             GL.BindVertexArray(vao);
 
@@ -386,10 +427,11 @@ namespace Replanetizer.Renderer
 
             shaderTable.animationShader.UseShader();
 
+            Matrix4 modelToWorld = (mob != null) ? mob.modelMatrix : Matrix4.Identity;
             Matrix4 worldToView = payload.camera.GetWorldViewMatrix();
-            shaderTable.animationShader.SetUniformMatrix4(UniformName.modelToWorld, ref mob.modelMatrix);
+            shaderTable.animationShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelToWorld);
             shaderTable.animationShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
-            shaderTable.animationShader.SetUniform1(UniformName.levelObjectNumber, mob.globalID);
+            shaderTable.animationShader.SetUniform1(UniformName.levelObjectNumber, (mob != null) ? mob.globalID : 0);
             if (selected)
             {
                 shaderTable.animationShader.SetUniform4(UniformName.staticColor, SELECTED_COLOR);
@@ -401,19 +443,28 @@ namespace Replanetizer.Renderer
             shaderTable.animationShader.SetUniform1(UniformName.lightIndex, light);
             shaderTable.animationShader.SetUniform1(UniformName.objectBlendDistance, blendDistance);
 
-            int animationID = mob.memory.animationID;
+            int animationID = (mob != null && mob.memory != null) ? mob.memory.animationID : payload.forcedAnimationID;
+
+            if (animationID != currentAnimationID)
+            {
+                currentAnimationID = animationID;
+                currentFrameID = 0;
+                frameBlend = 0.0f;
+            }
 
             Matrix4[] boneMatrices = new Matrix4[mobyModel.boneCount];
 
             Animation? anim = (animationID >= 0 && animationID < mobyModel.animations.Count) ? mobyModel.animations[animationID] : null;
 
-            int animationFrame = mob.memory.animationFrame;
+            int animationFrame = (mob != null && mob.memory != null) ? mob.memory.animationFrame : currentFrameID;
 
             Frame? frame = (anim != null && animationFrame >= 0 && animationFrame < anim.frames.Count) ? anim.frames[animationFrame] : null;
 
-            if (frame != null)
+            float frameSpeed = 4.0f * ((anim != null && anim.speed != 0.0f) ? anim.speed : 0.1f);
+
+            if (anim != null)
             {
-                frameBlend += frame.speed * (payload.deltaTime * 1000.0f / 60.0f);
+                frameBlend += frameSpeed * (payload.deltaTime * 1000.0f / 60.0f);
             }
 
             if (frame != currentFrame)
@@ -499,6 +550,17 @@ namespace Replanetizer.Renderer
                 for (int i = 0; i < mobyModel.boneCount; i++)
                 {
                     boneMatrices[i] = Matrix4.Identity;
+                }
+            }
+
+            // This causes the animation in the model viewer to loop.
+            if (frameBlend > 1.0f && mob == null && anim != null)
+            {
+                frameBlend -= 1.0f;
+                currentFrameID++;
+                if (currentFrameID >= anim.frames.Count)
+                {
+                    currentFrameID = 0;
                 }
             }
 

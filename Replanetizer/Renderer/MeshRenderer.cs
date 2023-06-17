@@ -27,6 +27,7 @@ namespace Replanetizer.Renderer
         private static readonly int ALLOCATED_LIGHTS = 20;
 
         private ModelObject? modelObject;
+        private Model? modelStandalone;
 
         private int loadedModelID = -1;
 
@@ -62,12 +63,30 @@ namespace Replanetizer.Renderer
             this.fallback = new BillboardRenderer(shaderTable);
         }
 
+        public void ChangeTextures(List<Texture> textures, Dictionary<Texture, GLTexture>? textureIds = null)
+        {
+            this.textures = textures;
+
+            if (textureIds != null)
+            {
+                this.textureIds = textureIds;
+            }
+
+            if (animationRenderer != null)
+            {
+                animationRenderer.ChangeTextures(textures, textureIds);
+            }
+        }
+
         public override void Include<T>(T obj)
         {
-            fallback.Include(obj);
+            modelObject = null;
+            modelStandalone = null;
 
             if (obj is ModelObject mObj)
             {
+                fallback.Include(mObj);
+
                 this.modelObject = mObj;
                 this.type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(mObj);
 
@@ -78,6 +97,23 @@ namespace Replanetizer.Renderer
                 {
                     animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds);
                     animationRenderer.Include(mob);
+                }
+
+                return;
+            }
+
+            if (obj is Model model)
+            {
+                this.modelStandalone = model;
+                this.type = RenderedObjectType.Null;
+
+                GenerateBuffers();
+                UpdateVars();
+
+                if (model is MobyModel mobyModel)
+                {
+                    animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds);
+                    animationRenderer.Include(mobyModel);
                 }
 
                 return;
@@ -122,31 +158,42 @@ namespace Replanetizer.Renderer
         /// </summary>
         private void SetupVertexAttribPointers()
         {
-            switch (type)
+            if (modelObject != null)
             {
-                case RenderedObjectType.Terrain:
-                    GLUtil.ActivateNumberOfVertexAttribArrays(5);
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 10, 0);
-                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 3);
-                    GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 6);
-                    GL.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 10, sizeof(float) * 8);
-                    GL.VertexAttribPointer(4, 1, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 9);
-                    break;
-                case RenderedObjectType.Tie:
-                    GLUtil.ActivateNumberOfVertexAttribArrays(4);
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, 0);
-                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 3);
-                    GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 6);
-                    GL.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 9, sizeof(float) * 8);
-                    break;
-                case RenderedObjectType.Shrub:
-                case RenderedObjectType.Moby:
-                    GLUtil.ActivateNumberOfVertexAttribArrays(3);
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
-                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
-                    GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
-                    break;
+                switch (type)
+                {
+                    case RenderedObjectType.Terrain:
+                        GLUtil.ActivateNumberOfVertexAttribArrays(5);
+                        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 10, 0);
+                        GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 3);
+                        GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 6);
+                        GL.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 10, sizeof(float) * 8);
+                        GL.VertexAttribPointer(4, 1, VertexAttribPointerType.Float, false, sizeof(float) * 10, sizeof(float) * 9);
+                        break;
+                    case RenderedObjectType.Tie:
+                        GLUtil.ActivateNumberOfVertexAttribArrays(4);
+                        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, 0);
+                        GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 3);
+                        GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 9, sizeof(float) * 6);
+                        GL.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 9, sizeof(float) * 8);
+                        break;
+                    case RenderedObjectType.Shrub:
+                    case RenderedObjectType.Moby:
+                        GLUtil.ActivateNumberOfVertexAttribArrays(3);
+                        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
+                        GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
+                        GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
+                        break;
+                }
             }
+            else
+            {
+                GLUtil.ActivateNumberOfVertexAttribArrays(3);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
+                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
+                GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
+            }
+
         }
 
         /// <summary>
@@ -156,12 +203,21 @@ namespace Replanetizer.Renderer
         {
             DeleteBuffers();
 
-            if (modelObject == null)
+            Model? model = modelObject?.model ?? modelStandalone;
+
+            if (modelObject != null)
+            {
+                loadedModelID = modelObject.modelID;
+            }
+            else if (modelStandalone != null)
+            {
+                loadedModelID = modelStandalone.id;
+            }
+
+            if (model == null)
                 return;
 
-            loadedModelID = modelObject.modelID;
-
-            if (modelObject.GetIndices().Length == 0)
+            if (model.GetIndices().Length == 0)
             {
                 emptyModel = true;
                 return;
@@ -169,7 +225,7 @@ namespace Replanetizer.Renderer
 
             // This is a camera object that only exist at runtime and blocks vision in interactive mode.
             // We simply don't draw it.
-            if (modelObject.modelID == 0x3EF)
+            if (loadedModelID == 0x3EF)
             {
                 loadedModelID = -1;
                 emptyModel = true;
@@ -179,45 +235,42 @@ namespace Replanetizer.Renderer
 
             emptyModel = false;
 
-            BufferUsageHint hint = BufferUsageHint.StaticDraw;
-            if (modelObject.IsDynamic())
-            {
-                hint = BufferUsageHint.DynamicDraw;
-            }
-
             GL.GenVertexArrays(1, out vao);
             GL.BindVertexArray(vao);
             vaoAllocated = true;
 
             // IBO
-            int iboLength = modelObject.GetIndices().Length * sizeof(ushort);
+            int iboLength = model.GetIndices().Length * sizeof(ushort);
             if (iboLength > 0)
             {
                 GL.GenBuffers(1, out ibo);
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
-                GL.BufferData(BufferTarget.ElementArrayBuffer, iboLength, IntPtr.Zero, hint);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, iboLength, IntPtr.Zero, BufferUsageHint.StaticDraw);
                 iboAllocated = true;
             }
 
             // VBO
-            int vboLength = modelObject.GetVertices().Length * sizeof(float);
-            switch (type)
+            int vboLength = model.GetVertices().Length * sizeof(float);
+            if (modelObject != null)
             {
-                case RenderedObjectType.Terrain:
-                    TerrainModel? terrainModel = (TerrainModel?) modelObject.model;
-                    if (terrainModel == null) break;
-                    vboLength += modelObject.GetAmbientRgbas().Length * sizeof(Byte) + terrainModel.lights.Count * sizeof(int);
-                    break;
-                case RenderedObjectType.Tie:
-                    vboLength += modelObject.GetAmbientRgbas().Length * sizeof(Byte);
-                    break;
+                switch (type)
+                {
+                    case RenderedObjectType.Terrain:
+                        TerrainModel? terrainModel = (TerrainModel?) model;
+                        if (terrainModel == null) break;
+                        vboLength += modelObject.GetAmbientRgbas().Length * sizeof(Byte) + terrainModel.lights.Count * sizeof(int);
+                        break;
+                    case RenderedObjectType.Tie:
+                        vboLength += modelObject.GetAmbientRgbas().Length * sizeof(Byte);
+                        break;
+                }
             }
 
             if (vboLength > 0)
             {
                 GL.GenBuffers(1, out vbo);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-                GL.BufferData(BufferTarget.ArrayBuffer, vboLength, IntPtr.Zero, hint);
+                GL.BufferData(BufferTarget.ArrayBuffer, vboLength, IntPtr.Zero, BufferUsageHint.StaticDraw);
                 vboAllocated = true;
             }
 
@@ -231,59 +284,63 @@ namespace Replanetizer.Renderer
         /// </summary>
         private void UpdateBuffers()
         {
-            if (modelObject == null)
-                return;
+            Model? model = modelObject?.model ?? modelStandalone;
+
+            if (model == null) return;
 
             GL.BindVertexArray(vao);
 
-            ushort[] iboData = modelObject.GetIndices();
+            ushort[] iboData = model.GetIndices();
             GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, iboData.Length * sizeof(ushort), iboData);
 
-            float[] vboData = modelObject.GetVertices();
-            switch (type)
+            float[] vboData = model.GetVertices();
+            if (modelObject != null)
             {
-                case RenderedObjectType.Terrain:
-                    {
-                        byte[] rgbas = modelObject.GetAmbientRgbas();
-                        TerrainModel? terrainModel = (TerrainModel?) modelObject.model;
-                        if (terrainModel == null) break;
-                        int[] lights = terrainModel.lights.ToArray();
-                        float[] fullData = new float[vboData.Length + rgbas.Length / 4 + lights.Length];
-                        for (int i = 0; i < vboData.Length / 8; i++)
+                switch (type)
+                {
+                    case RenderedObjectType.Terrain:
                         {
-                            fullData[10 * i + 0] = vboData[8 * i + 0];
-                            fullData[10 * i + 1] = vboData[8 * i + 1];
-                            fullData[10 * i + 2] = vboData[8 * i + 2];
-                            fullData[10 * i + 3] = vboData[8 * i + 3];
-                            fullData[10 * i + 4] = vboData[8 * i + 4];
-                            fullData[10 * i + 5] = vboData[8 * i + 5];
-                            fullData[10 * i + 6] = vboData[8 * i + 6];
-                            fullData[10 * i + 7] = vboData[8 * i + 7];
-                            fullData[10 * i + 8] = BitConverter.ToSingle(rgbas, i * 4);
-                            fullData[10 * i + 9] = (float) lights[i];
+                            byte[] rgbas = modelObject.GetAmbientRgbas();
+                            TerrainModel? terrainModel = (TerrainModel?) modelObject.model;
+                            if (terrainModel == null) break;
+                            int[] lights = terrainModel.lights.ToArray();
+                            float[] fullData = new float[vboData.Length + rgbas.Length / 4 + lights.Length];
+                            for (int i = 0; i < vboData.Length / 8; i++)
+                            {
+                                fullData[10 * i + 0] = vboData[8 * i + 0];
+                                fullData[10 * i + 1] = vboData[8 * i + 1];
+                                fullData[10 * i + 2] = vboData[8 * i + 2];
+                                fullData[10 * i + 3] = vboData[8 * i + 3];
+                                fullData[10 * i + 4] = vboData[8 * i + 4];
+                                fullData[10 * i + 5] = vboData[8 * i + 5];
+                                fullData[10 * i + 6] = vboData[8 * i + 6];
+                                fullData[10 * i + 7] = vboData[8 * i + 7];
+                                fullData[10 * i + 8] = BitConverter.ToSingle(rgbas, i * 4);
+                                fullData[10 * i + 9] = (float) lights[i];
+                            }
+                            vboData = fullData;
+                            break;
                         }
-                        vboData = fullData;
-                        break;
-                    }
-                case RenderedObjectType.Tie:
-                    {
-                        byte[] rgbas = modelObject.GetAmbientRgbas();
-                        float[] fullData = new float[vboData.Length + rgbas.Length / 4];
-                        for (int i = 0; i < vboData.Length / 8; i++)
+                    case RenderedObjectType.Tie:
                         {
-                            fullData[9 * i + 0] = vboData[8 * i + 0];
-                            fullData[9 * i + 1] = vboData[8 * i + 1];
-                            fullData[9 * i + 2] = vboData[8 * i + 2];
-                            fullData[9 * i + 3] = vboData[8 * i + 3];
-                            fullData[9 * i + 4] = vboData[8 * i + 4];
-                            fullData[9 * i + 5] = vboData[8 * i + 5];
-                            fullData[9 * i + 6] = vboData[8 * i + 6];
-                            fullData[9 * i + 7] = vboData[8 * i + 7];
-                            fullData[9 * i + 8] = BitConverter.ToSingle(rgbas, i * 4);
+                            byte[] rgbas = modelObject.GetAmbientRgbas();
+                            float[] fullData = new float[vboData.Length + rgbas.Length / 4];
+                            for (int i = 0; i < vboData.Length / 8; i++)
+                            {
+                                fullData[9 * i + 0] = vboData[8 * i + 0];
+                                fullData[9 * i + 1] = vboData[8 * i + 1];
+                                fullData[9 * i + 2] = vboData[8 * i + 2];
+                                fullData[9 * i + 3] = vboData[8 * i + 3];
+                                fullData[9 * i + 4] = vboData[8 * i + 4];
+                                fullData[9 * i + 5] = vboData[8 * i + 5];
+                                fullData[9 * i + 6] = vboData[8 * i + 6];
+                                fullData[9 * i + 7] = vboData[8 * i + 7];
+                                fullData[9 * i + 8] = BitConverter.ToSingle(rgbas, i * 4);
+                            }
+                            vboData = fullData;
+                            break;
                         }
-                        vboData = fullData;
-                        break;
-                    }
+                }
             }
             GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, vboData.Length * sizeof(float), vboData);
         }
@@ -294,37 +351,44 @@ namespace Replanetizer.Renderer
         /// </summary>
         private void UpdateVars()
         {
-            if (modelObject == null)
-                return;
-
-            switch (type)
+            if (modelObject != null)
             {
-                case RenderedObjectType.Terrain:
-                    light = ALLOCATED_LIGHTS;
-                    renderDistance = float.MaxValue;
-                    break;
-                case RenderedObjectType.Moby:
-                    Moby mob = (Moby) modelObject;
-                    light = Math.Max(0, Math.Min(ALLOCATED_LIGHTS, mob.light));
-                    mob.color.ToRgba32(ref ambient);
-                    renderDistance = mob.drawDistance;
-                    break;
-                case RenderedObjectType.Tie:
-                    Tie tie = (Tie) modelObject;
-                    light = Math.Max(0, Math.Min(ALLOCATED_LIGHTS, tie.light));
-                    renderDistance = float.MaxValue;
-                    break;
-                case RenderedObjectType.Shrub:
-                    Shrub shrub = (Shrub) modelObject;
-                    light = Math.Max(0, Math.Min(ALLOCATED_LIGHTS, shrub.light));
-                    ambient = shrub.color;
-                    renderDistance = shrub.drawDistance;
-                    break;
+                switch (type)
+                {
+                    case RenderedObjectType.Terrain:
+                        light = ALLOCATED_LIGHTS;
+                        renderDistance = float.MaxValue;
+                        break;
+                    case RenderedObjectType.Moby:
+                        Moby mob = (Moby) modelObject;
+                        light = Math.Max(0, Math.Min(ALLOCATED_LIGHTS, mob.light));
+                        mob.color.ToRgba32(ref ambient);
+                        renderDistance = mob.drawDistance;
+                        break;
+                    case RenderedObjectType.Tie:
+                        Tie tie = (Tie) modelObject;
+                        light = Math.Max(0, Math.Min(ALLOCATED_LIGHTS, tie.light));
+                        renderDistance = float.MaxValue;
+                        break;
+                    case RenderedObjectType.Shrub:
+                        Shrub shrub = (Shrub) modelObject;
+                        light = Math.Max(0, Math.Min(ALLOCATED_LIGHTS, shrub.light));
+                        ambient = shrub.color;
+                        renderDistance = shrub.drawDistance;
+                        break;
+                }
+
+                if (loadedModelID != modelObject.modelID)
+                {
+                    GenerateBuffers();
+                }
             }
-
-            if (loadedModelID != modelObject.modelID)
+            else if (modelStandalone != null)
             {
-                GenerateBuffers();
+                if (loadedModelID != modelStandalone.id)
+                {
+                    GenerateBuffers();
+                }
             }
         }
 
@@ -402,6 +466,7 @@ namespace Replanetizer.Renderer
         private bool ComputeCulling(Camera camera, bool distanceCulling, bool frustumCulling)
         {
             if (emptyModel) return true;
+            if (modelStandalone != null) return false;
             if (modelObject == null) return true;
 
             if (distanceCulling)
@@ -474,7 +539,7 @@ namespace Replanetizer.Renderer
 
         public override void Render(RendererPayload payload)
         {
-            if (modelObject == null) return;
+            if (modelObject == null && modelStandalone == null) return;
 
             if (modelObject is Moby mob && mob.memory != null && mob.memory.IsDead())
             {
@@ -483,7 +548,7 @@ namespace Replanetizer.Renderer
 
             UpdateVars();
 
-            if (emptyModel || modelObject.model == null)
+            if (emptyModel)
             {
                 if (payload.visibility.enableMeshlessModels)
                 {
@@ -491,6 +556,10 @@ namespace Replanetizer.Renderer
                 }
                 return;
             }
+
+            Model? model = modelObject?.model ?? modelStandalone;
+
+            if (model == null) return;
 
             if (payload.visibility.enableAnimations && animationRenderer != null)
             {
@@ -507,57 +576,50 @@ namespace Replanetizer.Renderer
 
             Select(payload.selection);
 
-            switch (type)
+            shaderTable.meshShader.UseShader();
+
+            Matrix4 modelToWorld = (modelObject != null) ? modelObject.modelMatrix : Matrix4.Identity;
+            Matrix4 worldToView = (payload != null) ? payload.camera.GetWorldViewMatrix() : Matrix4.Identity;
+            shaderTable.meshShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelToWorld);
+            shaderTable.meshShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
+            shaderTable.meshShader.SetUniform1(UniformName.levelObjectNumber, (modelObject != null) ? modelObject.globalID : 0);
+            shaderTable.meshShader.SetUniform1(UniformName.levelObjectType, (int) type);
+            shaderTable.meshShader.SetUniform4(UniformName.staticColor, ambient);
+            shaderTable.meshShader.SetUniform1(UniformName.lightIndex, light);
+            shaderTable.meshShader.SetUniform1(UniformName.objectBlendDistance, blendDistance);
+
+            //Bind textures one by one, applying it to the relevant vertices based on the index array
+            foreach (TextureConfig conf in model.textureConfig)
             {
-                case RenderedObjectType.Terrain:
-                case RenderedObjectType.Shrub:
-                case RenderedObjectType.Tie:
-                case RenderedObjectType.Moby:
-                    shaderTable.meshShader.UseShader();
+                if (conf.id > 0)
+                {
+                    GLTexture tex = textureIds[textures[conf.id]];
+                    tex.Bind();
+                    SetTextureWrapMode(conf, tex);
+                }
+                else
+                {
+                    GLTexture.BindNull();
+                }
+                SetTransparencyMode(conf);
+                GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+            }
 
-                    Matrix4 worldToView = (payload == null) ? Matrix4.Identity : payload.camera.GetWorldViewMatrix();
-                    shaderTable.meshShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelObject.modelMatrix);
-                    shaderTable.meshShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
-                    shaderTable.meshShader.SetUniform1(UniformName.levelObjectNumber, modelObject.globalID);
-                    shaderTable.meshShader.SetUniform1(UniformName.levelObjectType, (int) type);
-                    shaderTable.meshShader.SetUniform4(UniformName.staticColor, ambient);
-                    shaderTable.meshShader.SetUniform1(UniformName.lightIndex, light);
-                    shaderTable.meshShader.SetUniform1(UniformName.objectBlendDistance, blendDistance);
+            if (selected)
+            {
+                shaderTable.colorShader.UseShader();
 
-                    //Bind textures one by one, applying it to the relevant vertices based on the index array
-                    foreach (TextureConfig conf in modelObject.model.textureConfig)
-                    {
-                        if (conf.id > 0)
-                        {
-                            GLTexture tex = textureIds[textures[conf.id]];
-                            tex.Bind();
-                            SetTextureWrapMode(conf, tex);
-                        }
-                        else
-                        {
-                            GLTexture.BindNull();
-                        }
-                        SetTransparencyMode(conf);
-                        GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
-                    }
+                shaderTable.colorShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelToWorld);
+                shaderTable.colorShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
+                shaderTable.colorShader.SetUniform1(UniformName.levelObjectNumber, (modelObject != null) ? modelObject.globalID : 0);
+                shaderTable.colorShader.SetUniform1(UniformName.levelObjectType, (int) type);
+                shaderTable.colorShader.SetUniform4(UniformName.incolor, 1.0f, 1.0f, 1.0f, 1.0f);
 
-                    if (selected)
-                    {
-                        shaderTable.colorShader.UseShader();
-
-                        shaderTable.colorShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelObject.modelMatrix);
-                        shaderTable.colorShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
-                        shaderTable.colorShader.SetUniform1(UniformName.levelObjectNumber, modelObject.globalID);
-                        shaderTable.colorShader.SetUniform1(UniformName.levelObjectType, (int) type);
-                        shaderTable.colorShader.SetUniform4(UniformName.incolor, 1.0f, 1.0f, 1.0f, 1.0f);
-
-                        GL.Enable(EnableCap.LineSmooth);
-                        GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                        GL.DrawElements(PrimitiveType.Triangles, modelObject.model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
-                        GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                        GL.Disable(EnableCap.LineSmooth);
-                    }
-                    break;
+                GL.Enable(EnableCap.LineSmooth);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                GL.DrawElements(PrimitiveType.Triangles, model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                GL.Disable(EnableCap.LineSmooth);
             }
 
             GLUtil.CheckGlError("MeshRenderer");

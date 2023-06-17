@@ -33,6 +33,9 @@ namespace Replanetizer.Frames
         private string filterUpper = "";
         private bool showIDInHex = false;
         private FramebufferRenderer? renderer;
+        private MeshRenderer meshRenderer;
+        private RendererPayload rendererPayload;
+        private Camera camera;
         private Level level => levelFrame.level;
         private Model? selectedModel;
         private int selectedModelIndex;
@@ -47,6 +50,8 @@ namespace Replanetizer.Frames
         private List<Model> sortedShrubModels;
         private List<Model> sortedGadgetModels;
         private List<List<Model>> sortedMissionModels;
+
+        private float cameraDistance = 1.0f, cameraAngle = 0.0f;
 
         private List<ModelObject> selectedObjectInstances = new List<ModelObject>();
 
@@ -66,8 +71,6 @@ namespace Replanetizer.Frames
         };
 
         private ShaderTable shaderTable;
-
-        private float xDelta;
 
         // We use an exponential function to convert zoomRaw to zoom:
         //   e^(ZOOM_EXP_COEFF * zoomRaw)
@@ -89,9 +92,6 @@ namespace Replanetizer.Frames
 
         private bool initialized = false;
 
-        private Matrix4 trans, scale, worldView, rot = Matrix4.Identity;
-
-        private BufferContainer? container;
         private Rectangle contentRegion;
         private Vector2 mousePos;
         private int width, height;
@@ -106,6 +106,12 @@ namespace Replanetizer.Frames
             propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
             this.shaderTable = shaderIDTable;
             exportSettings = new ExporterModelSettings(lastUsedExportSettings);
+
+            camera = new Camera();
+            camera.position += new Vector3(0.0f, 0.0f, -5.0f);
+
+            meshRenderer = new MeshRenderer(shaderIDTable, levelFrame.level.textures, levelFrame.textureIds);
+            rendererPayload = new RendererPayload(camera);
 
             sortedMobyModels = new List<Model>(level.mobyModels);
             sortedTieModels = new List<Model>(level.tieModels);
@@ -379,6 +385,29 @@ namespace Replanetizer.Frames
                 }
 
                 ImGui.Separator();
+
+                if (selectedModel is MobyModel mobModel && mobModel.animations.Count > 0)
+                {
+                    ImGui.Checkbox("Show Animations", ref rendererPayload.visibility.enableAnimations);
+                    int animID = rendererPayload.forcedAnimationID;
+
+                    if (ImGui.InputInt("Animation ID", ref animID))
+                    {
+                        if (animID > mobModel.animations.Count)
+                        {
+                            animID = 0;
+                        }
+
+                        if (animID < 0)
+                        {
+                            animID = mobModel.animations.Count - 1;
+                        }
+
+                        rendererPayload.forcedAnimationID = animID;
+                    }
+                    ImGui.Separator();
+                }
+
                 if (selectedObjectInstances.Count > 0)
                 {
                     RenderInstanceList();
@@ -423,8 +452,6 @@ namespace Replanetizer.Frames
 
         private void ModelViewer_Load()
         {
-            worldView = CreateWorldView();
-            trans = Matrix4.CreateTranslation(0.0f, 0.0f, -5.0f);
         }
 
         private void UpdateInstanceList()
@@ -472,18 +499,15 @@ namespace Replanetizer.Frames
         {
             if (selectedModel == null) return;
 
-            scale = Matrix4.CreateScale(selectedModel.size);
             propertyFrame.selectedObject = selectedModel;
             UpdateTextures();
 
-            container = new BufferContainer(selectedModel, () =>
+            if (selectedTextureSet != null)
             {
-                GLUtil.ActivateNumberOfVertexAttribArrays(3);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
-                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
-                GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
-            });
-            container.Bind();
+                meshRenderer.Include(selectedModel);
+                meshRenderer.ChangeTextures(selectedTextureSet);
+                rendererPayload.forcedAnimationID = 0;
+            }
 
             UpdateInstanceList();
         }
@@ -603,39 +627,27 @@ namespace Replanetizer.Frames
             GL.ClearColor(CLEAR_COLOR.R / 255.0f, CLEAR_COLOR.G / 255.0f, CLEAR_COLOR.B / 255.0f, 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            if (selectedModel != null && selectedTextureSet != null && !(selectedModel is SkyboxModel) && container != null)
+            if (selectedModel != null && selectedTextureSet != null && !(selectedModel is SkyboxModel))
             {
-                // Has to be done in this order to work correctly
-                Matrix4 mvp = trans * scale * rot;
-
-                shaderTable.meshShader.UseShader();
-                shaderTable.meshShader.SetUniformMatrix4(UniformName.modelToWorld, ref mvp);
-                shaderTable.meshShader.SetUniformMatrix4(UniformName.worldToView, ref worldView);
-                shaderTable.meshShader.SetUniform1(UniformName.levelObjectType, (int) RenderedObjectType.Null);
-
-                container.Bind();
-
-                //Bind textures one by one, applying it to the relevant vertices based on the index array
-                foreach (TextureConfig conf in selectedModel.textureConfig)
+                if (rendererPayload.visibility.enableAnimations)
                 {
-                    if (conf.id >= 0 && conf.id < selectedTextureSet.Count)
-                    {
-                        GLTexture tex = levelFrame.textureIds[selectedTextureSet[conf.id]];
-                        tex.Bind();
-                        tex.SetWrapModes((conf.wrapModeS == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge, (conf.wrapModeT == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge);
-                    }
-                    else
-                    {
-                        GLTexture.BindNull();
-                    }
-                    shaderTable.meshShader.SetUniform1(UniformName.useTransparency, (conf.IgnoresTransparency()) ? 0 : 1);
-                    GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+                    shaderTable.animationShader.UseShader();
+                    shaderTable.animationShader.SetUniform1(UniformName.useFog, 0);
                 }
+                meshRenderer.Render(rendererPayload);
             }
+        }
+
+        private void UpdateCamera()
+        {
+            camera.position = new Vector3(zoom * MathF.Sin(cameraAngle), zoom * MathF.Cos(cameraAngle), 1.0f) * ZOOM_SCALE;
+            camera.rotation = new Vector3(0.0f, 0.0f, -cameraAngle + MathF.PI);
         }
 
         private void Tick(float deltaTime)
         {
+            rendererPayload.deltaTime = deltaTime;
+
             // Handle scrolling with arrow keys regardless of whether the window is hovered etc
             // Our ImGui version does not seem to have anything to check for (window or child) focus
             KEY_HELD_HANDLER.Update(wnd.KeyboardState, deltaTime);
@@ -670,8 +682,9 @@ namespace Replanetizer.Frames
                     zoomRaw = prevZoomRaw;
                     zoom = prevZoom;
                 }
-                worldView = CreateWorldView();
             }
+
+            UpdateCamera();
         }
 
         /// <param name="deltaTime">time since last tick</param>
@@ -687,14 +700,14 @@ namespace Replanetizer.Frames
                 return false;
             }
 
-            xDelta += wnd.MouseState.Delta.X * deltaTime;
-            rot = Matrix4.CreateRotationZ(xDelta);
+            cameraAngle += wnd.MouseState.Delta.X * deltaTime;
+
             return true;
         }
 
         private void OnResize()
         {
-            worldView = CreateWorldView();
+            camera.aspect = ((float) width) / height;
 
             renderer?.Dispose();
             renderer = new FramebufferRenderer(width, height);

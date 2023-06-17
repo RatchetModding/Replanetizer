@@ -34,7 +34,7 @@ namespace Replanetizer.Renderer
         public Toolbox? toolbox;
         public VisibilitySettings visibility = new VisibilitySettings();
 
-        // This is used for animations.
+        // This is used for animations. In seconds.
         public float deltaTime = 1.0f;
 
         // This is used for the model viewer.

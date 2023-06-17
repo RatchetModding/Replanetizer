@@ -460,11 +460,10 @@ namespace Replanetizer.Renderer
 
             Frame? frame = (anim != null && animationFrame >= 0 && animationFrame < anim.frames.Count) ? anim.frames[animationFrame] : null;
 
-            float frameSpeed = 4.0f * ((anim != null && anim.speed != 0.0f) ? anim.speed : 0.1f);
-
-            if (anim != null)
+            if (anim != null && frame != null)
             {
-                frameBlend += frameSpeed * (payload.deltaTime * 1000.0f / 60.0f);
+                float frameSpeed = (anim.speed != 0.0f) ? anim.speed : frame.speed;
+                frameBlend += payload.deltaTime * frameSpeed * 60.0f;
             }
 
             if (frame != currentFrame)

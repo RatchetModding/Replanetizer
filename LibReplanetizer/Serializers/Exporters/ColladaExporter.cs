@@ -153,14 +153,8 @@ namespace LibReplanetizer
             foreach (Frame frame in anim.frames)
             {
                 timeString += (frameStartTime).ToString("G", en_US) + " ";
-                if (frame.speed == 0.0f)
-                {
-                    frameStartTime += 1.0f / (60.0f * 0.2f);
-                }
-                else
-                {
-                    frameStartTime += 1.0f / (60.0f * frame.speed);
-                }
+                float frameSpeed = (anim.speed != 0.0f) ? anim.speed : frame.speed;
+                frameStartTime += 1.0f / (60.0f * frameSpeed);
             }
 
             // Duplicate single frame animations so that they are visible in tools like Blender

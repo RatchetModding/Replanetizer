@@ -6,7 +6,6 @@
 // Please see the LICENSE.md file for more details.
 
 using System;
-using System.Drawing;
 using SixLabors.ImageSharp;
 using System.IO;
 using System.Runtime.InteropServices;

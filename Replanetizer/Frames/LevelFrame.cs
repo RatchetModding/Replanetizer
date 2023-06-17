@@ -8,7 +8,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using SysVector2 = System.Numerics.Vector2;
@@ -25,6 +24,7 @@ using Replanetizer.MemoryHook;
 using static LibReplanetizer.DataFunctions;
 using static LibReplanetizer.Utilities;
 using Texture = LibReplanetizer.Texture;
+using SixLabors.ImageSharp;
 
 namespace Replanetizer.Frames
 {

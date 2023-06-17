@@ -8,11 +8,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Runtime.CompilerServices;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Replanetizer.Renderer
 {
@@ -232,7 +232,19 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform4(UniformName uniformName, Color color)
+        public void SetUniform4(UniformName uniformName, Rgb24 color)
+        {
+            GLUniform? uniform = GetUniformLocation(uniformName);
+
+            if (uniform != null)
+            {
+                UseShader();
+                uniform.Set4(color);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniform4(UniformName uniformName, Rgba32 color)
         {
             GLUniform? uniform = GetUniformLocation(uniformName);
 

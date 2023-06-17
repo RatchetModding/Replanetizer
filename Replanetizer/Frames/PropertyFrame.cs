@@ -13,12 +13,13 @@ using System.ComponentModel;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
-using System.Drawing;
 using ImGuiNET;
 using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
 using LibReplanetizer;
 using Replanetizer.Utils;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 
 namespace Replanetizer.Frames
 {
@@ -284,14 +285,27 @@ namespace Replanetizer.Frames
                     UpdateLevelFrame();
                 }
             }
-            else if (type == typeof(Color))
+            else if (type == typeof(Rgba32))
             {
-                var c = (Color) val;
+                var c = (Rgba32) val;
+                var v = new Vector4(c.R / 255.0f, c.G / 255.0f, c.B / 255.0f, c.A / 255.0f);
+                if (ImGui.ColorEdit4(propertyName, ref v))
+                {
+                    Rgba32 newColor = Color.FromRgba(
+                        (byte) (v.X * 255.0f), (byte) (v.Y * 255.0f), (byte) (v.Z * 255.0f), (byte) (v.W * 255.0f)
+                    );
+                    propertyInfo.SetValue(selectedObject, newColor);
+                    UpdateLevelFrame();
+                }
+            }
+            else if (type == typeof(Rgb24))
+            {
+                var c = (Rgb24) val;
                 var v = new Vector3(c.R / 255.0f, c.G / 255.0f, c.B / 255.0f);
                 if (ImGui.ColorEdit3(propertyName, ref v))
                 {
-                    Color newColor = Color.FromArgb(
-                        (int) (v.X * 255.0f), (int) (v.Y * 255.0f), (int) (v.Z * 255.0f)
+                    Rgb24 newColor = Color.FromRgb(
+                        (byte) (v.X * 255.0f), (byte) (v.Y * 255.0f), (byte) (v.Z * 255.0f)
                     );
                     propertyInfo.SetValue(selectedObject, newColor);
                     UpdateLevelFrame();

@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using ImGuiNET;
 using LibReplanetizer;
@@ -18,8 +17,9 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 using Replanetizer.Utils;
 using Replanetizer.Renderer;
 using Texture = LibReplanetizer.Texture;
-using LibReplanetizer.Serializers;
+using SixLabors.ImageSharp;
 using LibReplanetizer.LevelObjects;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Replanetizer.Frames
 {
@@ -27,6 +27,7 @@ namespace Replanetizer.Frames
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Model Viewer";
+        private static readonly Rgb24 CLEAR_COLOR = Color.FromRgb(0x9d, 0xab, 0xc7).ToPixel<Rgb24>();
 
         private string filter = "";
         private string filterUpper = "";
@@ -422,10 +423,6 @@ namespace Replanetizer.Frames
 
         private void ModelViewer_Load()
         {
-            GL.ClearColor(Color.SkyBlue);
-
-            GL.Enable(EnableCap.DepthTest);
-
             worldView = CreateWorldView();
             trans = Matrix4.CreateTranslation(0.0f, 0.0f, -5.0f);
         }
@@ -603,7 +600,7 @@ namespace Replanetizer.Frames
 
         private void OnPaint()
         {
-            GL.ClearColor(Color.SkyBlue);
+            GL.ClearColor(CLEAR_COLOR.R / 255.0f, CLEAR_COLOR.G / 255.0f, CLEAR_COLOR.B / 255.0f, 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             if (selectedModel != null && selectedTextureSet != null && !(selectedModel is SkyboxModel) && container != null)

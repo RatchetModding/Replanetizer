@@ -7,10 +7,10 @@
 
 using LibReplanetizer.Models;
 using OpenTK.Mathematics;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects
@@ -211,7 +211,7 @@ namespace LibReplanetizer.LevelObjects
         public int unk9 { get; set; }
 
         [Category("Attributes"), DisplayName("Color"), Description("Static diffuse lighting applied to the moby.")]
-        public Color color { get; set; }
+        public Rgb24 color { get; set; }
 
         [Category("Attributes"), DisplayName("Light"), Description("Index of the directional light that is applied to the moby.")]
         public int light { get; set; }
@@ -377,7 +377,7 @@ namespace LibReplanetizer.LevelObjects
             light = ReadInt(mobyBlock, offset + 0x70);
             cutscene = ReadInt(mobyBlock, offset + 0x74);
 
-            color = Color.FromArgb(r, g, b);
+            color = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
             position = new Vector3(x, y, z);
             rotation = new Quaternion(rotx, roty, rotz);
             scale = new Vector3(scaleHolder, scaleHolder, scaleHolder);
@@ -436,7 +436,7 @@ namespace LibReplanetizer.LevelObjects
             light = ReadInt(mobyBlock, offset + 0x80);
             cutscene = ReadInt(mobyBlock, offset + 0x84);
 
-            color = Color.FromArgb(r, g, b);
+            color = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
             position = new Vector3(x, y, z);
             rotation = new Quaternion(rotx, roty, rotz);
             scale = new Vector3(scaleHolder); //Mobys only use the X axis of scale
@@ -489,7 +489,7 @@ namespace LibReplanetizer.LevelObjects
 
             cutscene = 0;
 
-            color = Color.FromArgb(r, g, b);
+            color = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
             position = new Vector3(x, y, z);
             rotation = new Quaternion(rotx, roty, rotz);
             scale = new Vector3(scaleHolder); //Mobys only use the X axis of scale
@@ -700,7 +700,7 @@ namespace LibReplanetizer.LevelObjects
             public short drawDistance { get; set; }
             public ushort modeBits { get; set; }
             public ushort unk36 { get; set; }
-            public Color color { get; set; }
+            public Rgb24 color { get; set; }
             public int light { get; set; }
             public Vector4 rotation { get; set; }
             public byte animationFrame { get; set; }
@@ -792,7 +792,7 @@ namespace LibReplanetizer.LevelObjects
                 collPos = new Vector4(collX, collY, collZ, collW);
                 position = new Vector4(X, Y, Z, W);
                 rotation = new Vector4(rotX, rotY, rotZ, rotW);
-                color = Color.FromArgb(red, green, blue);
+                color = Color.FromRgb((byte) red, (byte) green, (byte) blue).ToPixel<Rgb24>();
             }
         }
 

@@ -6,11 +6,10 @@
 // Please see the LICENSE.md file for more details.
 
 using System;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
+using SixLabors.ImageSharp.PixelFormats;
 using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
 
 namespace Replanetizer.Renderer
@@ -109,7 +108,14 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Set4(Color color)
+        public void Set4(Rgb24 color)
+        {
+            Vector4 value = new Vector4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, 1.0f);
+            Set4(value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Set4(Rgba32 color)
         {
             Vector4 value = new Vector4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
             Set4(value);

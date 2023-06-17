@@ -7,9 +7,10 @@
 
 using LibReplanetizer.Models;
 using OpenTK.Mathematics;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using static LibReplanetizer.DataFunctions;
 
 
@@ -31,7 +32,7 @@ namespace LibReplanetizer.LevelObjects
         // the texture remains visible so cleary the visible
         // color is some blend between texture and this
         [Category("Attributes"), DisplayName("Static Color"), Description("Static diffuse lighting applied to the shrub.")]
-        public Color color { get; set; }
+        public Rgba32 color { get; set; }
         [Category("Unknowns"), DisplayName("OFF_64: Always 0")]
         public uint off64 { get; set; }
         [Category("Attributes"), DisplayName("Light"), Description("Index of the directional light that is applied to the shrub.")]
@@ -86,7 +87,7 @@ namespace LibReplanetizer.LevelObjects
             off6C = ReadUint(levelBlock, offset + 0x6C);
 
             model = shrubModels.Find(shrubModel => shrubModel.id == modelID);
-            color = Color.FromArgb(a, r, g, b);
+            color = Color.FromRgba(r, g, b, a).ToPixel<Rgba32>();
 
             rotation = modelMatrix.ExtractRotation();
             position = modelMatrix.ExtractTranslation();

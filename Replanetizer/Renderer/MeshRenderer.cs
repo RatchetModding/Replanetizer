@@ -12,9 +12,8 @@ using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using LibReplanetizer.Models;
-using System.Drawing;
-using Replanetizer.Renderer;
 using Replanetizer.Utils;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Replanetizer.Renderer
 {
@@ -43,7 +42,7 @@ namespace Replanetizer.Renderer
 
         private RenderedObjectType type { get; set; }
         private int light { get; set; }
-        private Color ambient { get; set; }
+        private Rgba32 ambient;
         private float renderDistance { get; set; }
 
         private bool selected;
@@ -307,7 +306,7 @@ namespace Replanetizer.Renderer
                 case RenderedObjectType.Moby:
                     Moby mob = (Moby) modelObject;
                     light = Math.Max(0, Math.Min(ALLOCATED_LIGHTS, mob.light));
-                    ambient = mob.color;
+                    mob.color.ToRgba32(ref ambient);
                     renderDistance = mob.drawDistance;
                     break;
                 case RenderedObjectType.Tie:

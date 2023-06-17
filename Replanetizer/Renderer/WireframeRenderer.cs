@@ -6,7 +6,6 @@
 // Please see the LICENSE.md file for more details.
 
 using System;
-using System.Drawing;
 using System.Collections.Generic;
 using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;

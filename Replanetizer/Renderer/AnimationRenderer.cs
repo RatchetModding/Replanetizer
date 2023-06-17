@@ -11,8 +11,8 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
+using SixLabors.ImageSharp.PixelFormats;
 using LibReplanetizer.Models;
-using System.Drawing;
 using Replanetizer.Renderer;
 using Replanetizer.Utils;
 using LibReplanetizer.Models.Animations;
@@ -42,7 +42,7 @@ namespace Replanetizer.Renderer
         private bool vaoAllocated = false;
 
         private int light { get; set; }
-        private Color ambient { get; set; }
+        private Rgb24 ambient { get; set; }
         private float renderDistance { get; set; }
         private static Vector4 SELECTED_COLOR = new Vector4(2.0f, 2.0f, 2.0f, 1.0f);
 

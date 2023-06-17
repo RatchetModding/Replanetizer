@@ -227,7 +227,7 @@ namespace Replanetizer.Renderer
         {
             if (levelVariables != null)
             {
-                GL.ClearColor(levelVariables.fogColor.R, levelVariables.fogColor.G, levelVariables.fogColor.B, 1.0f);
+                GL.ClearColor(levelVariables.fogColor.R / 255.0f, levelVariables.fogColor.G / 255.0f, levelVariables.fogColor.B / 255.0f, 1.0f);
             }
             else
             {

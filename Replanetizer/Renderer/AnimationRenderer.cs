@@ -574,7 +574,7 @@ namespace Replanetizer.Renderer
             //Bind textures one by one, applying it to the relevant vertices based on the index array
             foreach (TextureConfig conf in mobyModel.textureConfig)
             {
-                if (conf.id > 0)
+                if (conf.id >= 0)
                 {
                     GLTexture tex = textureIds[textures[conf.id]];
                     tex.Bind();

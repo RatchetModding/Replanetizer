@@ -51,8 +51,6 @@ namespace Replanetizer.Frames
         private List<Model> sortedGadgetModels;
         private List<List<Model>> sortedMissionModels;
 
-        private float cameraDistance = 1.0f, cameraAngle = 0.0f;
-
         private List<ModelObject> selectedObjectInstances = new List<ModelObject>();
 
         private static ExporterModelSettings lastUsedExportSettings = new ExporterModelSettings();
@@ -82,15 +80,15 @@ namespace Replanetizer.Frames
         // the model to position the camera
         private const float ZOOM_SCALE = 4;
         private const float ZOOM_EXP_COEFF = 0.4f;
-        private float zoomRaw;
-        private float zoom = 1;
+        private float zoomRaw = 6.0f;
+        private float zoom;
+        private float cameraAzimuth = MathF.PI * 0.5f;
+        private float cameraAltitude = MathF.PI * 0.25f;
 
         // Projection matrix settings
         private const float CLIP_NEAR = 0.1f;
         private const float CLIP_FAR = 1024.0f;
         private const float FIELD_OF_VIEW = MathF.PI / 3;  // 60 degrees
-
-        private bool initialized = false;
 
         private Rectangle contentRegion;
         private Vector2 mousePos;
@@ -108,7 +106,8 @@ namespace Replanetizer.Frames
             exportSettings = new ExporterModelSettings(lastUsedExportSettings);
 
             camera = new Camera();
-            camera.position += new Vector3(0.0f, 0.0f, -5.0f);
+            UpdateZoom(0.0f);
+            UpdateCamera();
 
             meshRenderer = new MeshRenderer(shaderIDTable, levelFrame.level.textures, levelFrame.textureIds, levelFrame.level.playerAnimations);
             rendererPayload = new RendererPayload(camera);
@@ -220,7 +219,22 @@ namespace Replanetizer.Frames
                 RenderSubTree("Moby", sortedMobyModels, level.textures);
                 RenderSubTree("Tie", sortedTieModels, level.textures);
                 RenderSubTree("Shrub", sortedShrubModels, level.textures);
-                RenderSubTree("Gadget", sortedGadgetModels, (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures);
+                if (level.game == GameType.RaC1)
+                {
+                    RenderSubTree("Gadget", sortedGadgetModels, level.textures);
+                }
+                else
+                {
+                    if (ImGui.TreeNode("Gadget"))
+                    {
+                        for (int i = 0; i < sortedGadgetModels.Count; i++)
+                        {
+                            Model gadget = sortedGadgetModels[i];
+                            RenderModelEntry(gadget, level.gadgetTextures, GetStringFromID(i));
+                        }
+                        ImGui.TreePop();
+                    }
+                }
                 if (ImGui.TreeNode("Armor"))
                 {
                     for (int i = 0; i < level.armorModels.Count; i++)
@@ -287,7 +301,7 @@ namespace Replanetizer.Frames
         {
             UpdateWindowSize();
             UpdateWindowTitle();
-            if (!initialized) ModelViewer_Load();
+
             if (renderer == null) return;
 
             ImGui.Columns(3);
@@ -393,7 +407,7 @@ namespace Replanetizer.Frames
 
                     if (ImGui.InputInt("Animation ID", ref animID))
                     {
-                        if (animID > mobModel.animations.Count)
+                        if (animID >= mobModel.animations.Count)
                         {
                             animID = 0;
                         }
@@ -448,10 +462,6 @@ namespace Replanetizer.Frames
             Vector2 windowZero = new Vector2(windowPos.X + vMin.X, windowPos.Y + vMin.Y);
             mousePos = wnd.MousePosition - windowZero;
             contentRegion = new Rectangle((int) windowZero.X, (int) windowZero.Y, width, height);
-        }
-
-        private void ModelViewer_Load()
-        {
         }
 
         private void UpdateInstanceList()
@@ -612,16 +622,6 @@ namespace Replanetizer.Frames
             SelectModel(model, textureSet);
         }
 
-        private Matrix4 CreateWorldView()
-        {
-            // To scale the zoom value to make a vector of that magnitude
-            // magnitude == sqrt(3*zoom^2)
-            const float INV_SQRT3 = 0.57735f;
-            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(FIELD_OF_VIEW, (float) width / height, CLIP_NEAR, CLIP_FAR);
-            Matrix4 view = Matrix4.LookAt(new Vector3(INV_SQRT3 * ZOOM_SCALE * zoom), Vector3.Zero, Vector3.UnitZ);
-            return view * projection;
-        }
-
         private void OnPaint()
         {
             GL.ClearColor(CLEAR_COLOR.R / 255.0f, CLEAR_COLOR.G / 255.0f, CLEAR_COLOR.B / 255.0f, 1.0f);
@@ -640,8 +640,23 @@ namespace Replanetizer.Frames
 
         private void UpdateCamera()
         {
-            camera.position = new Vector3(zoom * MathF.Sin(cameraAngle), zoom * MathF.Cos(cameraAngle), 1.0f) * ZOOM_SCALE;
-            camera.rotation = new Vector3(0.0f, 0.0f, -cameraAngle + MathF.PI);
+            Vector3 basePos = new Vector3(MathF.Sin(cameraAzimuth) * MathF.Cos(cameraAltitude), MathF.Cos(cameraAzimuth) * MathF.Cos(cameraAltitude), MathF.Sin(cameraAltitude)) * zoom * ZOOM_SCALE;
+            camera.position = basePos;
+            camera.rotation = new Vector3(-cameraAltitude, 0.0f, -cameraAzimuth + MathF.PI);
+        }
+
+        private void UpdateZoom(float scrollDelta)
+        {
+            float prevZoomRaw = zoomRaw;
+            float prevZoom = zoom;
+            zoomRaw -= wnd.MouseState.ScrollDelta.Y;
+            zoom = MathF.Exp(ZOOM_EXP_COEFF * zoomRaw);
+            if (zoom * ZOOM_SCALE is < CLIP_NEAR or > CLIP_FAR)
+            {
+                // Don't zoom beyond our clipping distances
+                zoomRaw = prevZoomRaw;
+                zoom = prevZoom;
+            }
         }
 
         private void Tick(float deltaTime)
@@ -672,16 +687,7 @@ namespace Replanetizer.Frames
 
             if (wnd.MouseState.ScrollDelta.Y != 0)
             {
-                var prevZoomRaw = zoomRaw;
-                var prevZoom = zoom;
-                zoomRaw -= wnd.MouseState.ScrollDelta.Y;
-                zoom = MathF.Exp(ZOOM_EXP_COEFF * zoomRaw);
-                if (zoom * ZOOM_SCALE is < CLIP_NEAR or > CLIP_FAR)
-                {
-                    // Don't zoom beyond our clipping distances
-                    zoomRaw = prevZoomRaw;
-                    zoom = prevZoom;
-                }
+                UpdateZoom(wnd.MouseState.ScrollDelta.Y);
             }
 
             UpdateCamera();
@@ -700,7 +706,18 @@ namespace Replanetizer.Frames
                 return false;
             }
 
-            cameraAngle += wnd.MouseState.Delta.X * deltaTime;
+            cameraAzimuth += wnd.MouseState.Delta.X * deltaTime;
+            cameraAltitude += wnd.MouseState.Delta.Y * deltaTime;
+
+            if (cameraAltitude > MathF.PI * 0.5f - 0.01f)
+            {
+                cameraAltitude = MathF.PI * 0.5f - 0.01f;
+            }
+
+            if (cameraAltitude < -MathF.PI * 0.5f + 0.01f)
+            {
+                cameraAltitude = -MathF.PI * 0.5f + 0.01f;
+            }
 
             return true;
         }

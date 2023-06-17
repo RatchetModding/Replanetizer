@@ -55,17 +55,21 @@ namespace Replanetizer.Renderer
         private Dictionary<Texture, GLTexture> textureIds;
         private ShaderTable shaderTable;
 
+        // The Ratchet moby does not contain its own animations.
+        private List<Animation>? ratchetAnimations = null;
+
         private int currentFrameID = 0;
         private int currentAnimationID = 0;
         private Frame? currentFrame = null;
         private Frame? previousFrame = null;
         private float frameBlend = 0.0f;
 
-        public AnimationRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, GLTexture> textureIds)
+        public AnimationRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, GLTexture> textureIds, List<Animation>? ratchetAnimations = null)
         {
             this.shaderTable = shaderTable;
             this.textureIds = textureIds;
             this.textures = textures;
+            this.ratchetAnimations = ratchetAnimations;
         }
 
         public void ChangeTextures(List<Texture> textures, Dictionary<Texture, GLTexture>? textureIds = null)
@@ -454,7 +458,9 @@ namespace Replanetizer.Renderer
 
             Matrix4[] boneMatrices = new Matrix4[mobyModel.boneCount];
 
-            Animation? anim = (animationID >= 0 && animationID < mobyModel.animations.Count) ? mobyModel.animations[animationID] : null;
+            List<Animation> animations = (loadedModelID == 0 && ratchetAnimations != null) ? ratchetAnimations : mobyModel.animations;
+
+            Animation? anim = (animationID >= 0 && animationID < mobyModel.animations.Count) ? animations[animationID] : null;
 
             int animationFrame = (mob != null && mob.memory != null) ? mob.memory.animationFrame : currentFrameID;
 

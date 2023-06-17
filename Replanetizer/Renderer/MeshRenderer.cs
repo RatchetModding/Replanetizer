@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using LibReplanetizer.Models;
 using Replanetizer.Utils;
 using SixLabors.ImageSharp.PixelFormats;
+using LibReplanetizer.Models.Animations;
 
 namespace Replanetizer.Renderer
 {
@@ -49,17 +50,20 @@ namespace Replanetizer.Renderer
         private bool selected;
         private float blendDistance = 0.0f;
 
+        private List<Animation>? ratchetAnimations = null;
+
         private List<Texture> textures;
         private Dictionary<Texture, GLTexture> textureIds;
         private ShaderTable shaderTable;
         private BillboardRenderer fallback;
         private AnimationRenderer? animationRenderer = null;
 
-        public MeshRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, GLTexture> textureIds)
+        public MeshRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, GLTexture> textureIds, List<Animation>? ratchetAnimations = null)
         {
             this.shaderTable = shaderTable;
             this.textureIds = textureIds;
             this.textures = textures;
+            this.ratchetAnimations = ratchetAnimations;
             this.fallback = new BillboardRenderer(shaderTable);
         }
 
@@ -95,7 +99,7 @@ namespace Replanetizer.Renderer
 
                 if (mObj is Moby mob)
                 {
-                    animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds);
+                    animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds, ratchetAnimations);
                     animationRenderer.Include(mob);
                 }
 
@@ -112,7 +116,7 @@ namespace Replanetizer.Renderer
 
                 if (model is MobyModel mobyModel)
                 {
-                    animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds);
+                    animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds, ratchetAnimations);
                     animationRenderer.Include(mobyModel);
                 }
 

@@ -110,7 +110,7 @@ namespace Replanetizer.Frames
             camera = new Camera();
             camera.position += new Vector3(0.0f, 0.0f, -5.0f);
 
-            meshRenderer = new MeshRenderer(shaderIDTable, levelFrame.level.textures, levelFrame.textureIds);
+            meshRenderer = new MeshRenderer(shaderIDTable, levelFrame.level.textures, levelFrame.textureIds, levelFrame.level.playerAnimations);
             rendererPayload = new RendererPayload(camera);
 
             sortedMobyModels = new List<Model>(level.mobyModels);

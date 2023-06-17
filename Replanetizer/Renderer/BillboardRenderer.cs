@@ -7,12 +7,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
+using SixLabors.ImageSharp;
 using System.IO;
 using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Replanetizer.Utils;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Replanetizer.Renderer
 {
@@ -62,10 +63,8 @@ namespace Replanetizer.Renderer
 
             // Only a single placeholder texture currently.
 
-            Image image = Image.FromFile(Path.Join(billboardsFolder, "Placeholder.png"), true);
-            Bitmap bitmap = new Bitmap(image);
-
-            GLTexture placeholderTex = new GLTexture("BillboardTexture", bitmap, true, true);
+            Image<Rgba32> image = Image.Load<Rgba32>(Path.Join(billboardsFolder, "Placeholder.png"));
+            GLTexture placeholderTex = new GLTexture("BillboardTexture", image, true, true);
 
             billboardTextures = new Dictionary<RenderedObjectType, GLTexture>();
             billboardTextures.Add(RenderedObjectType.Null, placeholderTex);

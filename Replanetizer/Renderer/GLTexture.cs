@@ -6,11 +6,11 @@
 // Please see the LICENSE.md file for more details.
 
 using System;
-using System.Drawing;
-using System.Drawing.Imaging;
+using SixLabors.ImageSharp;
 using LibReplanetizer;
 using OpenTK.Graphics.OpenGL;
 using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Replanetizer.Renderer
 {
@@ -52,7 +52,7 @@ namespace Replanetizer.Renderer
             GL.BindTexture(TextureTarget.Texture2D, 0);
         }
 
-        public GLTexture(string name, Bitmap image, bool generateMipmaps, bool srgb)
+        public GLTexture(string name, Image<Rgba32> image, bool generateMipmaps, bool srgb)
         {
             this.name = name;
             width = image.Width;
@@ -76,13 +76,11 @@ namespace Replanetizer.Renderer
             GL.TextureStorage2D(textureID, mipmapLevels, internalFormat, width, height);
             GLUtil.CheckGlError("Storage2d");
 
-            BitmapData data = image.LockBits(new Rectangle(0, 0, width, height),
-                ImageLockMode.ReadOnly, global::System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            byte[] imageBytes = new byte[image.Width * image.Height * 4];
+            image.CopyPixelDataTo(imageBytes);
 
-            GL.TextureSubImage2D(textureID, 0, 0, 0, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
+            GL.TextureSubImage2D(textureID, 0, 0, 0, width, height, PixelFormat.Rgba, PixelType.UnsignedByte, imageBytes);
             GLUtil.CheckGlError("SubImage");
-
-            image.UnlockBits(data);
 
             if (generateMipmaps) GL.GenerateTextureMipmap(textureID);
 

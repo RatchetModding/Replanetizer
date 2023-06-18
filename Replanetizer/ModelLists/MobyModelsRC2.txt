@@ -49,6 +49,7 @@
 09C6=Spitting Dune Crawler
 0A73=Ratchet's Shoe
 0A9A=Mr. Fizzwidget
+0A9C=Slot Machine
 0AAA=Elevator
 0B02=Kilonoid
 0B2A=Unknown Thief

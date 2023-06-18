@@ -35,10 +35,11 @@ Replanetizer is still in an early state of development. Its feature set entails:
    - Transformation of level objects
    - Manipulation of variables
  - Export
-   - Textures (`.png`)
-   - Rigged models including animations (`.dae`, `.obj`)
+   - Textures (`.png`, `.jpg`, `.bmp`)
+   - Rigged models including animations (`.gltf`, `.dae`, `.obj`)
    - Level as a model (`.obj`)
    - Collision (`.obj`)
+ - Live inspection of a game running in emulator
 
 Support for Ratchet Deadlocked is available but low priority.
 
@@ -75,13 +76,13 @@ Alternatively, open Replanetizer.sln in your favourite IDE, and use its tooling 
 
 The project is written in C#, and uses OpenTK4 for rendering. C# bindings for Dear ImGui are used for the UI.
 
-We currently target .NET 6 (net6.0-windows for the Windows builds, net6.0 on anything else).
+We currently target .NET 6 (net6.0-windows for the Windows builds, net6.0 on anything else). We use SixLabors.ImageSharp instead of System.Drawing for cross-platform compatibility.
 
 OpenGL 3.3 is used for the rendering.
 
 # Licensing
 
-Replanetizer is Copyright (C) 2018-2022, The Replanetizer Contributors.
+Replanetizer is Copyright (C) 2018-2023, The Replanetizer Contributors.
 
 Replanetizer is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

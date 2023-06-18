@@ -470,6 +470,12 @@ namespace Replanetizer.Renderer
             {
                 float frameSpeed = (anim.speed != 0.0f) ? anim.speed : frame.speed;
                 frameBlend += payload.deltaTime * frameSpeed * 60.0f;
+
+                // If frameSpeed is zero then no interpolation is used and thus always display exactly the current frame.
+                if (frameSpeed == 0.0f)
+                {
+                    frameBlend = 1.0f;
+                }
             }
 
             if (frame != currentFrame)
@@ -559,7 +565,7 @@ namespace Replanetizer.Renderer
             }
 
             // This causes the animation in the model viewer to loop.
-            if (frameBlend > 1.0f && mob == null && anim != null)
+            if (frameBlend >= 1.0f && mob == null && anim != null)
             {
                 frameBlend -= 1.0f;
                 currentFrameID++;

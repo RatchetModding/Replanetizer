@@ -43,12 +43,19 @@ namespace Replanetizer.Renderer
         private bool vaoAllocated = false;
 
         private RenderedObjectType type { get; set; }
+        private int objectID = 0;
         private int light { get; set; }
         private Rgba32 ambient;
         private float renderDistance { get; set; }
+        private Matrix4 modelToWorld = Matrix4.Identity;
+        private Matrix4 worldToView = Matrix4.Identity;
+        private Model? modelRender;
 
         private bool selected;
         private float blendDistance = 0.0f;
+
+        private bool renderPrepared = false;
+        private bool renderPerform = true;
 
         private List<Animation>? ratchetAnimations = null;
 
@@ -383,6 +390,9 @@ namespace Replanetizer.Renderer
                         break;
                 }
 
+                modelToWorld = modelObject.modelMatrix;
+                objectID = modelObject.globalID;
+
                 if (loadedModelID != modelObject.modelID)
                 {
                     GenerateBuffers();
@@ -390,6 +400,9 @@ namespace Replanetizer.Renderer
             }
             else if (modelStandalone != null)
             {
+                modelToWorld = Matrix4.Identity;
+                objectID = 0;
+
                 if (loadedModelID != modelStandalone.id)
                 {
                     GenerateBuffers();
@@ -542,16 +555,69 @@ namespace Replanetizer.Renderer
             return false;
         }
 
-        public override void Render(RendererPayload payload)
+        /*
+         * This function computes all values required for Render.
+         * Note that any changes made between PrepareRender and Render will be ignored.
+         */
+        public void PrepareRender(RendererPayload payload)
         {
-            if (modelObject == null && modelStandalone == null) return;
+            if (modelObject == null && modelStandalone == null)
+            {
+                renderPrepared = true;
+                renderPerform = false;
+                return;
+            }
 
             if (modelObject is Moby mob && mob.memory != null && mob.memory.IsDead())
             {
+                renderPrepared = true;
+                renderPerform = false;
                 return;
             }
 
             UpdateVars();
+
+            modelRender = modelObject?.model ?? modelStandalone;
+
+            if (modelRender == null)
+            {
+                renderPrepared = true;
+                renderPerform = false;
+                return;
+            }
+
+            if (ComputeCulling(payload.camera, payload.visibility.enableDistanceCulling, payload.visibility.enableFrustumCulling))
+            {
+                renderPrepared = true;
+                renderPerform = false;
+                return;
+            }
+
+            worldToView = payload.camera.GetWorldViewMatrix();
+            Select(payload.selection);
+
+            renderPrepared = true;
+            renderPerform = true;
+        }
+
+        public override void Render(RendererPayload payload)
+        {
+            if (renderPrepared && !renderPerform)
+            {
+                renderPrepared = false;
+                return;
+            }
+            else if (!renderPrepared)
+            {
+                PrepareRender(payload);
+                renderPrepared = false;
+                if (!renderPerform)
+                {
+                    return;
+                }
+            }
+
+            renderPrepared = false;
 
             if (emptyModel)
             {
@@ -562,10 +628,6 @@ namespace Replanetizer.Renderer
                 return;
             }
 
-            Model? model = modelObject?.model ?? modelStandalone;
-
-            if (model == null) return;
-
             if (payload.visibility.enableAnimations && animationRenderer != null)
             {
                 if (animationRenderer.IsValid())
@@ -575,26 +637,22 @@ namespace Replanetizer.Renderer
                 }
             }
 
-            if (ComputeCulling(payload.camera, payload.visibility.enableDistanceCulling, payload.visibility.enableFrustumCulling)) return;
+            if (modelRender == null) return;
 
             GL.BindVertexArray(vao);
 
-            Select(payload.selection);
-
             shaderTable.meshShader.UseShader();
 
-            Matrix4 modelToWorld = (modelObject != null) ? modelObject.modelMatrix : Matrix4.Identity;
-            Matrix4 worldToView = (payload != null) ? payload.camera.GetWorldViewMatrix() : Matrix4.Identity;
             shaderTable.meshShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelToWorld);
             shaderTable.meshShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
-            shaderTable.meshShader.SetUniform1(UniformName.levelObjectNumber, (modelObject != null) ? modelObject.globalID : 0);
+            shaderTable.meshShader.SetUniform1(UniformName.levelObjectNumber, objectID);
             shaderTable.meshShader.SetUniform1(UniformName.levelObjectType, (int) type);
             shaderTable.meshShader.SetUniform4(UniformName.staticColor, ambient);
             shaderTable.meshShader.SetUniform1(UniformName.lightIndex, light);
             shaderTable.meshShader.SetUniform1(UniformName.objectBlendDistance, blendDistance);
 
             //Bind textures one by one, applying it to the relevant vertices based on the index array
-            foreach (TextureConfig conf in model.textureConfig)
+            foreach (TextureConfig conf in modelRender.textureConfig)
             {
                 if (conf.id >= 0)
                 {
@@ -616,13 +674,13 @@ namespace Replanetizer.Renderer
 
                 shaderTable.colorShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelToWorld);
                 shaderTable.colorShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
-                shaderTable.colorShader.SetUniform1(UniformName.levelObjectNumber, (modelObject != null) ? modelObject.globalID : 0);
+                shaderTable.colorShader.SetUniform1(UniformName.levelObjectNumber, objectID);
                 shaderTable.colorShader.SetUniform1(UniformName.levelObjectType, (int) type);
                 shaderTable.colorShader.SetUniform4(UniformName.incolor, 1.0f, 1.0f, 1.0f, 1.0f);
 
                 GL.Enable(EnableCap.LineSmooth);
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                GL.DrawElements(PrimitiveType.Triangles, model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
+                GL.DrawElements(PrimitiveType.Triangles, modelRender.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 GL.Disable(EnableCap.LineSmooth);
             }

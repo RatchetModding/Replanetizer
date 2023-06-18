@@ -24,6 +24,7 @@ namespace Replanetizer.MemoryHook
         // Read and write acceess
         const int PROCESS_WM_READ = 0x38;
 
+#if _WINDOWS
         [DllImport("kernel32.dll")]
         private static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
 
@@ -32,6 +33,7 @@ namespace Replanetizer.MemoryHook
 
         [DllImport("kernel32.dll")]
         private static extern bool WriteProcessMemory(IntPtr hProcess, Int64 lpBaseAddress, byte[] lpBuffer, int nSize, ref int lpNumberOfBytesWritten);
+#endif
 
         private readonly Process? PROCESS;
         private readonly IntPtr PROCESS_HANDLE;
@@ -42,6 +44,7 @@ namespace Replanetizer.MemoryHook
 
         public MemoryHookHandle(Level level)
         {
+#if _WINDOWS
             switch (level.game.num)
             {
                 case 1:
@@ -77,6 +80,10 @@ namespace Replanetizer.MemoryHook
             {
                 level.EmplaceCommonData();
             }
+#else
+            hookWorking = false;
+            errorMessage = "Memory hooks are only supported for Windows.";
+#endif
         }
 
         public string GetLastErrorMessage()
@@ -86,6 +93,7 @@ namespace Replanetizer.MemoryHook
 
         public void UpdateCamera(Camera camera)
         {
+#if _WINDOWS
             if (!hookWorking) return;
             if (ADDRESSES == null) return;
             int bytesRead = 0;
@@ -93,10 +101,12 @@ namespace Replanetizer.MemoryHook
             ReadProcessMemory(PROCESS_HANDLE, ADDRESSES.camera, camBfr, camBfr.Length, ref bytesRead);
             camera.position = new Vector3(ReadFloat(camBfr, 0x00), ReadFloat(camBfr, 0x04), ReadFloat(camBfr, 0x08));
             camera.rotation = new Vector3(-ReadFloat(camBfr, 0x14), ReadFloat(camBfr, 0x10), ReadFloat(camBfr, 0x18) - (float) (Math.PI / 2));
+#endif
         }
 
         public void UpdateMobys(List<Moby> levelMobs, List<Model> models, LevelFrame frame)
         {
+#if _WINDOWS
             if (!hookWorking) return;
             if (ADDRESSES == null) return;
             if (!IsX64()) return;
@@ -132,10 +142,12 @@ namespace Replanetizer.MemoryHook
             {
                 levelMobs[i].UpdateFromMemory(mobys, i * 0x100, models);
             }
+#endif
         }
 
         public int GetLevelFrameNumber()
         {
+#if _WINDOWS
             if (!hookWorking) return -1;
             if (ADDRESSES == null) return -1;
 
@@ -145,6 +157,9 @@ namespace Replanetizer.MemoryHook
             ReadProcessMemory(PROCESS_HANDLE, ADDRESSES.levelFrames, buffer, buffer.Length, ref bytesRead);
 
             return ReadInt(buffer, 0);
+#else
+            return -1;
+#endif
         }
 
         private bool IsX64()

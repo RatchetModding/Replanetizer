@@ -32,8 +32,6 @@ namespace Replanetizer.Renderer
 
         private int loadedModelID = -1;
 
-        private bool emptyModel = false;
-
         private int ibo = 0;
         private int vbo = 0;
         private int vao = 0;
@@ -56,6 +54,7 @@ namespace Replanetizer.Renderer
 
         private bool renderPrepared = false;
         private bool renderPerform = true;
+        private bool renderPerformBillboardOnly = false;
 
         private List<Animation>? ratchetAnimations = null;
 
@@ -91,6 +90,7 @@ namespace Replanetizer.Renderer
 
         public override void Include<T>(T obj)
         {
+            modelRender = null;
             modelObject = null;
             modelStandalone = null;
             animationRenderer = null;
@@ -215,7 +215,7 @@ namespace Replanetizer.Renderer
         {
             DeleteBuffers();
 
-            Model? model = modelObject?.model ?? modelStandalone;
+            modelRender = modelObject?.model ?? modelStandalone;
 
             if (modelObject != null)
             {
@@ -226,33 +226,28 @@ namespace Replanetizer.Renderer
                 loadedModelID = modelStandalone.id;
             }
 
-            if (model == null)
+            if (modelRender == null)
                 return;
 
-            if (model.GetIndices().Length == 0)
-            {
-                emptyModel = true;
+            if (modelRender.GetIndices().Length == 0)
                 return;
-            }
 
             // This is a camera object that only exist at runtime and blocks vision in interactive mode.
             // We simply don't draw it.
-            if (loadedModelID == 0x3EF)
+            if (loadedModelID == 0x3EF && modelObject != null)
             {
                 loadedModelID = -1;
-                emptyModel = true;
                 modelObject = null;
+                modelRender = null;
                 return;
             }
-
-            emptyModel = false;
 
             GL.GenVertexArrays(1, out vao);
             GL.BindVertexArray(vao);
             vaoAllocated = true;
 
             // IBO
-            int iboLength = model.GetIndices().Length * sizeof(ushort);
+            int iboLength = modelRender.GetIndices().Length * sizeof(ushort);
             if (iboLength > 0)
             {
                 GL.GenBuffers(1, out ibo);
@@ -262,13 +257,13 @@ namespace Replanetizer.Renderer
             }
 
             // VBO
-            int vboLength = model.GetVertices().Length * sizeof(float);
+            int vboLength = modelRender.GetVertices().Length * sizeof(float);
             if (modelObject != null)
             {
                 switch (type)
                 {
                     case RenderedObjectType.Terrain:
-                        TerrainModel? terrainModel = (TerrainModel?) model;
+                        TerrainModel? terrainModel = (TerrainModel?) modelRender;
                         if (terrainModel == null) break;
                         vboLength += modelObject.GetAmbientRgbas().Length * sizeof(Byte) + terrainModel.lights.Count * sizeof(int);
                         break;
@@ -296,16 +291,14 @@ namespace Replanetizer.Renderer
         /// </summary>
         private void UpdateBuffers()
         {
-            Model? model = modelObject?.model ?? modelStandalone;
-
-            if (model == null) return;
+            if (modelRender == null) return;
 
             GL.BindVertexArray(vao);
 
-            ushort[] iboData = model.GetIndices();
+            ushort[] iboData = modelRender.GetIndices();
             GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, iboData.Length * sizeof(ushort), iboData);
 
-            float[] vboData = model.GetVertices();
+            float[] vboData = modelRender.GetVertices();
             if (modelObject != null)
             {
                 switch (type)
@@ -313,7 +306,7 @@ namespace Replanetizer.Renderer
                     case RenderedObjectType.Terrain:
                         {
                             byte[] rgbas = modelObject.GetAmbientRgbas();
-                            TerrainModel? terrainModel = (TerrainModel?) modelObject.model;
+                            TerrainModel? terrainModel = (TerrainModel?) modelRender;
                             if (terrainModel == null) break;
                             int[] lights = terrainModel.lights.ToArray();
                             float[] fullData = new float[vboData.Length + rgbas.Length / 4 + lights.Length];
@@ -483,7 +476,7 @@ namespace Replanetizer.Renderer
         /// </summary>
         private bool ComputeCulling(Camera camera, bool distanceCulling, bool frustumCulling)
         {
-            if (emptyModel) return true;
+            if (modelRender == null) return false;
             if (modelStandalone != null) return false;
             if (modelObject == null) return true;
 
@@ -579,13 +572,6 @@ namespace Replanetizer.Renderer
 
             modelRender = modelObject?.model ?? modelStandalone;
 
-            if (modelRender == null)
-            {
-                renderPrepared = true;
-                renderPerform = false;
-                return;
-            }
-
             if (ComputeCulling(payload.camera, payload.visibility.enableDistanceCulling, payload.visibility.enableFrustumCulling))
             {
                 renderPrepared = true;
@@ -593,11 +579,19 @@ namespace Replanetizer.Renderer
                 return;
             }
 
+            renderPrepared = true;
+            renderPerform = true;
+
+            if (modelRender == null || modelRender.GetIndices().Length == 0)
+            {
+                renderPerformBillboardOnly = true;
+                return;
+            }
+
             worldToView = payload.camera.GetWorldViewMatrix();
             Select(payload.selection);
 
-            renderPrepared = true;
-            renderPerform = true;
+            renderPerformBillboardOnly = false;
         }
 
         public override void Render(RendererPayload payload)
@@ -619,7 +613,7 @@ namespace Replanetizer.Renderer
 
             renderPrepared = false;
 
-            if (emptyModel)
+            if (renderPerformBillboardOnly)
             {
                 if (payload.visibility.enableMeshlessModels)
                 {

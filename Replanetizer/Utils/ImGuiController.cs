@@ -94,7 +94,7 @@ namespace Replanetizer.Utils
 
             string vertexSource = @"#version 330 core
 
-uniform mat4 projection_matrix;
+uniform mat4 worldToView;
 
 layout(location = 0) in vec2 in_position;
 layout(location = 1) in vec2 in_texCoord;
@@ -105,13 +105,13 @@ out vec2 texCoord;
 
 void main()
 {
-    gl_Position = projection_matrix * vec4(in_position, 0, 1);
+    gl_Position = worldToView * vec4(in_position, 0, 1);
     color = in_color;
     texCoord = in_texCoord;
 }";
             string fragmentSource = @"#version 330 core
 
-uniform sampler2D in_fontTexture;
+uniform sampler2D fontTexture;
 
 in vec4 color;
 in vec2 texCoord;
@@ -120,7 +120,7 @@ out vec4 outputColor;
 
 void main()
 {
-    outputColor = color * texture(in_fontTexture, texCoord);
+    outputColor = color * texture(fontTexture, texCoord);
 }";
             shader = new Shader("ImGui", vertexSource, fragmentSource);
 
@@ -154,7 +154,7 @@ void main()
             fontGlTexture.SetMagFilter(TextureMagFilter.Linear);
             fontGlTexture.SetMinFilter(TextureMinFilter.Linear);
 
-            io.Fonts.SetTexID((IntPtr) fontGlTexture.TEXTURE);
+            io.Fonts.SetTexID((IntPtr) fontGlTexture.textureID);
             io.Fonts.ClearTexData();
         }
 
@@ -341,8 +341,8 @@ void main()
                 1.0f);
 
             shader.UseShader();
-            GL.UniformMatrix4(shader.GetUniformLocation("projection_matrix"), false, ref mvp);
-            GL.Uniform1(shader.GetUniformLocation("in_fontTexture"), 0);
+            shader.SetUniformMatrix4(UniformName.worldToView, ref mvp);
+            shader.SetUniform1(UniformName.fontTexture, 0);
             GLUtil.CheckGlError("Projection");
 
             GL.BindVertexArray(vertexArray);

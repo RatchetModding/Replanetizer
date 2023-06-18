@@ -6,8 +6,9 @@
 // Please see the LICENSE.md file for more details.
 
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Models
@@ -18,7 +19,7 @@ namespace LibReplanetizer.Models
 
         public GameType game;
 
-        public Color someColor;
+        public Rgba32 someColor;
 
         //Unhandled offsets for serialization
         public short off04;
@@ -75,7 +76,7 @@ namespace LibReplanetizer.Models
 
             indexBuffer = GetIndices(fs, faceOffset, faceCount);
 
-            someColor = Color.FromArgb(alpha, red, green, blue);
+            someColor = Color.FromRgba(alpha, red, green, blue).ToPixel<Rgba32>();
         }
 
         public byte[] Serialize(int startOffset)

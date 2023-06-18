@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -13,17 +13,13 @@ using LibReplanetizer;
 using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
 using OpenTK.Mathematics;
+using Replanetizer.Frames;
 using Replanetizer.Utils;
 using static LibReplanetizer.DataFunctions;
 
 namespace Replanetizer.MemoryHook
 {
-
-    public struct MemoryAdresses
-    {
-        public long moby;
-    }
-    class MemoryHook
+    public class MemoryHookHandle
     {
         // Read and write acceess
         const int PROCESS_WM_READ = 0x38;
@@ -41,21 +37,24 @@ namespace Replanetizer.MemoryHook
         private readonly IntPtr PROCESS_HANDLE;
         private readonly MemoryAddresses? ADDRESSES;
 
-        public bool hookWorking = false;
+        public bool hookWorking { get; private set; } = false;
+        private string errorMessage = "";
 
-        public MemoryHook(int gameNum)
+        public MemoryHookHandle(Level level)
         {
-            switch (gameNum)
+            switch (level.game.num)
             {
                 case 1:
                     ADDRESSES = new MemoryAddresses
                     {
                         moby = 0x300A390A0,
-                        camera = 0x300951500
+                        camera = 0x300951500,
+                        levelFrames = 0x300a10710
                     };
                     break;
                 default:
                     hookWorking = false;
+                    errorMessage = "Memory hooks are only supported for RaC 1.";
                     return;
             }
 
@@ -66,7 +65,23 @@ namespace Replanetizer.MemoryHook
                 PROCESS_HANDLE = OpenProcess(PROCESS_WM_READ, false, PROCESS.Id);
 
                 hookWorking = true;
+                errorMessage = "Success!";
             }
+            else
+            {
+                hookWorking = false;
+                errorMessage = "Failed to find a running RPCS3 process.";
+            }
+
+            if (hookWorking)
+            {
+                level.EmplaceCommonData();
+            }
+        }
+
+        public string GetLastErrorMessage()
+        {
+            return errorMessage;
         }
 
         public void UpdateCamera(Camera camera)
@@ -77,10 +92,10 @@ namespace Replanetizer.MemoryHook
             byte[] camBfr = new byte[0x20];
             ReadProcessMemory(PROCESS_HANDLE, ADDRESSES.camera, camBfr, camBfr.Length, ref bytesRead);
             camera.position = new Vector3(ReadFloat(camBfr, 0x00), ReadFloat(camBfr, 0x04), ReadFloat(camBfr, 0x08));
-            camera.rotation = new Vector3(ReadFloat(camBfr, 0x10), ReadFloat(camBfr, 0x14), ReadFloat(camBfr, 0x18) - (float) (Math.PI / 2));
+            camera.rotation = new Vector3(-ReadFloat(camBfr, 0x14), ReadFloat(camBfr, 0x10), ReadFloat(camBfr, 0x18) - (float) (Math.PI / 2));
         }
 
-        public void UpdateMobys(List<Moby> levelMobs, List<Model> models)
+        public void UpdateMobys(List<Moby> levelMobs, List<Model> models, LevelFrame frame)
         {
             if (!hookWorking) return;
             if (ADDRESSES == null) return;
@@ -92,20 +107,44 @@ namespace Replanetizer.MemoryHook
             ReadProcessMemory(PROCESS_HANDLE, ADDRESSES.moby, ptrbuf, ptrbuf.Length, ref bytesRead);
             int firstMoby = ReadInt(ptrbuf, 0x00);
             int lastMoby = ReadInt(ptrbuf, 0x08);
+            int numMobs = (lastMoby - firstMoby) / 0x100 + 1;
 
-            byte[] mobys = new byte[lastMoby - firstMoby + 0x100];
+            byte[] mobys = new byte[numMobs * 0x100];
 
             ReadProcessMemory(PROCESS_HANDLE, 0x300000000 + firstMoby, mobys, mobys.Length, ref bytesRead);
 
-            while (levelMobs.Count < mobys.Length / 0x100)
+            while (levelMobs.Count < numMobs)
             {
-                levelMobs.Add(new Moby());
+                Moby mob = new Moby();
+                levelMobs.Add(mob);
+                frame.levelRenderer?.Include(mob);
             }
 
-            for (int i = 0; i < mobys.Length / 0x100; i++)
+            if (numMobs < levelMobs.Count)
+            {
+                for (int i = numMobs; i < levelMobs.Count; i++)
+                {
+                    levelMobs[i].SetDead();
+                }
+            }
+
+            for (int i = 0; i < numMobs; i++)
             {
                 levelMobs[i].UpdateFromMemory(mobys, i * 0x100, models);
             }
+        }
+
+        public int GetLevelFrameNumber()
+        {
+            if (!hookWorking) return -1;
+            if (ADDRESSES == null) return -1;
+
+            int bytesRead = 0;
+            byte[] buffer = new byte[0x4];
+
+            ReadProcessMemory(PROCESS_HANDLE, ADDRESSES.levelFrames, buffer, buffer.Length, ref bytesRead);
+
+            return ReadInt(buffer, 0);
         }
 
         private bool IsX64()

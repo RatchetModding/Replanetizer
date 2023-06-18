@@ -7,19 +7,21 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using LibReplanetizer;
 using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Replanetizer.Utils;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Replanetizer.Renderer
 {
     public class LevelRenderer : Renderer
     {
+        private static readonly Rgb24 CLEAR_COLOR = Color.FromRgb(0x9d, 0xab, 0xc7).ToPixel<Rgb24>();
         private readonly ShaderTable shaderTable;
-        private Dictionary<Texture, int> textureIDs;
+        private Dictionary<Texture, GLTexture> textureIDs;
 
         private LevelVariables? levelVariables;
         private List<Light>? lights;
@@ -46,7 +48,7 @@ namespace Replanetizer.Renderer
         private ToolRenderer toolRenderer;
         private DirectionalLightsBuffer dirLightsBuffer;
 
-        public LevelRenderer(ShaderTable shaderTable, Dictionary<Texture, int> textureIDs)
+        public LevelRenderer(ShaderTable shaderTable, Dictionary<Texture, GLTexture> textureIDs)
         {
             this.shaderTable = shaderTable;
             this.textureIDs = textureIDs;
@@ -223,7 +225,15 @@ namespace Replanetizer.Renderer
         public override void Include<T>(List<T> list) => throw new NotImplementedException();
         public override void Render(RendererPayload payload)
         {
-            GL.ClearColor((levelVariables != null) ? levelVariables.fogColor : Color.SkyBlue);
+            if (levelVariables != null)
+            {
+                GL.ClearColor(levelVariables.fogColor.R / 255.0f, levelVariables.fogColor.G / 255.0f, levelVariables.fogColor.B / 255.0f, 1.0f);
+            }
+            else
+            {
+                GL.ClearColor(CLEAR_COLOR.R / 255.0f, CLEAR_COLOR.G / 255.0f, CLEAR_COLOR.B / 255.0f, 1.0f);
+            }
+
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.DepthFunc(DepthFunction.Lequal);
 
@@ -232,12 +242,25 @@ namespace Replanetizer.Renderer
 
             bool useFog = payload.visibility.enableFog && levelVariables != null;
 
-            shaderTable.meshShader.UseShader();
-            shaderTable.meshShader.SetUniform1("useFog", (useFog) ? 1 : 0);
+            shaderTable.animationShader.UseShader();
+            shaderTable.animationShader.SetUniform1(UniformName.useFog, (useFog) ? 1 : 0);
+
             if (useFog && levelVariables != null)
             {
-                shaderTable.meshShader.SetUniform4("fogColor", levelVariables.fogColor);
-                shaderTable.meshShader.SetUniform4("fogParams", levelVariables.fogNearDistance / 1024.0f,
+                shaderTable.animationShader.SetUniform4(UniformName.fogColor, levelVariables.fogColor);
+                shaderTable.animationShader.SetUniform4(UniformName.fogParams, levelVariables.fogNearDistance / 1024.0f,
+                        1024.0f / (levelVariables.fogFarDistance - levelVariables.fogNearDistance),
+                        1.0f - levelVariables.fogNearIntensity / 255.0f,
+                        1.0f - levelVariables.fogFarIntensity / 255.0f);
+            }
+
+            shaderTable.meshShader.UseShader();
+            shaderTable.meshShader.SetUniform1(UniformName.useFog, (useFog) ? 1 : 0);
+
+            if (useFog && levelVariables != null)
+            {
+                shaderTable.meshShader.SetUniform4(UniformName.fogColor, levelVariables.fogColor);
+                shaderTable.meshShader.SetUniform4(UniformName.fogParams, levelVariables.fogNearDistance / 1024.0f,
                         1024.0f / (levelVariables.fogFarDistance - levelVariables.fogNearDistance),
                         1.0f - levelVariables.fogNearIntensity / 255.0f,
                         1.0f - levelVariables.fogFarIntensity / 255.0f);

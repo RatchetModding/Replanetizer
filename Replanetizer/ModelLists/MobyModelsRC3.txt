@@ -1,1 +1,3 @@
 0000=Ratchet
+000A=Clank
+0B37=Ocean

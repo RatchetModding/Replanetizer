@@ -40,21 +40,19 @@ namespace Replanetizer.Tools
 
             table.colorShader.UseShader();
 
-            table.colorShader.SetUniformMatrix4("modelToWorld", false, ref mat);
+            table.colorShader.SetUniformMatrix4(UniformName.modelToWorld, ref mat);
 
-            table.colorShader.SetUniform1("levelObjectNumber", 0);
-            table.colorShader.SetUniform4("incolor", 1.0f, 0.0f, 0.0f, 1.0f);
+            table.colorShader.SetUniform1(UniformName.levelObjectNumber, 0);
+            table.colorShader.SetUniform4(UniformName.incolor, 1.0f, 0.0f, 0.0f, 1.0f);
             GL.DrawArrays(PrimitiveType.LineStrip, 0, 2);
 
-            table.colorShader.SetUniform1("levelObjectNumber", 1);
-            table.colorShader.SetUniform4("incolor", 0.0f, 1.0f, 0.0f, 1.0f);
+            table.colorShader.SetUniform1(UniformName.levelObjectNumber, 1);
+            table.colorShader.SetUniform4(UniformName.incolor, 0.0f, 1.0f, 0.0f, 1.0f);
             GL.DrawArrays(PrimitiveType.LineStrip, 2, 2);
 
-            table.colorShader.SetUniform1("levelObjectNumber", 2);
-            table.colorShader.SetUniform4("incolor", 0.0f, 0.0f, 1.0f, 1.0f);
+            table.colorShader.SetUniform1(UniformName.levelObjectNumber, 2);
+            table.colorShader.SetUniform4(UniformName.incolor, 0.0f, 0.0f, 1.0f, 1.0f);
             GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
-
-            UnbindVao();
         }
 
         public void Render(Spline spline, Camera camera, ShaderTable table)

@@ -8,7 +8,8 @@
 using System;
 using System.ComponentModel;
 using OpenTK.Mathematics;
-using System.Drawing;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects
@@ -25,7 +26,7 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Ratchet Light ID")]
         public int heroLight { get; set; }
         [Category("Attributes"), DisplayName("Ratchet Ambient Color")]
-        public Color heroColor { get; set; }
+        public Rgb24 heroColor { get; set; }
         [Category("Unknowns"), DisplayName("Reverb Depth")]
         public int reverbDepth { get; set; }
         [Category("Unknowns"), DisplayName("Reverb Type")]
@@ -39,7 +40,7 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Music Track ID")]
         public int musicTrack { get; set; }
         [Category("Attributes"), DisplayName("Fog Color")]
-        public Color fogColor { get; set; }
+        public Rgb24 fogColor { get; set; }
         [Category("Attributes"), DisplayName("Fog Near Intensity")]
         public float fogNearIntensity { get; set; }
         [Category("Attributes"), DisplayName("Fog Far Intensity")]
@@ -106,7 +107,7 @@ namespace LibReplanetizer.LevelObjects
             musicTrack = ReadInt(block, offset + 0x28);
 
             position = new Vector3(posX, posY, posZ);
-            heroColor = Color.FromArgb(heroR, heroG, heroB);
+            heroColor = Color.FromRgb((byte) heroR, (byte) heroG, (byte) heroB).ToPixel<Rgb24>();
         }
 
         private void GetRC23DLVals(byte[] block, int num)
@@ -136,8 +137,8 @@ namespace LibReplanetizer.LevelObjects
             short fogFD = ReadShort(block, offset + 0x1C);
 
             position = new Vector3(posX * 0.25f, posY * 0.25f, posZ * 0.25f);
-            heroColor = Color.FromArgb(heroR, heroG, heroB);
-            fogColor = Color.FromArgb(fogR, fogG, fogB);
+            heroColor = Color.FromRgb((byte) heroR, (byte) heroG, (byte) heroB).ToPixel<Rgb24>();
+            fogColor = Color.FromRgb((byte) fogR, (byte) fogG, (byte) fogB).ToPixel<Rgb24>();
 
             // TODO: How to correctly interpret these values
             fogNearDist = (float) fogND;

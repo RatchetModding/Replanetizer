@@ -13,12 +13,13 @@ using System.ComponentModel;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
-using System.Drawing;
 using ImGuiNET;
 using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
 using LibReplanetizer;
 using Replanetizer.Utils;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 
 namespace Replanetizer.Frames
 {
@@ -172,6 +173,8 @@ namespace Replanetizer.Frames
             Type? type = propertyInfo.GetSetMethod() == null ? null : propertyInfo.PropertyType;
             string? description = propertyInfo.GetCustomAttribute<DescriptionAttribute>()?.Description ?? null;
 
+            bool nestedProperty = false;
+
             if (val == null)
             {
                 ImGui.LabelText(propertyName, "null");
@@ -209,7 +212,7 @@ namespace Replanetizer.Frames
             }
             else if (type == typeof(short))
             {
-                int v = Convert.ToInt32(val);
+                int v = Convert.ToInt16(val);
                 if (ImGui.InputInt(propertyName, ref v))
                 {
                     propertyInfo.SetValue(selectedObject, (short) (v & 0xffff));
@@ -222,6 +225,24 @@ namespace Replanetizer.Frames
                 if (ImGui.InputInt(propertyName, ref v))
                 {
                     propertyInfo.SetValue(selectedObject, unchecked((ushort) (v & 0xffff)));
+                    UpdateLevelFrame();
+                }
+            }
+            else if (type == typeof(char))
+            {
+                int v = Convert.ToChar(val);
+                if (ImGui.InputInt(propertyName, ref v))
+                {
+                    propertyInfo.SetValue(selectedObject, (char) (v & 0xff));
+                    UpdateLevelFrame();
+                }
+            }
+            else if (type == typeof(byte))
+            {
+                int v = (byte) val;
+                if (ImGui.InputInt(propertyName, ref v))
+                {
+                    propertyInfo.SetValue(selectedObject, unchecked((byte) (v & 0xff)));
                     UpdateLevelFrame();
                 }
             }
@@ -264,14 +285,27 @@ namespace Replanetizer.Frames
                     UpdateLevelFrame();
                 }
             }
-            else if (type == typeof(Color))
+            else if (type == typeof(Rgba32))
             {
-                var c = (Color) val;
+                var c = (Rgba32) val;
+                var v = new Vector4(c.R / 255.0f, c.G / 255.0f, c.B / 255.0f, c.A / 255.0f);
+                if (ImGui.ColorEdit4(propertyName, ref v))
+                {
+                    Rgba32 newColor = Color.FromRgba(
+                        (byte) (v.X * 255.0f), (byte) (v.Y * 255.0f), (byte) (v.Z * 255.0f), (byte) (v.W * 255.0f)
+                    );
+                    propertyInfo.SetValue(selectedObject, newColor);
+                    UpdateLevelFrame();
+                }
+            }
+            else if (type == typeof(Rgb24))
+            {
+                var c = (Rgb24) val;
                 var v = new Vector3(c.R / 255.0f, c.G / 255.0f, c.B / 255.0f);
                 if (ImGui.ColorEdit3(propertyName, ref v))
                 {
-                    Color newColor = Color.FromArgb(
-                        (int) (v.X * 255.0f), (int) (v.Y * 255.0f), (int) (v.Z * 255.0f)
+                    Rgb24 newColor = Color.FromRgb(
+                        (byte) (v.X * 255.0f), (byte) (v.Y * 255.0f), (byte) (v.Z * 255.0f)
                     );
                     propertyInfo.SetValue(selectedObject, newColor);
                     UpdateLevelFrame();
@@ -286,6 +320,24 @@ namespace Replanetizer.Frames
                     origV.X = v.X;
                     origV.Y = v.Y;
                     origV.Z = v.Z;
+                    propertyInfo.SetValue(selectedObject, origV);
+
+                    if (selectedObject is LevelObject levelObject)
+                        levelObject.UpdateTransformMatrix();
+
+                    UpdateLevelFrame();
+                }
+            }
+            else if (type == typeof(OpenTK.Mathematics.Vector4))
+            {
+                var origV = (OpenTK.Mathematics.Vector4) val;
+                var v = new Vector4(origV.X, origV.Y, origV.Z, origV.Z);
+                if (ImGui.InputFloat4(propertyName, ref v))
+                {
+                    origV.X = v.X;
+                    origV.Y = v.Y;
+                    origV.Z = v.Z;
+                    origV.W = v.W;
                     propertyInfo.SetValue(selectedObject, origV);
 
                     if (selectedObject is LevelObject levelObject)
@@ -489,12 +541,22 @@ namespace Replanetizer.Frames
                     ImGui.LabelText(propertyName, "List<" + genericTypeName + ">[" + list.Count + "]");
                 }
             }
+            else if (val != null)
+            {
+                if (ImGui.CollapsingHeader(propertyName))
+                {
+                    nestedProperty = true;
+                    PropertyFrame propertyFrame = new PropertyFrame(wnd, levelFrame, null, true, true);
+                    propertyFrame.selectedObject = val;
+                    propertyFrame.Render(1.0f);
+                }
+            }
             else
             {
                 ImGui.LabelText(propertyName, Convert.ToString(val));
             }
 
-            if (description != null)
+            if (description != null && !nestedProperty)
             {
                 ImGui.SameLine();
 

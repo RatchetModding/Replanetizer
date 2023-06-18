@@ -7,10 +7,10 @@
 
 using LibReplanetizer.Models;
 using OpenTK.Mathematics;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects
@@ -20,6 +20,9 @@ namespace LibReplanetizer.LevelObjects
         private GameType game;
 
         private static int MAX_ID = 0;
+
+        [Category("Attributes"), DisplayName("Ingame Memory"), Description("This field contains the current variable state if the memory hook is active.")]
+        public IngameMobyMemory? memory { get; set; } = null;
 
         [Category("Attributes"), DisplayName("Mission ID"), Description("Every planet has a set of missions. If a moby is assigned to a mission, its spawning behaviour can be based on whether the mission is completed.")]
         public int missionID { get; set; }
@@ -208,7 +211,7 @@ namespace LibReplanetizer.LevelObjects
         public int unk9 { get; set; }
 
         [Category("Attributes"), DisplayName("Color"), Description("Static diffuse lighting applied to the moby.")]
-        public Color color { get; set; }
+        public Rgb24 color { get; set; }
 
         [Category("Attributes"), DisplayName("Light"), Description("Index of the directional light that is applied to the moby.")]
         public int light { get; set; }
@@ -374,7 +377,7 @@ namespace LibReplanetizer.LevelObjects
             light = ReadInt(mobyBlock, offset + 0x70);
             cutscene = ReadInt(mobyBlock, offset + 0x74);
 
-            color = Color.FromArgb(r, g, b);
+            color = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
             position = new Vector3(x, y, z);
             rotation = new Quaternion(rotx, roty, rotz);
             scale = new Vector3(scaleHolder, scaleHolder, scaleHolder);
@@ -433,7 +436,7 @@ namespace LibReplanetizer.LevelObjects
             light = ReadInt(mobyBlock, offset + 0x80);
             cutscene = ReadInt(mobyBlock, offset + 0x84);
 
-            color = Color.FromArgb(r, g, b);
+            color = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
             position = new Vector3(x, y, z);
             rotation = new Quaternion(rotx, roty, rotz);
             scale = new Vector3(scaleHolder); //Mobys only use the X axis of scale
@@ -486,7 +489,7 @@ namespace LibReplanetizer.LevelObjects
 
             cutscene = 0;
 
-            color = Color.FromArgb(r, g, b);
+            color = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
             position = new Vector3(x, y, z);
             rotation = new Quaternion(rotx, roty, rotz);
             scale = new Vector3(scaleHolder); //Mobys only use the X axis of scale
@@ -683,34 +686,163 @@ namespace LibReplanetizer.LevelObjects
             modelMatrix = scaleMatrix * rotX * rotY * rotZ * translationMatrix;
         }
 
+        public class IngameMobyMemory
+        {
+            public Vector4 collPos { get; set; }
+            public Vector4 position { get; set; }
+            public byte state { get; set; }
+            public byte group { get; set; }
+            public byte mClass { get; set; }
+            public byte alpha { get; set; }
+            public float scale { get; set; }
+            public byte updateDistance { get; set; }
+            public byte visible { get; set; }
+            public short drawDistance { get; set; }
+            public ushort modeBits { get; set; }
+            public ushort unk36 { get; set; }
+            public Rgb24 color { get; set; }
+            public int light { get; set; }
+            public Vector4 rotation { get; set; }
+            public byte animationFrame { get; set; }
+            public byte updateID { get; set; }
+            public byte animationID { get; set; }
+            public float unk54 { get; set; }
+            public float unk58 { get; set; }
+            public float framerate { get; set; }
+            public uint pVars { get; set; }
+            public byte unk7C { get; set; }
+            public byte unk7D { get; set; }
+            public byte unk7E { get; set; }
+            public byte animState { get; set; }
+            public uint unk80 { get; set; }
+            public int unk84 { get; set; }
+            public int unk88 { get; set; }
+            public ushort oClass { get; set; }
+            public ushort UID { get; set; }
+
+            public IngameMobyMemory()
+            {
+            }
+
+            public bool IsDead()
+            {
+                return (state & 0x80) > 0;
+            }
+
+            public void SetDead()
+            {
+                state |= 0x80;
+            }
+
+            public void Update(byte[] memory, int offset)
+            {
+                float collX = ReadFloat(memory, offset + 0x00);
+                float collY = ReadFloat(memory, offset + 0x04);
+                float collZ = ReadFloat(memory, offset + 0x08);
+                float collW = ReadFloat(memory, offset + 0x0C);
+
+                float X = ReadFloat(memory, offset + 0x10);
+                float Y = ReadFloat(memory, offset + 0x14);
+                float Z = ReadFloat(memory, offset + 0x18);
+                float W = ReadFloat(memory, offset + 0x1C);
+
+                state = memory[offset + 0x20];
+                group = memory[offset + 0x21];
+                mClass = memory[offset + 0x22];
+                alpha = memory[offset + 0x23];
+                scale = ReadFloat(memory, offset + 0x2C);
+
+                updateDistance = memory[offset + 0x30];
+                visible = memory[offset + 0x31];
+                drawDistance = ReadShort(memory, offset + 0x32);
+                modeBits = ReadUshort(memory, offset + 0x34);
+                unk36 = ReadUshort(memory, offset + 0x36);
+                byte colorPadding = memory[offset + 0x38];
+                byte blue = memory[offset + 0x39];
+                byte green = memory[offset + 0x3A];
+                byte red = memory[offset + 0x3B];
+                light = ReadInt(memory, offset + 0x3C);
+
+                float rotX = ReadFloat(memory, offset + 0x40);
+                float rotY = ReadFloat(memory, offset + 0x44);
+                float rotZ = ReadFloat(memory, offset + 0x48);
+                float rotW = ReadFloat(memory, offset + 0x4C);
+
+                animationFrame = memory[offset + 0x51];
+                updateID = memory[offset + 0x52];
+                animationID = memory[offset + 0x53];
+                unk54 = ReadFloat(memory, offset + 0x54);
+                unk58 = ReadFloat(memory, offset + 0x58);
+                framerate = ReadFloat(memory, offset + 0x5C);
+
+                pVars = ReadUint(memory, offset + 0x78);
+                unk7C = memory[offset + 0x7C];
+                unk7D = memory[offset + 0x7D];
+                unk7E = memory[offset + 0x7E];
+                animState = memory[offset + 0x7F];
+
+                unk80 = ReadUint(memory, offset + 0x80);
+                unk84 = ReadInt(memory, offset + 0x84);
+                unk88 = ReadInt(memory, offset + 0x88);
+
+                oClass = ReadUshort(memory, offset + 0xA6);
+
+                UID = ReadUshort(memory, offset + 0xB2);
+
+                collPos = new Vector4(collX, collY, collZ, collW);
+                position = new Vector4(X, Y, Z, W);
+                rotation = new Vector4(rotX, rotY, rotZ, rotW);
+                color = Color.FromRgb((byte) red, (byte) green, (byte) blue).ToPixel<Rgb24>();
+            }
+        }
+
+        public void SetDead()
+        {
+            if (memory == null)
+            {
+                memory = new IngameMobyMemory();
+            }
+
+            memory.SetDead();
+        }
+
         public void UpdateFromMemory(byte[] mobyMemory, int offset, List<Model> models)
         {
-            pVarMemoryAddress = 0x300000000 + ReadUint(mobyMemory, offset + 0x78);
+            if (memory == null)
+            {
+                memory = new IngameMobyMemory();
+            }
+
+            memory.Update(mobyMemory, offset);
+
+            pVarMemoryAddress = 0x300000000 + memory.pVars;
 
             // If dead
-            if (mobyMemory[offset + 0x20] > 0x7F)
+            if (memory.IsDead())
             {
                 model = null;
                 return;
             }
 
-            ushort modId = ReadUshort(mobyMemory, offset + 0xA6);
-            float mobScale = ReadFloat(mobyMemory, offset + 0x2C);
-            Model? mod = models.Find(x => x.id == modId);
-
-            if (mod == null)
+            if (memory.oClass != modelID)
             {
-                mod = models.Find(x => x.id == 500);
+                Model? mod = models.Find(x => x.id == memory.oClass);
+
+                model = mod;
+                modelID = memory.oClass;
             }
 
-            if (mod == null) return;
+            float modelSize = (model != null) ? model.size : 1.0f;
 
-            model = mod;
-            position = new Vector3(ReadFloat(mobyMemory, offset + 0x10), ReadFloat(mobyMemory, offset + 0x14), ReadFloat(mobyMemory, offset + 0x18));
-            rotation = Quaternion.FromEulerAngles(ReadFloat(mobyMemory, offset + 0x40), ReadFloat(mobyMemory, offset + 0x44), ReadFloat(mobyMemory, offset + 0x48));
-            scale = new Vector3(mobScale / model.size);
+            mobyID = memory.UID;
+            groupIndex = memory.group;
+            position = memory.position.Xyz;
+            rotation = Quaternion.FromEulerAngles(memory.rotation.Xyz);
+            scale = new Vector3(memory.scale / modelSize);
+            color = memory.color;
+            light = memory.light;
+
             UpdateTransformMatrix();
-            modelID = modId;
         }
     }
 }

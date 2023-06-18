@@ -6,9 +6,10 @@
 // Please see the LICENSE.md file for more details.
 
 using System.ComponentModel;
-using System.Drawing;
 using System.IO;
 using OpenTK.Mathematics;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects
@@ -18,10 +19,10 @@ namespace LibReplanetizer.LevelObjects
         private uint byteSize = 0x0;
 
         [Category("Attributes"), DisplayName("Background Color")]
-        public Color backgroundColor { get; set; }
+        public Rgb24 backgroundColor { get; set; }
 
         [Category("Attributes"), DisplayName("Fog Color")]
-        public Color fogColor { get; set; }
+        public Rgb24 fogColor { get; set; }
 
         [Category("Attributes"), DisplayName("Fog Near Distance"), Description("Distance at which fog has its near intensity. The actual distance is given by [FogNearDistance]/1024.")]
         public float fogNearDistance { get; set; }
@@ -197,8 +198,8 @@ namespace LibReplanetizer.LevelObjects
             off48 = ReadInt(levelVarBlock, 0x48);
             off4C = ReadInt(levelVarBlock, 0x4C);
 
-            backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
-            fogColor = Color.FromArgb(r, g, b);
+            backgroundColor = Color.FromRgb((byte) bgRed, (byte) bgGreen, (byte) bgBlue).ToPixel<Rgb24>();
+            fogColor = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
             sphereCentre = Vector3.Zero;
             shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
         }
@@ -270,8 +271,8 @@ namespace LibReplanetizer.LevelObjects
                 off7C = ReadInt(levelVarBlock, 0x7C);
             }
 
-            backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
-            fogColor = Color.FromArgb(r, g, b);
+            backgroundColor = Color.FromRgb((byte) bgRed, (byte) bgGreen, (byte) bgBlue).ToPixel<Rgb24>();
+            fogColor = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
             sphereCentre = new Vector3(sphereCentreX, sphereCentreY, sphereCentreZ);
             shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
             chunk1Plane = new Vector3(chunk1PlaneX, chunk1PlaneY, chunk1PlaneZ);
@@ -355,8 +356,8 @@ namespace LibReplanetizer.LevelObjects
                 off80 = ReadInt(levelVarBlock, 0x80);
             }
 
-            backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
-            fogColor = Color.FromArgb(r, g, b);
+            backgroundColor = Color.FromRgb((byte) bgRed, (byte) bgGreen, (byte) bgBlue).ToPixel<Rgb24>();
+            fogColor = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
             sphereCentre = new Vector3(sphereCentreX, sphereCentreY, sphereCentreZ);
             shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
             chunk1Plane = new Vector3(chunk1PlaneX, chunk1PlaneY, chunk1PlaneZ);
@@ -414,8 +415,8 @@ namespace LibReplanetizer.LevelObjects
                 unknownBytes[i] = levelVarBlock[0x84 + i];
             }
 
-            backgroundColor = Color.FromArgb(bgRed, bgGreen, bgBlue);
-            fogColor = Color.FromArgb(r, g, b);
+            backgroundColor = Color.FromRgb((byte) bgRed, (byte) bgGreen, (byte) bgBlue).ToPixel<Rgb24>();
+            fogColor = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
             sphereCentre = new Vector3(sphereCentreX, sphereCentreY, sphereCentreZ);
             shipPosition = new Vector3(shipPositionX, shipPositionY, shipPositionZ);
         }

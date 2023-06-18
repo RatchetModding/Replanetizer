@@ -6,7 +6,6 @@
 // Please see the LICENSE.md file for more details.
 
 using System;
-using System.Drawing;
 using System.Collections.Generic;
 using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
@@ -130,21 +129,21 @@ namespace Replanetizer.Renderer
             shaderTable.colorShader.UseShader();
 
             Matrix4 worldToView = payload.camera.GetWorldViewMatrix();
-            shaderTable.colorShader.SetUniformMatrix4("worldToView", false, ref worldToView);
+            shaderTable.colorShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
 
             foreach (WireframeCollection wireframe in wireframes)
             {
-                shaderTable.colorShader.SetUniform1("levelObjectType", (int) wireframe.type);
+                shaderTable.colorShader.SetUniform1(UniformName.levelObjectType, (int) wireframe.type);
                 wireframe.Bind();
 
                 if (wireframe.isSpline)
                 {
                     foreach (LevelObject obj in wireframe.levelObjects)
                     {
-                        shaderTable.colorShader.SetUniform1("levelObjectNumber", obj.globalID);
-                        shaderTable.colorShader.SetUniformMatrix4("modelToWorld", false, ref obj.modelMatrix);
-                        shaderTable.colorShader.SetUniform4("incolor", payload.selection.Contains(obj) ? SELECTED_COLOR : DEFAULT_COLOR);
+                        shaderTable.colorShader.SetUniform1(UniformName.levelObjectNumber, obj.globalID);
+                        shaderTable.colorShader.SetUniformMatrix4(UniformName.modelToWorld, ref obj.modelMatrix);
+                        shaderTable.colorShader.SetUniform4(UniformName.incolor, payload.selection.Contains(obj) ? SELECTED_COLOR : DEFAULT_COLOR);
                         GL.DrawArrays(PrimitiveType.LineStrip, 0, wireframe.container.GetVertexBufferLength() / 3);
                     }
                 }
@@ -152,15 +151,13 @@ namespace Replanetizer.Renderer
                 {
                     foreach (LevelObject obj in wireframe.levelObjects)
                     {
-                        shaderTable.colorShader.SetUniform1("levelObjectNumber", obj.globalID);
-                        shaderTable.colorShader.SetUniformMatrix4("modelToWorld", false, ref obj.modelMatrix);
-                        shaderTable.colorShader.SetUniform4("incolor", payload.selection.Contains(obj) ? SELECTED_COLOR : DEFAULT_COLOR);
+                        shaderTable.colorShader.SetUniform1(UniformName.levelObjectNumber, obj.globalID);
+                        shaderTable.colorShader.SetUniformMatrix4(UniformName.modelToWorld, ref obj.modelMatrix);
+                        shaderTable.colorShader.SetUniform4(UniformName.incolor, payload.selection.Contains(obj) ? SELECTED_COLOR : DEFAULT_COLOR);
                         GL.DrawElements(PrimitiveType.Triangles, wireframe.container.GetIndexBufferLength(), DrawElementsType.UnsignedShort, 0);
                     }
                 }
             }
-
-            GL.BindVertexArray(0);
 
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             GLUtil.CheckGlError("WireframeRenderer");

@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using ImGuiNET;
 using LibReplanetizer;
@@ -18,8 +17,9 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 using Replanetizer.Utils;
 using Replanetizer.Renderer;
 using Texture = LibReplanetizer.Texture;
-using LibReplanetizer.Serializers;
+using SixLabors.ImageSharp;
 using LibReplanetizer.LevelObjects;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Replanetizer.Frames
 {
@@ -27,11 +27,15 @@ namespace Replanetizer.Frames
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Model Viewer";
+        private static readonly Rgb24 CLEAR_COLOR = Color.FromRgb(0x9d, 0xab, 0xc7).ToPixel<Rgb24>();
 
         private string filter = "";
         private string filterUpper = "";
         private bool showIDInHex = false;
         private FramebufferRenderer? renderer;
+        private MeshRenderer meshRenderer;
+        private RendererPayload rendererPayload;
+        private Camera camera;
         private Level level => levelFrame.level;
         private Model? selectedModel;
         private int selectedModelIndex;
@@ -40,6 +44,12 @@ namespace Replanetizer.Frames
         private List<List<Texture>>? selectedModelArmorTexturesSet;
         private List<Texture>? selectedTextureSet;
         private List<Texture>? modelTextureList;
+
+        private List<Model> sortedMobyModels;
+        private List<Model> sortedTieModels;
+        private List<Model> sortedShrubModels;
+        private List<Model> sortedGadgetModels;
+        private List<List<Model>> sortedMissionModels;
 
         private List<ModelObject> selectedObjectInstances = new List<ModelObject>();
 
@@ -60,8 +70,6 @@ namespace Replanetizer.Frames
 
         private ShaderTable shaderTable;
 
-        private float xDelta;
-
         // We use an exponential function to convert zoomRaw to zoom:
         //   e^(ZOOM_EXP_COEFF * zoomRaw)
         // This should feel more natural compared to a linear approach where
@@ -72,19 +80,16 @@ namespace Replanetizer.Frames
         // the model to position the camera
         private const float ZOOM_SCALE = 4;
         private const float ZOOM_EXP_COEFF = 0.4f;
-        private float zoomRaw;
-        private float zoom = 1;
+        private float zoomRaw = 6.0f;
+        private float zoom;
+        private float cameraAzimuth = MathF.PI * 0.5f;
+        private float cameraAltitude = MathF.PI * 0.25f;
 
         // Projection matrix settings
         private const float CLIP_NEAR = 0.1f;
         private const float CLIP_FAR = 1024.0f;
         private const float FIELD_OF_VIEW = MathF.PI / 3;  // 60 degrees
 
-        private bool initialized = false;
-
-        private Matrix4 trans, scale, worldView, rot = Matrix4.Identity;
-
-        private BufferContainer? container;
         private Rectangle contentRegion;
         private Vector2 mousePos;
         private int width, height;
@@ -99,6 +104,33 @@ namespace Replanetizer.Frames
             propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
             this.shaderTable = shaderIDTable;
             exportSettings = new ExporterModelSettings(lastUsedExportSettings);
+
+            camera = new Camera();
+            UpdateZoom(0.0f);
+            UpdateCamera();
+
+            meshRenderer = new MeshRenderer(shaderIDTable, levelFrame.level.textures, levelFrame.textureIds, levelFrame.level.playerAnimations);
+            rendererPayload = new RendererPayload(camera);
+
+            sortedMobyModels = new List<Model>(level.mobyModels);
+            sortedTieModels = new List<Model>(level.tieModels);
+            sortedShrubModels = new List<Model>(level.shrubModels);
+            sortedGadgetModels = new List<Model>(level.gadgetModels);
+            sortedMissionModels = new List<List<Model>>();
+            for (int i = 0; i < level.missions.Count; i++)
+            {
+                sortedMissionModels.Add(new List<Model>(level.missions[i].models));
+            }
+
+            sortedMobyModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+            sortedTieModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+            sortedShrubModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+            sortedGadgetModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+            foreach (List<Model> list in sortedMissionModels)
+            {
+                list.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+            }
+
             UpdateWindowSize();
             OnResize();
             SelectModel(model);
@@ -184,33 +216,40 @@ namespace Replanetizer.Frames
 
             if (ImGui.BeginChild("TreeView", childSize, false, ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {
-                RenderSubTree("Moby", level.mobyModels, level.textures);
-                RenderSubTree("Tie", level.tieModels, level.textures);
-                RenderSubTree("Shrub", level.shrubModels, level.textures);
-                if (ImGui.TreeNode("Gadget"))
+                RenderSubTree("Moby", sortedMobyModels, level.textures);
+                RenderSubTree("Tie", sortedTieModels, level.textures);
+                RenderSubTree("Shrub", sortedShrubModels, level.textures);
+                if (level.game == GameType.RaC1)
                 {
-                    for (int i = 0; i < level.gadgetModels.Count; i++)
+                    RenderSubTree("Gadget", sortedGadgetModels, level.textures);
+                }
+                else
+                {
+                    if (ImGui.TreeNode("Gadget"))
                     {
-                        Model gadget = level.gadgetModels[i];
-                        RenderModelEntry(gadget, (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures, GetStringFromID(i));
+                        for (int i = 0; i < sortedGadgetModels.Count; i++)
+                        {
+                            Model gadget = sortedGadgetModels[i];
+                            RenderModelEntry(gadget, level.gadgetTextures, GetStringFromID(i));
+                        }
+                        ImGui.TreePop();
                     }
-                    ImGui.TreePop();
                 }
                 if (ImGui.TreeNode("Armor"))
                 {
                     for (int i = 0; i < level.armorModels.Count; i++)
                     {
                         Model armor = level.armorModels[i];
-                        RenderModelEntry(armor, level.armorTextures[i], GetStringFromID(i));
+                        RenderModelEntry(armor, level.armorTextures[i], GetDisplayName(armor));
                     }
                     ImGui.TreePop();
                 }
                 if (ImGui.TreeNode("Missions"))
                 {
-                    for (int i = 0; i < level.missions.Count; i++)
+                    for (int i = 0; i < sortedMissionModels.Count; i++)
                     {
                         var mission = level.missions[i];
-                        RenderSubTree("Mission " + i, mission.models, mission.textures);
+                        RenderSubTree("Mission " + i, sortedMissionModels[i], mission.textures);
                     }
                     ImGui.TreePop();
                 }
@@ -262,7 +301,7 @@ namespace Replanetizer.Frames
         {
             UpdateWindowSize();
             UpdateWindowTitle();
-            if (!initialized) ModelViewer_Load();
+
             if (renderer == null) return;
 
             ImGui.Columns(3);
@@ -360,6 +399,29 @@ namespace Replanetizer.Frames
                 }
 
                 ImGui.Separator();
+
+                if (selectedModel is MobyModel mobModel && mobModel.animations.Count > 0)
+                {
+                    ImGui.Checkbox("Show Animations", ref rendererPayload.visibility.enableAnimations);
+                    int animID = rendererPayload.forcedAnimationID;
+
+                    if (ImGui.InputInt("Animation ID", ref animID))
+                    {
+                        if (animID >= mobModel.animations.Count)
+                        {
+                            animID = 0;
+                        }
+
+                        if (animID < 0)
+                        {
+                            animID = mobModel.animations.Count - 1;
+                        }
+
+                        rendererPayload.forcedAnimationID = animID;
+                    }
+                    ImGui.Separator();
+                }
+
                 if (selectedObjectInstances.Count > 0)
                 {
                     RenderInstanceList();
@@ -400,19 +462,6 @@ namespace Replanetizer.Frames
             Vector2 windowZero = new Vector2(windowPos.X + vMin.X, windowPos.Y + vMin.Y);
             mousePos = wnd.MousePosition - windowZero;
             contentRegion = new Rectangle((int) windowZero.X, (int) windowZero.Y, width, height);
-        }
-
-        private void ModelViewer_Load()
-        {
-            GL.ClearColor(Color.SkyBlue);
-
-            GL.Enable(EnableCap.DepthTest);
-
-            worldView = CreateWorldView();
-            trans = Matrix4.CreateTranslation(0.0f, 0.0f, -5.0f);
-
-            GL.GenVertexArrays(1, out int vao);
-            GL.BindVertexArray(vao);
         }
 
         private void UpdateInstanceList()
@@ -460,18 +509,15 @@ namespace Replanetizer.Frames
         {
             if (selectedModel == null) return;
 
-            scale = Matrix4.CreateScale(selectedModel.size);
             propertyFrame.selectedObject = selectedModel;
             UpdateTextures();
 
-            container = new BufferContainer(selectedModel, () =>
+            if (selectedTextureSet != null)
             {
-                GLUtil.ActivateNumberOfVertexAttribArrays(3);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, 0);
-                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 3);
-                GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 8, sizeof(float) * 6);
-            });
-            container.Bind();
+                meshRenderer.Include(selectedModel);
+                meshRenderer.ChangeTextures(selectedTextureSet);
+                rendererPayload.forcedAnimationID = 0;
+            }
 
             UpdateInstanceList();
         }
@@ -501,8 +547,8 @@ namespace Replanetizer.Frames
         private void PrepareForArrowInput()
         {
             List<Model>[] modelLists = {
-                level.mobyModels, level.tieModels, level.shrubModels,
-                level.gadgetModels, level.armorModels
+                sortedMobyModels, sortedTieModels, sortedShrubModels,
+                sortedGadgetModels, level.armorModels
             };
             foreach (var models in modelLists)
             {
@@ -516,7 +562,7 @@ namespace Replanetizer.Frames
                 // of a list of textures -- one list per armor set.
                 selectedModelTexturesSet = null;
                 selectedModelArmorTexturesSet = null;
-                if (ReferenceEquals(models, level.gadgetModels))
+                if (ReferenceEquals(models, sortedGadgetModels))
                     selectedModelTexturesSet = (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures;
                 else if (ReferenceEquals(models, level.armorModels))
                     selectedModelArmorTexturesSet = level.armorTextures;
@@ -576,47 +622,47 @@ namespace Replanetizer.Frames
             SelectModel(model, textureSet);
         }
 
-        private Matrix4 CreateWorldView()
-        {
-            // To scale the zoom value to make a vector of that magnitude
-            // magnitude == sqrt(3*zoom^2)
-            const float INV_SQRT3 = 0.57735f;
-            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(FIELD_OF_VIEW, (float) width / height, CLIP_NEAR, CLIP_FAR);
-            Matrix4 view = Matrix4.LookAt(new Vector3(INV_SQRT3 * ZOOM_SCALE * zoom), Vector3.Zero, Vector3.UnitZ);
-            return view * projection;
-        }
-
         private void OnPaint()
         {
-            GL.ClearColor(Color.SkyBlue);
+            GL.ClearColor(CLEAR_COLOR.R / 255.0f, CLEAR_COLOR.G / 255.0f, CLEAR_COLOR.B / 255.0f, 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            if (selectedModel != null && selectedTextureSet != null && !(selectedModel is SkyboxModel) && container != null)
+            if (selectedModel != null && selectedTextureSet != null && !(selectedModel is SkyboxModel))
             {
-                // Has to be done in this order to work correctly
-                Matrix4 mvp = trans * scale * rot;
-
-                shaderTable.meshShader.UseShader();
-                shaderTable.meshShader.SetUniformMatrix4("modelToWorld", false, ref mvp);
-                shaderTable.meshShader.SetUniformMatrix4("worldToView", false, ref worldView);
-                shaderTable.meshShader.SetUniform1("levelObjectType", (int) RenderedObjectType.Null);
-
-                container.Bind();
-
-                //Bind textures one by one, applying it to the relevant vertices based on the index array
-                foreach (TextureConfig conf in selectedModel.textureConfig)
+                if (rendererPayload.visibility.enableAnimations)
                 {
-                    GL.BindTexture(TextureTarget.Texture2D, (conf.id >= 0 && conf.id < selectedTextureSet.Count) ? levelFrame.textureIds[selectedTextureSet[conf.id]] : 0);
-                    shaderTable.meshShader.SetUniform1("useTransparency", (conf.IgnoresTransparency()) ? 0 : 1);
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) ((conf.wrapModeS == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge));
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) ((conf.wrapModeT == TextureConfig.WrapMode.Repeat) ? TextureWrapMode.Repeat : TextureWrapMode.ClampToEdge));
-                    GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+                    shaderTable.animationShader.UseShader();
+                    shaderTable.animationShader.SetUniform1(UniformName.useFog, 0);
                 }
+                meshRenderer.Render(rendererPayload);
+            }
+        }
+
+        private void UpdateCamera()
+        {
+            Vector3 basePos = new Vector3(MathF.Sin(cameraAzimuth) * MathF.Cos(cameraAltitude), MathF.Cos(cameraAzimuth) * MathF.Cos(cameraAltitude), MathF.Sin(cameraAltitude)) * zoom * ZOOM_SCALE;
+            camera.position = basePos;
+            camera.rotation = new Vector3(-cameraAltitude, 0.0f, -cameraAzimuth + MathF.PI);
+        }
+
+        private void UpdateZoom(float scrollDelta)
+        {
+            float prevZoomRaw = zoomRaw;
+            float prevZoom = zoom;
+            zoomRaw -= wnd.MouseState.ScrollDelta.Y;
+            zoom = MathF.Exp(ZOOM_EXP_COEFF * zoomRaw);
+            if (zoom * ZOOM_SCALE is < CLIP_NEAR or > CLIP_FAR)
+            {
+                // Don't zoom beyond our clipping distances
+                zoomRaw = prevZoomRaw;
+                zoom = prevZoom;
             }
         }
 
         private void Tick(float deltaTime)
         {
+            rendererPayload.deltaTime = deltaTime;
+
             // Handle scrolling with arrow keys regardless of whether the window is hovered etc
             // Our ImGui version does not seem to have anything to check for (window or child) focus
             KEY_HELD_HANDLER.Update(wnd.KeyboardState, deltaTime);
@@ -641,18 +687,10 @@ namespace Replanetizer.Frames
 
             if (wnd.MouseState.ScrollDelta.Y != 0)
             {
-                var prevZoomRaw = zoomRaw;
-                var prevZoom = zoom;
-                zoomRaw -= wnd.MouseState.ScrollDelta.Y;
-                zoom = MathF.Exp(ZOOM_EXP_COEFF * zoomRaw);
-                if (zoom * ZOOM_SCALE is < CLIP_NEAR or > CLIP_FAR)
-                {
-                    // Don't zoom beyond our clipping distances
-                    zoomRaw = prevZoomRaw;
-                    zoom = prevZoom;
-                }
-                worldView = CreateWorldView();
+                UpdateZoom(wnd.MouseState.ScrollDelta.Y);
             }
+
+            UpdateCamera();
         }
 
         /// <param name="deltaTime">time since last tick</param>
@@ -668,14 +706,25 @@ namespace Replanetizer.Frames
                 return false;
             }
 
-            xDelta += wnd.MouseState.Delta.X * deltaTime;
-            rot = Matrix4.CreateRotationZ(xDelta);
+            cameraAzimuth += wnd.MouseState.Delta.X * deltaTime;
+            cameraAltitude += wnd.MouseState.Delta.Y * deltaTime;
+
+            if (cameraAltitude > MathF.PI * 0.5f - 0.01f)
+            {
+                cameraAltitude = MathF.PI * 0.5f - 0.01f;
+            }
+
+            if (cameraAltitude < -MathF.PI * 0.5f + 0.01f)
+            {
+                cameraAltitude = -MathF.PI * 0.5f + 0.01f;
+            }
+
             return true;
         }
 
         private void OnResize()
         {
-            worldView = CreateWorldView();
+            camera.aspect = ((float) width) / height;
 
             renderer?.Dispose();
             renderer = new FramebufferRenderer(width, height);

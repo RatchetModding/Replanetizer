@@ -8,7 +8,8 @@
 using System;
 using System.ComponentModel;
 using OpenTK.Mathematics;
-using System.Drawing;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects
@@ -23,9 +24,9 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Inverse Matrix")]
         public Matrix4 inverseMatrix { get; set; }
         [Category("Attributes"), DisplayName("Ratchet Ambient Color 1")]
-        public Color heroColor1 { get; set; }
+        public Rgb24 heroColor1 { get; set; }
         [Category("Attributes"), DisplayName("Ratchet Ambient Color 2")]
-        public Color heroColor2 { get; set; }
+        public Rgb24 heroColor2 { get; set; }
         [Category("Attributes"), DisplayName("Ratchet Light ID 1")]
         public int heroLight1 { get; set; }
         [Category("Attributes"), DisplayName("Ratchet Light ID 2")]
@@ -33,9 +34,9 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Flags")]
         public int flags { get; set; }
         [Category("Attributes"), DisplayName("Fog Color 1")]
-        public Color fogColor1 { get; set; }
+        public Rgb24 fogColor1 { get; set; }
         [Category("Attributes"), DisplayName("Fog Color 2")]
-        public Color fogColor2 { get; set; }
+        public Rgb24 fogColor2 { get; set; }
         [Category("Attributes"), DisplayName("Fog Near Distance 1")]
         public float fogNearDist1 { get; set; }
         [Category("Attributes"), DisplayName("Fog Far Distance 1")]
@@ -98,10 +99,10 @@ namespace LibReplanetizer.LevelObjects
             fogFarDist2 = ReadFloat(mainBlock, offset + 0x74);
             fogFarIntensity2 = ReadFloat(mainBlock, offset + 0x78);
 
-            heroColor1 = Color.FromArgb(heroR1, heroG1, heroB1);
-            heroColor2 = Color.FromArgb(heroR2, heroG2, heroB2);
-            fogColor1 = Color.FromArgb(fogR1, fogG1, fogB1);
-            fogColor2 = Color.FromArgb(fogR2, fogG2, fogB2);
+            heroColor1 = Color.FromRgb(heroR1, heroG1, heroB1).ToPixel<Rgb24>();
+            heroColor2 = Color.FromRgb(heroR2, heroG2, heroB2).ToPixel<Rgb24>();
+            fogColor1 = Color.FromRgb(fogR1, fogG1, fogB1).ToPixel<Rgb24>();
+            fogColor2 = Color.FromRgb(fogR2, fogG2, fogB2).ToPixel<Rgb24>();
 
             UpdateTransformMatrix();
         }

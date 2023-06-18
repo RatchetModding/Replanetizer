@@ -6,11 +6,11 @@
 // Please see the LICENSE.md file for more details.
 
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
+using SixLabors.ImageSharp;
 using System.IO;
 using LibReplanetizer;
 using LibReplanetizer.Models;
+using SixLabors.ImageSharp.Formats.Png;
 
 namespace Replanetizer.Utils
 {
@@ -19,22 +19,24 @@ namespace Replanetizer.Utils
         public static void ExportTexture(Texture texture, string path, bool includeTransparency)
         {
             string extension = Path.GetExtension(path).ToLower();
-            ImageFormat imageFormat = ImageFormat.Png;
+
+            Image? image = texture.GetTextureImage(includeTransparency);
+
+            if (image == null) return;
 
             switch (extension)
             {
                 case ".bmp":
-                    imageFormat = ImageFormat.Bmp;
+                    image.SaveAsBmp(path);
                     break;
                 case ".jpg":
                 case ".jpeg":
-                    imageFormat = ImageFormat.Jpeg;
+                    image.SaveAsJpeg(path);
+                    break;
+                default:
+                    image.SaveAsPng(path);
                     break;
             }
-            Bitmap? bitmap = texture.GetTextureImage(includeTransparency);
-
-            if (bitmap == null) return;
-            bitmap.Save(path, imageFormat);
         }
 
         public static void ExportAllTextures(Level level, string path)
@@ -67,9 +69,7 @@ namespace Replanetizer.Utils
 
             for (int i = 0; i < level.textures.Count; i++)
             {
-                Bitmap? image = level.textures[i].GetTextureImage(!forcedOpaque[i]);
-                if (image == null) continue;
-                image.Save(Path.Join(path, $"{i}.png"), ImageFormat.Png);
+                ExportTexture(level.textures[i], Path.Join(path, $"{i}.png"), !forcedOpaque[i]);
             }
 
             for (int i = 0; i < level.armorTextures.Count; i++)
@@ -77,17 +77,13 @@ namespace Replanetizer.Utils
                 List<Texture> textures = level.armorTextures[i];
                 for (int j = 0; j < textures.Count; j++)
                 {
-                    Bitmap? image = textures[j].GetTextureImage(true);
-                    if (image == null) continue;
-                    image.Save(Path.Join(path, $"armor_{i}_{j}.png"), ImageFormat.Png);
+                    ExportTexture(textures[j], Path.Join(path, $"armor_{i}_{j}.png"), true);
                 }
             }
 
             for (int i = 0; i < level.gadgetTextures.Count; i++)
             {
-                Bitmap? image = level.gadgetTextures[i].GetTextureImage(true);
-                if (image == null) continue;
-                image.Save(Path.Join(path, $"gadget_{i}.png"), ImageFormat.Png);
+                ExportTexture(level.gadgetTextures[i], Path.Join(path, $"gadget_{i}.png"), true);
             }
 
             for (int i = 0; i < level.missions.Count; i++)
@@ -95,9 +91,7 @@ namespace Replanetizer.Utils
                 List<Texture> textures = level.missions[i].textures;
                 for (int j = 0; j < textures.Count; j++)
                 {
-                    Bitmap? image = textures[j].GetTextureImage(true);
-                    if (image == null) continue;
-                    image.Save(Path.Join(path, $"mission_{i}_{j}.png"), ImageFormat.Png);
+                    ExportTexture(textures[j], Path.Join(path, $"mission_{i}_{j}.png"), true);
                 }
             }
         }

@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -11,5 +11,6 @@ namespace Replanetizer.MemoryHook
     {
         public long moby;
         public long camera;
+        internal long levelFrames;
     }
 }

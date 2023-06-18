@@ -21,8 +21,10 @@ namespace Replanetizer.Utils
 
         //Camera variables
         public float speed = 0.2f;
-        public Vector3 position = new Vector3();
-        public Vector3 rotation = new Vector3(0, 0, -0.75f);
+        private Vector3 _position = new Vector3();
+        public Vector3 position { get { return _position; } set { matrixDirty = true; frustumDirty = true; _position = value; } }
+        private Vector3 _rotation = new Vector3(0, 0, -0.75f);
+        public Vector3 rotation { get { return _rotation; } set { matrixDirty = true; frustumDirty = true; _rotation = value; } }
 
         public float fovy { get; set; } = (float) 3 / MathF.PI;
         public float aspect { get; set; } = (float) 16 / 9;
@@ -101,8 +103,6 @@ namespace Replanetizer.Utils
         public void SetPosition(Vector3 position)
         {
             this.position = position;
-            matrixDirty = true;
-            frustumDirty = true;
         }
 
         public void SetPosition(float x, float y, float z)
@@ -113,8 +113,6 @@ namespace Replanetizer.Utils
         public void SetRotation(Vector3 rotation)
         {
             this.rotation = rotation;
-            matrixDirty = true;
-            frustumDirty = true;
         }
 
         public void SetRotation(float pitch, float yaw)
@@ -151,8 +149,6 @@ namespace Replanetizer.Utils
         public void Translate(Vector3 vector)
         {
             position += vector;
-            matrixDirty = true;
-            frustumDirty = true;
         }
 
         public void Translate(float x, float y, float z)
@@ -163,15 +159,11 @@ namespace Replanetizer.Utils
         public void TransformedTranslate(Vector3 vector)
         {
             position += LegacyTransform(vector, GetRotationMatrix());
-            matrixDirty = true;
-            frustumDirty = true;
         }
 
         public void Rotate(Vector3 vector)
         {
             rotation += vector;
-            matrixDirty = true;
-            frustumDirty = true;
         }
 
         public void Rotate(float x, float y, float z)
@@ -181,13 +173,14 @@ namespace Replanetizer.Utils
 
         public void Rotate(Vector2 rot)
         {
-            rotation.Z -= rot.X;
-            rotation.X -= rot.Y;
-            rotation.X = MathHelper.Clamp(rotation.X,
+            Vector3 v = rotation;
+
+            v.Z -= rot.X;
+            v.X -= rot.Y;
+            v.X = MathHelper.Clamp(v.X,
                 MathHelper.DegreesToRadians(-89.9f), MathHelper.DegreesToRadians(89.9f));
 
-            matrixDirty = true;
-            frustumDirty = true;
+            rotation = v;
         }
 
         public void Scale(Vector3 scale)

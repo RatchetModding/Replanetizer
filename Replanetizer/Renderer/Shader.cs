@@ -5,13 +5,14 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Runtime.CompilerServices;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Replanetizer.Renderer
 {
@@ -27,9 +28,11 @@ namespace Replanetizer.Renderer
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
 
+        private static readonly int TOTAL_NUM_UNIFORMS = Enum.GetNames(typeof(UniformName)).Length;
+
         public readonly string NAME;
         public int program { get; private set; }
-        private readonly Dictionary<string, int> UNIFORM_TO_LOCATION = new Dictionary<string, int>();
+        private readonly GLUniform[] uniforms = new GLUniform[TOTAL_NUM_UNIFORMS];
         private bool initialized = false;
 
         private readonly (ShaderType Type, string Path)[] FILES;
@@ -72,43 +75,27 @@ namespace Replanetizer.Renderer
             }
         }
 
-        public UniformFieldInfo[] GetUniforms()
-        {
-            GL.GetProgram(program, GetProgramParameterName.ActiveUniforms, out int uniformCount);
-
-            UniformFieldInfo[] uniforms = new UniformFieldInfo[uniformCount];
-
-            for (int i = 0; i < uniformCount; i++)
-            {
-                string name = GL.GetActiveUniform(program, i, out int size, out ActiveUniformType type);
-
-                UniformFieldInfo fieldInfo;
-                fieldInfo.location = GetUniformLocation(name);
-                fieldInfo.name = name;
-                fieldInfo.size = size;
-                fieldInfo.type = type;
-
-                uniforms[i] = fieldInfo;
-            }
-
-            return uniforms;
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int GetUniformLocation(string uniform)
+        public GLUniform? GetUniformLocation(UniformName name)
         {
-            if (UNIFORM_TO_LOCATION.TryGetValue(uniform, out int location) == false)
+            GLUniform? uniform = uniforms[(int) name];
+
+            if (uniform == null)
             {
-                location = GL.GetUniformLocation(program, uniform);
-                UNIFORM_TO_LOCATION.Add(uniform, location);
+                int location = GL.GetUniformLocation(program, name.ToString());
 
                 if (location == -1)
                 {
-                    Debug.Print($"The uniform '{uniform}' does not exist in the shader '{NAME}'!");
+                    Debug.Print($"The uniform '{name.ToString()}' does not exist in the shader '{NAME}'!");
+                }
+                else
+                {
+                    uniform = new GLUniform(location);
+                    uniforms[(int) name] = uniform;
                 }
             }
 
-            return location;
+            return uniform;
         }
 
         private int CreateProgram(string name, params (ShaderType Type, string source)[] shaderPaths)
@@ -161,75 +148,135 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniformMatrix4(string uniform, bool transpose, ref Matrix4 mat)
+        public void SetUniformMatrix4(UniformName uniformName, ref Matrix4 mat)
         {
-            int location = GetUniformLocation(uniform);
+            GLUniform? uniform = GetUniformLocation(uniformName);
 
-            if (location != -1)
+            if (uniform != null)
             {
-                GL.UniformMatrix4(location, transpose, ref mat);
+                UseShader();
+                uniform.SetMatrix4(ref mat);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform1(string uniform, float v)
+        public void SetUniformMatrix4(UniformName uniformName, int count, float[] mat)
         {
-            int location = GetUniformLocation(uniform);
+            GLUniform? uniform = GetUniformLocation(uniformName);
 
-            if (location != -1)
+            if (uniform != null)
             {
-                GL.Uniform1(location, v);
+                UseShader();
+                uniform.SetMatrix4(count, mat);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform1(string uniform, int v)
+        public void SetUniformMatrix4(UniformName uniformName, int count, ref float mat)
         {
-            int location = GetUniformLocation(uniform);
+            GLUniform? uniform = GetUniformLocation(uniformName);
 
-            if (location != -1)
+            if (uniform != null)
             {
-                GL.Uniform1(location, v);
+                UseShader();
+                uniform.SetMatrix4(count, ref mat);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform3(string uniform, float v0, float v1, float v2)
+        public void SetUniform1(UniformName uniformName, float v)
         {
-            int location = GetUniformLocation(uniform);
+            GLUniform? uniform = GetUniformLocation(uniformName);
 
-            if (location != -1)
+            if (uniform != null)
             {
-                GL.Uniform3(location, v0, v1, v2);
+                UseShader();
+                uniform.Set1(v);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform4(string uniform, Color color)
+        public void SetUniform1(UniformName uniformName, int v)
         {
-            int location = GetUniformLocation(uniform);
+            GLUniform? uniform = GetUniformLocation(uniformName);
 
-            if (location != -1)
+            if (uniform != null)
             {
-                GL.Uniform4(location, color);
+                UseShader();
+                uniform.Set1(v);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform4(string uniform, float v0, float v1, float v2, float v3)
+        public void SetUniform3(UniformName uniformName, Vector3 v)
         {
-            int location = GetUniformLocation(uniform);
+            GLUniform? uniform = GetUniformLocation(uniformName);
 
-            if (location != -1)
+            if (uniform != null)
             {
-                GL.Uniform4(location, v0, v1, v2, v3);
+                UseShader();
+                uniform.Set3(v);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetUniform4(string uniform, Vector4 v)
+        public void SetUniform3(UniformName uniformName, float v0, float v1, float v2)
         {
-            SetUniform4(uniform, v.X, v.Y, v.Z, v.W);
+            GLUniform? uniform = GetUniformLocation(uniformName);
+
+            if (uniform != null)
+            {
+                UseShader();
+                uniform.Set3(v0, v1, v2);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniform4(UniformName uniformName, Rgb24 color)
+        {
+            GLUniform? uniform = GetUniformLocation(uniformName);
+
+            if (uniform != null)
+            {
+                UseShader();
+                uniform.Set4(color);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniform4(UniformName uniformName, Rgba32 color)
+        {
+            GLUniform? uniform = GetUniformLocation(uniformName);
+
+            if (uniform != null)
+            {
+                UseShader();
+                uniform.Set4(color);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniform4(UniformName uniformName, float v0, float v1, float v2, float v3)
+        {
+            GLUniform? uniform = GetUniformLocation(uniformName);
+
+            if (uniform != null)
+            {
+                UseShader();
+                uniform.Set4(v0, v1, v2, v3);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniform4(UniformName uniformName, Vector4 v)
+        {
+            GLUniform? uniform = GetUniformLocation(uniformName);
+
+            if (uniform != null)
+            {
+                UseShader();
+                uniform.Set4(v);
+            }
         }
     }
 }

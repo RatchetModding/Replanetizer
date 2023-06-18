@@ -8,7 +8,6 @@
 using System;
 using System.ComponentModel;
 using OpenTK.Mathematics;
-using System.Drawing;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects

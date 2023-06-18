@@ -6,11 +6,12 @@
 // Please see the LICENSE.md file for more details.
 
 using System;
-using System.Drawing;
-using System.Drawing.Imaging;
+using SixLabors.ImageSharp;
 using System.IO;
 using System.Runtime.InteropServices;
 using static LibReplanetizer.DataFunctions;
+using SixLabors.ImageSharp.Metadata;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace LibReplanetizer
 {
@@ -19,7 +20,7 @@ namespace LibReplanetizer
         public const int TEXTUREELEMSIZE = 0x24;
 
         public Image? renderedImage;
-        public Bitmap? img;
+        public Image? img;
 
         public short width;
         public short height;
@@ -42,6 +43,7 @@ namespace LibReplanetizer
 
         public Texture(int id, short width, short height, byte[] data)
         {
+            this.id = id;
             this.width = width;
             this.height = height;
             this.data = data;
@@ -98,7 +100,7 @@ namespace LibReplanetizer
             return outBytes;
         }
 
-        public Bitmap? GetTextureImage(bool includeTransparency)
+        public Image? GetTextureImage(bool includeTransparency)
         {
             if (img != null) return img;
 
@@ -114,12 +116,9 @@ namespace LibReplanetizer
                     }
                 }
 
-                img = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-                BitmapData bmData = img.LockBits(new Rectangle(0, 0, img.Width, img.Height), ImageLockMode.ReadWrite, img.PixelFormat);
-                IntPtr pNative = bmData.Scan0;
-                Marshal.Copy(imgData, 0, pNative, width * height * 4);
-                img.UnlockBits(bmData);
+                img = Image.LoadPixelData<Bgra32>(imgData, width, height);
             }
+
             return img;
         }
 

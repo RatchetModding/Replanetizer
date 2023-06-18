@@ -8,15 +8,16 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Reflection;
 using ImGuiNET;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
+using SixLabors.ImageSharp;
 using Replanetizer.Frames;
 using Replanetizer.Utils;
 using Replanetizer.Renderer;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Replanetizer
 {
@@ -36,34 +37,16 @@ namespace Replanetizer
             this.args = args;
             openFrames = new List<Frame>();
 
-            try
-            {
-                System.Drawing.Icon? icon = System.Drawing.Icon.ExtractAssociatedIcon(System.AppContext.BaseDirectory + "Replanetizer.exe");
-                if (icon != null)
-                {
-                    using (MemoryStream ms = new MemoryStream())
-                    {
-                        icon.ToBitmap().Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-                        byte[] iconBytes = ms.ToArray();
-                        int rowSize = icon.Width * 4;
-                        int iconSize = rowSize * icon.Height;
-                        byte[] pixelBytes = new byte[iconSize];
-                        for (int y = 0; y < icon.Height; y++)
-                        {
-                            for (int i = 0; i < 4 * icon.Width; i++)
-                            {
-                                pixelBytes[i + y * rowSize] = iconBytes[54 + i + (icon.Height - y - 1) * rowSize];
-                            }
-                        }
-                        OpenTK.Windowing.Common.Input.Image img = new OpenTK.Windowing.Common.Input.Image(icon.Width, icon.Height, pixelBytes);
-                        OpenTK.Windowing.Common.Input.Image[] imgs = new OpenTK.Windowing.Common.Input.Image[] { img };
-                        this.Icon = new OpenTK.Windowing.Common.Input.WindowIcon(imgs);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-            }
+            string? applicationFolder = System.AppContext.BaseDirectory;
+            string iconsFolder = Path.Join(applicationFolder, "Icons");
+
+            Image<Rgba32> image = Image.Load<Rgba32>(Path.Join(iconsFolder, "Replanetizer.png"));
+            byte[] imageBytes = new byte[image.Width * image.Height * 4];
+            image.CopyPixelDataTo(imageBytes);
+
+            OpenTK.Windowing.Common.Input.Image img = new OpenTK.Windowing.Common.Input.Image(image.Width, image.Height, imageBytes);
+            OpenTK.Windowing.Common.Input.Image[] imgs = new OpenTK.Windowing.Common.Input.Image[] { img };
+            this.Icon = new OpenTK.Windowing.Common.Input.WindowIcon(imgs);
         }
 
         protected override void OnLoad()

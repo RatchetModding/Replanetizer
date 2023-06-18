@@ -8,7 +8,7 @@
 using OpenTK.Mathematics;
 using System;
 using System.ComponentModel;
-using System.Drawing;
+using SixLabors.ImageSharp;
 
 namespace LibReplanetizer
 {

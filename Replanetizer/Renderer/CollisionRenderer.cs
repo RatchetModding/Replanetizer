@@ -6,7 +6,6 @@
 // Please see the LICENSE.md file for more details.
 
 using System;
-using System.Drawing;
 using System.Collections.Generic;
 using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
@@ -59,8 +58,6 @@ namespace Replanetizer.Renderer
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
                 GL.VertexAttribPointer(1, 4, VertexAttribPointerType.UnsignedByte, false, sizeof(float) * 4, sizeof(float) * 3);
 
-                GL.BindVertexArray(0);
-
                 ibos.Add(ibo);
                 indexCount.Add(indexBuffer.Length);
 
@@ -95,13 +92,13 @@ namespace Replanetizer.Renderer
             Matrix4 modelToWorld = Matrix4.Identity;
 
             shaderTable.colorShader.UseShader();
-            shaderTable.colorShader.SetUniform1("levelObjectType", (int) RenderedObjectType.Null);
-            shaderTable.colorShader.SetUniform4("incolor", 1.0f, 1.0f, 1.0f, 1.0f);
-            shaderTable.colorShader.SetUniformMatrix4("worldToView", false, ref worldToView);
-            shaderTable.colorShader.SetUniformMatrix4("modelToWorld", false, ref modelToWorld);
+            shaderTable.colorShader.SetUniform1(UniformName.levelObjectType, (int) RenderedObjectType.Null);
+            shaderTable.colorShader.SetUniform4(UniformName.incolor, 1.0f, 1.0f, 1.0f, 1.0f);
+            shaderTable.colorShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
+            shaderTable.colorShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelToWorld);
 
             shaderTable.collisionShader.UseShader();
-            shaderTable.collisionShader.SetUniformMatrix4("worldToView", false, ref worldToView);
+            shaderTable.collisionShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
 
             shaderTable.colorShader.UseShader();
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
@@ -125,7 +122,6 @@ namespace Replanetizer.Renderer
                 GL.DrawElements(PrimitiveType.Triangles, indexCount[i], DrawElementsType.UnsignedInt, 0);
             }
 
-            GL.BindVertexArray(0);
             GLUtil.CheckGlError("CollisionRenderer");
         }
 

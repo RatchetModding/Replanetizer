@@ -38,7 +38,7 @@ namespace LibReplanetizer.Headers
 
             textureCount = 0;
 
-            for (int i = texturePointer; i < gadgetFile.Length; i += 0x24)
+            for (int i = texturePointer; i < gadgetFile.Length; i += Texture.TEXTUREELEMSIZE)
             {
                 textureCount++;
             }

@@ -8,25 +8,23 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using SysVector2 = System.Numerics.Vector2;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using ImGuiNET;
 using LibReplanetizer;
 using LibReplanetizer.LevelObjects;
-using LibReplanetizer.Models;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Replanetizer.Tools;
 using Replanetizer.Utils;
 using Replanetizer.Renderer;
+using Replanetizer.MemoryHook;
 using static LibReplanetizer.DataFunctions;
 using static LibReplanetizer.Utilities;
 using Texture = LibReplanetizer.Texture;
+using SixLabors.ImageSharp;
 
 namespace Replanetizer.Frames
 {
@@ -74,9 +72,13 @@ namespace Replanetizer.Frames
 
         private Toolbox toolbox = new();
 
-        public Dictionary<Texture, int> textureIds = new Dictionary<Texture, int>();
+        public Dictionary<Texture, GLTexture> textureIds = new Dictionary<Texture, GLTexture>();
 
-        MemoryHook.MemoryHook? hook;
+        private MemoryHookHandle? hook = null;
+        private bool interactiveSession = false;
+        private bool hookLiveUpdate = true;
+        private bool hookUpdateCamera = false;
+
 
         private int width, height;
 
@@ -120,6 +122,10 @@ namespace Replanetizer.Frames
             {
                 if (ImGui.BeginMenu("Level"))
                 {
+                    if (interactiveSession)
+                    {
+                        ImGui.BeginDisabled();
+                    }
                     if (ImGui.MenuItem("Save as"))
                     {
                         var res = CrossFileDialog.SaveFile();
@@ -127,6 +133,10 @@ namespace Replanetizer.Frames
                         {
                             level.Save(res);
                         }
+                    }
+                    if (interactiveSession)
+                    {
+                        ImGui.EndDisabled();
                     }
 
                     if (ImGui.BeginMenu("Export"))
@@ -245,6 +255,10 @@ namespace Replanetizer.Frames
                             }
                         );
                     }
+                    if (ImGui.MenuItem("Memory Hook"))
+                    {
+                        subFrames.Add(new MemoryHookFrame(this.wnd, this));
+                    }
                     ImGui.EndMenu();
                 }
 
@@ -272,6 +286,7 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Distance Culling", ref rendererPayload.visibility.enableDistanceCulling)) InvalidateView();
                     if (ImGui.Checkbox("Frustum Culling", ref rendererPayload.visibility.enableFrustumCulling)) InvalidateView();
                     if (ImGui.Checkbox("Fog", ref rendererPayload.visibility.enableFog)) InvalidateView();
+                    if (ImGui.Checkbox("Meshless Models", ref rendererPayload.visibility.enableMeshlessModels)) InvalidateView();
                     ImGui.PushItemWidth(90.0f);
                     if (ImGui.Combo("Antialiasing", ref antialiasing, antialiasingOptions, 1 + maxAntialiasing))
                     {
@@ -314,6 +329,14 @@ namespace Replanetizer.Frames
 
                 ImGui.Separator();
 
+                if (interactiveSession)
+                {
+                    ImGui.Checkbox("Hook Update", ref hookLiveUpdate);
+                    ImGui.Checkbox("Hook Camera", ref hookUpdateCamera);
+                    ImGui.Checkbox("Animations", ref rendererPayload.visibility.enableAnimations);
+                    ImGui.Separator();
+                }
+
                 if (selectedObjects != null && selectedObjects.Count != 0)
                 {
                     if (ImGui.BeginMenu("Selection"))
@@ -337,7 +360,6 @@ namespace Replanetizer.Frames
 
                         ImGui.EndMenu();
                     }
-
                 }
 
                 ImGui.EndMenuBar();
@@ -405,6 +427,11 @@ namespace Replanetizer.Frames
                 }
                 ImGui.Text("FPS: " + fps + " (" + frametime + " ms)");
                 ImGui.PopStyleColor();
+                if (interactiveSession)
+                {
+                    ImGui.Text("Game Frame Number: " + hook?.GetLevelFrameNumber());
+                }
+
             }
             ImGui.End();
         }
@@ -419,9 +446,9 @@ namespace Replanetizer.Frames
             width = (int) (vMax.X - vMin.X);
             height = (int) (vMax.Y - vMin.Y);
 
-            camera.aspect = (float) width / height;
-
             if (width <= 0 || height <= 0) return;
+
+            camera.aspect = (float) width / height;
 
             if (width != prevWidth || height != prevHeight)
             {
@@ -505,119 +532,46 @@ namespace Replanetizer.Frames
             //Setup openGL variables
             GL.Enable(EnableCap.DepthTest);
 
-            shaderTable.meshShader.UseShader();
             Matrix4 dissolvePattern = new Matrix4(1.0f / 17.0f, 9.0f / 17.0f, 3.0f / 17.0f, 11.0f / 17.0f,
                                         13.0f / 17.0f, 5.0f / 17.0f, 15.0f / 17.0f, 7.0f / 17.0f,
                                         4.0f / 17.0f, 12.0f / 17.0f, 2.0f / 17.0f, 10.0f / 17.0f,
                                         16.0f / 17.0f, 8.0f / 17.0f, 14.0f / 17.0f, 6.0f / 17.0f);
-            shaderTable.meshShader.SetUniformMatrix4("dissolvePattern", false, ref dissolvePattern);
+            shaderTable.meshShader.UseShader();
+            shaderTable.meshShader.SetUniformMatrix4(UniformName.dissolvePattern, ref dissolvePattern);
+            shaderTable.animationShader.UseShader();
+            shaderTable.animationShader.SetUniformMatrix4(UniformName.dissolvePattern, ref dissolvePattern);
 
             initialized = true;
 
             OnResize();
         }
 
-        private void SetTextureWrapMode(TextureConfig conf, TextureWrapMode wrapMode)
-        {
-            if (conf.id > 0)
-            {
-                GL.BindTexture(TextureTarget.Texture2D, textureIds[level.textures[conf.id]]);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) wrapMode);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) wrapMode);
-            }
-        }
-
-        private void LoadTexture(Texture t)
-        {
-            int texId;
-            GL.GenTextures(1, out texId);
-            GL.BindTexture(TextureTarget.Texture2D, texId);
-
-            // The game uses either Repeat or ClampToEdge
-            // The texture configuration determines which one is used
-            // Different modes may be used for S and T
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (float) TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (float) TextureWrapMode.Repeat);
-
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float) TextureMinFilter.LinearMipmapLinear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (float) TextureMagFilter.Linear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBaseLevel, 0);
-
-            // The game uses a negative LOD Bias, the value is taken from RenderDoc on RPCS3.
-            // The game may do this because of the low-res textures.
-            // NOTE: This data was gathered using RPCS3's strict rendering mode so it seems unlikely that it was introduced through RPCS3.
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureLodBias, -1.5f);
-
-            // Custom MP levels may have an incorrect number of mipmaps specified so we need to dynamically figure that out
-            int mipLevel = 0;
-
-            if (t.mipMapCount > 1)
-            {
-                int mipWidth = t.width;
-                int mipHeight = t.height;
-                int offset = 0;
-
-                for (; mipLevel < t.mipMapCount; mipLevel++)
-                {
-                    if (mipWidth > 0 && mipHeight > 0)
-                    {
-                        int size = ((mipWidth + 3) / 4) * ((mipHeight + 3) / 4) * 16;
-                        if (offset + size > t.data.Length)
-                        {
-                            LOGGER.Debug($"Texture {t.id} claims to have {t.mipMapCount} mipmaps but only has {mipLevel}!");
-                            break;
-                        }
-                        byte[] texPart = new byte[size];
-                        Array.Copy(t.data, offset, texPart, 0, size);
-                        GL.CompressedTexImage2D(TextureTarget.Texture2D, mipLevel, InternalFormat.CompressedRgbaS3tcDxt5Ext, mipWidth, mipHeight, 0, size, texPart);
-                        offset += size;
-                        mipWidth /= 2;
-                        mipHeight /= 2;
-                    }
-                }
-
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, mipLevel - 1);
-            }
-            else
-            {
-                int size = ((t.width + 3) / 4) * ((t.height + 3) / 4) * 16;
-                GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, InternalFormat.CompressedRgbaS3tcDxt5Ext, t.width, t.height, 0, size, t.data);
-                GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-            }
-
-            textureIds.Add(t, texId);
-            GLUtil.CheckGlError("Texture " + t.id);
-        }
-
         void LoadLevelTextures()
         {
-            textureIds = new Dictionary<Texture, int>();
+            textureIds = new Dictionary<Texture, GLTexture>();
             foreach (Texture t in level.textures)
             {
-                LoadTexture(t);
+                textureIds.Add(t, new GLTexture(t));
             }
-
-            // Skybox textures use ClampToEdge
-            foreach (TextureConfig conf in level.skybox.textureConfig) SetTextureWrapMode(conf, TextureWrapMode.ClampToEdge);
 
             foreach (List<Texture> list in level.armorTextures)
             {
                 foreach (Texture t in list)
                 {
-                    LoadTexture(t);
+                    textureIds.Add(t, new GLTexture(t));
                 }
             }
 
             foreach (Texture t in level.gadgetTextures)
             {
-                LoadTexture(t);
+                textureIds.Add(t, new GLTexture(t));
             }
 
             foreach (Mission mission in level.missions)
             {
                 foreach (Texture t in mission.textures)
                 {
-                    LoadTexture(t);
+                    textureIds.Add(t, new GLTexture(t));
                 }
             }
         }
@@ -830,6 +784,18 @@ namespace Replanetizer.Frames
 
         public void Tick(float deltaTime)
         {
+            rendererPayload.deltaTime = deltaTime;
+
+            if (interactiveSession && hookLiveUpdate && hook != null)
+            {
+                hook.UpdateMobys(level.mobs, level.mobyModels, this);
+                if (hookUpdateCamera)
+                {
+                    hook.UpdateCamera(camera);
+                }
+                InvalidateView();
+            }
+
             Point absoluteMousePos = new Point((int) wnd.MousePosition.X, (int) wnd.MousePosition.Y);
             var isWindowHovered = ImGui.IsWindowHovered();
             var isMouseInContentRegion = contentRegion.Contains(absoluteMousePos);
@@ -1046,25 +1012,23 @@ namespace Replanetizer.Frames
             invalidate = true;
         }
 
-        public bool TryRpcs3Hook()
+        public bool StartMemoryHook(ref string message)
         {
-            if (level == null || level.game == null) return false;
+            hook = new MemoryHook.MemoryHookHandle(level);
 
-            hook = new MemoryHook.MemoryHook(level.game.num);
+            message = hook.GetLastErrorMessage();
+
+            if (hook.hookWorking)
+            {
+                interactiveSession = true;
+            }
 
             return hook.hookWorking;
         }
 
-        public bool Rpcs3HookStatus()
+        public bool HasValidHook()
         {
-            if (hook != null && hook.hookWorking) return true;
-
-            return false;
-        }
-
-        public void RemoveRpcs3Hook()
-        {
-            hook = null;
+            return interactiveSession;
         }
 
         /// <summary>

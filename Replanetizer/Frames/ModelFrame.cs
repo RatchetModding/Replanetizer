@@ -20,6 +20,7 @@ using Texture = LibReplanetizer.Texture;
 using SixLabors.ImageSharp;
 using LibReplanetizer.LevelObjects;
 using SixLabors.ImageSharp.PixelFormats;
+using LibReplanetizer.Models.Animations;
 
 namespace Replanetizer.Frames
 {
@@ -403,30 +404,35 @@ namespace Replanetizer.Frames
                 if (selectedModel is MobyModel mobModel && mobModel.animations.Count > 0)
                 {
                     ImGui.Checkbox("Show Animations", ref rendererPayload.visibility.enableAnimations);
+
+                    List<Animation> animations = (mobModel.id == 0) ? level.playerAnimations : mobModel.animations;
+
                     int animID = rendererPayload.forcedAnimationID;
 
                     if (ImGui.InputInt("Animation ID", ref animID))
                     {
-                        if (animID >= mobModel.animations.Count)
+                        if (animID >= animations.Count)
                         {
                             animID = 0;
                         }
 
                         if (animID < 0)
                         {
-                            animID = mobModel.animations.Count - 1;
+                            animID = animations.Count - 1;
                         }
 
                         rendererPayload.forcedAnimationID = animID;
                     }
+                    ImGui.LabelText("Animation Framecount", (animID >= 0 && animID < animations.Count) ? animations[animID].frames.Count.ToString() : "0");
                     ImGui.Separator();
                 }
 
-                if (selectedObjectInstances.Count > 0)
+                if (selectedModel != null)
                 {
                     RenderInstanceList();
                     ImGui.Separator();
                 }
+
                 propertyFrame.Render(deltaTime);
             }
 

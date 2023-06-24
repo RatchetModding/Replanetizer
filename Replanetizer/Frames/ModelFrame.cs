@@ -29,6 +29,7 @@ namespace Replanetizer.Frames
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Model Viewer";
         private static readonly Rgb24 CLEAR_COLOR = Color.FromRgb(0x9d, 0xab, 0xc7).ToPixel<Rgb24>();
+        private const int PROPERTIES_WIDTH = 480;
 
         private string filter = "";
         private string filterUpper = "";
@@ -145,7 +146,7 @@ namespace Replanetizer.Frames
             {
                 System.Numerics.Vector2 startSize = new System.Numerics.Vector2(this.startSize.X, this.startSize.Y);
 
-                startSize.X *= 0.75f;
+                startSize.X *= 0.9f;
                 startSize.Y *= 0.75f;
 
                 ImGui.SetNextWindowSize(startSize);
@@ -293,7 +294,7 @@ namespace Replanetizer.Frames
             ImGui.Columns(3);
             ImGui.SetColumnWidth(0, 250);
             ImGui.SetColumnWidth(1, (float) width);
-            ImGui.SetColumnWidth(2, 320);
+            ImGui.SetColumnWidth(2, PROPERTIES_WIDTH);
             RenderTree();
             ImGui.NextColumn();
 
@@ -432,7 +433,7 @@ namespace Replanetizer.Frames
             System.Numerics.Vector2 vMax = ImGui.GetWindowContentRegionMax();
 
             vMin.X += 250;
-            vMax.X -= 300;
+            vMax.X -= PROPERTIES_WIDTH - 20;
 
             width = (int) (vMax.X - vMin.X);
             height = (int) (vMax.Y - vMin.Y);

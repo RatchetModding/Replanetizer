@@ -220,22 +220,7 @@ namespace Replanetizer.Frames
                 RenderSubTree("Moby", sortedMobyModels, level.textures);
                 RenderSubTree("Tie", sortedTieModels, level.textures);
                 RenderSubTree("Shrub", sortedShrubModels, level.textures);
-                if (level.game == GameType.RaC1)
-                {
-                    RenderSubTree("Gadget", sortedGadgetModels, level.textures);
-                }
-                else
-                {
-                    if (ImGui.TreeNode("Gadget"))
-                    {
-                        for (int i = 0; i < sortedGadgetModels.Count; i++)
-                        {
-                            Model gadget = sortedGadgetModels[i];
-                            RenderModelEntry(gadget, level.gadgetTextures, GetStringFromID(i));
-                        }
-                        ImGui.TreePop();
-                    }
-                }
+                RenderSubTree("Gadget", sortedGadgetModels, (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures);
                 if (ImGui.TreeNode("Armor"))
                 {
                     for (int i = 0; i < level.armorModels.Count; i++)

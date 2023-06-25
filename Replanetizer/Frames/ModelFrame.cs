@@ -391,7 +391,7 @@ namespace Replanetizer.Frames
                 {
                     ImGui.Checkbox("Show Animations", ref rendererPayload.visibility.enableAnimations);
 
-                    List<Animation> animations = (mobModel.id == 0) ? level.playerAnimations : mobModel.animations;
+                    List<Animation> animations = (mobModel.id == 0 && level.playerAnimations.Count > 0) ? level.playerAnimations : mobModel.animations;
 
                     int animID = rendererPayload.forcedAnimationID;
 

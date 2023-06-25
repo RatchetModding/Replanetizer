@@ -458,9 +458,9 @@ namespace Replanetizer.Renderer
 
             Matrix4[] boneMatrices = new Matrix4[mobyModel.boneCount];
 
-            List<Animation> animations = (loadedModelID == 0 && ratchetAnimations != null) ? ratchetAnimations : mobyModel.animations;
+            List<Animation> animations = (loadedModelID == 0 && ratchetAnimations != null && ratchetAnimations.Count > 0) ? ratchetAnimations : mobyModel.animations;
 
-            Animation? anim = (animationID >= 0 && animationID < mobyModel.animations.Count) ? animations[animationID] : null;
+            Animation? anim = (animationID >= 0 && animationID < animations.Count) ? animations[animationID] : null;
 
             int animationFrame = (mob != null && mob.memory != null) ? mob.memory.animationFrame : currentFrameID;
 

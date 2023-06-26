@@ -765,7 +765,7 @@ namespace LibReplanetizer
         {
             LOGGER.Trace(fileName);
 
-            bool includeSkeleton = (model is MobyModel mobyModel && mobyModel.boneCount != 0 && level.game != GameType.DL);
+            bool includeSkeleton = (model is MobyModel mobyModel && mobyModel.boneCount != 0);
 
             if (includeSkeleton && (settings.animationChoice == ExporterModelSettings.AnimationChoice.AllSeparate))
             {

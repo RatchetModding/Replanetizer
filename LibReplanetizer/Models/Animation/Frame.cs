@@ -163,7 +163,8 @@ namespace LibReplanetizer.Models.Animations
             return (1.0f - blend) * baseTranslation + blend * nextTranslation;
         }
 
-        public Frame(FileStream fs, int offset, int boneCount)
+        // Constructor for RaC 1, 2 and 3
+        public Frame(FileStream fs, GameType game, int offset, int boneCount)
         {
             byte[] header = ReadBlock(fs, offset, 0x10);
             speed = ReadFloat(header, 0x00);
@@ -213,10 +214,50 @@ namespace LibReplanetizer.Models.Animations
                 float x = ReadShort(frameBlock, translationPointer + i * 8 + 0x00) / 1024.0f;
                 float y = ReadShort(frameBlock, translationPointer + i * 8 + 0x02) / 1024.0f;
                 float z = ReadShort(frameBlock, translationPointer + i * 8 + 0x04) / 1024.0f;
-                byte unk = frameBlock[translationPointer + i * 8 + 0x06];
-                byte unk2 = frameBlock[translationPointer + i * 8 + 0x07];
-                translations.Add(new FrameBoneTranslation(x, y, z, unk, unk2));
+                byte bone = frameBlock[translationPointer + i * 8 + 0x06];
+                byte unk = frameBlock[translationPointer + i * 8 + 0x07];
+                translations.Add(new FrameBoneTranslation(x, y, z, bone, unk));
             }
+        }
+
+        // Constructor for Deadlocked
+        public Frame(byte[] frameBlock, int numRotations, int numScalings, int numTranslations)
+        {
+            int rotationOffset = 0;
+            rotations = new List<short[]>();
+            for (int i = 0; i < numRotations; i++)
+            {
+                short[] rot = new short[4];
+                rot[0] = ReadShort(frameBlock, i * 8 + 0x00);
+                rot[1] = ReadShort(frameBlock, i * 8 + 0x02);
+                rot[2] = ReadShort(frameBlock, i * 8 + 0x04);
+                rot[3] = ReadShort(frameBlock, i * 8 + 0x06);
+                rotations.Add(rot);
+            }
+
+            int scalingOffset = rotationOffset + numRotations * 0x08;
+            scalings = new List<FrameBoneScaling>();
+            /*for (int i = 0; i < numScalings; i++)
+            {
+                float x = ReadShort(frameBlock, scalingOffset + i * 8 + 0x00) / 4096.0f;
+                float y = ReadShort(frameBlock, scalingOffset + i * 8 + 0x02) / 4096.0f;
+                float z = ReadShort(frameBlock, scalingOffset + i * 8 + 0x04) / 4096.0f;
+                byte unk = frameBlock[scalingOffset + i * 8 + 0x06];
+                byte bone = frameBlock[scalingOffset + i * 8 + 0x07];
+                scalings.Add(new FrameBoneScaling(x, y, z, bone, unk));
+            }*/
+
+            int translationOffset = scalingOffset + numScalings * 0x08;
+            translations = new List<FrameBoneTranslation>();
+            /*for (int i = 0; i < numTranslations; i++)
+            {
+                float x = ReadShort(frameBlock, translationOffset + i * 8 + 0x00) / 1024.0f;
+                float y = ReadShort(frameBlock, translationOffset + i * 8 + 0x02) / 1024.0f;
+                float z = ReadShort(frameBlock, translationOffset + i * 8 + 0x04) / 1024.0f;
+                byte unk = frameBlock[translationOffset + i * 8 + 0x06];
+                byte bone = frameBlock[translationOffset + i * 8 + 0x07];
+                translations.Add(new FrameBoneTranslation(x, y, z, bone, unk));
+            }*/
         }
 
         public byte[] Serialize()

@@ -178,7 +178,7 @@ namespace LibReplanetizer
                 LOGGER.Debug("Added {0} terrain elements", terrainEngine.fragments.Count);
 
                 LOGGER.Debug("Parsing player animations...");
-                playerAnimations = engineParser.GetPlayerAnimations((MobyModel) mobyModels[0]);
+                playerAnimations = (mobyModels.Count > 0) ? engineParser.GetPlayerAnimations((MobyModel) mobyModels[0]) : new List<Animation>();
                 LOGGER.Debug("Added {0} player animations", playerAnimations.Count);
 
                 uiElements = engineParser.GetUiElements();

@@ -83,7 +83,7 @@ namespace LibReplanetizer.Parsers
         {
             if (engineHead.game == GameType.DL) return new List<Animation>();
 
-            return GetPlayerAnimations(engineHead.playerAnimationPointer, ratchet);
+            return GetPlayerAnimations(engineHead.game, engineHead.playerAnimationPointer, ratchet);
         }
 
         public List<Model> GetGadgets()

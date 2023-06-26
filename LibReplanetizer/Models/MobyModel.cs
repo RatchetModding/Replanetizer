@@ -130,14 +130,11 @@ namespace LibReplanetizer.Models
             unk6 = ReadUint(headBlock, 0x44);
 
             // Animation block
-            if (game != GameType.DL)
-            {
-                byte[] animationPointerBlock = ReadBlock(fs, offset + 0x48, animationCount * 0x04);
+            byte[] animationPointerBlock = ReadBlock(fs, offset + HEADERSIZE, animationCount * 0x04);
 
-                for (int i = 0; i < animationCount; i++)
-                {
-                    animations.Add(new Animation(fs, offset, ReadInt(animationPointerBlock, i * 0x04), boneCount));
-                }
+            for (int i = 0; i < animationCount; i++)
+            {
+                animations.Add(new Animation(fs, game, offset, ReadInt(animationPointerBlock, i * 0x04), boneCount));
             }
 
             // Type 10 ( has something to do with collision )

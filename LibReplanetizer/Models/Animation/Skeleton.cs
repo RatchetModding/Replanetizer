@@ -25,9 +25,9 @@ namespace LibReplanetizer.Models.Animations
             children = new List<Skeleton>();
         }
 
-        public bool InsertBone(BoneMatrix bone)
+        public bool InsertBone(BoneMatrix bone, int parentBoneID)
         {
-            if (this.bone.id == bone.parent)
+            if (this.bone.id == parentBoneID)
             {
                 children.Add(new Skeleton(bone, this));
                 return true;
@@ -37,7 +37,7 @@ namespace LibReplanetizer.Models.Animations
 
             foreach (Skeleton skel in children)
             {
-                found = skel.InsertBone(bone);
+                found = skel.InsertBone(bone, parentBoneID);
                 if (found) break;
             }
 

@@ -527,8 +527,9 @@ namespace Replanetizer.Renderer
                 for (int i = 0; i < mobyModel.boneCount; i++)
                 {
                     BoneMatrix boneMatrix = mobyModel.boneMatrices[i];
+                    BoneData boneData = mobyModel.boneDatas[i];
 
-                    Vector3 off = boneMatrix.cumulativeOffset;
+                    Vector3 off = boneData.translation;
 
                     Matrix3x4 origTrans = boneMatrix.transformation;
                     Matrix3 mat = new Matrix3(origTrans.Row0.Xyz, origTrans.Row1.Xyz, origTrans.Row2.Xyz);

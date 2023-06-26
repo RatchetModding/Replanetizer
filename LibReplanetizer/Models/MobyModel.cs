@@ -152,7 +152,7 @@ namespace LibReplanetizer.Models
                 byte[] boneMatrixBlock = ReadBlock(fs, offset + boneMatrixPointer, boneCount * 0x40);
                 for (int i = 0; i < boneCount; i++)
                 {
-                    boneMatrices.Add(new BoneMatrix(boneMatrixBlock, i));
+                    boneMatrices.Add(new BoneMatrix(game, boneMatrixBlock, i));
                 }
             }
 
@@ -164,7 +164,7 @@ namespace LibReplanetizer.Models
                 byte[] boneDataBlock = ReadBlock(fs, offset + boneDataPointer, boneCount * 0x10);
                 for (int i = 0; i < boneCount; i++)
                 {
-                    boneDatas.Add(new BoneData(boneDataBlock, i));
+                    boneDatas.Add(new BoneData(game, boneDataBlock, i));
                 }
             }
 
@@ -259,13 +259,13 @@ namespace LibReplanetizer.Models
                 }
             }
 
-            if (boneMatrices.Count > 0)
+            if (boneMatrices.Count > 0 && boneDatas.Count > 0)
             {
                 skeleton = new Skeleton(boneMatrices[0], null);
 
                 for (int i = 1; i < boneCount; i++)
                 {
-                    skeleton.InsertBone(boneMatrices[i]);
+                    skeleton.InsertBone(boneMatrices[i], boneDatas[i].parent);
                 }
             }
         }

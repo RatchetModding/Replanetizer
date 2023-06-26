@@ -13,14 +13,26 @@ namespace LibReplanetizer.Models.Animations
     public class BoneMatrix
     {
         public Matrix3x4 transformation;
-        public Vector3 cumulativeOffset;
-        public short parent;
+        private Vector3 cumulativeOffset;    // Private because this data is not available in Deadlocked.
+        private short parent;   // Private because this data is not available in Deadlocked.
         public short id;
         public short unk0x3C;
 
         //The last 4 bytes and the translation are also present in the BoneData.
 
-        public BoneMatrix(byte[] boneBlock, int num)
+        public BoneMatrix(GameType game, byte[] boneBlock, int num)
+        {
+            if (game == GameType.DL)
+            {
+                GetDLVals(boneBlock, num);
+            }
+            else
+            {
+                GetRC123Vals(boneBlock, num);
+            }
+        }
+
+        private void GetRC123Vals(byte[] boneBlock, int num)
         {
             int offset = num * 0x40;
             id = (short) (offset / 0x40);
@@ -36,6 +48,14 @@ namespace LibReplanetizer.Models.Animations
             //0 for root and some constant else (0b0111000000000000 = 0x7000 = 28672)
             unk0x3C = ReadShort(boneBlock, offset + 0x3C);
             parent = (short) (ReadShort(boneBlock, offset + 0x3E) / 0x40);
+        }
+
+        private void GetDLVals(byte[] boneBlock, int num)
+        {
+            int offset = num * 0x30;
+            id = (short) (offset / 0x30);
+
+            transformation = ReadMatrix3x4(boneBlock, offset);
         }
 
         public byte[] Serialize()

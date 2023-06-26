@@ -580,18 +580,9 @@ namespace LibReplanetizer
                     colladaStream.WriteLine("\t\t\t\t<source id=\"InvBindMats\">");
                     colladaStream.Write("\t\t\t\t\t<float_array id=\"InvBindMatsArray\" count=\"" + 16 * moby.boneMatrices.Count + "\">");
 
-                    List<Vector3> offsets = new List<Vector3>();
-
                     for (int i = 0; i < moby.boneMatrices.Count; i++)
                     {
-                        BoneMatrix bmatrix = moby.boneMatrices[i];
-
-                        offsets.Add(bmatrix.cumulativeOffset * model.size);
-                    }
-
-                    for (int i = 0; i < moby.boneMatrices.Count; i++)
-                    {
-                        Vector3 off = offsets[i];
+                        Vector3 off = moby.boneDatas[i].translation * model.size;
 
                         Matrix3x4 origTrans = moby.boneMatrices[i].transformation;
                         Matrix3 mat = new Matrix3(origTrans.Row0.Xyz, origTrans.Row1.Xyz, origTrans.Row2.Xyz);

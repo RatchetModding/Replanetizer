@@ -237,27 +237,27 @@ namespace LibReplanetizer.Models.Animations
 
             int scalingOffset = rotationOffset + numRotations * 0x08;
             scalings = new List<FrameBoneScaling>();
-            /*for (int i = 0; i < numScalings; i++)
+            for (int i = 0; i < numScalings; i++)
             {
-                float x = ReadShort(frameBlock, scalingOffset + i * 8 + 0x00) / 4096.0f;
-                float y = ReadShort(frameBlock, scalingOffset + i * 8 + 0x02) / 4096.0f;
-                float z = ReadShort(frameBlock, scalingOffset + i * 8 + 0x04) / 4096.0f;
+                float x = ReadShort(frameBlock, scalingOffset + i * 8 + 0x00) / 32767.0f;
+                float y = ReadShort(frameBlock, scalingOffset + i * 8 + 0x02) / 32767.0f;
+                float z = ReadShort(frameBlock, scalingOffset + i * 8 + 0x04) / 32767.0f;
                 byte unk = frameBlock[scalingOffset + i * 8 + 0x06];
                 byte bone = frameBlock[scalingOffset + i * 8 + 0x07];
                 scalings.Add(new FrameBoneScaling(x, y, z, bone, unk));
-            }*/
+            }
 
             int translationOffset = scalingOffset + numScalings * 0x08;
             translations = new List<FrameBoneTranslation>();
-            /*for (int i = 0; i < numTranslations; i++)
+            for (int i = 0; i < numTranslations; i++)
             {
-                float x = ReadShort(frameBlock, translationOffset + i * 8 + 0x00) / 1024.0f;
-                float y = ReadShort(frameBlock, translationOffset + i * 8 + 0x02) / 1024.0f;
-                float z = ReadShort(frameBlock, translationOffset + i * 8 + 0x04) / 1024.0f;
+                float x = ReadShort(frameBlock, translationOffset + i * 8 + 0x00) / 32767.0f;
+                float y = ReadShort(frameBlock, translationOffset + i * 8 + 0x02) / 32767.0f;
+                float z = ReadShort(frameBlock, translationOffset + i * 8 + 0x04) / 32767.0f;
                 byte unk = frameBlock[translationOffset + i * 8 + 0x06];
                 byte bone = frameBlock[translationOffset + i * 8 + 0x07];
                 translations.Add(new FrameBoneTranslation(x, y, z, bone, unk));
-            }*/
+            }
         }
 
         public byte[] Serialize()

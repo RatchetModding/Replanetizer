@@ -126,7 +126,7 @@ namespace LibReplanetizer.Models.Animations
             byte[] frameDataBlock = ReadBlock(fs, modelOffset + animationOffset + offsetFrameHeader + 0x10, numFrames * frameSize);
             for (int i = 0; i < frameCount; i++)
             {
-                frames.Add(new Frame(frameDataBlock, numRotations, numScalings, numTranslations));
+                frames.Add(new Frame(frameDataBlock, i * frameSize, numRotations, numScalings, numTranslations));
             }
 
             // Sound configs

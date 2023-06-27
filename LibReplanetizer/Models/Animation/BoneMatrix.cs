@@ -13,7 +13,7 @@ namespace LibReplanetizer.Models.Animations
     public class BoneMatrix
     {
         public Matrix3x4 transformation;
-        private Vector3 cumulativeOffset;    // Private because this data is not available in Deadlocked.
+        public Vector3 cumulativeOffset;
         private short parent;   // Private because this data is not available in Deadlocked.
         public short id;
         public short unk0x3C;
@@ -56,6 +56,7 @@ namespace LibReplanetizer.Models.Animations
             id = (short) (offset / 0x30);
 
             transformation = ReadMatrix3x4(boneBlock, offset);
+            cumulativeOffset = new Vector3(transformation.M14 / 32767.0f, transformation.M24 / 32767.0f, transformation.M34 / 32767.0f);
         }
 
         public byte[] Serialize()

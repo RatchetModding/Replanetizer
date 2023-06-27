@@ -12,7 +12,7 @@ namespace LibReplanetizer.Models.Animations
 {
     public class BoneData
     {
-        public Vector3 translation;
+        public Vector3 translation; // This is not the same as the cumulative offset in the bonematrix
         public short unk0x0C;
         public short parent;
 
@@ -52,7 +52,7 @@ namespace LibReplanetizer.Models.Animations
             float translationY = ReadFloat(boneDataBlock, offset + 0x04);
             float translationZ = ReadFloat(boneDataBlock, offset + 0x08);
 
-            translation = new Vector3(translationX / 1024.0f, translationY / 1024.0f, translationZ / 1024.0f);
+            translation = new Vector3(translationX / 32767.0f, translationY / 32767.0f, translationZ / 32767.0f);
 
             //0 for root and some constant else (0b0111000000000000 = 0x7000 = 28672)
             unk0x0C = ReadShort(boneDataBlock, offset + 0x0C);

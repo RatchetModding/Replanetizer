@@ -33,7 +33,7 @@ to the game.
             );
 
             warningText = String.Format(
-@"Currently, only Ratchet and Clank 1 is supported. Once the memory hook is
+@"Currently, Deadlocked is not supported. Once the memory hook is
 engaged you will no longer be able to save the level in Replanetizer.
 "
             );

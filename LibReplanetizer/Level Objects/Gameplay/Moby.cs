@@ -734,7 +734,7 @@ namespace LibReplanetizer.LevelObjects
                 state |= 0x80;
             }
 
-            public void Update(byte[] memory, int offset)
+            public void UpdateRC1(byte[] memory, int offset)
             {
                 float collX = ReadFloat(memory, offset + 0x00);
                 float collY = ReadFloat(memory, offset + 0x04);
@@ -794,6 +794,55 @@ namespace LibReplanetizer.LevelObjects
                 rotation = new Vector4(rotX, rotY, rotZ, rotW);
                 color = Color.FromRgb((byte) red, (byte) green, (byte) blue).ToPixel<Rgb24>();
             }
+
+            public void UpdateRC2(byte[] memory, int offset)
+            {
+                float collX = ReadFloat(memory, offset + 0x00);
+                float collY = ReadFloat(memory, offset + 0x04);
+                float collZ = ReadFloat(memory, offset + 0x08);
+                float collW = ReadFloat(memory, offset + 0x0C);
+
+                float X = ReadFloat(memory, offset + 0x10);
+                float Y = ReadFloat(memory, offset + 0x14);
+                float Z = ReadFloat(memory, offset + 0x18);
+                float W = ReadFloat(memory, offset + 0x1C);
+
+                state = memory[offset + 0x20];
+                group = memory[offset + 0x21];
+                mClass = memory[offset + 0x22];
+                alpha = memory[offset + 0x23];
+                scale = ReadFloat(memory, offset + 0x2C);
+
+                updateDistance = memory[offset + 0x30];
+                visible = memory[offset + 0x31];
+                drawDistance = ReadShort(memory, offset + 0x32);
+                modeBits = ReadUshort(memory, offset + 0x34);
+                unk36 = ReadUshort(memory, offset + 0x36);
+                byte colorPadding = memory[offset + 0x38];
+                byte blue = memory[offset + 0x39];
+                byte green = memory[offset + 0x3A];
+                byte red = memory[offset + 0x3B];
+                light = ReadInt(memory, offset + 0x3C);
+
+                animationFrame = memory[offset + 0x41];
+                updateID = memory[offset + 0x42];
+                animationID = memory[offset + 0x43];
+                unk54 = ReadFloat(memory, offset + 0x44);
+                unk58 = ReadFloat(memory, offset + 0x48);
+                framerate = ReadFloat(memory, offset + 0x4C);
+
+                oClass = ReadUshort(memory, offset + 0xAA);
+
+                float rotX = ReadFloat(memory, offset + 0xF0);
+                float rotY = ReadFloat(memory, offset + 0xF4);
+                float rotZ = ReadFloat(memory, offset + 0xF8);
+                float rotW = ReadFloat(memory, offset + 0xFC);
+
+                collPos = new Vector4(collX, collY, -collZ, collW);
+                position = new Vector4(X, Y, Z, W);
+                rotation = new Vector4(rotX, rotY, rotZ, rotW);
+                color = Color.FromRgb((byte) red, (byte) green, (byte) blue).ToPixel<Rgb24>();
+            }
         }
 
         public void SetDead()
@@ -813,7 +862,17 @@ namespace LibReplanetizer.LevelObjects
                 memory = new IngameMobyMemory();
             }
 
-            memory.Update(mobyMemory, offset);
+            switch (game.num)
+            {
+                case 1:
+                    memory.UpdateRC1(mobyMemory, offset);
+                    break;
+                case 2:
+                    memory.UpdateRC2(mobyMemory, offset);
+                    break;
+                default:
+                    return;
+            }
 
             pVarMemoryAddress = 0x300000000 + memory.pVars;
 

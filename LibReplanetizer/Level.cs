@@ -402,6 +402,32 @@ namespace LibReplanetizer
 
             mobyModels.AddRange(gadgetModels);
 
+            if (armorModels.Count > 0)
+            {
+                // Replace the empty ratchet model with the first armor model.
+                // This can be changed once we know where the game stores which armor model to use.
+
+                int armorTextureOffset = textures.Count;
+                textures.AddRange(armorTextures[0]);
+
+                Model defaultRatchetModel = armorModels[0];
+
+                foreach (TextureConfig conf in defaultRatchetModel.textureConfig)
+                {
+                    conf.id += armorTextureOffset;
+                }
+
+                mobyModels.RemoveAll(x => x.id == 0);
+                mobyModels.Add(defaultRatchetModel);
+                mobs.ForEach(x =>
+                {
+                    if (x.modelID == 0)
+                    {
+                        x.model = defaultRatchetModel;
+                    }
+                });
+            }
+
             mobyModels.ForEach(x =>
             {
                 if (x.id == 0 && x is MobyModel mobyModel)

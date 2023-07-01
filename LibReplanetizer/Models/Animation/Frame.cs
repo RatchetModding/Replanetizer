@@ -244,7 +244,7 @@ namespace LibReplanetizer.Models.Animations
                 int y = ReadShort(frameBlock, offset + i * 8 + 0x02);
                 int z = ReadShort(frameBlock, offset + i * 8 + 0x04);
                 int w = ReadShort(frameBlock, offset + i * 8 + 0x06);
-                rotations.Add(new FrameBoneRotation(-x, -y, -z, -w));
+                rotations.Add(new FrameBoneRotation(x, y, z, -w));
             }
 
             int scalingOffset = rotationOffset + numRotations * 0x08;

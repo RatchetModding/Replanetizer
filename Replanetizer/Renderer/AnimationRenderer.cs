@@ -526,32 +526,7 @@ namespace Replanetizer.Renderer
 
                 for (int i = 0; i < mobyModel.boneCount; i++)
                 {
-                    BoneMatrix boneMatrix = mobyModel.boneMatrices[i];
-
-                    Vector3 off = boneMatrix.cumulativeOffset;
-
-                    Matrix3x4 origTrans = boneMatrix.transformation;
-                    Matrix3 mat = new Matrix3(origTrans.Row0.Xyz, origTrans.Row1.Xyz, origTrans.Row2.Xyz);
-
-                    Matrix4 invBindMatrix = new Matrix4();
-                    invBindMatrix.M11 = mat.M11;
-                    invBindMatrix.M12 = mat.M12;
-                    invBindMatrix.M13 = mat.M13;
-                    invBindMatrix.M14 = 0.0f;
-                    invBindMatrix.M21 = mat.M21;
-                    invBindMatrix.M22 = mat.M22;
-                    invBindMatrix.M23 = mat.M23;
-                    invBindMatrix.M24 = 0.0f;
-                    invBindMatrix.M31 = mat.M31;
-                    invBindMatrix.M32 = mat.M32;
-                    invBindMatrix.M33 = mat.M33;
-                    invBindMatrix.M34 = 0.0f;
-                    invBindMatrix.M41 = off.X;
-                    invBindMatrix.M42 = off.Y;
-                    invBindMatrix.M43 = off.Z;
-                    invBindMatrix.M44 = 1.0f;
-
-                    boneMatrices[i] = invBindMatrix * boneMatrices[i];
+                    boneMatrices[i] = mobyModel.boneMatrices[i].GetInvBindMatrix(true) * boneMatrices[i];
                 }
             }
             else

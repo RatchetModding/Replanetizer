@@ -795,7 +795,7 @@ namespace LibReplanetizer.LevelObjects
                 color = Color.FromRgb((byte) red, (byte) green, (byte) blue).ToPixel<Rgb24>();
             }
 
-            public void UpdateRC2(byte[] memory, int offset)
+            public void UpdateRC23(byte[] memory, int offset)
             {
                 float collX = ReadFloat(memory, offset + 0x00);
                 float collY = ReadFloat(memory, offset + 0x04);
@@ -868,7 +868,8 @@ namespace LibReplanetizer.LevelObjects
                     memory.UpdateRC1(mobyMemory, offset);
                     break;
                 case 2:
-                    memory.UpdateRC2(mobyMemory, offset);
+                case 3:
+                    memory.UpdateRC23(mobyMemory, offset);
                     break;
                 default:
                     return;

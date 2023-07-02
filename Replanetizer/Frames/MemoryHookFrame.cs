@@ -33,8 +33,8 @@ to the game.
             );
 
             warningText = String.Format(
-@"Currently, Deadlocked is not supported. Once the memory hook is
-engaged you will no longer be able to save the level in Replanetizer.
+@"Currently, Deadlocked is not supported. Only the EU version of the trilogy is supported.
+Once the memory hook is engaged you will no longer be able to save the level in Replanetizer.
 "
             );
 

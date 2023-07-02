@@ -66,7 +66,7 @@ namespace Replanetizer.MemoryHook
                 case 3:
                     ADDRESSES = new MemoryAddresses
                     {
-                        moby = 0,
+                        moby = 0x300F22260,
                         camera = 0x300D6B400,
                         levelFrames = 0
                     };

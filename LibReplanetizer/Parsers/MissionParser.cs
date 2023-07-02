@@ -32,18 +32,23 @@ namespace LibReplanetizer.Parsers
             List<Model> models = new List<Model>();
 
             byte[] mobyBlock = ReadBlock(fileStream, 0x10, missionHead.mobiesCount * 0x08);
+
+            List<Tuple<int, int>> modelData = new List<Tuple<int, int>>();
             for (int i = 0; i < missionHead.mobiesCount; i++)
             {
                 short modelID = ReadShort(mobyBlock, (i * 0x08) + 0x02);
                 int offset = ReadInt(mobyBlock, (i * 0x08) + 0x04);
 
-                if (offset != 0)
-                {
-                    MobyModel model = MobyModel.GetGadgetMobyModel(fileStream, offset);
-                    model.id = modelID;
-                    models.Add(model);
-                }
+                modelData.Add(new Tuple<int, int>(offset, modelID));
+            }
 
+            foreach (Tuple<int, int> model in modelData)
+            {
+                // ID of zero implies that something wrong and this model is to be ignored.
+                if (model.Item2 != 0)
+                {
+                    models.Add(new MobyModel(fileStream, game, (short) model.Item2, model.Item1));
+                }
             }
 
             return models;

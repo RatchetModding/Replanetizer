@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -6,12 +6,9 @@
 // Please see the LICENSE.md file for more details.
 
 using LibReplanetizer.Headers;
-using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Parsers
 {
@@ -35,9 +32,13 @@ namespace LibReplanetizer.Parsers
         {
             List<MobyModel> models = new List<MobyModel>();
 
-            foreach (int modelPointer in gadgetHead.modelPointers)
+            foreach (Tuple<int, int> model in gadgetHead.modelData)
             {
-                models.Add(MobyModel.GetGadgetMobyModel(fileStream, modelPointer));
+                // ID of zero implies that something wrong and this model is to be ignored.
+                if (model.Item2 != 0)
+                {
+                    models.Add(new MobyModel(fileStream, game, (short) model.Item2, model.Item1));
+                }
             }
 
             // textureID is always 0 based hence we shift them so that they match with the textures

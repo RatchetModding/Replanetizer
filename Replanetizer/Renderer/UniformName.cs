@@ -39,7 +39,8 @@ namespace Replanetizer.Renderer
         right,
         position,
         bones,
-        fontTexture
+        fontTexture,
+        resolution
     }
 
 }

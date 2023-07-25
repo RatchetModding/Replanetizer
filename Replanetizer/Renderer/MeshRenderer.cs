@@ -105,12 +105,6 @@ namespace Replanetizer.Renderer
                 GenerateBuffers();
                 UpdateVars();
 
-                if (mObj is Moby mob)
-                {
-                    animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds, ratchetAnimations);
-                    animationRenderer.Include(mob);
-                }
-
                 return;
             }
 
@@ -121,12 +115,6 @@ namespace Replanetizer.Renderer
 
                 GenerateBuffers();
                 UpdateVars();
-
-                if (model is MobyModel mobyModel)
-                {
-                    animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds, ratchetAnimations);
-                    animationRenderer.Include(mobyModel);
-                }
 
                 return;
             }
@@ -220,10 +208,22 @@ namespace Replanetizer.Renderer
             if (modelObject != null)
             {
                 loadedModelID = modelObject.modelID;
+
+                if (modelObject is Moby mob)
+                {
+                    animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds, ratchetAnimations);
+                    animationRenderer.Include(mob);
+                }
             }
             else if (modelStandalone != null)
             {
                 loadedModelID = modelStandalone.id;
+
+                if (modelStandalone is MobyModel mobyModel)
+                {
+                    animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds, ratchetAnimations);
+                    animationRenderer.Include(mobyModel);
+                }
             }
 
             if (modelRender == null)
@@ -386,7 +386,7 @@ namespace Replanetizer.Renderer
                 modelToWorld = modelObject.modelMatrix;
                 objectID = modelObject.globalID;
 
-                if (loadedModelID != modelObject.modelID)
+                if (modelRender != modelObject.model)
                 {
                     GenerateBuffers();
                 }

@@ -12,14 +12,26 @@ namespace LibReplanetizer.Models.Animations
 {
     public class BoneData
     {
-        public Vector3 translation;
+        public Vector3 translation; // This is not the same as the cumulative offset in the bonematrix
         public short unk0x0C;
         public short parent;
 
         //The first 12 bytes are 3 floats which are exactly the translation from the BoneMatrix
         //Last 4 bytes are equal to the last 4 bytes in the corresponding BoneMatrix
 
-        public BoneData(byte[] boneDataBlock, int num)
+        public BoneData(GameType game, byte[] boneDataBlock, int num)
+        {
+            if (game == GameType.DL)
+            {
+                GetDLVals(boneDataBlock, num);
+            }
+            else
+            {
+                GetRC123Vals(boneDataBlock, num);
+            }
+        }
+
+        private void GetRC123Vals(byte[] boneDataBlock, int num)
         {
             int offset = num * 0x10;
             float translationX = ReadFloat(boneDataBlock, offset + 0x00);
@@ -31,6 +43,31 @@ namespace LibReplanetizer.Models.Animations
             //0 for root and some constant else (0b0111000000000000 = 0x7000 = 28672)
             unk0x0C = ReadShort(boneDataBlock, offset + 0x0C);
             parent = (short) (ReadShort(boneDataBlock, offset + 0x0E) / 0x40);
+        }
+
+        private void GetDLVals(byte[] boneDataBlock, int num)
+        {
+            int offset = num * 0x10;
+            float translationX = ReadFloat(boneDataBlock, offset + 0x00);
+            float translationY = ReadFloat(boneDataBlock, offset + 0x04);
+            float translationZ = ReadFloat(boneDataBlock, offset + 0x08);
+
+            translation = new Vector3(translationX / 1024.0f, translationY / 1024.0f, translationZ / 1024.0f);
+
+            //0 for root and some constant else (0b0111000000000000 = 0x7000 = 28672)
+            unk0x0C = ReadShort(boneDataBlock, offset + 0x0C);
+            parent = ReadShort(boneDataBlock, offset + 0x0E);
+
+            if (parent == 0xFF)
+            {
+                // The root node is always marked with 0xFF.
+                parent = 0;
+            }
+            else
+            {
+                // Parent is only 8 bits and the sign bit is set for some reason.
+                parent &= 0x7F;
+            }
         }
 
         public byte[] Serialize()

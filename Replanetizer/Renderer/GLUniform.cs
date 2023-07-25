@@ -25,6 +25,7 @@ namespace Replanetizer.Renderer
                                                     float.NaN, float.NaN, float.NaN, float.NaN);
         private int intValue = Int32.MaxValue;
         private float floatValue = float.NaN;
+        private Vector2 vec2Value = new Vector2(float.NaN);
         private Vector3 vec3Value = new Vector3(float.NaN);
         private Vector4 vec4Value = new Vector4(float.NaN);
 
@@ -79,6 +80,24 @@ namespace Replanetizer.Renderer
                 floatValue = value;
             }
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Set2(Vector2 value)
+        {
+            if (!Vector2.Equals(vec2Value, value))
+            {
+                GL.Uniform2(location, value);
+                vec2Value = value;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Set2(float v0, float v1)
+        {
+            Vector2 value = new Vector2(v0, v1);
+            Set2(value);
+        }
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set3(Vector3 value)

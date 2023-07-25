@@ -55,9 +55,25 @@ namespace Replanetizer.MemoryHook
                         levelFrames = 0x300a10710
                     };
                     break;
+                case 2:
+                    ADDRESSES = new MemoryAddresses
+                    {
+                        moby = 0x3015927B0,
+                        camera = 0x30146E3C0,
+                        levelFrames = 0
+                    };
+                    break;
+                case 3:
+                    ADDRESSES = new MemoryAddresses
+                    {
+                        moby = 0x300F22260,
+                        camera = 0x300D6B400,
+                        levelFrames = 0
+                    };
+                    break;
                 default:
                     hookWorking = false;
-                    errorMessage = "Memory hooks are only supported for RaC 1.";
+                    errorMessage = "Memory hooks are not supported for Deadlocked.";
                     return;
             }
 
@@ -96,6 +112,7 @@ namespace Replanetizer.MemoryHook
 #if _WINDOWS
             if (!hookWorking) return;
             if (ADDRESSES == null) return;
+            if (ADDRESSES.camera == 0) return;
             int bytesRead = 0;
             byte[] camBfr = new byte[0x20];
             ReadProcessMemory(PROCESS_HANDLE, ADDRESSES.camera, camBfr, camBfr.Length, ref bytesRead);
@@ -109,6 +126,7 @@ namespace Replanetizer.MemoryHook
 #if _WINDOWS
             if (!hookWorking) return;
             if (ADDRESSES == null) return;
+            if (ADDRESSES.moby == 0) return;
             if (!IsX64()) return;
 
             int bytesRead = 0;
@@ -150,6 +168,7 @@ namespace Replanetizer.MemoryHook
 #if _WINDOWS
             if (!hookWorking) return -1;
             if (ADDRESSES == null) return -1;
+            if (ADDRESSES.levelFrames == 0) return -1;
 
             int bytesRead = 0;
             byte[] buffer = new byte[0x4];

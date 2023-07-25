@@ -126,40 +126,45 @@ namespace Replanetizer.Renderer
 
         public override void Render(RendererPayload payload)
         {
-            shaderTable.colorShader.UseShader();
-
-            Matrix4 worldToView = payload.camera.GetWorldViewMatrix();
-            shaderTable.colorShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
-            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-
             foreach (WireframeCollection wireframe in wireframes)
             {
-                shaderTable.colorShader.SetUniform1(UniformName.levelObjectType, (int) wireframe.type);
                 wireframe.Bind();
 
                 if (wireframe.isSpline)
                 {
+                    shaderTable.splineShader.UseShader();
+
+                    Matrix4 worldToView = payload.camera.GetWorldViewMatrix();
+                    shaderTable.splineShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
+                    shaderTable.splineShader.SetUniform1(UniformName.levelObjectType, (int) wireframe.type);
+
                     foreach (LevelObject obj in wireframe.levelObjects)
                     {
-                        shaderTable.colorShader.SetUniform1(UniformName.levelObjectNumber, obj.globalID);
-                        shaderTable.colorShader.SetUniformMatrix4(UniformName.modelToWorld, ref obj.modelMatrix);
-                        shaderTable.colorShader.SetUniform4(UniformName.incolor, payload.selection.Contains(obj) ? SELECTED_COLOR : DEFAULT_COLOR);
+                        shaderTable.splineShader.SetUniform1(UniformName.levelObjectNumber, obj.globalID);
+                        shaderTable.splineShader.SetUniformMatrix4(UniformName.modelToWorld, ref obj.modelMatrix);
+                        shaderTable.splineShader.SetUniform4(UniformName.incolor, payload.selection.Contains(obj) ? SELECTED_COLOR : DEFAULT_COLOR);
                         GL.DrawArrays(PrimitiveType.LineStrip, 0, wireframe.container.GetVertexBufferLength() / 3);
                     }
                 }
                 else
                 {
+                    shaderTable.wireframeShader.UseShader();
+
+                    Matrix4 worldToView = payload.camera.GetWorldViewMatrix();
+                    shaderTable.wireframeShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
+                    shaderTable.wireframeShader.SetUniform1(UniformName.levelObjectType, (int) wireframe.type);
+
                     foreach (LevelObject obj in wireframe.levelObjects)
                     {
-                        shaderTable.colorShader.SetUniform1(UniformName.levelObjectNumber, obj.globalID);
-                        shaderTable.colorShader.SetUniformMatrix4(UniformName.modelToWorld, ref obj.modelMatrix);
-                        shaderTable.colorShader.SetUniform4(UniformName.incolor, payload.selection.Contains(obj) ? SELECTED_COLOR : DEFAULT_COLOR);
+                        shaderTable.wireframeShader.SetUniform1(UniformName.levelObjectNumber, obj.globalID);
+                        shaderTable.wireframeShader.SetUniformMatrix4(UniformName.modelToWorld, ref obj.modelMatrix);
+                        shaderTable.wireframeShader.SetUniform4(UniformName.incolor, payload.selection.Contains(obj) ? SELECTED_COLOR : DEFAULT_COLOR);
                         GL.DrawElements(PrimitiveType.Triangles, wireframe.container.GetIndexBufferLength(), DrawElementsType.UnsignedShort, 0);
                     }
                 }
+
             }
 
-            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             GLUtil.CheckGlError("WireframeRenderer");
         }
 

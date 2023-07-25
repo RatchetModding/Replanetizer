@@ -57,6 +57,8 @@ namespace LibReplanetizer
 
         private void WriteSkeleton(StreamWriter colladaStream, Skeleton skeleton, float size, string indent = "")
         {
+            // This does not work for Deadlocked yet. Rotation is already inverted in Deadlocked so we will need to invert again here to obtain
+            // the bind matrix as is needed here.
             Matrix3x4 trans = skeleton.bone.transformation;
             Matrix3 rotation = new Matrix3(trans.Row0.Xyz, trans.Row1.Xyz, trans.Row2.Xyz);
 
@@ -580,39 +582,29 @@ namespace LibReplanetizer
                     colladaStream.WriteLine("\t\t\t\t<source id=\"InvBindMats\">");
                     colladaStream.Write("\t\t\t\t\t<float_array id=\"InvBindMatsArray\" count=\"" + 16 * moby.boneMatrices.Count + "\">");
 
-                    List<Vector3> offsets = new List<Vector3>();
-
                     for (int i = 0; i < moby.boneMatrices.Count; i++)
                     {
-                        BoneMatrix bmatrix = moby.boneMatrices[i];
-
-                        offsets.Add(bmatrix.cumulativeOffset * model.size);
-                    }
-
-                    for (int i = 0; i < moby.boneMatrices.Count; i++)
-                    {
-                        Vector3 off = offsets[i];
-
-                        Matrix3x4 origTrans = moby.boneMatrices[i].transformation;
-                        Matrix3 mat = new Matrix3(origTrans.Row0.Xyz, origTrans.Row1.Xyz, origTrans.Row2.Xyz);
-                        mat.Transpose();
+                        Matrix4 mat = moby.boneMatrices[i].GetInvBindMatrix();
+                        mat.M14 *= model.size;
+                        mat.M24 *= model.size;
+                        mat.M34 *= model.size;
 
                         colladaStream.Write((mat.M11).ToString("G", en_US) + " ");
                         colladaStream.Write((mat.M12).ToString("G", en_US) + " ");
                         colladaStream.Write((mat.M13).ToString("G", en_US) + " ");
-                        colladaStream.Write((off.X).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.M14).ToString("G", en_US) + " ");
                         colladaStream.Write((mat.M21).ToString("G", en_US) + " ");
                         colladaStream.Write((mat.M22).ToString("G", en_US) + " ");
                         colladaStream.Write((mat.M23).ToString("G", en_US) + " ");
-                        colladaStream.Write((off.Y).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.M24).ToString("G", en_US) + " ");
                         colladaStream.Write((mat.M31).ToString("G", en_US) + " ");
                         colladaStream.Write((mat.M32).ToString("G", en_US) + " ");
                         colladaStream.Write((mat.M33).ToString("G", en_US) + " ");
-                        colladaStream.Write((off.Z).ToString("G", en_US) + " ");
-                        colladaStream.Write("0 ");
-                        colladaStream.Write("0 ");
-                        colladaStream.Write("0 ");
-                        colladaStream.Write("1 ");
+                        colladaStream.Write((mat.M34).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.M41).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.M42).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.M43).ToString("G", en_US) + " ");
+                        colladaStream.Write((mat.M44).ToString("G", en_US) + " ");
                     }
                     colladaStream.WriteLine("</float_array>");
                     colladaStream.WriteLine("\t\t\t\t\t<technique_common>");
@@ -765,7 +757,7 @@ namespace LibReplanetizer
         {
             LOGGER.Trace(fileName);
 
-            bool includeSkeleton = (model is MobyModel mobyModel && mobyModel.boneCount != 0 && level.game != GameType.DL);
+            bool includeSkeleton = (model is MobyModel mobyModel && mobyModel.boneCount != 0);
 
             if (includeSkeleton && (settings.animationChoice == ExporterModelSettings.AnimationChoice.AllSeparate))
             {

@@ -92,7 +92,7 @@
 00D4=Asteroid
 00D5=Tesla claw Ammo
 00D6=Pyrocitor Ammo
-00D9=Red Robot
+00D9=Big Axebot
 00DD=Construction Arm
 00DE=Visibomb Ammo
 00DF=Glove of Doom Ammo
@@ -175,6 +175,7 @@
 0195=Forcefield
 0196=Edwina's Welding Shield
 0197=Persuader
+0198=Sentry-bot Alarm
 0199=Rocket
 01A3=Giant Clank
 01A8=Shuttle
@@ -193,7 +194,7 @@
 01C7=Spawner
 01C9=Rocket
 01CA=Rocket
-01CB=Yellow Enemy
+01CB=Birdbot
 01CD=Qwark's Starfighter
 01CE=Shrub
 01D2=Snow Plow
@@ -242,8 +243,8 @@
 023A=Axe
 023C=Slime Parent
 023D=Robot Dog
-0241=Bird
-0242=Bomb Guy
+0241=Peckbot
+0242=Mine layer
 0244=Sandshark
 0247=Thruster Pack Lock (Green)
 0248=Yellow Platform
@@ -278,7 +279,7 @@
 028B=Elevator
 028C=Escalator
 028D=Escalator End
-0290=Digger
+0290=Bulldozer
 0291=Bomb
 0294=Fighter Jet
 0296=Dump Truck
@@ -322,17 +323,17 @@
 02DA=Agnogg Ship Front
 02DB=Agnogg Ship Back
 02DC=Crane
-02DE=Platform
 02DD=Rocket Launcher
+02DE=Platform
 02DF=Rocket Door1
 02E0=Rocket Door2
 02E6=Door Frame
 02E7=Tresspasser Door1
 02E8=Tresspasser Door2
+02EA=Bridge Half
 02EB=Inner support
 02ED=Veldin Frog
 02EE=Infobot
-02EA=Bridge Half
 02F1=Gadgetron Stand
 02F2=Green Mushroom
 02F3=Sandshark Egg

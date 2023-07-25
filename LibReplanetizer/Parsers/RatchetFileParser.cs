@@ -170,7 +170,7 @@ namespace LibReplanetizer.Parsers
             return list;
         }
 
-        protected List<Animation> GetPlayerAnimations(int offset, MobyModel ratchet)
+        protected List<Animation> GetPlayerAnimations(GameType game, int offset, MobyModel ratchet)
         {
             int count = ratchet.animations.Count;
             List<Animation> animations = new List<Animation>(ratchet.animations.Count);
@@ -182,7 +182,7 @@ namespace LibReplanetizer.Parsers
 
                 for (int i = 0; i < count; i++)
                 {
-                    animations.Add(new Animation(fileStream, ReadInt(headBlock, i * 4), 0, boneCount, true));
+                    animations.Add(new Animation(fileStream, game, ReadInt(headBlock, i * 4), 0, boneCount, true));
                 }
             }
 

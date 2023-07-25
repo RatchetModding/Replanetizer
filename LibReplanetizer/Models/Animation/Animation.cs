@@ -33,7 +33,7 @@ namespace LibReplanetizer.Models.Animations
         {
 
         }
-        public Animation(FileStream fs, int modelOffset, int animationOffset, int boneCount, bool force = false)
+        public Animation(FileStream fs, GameType game, int modelOffset, int animationOffset, int boneCount, bool force = false)
         {
             //Only try to parse if the offset is non-zero
             if (animationOffset == 0 && !force)
@@ -42,6 +42,22 @@ namespace LibReplanetizer.Models.Animations
             if (modelOffset <= 0)
                 return;
 
+            switch (game.num)
+            {
+                case 4:
+                    GetDLVals(fs, game, modelOffset, animationOffset, boneCount);
+                    break;
+                case 1:
+                case 2:
+                case 3:
+                default:
+                    GetRC123Vals(fs, game, modelOffset, animationOffset, boneCount);
+                    break;
+            }
+        }
+
+        private void GetRC123Vals(FileStream fs, GameType game, int modelOffset, int animationOffset, int boneCount)
+        {
             // Header
             byte[] header = ReadBlock(fs, modelOffset + animationOffset, 0x1C);
             unk1 = ReadFloat(header, 0x00);
@@ -67,11 +83,54 @@ namespace LibReplanetizer.Models.Animations
             byte[] animationPointerBlock = ReadBlock(fs, modelOffset + animationOffset + 0x1C, frameCount * 0x04);
             for (int i = 0; i < frameCount; i++)
             {
-                frames.Add(new Frame(fs, modelOffset + ReadInt(animationPointerBlock, i * 0x04), boneCount));
+                frames.Add(new Frame(fs, game, modelOffset + ReadInt(animationPointerBlock, i * 0x04), boneCount));
             }
 
             // Sound configs
             byte[] extrasBlock = ReadBlock(fs, (modelOffset + animationOffset) + 0x1C + frameCount * 0x04, soundsCount * 4);
+            for (int i = 0; i < soundsCount; i++)
+            {
+                sounds.Add(ReadInt(extrasBlock, i * 4));
+            }
+        }
+
+        private void GetDLVals(FileStream fs, GameType game, int modelOffset, int animationOffset, int boneCount)
+        {
+            // Header
+            byte[] header = ReadBlock(fs, modelOffset + animationOffset, 0x20);
+            unk1 = ReadFloat(header, 0x00);
+            unk2 = ReadFloat(header, 0x04);
+            unk3 = ReadFloat(header, 0x08);
+            unk4 = ReadFloat(header, 0x0C);
+
+            byte frameCount = header[0x10];
+            unk5 = header[0x11];
+            byte soundsCount = header[0x12];
+            unk7 = header[0x13];
+
+            int offsetSound = ReadInt(header, 0x14);
+            int offsetUnk = ReadInt(header, 0x18);
+            int offsetFrameHeader = ReadInt(header, 0x1C);
+
+            byte[] unkBytes = ReadBlock(fs, modelOffset + animationOffset + offsetUnk, offsetFrameHeader - offsetUnk);
+
+            byte[] frameHeaderBlock = ReadBlock(fs, modelOffset + animationOffset + offsetFrameHeader, 0x10);
+
+            byte numFrames = frameHeaderBlock[1];
+            byte numRotations = frameHeaderBlock[2];
+            byte numScalings = frameHeaderBlock[3];
+            byte numTranslations = frameHeaderBlock[4];
+
+            // Frames
+            int frameSize = (numRotations + numScalings + numTranslations) * 0x08;
+            byte[] frameDataBlock = ReadBlock(fs, modelOffset + animationOffset + offsetFrameHeader + 0x10, numFrames * frameSize);
+            for (int i = 0; i < frameCount; i++)
+            {
+                frames.Add(new Frame(frameDataBlock, i * frameSize, numRotations, numScalings, numTranslations));
+            }
+
+            // Sound configs
+            byte[] extrasBlock = ReadBlock(fs, modelOffset + animationOffset + offsetSound, soundsCount * 4);
             for (int i = 0; i < soundsCount; i++)
             {
                 sounds.Add(ReadInt(extrasBlock, i * 4));

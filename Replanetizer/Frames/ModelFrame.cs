@@ -20,6 +20,7 @@ using Texture = LibReplanetizer.Texture;
 using SixLabors.ImageSharp;
 using LibReplanetizer.LevelObjects;
 using SixLabors.ImageSharp.PixelFormats;
+using LibReplanetizer.Models.Animations;
 
 namespace Replanetizer.Frames
 {
@@ -28,6 +29,7 @@ namespace Replanetizer.Frames
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Model Viewer";
         private static readonly Rgb24 CLEAR_COLOR = Color.FromRgb(0x9d, 0xab, 0xc7).ToPixel<Rgb24>();
+        private const int PROPERTIES_WIDTH = 480;
 
         private string filter = "";
         private string filterUpper = "";
@@ -144,7 +146,7 @@ namespace Replanetizer.Frames
             {
                 System.Numerics.Vector2 startSize = new System.Numerics.Vector2(this.startSize.X, this.startSize.Y);
 
-                startSize.X *= 0.75f;
+                startSize.X *= 0.9f;
                 startSize.Y *= 0.75f;
 
                 ImGui.SetNextWindowSize(startSize);
@@ -219,22 +221,7 @@ namespace Replanetizer.Frames
                 RenderSubTree("Moby", sortedMobyModels, level.textures);
                 RenderSubTree("Tie", sortedTieModels, level.textures);
                 RenderSubTree("Shrub", sortedShrubModels, level.textures);
-                if (level.game == GameType.RaC1)
-                {
-                    RenderSubTree("Gadget", sortedGadgetModels, level.textures);
-                }
-                else
-                {
-                    if (ImGui.TreeNode("Gadget"))
-                    {
-                        for (int i = 0; i < sortedGadgetModels.Count; i++)
-                        {
-                            Model gadget = sortedGadgetModels[i];
-                            RenderModelEntry(gadget, level.gadgetTextures, GetStringFromID(i));
-                        }
-                        ImGui.TreePop();
-                    }
-                }
+                RenderSubTree("Gadget", sortedGadgetModels, (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures);
                 if (ImGui.TreeNode("Armor"))
                 {
                     for (int i = 0; i < level.armorModels.Count; i++)
@@ -307,7 +294,7 @@ namespace Replanetizer.Frames
             ImGui.Columns(3);
             ImGui.SetColumnWidth(0, 250);
             ImGui.SetColumnWidth(1, (float) width);
-            ImGui.SetColumnWidth(2, 320);
+            ImGui.SetColumnWidth(2, PROPERTIES_WIDTH);
             RenderTree();
             ImGui.NextColumn();
 
@@ -403,30 +390,35 @@ namespace Replanetizer.Frames
                 if (selectedModel is MobyModel mobModel && mobModel.animations.Count > 0)
                 {
                     ImGui.Checkbox("Show Animations", ref rendererPayload.visibility.enableAnimations);
+
+                    List<Animation> animations = (mobModel.id == 0 && level.playerAnimations.Count > 0) ? level.playerAnimations : mobModel.animations;
+
                     int animID = rendererPayload.forcedAnimationID;
 
                     if (ImGui.InputInt("Animation ID", ref animID))
                     {
-                        if (animID >= mobModel.animations.Count)
+                        if (animID >= animations.Count)
                         {
                             animID = 0;
                         }
 
                         if (animID < 0)
                         {
-                            animID = mobModel.animations.Count - 1;
+                            animID = animations.Count - 1;
                         }
 
                         rendererPayload.forcedAnimationID = animID;
                     }
+                    ImGui.LabelText("Animation Framecount", (animID >= 0 && animID < animations.Count) ? animations[animID].frames.Count.ToString() : "0");
                     ImGui.Separator();
                 }
 
-                if (selectedObjectInstances.Count > 0)
+                if (selectedModel != null)
                 {
                     RenderInstanceList();
                     ImGui.Separator();
                 }
+
                 propertyFrame.Render(deltaTime);
             }
 
@@ -441,7 +433,7 @@ namespace Replanetizer.Frames
             System.Numerics.Vector2 vMax = ImGui.GetWindowContentRegionMax();
 
             vMin.X += 250;
-            vMax.X -= 300;
+            vMax.X -= PROPERTIES_WIDTH - 20;
 
             width = (int) (vMax.X - vMin.X);
             height = (int) (vMax.Y - vMin.Y);
@@ -634,6 +626,7 @@ namespace Replanetizer.Frames
                     shaderTable.animationShader.UseShader();
                     shaderTable.animationShader.SetUniform1(UniformName.useFog, 0);
                 }
+                rendererPayload.SetWindowSize(width, height);
                 meshRenderer.Render(rendererPayload);
             }
         }

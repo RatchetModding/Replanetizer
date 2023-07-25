@@ -30,6 +30,8 @@ namespace Replanetizer.Renderer
         }
 
         public Camera camera;
+        public int width;
+        public int height;
         public Selection selection;
         public Toolbox? toolbox;
         public VisibilitySettings visibility = new VisibilitySettings();
@@ -45,6 +47,12 @@ namespace Replanetizer.Renderer
             this.camera = camera;
             this.selection = (selection != null) ? selection : new Selection();
             this.toolbox = toolbox;
+        }
+
+        public void SetWindowSize(int width, int height)
+        {
+            this.width = width;
+            this.height = height;
         }
     }
 

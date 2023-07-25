@@ -178,7 +178,7 @@ namespace LibReplanetizer
                 LOGGER.Debug("Added {0} terrain elements", terrainEngine.fragments.Count);
 
                 LOGGER.Debug("Parsing player animations...");
-                playerAnimations = engineParser.GetPlayerAnimations((MobyModel) mobyModels[0]);
+                playerAnimations = (mobyModels.Count > 0) ? engineParser.GetPlayerAnimations((MobyModel) mobyModels[0]) : new List<Animation>();
                 LOGGER.Debug("Added {0} player animations", playerAnimations.Count);
 
                 uiElements = engineParser.GetUiElements();
@@ -401,6 +401,32 @@ namespace LibReplanetizer
             }
 
             mobyModels.AddRange(gadgetModels);
+
+            if (armorModels.Count > 0)
+            {
+                // Replace the empty ratchet model with the first armor model.
+                // This can be changed once we know where the game stores which armor model to use.
+
+                int armorTextureOffset = textures.Count;
+                textures.AddRange(armorTextures[0]);
+
+                Model defaultRatchetModel = armorModels[0];
+
+                foreach (TextureConfig conf in defaultRatchetModel.textureConfig)
+                {
+                    conf.id += armorTextureOffset;
+                }
+
+                mobyModels.RemoveAll(x => x.id == 0);
+                mobyModels.Add(defaultRatchetModel);
+                mobs.ForEach(x =>
+                {
+                    if (x.modelID == 0)
+                    {
+                        x.model = defaultRatchetModel;
+                    }
+                });
+            }
 
             mobyModels.ForEach(x =>
             {

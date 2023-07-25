@@ -37,13 +37,26 @@ namespace Replanetizer.Renderer
 
         private readonly (ShaderType Type, string Path)[] FILES;
 
-        public Shader(string name, string vertexShader, string fragmentShader)
+        public Shader(string name, string vertexShader, string fragmentShader, string geometryShader = "")
         {
             NAME = name;
-            FILES = new[]{
+
+            if (geometryShader != "")
+            {
+                FILES = new[]{
+                (ShaderType.VertexShader, vertexShader),
+                (ShaderType.FragmentShader, fragmentShader),
+                (ShaderType.GeometryShader, geometryShader)
+            };
+            }
+            else
+            {
+                FILES = new[]{
                 (ShaderType.VertexShader, vertexShader),
                 (ShaderType.FragmentShader, fragmentShader),
             };
+            }
+
             program = CreateProgram(name, FILES);
         }
 
@@ -55,6 +68,25 @@ namespace Replanetizer.Renderer
                 using (StreamReader fs = new StreamReader(pathFS))
                 {
                     shader = new Shader(name, vs.ReadToEnd(), fs.ReadToEnd());
+                }
+            }
+
+            return shader;
+        }
+
+
+        public static Shader GetShaderFromFiles(string name, string pathVS, string pathFS, string pathGS)
+        {
+            Shader shader;
+            using (StreamReader vs = new StreamReader(pathVS))
+            {
+                using (StreamReader fs = new StreamReader(pathFS))
+                {
+                    using (StreamReader gs = new StreamReader(pathGS))
+                    {
+                        shader = new Shader(name, vs.ReadToEnd(), fs.ReadToEnd(), gs.ReadToEnd());
+                    }
+
                 }
             }
 
@@ -106,6 +138,11 @@ namespace Replanetizer.Renderer
             for (int i = 0; i < shaderPaths.Length; i++)
             {
                 shaders[i] = CompileShader(name, shaderPaths[i].Type, shaderPaths[i].source);
+
+                if (shaderPaths[i].Type == ShaderType.GeometryShader)
+                {
+
+                }
             }
 
             foreach (var shader in shaders)
@@ -204,6 +241,30 @@ namespace Replanetizer.Renderer
             {
                 UseShader();
                 uniform.Set1(v);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniform2(UniformName uniformName, float v0, float v1)
+        {
+            GLUniform? uniform = GetUniformLocation(uniformName);
+
+            if (uniform != null)
+            {
+                UseShader();
+                uniform.Set2(v0, v1);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniform2(UniformName uniformName, int v0, int v1)
+        {
+            GLUniform? uniform = GetUniformLocation(uniformName);
+
+            if (uniform != null)
+            {
+                UseShader();
+                uniform.Set2((float) v0, (float) v1);
             }
         }
 

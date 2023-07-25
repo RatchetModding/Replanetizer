@@ -1,10 +1,11 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using static LibReplanetizer.DataFunctions;
@@ -13,25 +14,22 @@ namespace LibReplanetizer.Headers
 {
     public class GadgetHeader
     {
-        public List<int> modelPointers = new List<int>();
+        public List<Tuple<int, int>> modelData = new List<Tuple<int, int>>();
         public int texturePointer;
         public int textureCount;
 
-        // Are they always 47? If not I would expect the count somewhere
-        private const int GADGET_COUNT = 47;
-
-        public GadgetHeader() { }
-
-
         public GadgetHeader(FileStream gadgetFile)
         {
-            byte[] gadgetHeaderBytes = ReadBlock(gadgetFile, 0x00, GADGET_COUNT * 0x04);
+            int gadgetCount = ReadInt(ReadBlock(gadgetFile, 0x3C0, 0x04), 0x00);
 
-            modelPointers = new List<int>();
+            byte[] gadgetHeaderBytes = ReadBlock(gadgetFile, 0x00, 0x3D0);
 
-            for (int i = 0; i < GADGET_COUNT; i++)
+            for (int i = 0; i < gadgetCount; i++)
             {
-                modelPointers.Add(ReadInt(gadgetHeaderBytes, i * 0x04));
+                int modelPointer = ReadInt(gadgetHeaderBytes, 0x00 + i * 0x04);
+                int modelID = ReadInt(gadgetHeaderBytes, 0x240 + i * 0x04);
+
+                modelData.Add(new Tuple<int, int>(modelPointer, modelID));
             }
 
             texturePointer = ReadInt(ReadBlock(gadgetFile, 0x3C4, 0x04), 0x00);
@@ -58,12 +56,9 @@ namespace LibReplanetizer.Headers
             switch (game.num)
             {
                 case 2:
-                    var rac2Path = Path.Join(superFolder, "global", "gadgets", "gadgets.ps3");
-                    if (File.Exists(rac2Path)) return rac2Path;
-                    break;
                 case 3:
-                    var rac3Path = Path.Join(superFolder, "global", "gadgets.ps3");
-                    if (File.Exists(rac3Path)) return rac3Path;
+                    var path = Path.Join(superFolder, "global", "gadgets.ps3");
+                    if (File.Exists(path)) return path;
                     break;
             }
 

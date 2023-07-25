@@ -165,7 +165,6 @@ namespace Replanetizer.Renderer
 
             Matrix4 worldToView = payload.camera.GetWorldViewMatrix();
             shaderTable.wireframeShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
-            shaderTable.wireframeShader.SetUniform2(UniformName.resolution, payload.width, payload.height);
 
             foreach (WireframeCollection wireframe in wireframes)
             {

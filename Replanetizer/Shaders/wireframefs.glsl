@@ -1,7 +1,7 @@
 #version 330 core
 
 // Interpolated values from the vertex shaders
-noperspective in vec3 dist;
+in vec3 dist;
 
 // Ouput data
 layout(location = 0) out vec4 color;
@@ -15,13 +15,12 @@ uniform vec4 incolor;
 
 void main() {
     // Get distance to nearest edge
-    float near_dist = min(min(dist[0], dist[1]), dist[2]);
-    float edge_intensity = exp2(-1.0f * near_dist * near_dist);
+    float edge_intensity = min(min(dist.x,dist.y),dist.z);
 
-    if (edge_intensity < 0.1f) {
+    if (edge_intensity > 0.01f) {
         discard;
     }
 
-	color =  vec4(incolor.rgb, 1.0f);
+	color = vec4(incolor.rgb, 1.0f);
 	id = (levelObjectType << 24) | levelObjectNumber;
 }

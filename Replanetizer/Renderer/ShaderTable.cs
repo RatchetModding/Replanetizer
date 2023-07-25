@@ -17,6 +17,7 @@ namespace Replanetizer.Renderer
         public Shader billboardShader;
         public Shader collisionShader;
         public Shader animationShader;
+        public Shader wireframeShader;
 
         public ShaderTable(string directory)
         {
@@ -26,6 +27,7 @@ namespace Replanetizer.Renderer
             billboardShader = Shader.GetShaderFromFiles("billboardShader", Path.Join(directory, "billboardvs.glsl"), Path.Join(directory, "billboardfs.glsl"));
             collisionShader = Shader.GetShaderFromFiles("collisionShader", Path.Join(directory, "collisionshadervs.glsl"), Path.Join(directory, "collisionshaderfs.glsl"));
             animationShader = Shader.GetShaderFromFiles("animationShader", Path.Join(directory, "animationvs.glsl"), Path.Join(directory, "animationfs.glsl"));
+            wireframeShader = Shader.GetShaderFromFiles("wireframeShader", Path.Join(directory, "wireframevs.glsl"), Path.Join(directory, "wireframefs.glsl"), Path.Join(directory, "wireframegs.glsl"));
         }
     }
 }

@@ -1055,6 +1055,7 @@ namespace Replanetizer.Frames
 
         protected void OnPaint()
         {
+            rendererPayload.SetWindowSize(width, height);
             levelRenderer?.Render(rendererPayload);
         }
 

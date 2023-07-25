@@ -126,7 +126,7 @@ namespace Replanetizer.Renderer
 
         public override void Render(RendererPayload payload)
         {
-            shaderTable.colorShader.UseShader();
+            /*shaderTable.colorShader.UseShader();
 
             Matrix4 worldToView = payload.camera.GetWorldViewMatrix();
             shaderTable.colorShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
@@ -159,7 +159,28 @@ namespace Replanetizer.Renderer
                 }
             }
 
-            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);*/
+
+            shaderTable.wireframeShader.UseShader();
+
+            Matrix4 worldToView = payload.camera.GetWorldViewMatrix();
+            shaderTable.wireframeShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
+            shaderTable.wireframeShader.SetUniform2(UniformName.resolution, payload.width, payload.height);
+
+            foreach (WireframeCollection wireframe in wireframes)
+            {
+                shaderTable.wireframeShader.SetUniform1(UniformName.levelObjectType, (int) wireframe.type);
+                wireframe.Bind();
+
+                foreach (LevelObject obj in wireframe.levelObjects)
+                {
+                    shaderTable.wireframeShader.SetUniform1(UniformName.levelObjectNumber, obj.globalID);
+                    shaderTable.wireframeShader.SetUniformMatrix4(UniformName.modelToWorld, ref obj.modelMatrix);
+                    shaderTable.wireframeShader.SetUniform4(UniformName.incolor, payload.selection.Contains(obj) ? SELECTED_COLOR : DEFAULT_COLOR);
+                    GL.DrawElements(PrimitiveType.Triangles, wireframe.container.GetIndexBufferLength(), DrawElementsType.UnsignedShort, 0);
+                }
+            }
+
             GLUtil.CheckGlError("WireframeRenderer");
         }
 

@@ -626,6 +626,7 @@ namespace Replanetizer.Frames
                     shaderTable.animationShader.UseShader();
                     shaderTable.animationShader.SetUniform1(UniformName.useFog, 0);
                 }
+                rendererPayload.SetWindowSize(width, height);
                 meshRenderer.Render(rendererPayload);
             }
         }

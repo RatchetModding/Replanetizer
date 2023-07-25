@@ -18,6 +18,7 @@ namespace Replanetizer.Renderer
         public Shader collisionShader;
         public Shader animationShader;
         public Shader wireframeShader;
+        public Shader splineShader;
 
         public ShaderTable(string directory)
         {
@@ -28,6 +29,7 @@ namespace Replanetizer.Renderer
             collisionShader = Shader.GetShaderFromFiles("collisionShader", Path.Join(directory, "collisionshadervs.glsl"), Path.Join(directory, "collisionshaderfs.glsl"));
             animationShader = Shader.GetShaderFromFiles("animationShader", Path.Join(directory, "animationvs.glsl"), Path.Join(directory, "animationfs.glsl"));
             wireframeShader = Shader.GetShaderFromFiles("wireframeShader", Path.Join(directory, "wireframevs.glsl"), Path.Join(directory, "wireframefs.glsl"), Path.Join(directory, "wireframegs.glsl"));
+            splineShader = Shader.GetShaderFromFiles("splineShader", Path.Join(directory, "splinevs.glsl"), Path.Join(directory, "splinefs.glsl"), Path.Join(directory, "splinegs.glsl"));
         }
     }
 }

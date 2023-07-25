@@ -464,6 +464,17 @@ namespace Replanetizer.Renderer
 
             int animationFrame = (mob != null && mob.memory != null) ? mob.memory.animationFrame : currentFrameID;
 
+            // For Example: RaC 1 bomb glove idles in the last frame of the animation despite the first one being selected.
+            // TODO: Understand what is happening in these cases.
+            if (anim != null && mob != null && mob.memory != null && mob.memory.animState == 0)
+            {
+                animationFrame--;
+                if (animationFrame < 0)
+                {
+                    animationFrame += anim.frames.Count;
+                }
+            }
+
             Frame? frame = (anim != null && animationFrame >= 0 && animationFrame < anim.frames.Count) ? anim.frames[animationFrame] : null;
 
             if (anim != null && frame != null)

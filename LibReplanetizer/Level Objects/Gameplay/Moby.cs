@@ -793,6 +793,12 @@ namespace LibReplanetizer.LevelObjects
                 position = new Vector4(X, Y, Z, W);
                 rotation = new Vector4(rotX, rotY, rotZ, rotW);
                 color = Color.FromRgb((byte) red, (byte) green, (byte) blue).ToPixel<Rgb24>();
+
+                // TODO: Understand this better, this is just a hack for now.
+                if (oClass == 71 || oClass == 190 || oClass == 192 || oClass == 208 || oClass == 229)
+                {
+                    rotation = rotation + new Vector4(1.5707964f, 0.0f, 0.0f, 0.0f);
+                }
             }
 
             public void UpdateRC23(byte[] memory, int offset)

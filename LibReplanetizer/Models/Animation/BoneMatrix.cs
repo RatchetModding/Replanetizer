@@ -117,6 +117,27 @@ namespace LibReplanetizer.Models.Animations
             return (transposed) ? inverseBindMatrixTransposed : inverseBindMatrix;
         }
 
+        public Vector3 GetTranslation()
+        {
+            return -inverseBindMatrix.ExtractTranslation();
+        }
+
+        public Quaternion GetRotation()
+        {
+            return inverseBindMatrix.ExtractRotation().Inverted();
+        }
+
+        public Vector3 GetScale()
+        {
+            Vector3 scale = inverseBindMatrix.ExtractScale();
+
+            scale.X = 1.0f / scale.X;
+            scale.Y = 1.0f / scale.Y;
+            scale.Z = 1.0f / scale.Z;
+
+            return scale;
+        }
+
         public byte[] Serialize()
         {
             byte[] outBytes = new byte[0x40];

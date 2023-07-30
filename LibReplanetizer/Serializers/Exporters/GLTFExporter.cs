@@ -111,7 +111,7 @@ namespace LibReplanetizer
                 public GLTFMaterialEntry(TextureConfig conf, int texOffset)
                 {
                     this.name = "Material_" + texOffset + "_" + conf.id;
-                    this.alphaMode = (conf.IgnoresTransparency() || conf.id == 0) ? GLTFMaterialEntry.OPAQUE : GLTFMaterialEntry.BLEND;
+                    this.alphaMode = (conf.IgnoresTransparency() || conf.id == 0) ? GLTFMaterialEntry.OPAQUE : GLTFMaterialEntry.MASK;
                     this.pbrMetallicRoughness = new GLTFMaterialEntry.GLTFMaterialPBRValues(texOffset, conf.id);
                 }
             }
@@ -243,20 +243,21 @@ namespace LibReplanetizer
                 public int componentType;
                 public int count;
                 public int byteOffset;
-                public float[]? max;
-                public float[]? min;
+                public float[]? max = null;
+                public float[]? min = null;
                 public String type;
 
-                public GLTFAccessorEntry(String name, int bufferView, int componentType, int count, int byteOffset, float[] max, float[] min, String type)
+                public GLTFAccessorEntry(String name, int bufferView, int componentType, int count, int byteOffset, Vector3 max, Vector3 min, String type)
                 {
                     this.name = name;
                     this.bufferView = bufferView;
                     this.componentType = componentType;
                     this.count = count;
                     this.byteOffset = byteOffset;
-                    this.max = max;
-                    this.min = min;
                     this.type = type;
+
+                    this.max = new float[3] { max.X, max.Y, max.Z };
+                    this.min = new float[3] { min.X, min.Y, min.Z };
                 }
 
                 public GLTFAccessorEntry(String name, int bufferView, int componentType, int count, int byteOffset, String type)
@@ -280,7 +281,7 @@ namespace LibReplanetizer
                 public int buffer;
                 public int byteLength;
                 public int byteOffset;
-                public int byteStride;
+                public int? byteStride = null;
                 public int target;
 
                 public GLTFBufferViewEntry(String name, int buffer, int byteLength, int byteOffset, int byteStride, int target)
@@ -290,6 +291,15 @@ namespace LibReplanetizer
                     this.byteLength = byteLength;
                     this.byteOffset = byteOffset;
                     this.byteStride = byteStride;
+                    this.target = target;
+                }
+
+                public GLTFBufferViewEntry(String name, int buffer, int byteLength, int byteOffset, int target)
+                {
+                    this.name = name;
+                    this.buffer = buffer;
+                    this.byteLength = byteLength;
+                    this.byteOffset = byteOffset;
                     this.target = target;
                 }
             }
@@ -364,7 +374,7 @@ namespace LibReplanetizer
             }
 
             public GLTFAssetProperty asset = new GLTFAssetProperty();
-            public String[] extensionUsed = { };
+            public String[]? extensionsUsed = null;
             public int scene = 0;
             public GLTFNodesEntry[] nodes = new GLTFNodesEntry[] { new GLTFNodesEntry("modelObject", 0) };
             public GLTFScenesEntry[] scenes = new GLTFScenesEntry[] { new GLTFScenesEntry("modelObject", new int[] { 0 }) };
@@ -487,12 +497,17 @@ namespace LibReplanetizer
                 int gltfVertexColorByteOffset = gltfVertexColorOffset * 4;
 
                 float[] gltfVertexBuffer = new float[gltfVertexBufferStride * model.vertexCount];
+                Vector3 vertexMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+                Vector3 vertexMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
 
                 for (int i = 0; i < model.vertexCount; i++)
                 {
                     gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexPosOffset + 0x0] = vertices[i].X;
                     gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexPosOffset + 0x1] = vertices[i].Y;
                     gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexPosOffset + 0x2] = vertices[i].Z;
+
+                    vertexMax = Vector3.ComponentMax(vertexMax, vertices[i]);
+                    vertexMin = Vector3.ComponentMin(vertexMin, vertices[i]);
                 }
 
                 for (int i = 0; i < model.vertexCount; i++)
@@ -561,19 +576,18 @@ namespace LibReplanetizer
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
                     TextureConfig conf = model.textureConfig[i];
-                    int stride = 2;
-                    int byteOffset = stride * conf.start;
-                    int byteLength = stride * conf.size;
+                    int byteOffset = sizeof(ushort) * conf.start;
+                    int byteLength = sizeof(ushort) * conf.size;
 
-                    listBufferViews.Add(new GLTFBufferViewEntry("IndexBufferView" + i, 1, byteLength, byteOffset, stride, GLTFBufferViewEntry.ELEMENT_ARRAY_BUFFER));
+                    listBufferViews.Add(new GLTFBufferViewEntry("IndexBufferView" + i, 1, byteLength, byteOffset, GLTFBufferViewEntry.ELEMENT_ARRAY_BUFFER));
                 }
                 this.bufferViews = listBufferViews.ToArray();
 
                 List<GLTFAccessorEntry> listAccessors = new List<GLTFAccessorEntry>();
-                listAccessors.Add(new GLTFAccessorEntry("VertexPosAccessor", 0, GLTFAccessorEntry.FLOAT, model.vertexCount, gltfVertexPosByteOffset, GLTFAccessorEntry.VEC3));
+                listAccessors.Add(new GLTFAccessorEntry("VertexPosAccessor", 0, GLTFAccessorEntry.FLOAT, model.vertexCount, gltfVertexPosByteOffset, vertexMax, vertexMin, GLTFAccessorEntry.VEC3));
                 listAccessors.Add(new GLTFAccessorEntry("VertexUVAccessor", 0, GLTFAccessorEntry.FLOAT, model.vertexCount, gltfVertexUVByteOffset, GLTFAccessorEntry.VEC2));
                 listAccessors.Add(new GLTFAccessorEntry("VertexNormalAccessor", 0, GLTFAccessorEntry.FLOAT, model.vertexCount, gltfVertexNormalByteOffset, GLTFAccessorEntry.VEC3));
-                listAccessors.Add(new GLTFAccessorEntry("VertexColorAccessor", 0, GLTFAccessorEntry.FLOAT, model.vertexCount, gltfVertexColorByteOffset, GLTFAccessorEntry.VEC4));
+                listAccessors.Add(new GLTFAccessorEntry("VertexColorAccessor", 0, GLTFAccessorEntry.UNSIGNED_BYTE, model.vertexCount, gltfVertexColorByteOffset, GLTFAccessorEntry.VEC4));
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
                     listAccessors.Add(new GLTFAccessorEntry("IndexAccessor" + i, i + 1, GLTFAccessorEntry.UNSIGNED_SHORT, model.textureConfig[i].size, 0, GLTFAccessorEntry.SCALAR));

@@ -57,34 +57,22 @@ namespace LibReplanetizer
 
         private void WriteSkeleton(StreamWriter colladaStream, Skeleton skeleton, float size, string indent = "")
         {
-            // This does not work for Deadlocked yet. Rotation is already inverted in Deadlocked so we will need to invert again here to obtain
-            // the bind matrix as is needed here.
-            Matrix3x4 trans = skeleton.bone.transformation;
-            Matrix3 rotation = new Matrix3(trans.Row0.Xyz, trans.Row1.Xyz, trans.Row2.Xyz);
-
-            // We need to represent our transformation relative to the parent node
-            if (skeleton.parent != null)
-            {
-                Matrix3x4 matP = skeleton.parent.bone.transformation;
-                Matrix3 matPTrans = new Matrix3(matP.Row0.Xyz, matP.Row1.Xyz, matP.Row2.Xyz);
-                matPTrans.Transpose();
-                rotation = matPTrans * rotation;
-            }
+            Matrix4 relTrans = skeleton.GetRelativeTransformation();
 
             colladaStream.WriteLine(indent + "<node id=\"Skel" + skeleton.bone.id.ToString() + "\" sid=\"J" + skeleton.bone.id.ToString() + "\" name=\"Skel" + skeleton.bone.id.ToString() + "\" type=\"JOINT\">");
             colladaStream.Write(indent + "<matrix sid=\"transform\">");
-            colladaStream.Write((rotation.M11).ToString("G", en_US) + " ");
-            colladaStream.Write((rotation.M12).ToString("G", en_US) + " ");
-            colladaStream.Write((rotation.M13).ToString("G", en_US) + " ");
-            colladaStream.Write((trans.M14 * size / 1024.0f).ToString("G", en_US) + " ");
-            colladaStream.Write((rotation.M21).ToString("G", en_US) + " ");
-            colladaStream.Write((rotation.M22).ToString("G", en_US) + " ");
-            colladaStream.Write((rotation.M23).ToString("G", en_US) + " ");
-            colladaStream.Write((trans.M24 * size / 1024.0f).ToString("G", en_US) + " ");
-            colladaStream.Write((rotation.M31).ToString("G", en_US) + " ");
-            colladaStream.Write((rotation.M32).ToString("G", en_US) + " ");
-            colladaStream.Write((rotation.M33).ToString("G", en_US) + " ");
-            colladaStream.Write((trans.M34 * size / 1024.0f).ToString("G", en_US) + " ");
+            colladaStream.Write((relTrans.M11).ToString("G", en_US) + " ");
+            colladaStream.Write((relTrans.M12).ToString("G", en_US) + " ");
+            colladaStream.Write((relTrans.M13).ToString("G", en_US) + " ");
+            colladaStream.Write((relTrans.M14 * size).ToString("G", en_US) + " ");
+            colladaStream.Write((relTrans.M21).ToString("G", en_US) + " ");
+            colladaStream.Write((relTrans.M22).ToString("G", en_US) + " ");
+            colladaStream.Write((relTrans.M23).ToString("G", en_US) + " ");
+            colladaStream.Write((relTrans.M24 * size).ToString("G", en_US) + " ");
+            colladaStream.Write((relTrans.M31).ToString("G", en_US) + " ");
+            colladaStream.Write((relTrans.M32).ToString("G", en_US) + " ");
+            colladaStream.Write((relTrans.M33).ToString("G", en_US) + " ");
+            colladaStream.Write((relTrans.M34 * size).ToString("G", en_US) + " ");
             colladaStream.Write("0 ");
             colladaStream.Write("0 ");
             colladaStream.Write("0 ");

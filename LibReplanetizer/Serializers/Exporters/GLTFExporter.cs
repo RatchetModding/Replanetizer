@@ -49,17 +49,22 @@ namespace LibReplanetizer
                     this.children = children;
                 }
 
-                public GLTFNodesEntry(Skeleton skeleton)
+                public GLTFNodesEntry(Skeleton skeleton, float modelSize = 1.0f)
                 {
                     this.name = "Skel" + skeleton.bone.id;
 
-                    Vector3 t = skeleton.bone.GetTranslation();
+                    Matrix4 transformation = skeleton.GetRelativeTransformation();
+
+                    // OpenTK interpretes everything in transposed so we need to transpose first to get what we want.
+                    transformation.Transpose();
+
+                    Vector3 t = transformation.ExtractTranslation() * modelSize;
                     this.translation = new float[3] { t.X, t.Y, t.Z };
 
-                    Quaternion q = skeleton.bone.GetRotation();
+                    Quaternion q = transformation.ExtractRotation();
                     this.rotation = new float[4] { q.X, q.Y, q.Z, q.W };
 
-                    Vector3 s = skeleton.bone.GetScale();
+                    Vector3 s = transformation.ExtractScale();
                     this.scale = new float[3] { s.X, s.Y, s.Z };
 
                     if (skeleton.children.Count > 0)
@@ -322,7 +327,7 @@ namespace LibReplanetizer
                 public int byteLength;
                 public int byteOffset;
                 public int? byteStride = null;
-                public int target;
+                public int? target = null;
 
                 public GLTFBufferViewEntry(String name, int buffer, int byteLength, int byteOffset, int byteStride, int target)
                 {
@@ -341,6 +346,14 @@ namespace LibReplanetizer
                     this.byteLength = byteLength;
                     this.byteOffset = byteOffset;
                     this.target = target;
+                }
+
+                public GLTFBufferViewEntry(String name, int buffer, int byteLength, int byteOffset)
+                {
+                    this.name = name;
+                    this.buffer = buffer;
+                    this.byteLength = byteLength;
+                    this.byteOffset = byteOffset;
                 }
             }
 
@@ -417,8 +430,9 @@ namespace LibReplanetizer
             {
                 public string name;
                 public int[] joints;
+                public int? inverseBindMatrices = null;
 
-                public GLTFSkinEntry(string name, int numBones)
+                public GLTFSkinEntry(string name, int numBones, int inverseBindMatrices)
                 {
                     this.name = name;
                     this.joints = new int[numBones];
@@ -427,6 +441,8 @@ namespace LibReplanetizer
                     {
                         this.joints[i] = i;
                     }
+
+                    this.inverseBindMatrices = inverseBindMatrices;
                 }
             }
 
@@ -608,18 +624,103 @@ namespace LibReplanetizer
                     }
                 }
 
+                float[] gltfInvBindMatrixBuffer = new float[0];
+
                 if (includeSkeleton)
                 {
                     MobyModel mobModel = (MobyModel) model;
 
                     for (int i = 0; i < model.vertexCount; i++)
                     {
-                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexWeightsOffset] = BitConverter.UInt32BitsToSingle(mobModel.weights[i]);
+                        // GLTF strictly requires the weights to sum to 255. However, the values in the game will sum to
+                        // 255 or 256, hence we need to fix this.
+                        // The issue is that it is not straight forward to normalize this using bytes.
+                        // Maybe just using floats is the best solution here.
+                        float weightFloat = BitConverter.UInt32BitsToSingle(mobModel.weights[i]);
+                        byte[] weights = BitConverter.GetBytes(weightFloat);
+
+                        int sum = 0;
+                        for (int j = 0; j < 4; j++)
+                        {
+                            sum += weights[j];
+                        }
+
+                        while (sum > 255)
+                        {
+                            for (int j = 0; j < 4; j++)
+                            {
+                                if (weights[j] > 0)
+                                {
+                                    weights[j]--;
+                                    sum--;
+                                    break;
+                                }
+                            }
+                        }
+
+                        while (sum < 255)
+                        {
+                            for (int j = 0; j < 4; j++)
+                            {
+                                if (weights[j] > 0 && weights[j] < 255)
+                                {
+                                    weights[j]++;
+                                    sum++;
+                                    break;
+                                }
+                            }
+                        }
+
+                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexWeightsOffset] = BitConverter.ToSingle(weights, 0);
                         gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexIDsOffset] = BitConverter.UInt32BitsToSingle(mobModel.ids[i]);
                     }
-                }
 
-                Dictionary<int, int> texIDToImageOffset = new Dictionary<int, int>();
+                    if (mobModel.skeleton != null)
+                    {
+                        Skeleton[] skeletonSorted = new Skeleton[mobModel.boneCount];
+                        Stack<Skeleton> skeletonStack = new Stack<Skeleton>();
+                        skeletonStack.Push(mobModel.skeleton);
+
+                        Skeleton? skel;
+                        while (skeletonStack.TryPop(out skel))
+                        {
+                            skeletonSorted[skel.bone.id] = skel;
+
+                            foreach (Skeleton child in skel.children)
+                            {
+                                skeletonStack.Push(child);
+                            }
+                        }
+
+                        List<float> listInvBindMatrix = new List<float>();
+                        foreach (Skeleton s in skeletonSorted)
+                        {
+                            Matrix4 invBindMatrix = s.bone.GetInvBindMatrix();
+
+                            invBindMatrix.M14 *= mobModel.size;
+                            invBindMatrix.M24 *= mobModel.size;
+                            invBindMatrix.M34 *= mobModel.size;
+
+                            listInvBindMatrix.Add(invBindMatrix.M11);
+                            listInvBindMatrix.Add(invBindMatrix.M21);
+                            listInvBindMatrix.Add(invBindMatrix.M31);
+                            listInvBindMatrix.Add(invBindMatrix.M41);
+                            listInvBindMatrix.Add(invBindMatrix.M12);
+                            listInvBindMatrix.Add(invBindMatrix.M22);
+                            listInvBindMatrix.Add(invBindMatrix.M32);
+                            listInvBindMatrix.Add(invBindMatrix.M42);
+                            listInvBindMatrix.Add(invBindMatrix.M13);
+                            listInvBindMatrix.Add(invBindMatrix.M23);
+                            listInvBindMatrix.Add(invBindMatrix.M33);
+                            listInvBindMatrix.Add(invBindMatrix.M43);
+                            listInvBindMatrix.Add(invBindMatrix.M14);
+                            listInvBindMatrix.Add(invBindMatrix.M24);
+                            listInvBindMatrix.Add(invBindMatrix.M34);
+                            listInvBindMatrix.Add(invBindMatrix.M44);
+                        }
+                        gltfInvBindMatrixBuffer = listInvBindMatrix.ToArray();
+                    }
+                }
 
                 ////
                 //  Nodes
@@ -652,7 +753,7 @@ namespace LibReplanetizer
 
                         foreach (Skeleton s in skeletonSorted)
                         {
-                            listNodes.Add(new GLTFNodesEntry(s));
+                            listNodes.Add(new GLTFNodesEntry(s, mobModel.size));
                         }
 
 
@@ -669,21 +770,10 @@ namespace LibReplanetizer
                 this.nodes = listNodes.ToArray();
 
                 ////
-                //  Skins
-                ////
-
-                if (includeSkeleton)
-                {
-                    MobyModel mobModel = (MobyModel) model;
-
-                    List<GLTFSkinEntry> listSkins = new List<GLTFSkinEntry>();
-                    listSkins.Add(new GLTFSkinEntry("Armature", mobModel.boneCount));
-                    this.skins = listSkins.ToArray();
-                }
-
-                ////
                 //  Images
                 ////
+
+                Dictionary<int, int> texIDToImageOffset = new Dictionary<int, int>();
 
                 List<GLTFImageEntry> listImages = new List<GLTFImageEntry>();
                 for (int i = 0; i < model.textureConfig.Count; i++)
@@ -727,6 +817,7 @@ namespace LibReplanetizer
 
                 List<GLTFBufferEntry> listBuffers = new List<GLTFBufferEntry>();
                 listBuffers.Add(new GLTFBufferEntry("VertexBuffer", gltfVertexBuffer));
+                listBuffers.Add(new GLTFBufferEntry("InvBindMatrixBuffer", gltfInvBindMatrixBuffer));
                 listBuffers.Add(new GLTFBufferEntry("IndexBuffer", gltfIndexBuffer));
                 this.buffers = listBuffers.ToArray();
 
@@ -736,15 +827,20 @@ namespace LibReplanetizer
 
                 List<GLTFBufferViewEntry> listBufferViews = new List<GLTFBufferViewEntry>();
                 listBufferViews.Add(new GLTFBufferViewEntry("VertexBufferView", 0, gltfVertexBufferByteStride * model.vertexCount, 0, gltfVertexBufferByteStride, GLTFBufferViewEntry.ARRAY_BUFFER));
+                listBufferViews.Add(new GLTFBufferViewEntry("InvBindMatrixBufferView", 1, gltfInvBindMatrixBuffer.Length * sizeof(float), 0));
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
                     TextureConfig conf = model.textureConfig[i];
                     int byteOffset = sizeof(ushort) * conf.start;
                     int byteLength = sizeof(ushort) * conf.size;
 
-                    listBufferViews.Add(new GLTFBufferViewEntry("IndexBufferView" + i, 1, byteLength, byteOffset, GLTFBufferViewEntry.ELEMENT_ARRAY_BUFFER));
+                    listBufferViews.Add(new GLTFBufferViewEntry("IndexBufferView" + i, 2, byteLength, byteOffset, GLTFBufferViewEntry.ELEMENT_ARRAY_BUFFER));
                 }
                 this.bufferViews = listBufferViews.ToArray();
+
+                ////
+                //  Accessors
+                ////
 
                 List<GLTFAccessorEntry> listAccessors = new List<GLTFAccessorEntry>();
                 listAccessors.Add(new GLTFAccessorEntry("VertexPosAccessor", 0, GLTFAccessorEntry.FLOAT, false, model.vertexCount, gltfVertexPosByteOffset, vertexMax, vertexMin, GLTFAccessorEntry.VEC3));
@@ -753,12 +849,30 @@ namespace LibReplanetizer
                 listAccessors.Add(new GLTFAccessorEntry("VertexColorAccessor", 0, GLTFAccessorEntry.UNSIGNED_BYTE, true, model.vertexCount, gltfVertexColorByteOffset, GLTFAccessorEntry.VEC4));
                 listAccessors.Add(new GLTFAccessorEntry("VertexWeightsAccessor", 0, GLTFAccessorEntry.UNSIGNED_BYTE, true, model.vertexCount, gltfVertexWeightsByteOffset, GLTFAccessorEntry.VEC4));
                 listAccessors.Add(new GLTFAccessorEntry("VertexIDsAccessor", 0, GLTFAccessorEntry.UNSIGNED_BYTE, false, model.vertexCount, gltfVertexIDsByteOffset, GLTFAccessorEntry.VEC4));
+                listAccessors.Add(new GLTFAccessorEntry("InvBindMatrixAccessor", 1, GLTFAccessorEntry.FLOAT, false, gltfInvBindMatrixBuffer.Length / 16, 0, GLTFAccessorEntry.MAT4));
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
-                    listAccessors.Add(new GLTFAccessorEntry("IndexAccessor" + i, i + 1, GLTFAccessorEntry.UNSIGNED_SHORT, false, model.textureConfig[i].size, 0, GLTFAccessorEntry.SCALAR));
+                    listAccessors.Add(new GLTFAccessorEntry("IndexAccessor" + i, 2 + i, GLTFAccessorEntry.UNSIGNED_SHORT, false, model.textureConfig[i].size, 0, GLTFAccessorEntry.SCALAR));
                 }
 
                 this.accessors = listAccessors.ToArray();
+
+                ////
+                //  Skins
+                ////
+
+                if (includeSkeleton)
+                {
+                    MobyModel mobModel = (MobyModel) model;
+
+                    List<GLTFSkinEntry> listSkins = new List<GLTFSkinEntry>();
+                    listSkins.Add(new GLTFSkinEntry("Armature", mobModel.boneCount, 6));
+                    this.skins = listSkins.ToArray();
+                }
+
+                ////
+                //  Materials
+                ////
 
                 List<GLTFMaterialEntry> listMaterials = new List<GLTFMaterialEntry>();
                 for (int i = 0; i < model.textureConfig.Count; i++)
@@ -782,15 +896,27 @@ namespace LibReplanetizer
                     vertexAttribs.JOINTS_0 = 5;
                 }
 
+                ////
+                //  MeshPrimitives
+                ////
+
                 List<GLTFMeshEntry.GLTFMeshPrimitivesEntry> listMeshPrimitives = new List<GLTFMeshEntry.GLTFMeshPrimitivesEntry>();
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
-                    listMeshPrimitives.Add(new GLTFMeshEntry.GLTFMeshPrimitivesEntry(vertexAttribs, 6 + i, i));
+                    listMeshPrimitives.Add(new GLTFMeshEntry.GLTFMeshPrimitivesEntry(vertexAttribs, 7 + i, i));
                 }
+
+                ////
+                //  Meshes
+                ////
 
                 List<GLTFMeshEntry> listMeshes = new List<GLTFMeshEntry>();
                 listMeshes.Add(new GLTFMeshEntry("Mesh", listMeshPrimitives.ToArray()));
                 this.meshes = listMeshes.ToArray();
+
+                ////
+                //  Scenes
+                ////
 
                 List<GLTFScenesEntry> listScenes = new List<GLTFScenesEntry>();
                 listScenes.Add(new GLTFScenesEntry("ModelObject", new int[] { listNodes.Count - 1 }));

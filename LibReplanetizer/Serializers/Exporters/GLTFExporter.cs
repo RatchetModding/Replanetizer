@@ -55,6 +55,8 @@ namespace LibReplanetizer
 
                     Matrix4 transformation = skeleton.GetRelativeTransformation();
 
+                    ChangeOrientation(ref transformation, ExporterModelSettings.Orientation.Y_UP);
+
                     // OpenTK interpretes everything in transposed so we need to transpose first to get what we want.
                     transformation.Transpose();
 
@@ -458,8 +460,8 @@ namespace LibReplanetizer
             public GLTFAccessorEntry[] accessors = new GLTFAccessorEntry[] { };
             public GLTFBufferViewEntry[] bufferViews = new GLTFBufferViewEntry[] { };
             public GLTFSamplerEntry[] samplers = new GLTFSamplerEntry[] { };
-            public GLTFBufferEntry[] buffers = new GLTFBufferEntry[] { };
             public GLTFSkinEntry[]? skins = null;
+            public GLTFBufferEntry[] buffers = new GLTFBufferEntry[] { };
 
             public GLTFDataObject(Level level, Model model, bool includeSkeleton)
             {
@@ -700,6 +702,8 @@ namespace LibReplanetizer
                             invBindMatrix.M14 *= mobModel.size;
                             invBindMatrix.M24 *= mobModel.size;
                             invBindMatrix.M34 *= mobModel.size;
+
+                            ChangeOrientation(ref invBindMatrix, ExporterModelSettings.Orientation.Y_UP);
 
                             listInvBindMatrix.Add(invBindMatrix.M11);
                             listInvBindMatrix.Add(invBindMatrix.M21);

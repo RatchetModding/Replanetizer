@@ -253,18 +253,18 @@ namespace LibReplanetizer
     {
         public enum Format
         {
-            Wavefront = 0,
-            Collada = 1,
-            glTF = 2
+            glTF = 0,
+            Wavefront = 1,
+            Collada = 2
         };
 
 
         public enum AnimationChoice
         {
             None = 0,
-            All = 1,
-            AllSeparate = 2,
-            AllSequential = 3
+            AllSeparate = 1,
+            AllSequential = 2,
+            All = 3
         };
 
         public enum Orientation
@@ -274,8 +274,8 @@ namespace LibReplanetizer
             X_UP = 2
         }
 
-        public static readonly string[] FORMAT_STRINGS = { "Wavefront (*.obj)", "Collada (*.dae)", "glTF 2.0 (*.gltf)" };
-        public static readonly string[] ANIMATION_CHOICE_STRINGS = { "No Animations", "All Animations", "Separate File for each Animation", "Concatenate Animations" };
+        public static readonly string[] FORMAT_STRINGS = { "glTF 2.0 (*.gltf)", "Wavefront (*.obj)", "Collada (*.dae)" };
+        public static readonly string[] ANIMATION_CHOICE_STRINGS = { "No Animations", "Separate File for each Animation", "Concatenate Animations", "All Animations" };
         public static readonly string[] ORIENTATION_STRINGS = { "Z Up", "Y Up", "X Up" };
 
         public ExporterModelSettings.Format format = ExporterModelSettings.Format.glTF;

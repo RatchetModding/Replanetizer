@@ -339,7 +339,7 @@ namespace Replanetizer.Frames
                         if (selectedModel is MobyModel mobyModel && mobyModel.animations.Count > 0)
                         {
                             int animationChoice = (int) exportSettings.animationChoice;
-                            if (ImGui.Combo("Animations", ref animationChoice, ExporterModelSettings.ANIMATION_CHOICE_STRINGS, ExporterModelSettings.ANIMATION_CHOICE_STRINGS.Length))
+                            if (ImGui.Combo("Animations", ref animationChoice, ExporterModelSettings.ANIMATION_CHOICE_STRINGS, ExporterModelSettings.ANIMATION_CHOICE_STRINGS.Length - 1))
                             {
                                 exportSettings.animationChoice = (ExporterModelSettings.AnimationChoice) animationChoice;
                             }
@@ -348,9 +348,7 @@ namespace Replanetizer.Frames
                         {
                             ImGui.BeginDisabled();
                             int animationChoice = 0;
-                            if (ImGui.Combo("Animations", ref animationChoice, ExporterModelSettings.ANIMATION_CHOICE_STRINGS, ExporterModelSettings.ANIMATION_CHOICE_STRINGS.Length))
-                            {
-                            }
+                            ImGui.Combo("Animations", ref animationChoice, ExporterModelSettings.ANIMATION_CHOICE_STRINGS, ExporterModelSettings.ANIMATION_CHOICE_STRINGS.Length);
                             ImGui.EndDisabled();
                         }
                     }
@@ -371,12 +369,15 @@ namespace Replanetizer.Frames
                     if (exportSettings.format == ExporterModelSettings.Format.glTF)
                     {
                         bool embedTextures = false;
-                        bool includeAnimations = false;
+                        bool includeAnimations = (exportSettings.animationChoice != ExporterModelSettings.AnimationChoice.None);
 
                         ImGui.BeginDisabled();
                         ImGui.Checkbox("Embed Textures", ref embedTextures);
-                        ImGui.Checkbox("Include Animations", ref includeAnimations);
                         ImGui.EndDisabled();
+                        if (ImGui.Checkbox("Include Animations", ref includeAnimations))
+                        {
+                            exportSettings.animationChoice = (includeAnimations) ? ExporterModelSettings.AnimationChoice.All : ExporterModelSettings.AnimationChoice.None;
+                        }
                     }
 
                     if (ImGui.Button("Export model"))

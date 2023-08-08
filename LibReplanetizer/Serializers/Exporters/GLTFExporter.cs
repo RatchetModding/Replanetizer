@@ -321,6 +321,20 @@ namespace LibReplanetizer
                     this.byteOffset = byteOffset;
                     this.type = type;
                 }
+
+                public GLTFAccessorEntry(string name, int bufferView, int componentType, bool normalized, int count, int byteOffset, float min, float max, string type)
+                {
+                    this.name = name;
+                    this.bufferView = bufferView;
+                    this.componentType = componentType;
+                    this.normalized = normalized;
+                    this.count = count;
+                    this.byteOffset = byteOffset;
+                    this.type = type;
+
+                    this.max = new float[1] { max };
+                    this.min = new float[1] { min };
+                }
             }
 
             public class GLTFBufferViewEntry
@@ -820,6 +834,7 @@ namespace LibReplanetizer
                 int animTranslationBaseOffset = 0;
                 int animRotationBaseOffset = 0;
                 int animScaleBaseOffset = 0;
+                float[] animLength = new float[0];
 
                 if (exportAnimations)
                 {
@@ -848,6 +863,8 @@ namespace LibReplanetizer
                     animRotationOffset = new int[mobModel.animations.Count];
                     animScaleOffset = new int[mobModel.animations.Count];
 
+                    animLength = new float[mobModel.animations.Count];
+
                     int currKeyframeOffset = 0;
                     int currTranslationOffset = 0;
                     int currRotationOffset = 0;
@@ -867,6 +884,7 @@ namespace LibReplanetizer
                         for (int i = 0; i < anim.frames.Count; i++)
                         {
                             gltfKeyframeBuffer[currKeyframeOffset++] = keyframeValue;
+                            animLength[k] = keyframeValue;
                             keyframeValue += (anim.speed != 0.0f) ? anim.speed : anim.frames[i].speed;
                         }
 
@@ -1029,7 +1047,6 @@ namespace LibReplanetizer
                 }
                 this.textures = listTextures.ToArray();
 
-
                 ////
                 //  Buffers
                 ////
@@ -1080,17 +1097,24 @@ namespace LibReplanetizer
                     listAccessors.Add(new GLTFAccessorEntry("IndexAccessor" + i, 6 + i, GLTFAccessorEntry.UNSIGNED_SHORT, false, model.textureConfig[i].size, 0, GLTFAccessorEntry.SCALAR));
                 }
 
+                int accessorCountPreAnimations = listAccessors.Count;
+
                 if (exportAnimations)
                 {
                     MobyModel mobModel = (MobyModel) model;
+
+                    for (int i = 0; i < mobModel.animations.Count; i++)
+                    {
+                        Animation anim = mobModel.animations[i];
+
+                        listAccessors.Add(new GLTFAccessorEntry("KeyframeAccessor" + i, 2, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, keyframeOffset[i] * sizeof(float), 0.0f, animLength[i], GLTFAccessorEntry.SCALAR));
+                    }
 
                     int animOutputStride = mobModel.boneCount * 10;
 
                     for (int i = 0; i < mobModel.animations.Count; i++)
                     {
                         Animation anim = mobModel.animations[i];
-
-                        listAccessors.Add(new GLTFAccessorEntry("KeyframeAccessor" + i, 2, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, keyframeOffset[i] * sizeof(float), GLTFAccessorEntry.SCALAR));
 
                         int currTranslationOffsetBytes = animTranslationOffset[i] * sizeof(float);
                         int currRotationOffsetBytes = animRotationOffset[i] * sizeof(float);
@@ -1110,6 +1134,28 @@ namespace LibReplanetizer
                 }
 
                 this.accessors = listAccessors.ToArray();
+
+                ////
+                //  Animations
+                ////
+
+                if (exportAnimations)
+                {
+                    MobyModel mobModel = (MobyModel) model;
+
+                    List<GLTFAnimationEntry> listAnimationEntries = new List<GLTFAnimationEntry>();
+
+                    int outputAccessorOffset = accessorCountPreAnimations + mobModel.animations.Count;
+
+                    for (int i = 0; i < mobModel.animations.Count; i++)
+                    {
+                        listAnimationEntries.Add(new GLTFAnimationEntry("Animation" + i, mobModel.boneCount, accessorCountPreAnimations + i, outputAccessorOffset));
+
+                        outputAccessorOffset += mobModel.boneCount * 3;
+                    }
+
+                    this.animations = listAnimationEntries.ToArray();
+                }
 
                 ////
                 //  Skins

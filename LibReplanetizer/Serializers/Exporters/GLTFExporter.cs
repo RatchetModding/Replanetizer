@@ -885,69 +885,60 @@ namespace LibReplanetizer
                         {
                             gltfKeyframeBuffer[currKeyframeOffset++] = keyframeValue;
                             animLength[k] = keyframeValue;
-                            keyframeValue += (anim.speed != 0.0f) ? anim.speed : anim.frames[i].speed;
+                            keyframeValue += ((anim.speed != 0.0f) ? anim.speed : anim.frames[i].speed) / 30.0f;
                         }
 
-                        Matrix4[][] animBoneMatrices = new Matrix4[mobModel.boneCount][];
                         for (int j = 0; j < mobModel.boneCount; j++)
                         {
-                            animBoneMatrices[j] = new Matrix4[anim.frames.Count];
-
                             for (int i = 0; i < anim.frames.Count; i++)
                             {
                                 Frame frame = anim.frames[i];
 
-                                Matrix4 animationMatrix = frame.GetRotationMatrix(i);
-                                Vector3? scaling = frame.GetScaling(i);
-                                Vector3? translation = frame.GetTranslation(i);
+                                Matrix4 animationMatrix = frame.GetRotationMatrix(j);
+                                Vector3? scaling = frame.GetScaling(j);
+                                Vector3? translation = frame.GetTranslation(j);
+
+                                // OpenTK interpretes everything in transposed so we need to transpose first to get what we want.
+                                animationMatrix.Transpose();
 
                                 // Translations replace the bone data translation
                                 Vector3 translationVector = (translation != null) ? (Vector3) translation : mobModel.boneDatas[j].translation;
 
-                                animationMatrix.M41 = translationVector.X;
-                                animationMatrix.M42 = translationVector.Y;
-                                animationMatrix.M43 = translationVector.Z;
+                                animationMatrix.M14 = translationVector.X;
+                                animationMatrix.M24 = translationVector.Y;
+                                animationMatrix.M34 = translationVector.Z;
 
                                 if (scaling != null)
                                 {
-                                    Vector3 s = (Vector3) scaling;
-                                    animationMatrix.M11 *= s.X;
-                                    animationMatrix.M12 *= s.X;
-                                    animationMatrix.M13 *= s.X;
-                                    animationMatrix.M21 *= s.Y;
-                                    animationMatrix.M22 *= s.Y;
-                                    animationMatrix.M23 *= s.Y;
-                                    animationMatrix.M31 *= s.Z;
-                                    animationMatrix.M32 *= s.Z;
-                                    animationMatrix.M33 *= s.Z;
+                                    Vector3 scale = (Vector3) scaling;
+                                    animationMatrix.M11 *= scale.X;
+                                    animationMatrix.M21 *= scale.X;
+                                    animationMatrix.M31 *= scale.X;
+                                    animationMatrix.M12 *= scale.Y;
+                                    animationMatrix.M22 *= scale.Y;
+                                    animationMatrix.M32 *= scale.Y;
+                                    animationMatrix.M13 *= scale.Z;
+                                    animationMatrix.M23 *= scale.Z;
+                                    animationMatrix.M33 *= scale.Z;
                                 }
 
-                                Matrix4 parentMatrix = (i == 0) ? Matrix4.Identity : animBoneMatrices[mobModel.boneDatas[j].parent][i];
-
-                                animBoneMatrices[j][i] = animationMatrix * parentMatrix;
-                            }
-
-                            for (int i = 0; i < anim.frames.Count; i++)
-                            {
-                                Matrix4 transformation = animBoneMatrices[j][i];
-
-                                ChangeOrientation(ref transformation, ExporterModelSettings.Orientation.Y_UP);
+                                ChangeOrientation(ref animationMatrix, ExporterModelSettings.Orientation.Y_UP);
 
                                 // OpenTK interpretes everything in transposed so we need to transpose first to get what we want.
-                                transformation.Transpose();
+                                animationMatrix.Transpose();
 
-                                Vector3 t = transformation.ExtractTranslation() * mobModel.size;
+                                Vector3 t = animationMatrix.ExtractTranslation() * mobModel.size;
                                 gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 0] = t.X;
                                 gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 1] = t.Y;
                                 gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 2] = t.Z;
 
-                                Quaternion q = transformation.ExtractRotation();
+                                Quaternion q = animationMatrix.ExtractRotation();
                                 gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 0] = q.X;
                                 gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 1] = q.Y;
                                 gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 2] = q.Z;
                                 gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 3] = q.W;
 
-                                Vector3 s = transformation.ExtractScale();
+                                Vector3 s = animationMatrix.ExtractScale();
                                 gltfAnimOutputBuffer[animScaleBaseOffset + currScaleOffset + 0] = s.X;
                                 gltfAnimOutputBuffer[animScaleBaseOffset + currScaleOffset + 1] = s.Y;
                                 gltfAnimOutputBuffer[animScaleBaseOffset + currScaleOffset + 2] = s.Z;
@@ -1067,9 +1058,9 @@ namespace LibReplanetizer
                 listBufferViews.Add(new GLTFBufferViewEntry("VertexBufferView", 0, gltfVertexBufferByteStride * model.vertexCount, 0, gltfVertexBufferByteStride, GLTFBufferViewEntry.ARRAY_BUFFER));
                 listBufferViews.Add(new GLTFBufferViewEntry("InvBindMatrixBufferView", 1, gltfInvBindMatrixBuffer.Length * sizeof(float), 0));
                 listBufferViews.Add(new GLTFBufferViewEntry("KeyframeBufferView", 3, gltfKeyframeBuffer.Length * sizeof(float), 0));
-                listBufferViews.Add(new GLTFBufferViewEntry("TranslationBufferView", 4, animTranslationSize * sizeof(float), 0));
-                listBufferViews.Add(new GLTFBufferViewEntry("RotationBufferView", 4, animRotationSize * sizeof(float), animTranslationSize));
-                listBufferViews.Add(new GLTFBufferViewEntry("ScaleBufferView", 4, animScaleSize * sizeof(float), animTranslationSize + animRotationSize));
+                listBufferViews.Add(new GLTFBufferViewEntry("TranslationBufferView", 4, animTranslationSize * sizeof(float), animTranslationBaseOffset * sizeof(float)));
+                listBufferViews.Add(new GLTFBufferViewEntry("RotationBufferView", 4, animRotationSize * sizeof(float), animRotationBaseOffset * sizeof(float)));
+                listBufferViews.Add(new GLTFBufferViewEntry("ScaleBufferView", 4, animScaleSize * sizeof(float), animScaleBaseOffset * sizeof(float)));
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
                     TextureConfig conf = model.textureConfig[i];

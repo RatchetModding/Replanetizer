@@ -14,6 +14,11 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.IO;
 
+// Due to the direct implementation of the GLTF standard through C# classes, we cannot
+// comply with all of our styling rules.
+#pragma warning disable IDE0003
+#pragma warning disable IDE1006
+
 namespace LibReplanetizer
 {
     public class GLTFExporter : Exporter
@@ -22,8 +27,8 @@ namespace LibReplanetizer
         {
             public class GLTFAssetProperty
             {
-                public String version = "2.0";
-                public String generator = "Replanetizer glTF Exporter";
+                public string version = "2.0";
+                public string generator = "Replanetizer glTF Exporter";
             }
 
             public class GLTFNodesEntry
@@ -82,10 +87,10 @@ namespace LibReplanetizer
 
             public class GLTFScenesEntry
             {
-                public String name;
+                public string name;
                 public int[] nodes;
 
-                public GLTFScenesEntry(String name, int[] nodes)
+                public GLTFScenesEntry(string name, int[] nodes)
                 {
                     this.name = name;
                     this.nodes = nodes;
@@ -95,9 +100,9 @@ namespace LibReplanetizer
             public class GLTFMaterialEntry
             {
                 // alphaMode
-                public const String OPAQUE = "OPAQUE";
-                public const String MASK = "MASK";
-                public const String BLEND = "BLEND";
+                public const string OPAQUE = "OPAQUE";
+                public const string MASK = "MASK";
+                public const string BLEND = "BLEND";
 
                 public class GLTFMaterialPBRValues
                 {
@@ -138,12 +143,12 @@ namespace LibReplanetizer
                 }
 
                 public bool doubleSided = true;
-                public String name;
-                public String alphaMode;
+                public string name;
+                public string alphaMode;
                 public float alphaCutoff = 0.5f; // Only used if alphaMode == MASK.
                 public GLTFMaterialPBRValues pbrMetallicRoughness;
 
-                public GLTFMaterialEntry(String name, String alphaMode, GLTFMaterialPBRValues pbrMetallicRoughness)
+                public GLTFMaterialEntry(string name, string alphaMode, GLTFMaterialPBRValues pbrMetallicRoughness)
                 {
                     this.name = name;
                     this.alphaMode = alphaMode;
@@ -204,10 +209,10 @@ namespace LibReplanetizer
                         this.material = material;
                     }
                 }
-                public String name;
+                public string name;
                 public GLTFMeshPrimitivesEntry[] primitives;
 
-                public GLTFMeshEntry(String name, GLTFMeshPrimitivesEntry[] primitives)
+                public GLTFMeshEntry(string name, GLTFMeshPrimitivesEntry[] primitives)
                 {
                     this.name = name;
                     this.primitives = primitives;
@@ -229,26 +234,26 @@ namespace LibReplanetizer
             public class GLTFImageEntry
             {
                 // mimeType
-                private const String PNG = "image/png";
-                private const String JPEG = "image/jpeg";
+                public const string PNG = "image/png";
+                public const string JPEG = "image/jpeg";
 
-                public String mimeType;
-                public String name;
+                public string mimeType;
+                public string name;
 
                 // Image is stored in a buffer
                 public int? bufferView = null;
 
                 // Image is stored in a file.
-                public String? uri = null;
+                public string? uri = null;
 
-                public GLTFImageEntry(int bufferView, String mimeType, String name)
+                public GLTFImageEntry(int bufferView, string mimeType, string name)
                 {
                     this.bufferView = bufferView;
                     this.mimeType = mimeType;
                     this.name = name;
                 }
 
-                public GLTFImageEntry(String uri, String mimeType, String name)
+                public GLTFImageEntry(string uri, string mimeType, string name)
                 {
                     this.uri = uri;
                     this.mimeType = mimeType;
@@ -274,15 +279,15 @@ namespace LibReplanetizer
                 public const int FLOAT = 5126;
 
                 // type
-                public const String SCALAR = "SCALAR";
-                public const String VEC2 = "VEC2";
-                public const String VEC3 = "VEC3";
-                public const String VEC4 = "VEC4";
-                public const String MAT2 = "MAT2";
-                public const String MAT3 = "MAT3";
-                public const String MAT4 = "MAT4";
+                public const string SCALAR = "SCALAR";
+                public const string VEC2 = "VEC2";
+                public const string VEC3 = "VEC3";
+                public const string VEC4 = "VEC4";
+                public const string MAT2 = "MAT2";
+                public const string MAT3 = "MAT3";
+                public const string MAT4 = "MAT4";
 
-                public String name;
+                public string name;
                 public int bufferView;
                 public int componentType;
                 public bool normalized;
@@ -290,9 +295,9 @@ namespace LibReplanetizer
                 public int byteOffset;
                 public float[]? max = null;
                 public float[]? min = null;
-                public String type;
+                public string type;
 
-                public GLTFAccessorEntry(String name, int bufferView, int componentType, bool normalized, int count, int byteOffset, Vector3 max, Vector3 min, String type)
+                public GLTFAccessorEntry(string name, int bufferView, int componentType, bool normalized, int count, int byteOffset, Vector3 max, Vector3 min, string type)
                 {
                     this.name = name;
                     this.bufferView = bufferView;
@@ -306,7 +311,7 @@ namespace LibReplanetizer
                     this.min = new float[3] { min.X, min.Y, min.Z };
                 }
 
-                public GLTFAccessorEntry(String name, int bufferView, int componentType, bool normalized, int count, int byteOffset, String type)
+                public GLTFAccessorEntry(string name, int bufferView, int componentType, bool normalized, int count, int byteOffset, string type)
                 {
                     this.name = name;
                     this.bufferView = bufferView;
@@ -324,14 +329,14 @@ namespace LibReplanetizer
                 public const int ARRAY_BUFFER = 34962;
                 public const int ELEMENT_ARRAY_BUFFER = 34963;
 
-                public String name;
+                public string name;
                 public int buffer;
                 public int byteLength;
                 public int byteOffset;
                 public int? byteStride = null;
                 public int? target = null;
 
-                public GLTFBufferViewEntry(String name, int buffer, int byteLength, int byteOffset, int byteStride, int target)
+                public GLTFBufferViewEntry(string name, int buffer, int byteLength, int byteOffset, int byteStride, int target)
                 {
                     this.name = name;
                     this.buffer = buffer;
@@ -341,7 +346,7 @@ namespace LibReplanetizer
                     this.target = target;
                 }
 
-                public GLTFBufferViewEntry(String name, int buffer, int byteLength, int byteOffset, int target)
+                public GLTFBufferViewEntry(string name, int buffer, int byteLength, int byteOffset, int target)
                 {
                     this.name = name;
                     this.buffer = buffer;
@@ -350,7 +355,7 @@ namespace LibReplanetizer
                     this.target = target;
                 }
 
-                public GLTFBufferViewEntry(String name, int buffer, int byteLength, int byteOffset)
+                public GLTFBufferViewEntry(string name, int buffer, int byteLength, int byteOffset)
                 {
                     this.name = name;
                     this.buffer = buffer;
@@ -374,13 +379,13 @@ namespace LibReplanetizer
                 public const int MIRRORED_REPEAT = 33648;
                 public const int REPEAT = 10497;
 
-                public String name;
+                public string name;
                 public int magFilter;
                 public int minFilter;
                 public int wrapS;
                 public int wrapT;
 
-                public GLTFSamplerEntry(String name, int magFilter, int minFilter, int wrapS, int wrapT)
+                public GLTFSamplerEntry(string name, int magFilter, int minFilter, int wrapS, int wrapT)
                 {
                     this.name = name;
                     this.magFilter = magFilter;
@@ -405,18 +410,18 @@ namespace LibReplanetizer
 
             public class GLTFBufferEntry
             {
-                public String name;
+                public string name;
                 public int byteLength;
-                public String uri;
+                public string uri;
 
-                public GLTFBufferEntry(String name, int byteLength, String uri)
+                public GLTFBufferEntry(string name, int byteLength, string uri)
                 {
                     this.name = name;
                     this.byteLength = byteLength;
                     this.uri = uri;
                 }
 
-                public GLTFBufferEntry(String name, Array arr)
+                public GLTFBufferEntry(string name, Array arr)
                 {
                     this.name = name;
 
@@ -448,8 +453,83 @@ namespace LibReplanetizer
                 }
             }
 
+            public class GLTFAnimationEntry
+            {
+                public class GLTFAnimationChannel
+                {
+                    public class GLTFAnimationChannelTarget
+                    {
+                        public const string TRANSLATION = "translation";
+                        public const string ROTATION = "rotation";
+                        public const string SCALE = "scale";
+                        public const string WEIGHTS = "weights";
+
+                        public int node;
+                        public string path;
+
+                        public GLTFAnimationChannelTarget(int node, string path)
+                        {
+                            this.node = node;
+                            this.path = path;
+                        }
+                    }
+
+                    public int sampler;
+                    public GLTFAnimationChannelTarget target;
+
+                    public GLTFAnimationChannel(int sampler, GLTFAnimationChannelTarget target)
+                    {
+                        this.sampler = sampler;
+                        this.target = target;
+                    }
+                }
+
+                public class GLTFAnimationSampler
+                {
+                    public const string LINEAR = "LINEAR";
+                    public const string STEP = "STEP";
+                    public const string CUBICSPLINE = "CUBICSPLINE";
+
+                    public int input;
+                    public int output;
+                    public string? interpolation = null;
+
+                    public GLTFAnimationSampler(int input, int output, string interpolation = LINEAR)
+                    {
+                        this.input = input;
+                        this.output = output;
+                        this.interpolation = interpolation;
+                    }
+                }
+
+                public string name;
+                public GLTFAnimationChannel[] channels;
+                public GLTFAnimationSampler[] samplers;
+
+                public GLTFAnimationEntry(string name, int boneCount, int keyframeAccessor, int outputAccessorOffset)
+                {
+                    this.name = name;
+
+                    this.samplers = new GLTFAnimationSampler[boneCount * 3];
+                    for (int i = 0; i < boneCount; i++)
+                    {
+                        this.samplers[3 * i + 0] = new GLTFAnimationSampler(keyframeAccessor, outputAccessorOffset + 3 * i + 0);
+                        this.samplers[3 * i + 1] = new GLTFAnimationSampler(keyframeAccessor, outputAccessorOffset + 3 * i + 1);
+                        this.samplers[3 * i + 2] = new GLTFAnimationSampler(keyframeAccessor, outputAccessorOffset + 3 * i + 2);
+                    }
+
+                    this.channels = new GLTFAnimationChannel[boneCount * 3];
+                    for (int i = 0; i < boneCount; i++)
+                    {
+                        this.channels[i * 3 + 0] = new GLTFAnimationChannel(i * 3 + 0, new GLTFAnimationChannel.GLTFAnimationChannelTarget(i, GLTFAnimationChannel.GLTFAnimationChannelTarget.TRANSLATION));
+                        this.channels[i * 3 + 1] = new GLTFAnimationChannel(i * 3 + 1, new GLTFAnimationChannel.GLTFAnimationChannelTarget(i, GLTFAnimationChannel.GLTFAnimationChannelTarget.ROTATION));
+                        this.channels[i * 3 + 2] = new GLTFAnimationChannel(i * 3 + 2, new GLTFAnimationChannel.GLTFAnimationChannelTarget(i, GLTFAnimationChannel.GLTFAnimationChannelTarget.SCALE));
+                    }
+                }
+            }
+
             public GLTFAssetProperty asset = new GLTFAssetProperty();
-            public String[]? extensionsUsed = null;
+            public string[]? extensionsUsed = null;
             public int scene = 0;
             public GLTFNodesEntry[] nodes = new GLTFNodesEntry[] { };
             public GLTFScenesEntry[] scenes = new GLTFScenesEntry[] { };
@@ -461,9 +541,10 @@ namespace LibReplanetizer
             public GLTFBufferViewEntry[] bufferViews = new GLTFBufferViewEntry[] { };
             public GLTFSamplerEntry[] samplers = new GLTFSamplerEntry[] { };
             public GLTFSkinEntry[]? skins = null;
+            public GLTFAnimationEntry[]? animations = null;
             public GLTFBufferEntry[] buffers = new GLTFBufferEntry[] { };
 
-            public GLTFDataObject(Level level, Model model, bool includeSkeleton)
+            public GLTFDataObject(Level level, Model model, bool includeSkeleton, ExporterModelSettings settings)
             {
                 // skybox model has no normals and thus the vertex buffer has a different layout
                 // if we see other cases like this, it may be advisable to generalize this
@@ -471,6 +552,8 @@ namespace LibReplanetizer
 
                 bool hasNormals = !(skyboxModel);
                 bool hasVertexColors = (skyboxModel) || (model is TerrainModel);
+
+                bool exportAnimations = (settings.animationChoice != ExporterModelSettings.AnimationChoice.None && includeSkeleton);
 
                 int vOffset = 0x00;
                 int vnOffset = 0x03;
@@ -683,8 +766,7 @@ namespace LibReplanetizer
                         Stack<Skeleton> skeletonStack = new Stack<Skeleton>();
                         skeletonStack.Push(mobModel.skeleton);
 
-                        Skeleton? skel;
-                        while (skeletonStack.TryPop(out skel))
+                        while (skeletonStack.TryPop(out Skeleton? skel))
                         {
                             skeletonSorted[skel.bone.id] = skel;
 
@@ -726,6 +808,140 @@ namespace LibReplanetizer
                     }
                 }
 
+                float[] gltfKeyframeBuffer = new float[0];
+                float[] gltfAnimOutputBuffer = new float[0];
+                int[] keyframeOffset = new int[0];
+                int[] animTranslationOffset = new int[0];
+                int[] animRotationOffset = new int[0];
+                int[] animScaleOffset = new int[0];
+                int animTranslationSize = 0;
+                int animRotationSize = 0;
+                int animScaleSize = 0;
+                int animTranslationBaseOffset = 0;
+                int animRotationBaseOffset = 0;
+                int animScaleBaseOffset = 0;
+
+                if (exportAnimations)
+                {
+                    MobyModel mobModel = (MobyModel) model;
+
+                    int frameCount = 0;
+
+                    foreach (Animation anim in mobModel.animations)
+                    {
+                        frameCount += anim.frames.Count;
+                    }
+
+                    animTranslationSize = frameCount * 3 * mobModel.boneCount;
+                    animRotationSize = frameCount * 4 * mobModel.boneCount;
+                    animScaleSize = frameCount * 3 * mobModel.boneCount;
+
+                    animTranslationBaseOffset = 0;
+                    animRotationBaseOffset = animTranslationBaseOffset + animTranslationSize;
+                    animScaleBaseOffset = animRotationBaseOffset + animRotationSize;
+
+                    gltfKeyframeBuffer = new float[frameCount];
+                    gltfAnimOutputBuffer = new float[animTranslationSize + animRotationSize + animScaleSize];
+
+                    keyframeOffset = new int[mobModel.animations.Count];
+                    animTranslationOffset = new int[mobModel.animations.Count];
+                    animRotationOffset = new int[mobModel.animations.Count];
+                    animScaleOffset = new int[mobModel.animations.Count];
+
+                    int currKeyframeOffset = 0;
+                    int currTranslationOffset = 0;
+                    int currRotationOffset = 0;
+                    int currScaleOffset = 0;
+
+                    for (int k = 0; k < mobModel.animations.Count; k++)
+                    {
+                        Animation anim = mobModel.animations[k];
+
+                        keyframeOffset[k] = currKeyframeOffset;
+                        animTranslationOffset[k] = currTranslationOffset;
+                        animRotationOffset[k] = currRotationOffset;
+                        animScaleOffset[k] = currScaleOffset;
+
+                        float keyframeValue = 0.0f;
+
+                        for (int i = 0; i < anim.frames.Count; i++)
+                        {
+                            gltfKeyframeBuffer[currKeyframeOffset++] = keyframeValue;
+                            keyframeValue += (anim.speed != 0.0f) ? anim.speed : anim.frames[i].speed;
+                        }
+
+                        Matrix4[][] animBoneMatrices = new Matrix4[mobModel.boneCount][];
+                        for (int j = 0; j < mobModel.boneCount; j++)
+                        {
+                            animBoneMatrices[j] = new Matrix4[anim.frames.Count];
+
+                            for (int i = 0; i < anim.frames.Count; i++)
+                            {
+                                Frame frame = anim.frames[i];
+
+                                Matrix4 animationMatrix = frame.GetRotationMatrix(i);
+                                Vector3? scaling = frame.GetScaling(i);
+                                Vector3? translation = frame.GetTranslation(i);
+
+                                // Translations replace the bone data translation
+                                Vector3 translationVector = (translation != null) ? (Vector3) translation : mobModel.boneDatas[j].translation;
+
+                                animationMatrix.M41 = translationVector.X;
+                                animationMatrix.M42 = translationVector.Y;
+                                animationMatrix.M43 = translationVector.Z;
+
+                                if (scaling != null)
+                                {
+                                    Vector3 s = (Vector3) scaling;
+                                    animationMatrix.M11 *= s.X;
+                                    animationMatrix.M12 *= s.X;
+                                    animationMatrix.M13 *= s.X;
+                                    animationMatrix.M21 *= s.Y;
+                                    animationMatrix.M22 *= s.Y;
+                                    animationMatrix.M23 *= s.Y;
+                                    animationMatrix.M31 *= s.Z;
+                                    animationMatrix.M32 *= s.Z;
+                                    animationMatrix.M33 *= s.Z;
+                                }
+
+                                Matrix4 parentMatrix = (i == 0) ? Matrix4.Identity : animBoneMatrices[mobModel.boneDatas[j].parent][i];
+
+                                animBoneMatrices[j][i] = animationMatrix * parentMatrix;
+                            }
+
+                            for (int i = 0; i < anim.frames.Count; i++)
+                            {
+                                Matrix4 transformation = animBoneMatrices[j][i];
+
+                                ChangeOrientation(ref transformation, ExporterModelSettings.Orientation.Y_UP);
+
+                                // OpenTK interpretes everything in transposed so we need to transpose first to get what we want.
+                                transformation.Transpose();
+
+                                Vector3 t = transformation.ExtractTranslation() * mobModel.size;
+                                gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 0] = t.X;
+                                gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 1] = t.Y;
+                                gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 2] = t.Z;
+
+                                Quaternion q = transformation.ExtractRotation();
+                                gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 0] = q.X;
+                                gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 1] = q.Y;
+                                gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 2] = q.Z;
+                                gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 3] = q.W;
+
+                                Vector3 s = transformation.ExtractScale();
+                                gltfAnimOutputBuffer[animScaleBaseOffset + currScaleOffset + 0] = s.X;
+                                gltfAnimOutputBuffer[animScaleBaseOffset + currScaleOffset + 1] = s.Y;
+                                gltfAnimOutputBuffer[animScaleBaseOffset + currScaleOffset + 2] = s.Z;
+
+                                currTranslationOffset += 3;
+                                currRotationOffset += 4;
+                                currScaleOffset += 3;
+                            }
+                        }
+                    }
+                }
+
                 ////
                 //  Nodes
                 ////
@@ -744,8 +960,7 @@ namespace LibReplanetizer
                         Stack<Skeleton> skeletonStack = new Stack<Skeleton>();
                         skeletonStack.Push(mobModel.skeleton);
 
-                        Skeleton? skel;
-                        while (skeletonStack.TryPop(out skel))
+                        while (skeletonStack.TryPop(out Skeleton? skel))
                         {
                             skeletonSorted[skel.bone.id] = skel;
 
@@ -823,6 +1038,8 @@ namespace LibReplanetizer
                 listBuffers.Add(new GLTFBufferEntry("VertexBuffer", gltfVertexBuffer));
                 listBuffers.Add(new GLTFBufferEntry("InvBindMatrixBuffer", gltfInvBindMatrixBuffer));
                 listBuffers.Add(new GLTFBufferEntry("IndexBuffer", gltfIndexBuffer));
+                listBuffers.Add(new GLTFBufferEntry("KeyframeBuffer", gltfKeyframeBuffer));
+                listBuffers.Add(new GLTFBufferEntry("AnimOutputBuffer", gltfAnimOutputBuffer));
                 this.buffers = listBuffers.ToArray();
 
                 ////
@@ -832,6 +1049,10 @@ namespace LibReplanetizer
                 List<GLTFBufferViewEntry> listBufferViews = new List<GLTFBufferViewEntry>();
                 listBufferViews.Add(new GLTFBufferViewEntry("VertexBufferView", 0, gltfVertexBufferByteStride * model.vertexCount, 0, gltfVertexBufferByteStride, GLTFBufferViewEntry.ARRAY_BUFFER));
                 listBufferViews.Add(new GLTFBufferViewEntry("InvBindMatrixBufferView", 1, gltfInvBindMatrixBuffer.Length * sizeof(float), 0));
+                listBufferViews.Add(new GLTFBufferViewEntry("KeyframeBufferView", 3, gltfKeyframeBuffer.Length * sizeof(float), 0));
+                listBufferViews.Add(new GLTFBufferViewEntry("TranslationBufferView", 4, animTranslationSize * sizeof(float), 0));
+                listBufferViews.Add(new GLTFBufferViewEntry("RotationBufferView", 4, animRotationSize * sizeof(float), animTranslationSize));
+                listBufferViews.Add(new GLTFBufferViewEntry("ScaleBufferView", 4, animScaleSize * sizeof(float), animTranslationSize + animRotationSize));
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
                     TextureConfig conf = model.textureConfig[i];
@@ -856,7 +1077,36 @@ namespace LibReplanetizer
                 listAccessors.Add(new GLTFAccessorEntry("InvBindMatrixAccessor", 1, GLTFAccessorEntry.FLOAT, false, gltfInvBindMatrixBuffer.Length / 16, 0, GLTFAccessorEntry.MAT4));
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
-                    listAccessors.Add(new GLTFAccessorEntry("IndexAccessor" + i, 2 + i, GLTFAccessorEntry.UNSIGNED_SHORT, false, model.textureConfig[i].size, 0, GLTFAccessorEntry.SCALAR));
+                    listAccessors.Add(new GLTFAccessorEntry("IndexAccessor" + i, 6 + i, GLTFAccessorEntry.UNSIGNED_SHORT, false, model.textureConfig[i].size, 0, GLTFAccessorEntry.SCALAR));
+                }
+
+                if (exportAnimations)
+                {
+                    MobyModel mobModel = (MobyModel) model;
+
+                    int animOutputStride = mobModel.boneCount * 10;
+
+                    for (int i = 0; i < mobModel.animations.Count; i++)
+                    {
+                        Animation anim = mobModel.animations[i];
+
+                        listAccessors.Add(new GLTFAccessorEntry("KeyframeAccessor" + i, 2, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, keyframeOffset[i] * sizeof(float), GLTFAccessorEntry.SCALAR));
+
+                        int currTranslationOffsetBytes = animTranslationOffset[i] * sizeof(float);
+                        int currRotationOffsetBytes = animRotationOffset[i] * sizeof(float);
+                        int currScaleOffsetBytes = animScaleOffset[i] * sizeof(float);
+
+                        for (int j = 0; j < mobModel.boneCount; j++)
+                        {
+                            listAccessors.Add(new GLTFAccessorEntry("TranslationAccessor" + i + "Bone" + j, 3, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, currTranslationOffsetBytes, GLTFAccessorEntry.VEC3));
+                            listAccessors.Add(new GLTFAccessorEntry("RotationAccessor" + i + "Bone" + j, 4, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, currRotationOffsetBytes, GLTFAccessorEntry.VEC4));
+                            listAccessors.Add(new GLTFAccessorEntry("ScaleAccessor" + i + "Bone" + j, 5, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, currScaleOffsetBytes, GLTFAccessorEntry.VEC3));
+
+                            currTranslationOffsetBytes += anim.frames.Count * 3 * sizeof(float);
+                            currRotationOffsetBytes += anim.frames.Count * 4 * sizeof(float);
+                            currScaleOffsetBytes += anim.frames.Count * 3 * sizeof(float);
+                        }
+                    }
                 }
 
                 this.accessors = listAccessors.ToArray();
@@ -959,8 +1209,8 @@ namespace LibReplanetizer
                 jsonOptions.IncludeFields = true;
                 jsonOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
 
-                GLTFDataObject gltfDataObject = new GLTFDataObject(level, model, includeSkeleton);
-                String gltfJson = JsonSerializer.Serialize(gltfDataObject, jsonOptions);
+                GLTFDataObject gltfDataObject = new GLTFDataObject(level, model, includeSkeleton, this.settings);
+                string gltfJson = JsonSerializer.Serialize(gltfDataObject, jsonOptions);
                 stream.Write(gltfJson);
             }
             finally

@@ -885,7 +885,8 @@ namespace LibReplanetizer
                         {
                             gltfKeyframeBuffer[currKeyframeOffset++] = keyframeValue;
                             animLength[k] = keyframeValue;
-                            keyframeValue += ((anim.speed != 0.0f) ? anim.speed : anim.frames[i].speed) / 30.0f;
+                            float speed = (anim.speed != 0.0f) ? anim.speed : anim.frames[i].speed;
+                            keyframeValue += 1.0f / (speed * 60.0f);
                         }
 
                         for (int j = 0; j < mobModel.boneCount; j++)

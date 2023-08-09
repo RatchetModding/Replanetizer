@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2022, The Replanetizer Contributors.
+﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -21,7 +21,7 @@ namespace LibReplanetizer.Models.Animations
         {
             public FrameBoneRotation(int x, int y, int z, int w)
             {
-                this.rotation = new Quaternion((x / 32767f) * 180f, (y / 32767f) * 180f, (z / 32767f) * 180f, (w / 32767f) * 180f);
+                this.rotation = new Quaternion(x / 32767f, y / 32767f, z / 32767f, w / 32767f);
             }
 
             public Quaternion rotation;
@@ -278,10 +278,10 @@ namespace LibReplanetizer.Models.Animations
             byte[] rotationBytes = new byte[rotations.Count * 0x08];
             for (int i = 0; i < rotations.Count; i++)
             {
-                WriteShort(rotationBytes, i * 8 + 0x00, (short) ((rotations[i].rotation.X / 180.0f) * 32767.0f));
-                WriteShort(rotationBytes, i * 8 + 0x02, (short) ((rotations[i].rotation.Y / 180.0f) * 32767.0f));
-                WriteShort(rotationBytes, i * 8 + 0x04, (short) ((rotations[i].rotation.Z / 180.0f) * 32767.0f));
-                WriteShort(rotationBytes, i * 8 + 0x06, (short) ((-rotations[i].rotation.W / 180.0f) * 32767.0f));
+                WriteShort(rotationBytes, i * 8 + 0x00, (short) (rotations[i].rotation.X * 32767.0f));
+                WriteShort(rotationBytes, i * 8 + 0x02, (short) (rotations[i].rotation.Y * 32767.0f));
+                WriteShort(rotationBytes, i * 8 + 0x04, (short) (rotations[i].rotation.Z * 32767.0f));
+                WriteShort(rotationBytes, i * 8 + 0x06, (short) (-rotations[i].rotation.W * 32767.0f));
             }
 
             byte[] sec0Bytes = new byte[scalings.Count * 0x08];

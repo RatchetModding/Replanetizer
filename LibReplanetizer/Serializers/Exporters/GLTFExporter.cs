@@ -895,51 +895,35 @@ namespace LibReplanetizer
                             {
                                 Frame frame = anim.frames[i];
 
-                                Matrix4 animationMatrix = frame.GetRotationMatrix(j);
-                                Vector3? scaling = frame.GetScaling(j);
                                 Vector3? translation = frame.GetTranslation(j);
+                                Quaternion? rotation = frame.GetRotationQuaternion(j);
+                                Vector3? scaling = frame.GetScaling(j);
 
-                                // OpenTK interpretes everything in transposed so we need to transpose first to get what we want.
-                                animationMatrix.Transpose();
+                                Vector3 t = (translation != null) ? (Vector3) translation : mobModel.boneDatas[j].translation;
+                                t *= mobModel.size;
+                                ChangeOrientation(ref t, ExporterModelSettings.Orientation.Y_UP);
 
-                                // Translations replace the bone data translation
-                                Vector3 translationVector = (translation != null) ? (Vector3) translation : mobModel.boneDatas[j].translation;
-
-                                animationMatrix.M14 = translationVector.X;
-                                animationMatrix.M24 = translationVector.Y;
-                                animationMatrix.M34 = translationVector.Z;
-
-                                if (scaling != null)
-                                {
-                                    Vector3 scale = (Vector3) scaling;
-                                    animationMatrix.M11 *= scale.X;
-                                    animationMatrix.M21 *= scale.X;
-                                    animationMatrix.M31 *= scale.X;
-                                    animationMatrix.M12 *= scale.Y;
-                                    animationMatrix.M22 *= scale.Y;
-                                    animationMatrix.M32 *= scale.Y;
-                                    animationMatrix.M13 *= scale.Z;
-                                    animationMatrix.M23 *= scale.Z;
-                                    animationMatrix.M33 *= scale.Z;
-                                }
-
-                                ChangeOrientation(ref animationMatrix, ExporterModelSettings.Orientation.Y_UP);
-
-                                // OpenTK interpretes everything in transposed so we need to transpose first to get what we want.
-                                animationMatrix.Transpose();
-
-                                Vector3 t = animationMatrix.ExtractTranslation() * mobModel.size;
                                 gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 0] = t.X;
                                 gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 1] = t.Y;
                                 gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 2] = t.Z;
 
-                                Quaternion q = animationMatrix.ExtractRotation();
+                                Quaternion q = (rotation != null) ? (Quaternion) rotation : Quaternion.Identity;
+                                ChangeOrientation(ref q, ExporterModelSettings.Orientation.Y_UP);
+
                                 gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 0] = q.X;
                                 gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 1] = q.Y;
                                 gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 2] = q.Z;
                                 gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 3] = q.W;
 
-                                Vector3 s = animationMatrix.ExtractScale();
+                                Vector3 s = Vector3.One;
+                                if (scaling != null)
+                                {
+                                    s = (Vector3) scaling;
+                                    float temp = s.Y;
+                                    s.Y = s.Z;
+                                    s.Z = temp;
+                                }
+
                                 gltfAnimOutputBuffer[animScaleBaseOffset + currScaleOffset + 0] = s.X;
                                 gltfAnimOutputBuffer[animScaleBaseOffset + currScaleOffset + 1] = s.Y;
                                 gltfAnimOutputBuffer[animScaleBaseOffset + currScaleOffset + 2] = s.Z;

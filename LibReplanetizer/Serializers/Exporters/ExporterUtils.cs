@@ -90,6 +90,30 @@ namespace LibReplanetizer
             }
         }
 
+        protected static void ChangeOrientation(ref Quaternion q, ExporterModelSettings.Orientation orientation)
+        {
+            switch (orientation)
+            {
+                case ExporterModelSettings.Orientation.Y_UP:
+                    {
+                        float temp = q.Y;
+                        q.Y = q.Z;
+                        q.Z = -temp;
+                        return;
+                    }
+                case ExporterModelSettings.Orientation.X_UP:
+                    {
+                        float temp = q.X;
+                        q.X = q.Z;
+                        q.Z = -temp;
+                        return;
+                    }
+                case ExporterModelSettings.Orientation.Z_UP:
+                default:
+                    return;
+            }
+        }
+
         /// <summary>
         /// Converts world space transformations from the game's Z Up format into the
         /// specified orientation.

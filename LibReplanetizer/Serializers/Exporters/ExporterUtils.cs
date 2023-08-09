@@ -81,7 +81,111 @@ namespace LibReplanetizer
                     {
                         float temp = v.X;
                         v.X = v.Z;
-                        v.X = -temp;
+                        v.Z = -temp;
+                        return;
+                    }
+                case ExporterModelSettings.Orientation.Z_UP:
+                default:
+                    return;
+            }
+        }
+
+        protected static void ChangeOrientation(ref Quaternion q, ExporterModelSettings.Orientation orientation)
+        {
+            switch (orientation)
+            {
+                case ExporterModelSettings.Orientation.Y_UP:
+                    {
+                        float temp = q.Y;
+                        q.Y = q.Z;
+                        q.Z = -temp;
+                        return;
+                    }
+                case ExporterModelSettings.Orientation.X_UP:
+                    {
+                        float temp = q.X;
+                        q.X = q.Z;
+                        q.Z = -temp;
+                        return;
+                    }
+                case ExporterModelSettings.Orientation.Z_UP:
+                default:
+                    return;
+            }
+        }
+
+        /// <summary>
+        /// Converts world space transformations from the game's Z Up format into the
+        /// specified orientation.
+        /// </summary>
+        protected static void ChangeOrientation(ref Matrix4[] m, ExporterModelSettings.Orientation orientation)
+        {
+            for (int i = 0; i < m.Length; i++)
+            {
+                ChangeOrientation(ref m[i], orientation);
+            }
+        }
+
+        protected static void ChangeOrientation(ref Matrix4 m, ExporterModelSettings.Orientation orientation)
+        {
+            switch (orientation)
+            {
+                case ExporterModelSettings.Orientation.Y_UP:
+                    {
+                        // Z-UP -> Y-UP:
+                        // 1  0  0  0 (X->X)
+                        // 0  0  1  0 (Z->Y)
+                        // 0 -1  0  0 (Y->-Z)
+                        // 0  0  0  1 (W->W)
+
+                        // Y-UP -> Z-UP:
+                        // 1  0  0  0 (X->X)
+                        // 0  0 -1  0 (Z->-Y)
+                        // 0  1  0  0 (Y->Z)
+                        // 0  0  0  1 (W->W)
+
+                        Matrix4 ZToY = new Matrix4();
+                        ZToY.M11 = 1.0f;
+                        ZToY.M23 = 1.0f;
+                        ZToY.M32 = -1.0f;
+                        ZToY.M44 = 1.0f;
+
+                        Matrix4 YToZ = new Matrix4();
+                        YToZ.M11 = 1.0f;
+                        YToZ.M23 = -1.0f;
+                        YToZ.M32 = 1.0f;
+                        YToZ.M44 = 1.0f;
+
+                        m = ZToY * m * YToZ;
+                        return;
+                    }
+                case ExporterModelSettings.Orientation.X_UP:
+                    {
+                        // Z-UP -> X-UP:
+                        // 0  0  1  0 (Z->X)
+                        // 0  1  0  0 (Y->Y)
+                        //-1  0  0  0 (X->-Z)
+                        // 0  0  0  1 (W->W)
+
+                        // X-UP -> Z-UP:
+                        // 0  0 -1  0 (X->X)
+                        // 0  1  0  0 (Z->-Y)
+                        // 1  0  0  0 (Y->Z)
+                        // 0  0  0  1 (W->W)
+
+                        Matrix4 ZToX = new Matrix4();
+                        ZToX.M13 = 1.0f;
+                        ZToX.M22 = 1.0f;
+                        ZToX.M31 = -1.0f;
+                        ZToX.M44 = 1.0f;
+
+                        Matrix4 XToZ = new Matrix4();
+                        XToZ.M13 = -1.0f;
+                        XToZ.M22 = 1.0f;
+                        XToZ.M31 = 1.0f;
+                        XToZ.M44 = 1.0f;
+
+                        m = ZToX * m * XToZ;
                         return;
                     }
                 case ExporterModelSettings.Orientation.Z_UP:
@@ -93,7 +197,7 @@ namespace LibReplanetizer
         /// <summary>
         /// Export a model to a file.
         /// </summary>
-        public abstract void ExportModel(string fileName, Level level, Model model);
+        public abstract void ExportModel(string fileName, Level level, Model model, List<Texture>? textures = null);
 
         /// <summary>
         /// Returns the default exporter.
@@ -173,18 +277,18 @@ namespace LibReplanetizer
     {
         public enum Format
         {
-            Wavefront = 0,
-            Collada = 1,
-            glTF = 2
+            glTF = 0,
+            Wavefront = 1,
+            Collada = 2
         };
 
 
         public enum AnimationChoice
         {
             None = 0,
-            All = 1,
-            AllSeparate = 2,
-            AllSequential = 3
+            AllSeparate = 1,
+            AllSequential = 2,
+            All = 3
         };
 
         public enum Orientation
@@ -194,8 +298,8 @@ namespace LibReplanetizer
             X_UP = 2
         }
 
-        public static readonly string[] FORMAT_STRINGS = { "Wavefront (*.obj)", "Collada (*.dae)", "glTF 2.0 (*.gltf)" };
-        public static readonly string[] ANIMATION_CHOICE_STRINGS = { "No Animations", "All Animations", "Separate File for each Animation", "Concatenate Animations" };
+        public static readonly string[] FORMAT_STRINGS = { "glTF 2.0 (*.gltf)", "Wavefront (*.obj)", "Collada (*.dae)" };
+        public static readonly string[] ANIMATION_CHOICE_STRINGS = { "No Animations", "Separate File for each Animation", "Concatenate Animations", "All Animations" };
         public static readonly string[] ORIENTATION_STRINGS = { "Z Up", "Y Up", "X Up" };
 
         public ExporterModelSettings.Format format = ExporterModelSettings.Format.glTF;
@@ -203,6 +307,7 @@ namespace LibReplanetizer
         public ExporterModelSettings.Orientation orientation = ExporterModelSettings.Orientation.Z_UP;
         public bool exportMtlFile = true;
         public bool extendedFeatures = false;
+        public bool embedTextures = false;
 
         public ExporterModelSettings()
         {

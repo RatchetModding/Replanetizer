@@ -339,7 +339,7 @@ namespace Replanetizer.Frames
                         if (selectedModel is MobyModel mobyModel && mobyModel.animations.Count > 0)
                         {
                             int animationChoice = (int) exportSettings.animationChoice;
-                            if (ImGui.Combo("Animations", ref animationChoice, ExporterModelSettings.ANIMATION_CHOICE_STRINGS, ExporterModelSettings.ANIMATION_CHOICE_STRINGS.Length))
+                            if (ImGui.Combo("Animations", ref animationChoice, ExporterModelSettings.ANIMATION_CHOICE_STRINGS, ExporterModelSettings.ANIMATION_CHOICE_STRINGS.Length - 1))
                             {
                                 exportSettings.animationChoice = (ExporterModelSettings.AnimationChoice) animationChoice;
                             }
@@ -348,9 +348,7 @@ namespace Replanetizer.Frames
                         {
                             ImGui.BeginDisabled();
                             int animationChoice = 0;
-                            if (ImGui.Combo("Animations", ref animationChoice, ExporterModelSettings.ANIMATION_CHOICE_STRINGS, ExporterModelSettings.ANIMATION_CHOICE_STRINGS.Length))
-                            {
-                            }
+                            ImGui.Combo("Animations", ref animationChoice, ExporterModelSettings.ANIMATION_CHOICE_STRINGS, ExporterModelSettings.ANIMATION_CHOICE_STRINGS.Length);
                             ImGui.EndDisabled();
                         }
                     }
@@ -370,13 +368,29 @@ namespace Replanetizer.Frames
                     // glTF specific settings
                     if (exportSettings.format == ExporterModelSettings.Format.glTF)
                     {
-                        bool embedTextures = false;
-                        bool includeAnimations = false;
+                        if (selectedModel is MobyModel mobyModel && mobyModel.animations.Count > 0)
+                        {
+                            bool includeAnimations = (exportSettings.animationChoice != ExporterModelSettings.AnimationChoice.None);
 
-                        ImGui.BeginDisabled();
-                        ImGui.Checkbox("Embed Textures", ref embedTextures);
-                        ImGui.Checkbox("Include Animations", ref includeAnimations);
-                        ImGui.EndDisabled();
+                            if (ImGui.Checkbox("Include Animations", ref includeAnimations))
+                            {
+                                exportSettings.animationChoice = (includeAnimations) ? ExporterModelSettings.AnimationChoice.All : ExporterModelSettings.AnimationChoice.None;
+                            }
+                        }
+                        else
+                        {
+                            bool includeAnimations = false;
+                            ImGui.BeginDisabled();
+                            ImGui.Checkbox("Include Animations", ref includeAnimations);
+                            ImGui.EndDisabled();
+                        }
+
+                        bool embedTextures = exportSettings.embedTextures;
+
+                        if (ImGui.Checkbox("Embed Textures", ref embedTextures))
+                        {
+                            exportSettings.embedTextures = embedTextures;
+                        }
                     }
 
                     if (ImGui.Button("Export model"))
@@ -739,7 +753,7 @@ namespace Replanetizer.Frames
             // Save the settings so that modelsframes created in the future start with these settings
             lastUsedExportSettings = new ExporterModelSettings(exportSettings);
 
-            exporter.ExportModel(fileName, level, model);
+            exporter.ExportModel(fileName, level, model, selectedTextureSet);
         }
 
         private void ExportSelectedModelTextures()

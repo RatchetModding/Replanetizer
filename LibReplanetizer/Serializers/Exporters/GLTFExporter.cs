@@ -559,7 +559,7 @@ namespace LibReplanetizer
             public GLTFAnimationEntry[]? animations = null;
             public GLTFBufferEntry[] buffers = new GLTFBufferEntry[] { };
 
-            public GLTFDataObject(Model model, bool includeSkeleton, ExporterModelSettings settings, List<Texture>? textures)
+            public GLTFDataObject(Level level, Model model, bool includeSkeleton, ExporterModelSettings settings, List<Texture>? textures)
             {
                 // skybox model has no normals and thus the vertex buffer has a different layout
                 // if we see other cases like this, it may be advisable to generalize this
@@ -569,6 +569,37 @@ namespace LibReplanetizer
                 bool hasVertexColors = (skyboxModel) || (model is TerrainModel);
 
                 bool exportAnimations = (settings.animationChoice != ExporterModelSettings.AnimationChoice.None && includeSkeleton);
+
+                // Animations may have no frames but GLTF does not allow that.
+                List<Animation> animations = new List<Animation>();
+
+                if (exportAnimations)
+                {
+                    MobyModel mobModel = (MobyModel) model;
+
+                    if (model.id == 0)
+                    {
+                        foreach (Animation anim in level.playerAnimations)
+                        {
+                            if (anim.frames.Count > 0)
+                            {
+                                animations.Add(anim);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (Animation anim in mobModel.animations)
+                        {
+                            if (anim.frames.Count > 0)
+                            {
+                                animations.Add(anim);
+                            }
+                        }
+                    }
+
+                    if (animations.Count == 0) exportAnimations = false;
+                }
 
                 int vOffset = 0x00;
                 int vnOffset = 0x03;
@@ -725,10 +756,13 @@ namespace LibReplanetizer
                 }
 
                 float[] gltfInvBindMatrixBuffer = new float[0];
+                int boneCount = 0;
 
                 if (includeSkeleton)
                 {
                     MobyModel mobModel = (MobyModel) model;
+
+                    boneCount = mobModel.boneCount;
 
                     for (int i = 0; i < model.vertexCount; i++)
                     {
@@ -777,7 +811,7 @@ namespace LibReplanetizer
 
                     if (mobModel.skeleton != null)
                     {
-                        Skeleton[] skeletonSorted = new Skeleton[mobModel.boneCount];
+                        Skeleton[] skeletonSorted = new Skeleton[boneCount];
                         Stack<Skeleton> skeletonStack = new Stack<Skeleton>();
                         skeletonStack.Push(mobModel.skeleton);
 
@@ -796,9 +830,9 @@ namespace LibReplanetizer
                         {
                             Matrix4 invBindMatrix = s.bone.GetInvBindMatrix();
 
-                            invBindMatrix.M14 *= mobModel.size;
-                            invBindMatrix.M24 *= mobModel.size;
-                            invBindMatrix.M34 *= mobModel.size;
+                            invBindMatrix.M14 *= model.size;
+                            invBindMatrix.M24 *= model.size;
+                            invBindMatrix.M34 *= model.size;
 
                             ChangeOrientation(ref invBindMatrix, ExporterModelSettings.Orientation.Y_UP);
 
@@ -823,6 +857,8 @@ namespace LibReplanetizer
                     }
                 }
 
+
+
                 float[] gltfKeyframeBuffer = new float[0];
                 float[] gltfAnimOutputBuffer = new float[0];
                 int[] keyframeOffset = new int[0];
@@ -843,14 +879,14 @@ namespace LibReplanetizer
 
                     int frameCount = 0;
 
-                    foreach (Animation anim in mobModel.animations)
+                    foreach (Animation anim in animations)
                     {
                         frameCount += anim.frames.Count;
                     }
 
-                    animTranslationSize = frameCount * 3 * mobModel.boneCount;
-                    animRotationSize = frameCount * 4 * mobModel.boneCount;
-                    animScaleSize = frameCount * 3 * mobModel.boneCount;
+                    animTranslationSize = frameCount * 3 * boneCount;
+                    animRotationSize = frameCount * 4 * boneCount;
+                    animScaleSize = frameCount * 3 * boneCount;
 
                     animTranslationBaseOffset = 0;
                     animRotationBaseOffset = animTranslationBaseOffset + animTranslationSize;
@@ -859,21 +895,21 @@ namespace LibReplanetizer
                     gltfKeyframeBuffer = new float[frameCount];
                     gltfAnimOutputBuffer = new float[animTranslationSize + animRotationSize + animScaleSize];
 
-                    keyframeOffset = new int[mobModel.animations.Count];
-                    animTranslationOffset = new int[mobModel.animations.Count];
-                    animRotationOffset = new int[mobModel.animations.Count];
-                    animScaleOffset = new int[mobModel.animations.Count];
+                    keyframeOffset = new int[animations.Count];
+                    animTranslationOffset = new int[animations.Count];
+                    animRotationOffset = new int[animations.Count];
+                    animScaleOffset = new int[animations.Count];
 
-                    animLength = new float[mobModel.animations.Count];
+                    animLength = new float[animations.Count];
 
                     int currKeyframeOffset = 0;
                     int currTranslationOffset = 0;
                     int currRotationOffset = 0;
                     int currScaleOffset = 0;
 
-                    for (int k = 0; k < mobModel.animations.Count; k++)
+                    for (int k = 0; k < animations.Count; k++)
                     {
-                        Animation anim = mobModel.animations[k];
+                        Animation anim = animations[k];
 
                         keyframeOffset[k] = currKeyframeOffset;
                         animTranslationOffset[k] = currTranslationOffset;
@@ -890,7 +926,7 @@ namespace LibReplanetizer
                             keyframeValue += 1.0f / (speed * 60.0f);
                         }
 
-                        for (int j = 0; j < mobModel.boneCount; j++)
+                        for (int j = 0; j < boneCount; j++)
                         {
                             for (int i = 0; i < anim.frames.Count; i++)
                             {
@@ -901,7 +937,7 @@ namespace LibReplanetizer
                                 Vector3? scaling = frame.GetScaling(j);
 
                                 Vector3 t = (translation != null) ? (Vector3) translation : mobModel.boneDatas[j].translation;
-                                t *= mobModel.size;
+                                t *= model.size;
                                 ChangeOrientation(ref t, ExporterModelSettings.Orientation.Y_UP);
 
                                 gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 0] = t.X;
@@ -1117,26 +1153,24 @@ namespace LibReplanetizer
                 {
                     animationAccessorBaseID = listAccessors.Count;
 
-                    MobyModel mobModel = (MobyModel) model;
-
-                    for (int i = 0; i < mobModel.animations.Count; i++)
+                    for (int i = 0; i < animations.Count; i++)
                     {
-                        Animation anim = mobModel.animations[i];
+                        Animation anim = animations[i];
 
                         listAccessors.Add(new GLTFAccessorEntry("KeyframeAccessor" + i, 2, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, keyframeOffset[i] * sizeof(float), 0.0f, animLength[i], GLTFAccessorEntry.SCALAR));
                     }
 
-                    int animOutputStride = mobModel.boneCount * 10;
+                    int animOutputStride = boneCount * 10;
 
-                    for (int i = 0; i < mobModel.animations.Count; i++)
+                    for (int i = 0; i < animations.Count; i++)
                     {
-                        Animation anim = mobModel.animations[i];
+                        Animation anim = animations[i];
 
                         int currTranslationOffsetBytes = animTranslationOffset[i] * sizeof(float);
                         int currRotationOffsetBytes = animRotationOffset[i] * sizeof(float);
                         int currScaleOffsetBytes = animScaleOffset[i] * sizeof(float);
 
-                        for (int j = 0; j < mobModel.boneCount; j++)
+                        for (int j = 0; j < boneCount; j++)
                         {
                             listAccessors.Add(new GLTFAccessorEntry("TranslationAccessor" + i + "Bone" + j, 3, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, currTranslationOffsetBytes, GLTFAccessorEntry.VEC3));
                             listAccessors.Add(new GLTFAccessorEntry("RotationAccessor" + i + "Bone" + j, 4, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, currRotationOffsetBytes, GLTFAccessorEntry.VEC4));
@@ -1157,17 +1191,15 @@ namespace LibReplanetizer
 
                 if (exportAnimations)
                 {
-                    MobyModel mobModel = (MobyModel) model;
-
                     List<GLTFAnimationEntry> listAnimationEntries = new List<GLTFAnimationEntry>();
 
-                    int outputAccessorOffset = animationAccessorBaseID + mobModel.animations.Count;
+                    int outputAccessorOffset = animationAccessorBaseID + animations.Count;
 
-                    for (int i = 0; i < mobModel.animations.Count; i++)
+                    for (int i = 0; i < animations.Count; i++)
                     {
-                        listAnimationEntries.Add(new GLTFAnimationEntry("Animation" + i, mobModel.boneCount, animationAccessorBaseID + i, outputAccessorOffset));
+                        listAnimationEntries.Add(new GLTFAnimationEntry("Animation" + i, boneCount, animationAccessorBaseID + i, outputAccessorOffset));
 
-                        outputAccessorOffset += mobModel.boneCount * 3;
+                        outputAccessorOffset += boneCount * 3;
                     }
 
                     this.animations = listAnimationEntries.ToArray();
@@ -1328,7 +1360,7 @@ namespace LibReplanetizer
                 jsonOptions.IncludeFields = true;
                 jsonOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
 
-                GLTFDataObject gltfDataObject = new GLTFDataObject(model, includeSkeleton, this.settings, textures);
+                GLTFDataObject gltfDataObject = new GLTFDataObject(level, model, includeSkeleton, this.settings, textures);
                 string gltfJson = JsonSerializer.Serialize(gltfDataObject, jsonOptions);
                 stream.Write(gltfJson);
             }

@@ -368,13 +368,24 @@ namespace Replanetizer.Frames
                     // glTF specific settings
                     if (exportSettings.format == ExporterModelSettings.Format.glTF)
                     {
-                        bool embedTextures = exportSettings.embedTextures;
-                        bool includeAnimations = (exportSettings.animationChoice != ExporterModelSettings.AnimationChoice.None);
-
-                        if (ImGui.Checkbox("Include Animations", ref includeAnimations))
+                        if (selectedModel is MobyModel mobyModel && mobyModel.animations.Count > 0)
                         {
-                            exportSettings.animationChoice = (includeAnimations) ? ExporterModelSettings.AnimationChoice.All : ExporterModelSettings.AnimationChoice.None;
+                            bool includeAnimations = (exportSettings.animationChoice != ExporterModelSettings.AnimationChoice.None);
+
+                            if (ImGui.Checkbox("Include Animations", ref includeAnimations))
+                            {
+                                exportSettings.animationChoice = (includeAnimations) ? ExporterModelSettings.AnimationChoice.All : ExporterModelSettings.AnimationChoice.None;
+                            }
                         }
+                        else
+                        {
+                            bool includeAnimations = false;
+                            ImGui.BeginDisabled();
+                            ImGui.Checkbox("Include Animations", ref includeAnimations);
+                            ImGui.EndDisabled();
+                        }
+
+                        bool embedTextures = exportSettings.embedTextures;
 
                         if (ImGui.Checkbox("Embed Textures", ref embedTextures))
                         {

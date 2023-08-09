@@ -1020,10 +1020,16 @@ namespace LibReplanetizer
 
                 List<GLTFBufferEntry> listBuffers = new List<GLTFBufferEntry>();
                 listBuffers.Add(new GLTFBufferEntry("VertexBuffer", gltfVertexBuffer));
-                listBuffers.Add(new GLTFBufferEntry("InvBindMatrixBuffer", gltfInvBindMatrixBuffer));
                 listBuffers.Add(new GLTFBufferEntry("IndexBuffer", gltfIndexBuffer));
-                listBuffers.Add(new GLTFBufferEntry("KeyframeBuffer", gltfKeyframeBuffer));
-                listBuffers.Add(new GLTFBufferEntry("AnimOutputBuffer", gltfAnimOutputBuffer));
+                if (includeSkeleton)
+                {
+                    listBuffers.Add(new GLTFBufferEntry("InvBindMatrixBuffer", gltfInvBindMatrixBuffer));
+                }
+                if (exportAnimations)
+                {
+                    listBuffers.Add(new GLTFBufferEntry("KeyframeBuffer", gltfKeyframeBuffer));
+                    listBuffers.Add(new GLTFBufferEntry("AnimOutputBuffer", gltfAnimOutputBuffer));
+                }
                 Dictionary<int, int> textureDataBufferIDs = new Dictionary<int, int>();
                 foreach (var texBuffer in textureDataBuffers)
                 {
@@ -1038,18 +1044,25 @@ namespace LibReplanetizer
 
                 List<GLTFBufferViewEntry> listBufferViews = new List<GLTFBufferViewEntry>();
                 listBufferViews.Add(new GLTFBufferViewEntry("VertexBufferView", 0, gltfVertexBufferByteStride * model.vertexCount, 0, gltfVertexBufferByteStride, GLTFBufferViewEntry.ARRAY_BUFFER));
-                listBufferViews.Add(new GLTFBufferViewEntry("InvBindMatrixBufferView", 1, gltfInvBindMatrixBuffer.Length * sizeof(float), 0));
-                listBufferViews.Add(new GLTFBufferViewEntry("KeyframeBufferView", 3, gltfKeyframeBuffer.Length * sizeof(float), 0));
-                listBufferViews.Add(new GLTFBufferViewEntry("TranslationBufferView", 4, animTranslationSize * sizeof(float), animTranslationBaseOffset * sizeof(float)));
-                listBufferViews.Add(new GLTFBufferViewEntry("RotationBufferView", 4, animRotationSize * sizeof(float), animRotationBaseOffset * sizeof(float)));
-                listBufferViews.Add(new GLTFBufferViewEntry("ScaleBufferView", 4, animScaleSize * sizeof(float), animScaleBaseOffset * sizeof(float)));
+                if (includeSkeleton)
+                {
+                    listBufferViews.Add(new GLTFBufferViewEntry("InvBindMatrixBufferView", 2, gltfInvBindMatrixBuffer.Length * sizeof(float), 0));
+                }
+                if (exportAnimations)
+                {
+                    listBufferViews.Add(new GLTFBufferViewEntry("KeyframeBufferView", 3, gltfKeyframeBuffer.Length * sizeof(float), 0));
+                    listBufferViews.Add(new GLTFBufferViewEntry("TranslationBufferView", 4, animTranslationSize * sizeof(float), animTranslationBaseOffset * sizeof(float)));
+                    listBufferViews.Add(new GLTFBufferViewEntry("RotationBufferView", 4, animRotationSize * sizeof(float), animRotationBaseOffset * sizeof(float)));
+                    listBufferViews.Add(new GLTFBufferViewEntry("ScaleBufferView", 4, animScaleSize * sizeof(float), animScaleBaseOffset * sizeof(float)));
+                }
+                int indexBufferViewBaseID = listBufferViews.Count;
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
                     TextureConfig conf = model.textureConfig[i];
                     int byteOffset = sizeof(ushort) * conf.start;
                     int byteLength = sizeof(ushort) * conf.size;
 
-                    listBufferViews.Add(new GLTFBufferViewEntry("IndexBufferView" + i, 2, byteLength, byteOffset, GLTFBufferViewEntry.ELEMENT_ARRAY_BUFFER));
+                    listBufferViews.Add(new GLTFBufferViewEntry("IndexBufferView" + i, 1, byteLength, byteOffset, GLTFBufferViewEntry.ELEMENT_ARRAY_BUFFER));
                 }
                 Dictionary<int, int> textureDataBufferViewIDs = new Dictionary<int, int>();
                 foreach (var texBuffer in textureDataBuffers)
@@ -1063,23 +1076,47 @@ namespace LibReplanetizer
                 //  Accessors
                 ////
 
+                int normalAccessorID = 0;
+                int vertexColorAccessorID = 0;
+                int vertexWeightsAccessorID = 0;
+                int vertexIDsAccessorID = 0;
+                int invBindMatrixAccessorID = 0;
+                int animationAccessorBaseID = 0;
+
                 List<GLTFAccessorEntry> listAccessors = new List<GLTFAccessorEntry>();
                 listAccessors.Add(new GLTFAccessorEntry("VertexPosAccessor", 0, GLTFAccessorEntry.FLOAT, false, model.vertexCount, gltfVertexPosByteOffset, vertexMax, vertexMin, GLTFAccessorEntry.VEC3));
                 listAccessors.Add(new GLTFAccessorEntry("VertexUVAccessor", 0, GLTFAccessorEntry.FLOAT, false, model.vertexCount, gltfVertexUVByteOffset, GLTFAccessorEntry.VEC2));
-                listAccessors.Add(new GLTFAccessorEntry("VertexNormalAccessor", 0, GLTFAccessorEntry.FLOAT, false, model.vertexCount, gltfVertexNormalByteOffset, GLTFAccessorEntry.VEC3));
-                listAccessors.Add(new GLTFAccessorEntry("VertexColorAccessor", 0, GLTFAccessorEntry.UNSIGNED_BYTE, true, model.vertexCount, gltfVertexColorByteOffset, GLTFAccessorEntry.VEC4));
-                listAccessors.Add(new GLTFAccessorEntry("VertexWeightsAccessor", 0, GLTFAccessorEntry.UNSIGNED_BYTE, true, model.vertexCount, gltfVertexWeightsByteOffset, GLTFAccessorEntry.VEC4));
-                listAccessors.Add(new GLTFAccessorEntry("VertexIDsAccessor", 0, GLTFAccessorEntry.UNSIGNED_BYTE, false, model.vertexCount, gltfVertexIDsByteOffset, GLTFAccessorEntry.VEC4));
-                listAccessors.Add(new GLTFAccessorEntry("InvBindMatrixAccessor", 1, GLTFAccessorEntry.FLOAT, false, gltfInvBindMatrixBuffer.Length / 16, 0, GLTFAccessorEntry.MAT4));
-                for (int i = 0; i < model.textureConfig.Count; i++)
+                if (hasNormals)
                 {
-                    listAccessors.Add(new GLTFAccessorEntry("IndexAccessor" + i, 6 + i, GLTFAccessorEntry.UNSIGNED_SHORT, false, model.textureConfig[i].size, 0, GLTFAccessorEntry.SCALAR));
+                    normalAccessorID = listAccessors.Count;
+                    listAccessors.Add(new GLTFAccessorEntry("VertexNormalAccessor", 0, GLTFAccessorEntry.FLOAT, false, model.vertexCount, gltfVertexNormalByteOffset, GLTFAccessorEntry.VEC3));
+                }
+                if (hasVertexColors)
+                {
+                    vertexColorAccessorID = listAccessors.Count;
+                    listAccessors.Add(new GLTFAccessorEntry("VertexColorAccessor", 0, GLTFAccessorEntry.UNSIGNED_BYTE, true, model.vertexCount, gltfVertexColorByteOffset, GLTFAccessorEntry.VEC4));
+                }
+                if (includeSkeleton)
+                {
+                    vertexWeightsAccessorID = listAccessors.Count;
+                    listAccessors.Add(new GLTFAccessorEntry("VertexWeightsAccessor", 0, GLTFAccessorEntry.UNSIGNED_BYTE, true, model.vertexCount, gltfVertexWeightsByteOffset, GLTFAccessorEntry.VEC4));
+                    vertexIDsAccessorID = listAccessors.Count;
+                    listAccessors.Add(new GLTFAccessorEntry("VertexIDsAccessor", 0, GLTFAccessorEntry.UNSIGNED_BYTE, false, model.vertexCount, gltfVertexIDsByteOffset, GLTFAccessorEntry.VEC4));
+                    invBindMatrixAccessorID = listAccessors.Count;
+                    listAccessors.Add(new GLTFAccessorEntry("InvBindMatrixAccessor", 1, GLTFAccessorEntry.FLOAT, false, gltfInvBindMatrixBuffer.Length / 16, 0, GLTFAccessorEntry.MAT4));
                 }
 
-                int accessorCountPreAnimations = listAccessors.Count;
+                int indexAccessorBaseID = listAccessors.Count;
+
+                for (int i = 0; i < model.textureConfig.Count; i++)
+                {
+                    listAccessors.Add(new GLTFAccessorEntry("IndexAccessor" + i, indexBufferViewBaseID + i, GLTFAccessorEntry.UNSIGNED_SHORT, false, model.textureConfig[i].size, 0, GLTFAccessorEntry.SCALAR));
+                }
 
                 if (exportAnimations)
                 {
+                    animationAccessorBaseID = listAccessors.Count;
+
                     MobyModel mobModel = (MobyModel) model;
 
                     for (int i = 0; i < mobModel.animations.Count; i++)
@@ -1124,11 +1161,11 @@ namespace LibReplanetizer
 
                     List<GLTFAnimationEntry> listAnimationEntries = new List<GLTFAnimationEntry>();
 
-                    int outputAccessorOffset = accessorCountPreAnimations + mobModel.animations.Count;
+                    int outputAccessorOffset = animationAccessorBaseID + mobModel.animations.Count;
 
                     for (int i = 0; i < mobModel.animations.Count; i++)
                     {
-                        listAnimationEntries.Add(new GLTFAnimationEntry("Animation" + i, mobModel.boneCount, accessorCountPreAnimations + i, outputAccessorOffset));
+                        listAnimationEntries.Add(new GLTFAnimationEntry("Animation" + i, mobModel.boneCount, animationAccessorBaseID + i, outputAccessorOffset));
 
                         outputAccessorOffset += mobModel.boneCount * 3;
                     }
@@ -1145,7 +1182,7 @@ namespace LibReplanetizer
                     MobyModel mobModel = (MobyModel) model;
 
                     List<GLTFSkinEntry> listSkins = new List<GLTFSkinEntry>();
-                    listSkins.Add(new GLTFSkinEntry("Armature", mobModel.boneCount, 6));
+                    listSkins.Add(new GLTFSkinEntry("Armature", mobModel.boneCount, invBindMatrixAccessorID));
                     this.skins = listSkins.ToArray();
                 }
 
@@ -1220,16 +1257,16 @@ namespace LibReplanetizer
                 GLTFMeshEntry.GLTFMeshPrimitivesEntry.GLTFMeshPrimitivesEntryAttributes vertexAttribs = new GLTFMeshEntry.GLTFMeshPrimitivesEntry.GLTFMeshPrimitivesEntryAttributes(0, 1);
                 if (hasNormals)
                 {
-                    vertexAttribs.NORMAL = 2;
+                    vertexAttribs.NORMAL = normalAccessorID;
                 }
                 if (hasVertexColors)
                 {
-                    vertexAttribs.COLOR_n = 3;
+                    vertexAttribs.COLOR_n = vertexColorAccessorID;
                 }
                 if (includeSkeleton)
                 {
-                    vertexAttribs.WEIGHTS_0 = 4;
-                    vertexAttribs.JOINTS_0 = 5;
+                    vertexAttribs.WEIGHTS_0 = vertexWeightsAccessorID;
+                    vertexAttribs.JOINTS_0 = vertexIDsAccessorID;
                 }
 
                 ////
@@ -1239,7 +1276,7 @@ namespace LibReplanetizer
                 List<GLTFMeshEntry.GLTFMeshPrimitivesEntry> listMeshPrimitives = new List<GLTFMeshEntry.GLTFMeshPrimitivesEntry>();
                 for (int i = 0; i < model.textureConfig.Count; i++)
                 {
-                    listMeshPrimitives.Add(new GLTFMeshEntry.GLTFMeshPrimitivesEntry(vertexAttribs, 7 + i, i));
+                    listMeshPrimitives.Add(new GLTFMeshEntry.GLTFMeshPrimitivesEntry(vertexAttribs, indexAccessorBaseID + i, i));
                 }
 
                 ////

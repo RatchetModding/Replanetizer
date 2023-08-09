@@ -551,7 +551,7 @@ namespace Replanetizer.Renderer
             }
 
             // This causes the animation in the model viewer to loop.
-            if (frameBlend >= 1.0f && mob == null && anim != null)
+            while (frameBlend >= 1.0f && mob == null && anim != null)
             {
                 frameBlend -= 1.0f;
                 currentFrameID++;

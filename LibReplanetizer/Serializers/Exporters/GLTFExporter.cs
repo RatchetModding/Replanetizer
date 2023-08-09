@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.IO;
+using SixLabors.ImageSharp;
 
 // Due to the direct implementation of the GLTF standard through C# classes, we cannot
 // comply with all of our styling rules.
@@ -558,7 +559,7 @@ namespace LibReplanetizer
             public GLTFAnimationEntry[]? animations = null;
             public GLTFBufferEntry[] buffers = new GLTFBufferEntry[] { };
 
-            public GLTFDataObject(Level level, Model model, bool includeSkeleton, ExporterModelSettings settings)
+            public GLTFDataObject(Model model, bool includeSkeleton, ExporterModelSettings settings, List<Texture>? textures)
             {
                 // skybox model has no normals and thus the vertex buffer has a different layout
                 // if we see other cases like this, it may be advisable to generalize this
@@ -936,6 +937,37 @@ namespace LibReplanetizer
                     }
                 }
 
+                Dictionary<int, byte[]> textureDataBuffers = new Dictionary<int, byte[]>();
+                Dictionary<int, int> texIDToImageBuffer = new Dictionary<int, int>();
+
+                if (settings.embedTextures && textures != null)
+                {
+                    for (int i = 0; i < model.textureConfig.Count; i++)
+                    {
+                        TextureConfig conf = model.textureConfig[i];
+                        if (!texIDToImageBuffer.ContainsKey(conf.id))
+                        {
+                            Texture? tex = textures.Find(t => t.id == conf.id);
+
+                            if (tex != null)
+                            {
+                                Image? image = tex.GetTextureImage(!conf.IgnoresTransparency());
+
+                                if (image != null)
+                                {
+                                    using (MemoryStream stream = new MemoryStream())
+                                    {
+                                        image.SaveAsPng(stream);
+                                        texIDToImageBuffer.Add(conf.id, textureDataBuffers.Count);
+                                        textureDataBuffers.Add(conf.id, stream.ToArray());
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                }
+
                 ////
                 //  Nodes
                 ////
@@ -983,47 +1015,6 @@ namespace LibReplanetizer
                 this.nodes = listNodes.ToArray();
 
                 ////
-                //  Images
-                ////
-
-                Dictionary<int, int> texIDToImageOffset = new Dictionary<int, int>();
-
-                List<GLTFImageEntry> listImages = new List<GLTFImageEntry>();
-                for (int i = 0; i < model.textureConfig.Count; i++)
-                {
-                    TextureConfig conf = model.textureConfig[i];
-                    if (!texIDToImageOffset.ContainsKey(conf.id))
-                    {
-                        texIDToImageOffset.Add(conf.id, listImages.Count);
-                        listImages.Add(new GLTFImageEntry(conf));
-                    }
-                }
-                this.images = listImages.ToArray();
-
-                ////
-                //  TextureSamplers
-                ////
-
-                List<GLTFSamplerEntry> listSamplers = new List<GLTFSamplerEntry>();
-                for (int i = 0; i < model.textureConfig.Count; i++)
-                {
-                    listSamplers.Add(new GLTFSamplerEntry(model.textureConfig[i]));
-                }
-                this.samplers = listSamplers.ToArray();
-
-                ////
-                //  Textures
-                ////
-
-                List<GLTFTextureEntry> listTextures = new List<GLTFTextureEntry>();
-                for (int i = 0; i < model.textureConfig.Count; i++)
-                {
-                    TextureConfig conf = model.textureConfig[i];
-                    listTextures.Add(new GLTFTextureEntry(i, texIDToImageOffset[conf.id]));
-                }
-                this.textures = listTextures.ToArray();
-
-                ////
                 //  Buffers
                 ////
 
@@ -1033,6 +1024,12 @@ namespace LibReplanetizer
                 listBuffers.Add(new GLTFBufferEntry("IndexBuffer", gltfIndexBuffer));
                 listBuffers.Add(new GLTFBufferEntry("KeyframeBuffer", gltfKeyframeBuffer));
                 listBuffers.Add(new GLTFBufferEntry("AnimOutputBuffer", gltfAnimOutputBuffer));
+                Dictionary<int, int> textureDataBufferIDs = new Dictionary<int, int>();
+                foreach (var texBuffer in textureDataBuffers)
+                {
+                    textureDataBufferIDs.Add(texBuffer.Key, listBuffers.Count);
+                    listBuffers.Add(new GLTFBufferEntry("TextureBuffer" + texBuffer.Key, texBuffer.Value));
+                }
                 this.buffers = listBuffers.ToArray();
 
                 ////
@@ -1053,6 +1050,12 @@ namespace LibReplanetizer
                     int byteLength = sizeof(ushort) * conf.size;
 
                     listBufferViews.Add(new GLTFBufferViewEntry("IndexBufferView" + i, 2, byteLength, byteOffset, GLTFBufferViewEntry.ELEMENT_ARRAY_BUFFER));
+                }
+                Dictionary<int, int> textureDataBufferViewIDs = new Dictionary<int, int>();
+                foreach (var texBuffer in textureDataBuffers)
+                {
+                    textureDataBufferViewIDs.Add(texBuffer.Key, listBufferViews.Count);
+                    listBufferViews.Add(new GLTFBufferViewEntry("TextureBufferView" + texBuffer.Key, textureDataBufferIDs[texBuffer.Key], texBuffer.Value.Length, 0));
                 }
                 this.bufferViews = listBufferViews.ToArray();
 
@@ -1147,6 +1150,63 @@ namespace LibReplanetizer
                 }
 
                 ////
+                //  Images
+                ////
+
+                Dictionary<int, int> texIDToImageOffset = new Dictionary<int, int>();
+
+                List<GLTFImageEntry> listImages = new List<GLTFImageEntry>();
+                if (settings.embedTextures && textures != null)
+                {
+                    for (int i = 0; i < model.textureConfig.Count; i++)
+                    {
+                        TextureConfig conf = model.textureConfig[i];
+                        if (!texIDToImageOffset.ContainsKey(conf.id) && textureDataBufferViewIDs.ContainsKey(conf.id))
+                        {
+                            texIDToImageOffset.Add(conf.id, listImages.Count);
+                            listImages.Add(new GLTFImageEntry(textureDataBufferViewIDs[conf.id], GLTFImageEntry.PNG, "Image" + conf.id));
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < model.textureConfig.Count; i++)
+                    {
+                        TextureConfig conf = model.textureConfig[i];
+                        if (!texIDToImageOffset.ContainsKey(conf.id))
+                        {
+                            texIDToImageOffset.Add(conf.id, listImages.Count);
+                            listImages.Add(new GLTFImageEntry(conf));
+                        }
+                    }
+                }
+
+                this.images = listImages.ToArray();
+
+                ////
+                //  TextureSamplers
+                ////
+
+                List<GLTFSamplerEntry> listSamplers = new List<GLTFSamplerEntry>();
+                for (int i = 0; i < model.textureConfig.Count; i++)
+                {
+                    listSamplers.Add(new GLTFSamplerEntry(model.textureConfig[i]));
+                }
+                this.samplers = listSamplers.ToArray();
+
+                ////
+                //  Textures
+                ////
+
+                List<GLTFTextureEntry> listTextures = new List<GLTFTextureEntry>();
+                for (int i = 0; i < model.textureConfig.Count; i++)
+                {
+                    TextureConfig conf = model.textureConfig[i];
+                    listTextures.Add(new GLTFTextureEntry(i, texIDToImageOffset[conf.id]));
+                }
+                this.textures = listTextures.ToArray();
+
+                ////
                 //  Materials
                 ////
 
@@ -1216,7 +1276,7 @@ namespace LibReplanetizer
             return ".gltf";
         }
 
-        public override void ExportModel(string fileName, Level level, Model model)
+        public override void ExportModel(string fileName, Level level, Model model, List<Texture>? textures = null)
         {
             LOGGER.Trace(fileName);
 
@@ -1231,7 +1291,7 @@ namespace LibReplanetizer
                 jsonOptions.IncludeFields = true;
                 jsonOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
 
-                GLTFDataObject gltfDataObject = new GLTFDataObject(level, model, includeSkeleton, this.settings);
+                GLTFDataObject gltfDataObject = new GLTFDataObject(model, includeSkeleton, this.settings, textures);
                 string gltfJson = JsonSerializer.Serialize(gltfDataObject, jsonOptions);
                 stream.Write(gltfJson);
             }

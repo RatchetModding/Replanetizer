@@ -197,7 +197,7 @@ namespace LibReplanetizer
         /// <summary>
         /// Export a model to a file.
         /// </summary>
-        public abstract void ExportModel(string fileName, Level level, Model model);
+        public abstract void ExportModel(string fileName, Level level, Model model, List<Texture>? textures = null);
 
         /// <summary>
         /// Returns the default exporter.
@@ -307,6 +307,7 @@ namespace LibReplanetizer
         public ExporterModelSettings.Orientation orientation = ExporterModelSettings.Orientation.Z_UP;
         public bool exportMtlFile = true;
         public bool extendedFeatures = false;
+        public bool embedTextures = false;
 
         public ExporterModelSettings()
         {

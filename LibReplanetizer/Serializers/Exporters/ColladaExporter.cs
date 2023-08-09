@@ -741,7 +741,7 @@ namespace LibReplanetizer
             }
         }
 
-        public override void ExportModel(string fileName, Level level, Model model)
+        public override void ExportModel(string fileName, Level level, Model model, List<Texture>? textures)
         {
             LOGGER.Trace(fileName);
 

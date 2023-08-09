@@ -300,7 +300,7 @@ namespace LibReplanetizer
             return vertexCount;
         }
 
-        public override void ExportModel(string fileName, Level level, Model model)
+        public override void ExportModel(string fileName, Level level, Model model, List<Texture>? textures)
         {
             string? pathName = Path.GetDirectoryName(fileName);
             string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);

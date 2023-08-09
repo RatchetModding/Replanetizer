@@ -368,15 +368,17 @@ namespace Replanetizer.Frames
                     // glTF specific settings
                     if (exportSettings.format == ExporterModelSettings.Format.glTF)
                     {
-                        bool embedTextures = false;
+                        bool embedTextures = exportSettings.embedTextures;
                         bool includeAnimations = (exportSettings.animationChoice != ExporterModelSettings.AnimationChoice.None);
 
-                        ImGui.BeginDisabled();
-                        ImGui.Checkbox("Embed Textures", ref embedTextures);
-                        ImGui.EndDisabled();
                         if (ImGui.Checkbox("Include Animations", ref includeAnimations))
                         {
                             exportSettings.animationChoice = (includeAnimations) ? ExporterModelSettings.AnimationChoice.All : ExporterModelSettings.AnimationChoice.None;
+                        }
+
+                        if (ImGui.Checkbox("Embed Textures", ref embedTextures))
+                        {
+                            exportSettings.embedTextures = embedTextures;
                         }
                     }
 
@@ -740,7 +742,7 @@ namespace Replanetizer.Frames
             // Save the settings so that modelsframes created in the future start with these settings
             lastUsedExportSettings = new ExporterModelSettings(exportSettings);
 
-            exporter.ExportModel(fileName, level, model);
+            exporter.ExportModel(fileName, level, model, selectedTextureSet);
         }
 
         private void ExportSelectedModelTextures()

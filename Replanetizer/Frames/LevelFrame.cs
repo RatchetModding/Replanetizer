@@ -574,6 +574,14 @@ namespace Replanetizer.Frames
                     textureIds.Add(t, new GLTexture(t));
                 }
             }
+
+            foreach (List<Texture> textures in level.mobyloadTextures)
+            {
+                foreach (Texture t in textures)
+                {
+                    textureIds.Add(t, new GLTexture(t));
+                }
+            }
         }
 
         private void LoadLevel(Level level)

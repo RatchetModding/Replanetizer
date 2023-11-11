@@ -270,15 +270,15 @@ namespace LibReplanetizer.Models
             byte[] uvBlock = ReadBlock(fs, uvPointer, vertexCount * uvElemSize);
             for (int i = 0; i < vertexCount; i++)
             {
-                vertexBuffer[(i * 8) + 0] = (ReadFloat(vertBlock, (i * vertexElemSize) + 0x00));    //VertexX
-                vertexBuffer[(i * 8) + 1] = (ReadFloat(vertBlock, (i * vertexElemSize) + 0x04));    //VertexY
-                vertexBuffer[(i * 8) + 2] = (ReadFloat(vertBlock, (i * vertexElemSize) + 0x08));    //VertexZ
-                vertexBuffer[(i * 8) + 3] = (ReadFloat(vertBlock, (i * vertexElemSize) + 0x0C));    //NormX
-                vertexBuffer[(i * 8) + 4] = (ReadFloat(vertBlock, (i * vertexElemSize) + 0x10));    //NormY
-                vertexBuffer[(i * 8) + 5] = (ReadFloat(vertBlock, (i * vertexElemSize) + 0x14));    //NormZ
+                vertexBuffer[(i * 8) + 0] = ReadFloat(vertBlock, (i * vertexElemSize) + 0x00);    //VertexX
+                vertexBuffer[(i * 8) + 1] = ReadFloat(vertBlock, (i * vertexElemSize) + 0x04);    //VertexY
+                vertexBuffer[(i * 8) + 2] = ReadFloat(vertBlock, (i * vertexElemSize) + 0x08);    //VertexZ
+                vertexBuffer[(i * 8) + 3] = ReadFloat(vertBlock, (i * vertexElemSize) + 0x0C);    //NormX
+                vertexBuffer[(i * 8) + 4] = ReadFloat(vertBlock, (i * vertexElemSize) + 0x10);    //NormY
+                vertexBuffer[(i * 8) + 5] = ReadFloat(vertBlock, (i * vertexElemSize) + 0x14);    //NormZ
 
-                vertexBuffer[(i * 8) + 6] = (ReadFloat(uvBlock, (i * uvElemSize) + 0x00));    //UVu
-                vertexBuffer[(i * 8) + 7] = (ReadFloat(uvBlock, (i * uvElemSize) + 0x04));    //UVv
+                vertexBuffer[(i * 8) + 6] = ReadFloat(uvBlock, (i * uvElemSize) + 0x00);    //UVu
+                vertexBuffer[(i * 8) + 7] = ReadFloat(uvBlock, (i * uvElemSize) + 0x04);    //UVv
             }
             return vertexBuffer;
         }

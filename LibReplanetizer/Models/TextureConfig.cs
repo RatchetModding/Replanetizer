@@ -38,12 +38,12 @@ namespace LibReplanetizer
             {
                 if ((mode & 0b01) > 0)
                 {
-                    return (((mode & 0b10) > 0)) ? WrapMode.ClampEdge : WrapMode.Repeat;
+                    return ((mode & 0b10) > 0) ? WrapMode.ClampEdge : WrapMode.Repeat;
                 }
 
                 if (((mode >> 24) & 0b01) > 0)
                 {
-                    return ((((mode >> 24) & 0b10) > 0)) ? WrapMode.ClampEdge : WrapMode.Repeat;
+                    return (((mode >> 24) & 0b10) > 0) ? WrapMode.ClampEdge : WrapMode.Repeat;
                 }
 
                 return WrapMode.Repeat;
@@ -55,10 +55,10 @@ namespace LibReplanetizer
                     switch (value)
                     {
                         case WrapMode.Repeat:
-                            mode = mode & (~0b10);
+                            mode &= (~0b10);
                             break;
                         case WrapMode.ClampEdge:
-                            mode = mode | 0b10;
+                            mode |= 0b10;
                             break;
                         default:
                             break;
@@ -71,10 +71,10 @@ namespace LibReplanetizer
                     switch (value)
                     {
                         case WrapMode.Repeat:
-                            mode = mode & ~(0b10 << 24);
+                            mode &= ~(0b10 << 24);
                             break;
                         case WrapMode.ClampEdge:
-                            mode = mode | (0b10 << 24);
+                            mode |= (0b10 << 24);
                             break;
                         default:
                             break;
@@ -91,12 +91,12 @@ namespace LibReplanetizer
             {
                 if (((mode >> 2) & 0b01) > 0)
                 {
-                    return ((((mode >> 2) & 0b10) > 0)) ? WrapMode.ClampEdge : WrapMode.Repeat;
+                    return (((mode >> 2) & 0b10) > 0) ? WrapMode.ClampEdge : WrapMode.Repeat;
                 }
 
                 if (((mode >> 26) & 0b01) > 0)
                 {
-                    return ((((mode >> 26) & 0b10) > 0)) ? WrapMode.ClampEdge : WrapMode.Repeat;
+                    return (((mode >> 26) & 0b10) > 0) ? WrapMode.ClampEdge : WrapMode.Repeat;
                 }
 
                 return WrapMode.Repeat;
@@ -108,10 +108,10 @@ namespace LibReplanetizer
                     switch (value)
                     {
                         case WrapMode.Repeat:
-                            mode = mode & ~(0b10 << 2);
+                            mode &= ~(0b10 << 2);
                             break;
                         case WrapMode.ClampEdge:
-                            mode = mode | (0b10 << 2);
+                            mode |= (0b10 << 2);
                             break;
                         default:
                             break;
@@ -124,10 +124,10 @@ namespace LibReplanetizer
                     switch (value)
                     {
                         case WrapMode.Repeat:
-                            mode = mode & ~(0b10 << 26);
+                            mode &= ~(0b10 << 26);
                             break;
                         case WrapMode.ClampEdge:
-                            mode = mode | (0b10 << 26);
+                            mode |= (0b10 << 26);
                             break;
                         default:
                             break;

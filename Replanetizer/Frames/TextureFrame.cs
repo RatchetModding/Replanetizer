@@ -131,10 +131,13 @@ namespace Replanetizer.Frames
                 {
                     List<Texture> textureList = level.mobyloadTextures[i];
 
-                    if (ImGui.TreeNode("Mobyload " + i))
+                    if (textureList.Count > 0)
                     {
-                        RenderTextureList(textureList, itemSizeX, levelFrame.textureIds);
-                        ImGui.TreePop();
+                        if (ImGui.TreeNode("Mobyload " + i))
+                        {
+                            RenderTextureList(textureList, itemSizeX, levelFrame.textureIds);
+                            ImGui.TreePop();
+                        }
                     }
                 }
             }

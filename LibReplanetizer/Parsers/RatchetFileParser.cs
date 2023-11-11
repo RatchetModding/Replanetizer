@@ -82,7 +82,7 @@ namespace LibReplanetizer.Parsers
             return textureList;
         }
 
-        protected List<Texture> GetTexturesMobyload(int texturePointer, int textureCount)
+        protected List<Texture> GetTexturesMobyload(int texturePointer, int textureDataPointer, int textureCount)
         {
             List<Texture> textureList = new List<Texture>(textureCount);
 
@@ -105,7 +105,7 @@ namespace LibReplanetizer.Parsers
                 {
                     length = (int) (fileStream.Length - textureList[i].vramPointer);
                 }
-                textureList[i].data = ReadBlock(fileStream, texturePointer + textureList[i].vramPointer, length);
+                textureList[i].data = ReadBlock(fileStream, textureDataPointer + textureList[i].vramPointer, length);
             }
 
             return textureList;

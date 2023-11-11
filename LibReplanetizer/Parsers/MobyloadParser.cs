@@ -25,7 +25,7 @@ namespace LibReplanetizer.Parsers
 
         public List<Texture> GetTextures()
         {
-            return GetTexturesMobyload(mobyloadHead.texturePointer, mobyloadHead.textureCount);
+            return GetTexturesMobyload(mobyloadHead.texturePointer, mobyloadHead.textureDataPointer, mobyloadHead.textureCount);
         }
 
         public List<MobyModel> GetMobyModels()
@@ -39,17 +39,6 @@ namespace LibReplanetizer.Parsers
                 {
                     models.Add(new MobyModel(fileStream, game, (short) model.Item2, model.Item1));
                 }
-            }
-
-            foreach (MobyModel model in models)
-            {
-                for (int i = 0; i < model.vertexCount; i++)
-                {
-                    // This fixes the UVs on Tyhrranosis Mobyload2.
-                    // Completely unclear how this is handled correctly.
-                    model.vertexBuffer[i * 8 + 6] += 0.285f;
-                }
-
             }
 
             return models;

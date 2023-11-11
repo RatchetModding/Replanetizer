@@ -46,9 +46,9 @@ namespace LibReplanetizer.Headers
 
             switch (game.num)
             {
-                case 2:
                 case 3:
-                    var path = Path.Join(folder, "mobyload" + id + ".ps3");
+                case 4:
+                    string? path = Path.Join(folder, "mobyload" + id + ".ps3");
                     if (File.Exists(path)) return path;
                     break;
             }

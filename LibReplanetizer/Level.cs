@@ -376,15 +376,21 @@ namespace LibReplanetizer
             mobyloadModels = new List<List<MobyModel>>();
             mobyloadTextures = new List<List<Texture>>();
 
-            for (int mobyloadFileID = 0; mobyloadFileID < 256; mobyloadFileID++)
+            for (int mobyloadFileID = 0; mobyloadFileID < 32; mobyloadFileID++)
             {
                 string? mobyloadFilePath = MobyloadHeader.FindMobyloadFile(game, enginePath, mobyloadFileID);
-                if (mobyloadFilePath == null) break;
-
-                using (MobyloadParser parser = new MobyloadParser(game, mobyloadFilePath))
+                if (mobyloadFilePath != null)
                 {
-                    mobyloadModels.Add(parser.GetMobyModels());
-                    mobyloadTextures.Add(parser.GetTextures());
+                    using (MobyloadParser parser = new MobyloadParser(game, mobyloadFilePath))
+                    {
+                        mobyloadModels.Add(parser.GetMobyModels());
+                        mobyloadTextures.Add(parser.GetTextures());
+                    }
+                }
+                else
+                {
+                    mobyloadModels.Add(new List<MobyModel>());
+                    mobyloadTextures.Add(new List<Texture>());
                 }
             }
 

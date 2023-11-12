@@ -82,6 +82,35 @@ namespace LibReplanetizer.Parsers
             return textureList;
         }
 
+        protected List<Texture> GetTexturesMobyload(int texturePointer, int textureDataPointer, int textureCount)
+        {
+            List<Texture> textureList = new List<Texture>(textureCount);
+
+            //Read the whole texture header block, and add textures based on the count
+            byte[] textureBlock = ReadBlock(fileStream, texturePointer, textureCount * Texture.TEXTUREELEMSIZE);
+            for (int i = 0; i < textureCount; i++)
+            {
+                textureList.Add(new Texture(textureBlock, i));
+            }
+
+            for (int i = 0; i < textureList.Count; i++)
+            {
+                textureList[i].mipMapCount = 0;
+                int length;
+                if (i < textureList.Count - 1)
+                {
+                    length = (int) (textureList[i + 1].vramPointer - textureList[i].vramPointer);
+                }
+                else
+                {
+                    length = (int) (fileStream.Length - textureList[i].vramPointer);
+                }
+                textureList[i].data = ReadBlock(fileStream, textureDataPointer + textureList[i].vramPointer, length);
+            }
+
+            return textureList;
+        }
+
         protected List<Tie> GetTies(List<Model> tieModels, int tiePointer, int tieCount)
         {
             List<Tie> ties = new List<Tie>(tieCount);

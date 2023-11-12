@@ -60,6 +60,8 @@ namespace LibReplanetizer
         public List<Terrain> terrainChunks;
         public List<int> textureConfigMenus;
         public List<Mission> missions;
+        public List<List<MobyModel>> mobyloadModels;
+        public List<List<Texture>> mobyloadTextures;
 
         public LevelVariables levelVariables;
         public OcclusionData? occlusionData;
@@ -268,7 +270,7 @@ namespace LibReplanetizer
 
             for (int i = 0; i < 5; i++)
             {
-                var chunkPath = Path.Join(path, @"chunk" + i + ".ps3");
+                string? chunkPath = Path.Join(path, @"chunk" + i + ".ps3");
                 if (!File.Exists(chunkPath)) continue;
 
                 using (ChunkParser chunkParser = new ChunkParser(chunkPath, game))
@@ -369,6 +371,27 @@ namespace LibReplanetizer
                 }
 
                 missions.Add(mission);
+            }
+
+            mobyloadModels = new List<List<MobyModel>>();
+            mobyloadTextures = new List<List<Texture>>();
+
+            for (int mobyloadFileID = 0; mobyloadFileID < 32; mobyloadFileID++)
+            {
+                string? mobyloadFilePath = MobyloadHeader.FindMobyloadFile(game, enginePath, mobyloadFileID);
+                if (mobyloadFilePath != null)
+                {
+                    using (MobyloadParser parser = new MobyloadParser(game, mobyloadFilePath))
+                    {
+                        mobyloadModels.Add(parser.GetMobyModels());
+                        mobyloadTextures.Add(parser.GetTextures());
+                    }
+                }
+                else
+                {
+                    mobyloadModels.Add(new List<MobyModel>());
+                    mobyloadTextures.Add(new List<Texture>());
+                }
             }
 
             using (VramParser vramParser = new VramParser(path + @"/vram.ps3"))

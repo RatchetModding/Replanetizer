@@ -106,10 +106,9 @@ namespace Replanetizer.Frames
             {
                 for (int i = 0; i < level.armorTextures.Count; i++)
                 {
-                    var textureList = level.armorTextures[i];
+                    List<Texture> textureList = level.armorTextures[i];
                     if (ImGui.TreeNode("Armor " + i))
                     {
-                        var offset = (int) ImGui.GetTreeNodeToLabelSpacing();
                         RenderTextureList(textureList, itemSizeX, levelFrame.textureIds);
                         ImGui.TreePop();
                     }
@@ -117,13 +116,28 @@ namespace Replanetizer.Frames
             }
             if (ImGui.CollapsingHeader("Mission textures"))
             {
-                foreach (var mission in level.missions)
+                foreach (Mission mission in level.missions)
                 {
                     if (ImGui.TreeNode("Mission " + mission.missionID))
                     {
-                        var offset = (int) ImGui.GetTreeNodeToLabelSpacing();
                         RenderTextureList(mission.textures, itemSizeX, levelFrame.textureIds);
                         ImGui.TreePop();
+                    }
+                }
+            }
+            if (ImGui.CollapsingHeader("Mobyload textures"))
+            {
+                for (int i = 0; i < level.mobyloadTextures.Count; i++)
+                {
+                    List<Texture> textureList = level.mobyloadTextures[i];
+
+                    if (textureList.Count > 0)
+                    {
+                        if (ImGui.TreeNode("Mobyload " + i))
+                        {
+                            RenderTextureList(textureList, itemSizeX, levelFrame.textureIds);
+                            ImGui.TreePop();
+                        }
                     }
                 }
             }

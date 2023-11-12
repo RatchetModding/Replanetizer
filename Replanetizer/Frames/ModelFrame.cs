@@ -52,6 +52,7 @@ namespace Replanetizer.Frames
         private List<Model> sortedShrubModels;
         private List<Model> sortedGadgetModels;
         private List<List<Model>> sortedMissionModels;
+        private List<List<Model>> sortedMobyloadModels;
 
         private List<ModelObject> selectedObjectInstances = new List<ModelObject>();
 
@@ -123,12 +124,21 @@ namespace Replanetizer.Frames
             {
                 sortedMissionModels.Add(new List<Model>(level.missions[i].models));
             }
+            sortedMobyloadModels = new List<List<Model>>();
+            for (int i = 0; i < level.mobyloadModels.Count; i++)
+            {
+                sortedMobyloadModels.Add(new List<Model>(level.mobyloadModels[i]));
+            }
 
             sortedMobyModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
             sortedTieModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
             sortedShrubModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
             sortedGadgetModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
             foreach (List<Model> list in sortedMissionModels)
+            {
+                list.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+            }
+            foreach (List<Model> list in sortedMobyloadModels)
             {
                 list.Sort((x, y) => (x.id < y.id) ? -1 : 1);
             }
@@ -235,8 +245,18 @@ namespace Replanetizer.Frames
                 {
                     for (int i = 0; i < sortedMissionModels.Count; i++)
                     {
-                        var mission = level.missions[i];
+                        Mission mission = level.missions[i];
                         RenderSubTree("Mission " + i, sortedMissionModels[i], mission.textures);
+                    }
+                    ImGui.TreePop();
+                }
+                if (ImGui.TreeNode("Mobyload"))
+                {
+                    for (int i = 0; i < sortedMobyloadModels.Count; i++)
+                    {
+                        List<Texture> textures = level.mobyloadTextures[i];
+                        if (textures.Count > 0)
+                            RenderSubTree("Mobyload " + i, sortedMobyloadModels[i], textures);
                     }
                     ImGui.TreePop();
                 }
@@ -314,8 +334,8 @@ namespace Replanetizer.Frames
                 System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
 
             ImGui.NextColumn();
-            var colW = ImGui.GetColumnWidth() - 10;
-            var colSize = new System.Numerics.Vector2(colW, height);
+            float colW = ImGui.GetColumnWidth() - 10.0f;
+            System.Numerics.Vector2 colSize = new System.Numerics.Vector2(colW, height);
 
             if (ImGui.BeginChild("TextureAndPropertyView", colSize, false, ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {

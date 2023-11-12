@@ -56,6 +56,8 @@ You can move around the world with keyboard and mouse:
  - Left click items to select them
  - Rotate the camera by holding the right mouse button down and moving your mouse
 
+> **&#9432;** If your computer has both a dedicated and an onboard GPU, make sure to use the dedicated GPU. On Windows with a dedicated Nvidia GPU, you can do this by right clicking on Replanetizer.exe and selecting "Run with graphics processor" -> "High performance NVIDIA processor".
+
 # Building
 
 Dependencies:

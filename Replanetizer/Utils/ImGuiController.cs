@@ -307,7 +307,7 @@ void main()
 
             for (int i = 0; i < drawData.CmdListsCount; i++)
             {
-                ImDrawListPtr cmdList = drawData.CmdListsRange[i];
+                ImDrawListPtr cmdList = drawData.CmdLists[i];
 
                 int vertexSize = cmdList.VtxBuffer.Size * Unsafe.SizeOf<ImDrawVert>();
                 if (vertexSize > vertexBufferSize)
@@ -360,7 +360,7 @@ void main()
             // Render command lists
             for (int n = 0; n < drawData.CmdListsCount; n++)
             {
-                ImDrawListPtr cmdList = drawData.CmdListsRange[n];
+                ImDrawListPtr cmdList = drawData.CmdLists[n];
 
                 GL.NamedBufferSubData(vertexBuffer, IntPtr.Zero, cmdList.VtxBuffer.Size * Unsafe.SizeOf<ImDrawVert>(), cmdList.VtxBuffer.Data);
                 GLUtil.CheckGlError($"Data Vert {n}");

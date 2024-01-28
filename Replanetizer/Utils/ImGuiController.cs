@@ -57,7 +57,6 @@ namespace Replanetizer.Utils
             io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
 
             CreateDeviceResources();
-            SetKeyMappings();
 
             SetPerFrameImGuiData(1f / 60f);
 
@@ -240,11 +239,11 @@ void main()
 
             foreach (Keys key in Enum.GetValues(typeof(Keys)))
             {
-                if (key == Keys.Unknown)
+                if (key == Keys.Unknown || !keyboardState.IsKeyDown(key))
                 {
                     continue;
                 }
-                io.KeysDown[(int) key] = keyboardState.IsKeyDown(key);
+                io.AddKeyEvent(ConvertKeyToImGuiKey(key), true);
             }
 
             foreach (var c in PRESSED_CHARS)
@@ -272,28 +271,51 @@ void main()
             io.MouseWheelH = offset.X;
         }
 
-        private static void SetKeyMappings()
+        private static ImGuiKey ConvertKeyToImGuiKey(Keys key)
         {
-            ImGuiIOPtr io = ImGui.GetIO();
-            io.KeyMap[(int) ImGuiKey.Tab] = (int) Keys.Tab;
-            io.KeyMap[(int) ImGuiKey.LeftArrow] = (int) Keys.Left;
-            io.KeyMap[(int) ImGuiKey.RightArrow] = (int) Keys.Right;
-            io.KeyMap[(int) ImGuiKey.UpArrow] = (int) Keys.Up;
-            io.KeyMap[(int) ImGuiKey.DownArrow] = (int) Keys.Down;
-            io.KeyMap[(int) ImGuiKey.PageUp] = (int) Keys.PageUp;
-            io.KeyMap[(int) ImGuiKey.PageDown] = (int) Keys.PageDown;
-            io.KeyMap[(int) ImGuiKey.Home] = (int) Keys.Home;
-            io.KeyMap[(int) ImGuiKey.End] = (int) Keys.End;
-            io.KeyMap[(int) ImGuiKey.Delete] = (int) Keys.Delete;
-            io.KeyMap[(int) ImGuiKey.Backspace] = (int) Keys.Backspace;
-            io.KeyMap[(int) ImGuiKey.Enter] = (int) Keys.Enter;
-            io.KeyMap[(int) ImGuiKey.Escape] = (int) Keys.Escape;
-            io.KeyMap[(int) ImGuiKey.A] = (int) Keys.A;
-            io.KeyMap[(int) ImGuiKey.C] = (int) Keys.C;
-            io.KeyMap[(int) ImGuiKey.V] = (int) Keys.V;
-            io.KeyMap[(int) ImGuiKey.X] = (int) Keys.X;
-            io.KeyMap[(int) ImGuiKey.Y] = (int) Keys.Y;
-            io.KeyMap[(int) ImGuiKey.Z] = (int) Keys.Z;
+            switch (key)
+            {
+                case Keys.Tab:
+                    return ImGuiKey.Tab;
+                case Keys.Left:
+                    return ImGuiKey.LeftArrow;
+                case Keys.Right:
+                    return ImGuiKey.RightArrow;
+                case Keys.Up:
+                    return ImGuiKey.UpArrow;
+                case Keys.Down:
+                    return ImGuiKey.DownArrow;
+                case Keys.PageUp:
+                    return ImGuiKey.PageUp;
+                case Keys.PageDown:
+                    return ImGuiKey.PageDown;
+                case Keys.Home:
+                    return ImGuiKey.Home;
+                case Keys.End:
+                    return ImGuiKey.End;
+                case Keys.Delete:
+                    return ImGuiKey.Delete;
+                case Keys.Backspace:
+                    return ImGuiKey.Backspace;
+                case Keys.Enter:
+                    return ImGuiKey.Enter;
+                case Keys.Escape:
+                    return ImGuiKey.Escape;
+                case Keys.A:
+                    return ImGuiKey.A;
+                case Keys.C:
+                    return ImGuiKey.C;
+                case Keys.V:
+                    return ImGuiKey.V;
+                case Keys.X:
+                    return ImGuiKey.X;
+                case Keys.Y:
+                    return ImGuiKey.Y;
+                case Keys.Z:
+                    return ImGuiKey.Z;
+            }
+
+            return (ImGuiKey) key;
         }
 
         private void RenderImDrawData(ImDrawDataPtr drawData)

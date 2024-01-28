@@ -43,10 +43,13 @@ Replanetizer is still in an early state of development. Its feature set entails:
 
 Support for Ratchet Deadlocked is available but low priority.
 
+> If you are looking for a level editor for the PS2 versions of the games, use [Wrench](https://github.com/chaoticgd/wrench) instead.
+
 # Usage
 
-Extract a `.psarc` file from a game using seperate tools (PSArcTool.exe for example).
-Use File -> Open, and select a `engine.ps3` file inside a level folder. It is recommended to keep the folder structure present in the `.psarc` file.
+First you need to unpack the game's files so that Replanetizer can access it. These files are packed in a file called `PS3Arc.psarc`. If you have the game installed in `RPCS3`, you can find the `PS3Arc.psarc` of Ratchet and Clank 1 (NPEA00385) in `[RPCS3 Directory]/dev_hdd0/game/NPEA00385/USRDIR/rc1/ps3data`. You can unpack this file using tools like [PSArc-cl](https://github.com/MilchRatchet/PSArcInterface). It is recommended to not change the folder structure of the `PS3Arc.psarc` contents after unpacking as Replanetizer may otherwise fail to find certain files.
+
+To load a level, start Replanetizer and use File -> Open, then select a `engine.ps3` file inside one of the level folders.
 
 To apply changes to the game, you need to either repack the files into a `.psarc` file or use an incomplete `.psarc` file. Any file missing in a `.psarc` file will be loaded from the correspondent location outside the `.psarc` file.
 
@@ -84,7 +87,7 @@ OpenGL 3.3 is used for the rendering.
 
 # Licensing
 
-Replanetizer is Copyright (C) 2018-2023, The Replanetizer Contributors.
+Replanetizer is Copyright (C) 2018-2024, The Replanetizer Contributors.
 
 Replanetizer is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

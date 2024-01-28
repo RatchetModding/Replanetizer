@@ -284,12 +284,12 @@ namespace LibReplanetizer.Models
         }
 
         //Get indices
-        public static ushort[] GetIndices(FileStream fs, int indexPointer, int faceCount, int offset = 0)
+        public static ushort[] GetIndices(FileStream fs, int indexPointer, int indexCount, int offset = 0)
         {
-            ushort[] indexBuffer = new ushort[faceCount];
-            byte[] indexBlock = ReadBlock(fs, indexPointer, faceCount * sizeof(ushort));
+            ushort[] indexBuffer = new ushort[indexCount];
+            byte[] indexBlock = ReadBlock(fs, indexPointer, indexCount * sizeof(ushort));
 
-            for (int i = 0; i < faceCount; i++)
+            for (int i = 0; i < indexCount; i++)
             {
                 ushort face = ReadUshort(indexBlock, i * sizeof(ushort));
                 indexBuffer[i] = (ushort) (face - offset);

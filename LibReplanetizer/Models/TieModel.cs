@@ -62,13 +62,13 @@ namespace LibReplanetizer.Models
             size = 1.0f;
 
             textureConfig = GetTextureConfigs(fs, texturePointer, textureCount, TIETEXELEMSIZE);
-            int faceCount = GetFaceCount();
+            int indexCount = GetFaceCount();
 
             //Get vertex buffer float[vertX, vertY, vertZ, normX, normY, normZ] and UV array float[U, V] * vertexCount
             vertexBuffer = GetVertices(fs, vertexPointer, uvPointer, vertexCount, TIEVERTELEMSIZE, TIEUVELEMSIZE);
 
             //Get index buffer ushort[i] * faceCount
-            indexBuffer = GetIndices(fs, indexPointer, faceCount);
+            indexBuffer = GetIndices(fs, indexPointer, indexCount);
         }
 
         public byte[] SerializeHead(int offStart)

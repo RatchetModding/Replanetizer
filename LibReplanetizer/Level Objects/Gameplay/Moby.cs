@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
+// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -694,6 +694,8 @@ namespace LibReplanetizer.LevelObjects
             public byte group { get; set; }
             public byte mClass { get; set; }
             public byte alpha { get; set; }
+            public uint pClass { get; set; }
+            public uint pChain { get; set; }
             public float scale { get; set; }
             public byte updateDistance { get; set; }
             public byte visible { get; set; }
@@ -703,22 +705,28 @@ namespace LibReplanetizer.LevelObjects
             public Rgb24 color { get; set; }
             public int light { get; set; }
             public Vector4 rotation { get; set; }
+            public byte previousAnimationFrame { get; set; }
             public byte animationFrame { get; set; }
-            public byte updateID { get; set; }
+            public byte previousAnimationID { get; set; }
             public byte animationID { get; set; }
-            public float unk54 { get; set; }
+            public float animationBlend { get; set; }
             public float unk58 { get; set; }
-            public float framerate { get; set; }
+            public float frameSpeed { get; set; }
+            public uint pAnimationLayers { get; set; }
+            public uint pPreviousAnimationData { get; set; }
+            public uint pCurrentAnimationData { get; set; }
+            public uint pUpdate { get; set; }
             public uint pVars { get; set; }
             public byte unk7C { get; set; }
             public byte unk7D { get; set; }
             public byte unk7E { get; set; }
-            public byte animState { get; set; }
+            public byte shadow { get; set; }
             public uint unk80 { get; set; }
             public int unk84 { get; set; }
             public int unk88 { get; set; }
             public ushort oClass { get; set; }
             public ushort UID { get; set; }
+            public Matrix3x4 transformation { get; set; }
 
             public IngameMobyMemory()
             {
@@ -750,6 +758,8 @@ namespace LibReplanetizer.LevelObjects
                 group = memory[offset + 0x21];
                 mClass = memory[offset + 0x22];
                 alpha = memory[offset + 0x23];
+                pClass = ReadUint(memory, offset + 0x24);
+                pChain = ReadUint(memory, offset + 0x28);
                 scale = ReadFloat(memory, offset + 0x2C);
 
                 updateDistance = memory[offset + 0x30];
@@ -768,18 +778,24 @@ namespace LibReplanetizer.LevelObjects
                 float rotZ = ReadFloat(memory, offset + 0x48);
                 float rotW = ReadFloat(memory, offset + 0x4C);
 
+                previousAnimationFrame = memory[offset + 0x50];
                 animationFrame = memory[offset + 0x51];
-                updateID = memory[offset + 0x52];
+                previousAnimationID = memory[offset + 0x52];
                 animationID = memory[offset + 0x53];
-                unk54 = ReadFloat(memory, offset + 0x54);
+                animationBlend = ReadFloat(memory, offset + 0x54);
                 unk58 = ReadFloat(memory, offset + 0x58);
-                framerate = ReadFloat(memory, offset + 0x5C);
+                frameSpeed = ReadFloat(memory, offset + 0x5C);
 
+                pAnimationLayers = ReadUint(memory, offset + 0x60);
+                pPreviousAnimationData = ReadUint(memory, offset + 0x68);
+                pCurrentAnimationData = ReadUint(memory, offset + 0x6C);
+
+                pUpdate = ReadUint(memory, offset + 0x74);
                 pVars = ReadUint(memory, offset + 0x78);
                 unk7C = memory[offset + 0x7C];
                 unk7D = memory[offset + 0x7D];
                 unk7E = memory[offset + 0x7E];
-                animState = memory[offset + 0x7F];
+                shadow = memory[offset + 0x7F];
 
                 unk80 = ReadUint(memory, offset + 0x80);
                 unk84 = ReadInt(memory, offset + 0x84);
@@ -789,16 +805,12 @@ namespace LibReplanetizer.LevelObjects
 
                 UID = ReadUshort(memory, offset + 0xB2);
 
+                transformation = ReadMatrix3x4(memory, offset + 0xC0);
+
                 collPos = new Vector4(collX, collY, collZ, collW);
                 position = new Vector4(X, Y, Z, W);
                 rotation = new Vector4(rotX, rotY, rotZ, rotW);
                 color = Color.FromRgb((byte) red, (byte) green, (byte) blue).ToPixel<Rgb24>();
-
-                // TODO: Understand this better, this is just a hack for now.
-                if (oClass == 71 || oClass == 190 || oClass == 192 || oClass == 208 || oClass == 229)
-                {
-                    rotation = rotation + new Vector4(1.5707964f, 0.0f, 0.0f, 0.0f);
-                }
             }
 
             public void UpdateRC23(byte[] memory, int offset)
@@ -830,14 +842,17 @@ namespace LibReplanetizer.LevelObjects
                 byte red = memory[offset + 0x3B];
                 light = ReadInt(memory, offset + 0x3C);
 
+                previousAnimationFrame = memory[offset + 0x40];
                 animationFrame = memory[offset + 0x41];
-                updateID = memory[offset + 0x42];
+                previousAnimationID = memory[offset + 0x42];
                 animationID = memory[offset + 0x43];
-                unk54 = ReadFloat(memory, offset + 0x44);
+                animationBlend = ReadFloat(memory, offset + 0x44);
                 unk58 = ReadFloat(memory, offset + 0x48);
-                framerate = ReadFloat(memory, offset + 0x4C);
+                frameSpeed = ReadFloat(memory, offset + 0x4C);
 
                 oClass = ReadUshort(memory, offset + 0xAA);
+
+                transformation = ReadMatrix3x4(memory, offset + 0xC0);
 
                 float rotX = ReadFloat(memory, offset + 0xF0);
                 float rotY = ReadFloat(memory, offset + 0xF4);
@@ -902,13 +917,28 @@ namespace LibReplanetizer.LevelObjects
 
             mobyID = memory.UID;
             groupIndex = memory.group;
-            position = memory.position.Xyz;
-            rotation = Quaternion.FromEulerAngles(memory.rotation.Xyz);
-            scale = new Vector3(memory.scale / modelSize);
             color = memory.color;
             light = memory.light;
 
-            UpdateTransformMatrix();
+            modelMatrix.M11 = memory.transformation.M11 * memory.scale;
+            modelMatrix.M12 = memory.transformation.M12 * memory.scale;
+            modelMatrix.M13 = memory.transformation.M13 * memory.scale;
+            modelMatrix.M14 = 0.0f;
+            modelMatrix.M21 = memory.transformation.M21 * memory.scale;
+            modelMatrix.M22 = memory.transformation.M22 * memory.scale;
+            modelMatrix.M23 = memory.transformation.M23 * memory.scale;
+            modelMatrix.M24 = 0.0f;
+            modelMatrix.M31 = memory.transformation.M31 * memory.scale;
+            modelMatrix.M32 = memory.transformation.M32 * memory.scale;
+            modelMatrix.M33 = memory.transformation.M33 * memory.scale;
+            modelMatrix.M34 = 0.0f;
+            modelMatrix.M41 = memory.transformation.M14 + position.X;
+            modelMatrix.M42 = memory.transformation.M24 + position.Y;
+            modelMatrix.M43 = memory.transformation.M34 + position.Z;
+            modelMatrix.M44 = 1.0f;
+            position = modelMatrix.ExtractTranslation();
+            rotation = modelMatrix.ExtractRotation();
+            scale = modelMatrix.ExtractScale();
         }
     }
 }

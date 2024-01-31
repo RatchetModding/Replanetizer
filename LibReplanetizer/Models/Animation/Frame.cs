@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
+// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -145,14 +145,28 @@ namespace LibReplanetizer.Models.Animations
             Quaternion rot1 = (Quaternion) baseRotation;
             Quaternion rot2 = (Quaternion) nextRotation;
 
-            // Quaternion.Slerp does not work for some reason, it always returns the first operand.
-            Quaternion rotation = new Quaternion(
-                rot1.X + (rot2.X - rot1.X) * blend,
-                rot1.Y + (rot2.Y - rot1.Y) * blend,
-                rot1.Z + (rot2.Z - rot1.Z) * blend,
-                rot1.W + (rot2.W - rot1.W) * blend);
+            rot1 *= (1.0f - blend);
+            rot2 *= blend;
 
-            return Matrix4.CreateFromQuaternion(rotation);
+            float dotProduct = rot1.X * rot2.X + rot1.Y * rot2.Y + rot1.Z * rot2.Z + rot1.W * rot2.W;
+
+            if (dotProduct >= 0.0f)
+            {
+                rot1 += rot2;
+            }
+            else
+            {
+                rot1 -= rot2;
+            }
+
+            float normSquared = rot1.X * rot1.X + rot1.Y * rot1.Y + rot1.Z * rot1.Z + rot1.W * rot1.W;
+
+            if (normSquared > 0.0f)
+            {
+                rot1 *= 1.0f / MathF.Sqrt(normSquared);
+            }
+
+            return Matrix4.CreateFromQuaternion(rot1);
         }
 
         public Vector3? GetScaling(int bone, Frame nextFrame, float blend)

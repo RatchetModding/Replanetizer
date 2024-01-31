@@ -13,6 +13,11 @@ namespace LibReplanetizer.LevelObjects
 {
     public class DirectionalLight : LevelObject
     {
+        // This is the implementation for the DirectionalLights in the gameplay_ntsc file.
+        // These are unused and in parts still in little endian.
+        // This here is merely for documentation and serialization.
+        // Do not mistake this for the actual directional lights which are stored in the engine file.
+
         public const int ELEMENTSIZE = 0x40;
 
         public Vector4 colorA;

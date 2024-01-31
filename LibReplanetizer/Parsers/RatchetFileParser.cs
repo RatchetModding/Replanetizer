@@ -95,7 +95,6 @@ namespace LibReplanetizer.Parsers
 
             for (int i = 0; i < textureList.Count; i++)
             {
-                textureList[i].mipMapCount = 0;
                 int length;
                 if (i < textureList.Count - 1)
                 {

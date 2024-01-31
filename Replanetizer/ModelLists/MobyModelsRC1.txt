@@ -256,7 +256,7 @@
 025F=Helipack
 025C=Sandmouse house
 0260=Thrusterpack
-0261=Hyropack
+0261=Hydropack
 0264=Yellow Enemy
 0265=UNKNOWN (Usually in rivers)
 0266=Mapper

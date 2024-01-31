@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2023, The Replanetizer Contributors.
+// Copyright (C) 2018-2023, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -226,7 +226,7 @@ namespace Replanetizer.Frames
                 filterUpper = filter.ToUpper();
             }
 
-            if (ImGui.BeginChild("TreeView", childSize, false, ImGuiWindowFlags.AlwaysVerticalScrollbar))
+            if (ImGui.BeginChild("TreeView", childSize, ImGuiChildFlags.None, ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {
                 RenderSubTree("Moby", sortedMobyModels, level.textures);
                 RenderSubTree("Tie", sortedTieModels, level.textures);
@@ -337,7 +337,7 @@ namespace Replanetizer.Frames
             float colW = ImGui.GetColumnWidth() - 10.0f;
             System.Numerics.Vector2 colSize = new System.Numerics.Vector2(colW, height);
 
-            if (ImGui.BeginChild("TextureAndPropertyView", colSize, false, ImGuiWindowFlags.AlwaysVerticalScrollbar))
+            if (ImGui.BeginChild("TextureAndPropertyView", colSize, ImGuiChildFlags.None, ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {
                 if (selectedModel != null)
                 {

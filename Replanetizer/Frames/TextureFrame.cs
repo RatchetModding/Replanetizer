@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Copyright (C) 2018-2021, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -41,7 +41,7 @@ namespace Replanetizer.Frames
             {
                 Texture t = textures[i];
 
-                ImGui.BeginChild("imageChild_" + prefix + i, ITEM_SIZE, false);
+                ImGui.BeginChild("imageChild_" + prefix + i, ITEM_SIZE, ImGuiChildFlags.None);
                 ImGui.Image((IntPtr) textureIds[t].textureID, IMAGE_SIZE);
                 string idText = prefix + t.id;
                 float idWidth = ImGui.CalcTextSize(idText).X;

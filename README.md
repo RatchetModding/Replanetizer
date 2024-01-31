@@ -39,11 +39,17 @@ Replanetizer is still in an early state of development. Its feature set entails:
    - Rigged models including animations (`.gltf`, `.dae`, `.obj`)
    - Level as a model (`.obj`)
    - Collision (`.obj`)
- - Live inspection of a game running in emulator
+ - Live inspection of a game running in emulator ([RPCS3](https://github.com/RPCS3/rpcs3))
 
 Support for Ratchet Deadlocked is available but low priority.
 
 > If you are looking for a level editor for the PS2 versions of the games, use [Wrench](https://github.com/chaoticgd/wrench) instead.
+
+# Binaries
+
+You can find prebuilt binaries of Replanetizer in the releases section:
+
+- [Release Builds](https://github.com/RatchetModding/Replanetizer/releases)
 
 # Usage
 

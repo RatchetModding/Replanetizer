@@ -566,37 +566,39 @@ namespace Replanetizer.Frames
             }
         }
 
+        private bool PrepareForArrowInputList(List<Model> models, List<Texture>? textures = null, List<List<Texture>>? textureSet = null)
+        {
+            var idx = models.FindIndex(m => ReferenceEquals(m, selectedModel));
+            if (idx == -1) return false;
+
+            selectedModelIndex = idx;
+            selectedModelList = models;
+
+            // This is a little weird because armorTextures is a list
+            // of a list of textures -- one list per armor set.
+            selectedModelTexturesSet = textures;
+            selectedModelArmorTexturesSet = textureSet;
+
+            return true;
+        }
+
         /// <summary>
         /// Use selectedModel to prepare selectedModelIndex and
         /// selectedModelList for using arrows to navigate through models.
         /// </summary>
         private void PrepareForArrowInput()
         {
-            List<Model>[] modelLists = {
-                sortedMobyModels, sortedTieModels, sortedShrubModels,
-                sortedGadgetModels, level.armorModels
-            };
-            foreach (var models in modelLists)
-            {
-                var idx = models.FindIndex(m => ReferenceEquals(m, selectedModel));
-                if (idx == -1) continue;
+            if (PrepareForArrowInputList(sortedMobyModels, level.textures)) return;
+            if (PrepareForArrowInputList(sortedTieModels, level.textures)) return;
+            if (PrepareForArrowInputList(sortedShrubModels, level.textures)) return;
+            if (PrepareForArrowInputList(sortedGadgetModels, (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures)) return;
+            if (PrepareForArrowInputList(level.armorModels, null, level.armorTextures)) return;
 
-                selectedModelIndex = idx;
-                selectedModelList = models;
+            for (int i = 0; i < sortedMissionModels.Count; i++)
+                if (PrepareForArrowInputList(sortedMissionModels[i], level.missions[i].textures)) return;
 
-                // This is a little weird because armorTextures is a list
-                // of a list of textures -- one list per armor set.
-                selectedModelTexturesSet = null;
-                selectedModelArmorTexturesSet = null;
-                if (ReferenceEquals(models, sortedGadgetModels))
-                    selectedModelTexturesSet = (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures;
-                else if (ReferenceEquals(models, level.armorModels))
-                    selectedModelArmorTexturesSet = level.armorTextures;
-                else
-                    selectedModelTexturesSet = level.textures;
-
-                return;
-            }
+            for (int i = 0; i < sortedMobyloadModels.Count; i++)
+                if (PrepareForArrowInputList(sortedMobyloadModels[i], level.mobyloadTextures[i])) return;
         }
 
         private void SelectModel(Model? model)

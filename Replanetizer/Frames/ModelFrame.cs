@@ -237,7 +237,7 @@ namespace Replanetizer.Frames
                     for (int i = 0; i < level.armorModels.Count; i++)
                     {
                         Model armor = level.armorModels[i];
-                        RenderModelEntry(armor, level.armorTextures[i], GetDisplayName(armor));
+                        RenderModelEntry(armor, level.armorTextures[i], "Armor " + i);
                     }
                     ImGui.TreePop();
                 }

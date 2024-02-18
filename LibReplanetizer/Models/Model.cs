@@ -38,7 +38,7 @@ namespace LibReplanetizer.Models
         }
 
         [Category("Attributes"), DisplayName("Face Count")]
-        public int faceCount
+        public virtual int faceCount
         {
             get
             {

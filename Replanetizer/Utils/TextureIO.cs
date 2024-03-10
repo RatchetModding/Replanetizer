@@ -97,7 +97,7 @@ namespace Replanetizer.Utils
 
             for (int i = 0; i < level.mobyloadTextures.Count; i++)
             {
-                List<Texture> textures = level.missions[i].textures;
+                List<Texture> textures = level.mobyloadTextures[i];
                 for (int j = 0; j < textures.Count; j++)
                 {
                     ExportTexture(textures[j], Path.Join(path, $"mobyload_{i}_{j}.png"), true);

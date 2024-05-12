@@ -378,6 +378,19 @@ namespace Replanetizer.Frames
                     {
                         ImGui.Checkbox("Include MTL File", ref exportSettings.exportMtlFile);
                         ImGui.Checkbox("Extended Features", ref exportSettings.extendedFeatures);
+
+                        // TODO: (Milch) Write a separate function for this so we can start using tooltips in more places without copy pasting the code all the time.
+                        ImGui.SameLine();
+                        ImGui.TextDisabled("(?)");
+                        if (ImGui.IsItemHovered())
+                        {
+                            ImGui.BeginTooltip();
+                            ImGui.PushTextWrapPos(ImGui.GetFontSize() * 40.0f);
+                            ImGui.TextUnformatted("Exports UV clamping modes.");
+                            ImGui.PopTextWrapPos();
+                            ImGui.EndTooltip();
+                        }
+
                         int orientation = (int) exportSettings.orientation;
                         if (ImGui.Combo("Orientation", ref orientation, ExporterModelSettings.ORIENTATION_STRINGS, ExporterModelSettings.ORIENTATION_STRINGS.Length))
                         {

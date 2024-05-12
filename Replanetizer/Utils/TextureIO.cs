@@ -34,7 +34,16 @@ namespace Replanetizer.Utils
                     image.SaveAsJpeg(path);
                     break;
                 default:
-                    image.SaveAsPng(path);
+                    PngEncoder pngEncoder = new PngEncoder() {
+                        Gamma = 1.0f / 2.2f,                                        // Textures are sRGB encoded
+                        ColorType = PngColorType.RgbWithAlpha,                        
+                        TransparentColorMode = PngTransparentColorMode.Preserve,    // Some textures in RaC 3 are fully transparent but are rendered without transparency.
+                        BitDepth = PngBitDepth.Bit8,
+                        InterlaceMethod = PngInterlaceMode.None,                    // Interlacing may not be supported by all PNG importers.
+                        FilterMethod = PngFilterMethod.Paeth,                       // Combined filter method may not be supported by all PNG importers.
+                        CompressionLevel = PngCompressionLevel.BestCompression      // Textures are small so compression speed is not a huge issue.
+                    };
+                    image.SaveAsPng(path, pngEncoder);
                     break;
             }
         }

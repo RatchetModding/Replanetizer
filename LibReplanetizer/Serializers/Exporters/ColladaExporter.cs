@@ -448,10 +448,10 @@ namespace LibReplanetizer
                         for (int x = 0; x < vertexCount; x++)
                         {
                             byte[] colors = BitConverter.GetBytes(model.vertexBuffer[(x * bufferStride) + vcOffset + 0x00]);
-                            float a = ((float) colors[0]) / 255.0f;
-                            float b = ((float) colors[1]) / 255.0f;
-                            float g = ((float) colors[2]) / 255.0f;
-                            float r = ((float) colors[3]) / 255.0f;
+                            float a = ((float) colors[3]) / 255.0f;
+                            float b = ((float) colors[2]) / 255.0f;
+                            float g = ((float) colors[1]) / 255.0f;
+                            float r = ((float) colors[0]) / 255.0f;
                             colladaStream.Write(r.ToString("G", en_US) + " " + g.ToString("G", en_US) + " " + b.ToString("G", en_US) + " " + a.ToString("G", en_US) + " ");
                         }
                     }

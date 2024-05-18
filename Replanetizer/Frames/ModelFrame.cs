@@ -386,7 +386,7 @@ namespace Replanetizer.Frames
                         {
                             ImGui.BeginTooltip();
                             ImGui.PushTextWrapPos(ImGui.GetFontSize() * 40.0f);
-                            ImGui.TextUnformatted("Exports UV clamping modes.");
+                            ImGui.TextUnformatted("Enables UV clamping modes and vertex colors.");
                             ImGui.PopTextWrapPos();
                             ImGui.EndTooltip();
                         }

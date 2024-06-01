@@ -249,6 +249,13 @@ namespace LibReplanetizer.Models.Animations
         // Constructor for Deadlocked
         public Frame(byte[] frameBlock, int offset, int numRotations, int numScalings, int numTranslations)
         {
+            // This code is not correct and is causing crashes.
+            // TODO: (Milch) Implement support for Deadlocked animations.
+#if true
+            rotations = new List<FrameBoneRotation>();
+            scalings = new List<FrameBoneScaling>();
+            translations = new List<FrameBoneTranslation>();
+#else
             int rotationOffset = 0;
             rotations = new List<FrameBoneRotation>();
             for (int i = 0; i < numRotations; i++)
@@ -284,6 +291,7 @@ namespace LibReplanetizer.Models.Animations
                 byte bone = frameBlock[offset + translationOffset + i * 8 + 0x07];
                 translations.Add(new FrameBoneTranslation(x, y, z, bone, unk));
             }
+#endif
         }
 
         public byte[] Serialize()

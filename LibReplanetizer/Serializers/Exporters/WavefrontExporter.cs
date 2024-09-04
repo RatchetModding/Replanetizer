@@ -26,6 +26,21 @@ namespace LibReplanetizer
             Vector3 staticColor = new Vector3();
             bool colorIsPerVertex = false;
 
+            public VertexColorContainer(SkyboxModel skybox)
+            {
+                colorIsPerVertex = true;
+
+                int vertexCount = skybox.vertexBuffer.Length / 0x06;
+                for (int i = 0; i < vertexCount; i++)
+                {
+                    byte[] colors = BitConverter.GetBytes(skybox.vertexBuffer[i * skybox.vertexStride + 0x05]);
+                    float r = ((float) colors[0]) / 255.0f;
+                    float g = ((float) colors[1]) / 255.0f;
+                    float b = ((float) colors[2]) / 255.0f;
+                    vertexColors.Add(new Vector3(r, g, b));
+                }
+            }
+
             public VertexColorContainer(ModelObject t)
             {
                 if (t is TerrainFragment || t is Tie)
@@ -201,7 +216,7 @@ namespace LibReplanetizer
         {
             if (model == null) return 0;
 
-            // skybox model has no normals and does the vertex buffer has a different layout
+            // skybox model has no normals and thus the vertex buffer has a different layout
             // if we see other cases like this, it may be advisable to generalize this
             bool skyboxModel = (model is SkyboxModel);
 
@@ -222,7 +237,7 @@ namespace LibReplanetizer
                 Vector3 pos = (new Vector4(px, py, pz, 1.0f) * modelMatrix).Xyz;
                 ChangeOrientation(ref pos, modelSettings.orientation);
                 vertices[vertIdx] = pos;
-                if (levelSettings.writeColors && vColors != null)
+                if ((levelSettings.writeColors || modelSettings.extendedFeatures) && vColors != null)
                 {
                     Vector3 color = vColors.GetColor(vertIdx);
                     objfs.WriteLine("v " + pos.X.ToString("G", en_US) + " " + pos.Y.ToString("G", en_US) + " " + pos.Z.ToString("G", en_US) + " " + color.X.ToString("G", en_US) + " " + color.Y.ToString("G", en_US) + " " + color.Z.ToString("G", en_US));
@@ -324,7 +339,9 @@ namespace LibReplanetizer
 
                 Matrix4 scale = Matrix4.CreateScale(model.size);
 
-                WriteData(objfs, model, 0, scale);
+                VertexColorContainer? vColors = (model is SkyboxModel) ? new VertexColorContainer((SkyboxModel)model) : null;
+
+                WriteData(objfs, model, 0, scale, vColors);
             }
         }
 

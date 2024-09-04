@@ -440,11 +440,10 @@ namespace Replanetizer.Frames
         {
             int prevWidth = width, prevHeight = height;
 
-            System.Numerics.Vector2 vMin = ImGui.GetWindowContentRegionMin();
-            System.Numerics.Vector2 vMax = ImGui.GetWindowContentRegionMax();
+            System.Numerics.Vector2 avail = ImGui.GetContentRegionAvail();
 
-            width = (int) (vMax.X - vMin.X);
-            height = (int) (vMax.Y - vMin.Y);
+            width = (int) avail.X;
+            height = (int) avail.Y;
 
             if (width <= 0 || height <= 0) return;
 
@@ -456,8 +455,8 @@ namespace Replanetizer.Frames
                 OnResize();
             }
 
-            System.Numerics.Vector2 windowPos = ImGui.GetWindowPos();
-            Vector2 windowZero = new Vector2(windowPos.X + vMin.X, windowPos.Y + vMin.Y);
+            System.Numerics.Vector2 cursorScreenPos = ImGui.GetCursorScreenPos();
+            Vector2 windowZero = new Vector2(cursorScreenPos.X, cursorScreenPos.Y);
             mousePos = wnd.MousePosition - windowZero;
             contentRegion = new Rectangle((int) windowZero.X, (int) windowZero.Y, width, height);
         }

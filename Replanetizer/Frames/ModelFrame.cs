@@ -356,7 +356,8 @@ namespace Replanetizer.Frames
                     // Collada specific settings
                     if (exportSettings.format == ExporterModelSettings.Format.Collada)
                     {
-                        if (selectedModel is MobyModel mobyModel && mobyModel.animations.Count > 0)
+                        // TODO: (Milch) Enable animations for Deadlocked once they are implemented.
+                        if (level.game != GameType.DL && selectedModel is MobyModel mobyModel && mobyModel.animations.Count > 0)
                         {
                             int animationChoice = (int) exportSettings.animationChoice;
                             if (ImGui.Combo("Animations", ref animationChoice, ExporterModelSettings.ANIMATION_CHOICE_STRINGS, ExporterModelSettings.ANIMATION_CHOICE_STRINGS.Length - 1))
@@ -378,6 +379,19 @@ namespace Replanetizer.Frames
                     {
                         ImGui.Checkbox("Include MTL File", ref exportSettings.exportMtlFile);
                         ImGui.Checkbox("Extended Features", ref exportSettings.extendedFeatures);
+
+                        // TODO: (Milch) Write a separate function for this so we can start using tooltips in more places without copy pasting the code all the time.
+                        ImGui.SameLine();
+                        ImGui.TextDisabled("(?)");
+                        if (ImGui.IsItemHovered())
+                        {
+                            ImGui.BeginTooltip();
+                            ImGui.PushTextWrapPos(ImGui.GetFontSize() * 40.0f);
+                            ImGui.TextUnformatted("Enables UV clamping modes and vertex colors.");
+                            ImGui.PopTextWrapPos();
+                            ImGui.EndTooltip();
+                        }
+
                         int orientation = (int) exportSettings.orientation;
                         if (ImGui.Combo("Orientation", ref orientation, ExporterModelSettings.ORIENTATION_STRINGS, ExporterModelSettings.ORIENTATION_STRINGS.Length))
                         {
@@ -388,7 +402,8 @@ namespace Replanetizer.Frames
                     // glTF specific settings
                     if (exportSettings.format == ExporterModelSettings.Format.glTF)
                     {
-                        if (selectedModel is MobyModel mobyModel && mobyModel.animations.Count > 0)
+                        // TODO: (Milch) Enable animations for Deadlocked once they are implemented.
+                        if (level.game != GameType.DL && selectedModel is MobyModel mobyModel && mobyModel.animations.Count > 0)
                         {
                             bool includeAnimations = (exportSettings.animationChoice != ExporterModelSettings.AnimationChoice.None);
 
@@ -421,7 +436,8 @@ namespace Replanetizer.Frames
 
                 ImGui.Separator();
 
-                if (selectedModel is MobyModel mobModel && mobModel.animations.Count > 0)
+                // TODO: (Milch) Enable animations for Deadlocked once they are implemented.
+                if (level.game != GameType.DL && selectedModel is MobyModel mobModel && mobModel.animations.Count > 0)
                 {
                     ImGui.Checkbox("Show Animations", ref rendererPayload.visibility.enableAnimations);
 
@@ -463,14 +479,10 @@ namespace Replanetizer.Frames
         {
             int prevWidth = width, prevHeight = height;
 
-            System.Numerics.Vector2 vMin = ImGui.GetWindowContentRegionMin();
-            System.Numerics.Vector2 vMax = ImGui.GetWindowContentRegionMax();
+            System.Numerics.Vector2 avail = ImGui.GetContentRegionAvail();
 
-            vMin.X += 250;
-            vMax.X -= PROPERTIES_WIDTH - 20;
-
-            width = (int) (vMax.X - vMin.X);
-            height = (int) (vMax.Y - vMin.Y);
+            width = (int) avail.X - PROPERTIES_WIDTH - 230;
+            height = (int) avail.Y;
 
             if (width <= 0 || height <= 0)
             {
@@ -484,8 +496,8 @@ namespace Replanetizer.Frames
                 OnResize();
             }
 
-            System.Numerics.Vector2 windowPos = ImGui.GetWindowPos();
-            Vector2 windowZero = new Vector2(windowPos.X + vMin.X, windowPos.Y + vMin.Y);
+            System.Numerics.Vector2 cursorScreenPos = ImGui.GetCursorScreenPos();
+            Vector2 windowZero = new Vector2(cursorScreenPos.X, cursorScreenPos.Y);
             mousePos = wnd.MousePosition - windowZero;
             contentRegion = new Rectangle((int) windowZero.X, (int) windowZero.Y, width, height);
         }

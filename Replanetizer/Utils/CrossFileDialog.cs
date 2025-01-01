@@ -262,8 +262,14 @@ namespace Replanetizer.Utils
                 var dialog = new System.Windows.Forms.OpenFileDialog();
                 dialog.Title = title;
                 dialog.Filter = BuildFilterList(filter);
-                dialog.ShowDialog();
-                return dialog.FileName;
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    return dialog.FileName;
+                }
+                else
+                {
+                    return string.Empty;
+                }
 #else
                 throw new NoImplementationException();
 #endif
@@ -284,8 +290,14 @@ namespace Replanetizer.Utils
                 var dialog = new System.Windows.Forms.SaveFileDialog();
                 dialog.Title = title;
                 dialog.Filter = BuildFilterList(filter);
-                dialog.ShowDialog();
-                return dialog.FileName;
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    return dialog.FileName;
+                }
+                else
+                {
+                    return string.Empty;
+                }
 #else
                 throw new NoImplementationException();
 #endif
@@ -297,8 +309,14 @@ namespace Replanetizer.Utils
                 var dialog = new System.Windows.Forms.FolderBrowserDialog();
                 dialog.Description = title;
                 dialog.UseDescriptionForTitle = true;
-                dialog.ShowDialog();
-                return dialog.SelectedPath;
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    return dialog.SelectedPath;
+                }
+                else
+                {
+                    return string.Empty;
+                }
 #else
                 throw new NoImplementationException();
 #endif

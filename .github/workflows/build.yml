@@ -32,7 +32,7 @@ jobs:
       - run: cd /tmp/out-linux/ && zip -r /tmp/zips/replanetizer-${{steps.get-version.outputs.release_name}}-linux-x64.zip replanetizer
         name: Zip up Replanetizer for Linux
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         name: Upload zips to GitHub actions artifact storage
         with:
           name: replanetizer-${{steps.get-version.outputs.release_name}}-linux-x64.zip
@@ -62,7 +62,7 @@ jobs:
       - run: Compress-Archive -Path /tmp/out-win/replanetizer -DestinationPath /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
         name: Zip up Replanetizer for Windows
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         name: Upload zips to GitHub actions artifact storage
         with:
             name: replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
@@ -92,7 +92,7 @@ jobs:
       - run: cd /tmp/out-osx/ && zip -r /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-osx-x64.zip replanetizer
         name: Zip up Replanetizer for Mac
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         name: Upload zips to GitHub actions artifact storage
         with:
             name: replanetizer-${{needs.build_linux.outputs.release_name}}-osx-x64.zip

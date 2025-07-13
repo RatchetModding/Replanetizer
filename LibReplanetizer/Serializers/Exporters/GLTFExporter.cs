@@ -1197,7 +1197,7 @@ namespace LibReplanetizer
 
                     for (int i = 0; i < animations.Count; i++)
                     {
-                        listAnimationEntries.Add(new GLTFAnimationEntry("Animation" + i, boneCount, animationAccessorBaseID + i, outputAccessorOffset));
+                        listAnimationEntries.Add(new GLTFAnimationEntry(String.Format("Animation{0:000}", i), boneCount, animationAccessorBaseID + i, outputAccessorOffset));
 
                         outputAccessorOffset += boneCount * 3;
                     }

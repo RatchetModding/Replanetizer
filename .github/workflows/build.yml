@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '8.0.x'
 
       - run: dotnet --list-runtimes && dotnet --list-sdks
         name: Output dotnet versions for debugging
@@ -45,7 +45,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '8.0.x'
 
       - run: dotnet --list-runtimes && dotnet --list-sdks
         name: Output dotnet versions for debugging
@@ -75,7 +75,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '8.0.x'
 
       - run: dotnet --list-runtimes && dotnet --list-sdks
         name: Output dotnet versions for debugging

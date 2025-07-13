@@ -25,7 +25,7 @@ jobs:
       - run: dotnet publish -c Release -o /tmp/out-linux/replanetizer --self-contained --runtime linux-x64 Replanetizer
         name: Build Replanetizer for Linux
 
-      - run: echo ::set-output name=release_name::$(grep -m 1 'InformationalVersionAttribute' Replanetizer/obj/Release/*/*/Replanetizer.AssemblyInfo.cs | cut -d '"' -f 2)
+      - run: echo "release_name=$(grep -m 1 'InformationalVersionAttribute' Replanetizer/obj/Release/*/*/Replanetizer.AssemblyInfo.cs | cut -d '"' -f 2)" >> $GITHUB_OUTPUT
         id: get-version
         name: Get Informational Version Attribute
 

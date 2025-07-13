@@ -99,7 +99,7 @@ jobs:
             path: /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-osx-x64.zip
 
   release:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs: [build_linux, build_windows, build_macos]
     if: github.ref == 'refs/heads/master'
     steps:

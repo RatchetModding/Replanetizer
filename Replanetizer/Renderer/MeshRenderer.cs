@@ -11,8 +11,10 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using LibReplanetizer.Models;
 using Replanetizer.Utils;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using LibReplanetizer.Models.Animations;
 
@@ -63,6 +65,16 @@ namespace Replanetizer.Renderer
         private ShaderTable shaderTable;
         private BillboardRenderer fallback;
         private AnimationRenderer? animationRenderer = null;
+
+        private static readonly GLTexture blueNoiseTexture;
+
+        static MeshRenderer()
+        {
+            string? applicationFolder = System.AppContext.BaseDirectory;
+            string resourcesFolder = Path.Join(applicationFolder, "Resources");
+            Image<L8> image = Image.Load<L8>(Path.Join(resourcesFolder, "blue_noise.png"));
+            blueNoiseTexture = new GLTexture("BlueNoiseTextrue", image);
+        }
 
         public MeshRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, GLTexture> textureIds, List<Animation>? ratchetAnimations = null)
         {
@@ -637,6 +649,8 @@ namespace Replanetizer.Renderer
 
             shaderTable.meshShader.UseShader();
 
+            shaderTable.meshShader.SetUniform1(UniformName.mainTexture, 0);
+            shaderTable.meshShader.SetUniform1(UniformName.blueNoiseTexture, 1);
             shaderTable.meshShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelToWorld);
             shaderTable.meshShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
             shaderTable.meshShader.SetUniform1(UniformName.levelObjectNumber, objectID);
@@ -644,6 +658,8 @@ namespace Replanetizer.Renderer
             shaderTable.meshShader.SetUniform4(UniformName.staticColor, ambient);
             shaderTable.meshShader.SetUniform1(UniformName.lightIndex, light);
             shaderTable.meshShader.SetUniform1(UniformName.objectBlendDistance, blendDistance);
+
+            blueNoiseTexture.Bind(1);
 
             //Bind textures one by one, applying it to the relevant vertices based on the index array
             foreach (TextureConfig conf in modelRender.textureConfig)

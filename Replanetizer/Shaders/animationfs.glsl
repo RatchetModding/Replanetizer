@@ -10,16 +10,36 @@ layout(location = 0) out vec4 color;
 layout(location = 1) out int id;
 
 // Values that stay constant for the whole mesh.
-uniform sampler2D myTextureSampler;
+uniform sampler2D mainTexture;
+uniform sampler2D blueNoiseTexture;
 uniform int levelObjectNumber;
 uniform vec4 fogColor;
-uniform mat4 dissolvePattern;
 uniform float objectBlendDistance;
 uniform int useTransparency;
 
+#define BLUE_NOISE_TEXTURE_SIZE (128.0f)
+#define ONE_OVER_GOLDEN_RATIO (2654435769u) /* 0.61803398875f */
+
+bool computeDitheringDiscard(float alpha)
+{
+    if (alpha >= 1.0f)
+        return false;
+
+    vec2 pixel = vec2(gl_FragCoord.x, gl_FragCoord.y);
+    vec2 blueNoiseIndex = pixel / BLUE_NOISE_TEXTURE_SIZE;
+    float alphaThreshold = texture(blueNoiseTexture, blueNoiseIndex).x;
+
+    float objectDitherOffset = uint(levelObjectNumber) * ONE_OVER_GOLDEN_RATIO;
+    objectDitherOffset = objectDitherOffset / 0xFFFFFFFFu;
+
+    alphaThreshold = mod(alphaThreshold + objectDitherOffset, 1.0f);
+
+    return (alphaThreshold > alpha);
+}
+
 void main() {
 	//color of the texture at the specified UV
-	vec4 textureColor = texture(myTextureSampler, UV);
+	vec4 textureColor = texture(mainTexture, UV);
 
     float alpha = 1.0f;
 
@@ -32,11 +52,7 @@ void main() {
         alpha *= textureColor.w;
     }
 
-    if (alpha < 1.0f) {
-        vec2 pixel = vec2(gl_FragCoord.x, gl_FragCoord.y);
-        ivec2 patternPos = ivec2(int(mod(pixel.x + levelObjectNumber,4.0f)), int(mod(pixel.y,4.0f)));
-        if (dissolvePattern[patternPos.x][patternPos.y] > alpha) discard;
-    }
+    if (computeDitheringDiscard(alpha)) discard;
 
 	color.xyz = 1.5f * textureColor.xyz * lightColor * 2.0f;
 	color.w = textureColor.w;

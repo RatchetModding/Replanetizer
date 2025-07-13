@@ -93,6 +93,35 @@ namespace Replanetizer.Renderer
             GL.TextureParameter(textureID, TextureParameterName.TextureMaxLevel, mipmapLevels - 1);
         }
 
+        public GLTexture(string name, Image<L8> image)
+        {
+            this.name = name;
+            width = image.Width;
+            height = image.Height;
+            internalFormat = SizedInternalFormat.R8;
+            mipmapLevels = 1;
+
+            GLUtil.CheckGlError("Clear");
+
+            GLUtil.CreateTexture(TextureTarget.Texture2D, this.name, out textureID);
+            GL.TextureStorage2D(textureID, mipmapLevels, internalFormat, width, height);
+            GLUtil.CheckGlError("Storage2d");
+
+            byte[] imageBytes = new byte[image.Width * image.Height];
+            image.CopyPixelDataTo(imageBytes);
+
+            GL.TextureSubImage2D(textureID, 0, 0, 0, width, height, PixelFormat.Red, PixelType.UnsignedByte, imageBytes);
+            GLUtil.CheckGlError("SubImage");
+
+            SetWrapModes(TextureWrapMode.Repeat, TextureWrapMode.Repeat);
+
+            GL.TextureParameter(textureID, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Nearest);
+            GL.TextureParameter(textureID, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Nearest);
+            GLUtil.CheckGlError("Filtering");
+
+            GL.TextureParameter(textureID, TextureParameterName.TextureMaxLevel, mipmapLevels - 1);
+        }
+
         public GLTexture(string name, int width, int height, IntPtr data, bool generateMipmaps = false, bool srgb = false)
         {
             this.name = name;
@@ -173,8 +202,9 @@ namespace Replanetizer.Renderer
             GLUtil.CheckGlError(name);
         }
 
-        public void Bind()
+        public void Bind(int bindSlot = 0)
         {
+            GL.ActiveTexture(TextureUnit.Texture0 + bindSlot);
             GL.BindTexture(TextureTarget.Texture2D, textureID);
         }
 

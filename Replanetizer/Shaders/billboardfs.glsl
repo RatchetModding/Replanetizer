@@ -7,13 +7,13 @@ in vec2 UV;
 layout(location = 0) out vec4 color;
 layout(location = 1) out int id;
 
-uniform sampler2D myTextureSampler;
+uniform sampler2D mainTexture;
 uniform int levelObjectType;
 uniform int levelObjectNumber;
 uniform int selected;
 
 void main() {
-    vec4 textureColor = texture(myTextureSampler, UV);
+    vec4 textureColor = texture(mainTexture, UV);
 
     if (textureColor.w < 1.0f) discard;
 

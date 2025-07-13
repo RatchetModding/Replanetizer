@@ -673,9 +673,9 @@ namespace Replanetizer.Renderer
                 shaderTable.colorShader.SetUniform4(UniformName.incolor, 1.0f, 1.0f, 1.0f, 1.0f);
 
                 GL.Enable(EnableCap.LineSmooth);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
                 GL.DrawElements(PrimitiveType.Triangles, modelRender.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
                 GL.Disable(EnableCap.LineSmooth);
             }
 

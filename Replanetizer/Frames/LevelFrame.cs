@@ -503,7 +503,6 @@ namespace Replanetizer.Frames
                 renderer.RenderToTexture(() =>
                 {
                     //Setup openGL variables
-                    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
                     GL.Enable(EnableCap.DepthTest);
                     GL.Viewport(0, 0, width, height);
                     GL.Enable(EnableCap.ScissorTest);

@@ -128,6 +128,8 @@ namespace LibReplanetizer
 
             path = Path.GetDirectoryName(enginePath);
 
+            mobyModels = new List<Model>();
+
             // Engine elements
             using (EngineParser engineParser = new EngineParser(enginePath))
             {
@@ -290,7 +292,7 @@ namespace LibReplanetizer
                 LOGGER.Debug("Looking for armor data in {0}", armor);
                 List<Texture> tex;
                 MobyModel? model;
-                MobyModel? ratchet = (MobyModel?) mobyModels?[0];
+                MobyModel? ratchet = (MobyModel?) mobyModels[0];
                 using (ArmorParser parser = new ArmorParser(game, armor))
                 {
                     tex = parser.GetTextures();

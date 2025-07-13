@@ -180,7 +180,7 @@ namespace LibReplanetizer
                 {
                     return new object();
                 }
-                object? o = context.PropertyDescriptor.GetValue(context.Instance);
+                object? o = context.PropertyDescriptor?.GetValue(context.Instance);
                 return (o == null) ? new object() : o;
             }
         }
@@ -222,7 +222,7 @@ namespace LibReplanetizer
                 {
                     return new object();
                 }
-                object? o = context.PropertyDescriptor.GetValue(context.Instance);
+                object? o = context.PropertyDescriptor?.GetValue(context.Instance);
                 return (o == null) ? new object() : o;
             }
         }

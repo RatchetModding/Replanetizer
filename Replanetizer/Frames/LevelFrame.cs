@@ -50,7 +50,7 @@ namespace Replanetizer.Frames
         private readonly string[] selectionPositioningOptions = { PivotPositioning.Mean.HUMAN_NAME, PivotPositioning.IndividualOrigins.HUMAN_NAME };
         private readonly string[] selectionSpaceOptions = { TransformSpace.Global.HUMAN_NAME, TransformSpace.Local.HUMAN_NAME };
 
-        private int antialiasing = 1;
+        private int antialiasing = 3;
         private readonly string[] antialiasingOptions = { "Off", "2x MSAA", "4x MSAA", "8x MSAA", "16x MSAA", "32x MSAA", "64x MSAA", "128x MSAA", "256x MSAA", "512x MSAA" };
         private int maxAntialiasing = 4;
 
@@ -503,7 +503,6 @@ namespace Replanetizer.Frames
                 renderer.RenderToTexture(() =>
                 {
                     //Setup openGL variables
-                    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
                     GL.Enable(EnableCap.DepthTest);
                     GL.Viewport(0, 0, width, height);
                     GL.Enable(EnableCap.ScissorTest);
@@ -530,15 +529,6 @@ namespace Replanetizer.Frames
         {
             //Setup openGL variables
             GL.Enable(EnableCap.DepthTest);
-
-            Matrix4 dissolvePattern = new Matrix4(1.0f / 17.0f, 9.0f / 17.0f, 3.0f / 17.0f, 11.0f / 17.0f,
-                                        13.0f / 17.0f, 5.0f / 17.0f, 15.0f / 17.0f, 7.0f / 17.0f,
-                                        4.0f / 17.0f, 12.0f / 17.0f, 2.0f / 17.0f, 10.0f / 17.0f,
-                                        16.0f / 17.0f, 8.0f / 17.0f, 14.0f / 17.0f, 6.0f / 17.0f);
-            shaderTable.meshShader.UseShader();
-            shaderTable.meshShader.SetUniformMatrix4(UniformName.dissolvePattern, ref dissolvePattern);
-            shaderTable.animationShader.UseShader();
-            shaderTable.animationShader.SetUniformMatrix4(UniformName.dissolvePattern, ref dissolvePattern);
 
             initialized = true;
 

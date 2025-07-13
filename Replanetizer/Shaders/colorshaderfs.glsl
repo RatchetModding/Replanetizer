@@ -9,7 +9,7 @@ layout(location = 0) out vec4 color;
 layout(location = 1) out int id;
 
 // Values that stay constant for the whole mesh.
-uniform sampler2D myTextureSampler;
+uniform sampler2D mainTexture;
 uniform int levelObjectType;
 uniform int levelObjectNumber;
 

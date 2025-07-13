@@ -4,14 +4,14 @@ on: [push]
 
 jobs:
   build_linux:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     outputs:
       release_name: ${{ steps.get-version.outputs.release_name }}
     steps:
       - uses: actions/checkout@master
       - uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '8.0.x'
 
       - run: dotnet --list-runtimes && dotnet --list-sdks
         name: Output dotnet versions for debugging
@@ -25,27 +25,27 @@ jobs:
       - run: dotnet publish -c Release -o /tmp/out-linux/replanetizer --self-contained --runtime linux-x64 Replanetizer
         name: Build Replanetizer for Linux
 
-      - run: echo ::set-output name=release_name::$(grep -m 1 'InformationalVersionAttribute' Replanetizer/obj/Release/*/*/Replanetizer.AssemblyInfo.cs | cut -d '"' -f 2)
+      - run: echo "release_name=$(grep -m 1 'InformationalVersionAttribute' Replanetizer/obj/Release/*/*/Replanetizer.AssemblyInfo.cs | cut -d '"' -f 2)" >> $GITHUB_OUTPUT
         id: get-version
         name: Get Informational Version Attribute
 
       - run: cd /tmp/out-linux/ && zip -r /tmp/zips/replanetizer-${{steps.get-version.outputs.release_name}}-linux-x64.zip replanetizer
         name: Zip up Replanetizer for Linux
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         name: Upload zips to GitHub actions artifact storage
         with:
           name: replanetizer-${{steps.get-version.outputs.release_name}}-linux-x64.zip
           path: /tmp/zips/replanetizer-${{steps.get-version.outputs.release_name}}-linux-x64.zip
 
   build_windows:
-    runs-on: windows-2022
+    runs-on: windows-2025
     needs: [build_linux]
     steps:
       - uses: actions/checkout@master
       - uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '8.0.x'
 
       - run: dotnet --list-runtimes && dotnet --list-sdks
         name: Output dotnet versions for debugging
@@ -62,20 +62,20 @@ jobs:
       - run: Compress-Archive -Path /tmp/out-win/replanetizer -DestinationPath /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
         name: Zip up Replanetizer for Windows
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         name: Upload zips to GitHub actions artifact storage
         with:
             name: replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
             path: /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-win-x64.zip
 
   build_macos:
-    runs-on: macos-12
+    runs-on: macos-15
     needs: [build_linux]
     steps:
       - uses: actions/checkout@master
       - uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '8.0.x'
 
       - run: dotnet --list-runtimes && dotnet --list-sdks
         name: Output dotnet versions for debugging
@@ -92,7 +92,7 @@ jobs:
       - run: cd /tmp/out-osx/ && zip -r /tmp/zips/replanetizer-${{needs.build_linux.outputs.release_name}}-osx-x64.zip replanetizer
         name: Zip up Replanetizer for Mac
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         name: Upload zips to GitHub actions artifact storage
         with:
             name: replanetizer-${{needs.build_linux.outputs.release_name}}-osx-x64.zip
@@ -104,7 +104,7 @@ jobs:
     if: github.ref == 'refs/heads/master'
     steps:
       - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           path: ./
 

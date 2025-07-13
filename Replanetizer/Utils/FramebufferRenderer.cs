@@ -12,7 +12,7 @@ namespace Replanetizer.Utils
 {
     public class FramebufferRenderer : IDisposable
     {
-        public static int MSAA_LEVEL = 2;
+        public static int MSAA_LEVEL = 8;
         private int internalAllocatedMsaaLevel;
 
         private bool disposed = false;

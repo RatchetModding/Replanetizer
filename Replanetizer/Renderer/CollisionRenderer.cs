@@ -101,7 +101,7 @@ namespace Replanetizer.Renderer
             shaderTable.collisionShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
 
             shaderTable.colorShader.UseShader();
-            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+            GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
 
             for (int i = 0; i < numCollisions; i++)
             {
@@ -112,7 +112,7 @@ namespace Replanetizer.Renderer
             }
 
             shaderTable.collisionShader.UseShader();
-            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
 
             for (int i = 0; i < numCollisions; i++)
             {

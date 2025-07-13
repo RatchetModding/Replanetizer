@@ -50,7 +50,7 @@ namespace Replanetizer.Frames
         private readonly string[] selectionPositioningOptions = { PivotPositioning.Mean.HUMAN_NAME, PivotPositioning.IndividualOrigins.HUMAN_NAME };
         private readonly string[] selectionSpaceOptions = { TransformSpace.Global.HUMAN_NAME, TransformSpace.Local.HUMAN_NAME };
 
-        private int antialiasing = 1;
+        private int antialiasing = 3;
         private readonly string[] antialiasingOptions = { "Off", "2x MSAA", "4x MSAA", "8x MSAA", "16x MSAA", "32x MSAA", "64x MSAA", "128x MSAA", "256x MSAA", "512x MSAA" };
         private int maxAntialiasing = 4;
 

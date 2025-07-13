@@ -1,5 +1,8 @@
 ﻿#version 330 core
 
+// MacOS seems to support this: https://www.geeks3d.com/20130611/apple-adds-opengl-4-support-in-os-x-10-9-mavericks/
+#extension GL_ARB_sample_shading : require
+
 // Interpolated values from the vertex shaders
 in vec2 UV;
 in vec3 lightColor;
@@ -30,7 +33,9 @@ bool computeDitheringDiscard(float alpha)
     vec2 blueNoiseIndex = pixel / BLUE_NOISE_TEXTURE_SIZE;
     float alphaThreshold = texture(blueNoiseTexture, blueNoiseIndex).x;
 
-    float objectDitherOffset = uint(levelObjectNumber) * ONE_OVER_GOLDEN_RATIO;
+    uint offsetIndex = uint(1 + gl_SampleID + levelObjectNumber * gl_NumSamples);
+
+    float objectDitherOffset = offsetIndex * ONE_OVER_GOLDEN_RATIO;
     objectDitherOffset = objectDitherOffset / 0xFFFFFFFFu;
 
     alphaThreshold = mod(alphaThreshold + objectDitherOffset, 1.0f);

@@ -550,7 +550,7 @@ namespace LibReplanetizer
                     colladaStream.Write("\t\t\t\t\t<float_array id=\"WeightsArray\" count=\"" + vertexCount * 4 + "\">");
                     for (int i = 0; i < vertexCount; i++)
                     {
-                        byte[] vWeights = BitConverter.GetBytes(model.weights[i]);
+                        byte[] vWeights = BitConverter.GetBytes(model.vertexBoneWeights[i]);
                         for (int j = 0; j < 4; j++)
                         {
                             if (vWeights[j] != 0)
@@ -611,7 +611,7 @@ namespace LibReplanetizer
                     colladaStream.Write("\t\t\t\t\t<vcount>");
                     for (int i = 0; i < vertexCount; i++)
                     {
-                        byte[] vWeights = BitConverter.GetBytes(model.weights[i]);
+                        byte[] vWeights = BitConverter.GetBytes(model.vertexBoneWeights[i]);
 
                         int c = 0;
                         for (int j = 0; j < 4; j++)
@@ -625,8 +625,8 @@ namespace LibReplanetizer
                     int vWeightOffset = 0;
                     for (int i = 0; i < vertexCount; i++)
                     {
-                        Byte[] indices = BitConverter.GetBytes(model.ids[i]);
-                        byte[] vWeights = BitConverter.GetBytes(model.weights[i]);
+                        Byte[] indices = BitConverter.GetBytes(model.vertexBoneIds[i]);
+                        byte[] vWeights = BitConverter.GetBytes(model.vertexBoneWeights[i]);
 
                         for (int j = 0; j < 4; j++)
                         {

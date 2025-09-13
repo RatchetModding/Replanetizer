@@ -13,7 +13,7 @@ using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Models
 {
-    public class MobyModel : Model
+    public class MobyModel : MetalModel
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
 
@@ -66,15 +66,6 @@ namespace LibReplanetizer.Models
         [Category("Attributes"), DisplayName("Bangles")]
         public List<Bangle> bangles { get; set; } = new List<Bangle>();
 
-        [Category("Unknowns"), DisplayName("Other Buffer")]
-        public List<byte> otherBuffer { get; set; } = new List<byte>();
-
-        [Category("Unknowns"), DisplayName("Other Texture Configurations")]
-        public List<TextureConfig> otherTextureConfigs { get; set; } = new List<TextureConfig>();
-
-        [Category("Unknowns"), DisplayName("Other Index Buffer")]
-        public List<ushort> otherIndexBuffer { get; set; } = new List<ushort>();
-
         public Skeleton? skeleton = null;
         [Category("Attributes"), DisplayName("Is Model")]
         public bool isModel { get; set; } = true;
@@ -84,6 +75,59 @@ namespace LibReplanetizer.Models
 
         // Unparsed sections
         public byte[] type10Block = { };                  // Hitbox
+
+        private void GetMeshData(FileStream fs, int headerSize, int headerPointer, int baseOffset)
+        {
+            byte[] meshHeader = ReadBlock(fs, baseOffset + headerPointer, headerSize);
+
+            int texCount = ReadInt(meshHeader, 0x00);
+            int metalTexCount = ReadInt(meshHeader, 0x04);
+            int texBlockPointer = baseOffset + ReadInt(meshHeader, 0x08);
+            int metalTexBlockPointer = baseOffset + ReadInt(meshHeader, 0x0C);
+            int vertPointer = baseOffset + ReadInt(meshHeader, 0x10);
+            int indexPointer = baseOffset + ReadInt(meshHeader, 0x14);
+            ushort vertexCount = ReadUshort(meshHeader, 0x18);
+            ushort metalVertCount = ReadUshort(meshHeader, 0x1a);
+
+            vertexCount2 = ReadUshort(meshHeader, 0x1C);     //These vertices are not affected by color2
+
+            int faceCount = 0;
+            if (texBlockPointer > 0)
+            {
+                textureConfig = GetTextureConfigs(fs, texBlockPointer, texCount, TEXTUREELEMENTSIZE);
+                faceCount = GetFaceCount();
+            }
+
+            int metalFaceCount = 0;
+            if (metalTexBlockPointer > 0)
+            {
+                metalTextureConfig = GetTextureConfigs(fs, metalTexBlockPointer, metalTexCount, TEXTUREELEMENTSIZE);
+                metalFaceCount = GetMetalFaceCount();
+            }
+
+            if (vertexCount > 0)
+            {
+                (vertexBuffer, vertexBoneWeights, vertexBoneIds) = GetVertices(fs, vertPointer, vertexCount, VERTELEMENTSIZE);
+            }
+
+            int metalVertPointer = vertPointer + vertexCount * VERTELEMENTSIZE;
+            if (metalVertCount > 0)
+            {
+                // TODO: (Milch) Are metal vertices rigged? Or rather, do they contain bone weights and ids? The original code assumed a stride of 0x20.
+                (metalVertexBuffer, metalVertexBoneWeights, metalVertexBoneIds) = GetVertices(fs, metalVertPointer, metalVertCount, VERTELEMENTSIZE);
+            }
+
+            if (faceCount > 0)
+            {
+                indexBuffer = GetIndices(fs, indexPointer, faceCount);
+            }
+
+            int metalIndexPointer = indexPointer + faceCount * sizeof(ushort);
+            if (metalFaceCount > 0)
+            {
+                metalIndexBuffer = GetIndices(fs, metalIndexPointer, metalFaceCount);
+            }
+        }
 
 
         public MobyModel() { }
@@ -198,8 +242,6 @@ namespace LibReplanetizer.Models
                 }
             }
 
-
-
             // Attachments
             if (attachmentPointer > 0)
             {
@@ -239,52 +281,7 @@ namespace LibReplanetizer.Models
             // Mesh meta
             if (meshPointer > 0)
             {
-                byte[] meshHeader = ReadBlock(fs, offset + meshPointer, MESHHEADERSIZE);
-
-                int texCount = ReadInt(meshHeader, 0x00);
-                int otherCount = ReadInt(meshHeader, 0x04);
-                int texBlockPointer = offset + ReadInt(meshHeader, 0x08);
-                int otherBlockPointer = offset + ReadInt(meshHeader, 0x0C);
-                int vertPointer = offset + ReadInt(meshHeader, 0x10);
-                int indexPointer = offset + ReadInt(meshHeader, 0x14);
-                ushort vertexCount = ReadUshort(meshHeader, 0x18);
-                ushort otherVertCount = ReadUshort(meshHeader, 0x1a);
-
-                int otherPointer = vertPointer + vertexCount * 0x28;
-
-                vertexCount2 = ReadUshort(meshHeader, 0x1C);     //These vertices are not affected by color2
-
-                int faceCount = 0;
-
-                //Texture configuration
-                if (texBlockPointer > 0)
-                {
-                    textureConfig = GetTextureConfigs(fs, texBlockPointer, texCount, TEXTUREELEMENTSIZE);
-                    faceCount = GetFaceCount();
-                }
-
-                if (vertPointer > 0 && vertexCount > 0)
-                {
-                    //Get vertex buffer float[vertX, vertY, vertZ, normX, normY, normZ, U, V, reserved, reserved]
-                    vertexBuffer = GetVertices(fs, vertPointer, vertexCount, VERTELEMENTSIZE);
-                }
-
-                if (indexPointer > 0 && faceCount > 0)
-                {
-                    //Index buffer
-                    indexBuffer = GetIndices(fs, indexPointer, faceCount);
-                }
-                if (otherPointer > 0)
-                {
-                    otherBuffer.AddRange(ReadBlockNopad(fs, otherPointer, otherVertCount * 0x20));
-                    otherTextureConfigs = GetTextureConfigs(fs, otherBlockPointer, otherCount, 0x10);
-                    int otherfaceCount = 0;
-                    foreach (TextureConfig tex in otherTextureConfigs)
-                    {
-                        otherfaceCount += tex.size;
-                    }
-                    otherIndexBuffer.AddRange(GetIndices(fs, indexPointer + faceCount * sizeof(ushort), otherfaceCount));
-                }
+                GetMeshData(fs, MESHHEADERSIZE, meshPointer, offset);
             }
 
             if (boneMatrices.Count > 0 && boneDatas.Count > 0)
@@ -301,131 +298,14 @@ namespace LibReplanetizer.Models
         /*
          * RaC 2 and 3 armor files contain only the mesh
          */
-        public static MobyModel GetArmorMobyModel(FileStream fileStream, int modelPointer)
+        public static MobyModel GetArmorMobyModel(FileStream fs, int modelPointer)
         {
             MobyModel model = new MobyModel();
 
-            model.size = 1.0f;
-
-            byte[] meshHeader = ReadBlock(fileStream, modelPointer, 0x20);
-
-            int texCount = ReadInt(meshHeader, 0x00);
-            int otherCount = ReadInt(meshHeader, 0x04);
-            int texBlockPointer = ReadInt(meshHeader, 0x08);
-            int otherBlockPointer = ReadInt(meshHeader, 0x0C);
-            int vertPointer = ReadInt(meshHeader, 0x10);
-            int indexPointer = ReadInt(meshHeader, 0x14);
-            ushort vertexCount = ReadUshort(meshHeader, 0x18);
-            ushort otherVertCount = ReadUshort(meshHeader, 0x1a);
-
-            int otherPointer = vertPointer + vertexCount * 0x28;
-
-            model.vertexCount2 = ReadUshort(meshHeader, 0x1C);     //These vertices are not affected by color2
-
-            int faceCount = 0;
-
-            //Texture configuration
-            if (texBlockPointer > 0)
-            {
-                model.textureConfig = GetTextureConfigs(fileStream, texBlockPointer, texCount, TEXTUREELEMENTSIZE);
-                faceCount = model.GetFaceCount();
-            }
-
-            if (vertPointer > 0 && vertexCount > 0)
-            {
-                //Get vertex buffer float[vertX, vertY, vertZ, normX, normY, normZ, U, V, reserved, reserved]
-                model.vertexBuffer = model.GetVertices(fileStream, vertPointer, vertexCount, VERTELEMENTSIZE);
-            }
-
-            if (indexPointer > 0 && faceCount > 0)
-            {
-                //Index buffer
-                model.indexBuffer = GetIndices(fileStream, indexPointer, faceCount);
-            }
-
-            if (otherPointer > 0)
-            {
-                model.otherBuffer.AddRange(ReadBlockNopad(fileStream, otherPointer, otherVertCount * 0x20));
-                model.otherTextureConfigs = GetTextureConfigs(fileStream, otherBlockPointer, otherCount, 0x10);
-                int otherfaceCount = 0;
-                foreach (TextureConfig tex in model.otherTextureConfigs)
-                {
-                    otherfaceCount += tex.size;
-                }
-                model.otherIndexBuffer.AddRange(GetIndices(fileStream, indexPointer + faceCount * sizeof(ushort), otherfaceCount));
-            }
+            model.GetMeshData(fs, MESHHEADERSIZE, modelPointer, 0);
 
             return model;
         }
-
-        /*
-         * RaC 2 and 3 gadgets files contain only the mesh
-         * Same Format is also used for DL missions
-         */
-        public static MobyModel GetGadgetMobyModel(FileStream fileStream, int modelPointer)
-        {
-            MobyModel model = new MobyModel();
-
-            int modelHeadSize = ReadInt(ReadBlock(fileStream, modelPointer, 0x04), 0x00);
-
-            if (modelHeadSize == 0) return model;
-
-            byte[] meshHeader = ReadBlock(fileStream, modelPointer, modelHeadSize + 0x20);
-
-            int objectPointer = ReadInt(meshHeader, 0x00);
-
-            int texCount = ReadInt(meshHeader, objectPointer + 0x00);
-            int otherCount = ReadInt(meshHeader, objectPointer + 0x04);
-            int texBlockPointer = ReadInt(meshHeader, objectPointer + 0x08);
-            int otherBlockPointer = ReadInt(meshHeader, objectPointer + 0x0C);
-            int vertPointer = ReadInt(meshHeader, objectPointer + 0x10);
-            int indexPointer = ReadInt(meshHeader, objectPointer + 0x14);
-            ushort vertexCount = ReadUshort(meshHeader, objectPointer + 0x18);
-            ushort otherVertCount = ReadUshort(meshHeader, objectPointer + 0x1a);
-            model.size = ReadFloat(meshHeader, 0x24);
-
-            int otherPointer = vertPointer + vertexCount * 0x28;
-
-            model.vertexCount2 = ReadUshort(meshHeader, objectPointer + 0x1C);     //These vertices are not affected by color2
-
-            int faceCount = 0;
-
-            //Texture configuration
-            if (texBlockPointer > 0)
-            {
-                model.textureConfig = GetTextureConfigs(fileStream, modelPointer + texBlockPointer, texCount, TEXTUREELEMENTSIZE);
-                faceCount = model.GetFaceCount();
-            }
-
-            if (vertPointer > 0 && vertexCount > 0)
-            {
-                //Get vertex buffer float[vertX, vertY, vertZ, normX, normY, normZ, U, V, reserved, reserved]
-                model.vertexBuffer = model.GetVertices(fileStream, modelPointer + vertPointer, vertexCount, VERTELEMENTSIZE);
-            }
-
-            if (indexPointer > 0 && faceCount > 0)
-            {
-                //Index buffer
-                model.indexBuffer = GetIndices(fileStream, modelPointer + indexPointer, faceCount);
-            }
-
-            if (otherPointer > 0)
-            {
-                model.otherBuffer.AddRange(ReadBlockNopad(fileStream, modelPointer + otherPointer, otherVertCount * 0x20));
-                model.otherTextureConfigs = GetTextureConfigs(fileStream, modelPointer + otherBlockPointer, otherCount, 0x10);
-                int otherfaceCount = 0;
-                foreach (TextureConfig tex in model.otherTextureConfigs)
-                {
-                    otherfaceCount += tex.size;
-                }
-                model.otherIndexBuffer.AddRange(GetIndices(fileStream, modelPointer + indexPointer + faceCount * sizeof(ushort), otherfaceCount));
-            }
-
-            return model;
-        }
-
-
-
 
         public byte[] Serialize(int offset)
         {
@@ -443,17 +323,10 @@ namespace LibReplanetizer.Models
                 stupidOffset = 0x20 * 4;
             }
 
-
-
             byte[] vertexBytes = SerializeVertices();
+            byte[] metalVertexBytes = SerializeMetalVertices();
             byte[] faceBytes = GetFaceBytes();
-
-
-            byte[] otherFaceBytes = new byte[otherIndexBuffer.Count * sizeof(ushort)];
-            for (int i = 0; i < otherIndexBuffer.Count; i++)
-            {
-                WriteUshort(otherFaceBytes, i * sizeof(ushort), otherIndexBuffer[i]);
-            }
+            byte[] metalIndexBytes = SerializeMetalIndices();
 
             //sounds
             byte[] soundBytes = new byte[modelSounds.Count * 0x20];
@@ -483,16 +356,16 @@ namespace LibReplanetizer.Models
             if (id > 2) hack = 0x20;
             int meshDataOffset = GetLength(HEADERSIZE + animations.Count * 4 + stupidOffset + hack, alignment);
             int textureConfigOffset = GetLength(meshDataOffset + 0x20, alignment);
-            int otherTextureConfigOffset = GetLength(textureConfigOffset + textureConfig.Count * 0x10, alignment);
+            int metalTextureConfigOffset = GetLength(textureConfigOffset + textureConfig.Count * 0x10, alignment);
 
             int file80 = 0;
             if (vertexBuffer.Length != 0)
-                file80 = DistToFile80(offset + otherTextureConfigOffset + otherTextureConfigs.Count * 0x10);
-            int vertOffset = GetLength(otherTextureConfigOffset + otherTextureConfigs.Count * 0x10 + file80, alignment);
-            int otherOffset = vertOffset + vertexBytes.Length;
-            int faceOffset = GetLength(otherOffset + otherBuffer.Count, alignment);
-            int otherFaceOffset = faceOffset + faceBytes.Length;
-            int type10Offset = GetLength(otherFaceOffset + otherFaceBytes.Length, alignment);
+                file80 = DistToFile80(offset + metalTextureConfigOffset + metalTextureConfig.Count * 0x10);
+            int vertOffset = GetLength(metalTextureConfigOffset + metalTextureConfig.Count * 0x10 + file80, alignment);
+            int metalVertOffset = vertOffset + vertexBytes.Length;
+            int faceOffset = GetLength(metalVertOffset + metalVertexBytes.Length, alignment);
+            int metalIndexOffset = faceOffset + faceBytes.Length;
+            int type10Offset = GetLength(metalIndexOffset + metalIndexBytes.Length, alignment);
             int soundOffset = GetLength(type10Offset + type10Block.Length, alignment);
             int attachmentOffset = GetLength(soundOffset + soundBytes.Length, alignment);
 
@@ -596,10 +469,10 @@ namespace LibReplanetizer.Models
                 WriteInt(outbytes, HEADERSIZE + i * 0x04, animOffsets[i]);
             }
 
-            otherBuffer.CopyTo(outbytes, otherOffset);
             vertexBytes.CopyTo(outbytes, vertOffset);
+            metalVertexBytes.CopyTo(outbytes, metalVertOffset);
             faceBytes.CopyTo(outbytes, faceOffset);
-            otherFaceBytes.CopyTo(outbytes, otherFaceOffset);
+            metalIndexBytes.CopyTo(outbytes, metalIndexOffset);
 
             if (type10Block != null)
             {
@@ -615,22 +488,18 @@ namespace LibReplanetizer.Models
 
             // Mesh header
             WriteInt(outbytes, meshDataOffset + 0x00, textureConfig.Count);
-            WriteInt(outbytes, meshDataOffset + 0x04, otherTextureConfigs.Count);
-            //Othercount
+            WriteInt(outbytes, meshDataOffset + 0x04, metalTextureConfig.Count);
             if (textureConfig.Count != 0)
                 WriteInt(outbytes, meshDataOffset + 0x08, textureConfigOffset);
-            if (otherTextureConfigs.Count != 0)
-                WriteInt(outbytes, meshDataOffset + 0x0c, otherTextureConfigOffset);
-            //otheroffset
+            if (metalTextureConfig.Count != 0)
+                WriteInt(outbytes, meshDataOffset + 0x0c, metalTextureConfigOffset);
             if (vertexBuffer.Length != 0)
                 WriteInt(outbytes, meshDataOffset + 0x10, vertOffset);
-
             if (faceBytes.Length != 0)
                 WriteInt(outbytes, meshDataOffset + 0x14, faceOffset);
             WriteShort(outbytes, meshDataOffset + 0x18, (short) (vertexBytes.Length / VERTELEMENTSIZE));
-            WriteShort(outbytes, meshDataOffset + 0x1a, (short) (otherBuffer.Count / 0x20));
+            WriteShort(outbytes, meshDataOffset + 0x1a, (short) (metalVertexBytes.Length / VERTELEMENTSIZE));
             WriteShort(outbytes, meshDataOffset + 0x1C, (short) (vertexCount2));
-
 
             for (int i = 0; i < textureConfig.Count; i++)
             {
@@ -640,12 +509,12 @@ namespace LibReplanetizer.Models
                 WriteInt(outbytes, textureConfigOffset + i * 0x10 + 0x0C, textureConfig[i].mode);
             }
 
-            for (int i = 0; i < otherTextureConfigs.Count; i++)
+            for (int i = 0; i < metalTextureConfig.Count; i++)
             {
-                WriteInt(outbytes, otherTextureConfigOffset + i * 0x10 + 0x00, otherTextureConfigs[i].id);
-                WriteInt(outbytes, otherTextureConfigOffset + i * 0x10 + 0x04, otherTextureConfigs[i].start);
-                WriteInt(outbytes, otherTextureConfigOffset + i * 0x10 + 0x08, otherTextureConfigs[i].size);
-                WriteInt(outbytes, otherTextureConfigOffset + i * 0x10 + 0x0C, otherTextureConfigs[i].mode);
+                WriteInt(outbytes, metalTextureConfigOffset + i * 0x10 + 0x00, metalTextureConfig[i].id);
+                WriteInt(outbytes, metalTextureConfigOffset + i * 0x10 + 0x04, metalTextureConfig[i].start);
+                WriteInt(outbytes, metalTextureConfigOffset + i * 0x10 + 0x08, metalTextureConfig[i].size);
+                WriteInt(outbytes, metalTextureConfigOffset + i * 0x10 + 0x0C, metalTextureConfig[i].mode);
             }
 
             return outbytes;

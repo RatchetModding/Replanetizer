@@ -348,8 +348,8 @@ namespace Replanetizer.Renderer
 
                 // VBO
                 int subModelVboLength = subModel.GetVertices().Length * sizeof(float);
-                subModelVboLength += subModel.ids.Length * sizeof(uint);
-                subModelVboLength += subModel.weights.Length * sizeof(uint);
+                subModelVboLength += subModel.vertexBoneIds.Length * sizeof(uint);
+                subModelVboLength += subModel.vertexBoneWeights.Length * sizeof(uint);
                 int subModelVbo = -1;
                 if (subModelVboLength > 0)
                 {

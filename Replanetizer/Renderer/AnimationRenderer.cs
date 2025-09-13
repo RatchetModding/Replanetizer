@@ -255,8 +255,8 @@ namespace Replanetizer.Renderer
 
             // VBO
             int vboLength = mobyModel.GetVertices().Length * sizeof(float);
-            vboLength += mobyModel.ids.Length * sizeof(uint);
-            vboLength += mobyModel.weights.Length * sizeof(uint);
+            vboLength += mobyModel.vertexBoneIds.Length * sizeof(uint);
+            vboLength += mobyModel.vertexBoneWeights.Length * sizeof(uint);
             if (vboLength > 0)
             {
                 GL.GenBuffers(1, out vbo);
@@ -292,8 +292,8 @@ namespace Replanetizer.Renderer
 
                 // VBO
                 int subModelVboLength = subModel.GetVertices().Length * sizeof(float);
-                subModelVboLength += subModel.ids.Length * sizeof(uint);
-                subModelVboLength += subModel.weights.Length * sizeof(uint);
+                subModelVboLength += subModel.vertexBoneIds.Length * sizeof(uint);
+                subModelVboLength += subModel.vertexBoneWeights.Length * sizeof(uint);
                 int subModelVbo = -1;
                 if (subModelVboLength > 0)
                 {
@@ -321,8 +321,8 @@ namespace Replanetizer.Renderer
             GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, iboData.Length * sizeof(ushort), iboData);
 
             float[] vboData = model.GetVertices();
-            uint[] boneIDs = model.ids;
-            uint[] boneWeights = model.weights;
+            uint[] boneIDs = model.vertexBoneIds;
+            uint[] boneWeights = model.vertexBoneWeights;
 
             float[] fullData = new float[vboData.Length + boneIDs.Length + boneWeights.Length];
 

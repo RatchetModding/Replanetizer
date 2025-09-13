@@ -770,7 +770,7 @@ namespace LibReplanetizer
                         // 255 or 256, hence we need to fix this.
                         // The issue is that it is not straight forward to normalize this using bytes.
                         // Maybe just using floats is the best solution here.
-                        float weightFloat = BitConverter.UInt32BitsToSingle(mobModel.weights[i]);
+                        float weightFloat = BitConverter.UInt32BitsToSingle(mobModel.vertexBoneWeights[i]);
                         byte[] weights = BitConverter.GetBytes(weightFloat);
 
                         int sum = 0;
@@ -806,7 +806,7 @@ namespace LibReplanetizer
                         }
 
                         gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexWeightsOffset] = BitConverter.ToSingle(weights, 0);
-                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexIDsOffset] = BitConverter.UInt32BitsToSingle(mobModel.ids[i]);
+                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexIDsOffset] = BitConverter.UInt32BitsToSingle(mobModel.vertexBoneIds[i]);
                     }
 
                     if (mobModel.skeleton != null)

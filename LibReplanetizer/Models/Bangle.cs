@@ -14,7 +14,7 @@ using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Models
 {
-    public class Bangle : Model
+    public class Bangle : MetalModel
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
 
@@ -36,46 +36,48 @@ namespace LibReplanetizer.Models
             byte[] meshHeader = ReadBlock(fs, baseOffset + headerOffset, MESHHEADERSIZE);
 
             int texCount = ReadInt(meshHeader, 0x00);
-            int otherCount = ReadInt(meshHeader, 0x04);
+            int metalTexCount = ReadInt(meshHeader, 0x04);
             int texBlockPointer = baseOffset + ReadInt(meshHeader, 0x08);
-            int otherBlockPointer = baseOffset + ReadInt(meshHeader, 0x0C);
+            int metalTexBlockPointer = baseOffset + ReadInt(meshHeader, 0x0C);
             int vertPointer = baseOffset + ReadInt(meshHeader, 0x10);
             int indexPointer = baseOffset + ReadInt(meshHeader, 0x14);
             ushort vertexCount = ReadUshort(meshHeader, 0x18);
-            ushort otherVertCount = ReadUshort(meshHeader, 0x1a);
-
-            int otherPointer = vertPointer + vertexCount * 0x28;
+            ushort metalVertCount = ReadUshort(meshHeader, 0x1a);
 
             int faceCount = 0;
-
-            //Texture configuration
             if (texBlockPointer > 0)
             {
                 textureConfig = GetTextureConfigs(fs, texBlockPointer, texCount, TEXTUREELEMENTSIZE);
                 faceCount = GetFaceCount();
             }
 
-            if (vertPointer > 0 && vertexCount > 0)
+            int metalFaceCount = 0;
+            if (metalTexBlockPointer > 0)
             {
-                //Get vertex buffer float[vertX, vertY, vertZ, normX, normY, normZ, U, V, reserved, reserved]
-                vertexBuffer = GetVertices(fs, vertPointer, vertexCount, VERTELEMENTSIZE);
+                metalTextureConfig = GetTextureConfigs(fs, metalTexBlockPointer, metalTexCount, TEXTUREELEMENTSIZE);
+                metalFaceCount = GetMetalFaceCount();
             }
 
-            if (indexPointer > 0 && faceCount > 0)
+            if (vertexCount > 0)
             {
-                //Index buffer
+                (vertexBuffer, vertexBoneWeights, vertexBoneIds) = GetVertices(fs, vertPointer, vertexCount, VERTELEMENTSIZE);
+            }
+
+            int metalVertPointer = vertPointer + vertexCount * VERTELEMENTSIZE;
+            if (metalVertCount > 0)
+            {
+                (metalVertexBuffer, metalVertexBoneWeights, metalVertexBoneIds) = GetVertices(fs, metalVertPointer, metalVertCount, VERTELEMENTSIZE);
+            }
+
+            if (faceCount > 0)
+            {
                 indexBuffer = GetIndices(fs, indexPointer, faceCount);
             }
-            if (otherPointer > 0)
+
+            int metalIndexPointer = indexPointer + faceCount * sizeof(ushort);
+            if (metalFaceCount > 0)
             {
-                otherBuffer.AddRange(ReadBlockNopad(fs, otherPointer, otherVertCount * 0x20));
-                otherTextureConfigs = GetTextureConfigs(fs, otherBlockPointer, otherCount, 0x10);
-                int otherfaceCount = 0;
-                foreach (TextureConfig tex in otherTextureConfigs)
-                {
-                    otherfaceCount += tex.size;
-                }
-                otherIndexBuffer.AddRange(GetIndices(fs, indexPointer + faceCount * sizeof(ushort), otherfaceCount));
+                metalIndexBuffer = GetIndices(fs, metalIndexPointer, metalFaceCount);
             }
         }
 

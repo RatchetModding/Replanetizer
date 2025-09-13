@@ -16,6 +16,9 @@ namespace Replanetizer.Renderer
         {
             public bool[] chunks = new bool[5] { true, true, true, true, true };
 
+            // TODO: (Milch) Figure out the upperbound on the number of bangles
+            public bool[] subModels = new bool[15] { true, true, true, true, true, true, true, true, true, true, true, true, true, true, true };
+
             public bool enableMoby = true, enableTie = true, enableShrub = true, enableSpline = false,
             enableCuboid = false, enableSpheres = false, enableCylinders = false, enablePills = false,
             enableSkybox = true, enableTerrain = true, enableCollision = false, enableTransparency = true,

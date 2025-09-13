@@ -38,6 +38,10 @@ namespace Replanetizer.Renderer
         private int vbo = 0;
         private int vao = 0;
 
+        private List<int> subModelIBOs = new List<int>();
+        private List<int> subModelVBOs = new List<int>();
+        private List<int> subModelVAOs = new List<int>();
+
         private bool iboAllocated = false;
         private bool vboAllocated = false;
         private bool vaoAllocated = false;
@@ -114,9 +118,7 @@ namespace Replanetizer.Renderer
                 this.modelObject = mObj;
                 this.type = RenderedObjectTypeUtils.GetRenderTypeFromLevelObject(mObj);
 
-                GenerateBuffers();
                 UpdateVars();
-
                 return;
             }
 
@@ -125,9 +127,7 @@ namespace Replanetizer.Renderer
                 this.modelStandalone = model;
                 this.type = RenderedObjectType.Null;
 
-                GenerateBuffers();
                 UpdateVars();
-
                 return;
             }
 
@@ -163,6 +163,34 @@ namespace Replanetizer.Renderer
             }
 
             loadedModelID = -1;
+
+            foreach (int subModelIBO in subModelIBOs)
+            {
+                if (subModelIBO != -1)
+                {
+                    GL.DeleteBuffer(subModelIBO);
+                }
+            }
+
+            foreach (int subModelVBO in subModelVBOs)
+            {
+                if (subModelVBO != -1)
+                {
+                    GL.DeleteBuffer(subModelVBO);
+                }
+            }
+
+            foreach (int subModelVAO in subModelVAOs)
+            {
+                if (subModelVAO != -1)
+                {
+                    GL.DeleteVertexArray(subModelVAO);
+                }
+            }
+
+            subModelVAOs.Clear();
+            subModelIBOs.Clear();
+            subModelVBOs.Clear();
         }
 
         /// <summary>
@@ -293,24 +321,62 @@ namespace Replanetizer.Renderer
                 vboAllocated = true;
             }
 
-            SetupVertexAttribPointers();
+            UpdateBuffers(modelRender, vao);
 
-            UpdateBuffers();
+            // Initialize all submodels aswell, we can then dynamically decide to draw them or not during rendering.
+            int subModelCount = modelRender.GetSubModelCount();
+            for (int i = 0; i < subModelCount; i++)
+            {
+                Model? subModel = modelRender.GetSubModel(i);
+
+                if (subModel == null)
+                    continue;
+
+                int subModelVao;
+                GL.GenVertexArrays(1, out subModelVao);
+                GL.BindVertexArray(subModelVao);
+
+                // IBO
+                int subModelIboLength = subModel.GetIndices().Length * sizeof(ushort);
+                int subModelIbo = -1;
+                if (subModelIboLength > 0)
+                {
+                    GL.GenBuffers(1, out subModelIbo);
+                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, subModelIbo);
+                    GL.BufferData(BufferTarget.ElementArrayBuffer, subModelIboLength, IntPtr.Zero, BufferUsageHint.StaticDraw);
+                }
+
+                // VBO
+                int subModelVboLength = subModel.GetVertices().Length * sizeof(float);
+                subModelVboLength += subModel.ids.Length * sizeof(uint);
+                subModelVboLength += subModel.weights.Length * sizeof(uint);
+                int subModelVbo = -1;
+                if (subModelVboLength > 0)
+                {
+                    GL.GenBuffers(1, out subModelVbo);
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, subModelVbo);
+                    GL.BufferData(BufferTarget.ArrayBuffer, subModelVboLength, IntPtr.Zero, BufferUsageHint.StaticDraw);
+                }
+
+                subModelVAOs.Add(subModelVao);
+                subModelIBOs.Add(subModelIbo);
+                subModelVBOs.Add(subModelVbo);
+
+                UpdateBuffers(subModel, subModelVao);
+            }
         }
 
         /// <summary>
         /// Updates the buffers. This is not actually needed as long as mesh manipulations are not possible.
         /// </summary>
-        private void UpdateBuffers()
+        private void UpdateBuffers(Model model, int modelVAO)
         {
-            if (modelRender == null) return;
+            GL.BindVertexArray(modelVAO);
 
-            GL.BindVertexArray(vao);
-
-            ushort[] iboData = modelRender.GetIndices();
+            ushort[] iboData = model.GetIndices();
             GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, iboData.Length * sizeof(ushort), iboData);
 
-            float[] vboData = modelRender.GetVertices();
+            float[] vboData = model.GetVertices();
             if (modelObject != null)
             {
                 switch (type)
@@ -318,7 +384,7 @@ namespace Replanetizer.Renderer
                     case RenderedObjectType.Terrain:
                         {
                             byte[] rgbas = modelObject.GetAmbientRgbas();
-                            TerrainModel? terrainModel = (TerrainModel?) modelRender;
+                            TerrainModel? terrainModel = (TerrainModel?) model;
                             if (terrainModel == null) break;
                             int[] lights = terrainModel.lights.ToArray();
                             float[] fullData = new float[vboData.Length + rgbas.Length / 4 + lights.Length];
@@ -360,6 +426,8 @@ namespace Replanetizer.Renderer
                 }
             }
             GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, vboData.Length * sizeof(float), vboData);
+
+            SetupVertexAttribPointers();
         }
 
         /// <summary>
@@ -606,6 +674,41 @@ namespace Replanetizer.Renderer
             renderPerformBillboardOnly = false;
         }
 
+        private void RenderModel(Model model, int modelVAO)
+        {
+            GL.BindVertexArray(modelVAO);
+
+            shaderTable.meshShader.UseShader();
+
+            //Bind textures one by one, applying it to the relevant vertices based on the index array
+            foreach (TextureConfig conf in model.textureConfig)
+            {
+                if (conf.id >= 0)
+                {
+                    GLTexture tex = textureIds[textures[conf.id]];
+                    tex.Bind();
+                    SetTextureWrapMode(conf, tex);
+                }
+                else
+                {
+                    GLTexture.BindNull();
+                }
+                SetTransparencyMode(conf);
+                GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+            }
+
+            if (selected)
+            {
+                shaderTable.colorShader.UseShader();
+
+                GL.Enable(EnableCap.LineSmooth);
+                GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
+                GL.DrawElements(PrimitiveType.Triangles, model.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
+                GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
+                GL.Disable(EnableCap.LineSmooth);
+            }
+        }
+
         public override void Render(RendererPayload payload)
         {
             if (renderPrepared && !renderPerform)
@@ -645,8 +748,7 @@ namespace Replanetizer.Renderer
 
             if (modelRender == null) return;
 
-            GL.BindVertexArray(vao);
-
+            // Setup shaders
             shaderTable.meshShader.UseShader();
 
             shaderTable.meshShader.SetUniform1(UniformName.mainTexture, 0);
@@ -661,23 +763,6 @@ namespace Replanetizer.Renderer
 
             blueNoiseTexture.Bind(1);
 
-            //Bind textures one by one, applying it to the relevant vertices based on the index array
-            foreach (TextureConfig conf in modelRender.textureConfig)
-            {
-                if (conf.id >= 0)
-                {
-                    GLTexture tex = textureIds[textures[conf.id]];
-                    tex.Bind();
-                    SetTextureWrapMode(conf, tex);
-                }
-                else
-                {
-                    GLTexture.BindNull();
-                }
-                SetTransparencyMode(conf);
-                GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
-            }
-
             if (selected)
             {
                 shaderTable.colorShader.UseShader();
@@ -687,12 +772,20 @@ namespace Replanetizer.Renderer
                 shaderTable.colorShader.SetUniform1(UniformName.levelObjectNumber, objectID);
                 shaderTable.colorShader.SetUniform1(UniformName.levelObjectType, (int) type);
                 shaderTable.colorShader.SetUniform4(UniformName.incolor, 1.0f, 1.0f, 1.0f, 1.0f);
+            }
 
-                GL.Enable(EnableCap.LineSmooth);
-                GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
-                GL.DrawElements(PrimitiveType.Triangles, modelRender.indexBuffer.Length, DrawElementsType.UnsignedShort, 0);
-                GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
-                GL.Disable(EnableCap.LineSmooth);
+            RenderModel(modelRender, vao);
+
+            int subModelCount = modelRender.GetSubModelCount();
+            for (int i = 0; i < subModelCount; i++)
+            {
+                if (payload.visibility.subModels[i] == false) continue;
+
+                Model? subModel = modelRender.GetSubModel(i);
+
+                if (subModel == null) continue;
+
+                RenderModel(subModel, subModelVAOs[i]);
             }
 
             GLUtil.CheckGlError("MeshRenderer");

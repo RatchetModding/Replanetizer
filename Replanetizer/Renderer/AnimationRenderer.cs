@@ -39,6 +39,10 @@ namespace Replanetizer.Renderer
         private int vbo = 0;
         private int vao = 0;
 
+        private List<int> subModelIBOs = new List<int>();
+        private List<int> subModelVBOs = new List<int>();
+        private List<int> subModelVAOs = new List<int>();
+
         private bool iboAllocated = false;
         private bool vboAllocated = false;
         private bool vaoAllocated = false;
@@ -90,20 +94,14 @@ namespace Replanetizer.Renderer
             if (obj is Moby moby)
             {
                 mob = moby;
-
-                GenerateBuffers();
                 UpdateVars();
-
                 return;
             }
 
             if (obj is MobyModel mobyModel)
             {
                 mobyModelStandalone = mobyModel;
-
-                GenerateBuffers();
                 UpdateVars();
-
                 return;
             }
 
@@ -139,6 +137,34 @@ namespace Replanetizer.Renderer
             }
 
             loadedModelID = -1;
+
+            foreach (int subModelIBO in subModelIBOs)
+            {
+                if (subModelIBO != -1)
+                {
+                    GL.DeleteBuffer(subModelIBO);
+                }
+            }
+
+            foreach (int subModelVBO in subModelVBOs)
+            {
+                if (subModelVBO != -1)
+                {
+                    GL.DeleteBuffer(subModelVBO);
+                }
+            }
+
+            foreach (int subModelVAO in subModelVAOs)
+            {
+                if (subModelVAO != -1)
+                {
+                    GL.DeleteVertexArray(subModelVAO);
+                }
+            }
+
+            subModelVAOs.Clear();
+            subModelIBOs.Clear();
+            subModelVBOs.Clear();
         }
 
         public bool IsValid()
@@ -239,28 +265,64 @@ namespace Replanetizer.Renderer
                 vboAllocated = true;
             }
 
-            SetupVertexAttribPointers();
+            UpdateBuffers(mobyModel, vao);
 
-            UpdateBuffers();
+            // Initialize all submodels aswell, we can then dynamically decide to draw them or not during rendering.
+            int subModelCount = mobyModel.GetSubModelCount();
+            for (int i = 0; i < subModelCount; i++)
+            {
+                Model? subModel = mobyModel.GetSubModel(i);
+
+                if (subModel == null)
+                    continue;
+
+                int subModelVao;
+                GL.GenVertexArrays(1, out subModelVao);
+                GL.BindVertexArray(subModelVao);
+
+                // IBO
+                int subModelIboLength = subModel.GetIndices().Length * sizeof(ushort);
+                int subModelIbo = -1;
+                if (subModelIboLength > 0)
+                {
+                    GL.GenBuffers(1, out subModelIbo);
+                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, subModelIbo);
+                    GL.BufferData(BufferTarget.ElementArrayBuffer, subModelIboLength, IntPtr.Zero, BufferUsageHint.StaticDraw);
+                }
+
+                // VBO
+                int subModelVboLength = subModel.GetVertices().Length * sizeof(float);
+                subModelVboLength += subModel.ids.Length * sizeof(uint);
+                subModelVboLength += subModel.weights.Length * sizeof(uint);
+                int subModelVbo = -1;
+                if (subModelVboLength > 0)
+                {
+                    GL.GenBuffers(1, out subModelVbo);
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, subModelVbo);
+                    GL.BufferData(BufferTarget.ArrayBuffer, subModelVboLength, IntPtr.Zero, BufferUsageHint.StaticDraw);
+                }
+
+                subModelVAOs.Add(subModelVao);
+                subModelIBOs.Add(subModelIbo);
+                subModelVBOs.Add(subModelVbo);
+
+                UpdateBuffers(subModel, subModelVao);
+            }
         }
 
         /// <summary>
         /// Updates the buffers. This is not actually needed as long as mesh manipulations are not possible.
         /// </summary>
-        private void UpdateBuffers()
+        private void UpdateBuffers(Model model, int modelVAO)
         {
-            MobyModel? mobyModel = (MobyModel?) mob?.model ?? mobyModelStandalone;
+            GL.BindVertexArray(modelVAO);
 
-            if (mobyModel == null) return;
-
-            GL.BindVertexArray(vao);
-
-            ushort[] iboData = mobyModel.GetIndices();
+            ushort[] iboData = model.GetIndices();
             GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, iboData.Length * sizeof(ushort), iboData);
 
-            float[] vboData = mobyModel.GetVertices();
-            uint[] boneIDs = mobyModel.ids;
-            uint[] boneWeights = mobyModel.weights;
+            float[] vboData = model.GetVertices();
+            uint[] boneIDs = model.ids;
+            uint[] boneWeights = model.weights;
 
             float[] fullData = new float[vboData.Length + boneIDs.Length + boneWeights.Length];
 
@@ -278,6 +340,8 @@ namespace Replanetizer.Renderer
                 fullData[10 * i + 9] = BitConverter.UInt32BitsToSingle(boneWeights[i]);
             }
             GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, fullData.Length * sizeof(float), fullData);
+
+            SetupVertexAttribPointers();
         }
 
         /// <summary>
@@ -286,24 +350,25 @@ namespace Replanetizer.Renderer
         /// </summary>
         private void UpdateVars()
         {
+            int modelID = -1;
+
             if (mob != null)
             {
                 light = Math.Max(0, Math.Min(ALLOCATED_LIGHTS, mob.light)); ;
                 ambient = mob.color;
                 renderDistance = mob.drawDistance;
-
-                if (loadedModelID != mob.modelID)
-                {
-                    previousFrame = null;
-                    GenerateBuffers();
-                }
+                modelID = mob.modelID;
             }
             else if (mobyModelStandalone != null)
             {
                 light = -1;
                 ambient = Color.FromRgb(255, 255, 255).ToPixel<Rgb24>();
+                modelID = mobyModelStandalone.id;
+            }
 
-                if (loadedModelID != mobyModelStandalone.id)
+            if (modelID != -1)
+            {
+                if (loadedModelID != modelID)
                 {
                     previousFrame = null;
                     GenerateBuffers();
@@ -408,6 +473,28 @@ namespace Replanetizer.Renderer
             return false;
         }
 
+        private void RenderModel(Model model, int modelVAO)
+        {
+            GL.BindVertexArray(modelVAO);
+
+            //Bind textures one by one, applying it to the relevant vertices based on the index array
+            foreach (TextureConfig conf in model.textureConfig)
+            {
+                if (conf.id >= 0)
+                {
+                    GLTexture tex = textureIds[textures[conf.id]];
+                    tex.Bind();
+                    SetTextureWrapMode(conf, tex);
+                }
+                else
+                {
+                    GLTexture.BindNull();
+                }
+                SetTransparencyMode(conf);
+                GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+            }
+        }
+
         public override void Render(RendererPayload payload)
         {
             if (((mob == null || mob.model == null || mob.memory == null) && mobyModelStandalone == null)) return;
@@ -424,8 +511,6 @@ namespace Replanetizer.Renderer
             MobyModel? mobyModel = (MobyModel?) mob?.model ?? mobyModelStandalone;
 
             if (mobyModel == null) return;
-
-            GL.BindVertexArray(vao);
 
             Select(payload.selection);
 
@@ -563,21 +648,18 @@ namespace Replanetizer.Renderer
 
             shaderTable.animationShader.SetUniformMatrix4(UniformName.bones, mobyModel.boneCount, ref boneMatrices[0].Row0.X);
 
-            //Bind textures one by one, applying it to the relevant vertices based on the index array
-            foreach (TextureConfig conf in mobyModel.textureConfig)
+            RenderModel(mobyModel, vao);
+
+            int subModelCount = mobyModel.GetSubModelCount();
+            for (int i = 0; i < subModelCount; i++)
             {
-                if (conf.id >= 0)
-                {
-                    GLTexture tex = textureIds[textures[conf.id]];
-                    tex.Bind();
-                    SetTextureWrapMode(conf, tex);
-                }
-                else
-                {
-                    GLTexture.BindNull();
-                }
-                SetTransparencyMode(conf);
-                GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
+                if (payload.visibility.subModels[i] == false) continue;
+
+                Model? subModel = mobyModel.GetSubModel(i);
+
+                if (subModel == null) continue;
+
+                RenderModel(subModel, subModelVAOs[i]);
             }
 
             GLUtil.CheckGlError("AnimationRenderer");

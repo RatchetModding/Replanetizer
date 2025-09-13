@@ -79,6 +79,8 @@ namespace LibReplanetizer.Models
         [Category("Attributes"), DisplayName("Is Model")]
         public bool isModel { get; set; } = true;
 
+        public override int GetSubModelCount() { return bangles.Count; }
+        public override Model? GetSubModel(int index) { return (index < bangles.Count) ? (Model?) bangles[index] : null; }
 
         // Unparsed sections
         public byte[] type10Block = { };                  // Hitbox

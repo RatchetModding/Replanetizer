@@ -46,6 +46,9 @@ namespace LibReplanetizer.Models
             }
         }
 
+        public virtual int GetSubModelCount() { return 0; }
+        public virtual Model? GetSubModel(int index) { return null; }
+
         // Every vertex can be assigned to at most 4 bones
         // weights contains 4 uint8 each being of weight (value / 255.0)
         // ids contains 4 uint8 each defining which bones we refer to

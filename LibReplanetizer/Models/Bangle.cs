@@ -66,7 +66,7 @@ namespace LibReplanetizer.Models
             int metalVertPointer = vertPointer + vertexCount * VERTELEMENTSIZE;
             if (metalVertCount > 0)
             {
-                (metalVertexBuffer, metalVertexBoneWeights, metalVertexBoneIds) = GetVertices(fs, metalVertPointer, metalVertCount, VERTELEMENTSIZE);
+                (metalVertexBuffer, metalVertexBoneWeights, metalVertexBoneIds) = GetMetalVertices(fs, metalVertPointer, metalVertCount);
             }
 
             if (faceCount > 0)

@@ -18,6 +18,7 @@ namespace LibReplanetizer.Models
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
 
         const int VERTELEMENTSIZE = 0x28;
+        const int METALVERTELEMENTSIZE = 0x20;
         const int TEXTUREELEMENTSIZE = 0x10;
         const int MESHHEADERSIZE = 0x20;
         const int HEADERSIZE = 0x48;
@@ -113,8 +114,7 @@ namespace LibReplanetizer.Models
             int metalVertPointer = vertPointer + vertexCount * VERTELEMENTSIZE;
             if (metalVertCount > 0)
             {
-                // TODO: (Milch) Are metal vertices rigged? Or rather, do they contain bone weights and ids? The original code assumed a stride of 0x20.
-                (metalVertexBuffer, metalVertexBoneWeights, metalVertexBoneIds) = GetVertices(fs, metalVertPointer, metalVertCount, VERTELEMENTSIZE);
+                (metalVertexBuffer, metalVertexBoneWeights, metalVertexBoneIds) = GetMetalVertices(fs, metalVertPointer, metalVertCount);
             }
 
             if (faceCount > 0)
@@ -498,7 +498,7 @@ namespace LibReplanetizer.Models
             if (faceBytes.Length != 0)
                 WriteInt(outbytes, meshDataOffset + 0x14, faceOffset);
             WriteShort(outbytes, meshDataOffset + 0x18, (short) (vertexBytes.Length / VERTELEMENTSIZE));
-            WriteShort(outbytes, meshDataOffset + 0x1a, (short) (metalVertexBytes.Length / VERTELEMENTSIZE));
+            WriteShort(outbytes, meshDataOffset + 0x1a, (short) (metalVertexBytes.Length / METALVERTELEMENTSIZE));
             WriteShort(outbytes, meshDataOffset + 0x1C, (short) (vertexCount2));
 
             for (int i = 0; i < textureConfig.Count; i++)

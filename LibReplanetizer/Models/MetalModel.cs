@@ -53,9 +53,32 @@ namespace LibReplanetizer.Models
             return faceCount;
         }
 
+        public static (float[], uint[], uint[]) GetMetalVertices(FileStream fs, int vertexPointer, int vertexCount)
+        {
+            const int elemSize = 0x20;
+
+            float[] vertexBuffer = new float[vertexCount * 8];
+            uint[] weights = new uint[vertexCount];
+            uint[] ids = new uint[vertexCount];
+            //List<float> vertexBuffer = new List<float>();
+            byte[] vertBlock = ReadBlock(fs, vertexPointer, vertexCount * elemSize);
+            for (int i = 0; i < vertexCount; i++)
+            {
+                vertexBuffer[(i * 8) + 0] = (ReadFloat(vertBlock, (i * elemSize) + 0x00));    //VertexX
+                vertexBuffer[(i * 8) + 1] = (ReadFloat(vertBlock, (i * elemSize) + 0x04));    //VertexY
+                vertexBuffer[(i * 8) + 2] = (ReadFloat(vertBlock, (i * elemSize) + 0x08));    //VertexZ
+                vertexBuffer[(i * 8) + 3] = (ReadFloat(vertBlock, (i * elemSize) + 0x0C));    //NormX
+                vertexBuffer[(i * 8) + 4] = (ReadFloat(vertBlock, (i * elemSize) + 0x10));    //NormY
+                vertexBuffer[(i * 8) + 5] = (ReadFloat(vertBlock, (i * elemSize) + 0x14));    //NormZ
+                weights[i] = (ReadUint(vertBlock, (i * elemSize) + 0x18));
+                ids[i] = (ReadUint(vertBlock, (i * elemSize) + 0x1C));
+            }
+            return (vertexBuffer, weights, ids);
+        }
+
         public byte[] SerializeMetalVertices()
         {
-            int elemSize = 0x28;
+            int elemSize = 0x20;
             byte[] outBytes = new byte[(metalVertexBuffer.Length / 8) * elemSize];
 
             for (int i = 0; i < metalVertexBuffer.Length / 8; i++)
@@ -66,10 +89,8 @@ namespace LibReplanetizer.Models
                 WriteFloat(outBytes, (i * elemSize) + 0x0C, metalVertexBuffer[(i * 8) + 3]);
                 WriteFloat(outBytes, (i * elemSize) + 0x10, metalVertexBuffer[(i * 8) + 4]);
                 WriteFloat(outBytes, (i * elemSize) + 0x14, metalVertexBuffer[(i * 8) + 5]);
-                WriteFloat(outBytes, (i * elemSize) + 0x18, metalVertexBuffer[(i * 8) + 6]);
-                WriteFloat(outBytes, (i * elemSize) + 0x1C, metalVertexBuffer[(i * 8) + 7]);
-                WriteUint(outBytes, (i * elemSize) + 0x20, metalVertexBoneWeights[i]);
-                WriteUint(outBytes, (i * elemSize) + 0x24, metalVertexBoneIds[i]);
+                WriteUint(outBytes, (i * elemSize) + 0x18, metalVertexBoneWeights[i]);
+                WriteUint(outBytes, (i * elemSize) + 0x1C, metalVertexBoneIds[i]);
             }
 
             return outBytes;

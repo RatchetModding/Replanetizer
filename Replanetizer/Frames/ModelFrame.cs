@@ -93,6 +93,8 @@ namespace Replanetizer.Frames
         private const float CLIP_FAR = 1024.0f;
         private const float FIELD_OF_VIEW = MathF.PI / 3;  // 60 degrees
 
+        private bool showBangles = true;
+
         private Rectangle contentRegion;
         private Vector2 mousePos;
         private int width, height;
@@ -460,6 +462,19 @@ namespace Replanetizer.Frames
                         rendererPayload.forcedAnimationID = animID;
                     }
                     ImGui.LabelText("Animation Framecount", (animID >= 0 && animID < animations.Count) ? animations[animID].frames.Count.ToString() : "0");
+                    ImGui.Separator();
+                }
+
+                if (selectedModel?.GetSubModelCount() > 0)
+                {
+                    if (ImGui.Checkbox("Show Bangles", ref showBangles))
+                    {
+                        for (int i = 0; i < rendererPayload.visibility.subModels.Length; i++)
+                        {
+                            rendererPayload.visibility.subModels[i] = showBangles;
+                        }
+                    }
+
                     ImGui.Separator();
                 }
 

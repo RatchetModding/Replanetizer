@@ -320,7 +320,11 @@ namespace LibReplanetizer
                 }
 
                 if (model != null)
+                {
+                    // Set a canonical id so Replanetizer can more easily differentiate between armor models
+                    model.id = (short)armorModels.Count;
                     armorModels.Add(model);
+                }
 
                 armorTextures.Add(tex);
             }

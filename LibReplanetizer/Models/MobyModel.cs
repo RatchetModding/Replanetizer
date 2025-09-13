@@ -35,17 +35,18 @@ namespace LibReplanetizer.Models
         public byte count8 { get; set; }
 
         public int null2 { get; set; }
-        public int null3 { get; set; }
 
-        /*
-         * These are not zero, yet setting them to 0 has no effect on Oozla (maybe test other levels?)
-         */
-        public float unk1 { get; set; }
-        public float unk2 { get; set; }
-        public float unk3 { get; set; }
-        public float unk4 { get; set; }
+        [Category("Culling Parameters"), DisplayName("Position X")]
+        public float cullingX { get; set; }
+        [Category("Culling Parameters"), DisplayName("Position Y")]
+        public float cullingY { get; set; }
+        [Category("Culling Parameters"), DisplayName("Position Z")]
+        public float cullingZ { get; set; }
+        [Category("Culling Parameters"), DisplayName("Radius")]
+        public float cullingRadius { get; set; }
 
         public uint color2 { get; set; }               // RGBA color
+        public byte unk1 { get; set; }
         public uint unk6 { get; set; }
 
         public ushort vertexCount2 { get; set; }
@@ -62,6 +63,8 @@ namespace LibReplanetizer.Models
         public List<BoneMatrix> boneMatrices { get; set; } = new List<BoneMatrix>();
         [Category("Attributes"), DisplayName("Bone Datas")]
         public List<BoneData> boneDatas { get; set; } = new List<BoneData>();
+        [Category("Attributes"), DisplayName("Bangles")]
+        public List<Bangle> bangles { get; set; } = new List<Bangle>();
 
         [Category("Unknowns"), DisplayName("Other Buffer")]
         public List<byte> otherBuffer { get; set; } = new List<byte>();
@@ -71,6 +74,7 @@ namespace LibReplanetizer.Models
 
         [Category("Unknowns"), DisplayName("Other Index Buffer")]
         public List<ushort> otherIndexBuffer { get; set; } = new List<ushort>();
+
         public Skeleton? skeleton = null;
         [Category("Attributes"), DisplayName("Is Model")]
         public bool isModel { get; set; } = true;
@@ -117,14 +121,15 @@ namespace LibReplanetizer.Models
             null2 = ReadInt(headBlock, 0x20);
             size = ReadFloat(headBlock, 0x24);
             int soundPointer = ReadInt(headBlock, 0x28);
-            null3 = ReadInt(headBlock, 0x2C);
+            ushort banglesPointer = ReadUshort(headBlock, 0x2C);
+            ushort corncobPointer = ReadUshort(headBlock, 0x2E);
 
-            if (null1 != 0 || null2 != 0 || null3 != 0) { LOGGER.Warn("Warning: null in model header wan't null"); }
+            if (null1 != 0 || null2 != 0) { LOGGER.Warn("Warning: null in model header wan't null"); }
 
-            unk1 = ReadFloat(headBlock, 0x30);
-            unk2 = ReadFloat(headBlock, 0x34);
-            unk3 = ReadFloat(headBlock, 0x38);
-            unk4 = ReadFloat(headBlock, 0x3C);
+            cullingX = ReadFloat(headBlock, 0x30);
+            cullingY = ReadFloat(headBlock, 0x34);
+            cullingZ = ReadFloat(headBlock, 0x38);
+            cullingRadius = ReadFloat(headBlock, 0x3C);
 
             color2 = ReadUint(headBlock, 0x40);
             unk6 = ReadUint(headBlock, 0x44);
@@ -135,6 +140,29 @@ namespace LibReplanetizer.Models
             for (int i = 0; i < animationCount; i++)
             {
                 animations.Add(new Animation(fs, game, offset, ReadInt(animationPointerBlock, i * 0x04), boneCount));
+            }
+
+            // Bangles
+            if (banglesPointer > 0)
+            {
+                byte[] banglesHeader = ReadBlock(fs, offset + banglesPointer * 0x10, 0x04);
+
+                // Wrench always loads 15 bangles
+                byte banglesCount = 15;
+
+                byte[] banglesIndices = ReadBlock(fs, offset + banglesPointer * 0x10 + 0x04, banglesCount * 0x04);
+
+                for (int i = 0; i < banglesCount; i++)
+                {
+                    int bangleHeaderOffset = ReadInt(banglesIndices, i * 0x04);
+
+                    if (bangleHeaderOffset > 0)
+                    {
+                        bangles.Add(new Bangle(fs, offset, bangleHeaderOffset));
+                    }
+                }
+
+                LOGGER.Warn("Moby Model " + id + " has bangles.");
             }
 
             // Type 10 ( has something to do with collision )
@@ -194,9 +222,7 @@ namespace LibReplanetizer.Models
                         attid++;
                     }
                 }
-
             }
-
 
             // Sounds
             if (soundPointer > 0)
@@ -211,7 +237,7 @@ namespace LibReplanetizer.Models
             // Mesh meta
             if (meshPointer > 0)
             {
-                byte[] meshHeader = ReadBlock(fs, offset + meshPointer, 0x20);
+                byte[] meshHeader = ReadBlock(fs, offset + meshPointer, MESHHEADERSIZE);
 
                 int texCount = ReadInt(meshHeader, 0x00);
                 int otherCount = ReadInt(meshHeader, 0x04);
@@ -551,13 +577,14 @@ namespace LibReplanetizer.Models
             if (modelSounds.Count != 0)
                 WriteInt(outbytes, 0x28, soundOffset);
 
+            // TODO: Serialize Bangles
+            outbytes[0x2D] = unk1;
+            // TODO: Serialize corncobs
 
-            //null
-
-            WriteFloat(outbytes, 0x30, unk1);
-            WriteFloat(outbytes, 0x34, unk2);
-            WriteFloat(outbytes, 0x38, unk3);
-            WriteFloat(outbytes, 0x3C, unk4);
+            WriteFloat(outbytes, 0x30, cullingX);
+            WriteFloat(outbytes, 0x34, cullingY);
+            WriteFloat(outbytes, 0x38, cullingZ);
+            WriteFloat(outbytes, 0x3C, cullingRadius);
 
             WriteUint(outbytes, 0x40, color2);
             WriteUint(outbytes, 0x44, unk6);

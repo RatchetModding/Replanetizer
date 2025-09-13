@@ -79,6 +79,7 @@ namespace Replanetizer.Frames
         private bool hookLiveUpdate = true;
         private bool hookUpdateCamera = false;
 
+        private bool showBangles = true;
 
         private int width, height;
 
@@ -287,6 +288,14 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Frustum Culling", ref rendererPayload.visibility.enableFrustumCulling)) InvalidateView();
                     if (ImGui.Checkbox("Fog", ref rendererPayload.visibility.enableFog)) InvalidateView();
                     if (ImGui.Checkbox("Meshless Models", ref rendererPayload.visibility.enableMeshlessModels)) InvalidateView();
+                    if (ImGui.Checkbox("Bangles", ref showBangles))
+                    {
+                        for (int i = 0; i < rendererPayload.visibility.subModels.Length; i++)
+                        {
+                            rendererPayload.visibility.subModels[i] = showBangles;
+                        }
+                        InvalidateView();
+                    }
                     ImGui.PushItemWidth(90.0f);
                     if (ImGui.Combo("Antialiasing", ref antialiasing, antialiasingOptions, 1 + maxAntialiasing))
                     {

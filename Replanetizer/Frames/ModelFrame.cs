@@ -422,11 +422,14 @@ namespace Replanetizer.Frames
                             ImGui.EndDisabled();
                         }
 
-                        bool embedTextures = exportSettings.embedTextures;
-
-                        if (ImGui.Checkbox("Embed Textures", ref embedTextures))
+                        if (selectedModel.textureConfig.Count > 0)
                         {
-                            exportSettings.embedTextures = embedTextures;
+                            ImGui.Checkbox("Embed Textures", ref exportSettings.embedTextures);
+                        }
+
+                        if (selectedModel.GetSubModelCount() > 0)
+                        {
+                            ImGui.Checkbox("Include Bangles", ref exportSettings.includeBangles);
                         }
                     }
 

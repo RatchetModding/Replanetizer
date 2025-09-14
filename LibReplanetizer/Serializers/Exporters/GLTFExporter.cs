@@ -61,7 +61,7 @@ namespace LibReplanetizer
                 public int gltfTextureBaseIndex;
                 public int gltfMaterialBaseIndex;
 
-                public MeshContainer(Model model, bool skyboxModel, bool hasNormals, bool hasVertexColors, bool includeSkeleton)
+                public MeshContainer(Model model, float size, bool skyboxModel, bool hasNormals, bool hasVertexColors, bool includeSkeleton)
                 {
                     this.model = model;
 
@@ -78,9 +78,9 @@ namespace LibReplanetizer
 
                     for (int i = 0; i < model.vertexCount; i++)
                     {
-                        float px = model.vertexBuffer[(i * model.vertexStride) + vOffset + 0x0] * model.size;
-                        float py = model.vertexBuffer[(i * model.vertexStride) + vOffset + 0x1] * model.size;
-                        float pz = model.vertexBuffer[(i * model.vertexStride) + vOffset + 0x2] * model.size;
+                        float px = model.vertexBuffer[(i * model.vertexStride) + vOffset + 0x0] * size;
+                        float py = model.vertexBuffer[(i * model.vertexStride) + vOffset + 0x1] * size;
+                        float pz = model.vertexBuffer[(i * model.vertexStride) + vOffset + 0x2] * size;
                         vertices[i] = new Vector3(px, py, pz);
 
                         vertexMax = Vector3.ComponentMax(vertexMax, vertices[i]);
@@ -846,7 +846,7 @@ namespace LibReplanetizer
 
                 GLTFUtils.MeshContainer[] meshContainers = new GLTFUtils.MeshContainer[numMeshes];
 
-                meshContainers[0] = new GLTFUtils.MeshContainer(model, skyboxModel, hasNormals, hasVertexColors, includeSkeleton);
+                meshContainers[0] = new GLTFUtils.MeshContainer(model, model.size, skyboxModel, hasNormals, hasVertexColors, includeSkeleton);
 
                 if (settings.includeBangles)
                 {
@@ -856,7 +856,7 @@ namespace LibReplanetizer
 
                         if (subModel == null) continue;
 
-                        meshContainers[1 + i] = new GLTFUtils.MeshContainer(subModel, skyboxModel, hasNormals, hasVertexColors, includeSkeleton);
+                        meshContainers[1 + i] = new GLTFUtils.MeshContainer(subModel, model.size, skyboxModel, hasNormals, hasVertexColors, includeSkeleton);
                     }
                 }
 
@@ -1142,11 +1142,26 @@ namespace LibReplanetizer
                         skin = 0;
                     }
                 }
-                listNodes.Add(new GLTFNodesEntry("modelObject", 0, skin));
+
+                int[] meshNodes = new int[meshContainers.Length];
+                for (int i = 0; i < meshContainers.Length; i++)
+                {
+                    meshNodes[i] = listNodes.Count;
+                    listNodes.Add(new GLTFNodesEntry("Mesh" + i, i, skin));
+                }
 
                 if (includeSkeleton)
                 {
-                    listNodes.Add(new GLTFNodesEntry("Armature", new int[] { 0, listNodes.Count - 1 }));
+                    int[] armatureNodes = new int[meshContainers.Length + 1];
+                    armatureNodes[0] = 0;
+                    meshNodes.CopyTo(armatureNodes, 1);
+
+                    listNodes.Add(new GLTFNodesEntry("Armature", armatureNodes));
+                    listNodes.Add(new GLTFNodesEntry("ModelObject", new int[] { listNodes.Count - 1 }));
+                }
+                else
+                {
+                    listNodes.Add(new GLTFNodesEntry("ModelObject", meshNodes));
                 }
 
                 this.nodes = listNodes.ToArray();
@@ -1454,10 +1469,10 @@ namespace LibReplanetizer
                 this.materials = listMaterials.ToArray();
 
                 ////
-                //  Mesh Primitives
+                //  Meshes
                 ////
 
-                List<GLTFMeshEntry.GLTFMeshPrimitivesEntry> listMeshPrimitives = new List<GLTFMeshEntry.GLTFMeshPrimitivesEntry>();
+                List<GLTFMeshEntry> listMeshes = new List<GLTFMeshEntry>();
                 for (int i = 0; i < meshContainers.Length; i++)
                 {
                     GLTFUtils.MeshContainer meshContainer = meshContainers[i];
@@ -1477,19 +1492,15 @@ namespace LibReplanetizer
                         vertexAttribs.JOINTS_0 = meshContainer.gltfBoneIDsAccessorIndex;
                     }
 
-
+                    List<GLTFMeshEntry.GLTFMeshPrimitivesEntry> listMeshPrimitives = new List<GLTFMeshEntry.GLTFMeshPrimitivesEntry>();
                     for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
                     {
                         listMeshPrimitives.Add(new GLTFMeshEntry.GLTFMeshPrimitivesEntry(vertexAttribs, meshContainer.gltfIndexAccessorBaseIndex + j, meshContainer.gltfMaterialBaseIndex + j));
                     }
+
+                    listMeshes.Add(new GLTFMeshEntry("Mesh" + i, listMeshPrimitives.ToArray()));
                 }
 
-                ////
-                //  Meshes
-                ////
-
-                List<GLTFMeshEntry> listMeshes = new List<GLTFMeshEntry>();
-                listMeshes.Add(new GLTFMeshEntry("Mesh", listMeshPrimitives.ToArray()));
                 this.meshes = listMeshes.ToArray();
 
                 ////

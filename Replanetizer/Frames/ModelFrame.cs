@@ -712,9 +712,14 @@ namespace Replanetizer.Frames
 
             if (selectedModel != null && selectedTextureSet != null && !(selectedModel is SkyboxModel))
             {
+                shaderTable.meshShader.UseShader();
+                shaderTable.meshShader.SetUniform1(UniformName.useLighting, 0);
+                shaderTable.meshShader.SetUniform1(UniformName.useFog, 0);
+
                 if (rendererPayload.visibility.enableAnimations)
                 {
                     shaderTable.animationShader.UseShader();
+                    shaderTable.animationShader.SetUniform1(UniformName.useLighting, 0);
                     shaderTable.animationShader.SetUniform1(UniformName.useFog, 0);
                 }
                 rendererPayload.SetWindowSize(width, height);

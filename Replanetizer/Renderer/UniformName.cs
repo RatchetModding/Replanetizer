@@ -42,7 +42,8 @@ namespace Replanetizer.Renderer
         bones,
         fontTexture,
         resolution,
-        useTexture
+        useTexture,
+        useLighting
     }
 
 }

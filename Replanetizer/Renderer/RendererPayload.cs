@@ -24,7 +24,7 @@ namespace Replanetizer.Renderer
             enableSkybox = true, enableTerrain = true, enableCollision = false, enableTransparency = true,
             enableDistanceCulling = true, enableFrustumCulling = true, enableFog = true, enableGameCameras = false,
             enablePointLights = false, enableEnvSamples = false, enableEnvTransitions = false, enableSoundInstances = false,
-            enableGrindPaths = false, enableMeshlessModels = false, enableAnimations = false;
+            enableGrindPaths = false, enableMeshlessModels = false, enableAnimations = false, enableLighting = true;
 
             public VisibilitySettings()
             {

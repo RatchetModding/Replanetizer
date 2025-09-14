@@ -33,6 +33,7 @@ uniform int lightIndex;
 uniform int useFog;
 uniform vec4 fogParams;
 uniform vec4 staticColor;
+uniform int useLighting;
 
 void main() {
     vec4 position = vec4(0.0f);
@@ -54,17 +55,22 @@ void main() {
 	UV = vertexUV;
 
     // Light color is precomputed on PS3 but we do it here instead.
-    vec3 directionalLight = vec3(0.0f);
+    if (useLighting == 1) {
+        vec3 directionalLight = vec3(0.0f);
 
-    if (lightIndex >= 0) {
-        Light l = light[lightIndex];
-        directionalLight += max(0.0f, -dot(l.direction1, normal)) * l.color1.xyz;
-        directionalLight += max(0.0f, -dot(l.direction2, normal)) * l.color2.xyz;
+        if (lightIndex >= 0) {
+            Light l = light[lightIndex];
+            directionalLight += max(0.0f, -dot(l.direction1, normal)) * l.color1.xyz;
+            directionalLight += max(0.0f, -dot(l.direction2, normal)) * l.color2.xyz;
+        }
+
+        vec3 diffuseLight = staticColor.xyz;
+
+        lightColor = mix(diffuseLight, directionalLight, 0.5f);
     }
-
-    vec3 diffuseLight = staticColor.xyz;
-
-    lightColor = mix(diffuseLight, directionalLight, 0.5f);
+    else {
+        lightColor = vec3(0.5f, 0.5f, 0.5f);
+    }
 
 	fogBlend = 0.0f;
 

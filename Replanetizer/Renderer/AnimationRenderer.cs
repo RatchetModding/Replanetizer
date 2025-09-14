@@ -386,7 +386,7 @@ namespace Replanetizer.Renderer
 
         private void SetTextureMode(TextureConfig config)
         {
-            shaderTable.meshShader.SetUniform1(UniformName.useTexture, (config.id >= 0) ? 1 : 0);
+            shaderTable.animationShader.SetUniform1(UniformName.useTexture, (config.id >= 0) ? 1 : 0);
         }
 
         /// <summary>

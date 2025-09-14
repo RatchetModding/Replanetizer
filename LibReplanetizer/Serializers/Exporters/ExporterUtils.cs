@@ -308,6 +308,7 @@ namespace LibReplanetizer
         public bool exportMtlFile = true;
         public bool extendedFeatures = false;
         public bool embedTextures = false;
+        public bool includeBangles = true;
 
         public ExporterModelSettings()
         {

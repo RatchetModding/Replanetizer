@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2023, The Replanetizer Contributors.
+// Copyright (C) 2018-2025, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.IO;
 using SixLabors.ImageSharp;
+using System.Linq;
 
 // Due to the direct implementation of the GLTF standard through C# classes, we cannot
 // comply with all of our styling rules.
@@ -24,6 +25,246 @@ namespace LibReplanetizer
 {
     public class GLTFExporter : Exporter
     {
+        protected class GLTFUtils
+        {
+            public class MeshContainer
+            {
+                public Model model;
+
+                private ushort[] indices;
+
+                private Vector3[] vertices;
+                private Vector2[] UVs;
+                private Vector3[]? normals;
+                private Vector4[]? vertexColors;
+                private uint[]? boneWeights;
+                private uint[]? boneIDs;
+
+                public Vector3 vertexMax;
+                public Vector3 vertexMin;
+
+                public int gltfVertexBufferIndex;
+                public int gltfIndexBufferIndex;
+
+                public int gltfVertexBufferViewIndex;
+                public int gltfIndexBufferViewBaseIndex;
+
+                public int gltfVertexAccessorIndex;
+                public int gltfUVAccessorIndex;
+                public int gltfNormalAccessorIndex;
+                public int gltfVertexColorAccessorIndex;
+                public int gltfBoneWeightAccessorIndex;
+                public int gltfBoneIDsAccessorIndex;
+                public int gltfIndexAccessorBaseIndex;
+
+                public int gltfTextureSamplerBaseIndex;
+                public int gltfTextureBaseIndex;
+                public int gltfMaterialBaseIndex;
+
+                public MeshContainer(Model model, bool skyboxModel, bool hasNormals, bool hasVertexColors, bool includeSkeleton)
+                {
+                    this.model = model;
+
+                    int vOffset = 0x00;
+                    int vnOffset = 0x03;
+                    int vtOffset = (skyboxModel) ? 0x03 : 0x06;
+                    int vcOffset = 0x05;
+
+                    vertices = new Vector3[model.vertexCount];
+                    UVs = new Vector2[model.vertexCount];
+
+                    vertexMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+                    vertexMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+
+                    for (int i = 0; i < model.vertexCount; i++)
+                    {
+                        float px = model.vertexBuffer[(i * model.vertexStride) + vOffset + 0x0] * model.size;
+                        float py = model.vertexBuffer[(i * model.vertexStride) + vOffset + 0x1] * model.size;
+                        float pz = model.vertexBuffer[(i * model.vertexStride) + vOffset + 0x2] * model.size;
+                        vertices[i] = new Vector3(px, py, pz);
+
+                        vertexMax = Vector3.ComponentMax(vertexMax, vertices[i]);
+                        vertexMin = Vector3.ComponentMin(vertexMin, vertices[i]);
+                    }
+
+                    for (int i = 0; i < model.vertexCount; i++)
+                    {
+                        float u = model.vertexBuffer[(i * model.vertexStride) + vtOffset + 0x0];
+                        float v = model.vertexBuffer[(i * model.vertexStride) + vtOffset + 0x1];
+                        UVs[i] = new Vector2(u, v);
+                    }
+
+                    if (hasNormals)
+                    {
+                        normals = new Vector3[model.vertexCount];
+
+                        for (int i = 0; i < model.vertexCount; i++)
+                        {
+                            float nx = model.vertexBuffer[(i * model.vertexStride) + vnOffset + 0x0];
+                            float ny = model.vertexBuffer[(i * model.vertexStride) + vnOffset + 0x1];
+                            float nz = model.vertexBuffer[(i * model.vertexStride) + vnOffset + 0x2];
+                            normals[i] = new Vector3(nx, ny, nz);
+                        }
+                    }
+
+                    if (hasVertexColors)
+                    {
+                        vertexColors = new Vector4[model.vertexCount];
+
+                        for (int i = 0; i < model.vertexCount; i++)
+                        {
+                            byte[] colors = BitConverter.GetBytes(model.vertexBuffer[(i * model.vertexStride) + vcOffset + 0x00]);
+                            float r = ((float) colors[0]) / 255.0f;
+                            float g = ((float) colors[1]) / 255.0f;
+                            float b = ((float) colors[2]) / 255.0f;
+                            float a = ((float) colors[3]) / 255.0f;
+                            vertexColors[i] = new Vector4(r, g, b, a);
+                        }
+                    }
+
+                    if (includeSkeleton)
+                    {
+                        boneWeights = new uint[model.vertexCount];
+                        boneIDs = new uint[model.vertexCount];
+
+                        for (int i = 0; i < model.vertexCount; i++)
+                        {
+                            // GLTF strictly requires the weights to sum to 255. However, the values in the game will sum to
+                            // 255 or 256, hence we need to fix this.
+                            // The issue is that it is not straight forward to normalize this using bytes.
+                            // Maybe just using floats is the best solution here.
+                            byte[] weights = BitConverter.GetBytes(model.vertexBoneWeights[i]);
+
+                            int sum = 0;
+                            for (int j = 0; j < 4; j++)
+                            {
+                                sum += weights[j];
+                            }
+
+                            while (sum > 255)
+                            {
+                                for (int j = 0; j < 4; j++)
+                                {
+                                    if (weights[j] > 0)
+                                    {
+                                        weights[j]--;
+                                        sum--;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            while (sum < 255)
+                            {
+                                for (int j = 0; j < 4; j++)
+                                {
+                                    if (weights[j] > 0 && weights[j] < 255)
+                                    {
+                                        weights[j]++;
+                                        sum++;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            boneWeights[i] = BitConverter.ToUInt32(weights, 0);
+                            boneIDs[i] = model.vertexBoneIds[i];
+                        }
+                    }
+
+                    indices = new ushort[model.faceCount * 3];
+                    model.indexBuffer.CopyTo(indices, 0);
+
+                    // Correct face orientation
+                    if (hasNormals)
+                    {
+                        for (int i = 0; i < model.faceCount; i++)
+                        {
+                            ushort f1 = indices[i * 3 + 0];
+                            ushort f2 = indices[i * 3 + 1];
+                            ushort f3 = indices[i * 3 + 2];
+
+                            if (ShouldReverseWinding(vertices, normals, f1, f2, f3))
+                            {
+                                indices[i * 3 + 1] = f3;
+                                indices[i * 3 + 2] = f2;
+                            }
+                        }
+                    }
+
+                    // Change orientation, glTF enforces an orientation of Y Up
+                    ChangeOrientation(ref vertices, ExporterModelSettings.Orientation.Y_UP);
+                    if (normals != null)
+                    {
+                        ChangeOrientation(ref normals, ExporterModelSettings.Orientation.Y_UP);
+                    }
+                }
+
+                public float[] ConstructGLTFVertexBuffer(int gltfVertexBufferStride, int gltfVertexPosOffset, int gltfVertexUVOffset, int gltfVertexNormalOffset, int gltfVertexColorOffset, int gltfVertexWeightsOffset, int gltfVertexIDsOffset)
+                {
+                    float[] gltfVertexBuffer = new float[gltfVertexBufferStride * model.vertexCount];
+
+                    for (int i = 0; i < model.vertexCount; i++)
+                    {
+                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexPosOffset + 0x0] = vertices[i].X;
+                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexPosOffset + 0x1] = vertices[i].Y;
+                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexPosOffset + 0x2] = vertices[i].Z;
+                    }
+
+                    for (int i = 0; i < model.vertexCount; i++)
+                    {
+                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexUVOffset + 0x0] = UVs[i].X;
+                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexUVOffset + 0x1] = UVs[i].Y;
+                    }
+
+                    if (normals != null)
+                    {
+                        for (int i = 0; i < model.vertexCount; i++)
+                        {
+                            gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexNormalOffset + 0x0] = normals[i].X;
+                            gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexNormalOffset + 0x1] = normals[i].Y;
+                            gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexNormalOffset + 0x2] = normals[i].Z;
+                        }
+                    }
+
+                    if (vertexColors != null)
+                    {
+                        for (int i = 0; i < model.vertexCount; i++)
+                        {
+                            gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexColorOffset + 0x0] = vertexColors[i].X;
+                            gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexColorOffset + 0x1] = vertexColors[i].Y;
+                            gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexColorOffset + 0x2] = vertexColors[i].Z;
+                            gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexColorOffset + 0x3] = vertexColors[i].W;
+                        }
+                    }
+
+                    if (boneWeights != null)
+                    {
+                        for (int i = 0; i < model.vertexCount; i++)
+                        {
+                            gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexWeightsOffset] = BitConverter.UInt32BitsToSingle(boneWeights[i]);
+                        }
+                    }
+
+                    if (boneIDs != null)
+                    {
+                        for (int i = 0; i < model.vertexCount; i++)
+                        {
+                            gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexIDsOffset] = BitConverter.UInt32BitsToSingle(boneIDs[i]);
+                        }
+                    }
+
+                    return gltfVertexBuffer;
+                }
+
+                public ushort[] ConstructGLTFIndexBuffer()
+                {
+                    return indices;
+                }
+            }
+        }
+
+
         private class GLTFDataObject
         {
             public class GLTFAssetProperty
@@ -601,81 +842,22 @@ namespace LibReplanetizer
                     if (animations.Count == 0) exportAnimations = false;
                 }
 
-                int vOffset = 0x00;
-                int vnOffset = 0x03;
-                int vtOffset = (skyboxModel) ? 0x03 : 0x06;
-                int vcOffset = 0x05;
+                int numMeshes = settings.includeBangles ? 1 + model.GetSubModelCount() : 1;
 
-                // Separate vertex buffer into components
-                Vector3[] vertices = new Vector3[model.vertexCount];
-                Vector3[] normals = new Vector3[model.vertexCount];
-                Vector2[] UVs = new Vector2[model.vertexCount];
-                Vector4[] vertexColors = new Vector4[model.vertexCount];
+                GLTFUtils.MeshContainer[] meshContainers = new GLTFUtils.MeshContainer[numMeshes];
 
-                for (int i = 0; i < model.vertexCount; i++)
+                meshContainers[0] = new GLTFUtils.MeshContainer(model, skyboxModel, hasNormals, hasVertexColors, includeSkeleton);
+
+                if (settings.includeBangles)
                 {
-                    float px = model.vertexBuffer[(i * model.vertexStride) + vOffset + 0x0] * model.size;
-                    float py = model.vertexBuffer[(i * model.vertexStride) + vOffset + 0x1] * model.size;
-                    float pz = model.vertexBuffer[(i * model.vertexStride) + vOffset + 0x2] * model.size;
-                    vertices[i] = new Vector3(px, py, pz);
-                }
-
-                for (int i = 0; i < model.vertexCount; i++)
-                {
-                    float u = model.vertexBuffer[(i * model.vertexStride) + vtOffset + 0x0];
-                    float v = model.vertexBuffer[(i * model.vertexStride) + vtOffset + 0x1];
-                    UVs[i] = new Vector2(u, v);
-                }
-
-                if (hasNormals)
-                {
-                    for (int i = 0; i < model.vertexCount; i++)
+                    for (int i = 0; i < model.GetSubModelCount(); i++)
                     {
-                        float nx = model.vertexBuffer[(i * model.vertexStride) + vnOffset + 0x0];
-                        float ny = model.vertexBuffer[(i * model.vertexStride) + vnOffset + 0x1];
-                        float nz = model.vertexBuffer[(i * model.vertexStride) + vnOffset + 0x2];
-                        normals[i] = new Vector3(nx, ny, nz);
+                        Model? subModel = model.GetSubModel(i);
+
+                        if (subModel == null) continue;
+
+                        meshContainers[1 + i] = new GLTFUtils.MeshContainer(subModel, skyboxModel, hasNormals, hasVertexColors, includeSkeleton);
                     }
-                }
-
-                if (hasVertexColors)
-                {
-                    for (int i = 0; i < model.vertexCount; i++)
-                    {
-                        byte[] colors = BitConverter.GetBytes(model.vertexBuffer[(i * model.vertexStride) + vcOffset + 0x00]);
-                        float r = ((float) colors[0]) / 255.0f;
-                        float g = ((float) colors[1]) / 255.0f;
-                        float b = ((float) colors[2]) / 255.0f;
-                        float a = ((float) colors[3]) / 255.0f;
-                        vertexColors[i] = new Vector4(r, g, b, a);
-                    }
-                }
-
-                ushort[] gltfIndexBuffer = new ushort[model.faceCount * 3];
-                model.indexBuffer.CopyTo(gltfIndexBuffer, 0);
-
-                // Correct face orientation
-                if (hasNormals)
-                {
-                    for (int i = 0; i < model.faceCount; i++)
-                    {
-                        ushort f1 = gltfIndexBuffer[i * 3 + 0];
-                        ushort f2 = gltfIndexBuffer[i * 3 + 1];
-                        ushort f3 = gltfIndexBuffer[i * 3 + 2];
-
-                        if (ShouldReverseWinding(vertices, normals, f1, f2, f3))
-                        {
-                            gltfIndexBuffer[i * 3 + 1] = f3;
-                            gltfIndexBuffer[i * 3 + 2] = f2;
-                        }
-                    }
-                }
-
-                // Change orientation, glTF enforces an orientation of Y Up
-                ChangeOrientation(ref vertices, ExporterModelSettings.Orientation.Y_UP);
-                if (hasNormals)
-                {
-                    ChangeOrientation(ref normals, ExporterModelSettings.Orientation.Y_UP);
                 }
 
                 // Construct Vertex Buffer for glTF export
@@ -714,47 +896,6 @@ namespace LibReplanetizer
                 int gltfVertexWeightsByteOffset = gltfVertexWeightsOffset * 4;
                 int gltfVertexIDsByteOffset = gltfVertexIDsOffset * 4;
 
-                float[] gltfVertexBuffer = new float[gltfVertexBufferStride * model.vertexCount];
-                Vector3 vertexMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
-                Vector3 vertexMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
-
-                for (int i = 0; i < model.vertexCount; i++)
-                {
-                    gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexPosOffset + 0x0] = vertices[i].X;
-                    gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexPosOffset + 0x1] = vertices[i].Y;
-                    gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexPosOffset + 0x2] = vertices[i].Z;
-
-                    vertexMax = Vector3.ComponentMax(vertexMax, vertices[i]);
-                    vertexMin = Vector3.ComponentMin(vertexMin, vertices[i]);
-                }
-
-                for (int i = 0; i < model.vertexCount; i++)
-                {
-                    gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexUVOffset + 0x0] = UVs[i].X;
-                    gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexUVOffset + 0x1] = UVs[i].Y;
-                }
-
-                if (hasNormals)
-                {
-                    for (int i = 0; i < model.vertexCount; i++)
-                    {
-                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexNormalOffset + 0x0] = normals[i].X;
-                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexNormalOffset + 0x1] = normals[i].Y;
-                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexNormalOffset + 0x2] = normals[i].Z;
-                    }
-                }
-
-                if (hasVertexColors)
-                {
-                    for (int i = 0; i < model.vertexCount; i++)
-                    {
-                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexColorOffset + 0x0] = vertexColors[i].X;
-                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexColorOffset + 0x1] = vertexColors[i].Y;
-                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexColorOffset + 0x2] = vertexColors[i].Z;
-                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexColorOffset + 0x3] = vertexColors[i].W;
-                    }
-                }
-
                 float[] gltfInvBindMatrixBuffer = new float[0];
                 int boneCount = 0;
 
@@ -763,51 +904,6 @@ namespace LibReplanetizer
                     MobyModel mobModel = (MobyModel) model;
 
                     boneCount = mobModel.boneCount;
-
-                    for (int i = 0; i < model.vertexCount; i++)
-                    {
-                        // GLTF strictly requires the weights to sum to 255. However, the values in the game will sum to
-                        // 255 or 256, hence we need to fix this.
-                        // The issue is that it is not straight forward to normalize this using bytes.
-                        // Maybe just using floats is the best solution here.
-                        float weightFloat = BitConverter.UInt32BitsToSingle(mobModel.vertexBoneWeights[i]);
-                        byte[] weights = BitConverter.GetBytes(weightFloat);
-
-                        int sum = 0;
-                        for (int j = 0; j < 4; j++)
-                        {
-                            sum += weights[j];
-                        }
-
-                        while (sum > 255)
-                        {
-                            for (int j = 0; j < 4; j++)
-                            {
-                                if (weights[j] > 0)
-                                {
-                                    weights[j]--;
-                                    sum--;
-                                    break;
-                                }
-                            }
-                        }
-
-                        while (sum < 255)
-                        {
-                            for (int j = 0; j < 4; j++)
-                            {
-                                if (weights[j] > 0 && weights[j] < 255)
-                                {
-                                    weights[j]++;
-                                    sum++;
-                                    break;
-                                }
-                            }
-                        }
-
-                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexWeightsOffset] = BitConverter.ToSingle(weights, 0);
-                        gltfVertexBuffer[(i * gltfVertexBufferStride) + gltfVertexIDsOffset] = BitConverter.UInt32BitsToSingle(mobModel.vertexBoneIds[i]);
-                    }
 
                     if (mobModel.skeleton != null)
                     {
@@ -978,28 +1074,33 @@ namespace LibReplanetizer
 
                 if (settings.embedTextures && textures != null)
                 {
-                    for (int i = 0; i < model.textureConfig.Count; i++)
+                    for (int i = 0; i < meshContainers.Length; i++)
                     {
-                        TextureConfig conf = model.textureConfig[i];
-                        if (!texIDToImageBuffer.ContainsKey(conf.id))
+                        GLTFUtils.MeshContainer meshContainer = meshContainers[i];
+
+                        for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
                         {
-                            Texture? tex = textures.Find(t => t.id == conf.id);
-
-                            if (tex != null)
+                            TextureConfig conf = meshContainer.model.textureConfig[j];
+                            if (!texIDToImageBuffer.ContainsKey(conf.id))
                             {
-                                Image? image = tex.GetTextureImage(!conf.IgnoresTransparency());
+                                Texture? tex = textures.Find(t => t.id == conf.id);
 
-                                if (image != null)
+                                if (tex != null)
                                 {
-                                    using (MemoryStream stream = new MemoryStream())
+                                    Image? image = tex.GetTextureImage(!conf.IgnoresTransparency());
+
+                                    if (image != null)
                                     {
-                                        image.SaveAsPng(stream);
-                                        texIDToImageBuffer.Add(conf.id, textureDataBuffers.Count);
-                                        textureDataBuffers.Add(conf.id, stream.ToArray());
+                                        using (MemoryStream stream = new MemoryStream())
+                                        {
+                                            image.SaveAsPng(stream);
+                                            texIDToImageBuffer.Add(conf.id, textureDataBuffers.Count);
+                                            textureDataBuffers.Add(conf.id, stream.ToArray());
+                                        }
                                     }
                                 }
-                            }
 
+                            }
                         }
                     }
                 }
@@ -1055,8 +1156,7 @@ namespace LibReplanetizer
                 ////
 
                 List<GLTFBufferEntry> listBuffers = new List<GLTFBufferEntry>();
-                listBuffers.Add(new GLTFBufferEntry("VertexBuffer", gltfVertexBuffer));
-                listBuffers.Add(new GLTFBufferEntry("IndexBuffer", gltfIndexBuffer));
+
                 if (includeSkeleton)
                 {
                     listBuffers.Add(new GLTFBufferEntry("InvBindMatrixBuffer", gltfInvBindMatrixBuffer));
@@ -1072,6 +1172,20 @@ namespace LibReplanetizer
                     textureDataBufferIDs.Add(texBuffer.Key, listBuffers.Count);
                     listBuffers.Add(new GLTFBufferEntry("TextureBuffer" + texBuffer.Key, texBuffer.Value));
                 }
+
+                for (int i = 0; i < meshContainers.Length; i++)
+                {
+                    GLTFUtils.MeshContainer meshContainer = meshContainers[i];
+
+                    float[] gltfVertexBuffer = meshContainer.ConstructGLTFVertexBuffer(gltfVertexBufferStride, gltfVertexPosOffset, gltfVertexUVOffset, gltfVertexNormalOffset, gltfVertexColorOffset, gltfVertexWeightsOffset, gltfVertexIDsOffset);
+                    meshContainer.gltfVertexBufferIndex = listBuffers.Count;
+                    listBuffers.Add(new GLTFBufferEntry("VertexBuffer" + i, gltfVertexBuffer));
+
+                    ushort[] gltfIndexBuffer = meshContainer.ConstructGLTFIndexBuffer();
+                    meshContainer.gltfIndexBufferIndex = listBuffers.Count;
+                    listBuffers.Add(new GLTFBufferEntry("IndexBuffer" + i, gltfIndexBuffer));
+                }
+
                 this.buffers = listBuffers.ToArray();
 
                 ////
@@ -1079,74 +1193,59 @@ namespace LibReplanetizer
                 ////
 
                 List<GLTFBufferViewEntry> listBufferViews = new List<GLTFBufferViewEntry>();
-                listBufferViews.Add(new GLTFBufferViewEntry("VertexBufferView", 0, gltfVertexBufferByteStride * model.vertexCount, 0, gltfVertexBufferByteStride, GLTFBufferViewEntry.ARRAY_BUFFER));
+
                 if (includeSkeleton)
                 {
-                    listBufferViews.Add(new GLTFBufferViewEntry("InvBindMatrixBufferView", 2, gltfInvBindMatrixBuffer.Length * sizeof(float), 0));
+                    listBufferViews.Add(new GLTFBufferViewEntry("InvBindMatrixBufferView", 0, gltfInvBindMatrixBuffer.Length * sizeof(float), 0));
                 }
                 if (exportAnimations)
                 {
-                    listBufferViews.Add(new GLTFBufferViewEntry("KeyframeBufferView", 3, gltfKeyframeBuffer.Length * sizeof(float), 0));
-                    listBufferViews.Add(new GLTFBufferViewEntry("TranslationBufferView", 4, animTranslationSize * sizeof(float), animTranslationBaseOffset * sizeof(float)));
-                    listBufferViews.Add(new GLTFBufferViewEntry("RotationBufferView", 4, animRotationSize * sizeof(float), animRotationBaseOffset * sizeof(float)));
-                    listBufferViews.Add(new GLTFBufferViewEntry("ScaleBufferView", 4, animScaleSize * sizeof(float), animScaleBaseOffset * sizeof(float)));
+                    listBufferViews.Add(new GLTFBufferViewEntry("KeyframeBufferView", 1, gltfKeyframeBuffer.Length * sizeof(float), 0));
+                    listBufferViews.Add(new GLTFBufferViewEntry("TranslationBufferView", 2, animTranslationSize * sizeof(float), animTranslationBaseOffset * sizeof(float)));
+                    listBufferViews.Add(new GLTFBufferViewEntry("RotationBufferView", 2, animRotationSize * sizeof(float), animRotationBaseOffset * sizeof(float)));
+                    listBufferViews.Add(new GLTFBufferViewEntry("ScaleBufferView", 2, animScaleSize * sizeof(float), animScaleBaseOffset * sizeof(float)));
                 }
-                int indexBufferViewBaseID = listBufferViews.Count;
-                for (int i = 0; i < model.textureConfig.Count; i++)
-                {
-                    TextureConfig conf = model.textureConfig[i];
-                    int byteOffset = sizeof(ushort) * conf.start;
-                    int byteLength = sizeof(ushort) * conf.size;
 
-                    listBufferViews.Add(new GLTFBufferViewEntry("IndexBufferView" + i, 1, byteLength, byteOffset, GLTFBufferViewEntry.ELEMENT_ARRAY_BUFFER));
-                }
                 Dictionary<int, int> textureDataBufferViewIDs = new Dictionary<int, int>();
                 foreach (var texBuffer in textureDataBuffers)
                 {
                     textureDataBufferViewIDs.Add(texBuffer.Key, listBufferViews.Count);
                     listBufferViews.Add(new GLTFBufferViewEntry("TextureBufferView" + texBuffer.Key, textureDataBufferIDs[texBuffer.Key], texBuffer.Value.Length, 0));
                 }
+
+                for (int i = 0; i < meshContainers.Length; i++)
+                {
+                    GLTFUtils.MeshContainer meshContainer = meshContainers[i];
+
+                    meshContainer.gltfVertexBufferViewIndex = listBufferViews.Count;
+                    listBufferViews.Add(new GLTFBufferViewEntry("VertexBufferView" + i, meshContainer.gltfVertexBufferIndex, gltfVertexBufferByteStride * meshContainer.model.vertexCount, 0, gltfVertexBufferByteStride, GLTFBufferViewEntry.ARRAY_BUFFER));
+
+                    meshContainer.gltfIndexBufferViewBaseIndex = listBufferViews.Count;
+                    for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
+                    {
+                        TextureConfig conf = meshContainer.model.textureConfig[j];
+                        int byteOffset = sizeof(ushort) * conf.start;
+                        int byteLength = sizeof(ushort) * conf.size;
+
+                        listBufferViews.Add(new GLTFBufferViewEntry("IndexBufferView" + i + "_" + j, meshContainer.gltfIndexBufferIndex, byteLength, byteOffset, GLTFBufferViewEntry.ELEMENT_ARRAY_BUFFER));
+                    }
+                }
+
                 this.bufferViews = listBufferViews.ToArray();
 
                 ////
                 //  Accessors
                 ////
 
-                int normalAccessorID = 0;
-                int vertexColorAccessorID = 0;
-                int vertexWeightsAccessorID = 0;
-                int vertexIDsAccessorID = 0;
                 int invBindMatrixAccessorID = 0;
                 int animationAccessorBaseID = 0;
 
                 List<GLTFAccessorEntry> listAccessors = new List<GLTFAccessorEntry>();
-                listAccessors.Add(new GLTFAccessorEntry("VertexPosAccessor", 0, GLTFAccessorEntry.FLOAT, false, model.vertexCount, gltfVertexPosByteOffset, vertexMax, vertexMin, GLTFAccessorEntry.VEC3));
-                listAccessors.Add(new GLTFAccessorEntry("VertexUVAccessor", 0, GLTFAccessorEntry.FLOAT, false, model.vertexCount, gltfVertexUVByteOffset, GLTFAccessorEntry.VEC2));
-                if (hasNormals)
-                {
-                    normalAccessorID = listAccessors.Count;
-                    listAccessors.Add(new GLTFAccessorEntry("VertexNormalAccessor", 0, GLTFAccessorEntry.FLOAT, false, model.vertexCount, gltfVertexNormalByteOffset, GLTFAccessorEntry.VEC3));
-                }
-                if (hasVertexColors)
-                {
-                    vertexColorAccessorID = listAccessors.Count;
-                    listAccessors.Add(new GLTFAccessorEntry("VertexColorAccessor", 0, GLTFAccessorEntry.UNSIGNED_BYTE, true, model.vertexCount, gltfVertexColorByteOffset, GLTFAccessorEntry.VEC4));
-                }
+
                 if (includeSkeleton)
                 {
-                    vertexWeightsAccessorID = listAccessors.Count;
-                    listAccessors.Add(new GLTFAccessorEntry("VertexWeightsAccessor", 0, GLTFAccessorEntry.UNSIGNED_BYTE, true, model.vertexCount, gltfVertexWeightsByteOffset, GLTFAccessorEntry.VEC4));
-                    vertexIDsAccessorID = listAccessors.Count;
-                    listAccessors.Add(new GLTFAccessorEntry("VertexIDsAccessor", 0, GLTFAccessorEntry.UNSIGNED_BYTE, false, model.vertexCount, gltfVertexIDsByteOffset, GLTFAccessorEntry.VEC4));
                     invBindMatrixAccessorID = listAccessors.Count;
-                    listAccessors.Add(new GLTFAccessorEntry("InvBindMatrixAccessor", 1, GLTFAccessorEntry.FLOAT, false, gltfInvBindMatrixBuffer.Length / 16, 0, GLTFAccessorEntry.MAT4));
-                }
-
-                int indexAccessorBaseID = listAccessors.Count;
-
-                for (int i = 0; i < model.textureConfig.Count; i++)
-                {
-                    listAccessors.Add(new GLTFAccessorEntry("IndexAccessor" + i, indexBufferViewBaseID + i, GLTFAccessorEntry.UNSIGNED_SHORT, false, model.textureConfig[i].size, 0, GLTFAccessorEntry.SCALAR));
+                    listAccessors.Add(new GLTFAccessorEntry("InvBindMatrixAccessor", 0, GLTFAccessorEntry.FLOAT, false, gltfInvBindMatrixBuffer.Length / 16, 0, GLTFAccessorEntry.MAT4));
                 }
 
                 if (exportAnimations)
@@ -1157,7 +1256,7 @@ namespace LibReplanetizer
                     {
                         Animation anim = animations[i];
 
-                        listAccessors.Add(new GLTFAccessorEntry("KeyframeAccessor" + i, 2, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, keyframeOffset[i] * sizeof(float), 0.0f, animLength[i], GLTFAccessorEntry.SCALAR));
+                        listAccessors.Add(new GLTFAccessorEntry("KeyframeAccessor" + i, 1, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, keyframeOffset[i] * sizeof(float), 0.0f, animLength[i], GLTFAccessorEntry.SCALAR));
                     }
 
                     int animOutputStride = boneCount * 10;
@@ -1172,14 +1271,50 @@ namespace LibReplanetizer
 
                         for (int j = 0; j < boneCount; j++)
                         {
-                            listAccessors.Add(new GLTFAccessorEntry("TranslationAccessor" + i + "Bone" + j, 3, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, currTranslationOffsetBytes, GLTFAccessorEntry.VEC3));
-                            listAccessors.Add(new GLTFAccessorEntry("RotationAccessor" + i + "Bone" + j, 4, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, currRotationOffsetBytes, GLTFAccessorEntry.VEC4));
-                            listAccessors.Add(new GLTFAccessorEntry("ScaleAccessor" + i + "Bone" + j, 5, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, currScaleOffsetBytes, GLTFAccessorEntry.VEC3));
+                            listAccessors.Add(new GLTFAccessorEntry("TranslationAccessor" + i + "Bone" + j, 2, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, currTranslationOffsetBytes, GLTFAccessorEntry.VEC3));
+                            listAccessors.Add(new GLTFAccessorEntry("RotationAccessor" + i + "Bone" + j, 3, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, currRotationOffsetBytes, GLTFAccessorEntry.VEC4));
+                            listAccessors.Add(new GLTFAccessorEntry("ScaleAccessor" + i + "Bone" + j, 4, GLTFAccessorEntry.FLOAT, false, anim.frames.Count, currScaleOffsetBytes, GLTFAccessorEntry.VEC3));
 
                             currTranslationOffsetBytes += anim.frames.Count * 3 * sizeof(float);
                             currRotationOffsetBytes += anim.frames.Count * 4 * sizeof(float);
                             currScaleOffsetBytes += anim.frames.Count * 3 * sizeof(float);
                         }
+                    }
+                }
+
+                for (int i = 0; i < meshContainers.Length; i++)
+                {
+                    GLTFUtils.MeshContainer meshContainer = meshContainers[i];
+
+                    meshContainer.gltfVertexAccessorIndex = listAccessors.Count;
+                    listAccessors.Add(new GLTFAccessorEntry("VertexPosAccessor" + i, meshContainer.gltfVertexBufferViewIndex, GLTFAccessorEntry.FLOAT, false, meshContainer.model.vertexCount, gltfVertexPosByteOffset, meshContainer.vertexMax, meshContainer.vertexMin, GLTFAccessorEntry.VEC3));
+
+                    meshContainer.gltfUVAccessorIndex = listAccessors.Count;
+                    listAccessors.Add(new GLTFAccessorEntry("VertexUVAccessor" + i, meshContainer.gltfVertexBufferViewIndex, GLTFAccessorEntry.FLOAT, false, meshContainer.model.vertexCount, gltfVertexUVByteOffset, GLTFAccessorEntry.VEC2));
+
+                    if (hasNormals)
+                    {
+                        meshContainer.gltfNormalAccessorIndex = listAccessors.Count;
+                        listAccessors.Add(new GLTFAccessorEntry("VertexNormalAccessor" + i, meshContainer.gltfVertexBufferViewIndex, GLTFAccessorEntry.FLOAT, false, meshContainer.model.vertexCount, gltfVertexNormalByteOffset, GLTFAccessorEntry.VEC3));
+                    }
+                    if (hasVertexColors)
+                    {
+                        meshContainer.gltfVertexColorAccessorIndex = listAccessors.Count;
+                        listAccessors.Add(new GLTFAccessorEntry("VertexColorAccessor" + i, meshContainer.gltfVertexBufferViewIndex, GLTFAccessorEntry.UNSIGNED_BYTE, true, meshContainer.model.vertexCount, gltfVertexColorByteOffset, GLTFAccessorEntry.VEC4));
+                    }
+                    if (includeSkeleton)
+                    {
+                        meshContainer.gltfBoneWeightAccessorIndex = listAccessors.Count;
+                        listAccessors.Add(new GLTFAccessorEntry("VertexWeightsAccessor" + i, meshContainer.gltfVertexBufferViewIndex, GLTFAccessorEntry.UNSIGNED_BYTE, true, meshContainer.model.vertexCount, gltfVertexWeightsByteOffset, GLTFAccessorEntry.VEC4));
+                        meshContainer.gltfBoneIDsAccessorIndex = listAccessors.Count;
+                        listAccessors.Add(new GLTFAccessorEntry("VertexIDsAccessor" + i, meshContainer.gltfVertexBufferViewIndex, GLTFAccessorEntry.UNSIGNED_BYTE, false, meshContainer.model.vertexCount, gltfVertexIDsByteOffset, GLTFAccessorEntry.VEC4));
+
+                    }
+
+                    meshContainer.gltfIndexAccessorBaseIndex = listAccessors.Count;
+                    for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
+                    {
+                        listAccessors.Add(new GLTFAccessorEntry("IndexAccessor" + i + "_" + j, meshContainer.gltfIndexBufferViewBaseIndex + j, GLTFAccessorEntry.UNSIGNED_SHORT, false, meshContainer.model.textureConfig[j].size, 0, GLTFAccessorEntry.SCALAR));
                     }
                 }
 
@@ -1227,25 +1362,35 @@ namespace LibReplanetizer
                 List<GLTFImageEntry> listImages = new List<GLTFImageEntry>();
                 if (settings.embedTextures && textures != null)
                 {
-                    for (int i = 0; i < model.textureConfig.Count; i++)
+                    for (int i = 0; i < meshContainers.Length; i++)
                     {
-                        TextureConfig conf = model.textureConfig[i];
-                        if (!texIDToImageOffset.ContainsKey(conf.id) && textureDataBufferViewIDs.ContainsKey(conf.id))
+                        GLTFUtils.MeshContainer meshContainer = meshContainers[i];
+
+                        for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
                         {
-                            texIDToImageOffset.Add(conf.id, listImages.Count);
-                            listImages.Add(new GLTFImageEntry(textureDataBufferViewIDs[conf.id], GLTFImageEntry.PNG, "Image" + conf.id));
+                            TextureConfig conf = meshContainer.model.textureConfig[j];
+                            if (!texIDToImageOffset.ContainsKey(conf.id) && textureDataBufferViewIDs.ContainsKey(conf.id))
+                            {
+                                texIDToImageOffset.Add(conf.id, listImages.Count);
+                                listImages.Add(new GLTFImageEntry(textureDataBufferViewIDs[conf.id], GLTFImageEntry.PNG, "Image" + conf.id));
+                            }
                         }
                     }
                 }
                 else
                 {
-                    for (int i = 0; i < model.textureConfig.Count; i++)
+                    for (int i = 0; i < meshContainers.Length; i++)
                     {
-                        TextureConfig conf = model.textureConfig[i];
-                        if (!texIDToImageOffset.ContainsKey(conf.id))
+                        GLTFUtils.MeshContainer meshContainer = meshContainers[i];
+
+                        for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
                         {
-                            texIDToImageOffset.Add(conf.id, listImages.Count);
-                            listImages.Add(new GLTFImageEntry(conf));
+                            TextureConfig conf = meshContainer.model.textureConfig[j];
+                            if (!texIDToImageOffset.ContainsKey(conf.id))
+                            {
+                                texIDToImageOffset.Add(conf.id, listImages.Count);
+                                listImages.Add(new GLTFImageEntry(conf));
+                            }
                         }
                     }
                 }
@@ -1257,10 +1402,17 @@ namespace LibReplanetizer
                 ////
 
                 List<GLTFSamplerEntry> listSamplers = new List<GLTFSamplerEntry>();
-                for (int i = 0; i < model.textureConfig.Count; i++)
+                for (int i = 0; i < meshContainers.Length; i++)
                 {
-                    listSamplers.Add(new GLTFSamplerEntry(model.textureConfig[i]));
+                    GLTFUtils.MeshContainer meshContainer = meshContainers[i];
+
+                    meshContainer.gltfTextureSamplerBaseIndex = listSamplers.Count;
+                    for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
+                    {
+                        listSamplers.Add(new GLTFSamplerEntry(meshContainer.model.textureConfig[j]));
+                    }
                 }
+
                 this.samplers = listSamplers.ToArray();
 
                 ////
@@ -1268,11 +1420,18 @@ namespace LibReplanetizer
                 ////
 
                 List<GLTFTextureEntry> listTextures = new List<GLTFTextureEntry>();
-                for (int i = 0; i < model.textureConfig.Count; i++)
+                for (int i = 0; i < meshContainers.Length; i++)
                 {
-                    TextureConfig conf = model.textureConfig[i];
-                    listTextures.Add(new GLTFTextureEntry(i, texIDToImageOffset[conf.id]));
+                    GLTFUtils.MeshContainer meshContainer = meshContainers[i];
+
+                    meshContainer.gltfTextureBaseIndex = listTextures.Count;
+                    for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
+                    {
+                        TextureConfig conf = meshContainer.model.textureConfig[j];
+                        listTextures.Add(new GLTFTextureEntry(meshContainer.gltfTextureSamplerBaseIndex + j, texIDToImageOffset[conf.id]));
+                    }
                 }
+
                 this.textures = listTextures.ToArray();
 
                 ////
@@ -1280,35 +1439,49 @@ namespace LibReplanetizer
                 ////
 
                 List<GLTFMaterialEntry> listMaterials = new List<GLTFMaterialEntry>();
-                for (int i = 0; i < model.textureConfig.Count; i++)
+                for (int i = 0; i < meshContainers.Length; i++)
                 {
-                    listMaterials.Add(new GLTFMaterialEntry(model.textureConfig[i], i));
+                    GLTFUtils.MeshContainer meshContainer = meshContainers[i];
+
+                    meshContainer.gltfMaterialBaseIndex = listMaterials.Count;
+                    for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
+                    {
+                        TextureConfig conf = meshContainer.model.textureConfig[j];
+                        listMaterials.Add(new GLTFMaterialEntry(conf, meshContainer.gltfTextureBaseIndex + j));
+                    }
                 }
+
                 this.materials = listMaterials.ToArray();
 
-                GLTFMeshEntry.GLTFMeshPrimitivesEntry.GLTFMeshPrimitivesEntryAttributes vertexAttribs = new GLTFMeshEntry.GLTFMeshPrimitivesEntry.GLTFMeshPrimitivesEntryAttributes(0, 1);
-                if (hasNormals)
-                {
-                    vertexAttribs.NORMAL = normalAccessorID;
-                }
-                if (hasVertexColors)
-                {
-                    vertexAttribs.COLOR_n = vertexColorAccessorID;
-                }
-                if (includeSkeleton)
-                {
-                    vertexAttribs.WEIGHTS_0 = vertexWeightsAccessorID;
-                    vertexAttribs.JOINTS_0 = vertexIDsAccessorID;
-                }
-
                 ////
-                //  MeshPrimitives
+                //  Mesh Primitives
                 ////
 
                 List<GLTFMeshEntry.GLTFMeshPrimitivesEntry> listMeshPrimitives = new List<GLTFMeshEntry.GLTFMeshPrimitivesEntry>();
-                for (int i = 0; i < model.textureConfig.Count; i++)
+                for (int i = 0; i < meshContainers.Length; i++)
                 {
-                    listMeshPrimitives.Add(new GLTFMeshEntry.GLTFMeshPrimitivesEntry(vertexAttribs, indexAccessorBaseID + i, i));
+                    GLTFUtils.MeshContainer meshContainer = meshContainers[i];
+
+                    GLTFMeshEntry.GLTFMeshPrimitivesEntry.GLTFMeshPrimitivesEntryAttributes vertexAttribs = new GLTFMeshEntry.GLTFMeshPrimitivesEntry.GLTFMeshPrimitivesEntryAttributes(meshContainer.gltfVertexAccessorIndex, meshContainer.gltfUVAccessorIndex);
+                    if (hasNormals)
+                    {
+                        vertexAttribs.NORMAL = meshContainer.gltfNormalAccessorIndex;
+                    }
+                    if (hasVertexColors)
+                    {
+                        vertexAttribs.COLOR_n = meshContainer.gltfVertexColorAccessorIndex;
+                    }
+                    if (includeSkeleton)
+                    {
+                        vertexAttribs.WEIGHTS_0 = meshContainer.gltfBoneWeightAccessorIndex;
+                        vertexAttribs.JOINTS_0 = meshContainer.gltfBoneIDsAccessorIndex;
+                    }
+
+
+                    for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
+                    {
+                        listMeshPrimitives.Add(new GLTFMeshEntry.GLTFMeshPrimitivesEntry(vertexAttribs, meshContainer.gltfIndexAccessorBaseIndex + j, meshContainer.gltfMaterialBaseIndex + j));
+                    }
                 }
 
                 ////

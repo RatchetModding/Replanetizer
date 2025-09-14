@@ -239,11 +239,11 @@ void main()
 
             foreach (Keys key in Enum.GetValues(typeof(Keys)))
             {
-                if (key == Keys.Unknown || !keyboardState.IsKeyDown(key))
+                if (key == Keys.Unknown)
                 {
                     continue;
                 }
-                io.AddKeyEvent(ConvertKeyToImGuiKey(key), true);
+                io.AddKeyEvent(ConvertKeyToImGuiKey(key), keyboardState.IsKeyDown(key));
             }
 
             foreach (var c in PRESSED_CHARS)

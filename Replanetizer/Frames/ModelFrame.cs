@@ -234,33 +234,42 @@ namespace Replanetizer.Frames
                 RenderSubTree("Tie", sortedTieModels, level.textures);
                 RenderSubTree("Shrub", sortedShrubModels, level.textures);
                 RenderSubTree("Gadget", sortedGadgetModels, (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures);
-                if (ImGui.TreeNode("Armor"))
+                if (level.armorModels.Count > 0)
                 {
-                    for (int i = 0; i < level.armorModels.Count; i++)
+                    if (ImGui.TreeNode("Armor"))
                     {
-                        Model armor = level.armorModels[i];
-                        RenderModelEntry(armor, level.armorTextures[i], "Armor " + i);
+                        for (int i = 0; i < level.armorModels.Count; i++)
+                        {
+                            Model armor = level.armorModels[i];
+                            RenderModelEntry(armor, level.armorTextures[i], "Armor " + i);
+                        }
+                        ImGui.TreePop();
                     }
-                    ImGui.TreePop();
                 }
-                if (ImGui.TreeNode("Missions"))
+                if (sortedMissionModels.Count > 0)
                 {
-                    for (int i = 0; i < sortedMissionModels.Count; i++)
+                    if (ImGui.TreeNode("Missions"))
                     {
-                        Mission mission = level.missions[i];
-                        RenderSubTree("Mission " + i, sortedMissionModels[i], mission.textures);
+                        for (int i = 0; i < sortedMissionModels.Count; i++)
+                        {
+                            Mission mission = level.missions[i];
+                            RenderSubTree("Mission " + i, sortedMissionModels[i], mission.textures);
+                        }
+                        ImGui.TreePop();
                     }
-                    ImGui.TreePop();
                 }
-                if (ImGui.TreeNode("Mobyload"))
+                if (sortedMobyloadModels.Count > 0)
                 {
-                    for (int i = 0; i < sortedMobyloadModels.Count; i++)
+                    if (ImGui.TreeNode("Mobyload"))
                     {
-                        List<Texture> textures = level.mobyloadTextures[i];
-                        if (textures.Count > 0)
-                            RenderSubTree("Mobyload " + i, sortedMobyloadModels[i], textures);
+                        for (int i = 0; i < sortedMobyloadModels.Count; i++)
+                        {
+                            List<Texture> textures = level.mobyloadTextures[i];
+                            if (textures.Count > 0)
+                                RenderSubTree("Mobyload " + i, sortedMobyloadModels[i], textures);
+                        }
+                        ImGui.TreePop();
                     }
-                    ImGui.TreePop();
                 }
                 if (ImGui.TreeNode("Miscellaneous"))
                 {

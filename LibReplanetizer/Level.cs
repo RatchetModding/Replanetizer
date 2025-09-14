@@ -393,11 +393,6 @@ namespace LibReplanetizer
                         mobyloadTextures.Add(parser.GetTextures());
                     }
                 }
-                else
-                {
-                    mobyloadModels.Add(new List<MobyModel>());
-                    mobyloadTextures.Add(new List<Texture>());
-                }
             }
 
             using (VramParser vramParser = new VramParser(path + @"/vram.ps3"))

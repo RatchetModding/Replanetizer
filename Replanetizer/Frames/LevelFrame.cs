@@ -104,7 +104,7 @@ namespace Replanetizer.Frames
 
             toolbox.ToolChanged += (_, _) => InvalidateView();
 
-            rendererPayload = new RendererPayload(camera, selectedObjects, toolbox);
+            rendererPayload = new RendererPayload(camera, selectedObjects, toolbox, false);
 
             UpdateWindowSize();
             OnResize();

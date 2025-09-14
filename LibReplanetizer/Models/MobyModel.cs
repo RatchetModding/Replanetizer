@@ -207,8 +207,6 @@ namespace LibReplanetizer.Models
                         bangles.Add(new Bangle(fs, offset, bangleHeaderOffset));
                     }
                 }
-
-                LOGGER.Warn("Moby Model " + id + " has bangles.");
             }
 
             // Type 10 ( has something to do with collision )

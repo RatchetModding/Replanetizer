@@ -45,11 +45,12 @@ namespace Replanetizer.Renderer
         // This is used for the model viewer.
         public int forcedAnimationID = 0;
 
-        public RendererPayload(Camera camera, Selection? selection = null, Toolbox? toolbox = null)
+        public RendererPayload(Camera camera, Selection? selection = null, Toolbox? toolbox = null, bool showSubModels = true)
         {
             this.camera = camera;
             this.selection = (selection != null) ? selection : new Selection();
             this.toolbox = toolbox;
+            this.visibility.subModels = new bool[15] { showSubModels, showSubModels, showSubModels, showSubModels, showSubModels, showSubModels, showSubModels, showSubModels, showSubModels, showSubModels, showSubModels, showSubModels, showSubModels, showSubModels, showSubModels };
         }
 
         public void SetWindowSize(int width, int height)

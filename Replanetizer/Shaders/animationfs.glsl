@@ -19,6 +19,7 @@ uniform int levelObjectNumber;
 uniform vec4 fogColor;
 uniform float objectBlendDistance;
 uniform int useTransparency;
+uniform int useTexture;
 
 #define BLUE_NOISE_TEXTURE_SIZE (128.0f)
 #define ONE_OVER_GOLDEN_RATIO (2654435769u) /* 0.61803398875f */
@@ -44,7 +45,13 @@ bool computeDitheringDiscard(float alpha)
 
 void main() {
 	//color of the texture at the specified UV
-	vec4 textureColor = texture(mainTexture, UV);
+    vec4 textureColor;
+    if (useTexture == 1) {
+        textureColor = texture(mainTexture, UV);
+    }
+    else {
+        textureColor = vec4(1.0f, 1.0f, 1.0f, 0.5f);
+    }
 
     float alpha = 1.0f;
 

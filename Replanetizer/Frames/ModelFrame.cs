@@ -587,13 +587,38 @@ namespace Replanetizer.Frames
 
             modelTextureList.Clear();
 
-            for (int i = 0; i < selectedModel.textureConfig.Count; i++)
+            List<TextureConfig> textureConfigs = new List<TextureConfig>();
+            foreach (TextureConfig conf in selectedModel.textureConfig)
             {
-                int textureId = selectedModel.textureConfig[i].id;
+                textureConfigs.Add(conf);
+            }
+
+            for (int i = 0; i < selectedModel.GetSubModelCount(); i++)
+            {
+                Model? subModel = selectedModel.GetSubModel(i);
+
+                if (subModel == null) continue;
+
+                foreach (TextureConfig conf in subModel.textureConfig)
+                {
+                    textureConfigs.Add(conf);
+                }
+            }
+
+            foreach (TextureConfig conf in textureConfigs)
+            {
+                int textureId = conf.id;
                 if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
 
-                modelTextureList.Add(selectedTextureSet[textureId]);
+                Texture tex = selectedTextureSet[textureId];
+
+                if (!modelTextureList.Contains(tex))
+                {
+                    modelTextureList.Add(tex);
+                }
             }
+
+            modelTextureList.Sort((lhs, rhs) => lhs.id.CompareTo(rhs.id));
         }
 
         private bool PrepareForArrowInputList(List<Model> models, List<Texture>? textures = null, List<List<Texture>>? textureSet = null)
@@ -819,14 +844,32 @@ namespace Replanetizer.Frames
             String folder = CrossFileDialog.OpenFolder();
             if (folder.Length == 0) return;
 
-            foreach (var config in selectedModel.textureConfig)
+            List<TextureConfig> textureConfigs = new List<TextureConfig>();
+            foreach (TextureConfig conf in selectedModel.textureConfig)
             {
-                var textureId = config.id;
+                textureConfigs.Add(conf);
+            }
+
+            for (int i = 0; i < selectedModel.GetSubModelCount(); i++)
+            {
+                Model? subModel = selectedModel.GetSubModel(i);
+
+                if (subModel == null) continue;
+
+                foreach (TextureConfig conf in subModel.textureConfig)
+                {
+                    textureConfigs.Add(conf);
+                }
+            }
+
+            foreach (TextureConfig conf in textureConfigs)
+            {
+                var textureId = conf.id;
                 if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
 
                 var texture = selectedTextureSet[textureId];
 
-                bool includeTransparency = (config.IgnoresTransparency()) ? false : true;
+                bool includeTransparency = (conf.IgnoresTransparency()) ? false : true;
 
                 TextureIO.ExportTexture(texture, Path.Combine(folder, $"{textureId}.png"), includeTransparency);
             }

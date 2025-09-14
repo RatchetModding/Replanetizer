@@ -481,6 +481,11 @@ namespace Replanetizer.Renderer
             shaderTable.meshShader.SetUniform1(UniformName.useTransparency, (config.IgnoresTransparency()) ? 0 : 1);
         }
 
+        private void SetTextureMode(TextureConfig config)
+        {
+            shaderTable.meshShader.SetUniform1(UniformName.useTexture, (config.id >= 0) ? 1 : 0);
+        }
+
         /// <summary>
         /// Takes a textureConfig as input and sets the texture wrap modes based on that.
         /// </summary>
@@ -679,11 +684,9 @@ namespace Replanetizer.Renderer
                     tex.Bind();
                     SetTextureWrapMode(conf, tex);
                 }
-                else
-                {
-                    GLTexture.BindNull();
-                }
+
                 SetTransparencyMode(conf);
+                SetTextureMode(conf);
                 GL.DrawElements(PrimitiveType.Triangles, conf.size, DrawElementsType.UnsignedShort, conf.start * sizeof(ushort));
             }
 

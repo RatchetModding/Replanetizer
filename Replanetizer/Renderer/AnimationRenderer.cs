@@ -520,6 +520,8 @@ namespace Replanetizer.Renderer
             Matrix4 worldToView = payload.camera.GetWorldViewMatrix();
             shaderTable.animationShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelToWorld);
             shaderTable.animationShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
+            shaderTable.animationShader.SetUniform1(UniformName.mainTexture, 0);
+            shaderTable.animationShader.SetUniform1(UniformName.blueNoiseTexture, 1);
             shaderTable.animationShader.SetUniform1(UniformName.levelObjectNumber, (mob != null) ? mob.globalID : 0);
             if (selected)
             {
@@ -531,6 +533,8 @@ namespace Replanetizer.Renderer
             }
             shaderTable.animationShader.SetUniform1(UniformName.lightIndex, light);
             shaderTable.animationShader.SetUniform1(UniformName.objectBlendDistance, blendDistance);
+
+            GLTexture.blueNoiseTexture.Bind(1);
 
             int animationID = (mob != null && mob.memory != null) ? mob.memory.animationID : payload.forcedAnimationID;
 

@@ -11,6 +11,7 @@ using LibReplanetizer;
 using OpenTK.Graphics.OpenGL;
 using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
 using SixLabors.ImageSharp.PixelFormats;
+using System.IO;
 
 namespace Replanetizer.Renderer
 {
@@ -32,9 +33,17 @@ namespace Replanetizer.Renderer
 
         private static readonly float MAX_ANISO;
 
+        // Global textures
+        public static readonly GLTexture blueNoiseTexture;
+
         static GLTexture()
         {
             MAX_ANISO = GL.GetFloat(MAX_TEXTURE_MAX_ANISOTROPY);
+
+            string? applicationFolder = System.AppContext.BaseDirectory;
+            string resourcesFolder = Path.Join(applicationFolder, "Resources");
+            Image<L8> image = Image.Load<L8>(Path.Join(resourcesFolder, "blue_noise.png"));
+            blueNoiseTexture = new GLTexture("BlueNoiseTextrue", image);
         }
 
         public readonly string name;

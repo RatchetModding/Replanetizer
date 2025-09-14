@@ -70,16 +70,6 @@ namespace Replanetizer.Renderer
         private BillboardRenderer fallback;
         private AnimationRenderer? animationRenderer = null;
 
-        private static readonly GLTexture blueNoiseTexture;
-
-        static MeshRenderer()
-        {
-            string? applicationFolder = System.AppContext.BaseDirectory;
-            string resourcesFolder = Path.Join(applicationFolder, "Resources");
-            Image<L8> image = Image.Load<L8>(Path.Join(resourcesFolder, "blue_noise.png"));
-            blueNoiseTexture = new GLTexture("BlueNoiseTextrue", image);
-        }
-
         public MeshRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, GLTexture> textureIds, List<Animation>? ratchetAnimations = null)
         {
             this.shaderTable = shaderTable;
@@ -761,7 +751,7 @@ namespace Replanetizer.Renderer
             shaderTable.meshShader.SetUniform1(UniformName.lightIndex, light);
             shaderTable.meshShader.SetUniform1(UniformName.objectBlendDistance, blendDistance);
 
-            blueNoiseTexture.Bind(1);
+            GLTexture.blueNoiseTexture.Bind(1);
 
             if (selected)
             {

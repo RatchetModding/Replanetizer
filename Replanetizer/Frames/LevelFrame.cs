@@ -79,6 +79,7 @@ namespace Replanetizer.Frames
         private bool hookLiveUpdate = true;
         private bool hookUpdateCamera = false;
 
+        private bool showBangles = true;
 
         private int width, height;
 
@@ -103,7 +104,7 @@ namespace Replanetizer.Frames
 
             toolbox.ToolChanged += (_, _) => InvalidateView();
 
-            rendererPayload = new RendererPayload(camera, selectedObjects, toolbox);
+            rendererPayload = new RendererPayload(camera, selectedObjects, toolbox, false);
 
             UpdateWindowSize();
             OnResize();
@@ -286,7 +287,16 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Distance Culling", ref rendererPayload.visibility.enableDistanceCulling)) InvalidateView();
                     if (ImGui.Checkbox("Frustum Culling", ref rendererPayload.visibility.enableFrustumCulling)) InvalidateView();
                     if (ImGui.Checkbox("Fog", ref rendererPayload.visibility.enableFog)) InvalidateView();
+                    if (ImGui.Checkbox("Lighting", ref rendererPayload.visibility.enableLighting)) InvalidateView();
                     if (ImGui.Checkbox("Meshless Models", ref rendererPayload.visibility.enableMeshlessModels)) InvalidateView();
+                    if (ImGui.Checkbox("Bangles", ref showBangles))
+                    {
+                        for (int i = 0; i < rendererPayload.visibility.subModels.Length; i++)
+                        {
+                            rendererPayload.visibility.subModels[i] = showBangles;
+                        }
+                        InvalidateView();
+                    }
                     ImGui.PushItemWidth(90.0f);
                     if (ImGui.Combo("Antialiasing", ref antialiasing, antialiasingOptions, 1 + maxAntialiasing))
                     {
@@ -474,7 +484,6 @@ namespace Replanetizer.Frames
             ImGui.SetNextWindowViewport(viewport.ID);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, 0);
 
             ImGui.Begin(frameName,
                 ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize |

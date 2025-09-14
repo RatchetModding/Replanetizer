@@ -93,6 +93,8 @@ namespace Replanetizer.Frames
         private const float CLIP_FAR = 1024.0f;
         private const float FIELD_OF_VIEW = MathF.PI / 3;  // 60 degrees
 
+        private bool showBangles = true;
+
         private Rectangle contentRegion;
         private Vector2 mousePos;
         private int width, height;
@@ -165,10 +167,10 @@ namespace Replanetizer.Frames
             if (ImGui.Begin(frameName, ref isOpen, ImGuiWindowFlags.NoSavedSettings))
             {
                 Render(deltaTime);
-                ImGui.End();
 
                 firstFrame = false;
             }
+            ImGui.End();
         }
 
         private void RenderModelEntry(Model mod, List<Texture> textureSet, string name)
@@ -232,41 +234,50 @@ namespace Replanetizer.Frames
                 RenderSubTree("Tie", sortedTieModels, level.textures);
                 RenderSubTree("Shrub", sortedShrubModels, level.textures);
                 RenderSubTree("Gadget", sortedGadgetModels, (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures);
-                if (ImGui.TreeNode("Armor"))
+                if (level.armorModels.Count > 0)
                 {
-                    for (int i = 0; i < level.armorModels.Count; i++)
+                    if (ImGui.TreeNode("Armor"))
                     {
-                        Model armor = level.armorModels[i];
-                        RenderModelEntry(armor, level.armorTextures[i], "Armor " + i);
+                        for (int i = 0; i < level.armorModels.Count; i++)
+                        {
+                            Model armor = level.armorModels[i];
+                            RenderModelEntry(armor, level.armorTextures[i], "Armor " + i);
+                        }
+                        ImGui.TreePop();
                     }
-                    ImGui.TreePop();
                 }
-                if (ImGui.TreeNode("Missions"))
+                if (sortedMissionModels.Count > 0)
                 {
-                    for (int i = 0; i < sortedMissionModels.Count; i++)
+                    if (ImGui.TreeNode("Missions"))
                     {
-                        Mission mission = level.missions[i];
-                        RenderSubTree("Mission " + i, sortedMissionModels[i], mission.textures);
+                        for (int i = 0; i < sortedMissionModels.Count; i++)
+                        {
+                            Mission mission = level.missions[i];
+                            RenderSubTree("Mission " + i, sortedMissionModels[i], mission.textures);
+                        }
+                        ImGui.TreePop();
                     }
-                    ImGui.TreePop();
                 }
-                if (ImGui.TreeNode("Mobyload"))
+                if (sortedMobyloadModels.Count > 0)
                 {
-                    for (int i = 0; i < sortedMobyloadModels.Count; i++)
+                    if (ImGui.TreeNode("Mobyload"))
                     {
-                        List<Texture> textures = level.mobyloadTextures[i];
-                        if (textures.Count > 0)
-                            RenderSubTree("Mobyload " + i, sortedMobyloadModels[i], textures);
+                        for (int i = 0; i < sortedMobyloadModels.Count; i++)
+                        {
+                            List<Texture> textures = level.mobyloadTextures[i];
+                            if (textures.Count > 0)
+                                RenderSubTree("Mobyload " + i, sortedMobyloadModels[i], textures);
+                        }
+                        ImGui.TreePop();
                     }
-                    ImGui.TreePop();
                 }
                 if (ImGui.TreeNode("Miscellaneous"))
                 {
                     RenderModelEntry(level.skybox, level.textures, "Skybox");
                     ImGui.TreePop();
                 }
-                ImGui.EndChild();
             }
+            ImGui.EndChild();
         }
 
         private void RenderInstanceList()
@@ -385,10 +396,12 @@ namespace Replanetizer.Frames
                         ImGui.TextDisabled("(?)");
                         if (ImGui.IsItemHovered())
                         {
-                            ImGui.BeginTooltip();
-                            ImGui.PushTextWrapPos(ImGui.GetFontSize() * 40.0f);
-                            ImGui.TextUnformatted("Enables UV clamping modes and vertex colors.");
-                            ImGui.PopTextWrapPos();
+                            if (ImGui.BeginTooltip())
+                            {
+                                ImGui.PushTextWrapPos(ImGui.GetFontSize() * 40.0f);
+                                ImGui.TextUnformatted("Enables UV clamping modes and vertex colors.");
+                                ImGui.PopTextWrapPos();
+                            }
                             ImGui.EndTooltip();
                         }
 
@@ -420,11 +433,28 @@ namespace Replanetizer.Frames
                             ImGui.EndDisabled();
                         }
 
-                        bool embedTextures = exportSettings.embedTextures;
-
-                        if (ImGui.Checkbox("Embed Textures", ref embedTextures))
+                        if (selectedModel.textureConfig.Count > 0)
                         {
-                            exportSettings.embedTextures = embedTextures;
+                            ImGui.Checkbox("Embed Textures", ref exportSettings.embedTextures);
+                        }
+                        else
+                        {
+                            bool embedTextures = false;
+                            ImGui.BeginDisabled();
+                            ImGui.Checkbox("Embed Textures", ref embedTextures);
+                            ImGui.EndDisabled();
+                        }
+
+                        if (selectedModel.GetSubModelCount() > 0)
+                        {
+                            ImGui.Checkbox("Include Bangles", ref exportSettings.includeBangles);
+                        }
+                        else
+                        {
+                            bool includeBangles = false;
+                            ImGui.BeginDisabled();
+                            ImGui.Checkbox("Include Bangles", ref includeBangles);
+                            ImGui.EndDisabled();
                         }
                     }
 
@@ -463,6 +493,19 @@ namespace Replanetizer.Frames
                     ImGui.Separator();
                 }
 
+                if (selectedModel?.GetSubModelCount() > 0)
+                {
+                    if (ImGui.Checkbox("Show Bangles", ref showBangles))
+                    {
+                        for (int i = 0; i < rendererPayload.visibility.subModels.Length; i++)
+                        {
+                            rendererPayload.visibility.subModels[i] = showBangles;
+                        }
+                    }
+
+                    ImGui.Separator();
+                }
+
                 if (selectedModel != null)
                 {
                     RenderInstanceList();
@@ -471,6 +514,7 @@ namespace Replanetizer.Frames
 
                 propertyFrame.Render(deltaTime);
             }
+            ImGui.EndChild();
 
             ImGui.Columns(1);
         }
@@ -569,13 +613,38 @@ namespace Replanetizer.Frames
 
             modelTextureList.Clear();
 
-            for (int i = 0; i < selectedModel.textureConfig.Count; i++)
+            List<TextureConfig> textureConfigs = new List<TextureConfig>();
+            foreach (TextureConfig conf in selectedModel.textureConfig)
             {
-                int textureId = selectedModel.textureConfig[i].id;
+                textureConfigs.Add(conf);
+            }
+
+            for (int i = 0; i < selectedModel.GetSubModelCount(); i++)
+            {
+                Model? subModel = selectedModel.GetSubModel(i);
+
+                if (subModel == null) continue;
+
+                foreach (TextureConfig conf in subModel.textureConfig)
+                {
+                    textureConfigs.Add(conf);
+                }
+            }
+
+            foreach (TextureConfig conf in textureConfigs)
+            {
+                int textureId = conf.id;
                 if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
 
-                modelTextureList.Add(selectedTextureSet[textureId]);
+                Texture tex = selectedTextureSet[textureId];
+
+                if (!modelTextureList.Contains(tex))
+                {
+                    modelTextureList.Add(tex);
+                }
             }
+
+            modelTextureList.Sort((lhs, rhs) => lhs.id.CompareTo(rhs.id));
         }
 
         private bool PrepareForArrowInputList(List<Model> models, List<Texture>? textures = null, List<List<Texture>>? textureSet = null)
@@ -669,9 +738,14 @@ namespace Replanetizer.Frames
 
             if (selectedModel != null && selectedTextureSet != null && !(selectedModel is SkyboxModel))
             {
+                shaderTable.meshShader.UseShader();
+                shaderTable.meshShader.SetUniform1(UniformName.useLighting, 0);
+                shaderTable.meshShader.SetUniform1(UniformName.useFog, 0);
+
                 if (rendererPayload.visibility.enableAnimations)
                 {
                     shaderTable.animationShader.UseShader();
+                    shaderTable.animationShader.SetUniform1(UniformName.useLighting, 0);
                     shaderTable.animationShader.SetUniform1(UniformName.useFog, 0);
                 }
                 rendererPayload.SetWindowSize(width, height);
@@ -801,14 +875,32 @@ namespace Replanetizer.Frames
             String folder = CrossFileDialog.OpenFolder();
             if (folder.Length == 0) return;
 
-            foreach (var config in selectedModel.textureConfig)
+            List<TextureConfig> textureConfigs = new List<TextureConfig>();
+            foreach (TextureConfig conf in selectedModel.textureConfig)
             {
-                var textureId = config.id;
+                textureConfigs.Add(conf);
+            }
+
+            for (int i = 0; i < selectedModel.GetSubModelCount(); i++)
+            {
+                Model? subModel = selectedModel.GetSubModel(i);
+
+                if (subModel == null) continue;
+
+                foreach (TextureConfig conf in subModel.textureConfig)
+                {
+                    textureConfigs.Add(conf);
+                }
+            }
+
+            foreach (TextureConfig conf in textureConfigs)
+            {
+                var textureId = conf.id;
                 if (textureId < 0 || textureId >= selectedTextureSet.Count) continue;
 
                 var texture = selectedTextureSet[textureId];
 
-                bool includeTransparency = (config.IgnoresTransparency()) ? false : true;
+                bool includeTransparency = (conf.IgnoresTransparency()) ? false : true;
 
                 TextureIO.ExportTexture(texture, Path.Combine(folder, $"{textureId}.png"), includeTransparency);
             }

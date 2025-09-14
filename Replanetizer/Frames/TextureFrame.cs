@@ -41,12 +41,14 @@ namespace Replanetizer.Frames
             {
                 Texture t = textures[i];
 
-                ImGui.BeginChild("imageChild_" + prefix + i, ITEM_SIZE, ImGuiChildFlags.None);
-                ImGui.Image((IntPtr) textureIds[t].textureID, IMAGE_SIZE);
-                string idText = prefix + t.id;
-                float idWidth = ImGui.CalcTextSize(idText).X;
-                ImGui.SetCursorPosX(ITEM_SIZE.X - idWidth);
-                ImGui.Text(idText);
+                if (ImGui.BeginChild("imageChild_" + prefix + i, ITEM_SIZE, ImGuiChildFlags.None))
+                {
+                    ImGui.Image((IntPtr) textureIds[t].textureID, IMAGE_SIZE);
+                    string idText = prefix + t.id;
+                    float idWidth = ImGui.CalcTextSize(idText).X;
+                    ImGui.SetCursorPosX(ITEM_SIZE.X - idWidth);
+                    ImGui.Text(idText);
+                }
                 ImGui.EndChild();
 
                 if (ImGui.BeginPopupContextItem($"context-menu for {i}"))
@@ -63,12 +65,14 @@ namespace Replanetizer.Frames
                 }
                 else if (ImGui.IsItemHovered())
                 {
-                    ImGui.BeginTooltip();
-                    ImGui.Image((IntPtr) textureIds[t].textureID, new System.Numerics.Vector2(t.width, t.height));
-                    string resolutionText = $"{t.width}x{t.height}";
-                    float resolutionWidth = ImGui.CalcTextSize(resolutionText).X;
-                    ImGui.SetCursorPosX(t.width - resolutionWidth);
-                    ImGui.Text(resolutionText);
+                    if (ImGui.BeginTooltip())
+                    {
+                        ImGui.Image((IntPtr) textureIds[t].textureID, new System.Numerics.Vector2(t.width, t.height));
+                        string resolutionText = $"{t.width}x{t.height}";
+                        float resolutionWidth = ImGui.CalcTextSize(resolutionText).X;
+                        ImGui.SetCursorPosX(t.width - resolutionWidth);
+                        ImGui.Text(resolutionText);
+                    }
                     ImGui.EndTooltip();
                 }
 
@@ -88,8 +92,8 @@ namespace Replanetizer.Frames
             if (ImGui.Begin(frameName, ref isOpen, ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {
                 Render(deltaTime);
-                ImGui.End();
             }
+            ImGui.End();
         }
 
         public override void Render(float deltaTime)

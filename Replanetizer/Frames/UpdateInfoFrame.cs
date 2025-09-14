@@ -159,8 +159,8 @@ Link: ", buildDate.ToString(), currVersionDate.ToString(), diff?.Days, diff?.Hou
             if (ImGui.Begin(frameName, ref isOpen, ImGuiWindowFlags.HorizontalScrollbar))
             {
                 Render(deltaTime);
-                ImGui.End();
             }
+            ImGui.End();
         }
 
         public static async void CheckForNewVersion(Window wnd)

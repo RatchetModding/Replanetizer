@@ -239,11 +239,11 @@ void main()
 
             foreach (Keys key in Enum.GetValues(typeof(Keys)))
             {
-                if (key == Keys.Unknown || !keyboardState.IsKeyDown(key))
+                if (key == Keys.Unknown)
                 {
                     continue;
                 }
-                io.AddKeyEvent(ConvertKeyToImGuiKey(key), true);
+                io.AddKeyEvent(ConvertKeyToImGuiKey(key), keyboardState.IsKeyDown(key));
             }
 
             foreach (var c in PRESSED_CHARS)
@@ -301,8 +301,10 @@ void main()
                     return ImGuiKey.Enter;
                 case Keys.Escape:
                     return ImGuiKey.Escape;
-                case Keys.A:
-                    return ImGuiKey.A;
+                case Keys.Space:
+                    return ImGuiKey.Space;
+                case Keys.LeftControl:
+                    return ImGuiKey.LeftCtrl;
                 case Keys.C:
                     return ImGuiKey.C;
                 case Keys.V:
@@ -313,9 +315,17 @@ void main()
                     return ImGuiKey.Y;
                 case Keys.Z:
                     return ImGuiKey.Z;
+                case Keys.W:
+                    return ImGuiKey.W;
+                case Keys.A:
+                    return ImGuiKey.A;
+                case Keys.S:
+                    return ImGuiKey.S;
+                case Keys.D:
+                    return ImGuiKey.D;
             }
 
-            return (ImGuiKey) key;
+            return ImGuiKey.None;
         }
 
         private void RenderImDrawData(ImDrawDataPtr drawData)

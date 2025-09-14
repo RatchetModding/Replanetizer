@@ -46,13 +46,16 @@ namespace LibReplanetizer.Models
             }
         }
 
+        public virtual int GetSubModelCount() { return 0; }
+        public virtual Model? GetSubModel(int index) { return null; }
+
         // Every vertex can be assigned to at most 4 bones
         // weights contains 4 uint8 each being of weight (value / 255.0)
         // ids contains 4 uint8 each defining which bones we refer to
         [Category("Attributes"), DisplayName("Bone Weights")]
-        public uint[] weights { get; set; } = new uint[0];
+        public uint[] vertexBoneWeights { get; set; } = new uint[0];
         [Category("Attributes"), DisplayName("Vertex to Bone Map")]
-        public uint[] ids { get; set; } = new uint[0];
+        public uint[] vertexBoneIds { get; set; } = new uint[0];
 
         [Category("Attributes"), DisplayName("Vertex Colors")]
         public byte[] rgbas { get; set; } = new byte[0];
@@ -131,11 +134,11 @@ namespace LibReplanetizer.Models
         }
 
         //Get vertices with UV's baked in
-        public float[] GetVertices(FileStream fs, int vertexPointer, int vertexCount, int elemSize)
+        public static (float[], uint[], uint[]) GetVertices(FileStream fs, int vertexPointer, int vertexCount, int elemSize)
         {
             float[] vertexBuffer = new float[vertexCount * 8];
-            weights = new uint[vertexCount];
-            ids = new uint[vertexCount];
+            uint[] weights = new uint[vertexCount];
+            uint[] ids = new uint[vertexCount];
             //List<float> vertexBuffer = new List<float>();
             byte[] vertBlock = ReadBlock(fs, vertexPointer, vertexCount * elemSize);
             for (int i = 0; i < vertexCount; i++)
@@ -156,7 +159,7 @@ namespace LibReplanetizer.Models
 
 
             }
-            return vertexBuffer;
+            return (vertexBuffer, weights, ids);
         }
 
         public byte[] SerializeVertices()
@@ -174,8 +177,8 @@ namespace LibReplanetizer.Models
                 WriteFloat(outBytes, (i * elemSize) + 0x14, vertexBuffer[(i * 8) + 5]);
                 WriteFloat(outBytes, (i * elemSize) + 0x18, vertexBuffer[(i * 8) + 6]);
                 WriteFloat(outBytes, (i * elemSize) + 0x1C, vertexBuffer[(i * 8) + 7]);
-                WriteUint(outBytes, (i * elemSize) + 0x20, weights[i]);
-                WriteUint(outBytes, (i * elemSize) + 0x24, ids[i]);
+                WriteUint(outBytes, (i * elemSize) + 0x20, vertexBoneWeights[i]);
+                WriteUint(outBytes, (i * elemSize) + 0x24, vertexBoneIds[i]);
             }
 
             return outBytes;

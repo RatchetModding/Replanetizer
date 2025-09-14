@@ -11,6 +11,7 @@ using LibReplanetizer;
 using OpenTK.Graphics.OpenGL;
 using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
 using SixLabors.ImageSharp.PixelFormats;
+using System.IO;
 
 namespace Replanetizer.Renderer
 {
@@ -32,9 +33,17 @@ namespace Replanetizer.Renderer
 
         private static readonly float MAX_ANISO;
 
+        // Global textures
+        public static readonly GLTexture blueNoiseTexture;
+
         static GLTexture()
         {
             MAX_ANISO = GL.GetFloat(MAX_TEXTURE_MAX_ANISOTROPY);
+
+            string? applicationFolder = System.AppContext.BaseDirectory;
+            string resourcesFolder = Path.Join(applicationFolder, "Resources");
+            Image<L8> image = Image.Load<L8>(Path.Join(resourcesFolder, "blue_noise.png"));
+            blueNoiseTexture = new GLTexture("BlueNoiseTextrue", image);
         }
 
         public readonly string name;
@@ -162,6 +171,24 @@ namespace Replanetizer.Renderer
 
             internalFormat = SRGB8_ALPHA8;
 
+            int bytesPerPixel = (t.compressionFormat == Texture.CompressionFormat.BC1) ? 8 : 16;
+
+            InternalFormat glFormat;
+            switch (t.compressionFormat)
+            {
+                case Texture.CompressionFormat.BC1:
+                    glFormat = InternalFormat.CompressedRgbaS3tcDxt1Ext;
+                    break;
+                case Texture.CompressionFormat.BC2:
+                    glFormat = InternalFormat.CompressedRgbaS3tcDxt3Ext;
+                    break;
+                case Texture.CompressionFormat.BC3:
+                    glFormat = InternalFormat.CompressedRgbaS3tcDxt5Ext;
+                    break;
+                default:
+                    throw new NotImplementedException($"Encountered invalid texture compression format {t.compressionFormat}");
+            }
+
             // Custom MP levels may have an incorrect number of mipmaps specified so we need to dynamically figure that out
             int mipLevel = 0;
 
@@ -175,7 +202,7 @@ namespace Replanetizer.Renderer
                 {
                     if (mipWidth > 0 && mipHeight > 0)
                     {
-                        int size = ((mipWidth + 3) / 4) * ((mipHeight + 3) / 4) * 16;
+                        int size = ((mipWidth + 3) / 4) * ((mipHeight + 3) / 4) * bytesPerPixel;
                         if (offset + size > t.data.Length)
                         {
                             LOGGER.Debug($"Texture {t.id} claims to have {t.mipMapCount} mipmaps but only has {mipLevel}!");
@@ -183,7 +210,7 @@ namespace Replanetizer.Renderer
                         }
                         byte[] texPart = new byte[size];
                         Array.Copy(t.data, offset, texPart, 0, size);
-                        GL.CompressedTexImage2D(TextureTarget.Texture2D, mipLevel, InternalFormat.CompressedRgbaS3tcDxt5Ext, mipWidth, mipHeight, 0, size, texPart);
+                        GL.CompressedTexImage2D(TextureTarget.Texture2D, mipLevel, glFormat, mipWidth, mipHeight, 0, size, texPart);
                         offset += size;
                         mipWidth /= 2;
                         mipHeight /= 2;
@@ -194,8 +221,8 @@ namespace Replanetizer.Renderer
             }
             else
             {
-                int size = ((t.width + 3) / 4) * ((t.height + 3) / 4) * 16;
-                GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, InternalFormat.CompressedRgbaS3tcDxt5Ext, t.width, t.height, 0, size, t.data);
+                int size = ((t.width + 3) / 4) * ((t.height + 3) / 4) * bytesPerPixel;
+                GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, glFormat, t.width, t.height, 0, size, t.data);
                 GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
             }
 

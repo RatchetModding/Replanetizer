@@ -563,10 +563,12 @@ namespace Replanetizer.Frames
                 ImGui.TextDisabled("(?)");
                 if (ImGui.IsItemHovered())
                 {
-                    ImGui.BeginTooltip();
-                    ImGui.PushTextWrapPos(ImGui.GetFontSize() * 40.0f);
-                    ImGui.TextUnformatted(description);
-                    ImGui.PopTextWrapPos();
+                    if (ImGui.BeginTooltip())
+                    {
+                        ImGui.PushTextWrapPos(ImGui.GetFontSize() * 40.0f);
+                        ImGui.TextUnformatted(description);
+                        ImGui.PopTextWrapPos();
+                    }
                     ImGui.EndTooltip();
                 }
             }

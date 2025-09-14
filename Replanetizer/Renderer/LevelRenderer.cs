@@ -243,6 +243,7 @@ namespace Replanetizer.Renderer
             bool useFog = payload.visibility.enableFog && levelVariables != null;
 
             shaderTable.animationShader.UseShader();
+            shaderTable.animationShader.SetUniform1(UniformName.useLighting, (payload.visibility.enableLighting) ? 1 : 0);
             shaderTable.animationShader.SetUniform1(UniformName.useFog, (useFog) ? 1 : 0);
 
             if (useFog && levelVariables != null)
@@ -255,6 +256,7 @@ namespace Replanetizer.Renderer
             }
 
             shaderTable.meshShader.UseShader();
+            shaderTable.meshShader.SetUniform1(UniformName.useLighting, (payload.visibility.enableLighting) ? 1 : 0);
             shaderTable.meshShader.SetUniform1(UniformName.useFog, (useFog) ? 1 : 0);
 
             if (useFog && levelVariables != null)

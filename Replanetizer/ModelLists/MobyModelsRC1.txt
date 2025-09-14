@@ -50,6 +50,7 @@
 006A=Bridge
 006E=Wrench
 006F=Blarg Space Fighter
+0070=Explosion
 0072=The Guy
 0073=White Ship
 0074=Red Ship 2
@@ -181,6 +182,7 @@
 01A8=Shuttle
 01A9=Bomb
 01AB=Blarg Trooper
+01AC=Feather
 01B0=Eudora Bridge
 01B1=Sonic Summoner
 01B2=Platform Booster
@@ -243,6 +245,7 @@
 023A=Axe
 023C=Slime Parent
 023D=Robot Dog
+023E=Blarg Commander
 0241=Peckbot
 0242=Mine layer
 0244=Sandshark
@@ -346,6 +349,7 @@
 0301=Door Right
 0302=Helipack
 0306=Plumber
+0307=Splash Effect
 030A=Pipe
 030C=Bridge Platform
 030D=Crane Top
@@ -368,6 +372,7 @@
 0336=Train Locomotive
 0337=Lamp
 0339=Robo Shack Sign
+0341=Rocket
 033B=Frog
 033E=Button
 033F=Water
@@ -392,6 +397,7 @@
 0374=Test Dummy Walloper
 0376=Timed Activation Pads
 037A=Helga
+0382=Ceiling
 0386=Water
 0387=Platform
 0389=Moving Platform Medium
@@ -473,6 +479,7 @@
 046A=Batalia Commando
 046E=Gold Bolt
 046F=Teleport Pad
+0472=Frame
 0473=Hoverboard Ring
 0474=Hoverboard Boost Pad
 0475=Elevator
@@ -502,6 +509,7 @@
 04A4=Airship Part
 04A5=Airship Part
 04A6=Lieutenant
+04A8=Explosion
 04AB=Robot Face
 04AC=Screamer
 04AF=Darter
@@ -516,6 +524,7 @@
 04BD=Background Ship 2
 04C2=Ammocrate
 04C4=Jet Fighter Health Crate
+04C6=Propeller
 04CD=Blarg Ship
 04CF=Psy-tcopus
 04D1=Rocket
@@ -639,6 +648,13 @@
 0672=Mushroom
 067F=Robot Head
 0696=Seashell
+06C5=Spawner Leg (Damaged)
+06C6=Spawner Leg (Damaged)
+06C7=Spawner Top (Damaged)
+06CE=Robot Dog Jaw (Damaged)
+06CF=Robot Dog Head (Damaged)
+06D0=Blarg Commander Weapon (Damaged)
+06D2=Blarg Commander Shoe (Damaged)
 06E6=Shuttle
 06F5=Red Plant
 06F6=Green Plant
@@ -650,6 +666,9 @@
 071C=White Flower
 0722=Elevator
 0723=Lightpost
+0724=Lightpost Bottom (Damaged)
+0725=Lightpost Top (Damaged)
+0726=Lightpost Sphere (Damaged)
 072A=Pipe
 0730=Fireplug
 0733=Blarg Ship

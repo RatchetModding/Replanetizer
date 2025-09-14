@@ -484,7 +484,6 @@ namespace Replanetizer.Frames
             ImGui.SetNextWindowViewport(viewport.ID);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, 0);
 
             ImGui.Begin(frameName,
                 ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize |

@@ -167,10 +167,10 @@ namespace Replanetizer.Frames
             if (ImGui.Begin(frameName, ref isOpen, ImGuiWindowFlags.NoSavedSettings))
             {
                 Render(deltaTime);
-                ImGui.End();
 
                 firstFrame = false;
             }
+            ImGui.End();
         }
 
         private void RenderModelEntry(Model mod, List<Texture> textureSet, string name)
@@ -267,8 +267,8 @@ namespace Replanetizer.Frames
                     RenderModelEntry(level.skybox, level.textures, "Skybox");
                     ImGui.TreePop();
                 }
-                ImGui.EndChild();
             }
+            ImGui.EndChild();
         }
 
         private void RenderInstanceList()
@@ -387,10 +387,12 @@ namespace Replanetizer.Frames
                         ImGui.TextDisabled("(?)");
                         if (ImGui.IsItemHovered())
                         {
-                            ImGui.BeginTooltip();
-                            ImGui.PushTextWrapPos(ImGui.GetFontSize() * 40.0f);
-                            ImGui.TextUnformatted("Enables UV clamping modes and vertex colors.");
-                            ImGui.PopTextWrapPos();
+                            if (ImGui.BeginTooltip())
+                            {
+                                ImGui.PushTextWrapPos(ImGui.GetFontSize() * 40.0f);
+                                ImGui.TextUnformatted("Enables UV clamping modes and vertex colors.");
+                                ImGui.PopTextWrapPos();
+                            }
                             ImGui.EndTooltip();
                         }
 
@@ -489,6 +491,7 @@ namespace Replanetizer.Frames
 
                 propertyFrame.Render(deltaTime);
             }
+            ImGui.EndChild();
 
             ImGui.Columns(1);
         }

@@ -497,10 +497,7 @@ namespace Replanetizer.Frames
                 {
                     if (ImGui.Checkbox("Show Bangles", ref showBangles))
                     {
-                        for (int i = 0; i < rendererPayload.visibility.subModels.Length; i++)
-                        {
-                            rendererPayload.visibility.subModels[i] = showBangles;
-                        }
+                        rendererPayload.SetShowSubmodels(showBangles);
                     }
 
                     ImGui.Separator();

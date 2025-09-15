@@ -291,10 +291,7 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Meshless Models", ref rendererPayload.visibility.enableMeshlessModels)) InvalidateView();
                     if (ImGui.Checkbox("Bangles", ref showBangles))
                     {
-                        for (int i = 0; i < rendererPayload.visibility.subModels.Length; i++)
-                        {
-                            rendererPayload.visibility.subModels[i] = showBangles;
-                        }
+                        rendererPayload.SetShowSubmodels(showBangles);
                         InvalidateView();
                     }
                     ImGui.PushItemWidth(90.0f);

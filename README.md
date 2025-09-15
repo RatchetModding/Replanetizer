@@ -93,7 +93,7 @@ OpenGL 3.3 is used for the rendering.
 
 # Licensing
 
-Replanetizer is Copyright (C) 2018-2024, The Replanetizer Contributors.
+Replanetizer is Copyright (C) 2018-2025, The Replanetizer Contributors.
 
 Replanetizer is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

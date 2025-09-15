@@ -79,7 +79,7 @@ namespace Replanetizer.Frames
         private bool hookLiveUpdate = true;
         private bool hookUpdateCamera = false;
 
-        private bool showBangles = true;
+        private bool showBangles = false;
 
         private int width, height;
 
@@ -104,7 +104,7 @@ namespace Replanetizer.Frames
 
             toolbox.ToolChanged += (_, _) => InvalidateView();
 
-            rendererPayload = new RendererPayload(camera, selectedObjects, toolbox, false);
+            rendererPayload = new RendererPayload(camera, selectedObjects, toolbox, showBangles);
 
             UpdateWindowSize();
             OnResize();
@@ -291,10 +291,7 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Meshless Models", ref rendererPayload.visibility.enableMeshlessModels)) InvalidateView();
                     if (ImGui.Checkbox("Bangles", ref showBangles))
                     {
-                        for (int i = 0; i < rendererPayload.visibility.subModels.Length; i++)
-                        {
-                            rendererPayload.visibility.subModels[i] = showBangles;
-                        }
+                        rendererPayload.SetShowSubmodels(showBangles);
                         InvalidateView();
                     }
                     ImGui.PushItemWidth(90.0f);

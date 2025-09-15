@@ -22,7 +22,7 @@ namespace Replanetizer.Frames
             var versionAttr = currentAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
             string gitTreeStatus = versionAttr != null ? versionAttr.InformationalVersion : "unknown";
             aboutText = String.Format(@"Replanetizer, a Level Editor for Ratchet & Clank games on the PS3.
-Copyright (C) 2018 - 2022, The Replanetizer Contributors.
+Copyright (C) 2018 - 2025, The Replanetizer Contributors.
 
 Replanetizer is free software, licensed under the GNU GPL 3.0.
 Please see the LICENSE.md file for more details, or visit

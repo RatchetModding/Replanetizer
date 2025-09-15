@@ -660,7 +660,7 @@ namespace Replanetizer.Renderer
             int subModelCount = mobyModel.GetSubModelCount();
             for (int i = 0; i < subModelCount; i++)
             {
-                if (payload.visibility.subModels[i] == false) continue;
+                if ((payload.visibility.subModelsMask & (1u << i)) == 0) continue;
 
                 Model? subModel = mobyModel.GetSubModel(i);
 

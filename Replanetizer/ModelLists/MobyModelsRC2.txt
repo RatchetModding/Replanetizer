@@ -133,6 +133,7 @@
 0CB2=Synthenoid
 0CBC=Megacorp Hover Tank
 0CC9=Dynamo Target
+0CDB=Ammo
 0CE3=Gravity Bomb
 0CEE=HK22 Gun
 0CF5=Joba Tribesman

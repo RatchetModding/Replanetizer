@@ -150,10 +150,14 @@ namespace Replanetizer.Frames
             ImGui.Text(selectedObject.GetType().Name);
             ImGui.Separator();
 
+            ImGui.PushID(selectedObject.GetType().Name);
+
             foreach (var (categoryName, categoryItems) in properties)
             {
                 RenderCategory(categoryName, categoryItems);
             }
+
+            ImGui.PopID();
         }
 
         private void RenderCategory(string categoryName, Dictionary<string, PropertyInfo> categoryItems)

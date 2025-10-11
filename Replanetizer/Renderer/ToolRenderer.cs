@@ -33,9 +33,12 @@ namespace Replanetizer.Renderer
             if (payload.toolbox == null || payload.toolbox.tool == null || payload.selection.Count == 0)
                 return;
 
+            Matrix4 worldToView = payload.camera.GetWorldViewMatrix();
+
             GL.Disable(EnableCap.DepthTest);
             shaderTable.colorShader.UseShader();
             shaderTable.colorShader.SetUniform1(UniformName.levelObjectType, (int) RenderedObjectType.Tool);
+            shaderTable.colorShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
 
             if (payload.selection.TryGetOne(out var obj) && obj is Spline spline &&
                 payload.toolbox.tool is VertexTranslationTool vertexTranslationTool)

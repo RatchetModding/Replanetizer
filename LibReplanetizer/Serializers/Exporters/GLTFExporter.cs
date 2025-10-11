@@ -1106,67 +1106,6 @@ namespace LibReplanetizer
                 }
 
                 ////
-                //  Nodes
-                ////
-
-                List<GLTFNodesEntry> listNodes = new List<GLTFNodesEntry>();
-
-                int? skin = null;
-
-                if (includeSkeleton)
-                {
-                    MobyModel mobModel = (MobyModel) model;
-
-                    if (mobModel.skeleton != null)
-                    {
-                        Skeleton[] skeletonSorted = new Skeleton[mobModel.boneCount];
-                        Stack<Skeleton> skeletonStack = new Stack<Skeleton>();
-                        skeletonStack.Push(mobModel.skeleton);
-
-                        while (skeletonStack.TryPop(out Skeleton? skel))
-                        {
-                            skeletonSorted[skel.bone.id] = skel;
-
-                            foreach (Skeleton child in skel.children)
-                            {
-                                skeletonStack.Push(child);
-                            }
-                        }
-
-                        foreach (Skeleton s in skeletonSorted)
-                        {
-                            listNodes.Add(new GLTFNodesEntry(s, mobModel.size));
-                        }
-
-
-                        skin = 0;
-                    }
-                }
-
-                int[] meshNodes = new int[meshContainers.Length];
-                for (int i = 0; i < meshContainers.Length; i++)
-                {
-                    meshNodes[i] = listNodes.Count;
-                    listNodes.Add(new GLTFNodesEntry("Mesh" + i, i, skin));
-                }
-
-                if (includeSkeleton)
-                {
-                    int[] armatureNodes = new int[meshContainers.Length + 1];
-                    armatureNodes[0] = 0;
-                    meshNodes.CopyTo(armatureNodes, 1);
-
-                    listNodes.Add(new GLTFNodesEntry("Armature", armatureNodes));
-                    listNodes.Add(new GLTFNodesEntry("ModelObject", new int[] { listNodes.Count - 1 }));
-                }
-                else
-                {
-                    listNodes.Add(new GLTFNodesEntry("ModelObject", meshNodes));
-                }
-
-                this.nodes = listNodes.ToArray();
-
-                ////
                 //  Buffers
                 ////
 
@@ -1329,6 +1268,9 @@ namespace LibReplanetizer
                     meshContainer.gltfIndexAccessorBaseIndex = listAccessors.Count;
                     for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
                     {
+                        if (meshContainer.model.textureConfig[j].id < 0)
+                            continue;
+
                         listAccessors.Add(new GLTFAccessorEntry("IndexAccessor" + i + "_" + j, meshContainer.gltfIndexBufferViewBaseIndex + j, GLTFAccessorEntry.UNSIGNED_SHORT, false, meshContainer.model.textureConfig[j].size, 0, GLTFAccessorEntry.SCALAR));
                     }
                 }
@@ -1384,6 +1326,10 @@ namespace LibReplanetizer
                         for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
                         {
                             TextureConfig conf = meshContainer.model.textureConfig[j];
+
+                            if (conf.id < 0)
+                                continue;
+
                             if (!texIDToImageOffset.ContainsKey(conf.id) && textureDataBufferViewIDs.ContainsKey(conf.id))
                             {
                                 texIDToImageOffset.Add(conf.id, listImages.Count);
@@ -1401,6 +1347,10 @@ namespace LibReplanetizer
                         for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
                         {
                             TextureConfig conf = meshContainer.model.textureConfig[j];
+
+                            if (conf.id < 0)
+                                continue;
+
                             if (!texIDToImageOffset.ContainsKey(conf.id))
                             {
                                 texIDToImageOffset.Add(conf.id, listImages.Count);
@@ -1424,6 +1374,9 @@ namespace LibReplanetizer
                     meshContainer.gltfTextureSamplerBaseIndex = listSamplers.Count;
                     for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
                     {
+                        if (meshContainer.model.textureConfig[j].id < 0)
+                            continue;
+
                         listSamplers.Add(new GLTFSamplerEntry(meshContainer.model.textureConfig[j]));
                     }
                 }
@@ -1440,10 +1393,16 @@ namespace LibReplanetizer
                     GLTFUtils.MeshContainer meshContainer = meshContainers[i];
 
                     meshContainer.gltfTextureBaseIndex = listTextures.Count;
+
+                    int validTextureConfigIndex = 0;
                     for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
                     {
                         TextureConfig conf = meshContainer.model.textureConfig[j];
-                        listTextures.Add(new GLTFTextureEntry(meshContainer.gltfTextureSamplerBaseIndex + j, texIDToImageOffset[conf.id]));
+
+                        if (conf.id < 0)
+                            continue;
+
+                        listTextures.Add(new GLTFTextureEntry(meshContainer.gltfTextureSamplerBaseIndex + validTextureConfigIndex++, texIDToImageOffset[conf.id]));
                     }
                 }
 
@@ -1459,10 +1418,16 @@ namespace LibReplanetizer
                     GLTFUtils.MeshContainer meshContainer = meshContainers[i];
 
                     meshContainer.gltfMaterialBaseIndex = listMaterials.Count;
+
+                    int validTextureConfigIndex = 0;
                     for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
                     {
                         TextureConfig conf = meshContainer.model.textureConfig[j];
-                        listMaterials.Add(new GLTFMaterialEntry(conf, meshContainer.gltfTextureBaseIndex + j));
+
+                        if (conf.id < 0)
+                            continue;
+
+                        listMaterials.Add(new GLTFMaterialEntry(conf, meshContainer.gltfTextureBaseIndex + validTextureConfigIndex++));
                     }
                 }
 
@@ -1493,15 +1458,86 @@ namespace LibReplanetizer
                     }
 
                     List<GLTFMeshEntry.GLTFMeshPrimitivesEntry> listMeshPrimitives = new List<GLTFMeshEntry.GLTFMeshPrimitivesEntry>();
+
+                    int validTextureConfigIndex = 0;
                     for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
                     {
-                        listMeshPrimitives.Add(new GLTFMeshEntry.GLTFMeshPrimitivesEntry(vertexAttribs, meshContainer.gltfIndexAccessorBaseIndex + j, meshContainer.gltfMaterialBaseIndex + j));
+                        if (meshContainer.model.textureConfig[j].id < 0)
+                            continue;
+
+                        listMeshPrimitives.Add(new GLTFMeshEntry.GLTFMeshPrimitivesEntry(vertexAttribs, meshContainer.gltfIndexAccessorBaseIndex + validTextureConfigIndex, meshContainer.gltfMaterialBaseIndex + validTextureConfigIndex));
+                        validTextureConfigIndex++;
                     }
+
+                    // GLTF requires a mesh to have primitives
+                    if (listMeshPrimitives.Count == 0)
+                        continue;
 
                     listMeshes.Add(new GLTFMeshEntry("Mesh" + i, listMeshPrimitives.ToArray()));
                 }
 
                 this.meshes = listMeshes.ToArray();
+
+                ////
+                //  Nodes
+                ////
+
+                List<GLTFNodesEntry> listNodes = new List<GLTFNodesEntry>();
+
+                int? skin = null;
+
+                if (includeSkeleton)
+                {
+                    MobyModel mobModel = (MobyModel) model;
+
+                    if (mobModel.skeleton != null)
+                    {
+                        Skeleton[] skeletonSorted = new Skeleton[mobModel.boneCount];
+                        Stack<Skeleton> skeletonStack = new Stack<Skeleton>();
+                        skeletonStack.Push(mobModel.skeleton);
+
+                        while (skeletonStack.TryPop(out Skeleton? skel))
+                        {
+                            skeletonSorted[skel.bone.id] = skel;
+
+                            foreach (Skeleton child in skel.children)
+                            {
+                                skeletonStack.Push(child);
+                            }
+                        }
+
+                        foreach (Skeleton s in skeletonSorted)
+                        {
+                            listNodes.Add(new GLTFNodesEntry(s, mobModel.size));
+                        }
+
+
+                        skin = 0;
+                    }
+                }
+
+                int[] meshNodes = new int[listMeshes.Count];
+                for (int i = 0; i < listMeshes.Count; i++)
+                {
+                    meshNodes[i] = listNodes.Count;
+                    listNodes.Add(new GLTFNodesEntry(listMeshes[i].name, i, skin));
+                }
+
+                if (includeSkeleton)
+                {
+                    int[] armatureNodes = new int[meshContainers.Length + 1];
+                    armatureNodes[0] = 0;
+                    meshNodes.CopyTo(armatureNodes, 1);
+
+                    listNodes.Add(new GLTFNodesEntry("Armature", armatureNodes));
+                    listNodes.Add(new GLTFNodesEntry("ModelObject", new int[] { listNodes.Count - 1 }));
+                }
+                else
+                {
+                    listNodes.Add(new GLTFNodesEntry("ModelObject", meshNodes));
+                }
+
+                this.nodes = listNodes.ToArray();
 
                 ////
                 //  Scenes

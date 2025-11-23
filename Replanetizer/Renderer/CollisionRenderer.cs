@@ -114,6 +114,9 @@ namespace Replanetizer.Renderer
             shaderTable.collisionShader.UseShader();
             GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
 
+            GL.Enable(EnableCap.CullFace);
+            GL.CullFace(TriangleFace.Back);
+
             for (int i = 0; i < numCollisions; i++)
             {
                 if (!payload.visibility.chunks[i]) continue;
@@ -121,6 +124,8 @@ namespace Replanetizer.Renderer
                 GL.BindVertexArray(vaos[i]);
                 GL.DrawElements(PrimitiveType.Triangles, indexCount[i], DrawElementsType.UnsignedInt, 0);
             }
+
+            GL.Disable(EnableCap.CullFace);
 
             GLUtil.CheckGlError("CollisionRenderer");
         }

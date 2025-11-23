@@ -104,16 +104,16 @@ namespace LibReplanetizer.Models
                             uint f1 = totalVertexCount + b0;
                             uint f2 = totalVertexCount + b1;
                             uint f3 = totalVertexCount + b2;
-                            indexList.Add(f1);
                             indexList.Add(f2);
+                            indexList.Add(f1);
                             indexList.Add(f3);
 
                             if (f < rCount)
                             {
                                 int rOffset = vOffset + 4 + (12 * vertexCount) + (faceCount * 4) + f;
                                 uint f4 = totalVertexCount + collision[rOffset];
-                                indexList.Add(f1);
                                 indexList.Add(f3);
+                                indexList.Add(f1);
                                 indexList.Add(f4);
                                 collisionType[collision[rOffset]] = b3;
                             }

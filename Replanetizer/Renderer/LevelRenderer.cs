@@ -268,6 +268,30 @@ namespace Replanetizer.Renderer
                         1.0f - levelVariables.fogFarIntensity / 255.0f);
             }
 
+            shaderTable.colorShader.UseShader();
+            shaderTable.colorShader.SetUniform1(UniformName.useFog, (useFog) ? 1 : 0);
+
+            if (useFog && levelVariables != null)
+            {
+                shaderTable.colorShader.SetUniform4(UniformName.fogColor, levelVariables.fogColor);
+                shaderTable.colorShader.SetUniform4(UniformName.fogParams, levelVariables.fogNearDistance / 1024.0f,
+                        1024.0f / (levelVariables.fogFarDistance - levelVariables.fogNearDistance),
+                        1.0f - levelVariables.fogNearIntensity / 255.0f,
+                        1.0f - levelVariables.fogFarIntensity / 255.0f);
+            }
+
+            shaderTable.collisionShader.UseShader();
+            shaderTable.collisionShader.SetUniform1(UniformName.useFog, (useFog) ? 1 : 0);
+
+            if (useFog && levelVariables != null)
+            {
+                shaderTable.collisionShader.SetUniform4(UniformName.fogColor, levelVariables.fogColor);
+                shaderTable.collisionShader.SetUniform4(UniformName.fogParams, levelVariables.fogNearDistance / 1024.0f,
+                        1024.0f / (levelVariables.fogFarDistance - levelVariables.fogNearDistance),
+                        1.0f - levelVariables.fogNearIntensity / 255.0f,
+                        1.0f - levelVariables.fogFarIntensity / 255.0f);
+            }
+
             dirLightsBuffer.Update(lights);
             dirLightsBuffer.Bind();
 

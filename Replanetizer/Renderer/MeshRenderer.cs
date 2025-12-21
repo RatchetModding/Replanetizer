@@ -589,6 +589,7 @@ namespace Replanetizer.Renderer
                             ShrubModel? shrub = (ShrubModel?) modelObject.model;
                             if (shrub == null) break;
                             center = new Vector3(shrub.cullingX, shrub.cullingY, shrub.cullingZ);
+                            center = (modelObject.reflection * new Vector4(center, 1.0f)).Xyz;
                             center = modelObject.rotation * center;
                             center += modelObject.position;
                             float shrubScale = MathF.MaxMagnitude(modelObject.scale.X, MathF.MaxMagnitude(modelObject.scale.Y, modelObject.scale.Z));
@@ -598,6 +599,7 @@ namespace Replanetizer.Renderer
                             TieModel? tie = (TieModel?) modelObject.model;
                             if (tie == null) break;
                             center = new Vector3(tie.cullingX, tie.cullingY, tie.cullingZ);
+                            center = (modelObject.reflection * new Vector4(center, 1.0f)).Xyz;
                             center = modelObject.rotation * center;
                             center += modelObject.position;
                             float tieScale = MathF.MaxMagnitude(modelObject.scale.X, MathF.MaxMagnitude(modelObject.scale.Y, modelObject.scale.Z));
@@ -612,7 +614,7 @@ namespace Replanetizer.Renderer
                         Vector3 planeNormal = frustum.planeNormals[i];
                         Vector3 planePoint = frustum.planePoints[i];
 
-                        if (Vector3.Dot(center - planePoint, planeNormal) < -size)
+                        if (Vector3.Dot(planePoint - center, planeNormal) > size)
                         {
                             return true;
                         }

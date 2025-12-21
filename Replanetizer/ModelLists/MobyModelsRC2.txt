@@ -149,7 +149,7 @@
 0DDC=Slim Cognito Button
 0E0D=Slim Cognito Ship
 0E0F=Joba Arena Rising Lava
-0E14=Heavy Bouncer
+0E14=Bouncer
 0E23=Qwark
 0E29=Unknown Thief's Ship
 0E2F=Tetrabomb Gun

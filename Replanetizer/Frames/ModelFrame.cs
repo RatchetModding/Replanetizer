@@ -322,29 +322,46 @@ namespace Replanetizer.Frames
 
             if (renderer == null) return;
 
-            ImGui.Columns(3);
-            ImGui.SetColumnWidth(0, 250);
-            ImGui.SetColumnWidth(1, (float) width);
-            ImGui.SetColumnWidth(2, PROPERTIES_WIDTH);
+            // The model column resizes based on window size. If the user shrinks the window enough, the column has zero width and ImGui complains.
+            bool renderModel = width != 0;
+
+            if (renderModel)
+            {
+                ImGui.Columns(3);
+                ImGui.SetColumnWidth(0, 250);
+                ImGui.SetColumnWidth(1, (float) width);
+                ImGui.SetColumnWidth(2, PROPERTIES_WIDTH);
+            }
+            else
+            {
+                ImGui.Columns(2);
+                ImGui.SetColumnWidth(0, 250);
+                ImGui.SetColumnWidth(1, PROPERTIES_WIDTH);
+            }
+
             RenderTree();
             ImGui.NextColumn();
 
             Tick(deltaTime);
 
-            renderer.RenderToTexture(() =>
+            if (renderModel)
             {
-                //Setup openGL variables
-                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-                GL.Enable(EnableCap.DepthTest);
-                GL.Viewport(0, 0, width, height);
+                renderer.RenderToTexture(() =>
+                {
+                    //Setup openGL variables
+                    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+                    GL.Enable(EnableCap.DepthTest);
+                    GL.Viewport(0, 0, width, height);
 
-                OnPaint();
-            });
+                    OnPaint();
+                });
 
-            ImGui.Image((IntPtr) renderer.outputTexture, new System.Numerics.Vector2(width, height),
-                System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
+                ImGui.Image((IntPtr) renderer.outputTexture, new System.Numerics.Vector2(width, height),
+                    System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
 
-            ImGui.NextColumn();
+                ImGui.NextColumn();
+            }
+
             float colW = ImGui.GetColumnWidth() - 10.0f;
             System.Numerics.Vector2 colSize = new System.Numerics.Vector2(colW, height);
 

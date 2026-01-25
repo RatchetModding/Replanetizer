@@ -6,6 +6,7 @@
 // Please see the LICENSE.md file for more details.
 
 using System;
+using System.Drawing.Text;
 using LibReplanetizer.LevelObjects;
 using OpenTK.Mathematics;
 
@@ -26,10 +27,14 @@ namespace Replanetizer.Utils
         private Vector3 _rotation = new Vector3(0, 0, -0.75f);
         public Vector3 rotation { get { return _rotation; } set { matrixDirty = true; frustumDirty = true; _rotation = value; } }
 
-        public float fovy { get; set; } = (float) 3 / MathF.PI;
-        public float aspect { get; set; } = (float) 16 / 9;
-        public float near { get; set; } = 0.1f;
-        public float far { get; set; } = 1024.0f;
+        private float _fovy = (float) 3 / MathF.PI;
+        public float fovy { get { return _fovy; } set { matrixDirty = true; frustumDirty = true; _fovy = value; } }
+        private float _aspect = (float) 16 / 9;
+        public float aspect { get { return _aspect; } set { matrixDirty = true; frustumDirty = true; _aspect = value; } }
+        private float _near = 0.1f;
+        public float near { get { return _near; } set { matrixDirty = true; frustumDirty = true; _near = value; } }
+        private float _far = 1024.0f;
+        public float far { get { return _far; } set { matrixDirty = true; frustumDirty = true; _far = value; } }
 
         /// <summary>
         /// The frustum is defined by 6 planes which are each defined by a point and a normal.

@@ -432,9 +432,106 @@ namespace Replanetizer.Frames
                 {
                     Array array = (Array) val;
 
-                    foreach (object o in array)
-                        ImGui.Text(Convert.ToString(o));
+                    if (array.Length == 0)
+                    {
+                        ImGui.Text("[Empty Array]");
+                        ImGui.Separator();
+                    }
+                    else
+                    {
+                        /* Peek at first element's type to customize rendering */
+                        Type t = array.GetValue(0)!.GetType();
 
+                        if (t == typeof(byte) || t == typeof(char))
+                        {
+                            /* Display byte arrays in hex editor fashion:
+                             *       00 01 02 03  04 05 06 07  08 09 0A 0B  0C 0D 0E 0F
+                             * 0000: xx xx xx xx  xx xx xx xx  xx xx xx xx  xx xx xx xx
+                             */
+                            ImGui.Text($"{propertyName}: Array<{t.Name}>[0x{array.Length.ToString("X2")}]");
+                            if (ImGui.BeginTable($"{propertyName} ByteArray",
+                                    17, /* 16 bytes + 1 for offset column */
+                                    ImGuiTableFlags.BordersH | ImGuiTableFlags.BordersOuterV |
+                                    ImGuiTableFlags.NoHostExtendX))
+                            {
+                                float byteColumnWidth = ImGui.CalcTextSize("FF").X;
+                                float offsetColumnWidth = ImGui.CalcTextSize("0000").X * 1.5f;
+
+                                ImGui.TableSetupColumn("Offset", ImGuiTableColumnFlags.WidthFixed, offsetColumnWidth);
+                                for (int i = 0; i < 16; i++)
+                                {
+                                    ImGui.TableSetupColumn(i.ToString("X2"), ImGuiTableColumnFlags.WidthFixed, byteColumnWidth);
+                                }
+                                ImGui.TableHeadersRow();
+
+                                int numRows = (array.Length + 15) / 16;
+                                for (int row = 0; row < numRows; row++)
+                                {
+                                    ImGui.TableNextRow();
+                                    ImGui.TableSetColumnIndex(0);
+
+                                    int offset = row * 16;
+
+                                    /* Center content of all columns */
+                                    ImGui.SetCursorPosX(ImGui.GetCursorPosX() +
+                                        (ImGui.GetColumnWidth() - offsetColumnWidth) * 0.5f);
+                                    ImGui.TextDisabled(offset.ToString("X4"));
+
+                                    for (int col = 0, index = offset;
+                                        col < 16 && index < array.Length;
+                                        col++, index++)
+                                    {
+                                        ImGui.TableSetColumnIndex(col + 1);
+                                        byte element = Convert.ToByte(array.GetValue(index)!);
+                                        string byteText = element.ToString("X2");
+                                        string tooltipText = $"Decimal (8 bits): {element}" +
+                                                           $"\nHexadecimal (8 bits): {byteText}";
+
+                                        /* When hovering the first byte of a u16,
+                                         * display additional info in the tooltip
+                                         */
+                                        if ((col % 2) == 0 && ((index + 1) < array.Length))
+                                        {
+                                            ushort u16val = (ushort)((element << 8) | Convert.ToByte(array.GetValue(index + 1)!));
+                                            tooltipText += $"\nDecimal (16 bits): {u16val}";
+                                            tooltipText += $"\nHexadecimal (16 bits): 0x" + u16val.ToString("X4");
+                                        }
+
+                                        /* Ditto for the first byte of a u32 */
+                                        if ((col % 4) == 0 && ((index + 3) < array.Length))
+                                        {
+                                            byte n1 = Convert.ToByte(array.GetValue(index + 1)!);
+                                            byte n2 = Convert.ToByte(array.GetValue(index + 2)!);
+                                            byte n3 = Convert.ToByte(array.GetValue(index + 3)!);
+
+                                            uint u32val = (uint)((element << 24) | (n1 << 16) | (n2 << 8) | n3);
+                                            tooltipText += $"\nDecimal (32 bits): {u32val}";
+                                            tooltipText += $"\nHexadecimal (32 bits): 0x" + u32val.ToString("X8");
+
+                                            /* Also try to decode as floating-point number */
+                                            float f32val = BitConverter.UInt32BitsToSingle(u32val);
+                                            tooltipText += $"\nFloat: {f32val}";
+                                        }
+
+                                        ImGui.Text(byteText);
+                                        if (ImGui.BeginItemTooltip())
+                                        {
+                                            ImGui.TextUnformatted(tooltipText);
+                                            ImGui.EndTooltip();
+                                        }
+                                    }
+                                }
+
+                                ImGui.EndTable();
+                            }
+                        }
+                        else
+                        {
+                            /* Type without specific handling: fallback to simple listing */
+                            foreach (object o in array)
+                                ImGui.Text(Convert.ToString(o));
+                        }
+                    }
                     ImGui.Separator();
                 }
             }

@@ -19,9 +19,25 @@ namespace LibReplanetizer.Models.Animations
 
         private struct FrameBoneRotation
         {
-            public FrameBoneRotation(int x, int y, int z, int w)
+            public FrameBoneRotation(GameType game, int x, int y, int z, int w)
             {
-                this.rotation = new Quaternion(x / 32767f, y / 32767f, z / 32767f, w / 32767f);
+                if (game.num == 4)
+                {
+                    this.rotation = new Quaternion(ParseDlFloat(x), ParseDlFloat(y), ParseDlFloat(z), -ParseDlFloat(w));
+                }
+                else
+                {
+                    this.rotation = new Quaternion(x / 32767f, y / 32767f, z / 32767f, -w / 32767f);
+                }
+            }
+
+            private float ParseDlFloat(int v)
+            {
+                int vpos = v & 0x7fff;
+                if (v < 0)
+                    return vpos / -32767f;
+
+                return vpos / 32767f;
             }
 
             public Quaternion rotation;
@@ -115,7 +131,9 @@ namespace LibReplanetizer.Models.Animations
 
             if (exists)
             {
-                return translations.First(t => t.bone == bone).translation;
+                // dl can have multiple translations per bone
+                // doesn't seem to break the other rac games
+                return translations.Where(t => t.bone == bone).Select(x => x.translation).Aggregate((a, b) => a + b);
             }
 
             return null;
@@ -210,7 +228,7 @@ namespace LibReplanetizer.Models.Animations
                 int y = ReadShort(frameBlock, i * 8 + 0x02);
                 int z = ReadShort(frameBlock, i * 8 + 0x04);
                 int w = ReadShort(frameBlock, i * 8 + 0x06);
-                rotations.Add(new FrameBoneRotation(x, y, z, -w));
+                rotations.Add(new FrameBoneRotation(game, x, y, z, w));
             }
 
             scalings = new List<FrameBoneScaling>();
@@ -249,13 +267,6 @@ namespace LibReplanetizer.Models.Animations
         // Constructor for Deadlocked
         public Frame(byte[] frameBlock, int offset, int numRotations, int numScalings, int numTranslations)
         {
-            // This code is not correct and is causing crashes.
-            // TODO: (Milch) Implement support for Deadlocked animations.
-#if true
-            rotations = new List<FrameBoneRotation>();
-            scalings = new List<FrameBoneScaling>();
-            translations = new List<FrameBoneTranslation>();
-#else
             int rotationOffset = 0;
             rotations = new List<FrameBoneRotation>();
             for (int i = 0; i < numRotations; i++)
@@ -265,16 +276,16 @@ namespace LibReplanetizer.Models.Animations
                 int y = ReadShort(frameBlock, offset + i * 8 + 0x02);
                 int z = ReadShort(frameBlock, offset + i * 8 + 0x04);
                 int w = ReadShort(frameBlock, offset + i * 8 + 0x06);
-                rotations.Add(new FrameBoneRotation(x, y, z, -w));
+                rotations.Add(new FrameBoneRotation(GameType.DL, x, y, z, w));
             }
 
             int scalingOffset = rotationOffset + numRotations * 0x08;
             scalings = new List<FrameBoneScaling>();
             for (int i = 0; i < numScalings; i++)
             {
-                float x = ReadShort(frameBlock, offset + scalingOffset + i * 8 + 0x00) / 32767.0f;
-                float y = ReadShort(frameBlock, offset + scalingOffset + i * 8 + 0x02) / 32767.0f;
-                float z = ReadShort(frameBlock, offset + scalingOffset + i * 8 + 0x04) / 32767.0f;
+                float x = ReadShort(frameBlock, offset + scalingOffset + i * 8 + 0x00) / 4096.0f;
+                float y = ReadShort(frameBlock, offset + scalingOffset + i * 8 + 0x02) / 4096.0f;
+                float z = ReadShort(frameBlock, offset + scalingOffset + i * 8 + 0x04) / 4096.0f;
                 byte unk = frameBlock[offset + scalingOffset + i * 8 + 0x06];
                 byte bone = frameBlock[offset + scalingOffset + i * 8 + 0x07];
                 scalings.Add(new FrameBoneScaling(x, y, z, bone, unk));
@@ -284,14 +295,13 @@ namespace LibReplanetizer.Models.Animations
             translations = new List<FrameBoneTranslation>();
             for (int i = 0; i < numTranslations; i++)
             {
-                float x = ReadShort(frameBlock, offset + translationOffset + i * 8 + 0x00) / 32767.0f;
-                float y = ReadShort(frameBlock, offset + translationOffset + i * 8 + 0x02) / 32767.0f;
-                float z = ReadShort(frameBlock, offset + translationOffset + i * 8 + 0x04) / 32767.0f;
+                float x = ReadShort(frameBlock, offset + translationOffset + i * 8 + 0x00) / 1024.0f;
+                float y = ReadShort(frameBlock, offset + translationOffset + i * 8 + 0x02) / 1024.0f;
+                float z = ReadShort(frameBlock, offset + translationOffset + i * 8 + 0x04) / 1024.0f;
                 byte unk = frameBlock[offset + translationOffset + i * 8 + 0x06];
                 byte bone = frameBlock[offset + translationOffset + i * 8 + 0x07];
                 translations.Add(new FrameBoneTranslation(x, y, z, bone, unk));
             }
-#endif
         }
 
         public byte[] Serialize()

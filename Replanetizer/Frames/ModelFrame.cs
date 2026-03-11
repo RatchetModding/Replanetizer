@@ -384,8 +384,7 @@ namespace Replanetizer.Frames
                     // Collada specific settings
                     if (exportSettings.format == ExporterModelSettings.Format.Collada)
                     {
-                        // TODO: (Milch) Enable animations for Deadlocked once they are implemented.
-                        if (level.game != GameType.DL && selectedModel is MobyModel mobyModel && mobyModel.animations.Count > 0)
+                        if (selectedModel is MobyModel mobyModel && mobyModel.animations.Count > 0)
                         {
                             int animationChoice = (int) exportSettings.animationChoice;
                             if (ImGui.Combo("Animations", ref animationChoice, ExporterModelSettings.ANIMATION_CHOICE_STRINGS, ExporterModelSettings.ANIMATION_CHOICE_STRINGS.Length - 1))
@@ -432,8 +431,7 @@ namespace Replanetizer.Frames
                     // glTF specific settings
                     if (exportSettings.format == ExporterModelSettings.Format.glTF)
                     {
-                        // TODO: (Milch) Enable animations for Deadlocked once they are implemented.
-                        if (level.game != GameType.DL && selectedModel is MobyModel mobyModel && mobyModel.animations.Count > 0)
+                        if (selectedModel is MobyModel mobyModel && mobyModel.animations.Count > 0)
                         {
                             bool includeAnimations = (exportSettings.animationChoice != ExporterModelSettings.AnimationChoice.None);
 
@@ -483,8 +481,7 @@ namespace Replanetizer.Frames
 
                 ImGui.Separator();
 
-                // TODO: (Milch) Enable animations for Deadlocked once they are implemented.
-                if (level.game != GameType.DL && selectedModel is MobyModel mobModel && mobModel.animations.Count > 0)
+                if (selectedModel is MobyModel mobModel && mobModel.animations.Count > 0)
                 {
                     ImGui.Checkbox("Show Animations", ref rendererPayload.visibility.enableAnimations);
 

@@ -109,10 +109,10 @@ namespace LibReplanetizer.Models.Animations
             unk7 = header[0x13];
 
             int offsetSound = ReadInt(header, 0x14);
-            int offsetUnk = ReadInt(header, 0x18);
+            int offsetAnimInfo = ReadInt(header, 0x18);
             int offsetFrameHeader = ReadInt(header, 0x1C);
 
-            byte[] unkBytes = ReadBlock(fs, modelOffset + animationOffset + offsetUnk, offsetFrameHeader - offsetUnk);
+            byte[] animInfoBytes = ReadBlock(fs, modelOffset + animationOffset + offsetAnimInfo, offsetFrameHeader - offsetAnimInfo);
 
             byte[] frameHeaderBlock = ReadBlock(fs, modelOffset + animationOffset + offsetFrameHeader, 0x10);
 
@@ -135,6 +135,9 @@ namespace LibReplanetizer.Models.Animations
             {
                 sounds.Add(ReadInt(extrasBlock, i * 4));
             }
+
+            // speed is not stored in anim header
+            speed = 1;
         }
 
         public byte[] Serialize(int baseOffset = 0, int fileOffset = 0)

@@ -180,6 +180,17 @@ namespace LibReplanetizer.Models
             color2 = ReadUint(headBlock, 0x40);
             unk6 = ReadUint(headBlock, 0x44);
 
+            // dynamically determine skeleton format
+            // since rc4 actually has some rc3 models in it
+            var skeletonGame = game;
+            if (boneDataPointer > 0 && boneMatrixPointer > 0 && boneCount > 0)
+            {
+                if (((boneDataPointer - boneMatrixPointer) / boneCount) == 0x30)
+                    skeletonGame = GameType.DL;
+                else
+                    skeletonGame = GameType.RaC3;
+            }
+
             // Animation block
             byte[] animationPointerBlock = ReadBlock(fs, offset + HEADERSIZE, animationCount * 0x04);
 
@@ -224,7 +235,7 @@ namespace LibReplanetizer.Models
                 byte[] boneMatrixBlock = ReadBlock(fs, offset + boneMatrixPointer, boneCount * 0x40);
                 for (int i = 0; i < boneCount; i++)
                 {
-                    boneMatrices.Add(new BoneMatrix(game, boneMatrixBlock, i));
+                    boneMatrices.Add(new BoneMatrix(skeletonGame, boneMatrixBlock, i));
                 }
             }
 
@@ -236,7 +247,7 @@ namespace LibReplanetizer.Models
                 byte[] boneDataBlock = ReadBlock(fs, offset + boneDataPointer, boneCount * 0x10);
                 for (int i = 0; i < boneCount; i++)
                 {
-                    boneDatas.Add(new BoneData(game, boneDataBlock, i));
+                    boneDatas.Add(new BoneData(skeletonGame, boneDataBlock, i));
                 }
             }
 

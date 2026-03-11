@@ -58,9 +58,9 @@ namespace LibReplanetizer.Models.Animations
             unk0x0C = ReadShort(boneDataBlock, offset + 0x0C);
             parent = ReadShort(boneDataBlock, offset + 0x0E);
 
-            if (parent == 0xFF)
+            if (parent == 0xFF || parent == 0x7F)
             {
-                // The root node is always marked with 0xFF.
+                // The root node is always marked with 0xFF/0x7F.
                 parent = 0;
             }
             else

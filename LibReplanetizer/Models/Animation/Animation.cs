@@ -137,7 +137,7 @@ namespace LibReplanetizer.Models.Animations
             }
 
             // speed is not stored in anim header
-            speed = 1;
+            speed = 0.5f;
         }
 
         public byte[] Serialize(int baseOffset = 0, int fileOffset = 0)

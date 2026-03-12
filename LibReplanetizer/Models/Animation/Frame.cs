@@ -107,7 +107,9 @@ namespace LibReplanetizer.Models.Animations
 
             if (exists)
             {
-                return scalings.First(s => s.bone == bone).scale;
+                // dl can have multiple scalings per bone
+                // doesn't seem to break the other rac games
+                return scalings.Where(s => s.bone == bone).Select(x => x.scale).Aggregate((a, b) => a + b);
             }
 
             return null;

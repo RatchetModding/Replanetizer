@@ -39,22 +39,82 @@ namespace LibReplanetizer.Models
             // RaC 1 title screen has no collision
             if (collisionPointer == 0) return;
 
-            float div = 1024f;
-
-            uint totalVertexCount = 0;
-
             byte[] headBlock = ReadBlock(fs, collisionPointer, 0x08);
-            int collisionStart = collisionPointer + ReadInt(headBlock, 0x00);
-            int collisionLength = ReadInt(headBlock, 0x04);
-            if (collisionLength == 0)
-            {
-                collisionLength = (int) fs.Length - collisionStart;
-            }
-            byte[] collision = ReadBlock(fs, collisionStart, collisionLength);
+            int standardCollisionStart = ReadInt(headBlock, 0x00);
+            int heroCollisionStart = ReadInt(headBlock, 0x04);
 
             var vertexList = new List<float>();
             var indexList = new List<uint>();
             var colorList = new List<uint>();
+            uint totalVertexCount = 0;
+
+            if (standardCollisionStart > 0)
+            {
+                int start = collisionPointer + standardCollisionStart;
+                int length;
+
+                if (heroCollisionStart > 0)
+                    length = heroCollisionStart - standardCollisionStart;
+                else
+                    length = (int) fs.Length - start;
+
+                byte[] data = ReadBlock(fs, start, length);
+                ParseStandardCollision(data, vertexList, indexList, ref totalVertexCount);
+            }
+
+            if (heroCollisionStart > 0)
+            {
+                int start = collisionPointer + heroCollisionStart;
+                int length = (int) fs.Length - start;
+
+                byte[] data = ReadBlock(fs, start, length);
+                ParseHeroCollision(data, vertexList, indexList, ref totalVertexCount);
+            }
+
+            vertexBuffer = vertexList.ToArray();
+            indBuff = indexList.ToArray();
+        }
+
+        private void ParseHeroCollision(byte[] hero, List<float> vertexList, List<uint> indexList, ref uint totalVertexCount)
+        {
+            int groupCount = ReadInt(hero, 0x00);
+
+            for (int i = 0; i < groupCount; i++)
+            {
+                int entryOffset = 0x10 + (i * 16);
+
+                ushort triCount = ReadUshort(hero, entryOffset + 8);
+                ushort vertCount = ReadUshort(hero, entryOffset + 10);
+                int dataOffset = (int) ReadUint(hero, entryOffset + 12);
+
+                // Wrench has hero collision as blue, so I figured I'll just... use that color as well...
+                FloatColor fc = new FloatColor { r = 0, g = 0, b = 255, a = 255 };
+
+                for (int v = 0; v < vertCount; v++)
+                {
+                    int vOff = dataOffset + (v * 8);
+                    vertexList.Add(ReadUshort(hero, vOff + 0) / 64.0f);
+                    vertexList.Add(ReadUshort(hero, vOff + 2) / 64.0f);
+                    vertexList.Add(ReadUshort(hero, vOff + 4) / 64.0f);
+                    vertexList.Add(fc.value);
+                }
+
+                int triBase = dataOffset + (vertCount * 8);
+                for (int t = 0; t < triCount; t++)
+                {
+                    int tOff = triBase + (t * 4);
+                    indexList.Add(totalVertexCount + hero[tOff + 1]);
+                    indexList.Add(totalVertexCount + hero[tOff + 0]);
+                    indexList.Add(totalVertexCount + hero[tOff + 2]);
+                }
+
+                totalVertexCount += vertCount;
+            }
+        }
+
+        private void ParseStandardCollision(byte[] collision, List<float> vertexList, List<uint> indexList, ref uint totalVertexCount)
+        {
+            float div = 1024f;
 
             ushort zShift = ReadUshort(collision, 0);
             ushort zCount = ReadUshort(collision, 2);
@@ -152,8 +212,6 @@ namespace LibReplanetizer.Models
                     }
                 }
             }
-            vertexBuffer = vertexList.ToArray();
-            indBuff = indexList.ToArray();
         }
     }
 }

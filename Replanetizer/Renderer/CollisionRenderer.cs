@@ -89,19 +89,15 @@ namespace Replanetizer.Renderer
         public override void Render(RendererPayload payload)
         {
             Matrix4 worldToView = payload.camera.GetWorldViewMatrix();
-            Matrix4 modelToWorld = Matrix4.Identity;
 
-            shaderTable.colorShader.UseShader();
-            shaderTable.colorShader.SetUniform1(UniformName.levelObjectType, (int) RenderedObjectType.Null);
-            shaderTable.colorShader.SetUniform4(UniformName.incolor, 1.0f, 1.0f, 1.0f, 1.0f);
-            shaderTable.colorShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
-            shaderTable.colorShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelToWorld);
+            // Calculate camera position from the view matrix
+            var cameraPos = worldToView.ExtractTranslation();
 
             shaderTable.collisionShader.UseShader();
             shaderTable.collisionShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
 
-            shaderTable.colorShader.UseShader();
-            GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
+            // Send the camera position to the shader
+            shaderTable.collisionShader.SetUniform3(UniformName.cameraPosition, cameraPos);
 
             for (int i = 0; i < numCollisions; i++)
             {
@@ -114,9 +110,6 @@ namespace Replanetizer.Renderer
             shaderTable.collisionShader.UseShader();
             GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
 
-            GL.Enable(EnableCap.CullFace);
-            GL.CullFace(TriangleFace.Back);
-
             for (int i = 0; i < numCollisions; i++)
             {
                 if (!payload.visibility.chunks[i]) continue;
@@ -124,8 +117,6 @@ namespace Replanetizer.Renderer
                 GL.BindVertexArray(vaos[i]);
                 GL.DrawElements(PrimitiveType.Triangles, indexCount[i], DrawElementsType.UnsignedInt, 0);
             }
-
-            GL.Disable(EnableCap.CullFace);
 
             GLUtil.CheckGlError("CollisionRenderer");
         }

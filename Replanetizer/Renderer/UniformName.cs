@@ -43,7 +43,8 @@ namespace Replanetizer.Renderer
         fontTexture,
         resolution,
         useTexture,
-        useLighting
+        useLighting,
+        cameraPosition
     }
 
 }

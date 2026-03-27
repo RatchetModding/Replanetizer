@@ -44,7 +44,7 @@ namespace Replanetizer.Frames
                 if (ImGui.BeginChild("imageChild_" + prefix + i, ITEM_SIZE, ImGuiChildFlags.None))
                 {
                     ImGui.Image((IntPtr) textureIds[t].textureID, IMAGE_SIZE);
-                    string idText = prefix + t.id;
+                    string idText = t.id.ToString();
                     float idWidth = ImGui.CalcTextSize(idText).X;
                     ImGui.SetCursorPosX(ITEM_SIZE.X - idWidth);
                     ImGui.Text(idText);
@@ -100,11 +100,11 @@ namespace Replanetizer.Frames
         {
             if (ImGui.CollapsingHeader("Level textures"))
             {
-                RenderTextureList(level.textures, itemSizeX, levelFrame.textureIds);
+                RenderTextureList(level.textures, itemSizeX, levelFrame.textureIds, "levelTextures");
             }
             if (ImGui.CollapsingHeader("Gadget textures"))
             {
-                RenderTextureList(level.gadgetTextures, itemSizeX, levelFrame.textureIds);
+                RenderTextureList(level.gadgetTextures, itemSizeX, levelFrame.textureIds, "gadgetTextures");
             }
             if (ImGui.CollapsingHeader("Armor textures"))
             {

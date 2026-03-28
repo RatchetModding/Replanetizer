@@ -121,7 +121,7 @@ namespace Replanetizer.MemoryHook
 #endif
         }
 
-        public void UpdateMobys(List<Moby> levelMobs, List<Model> models, LevelFrame frame)
+        public void UpdateMobys(List<Moby> levelMobs, List<Model> models, LevelFrame frame, GameType game)
         {
 #if _WINDOWS
             if (!hookWorking) return;
@@ -143,7 +143,7 @@ namespace Replanetizer.MemoryHook
 
             while (levelMobs.Count < numMobs)
             {
-                Moby mob = new Moby();
+                Moby mob = new Moby(game);
                 levelMobs.Add(mob);
                 frame.levelRenderer?.Include(mob);
             }

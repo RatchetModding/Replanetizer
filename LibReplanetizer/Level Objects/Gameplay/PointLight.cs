@@ -133,9 +133,9 @@ namespace LibReplanetizer.LevelObjects
             WriteShort(bytes, 0x02, (short) MathF.Round(position.Y * 64.0f));
             WriteShort(bytes, 0x04, (short) MathF.Round(position.Z * 64.0f));
             WriteShort(bytes, 0x06, (short) MathF.Round(radius * 64.0f));
-            WriteUshort(bytes, 0x08, (ushort) MathF.Round(color.X * 64.0f));
-            WriteUshort(bytes, 0x0A, (ushort) MathF.Round(color.Y * 64.0f));
-            WriteUshort(bytes, 0x0C, (ushort) MathF.Round(color.Z * 64.0f));
+            WriteUshort(bytes, 0x08, (ushort) MathF.Round(color.X * 65535.0f));
+            WriteUshort(bytes, 0x0A, (ushort) MathF.Round(color.Y * 65535.0f));
+            WriteUshort(bytes, 0x0C, (ushort) MathF.Round(color.Z * 65535.0f));
 
             return bytes;
         }

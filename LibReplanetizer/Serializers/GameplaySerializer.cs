@@ -358,7 +358,7 @@ namespace LibReplanetizer.Serializers
             byte[] offsetBytes = new byte[0x04 * grindPaths.Count];
             for (int i = 0; i < grindPaths.Count; i++)
             {
-                WriteInt(bytes, i * 0x04, offsets[i]);
+                WriteInt(offsetBytes, i * 0x04, offsets[i]);
             }
 
             //Header
@@ -371,7 +371,7 @@ namespace LibReplanetizer.Serializers
             block.AddRange(offsetBytes);
             block.AddRange(splineData);
 
-            return bytes;
+            return block.ToArray();
         }
 
         public byte[] GetEnvTransitionBytes(List<EnvTransition> envTransitions)

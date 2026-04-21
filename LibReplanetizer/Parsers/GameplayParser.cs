@@ -289,6 +289,8 @@ namespace LibReplanetizer.Parsers
         public List<KeyValuePair<int, int>> GetType5Cs()
         {
             var keyValuePairs = new List<KeyValuePair<int, int>>();
+            if (gameplayHeader.pvarRewirePointer == 0) { return keyValuePairs; }
+
             byte[] bytes;
             for (int i = 0; (bytes = ReadBlock(fileStream, gameplayHeader.pvarRewirePointer + i * 8, 8))[0] != 0xFF; i++)
             {
@@ -303,6 +305,8 @@ namespace LibReplanetizer.Parsers
         public List<KeyValuePair<int, int>> GetType50s()
         {
             var keyValuePairs = new List<KeyValuePair<int, int>>();
+            if (gameplayHeader.pvarScratchPadPointer == 0) { return keyValuePairs; }
+
             byte[] bytes;
             for (int i = 0; (bytes = ReadBlock(fileStream, gameplayHeader.pvarScratchPadPointer + i * 8, 8))[0] != 0xFF; i++)
             {

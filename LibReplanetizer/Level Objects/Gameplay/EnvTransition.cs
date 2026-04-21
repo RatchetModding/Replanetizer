@@ -152,14 +152,14 @@ namespace LibReplanetizer.LevelObjects
             block[0x5B] = (byte) 0;
             WriteFloat(block, 0x5C, fogNearDist1);
 
-            WriteFloat(block, 0x6C, fogNearIntensity1);
-            WriteFloat(block, 0x6C, fogFarDist1);
-            WriteFloat(block, 0x6C, fogFarIntensity1);
+            WriteFloat(block, 0x60, fogNearIntensity1);
+            WriteFloat(block, 0x64, fogFarDist1);
+            WriteFloat(block, 0x68, fogFarIntensity1);
             WriteFloat(block, 0x6C, fogNearDist2);
 
-            WriteFloat(block, 0x7C, fogNearIntensity2);
-            WriteFloat(block, 0x7C, fogFarDist2);
-            WriteFloat(block, 0x7C, fogFarIntensity2);
+            WriteFloat(block, 0x70, fogNearIntensity2);
+            WriteFloat(block, 0x74, fogFarDist2);
+            WriteFloat(block, 0x78, fogFarIntensity2);
 
             return block;
         }

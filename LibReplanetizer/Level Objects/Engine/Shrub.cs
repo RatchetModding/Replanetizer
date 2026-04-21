@@ -55,6 +55,7 @@ namespace LibReplanetizer.LevelObjects
             this.position = referenceShrub.position;
             this.rotation = referenceShrub.rotation;
             this.scale = referenceShrub.scale;
+            this.reflection = referenceShrub.reflection;
             this.drawDistance = referenceShrub.drawDistance;
 
             UpdateTransformMatrix();

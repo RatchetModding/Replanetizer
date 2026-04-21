@@ -288,12 +288,19 @@ namespace LibReplanetizer.LevelObjects
             this.rootedDistance = referenceMoby.rootedDistance;
             this.mobyID = MAX_ID++;
 
+            this.unk3A = referenceMoby.unk3A;
             this.unk3B = referenceMoby.unk3B;
+            this.unk6 = referenceMoby.unk6;
             this.occlusion = referenceMoby.occlusion;
             this.unk7A = referenceMoby.unk7A;
+            this.unk7B = referenceMoby.unk7B;
             this.unk8A = referenceMoby.unk8A;
+            this.unk8B = referenceMoby.unk8B;
             this.unk9 = referenceMoby.unk9;
-            this.unk12A = referenceMoby.unk8A;
+            this.unk12A = referenceMoby.unk12A;
+            this.unk12B = referenceMoby.unk12B;
+            this.exp = referenceMoby.exp;
+            this.mode = referenceMoby.mode;
 
             UpdateTransformMatrix();
         }
@@ -646,7 +653,7 @@ namespace LibReplanetizer.LevelObjects
             WriteFloat(buffer, 0x30, position.Z);
             WriteFloat(buffer, 0x34, eulerAngles.X);
             WriteFloat(buffer, 0x38, eulerAngles.Y);
-            WriteFloat(buffer, 0x3A, eulerAngles.Z);
+            WriteFloat(buffer, 0x3C, eulerAngles.Z);
 
             WriteInt(buffer, 0x40, groupIndex);
             WriteInt(buffer, 0x44, isRooted);

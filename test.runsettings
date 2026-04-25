@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+    <RunConfiguration>
+        <EnvironmentVariables>
+            <REPLANETIZER_TEST_FIXTURES>E:\RatchetFiles\Trilogy\extracted\rc1\ps3data\level0</REPLANETIZER_TEST_FIXTURES>
+        </EnvironmentVariables>
+    </RunConfiguration>
+</RunSettings>

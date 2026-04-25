@@ -13,4 +13,8 @@
     <PackageReference Include="System.Resources.Extensions" Version="9.0.9" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="LibReplanetizer.Tests" />
+  </ItemGroup>
+
 </Project>

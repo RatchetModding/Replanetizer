@@ -23,7 +23,7 @@ namespace LibReplanetizer.Serializers
         public void Save(Level level, string directory)
         {
             directory = Path.Join(directory, "gameplay_ntsc");
-            FileStream fs = File.Open(directory, FileMode.Create);
+            ReplanetizerFileStream fs = new ReplanetizerFileStream(directory, FileMode.Create);
 
             switch (level.game.num)
             {

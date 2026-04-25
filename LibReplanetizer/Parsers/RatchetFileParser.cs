@@ -21,7 +21,7 @@ namespace LibReplanetizer.Parsers
 
         protected RatchetFileParser(string filePath)
         {
-            fileStream = File.OpenRead(filePath);
+            fileStream = new ReplanetizerFileStream(filePath, FileMode.Open, FileAccess.Read);
         }
 
         protected List<Model> GetMobyModels(GameType game, int mobyModelPointer)

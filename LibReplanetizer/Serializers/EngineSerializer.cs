@@ -23,7 +23,7 @@ namespace LibReplanetizer.Serializers
         public void Save(Level level, string directory)
         {
             enginePath = Path.Join(directory, "engine.ps3");
-            FileStream fs = File.Open(enginePath, FileMode.Create);
+            ReplanetizerFileStream fs = new ReplanetizerFileStream(enginePath, FileMode.Create);
 
             switch (level.game.num)
             {
@@ -404,7 +404,7 @@ namespace LibReplanetizer.Serializers
                 vramBytes.AddRange(textures[i].data);
             }
 
-            FileStream fs = File.Open(Path.Join(Path.GetDirectoryName(enginePath), "vram.ps3"), FileMode.Create);
+            ReplanetizerFileStream fs = new ReplanetizerFileStream(Path.Join(Path.GetDirectoryName(enginePath), "vram.ps3"), FileMode.Create);
             fs.Write(vramBytes.ToArray(), 0, vramBytes.Count);
             fs.Close();
 

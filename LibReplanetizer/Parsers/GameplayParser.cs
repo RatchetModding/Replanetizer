@@ -43,7 +43,7 @@ namespace LibReplanetizer.Parsers
             for (int i = 0; i < splineCount; i++)
             {
                 int offset = ReadInt(splineHeadBlock, (i * 4));
-                splines.Add(new Spline(splineBlock, offset));
+                splines.Add(new Spline(splineBlock, offset, i));
             }
             return splines;
         }
@@ -332,8 +332,12 @@ namespace LibReplanetizer.Parsers
 
             for (int i = 0; i < count; i++)
             {
+                /*
+                 * Use ID -1 for the Spline objects created here
+                 * as they are used only for rendering.
+                 */
                 int offset = ReadInt(splineHeadBlock, i * 0x04);
-                splines.Add(new Spline(splineBlock, offset));
+                splines.Add(new Spline(splineBlock, offset, -1));
             }
 
             for (int i = 0; i < count; i++)

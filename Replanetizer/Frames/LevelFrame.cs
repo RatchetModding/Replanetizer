@@ -791,7 +791,7 @@ namespace Replanetizer.Frames
 
             if (interactiveSession && hookLiveUpdate && hook != null)
             {
-                hook.UpdateMobys(level.mobs, level.mobyModels, this);
+                hook.UpdateMobys(level.mobs, level.mobyModels, this, level.game);
                 if (hookUpdateCamera)
                 {
                     hook.UpdateCamera(camera);

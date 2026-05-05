@@ -244,9 +244,9 @@ namespace LibReplanetizer.LevelObjects
         public Bitmask mode { get; set; } = 0;
 
         // This should probably get removed, not enough information are available to construct a moby like that
-        public Moby()
+        public Moby(GameType game)
         {
-            this.game = GameType.RaC1;
+            this.game = game;
             this.pVars = new byte[0];
             this.mobyID = MAX_ID++;
         }
@@ -852,6 +852,8 @@ namespace LibReplanetizer.LevelObjects
 
                 oClass = ReadUshort(memory, offset + 0xAA);
 
+                UID = ReadUshort(memory, offset + 0xB2);
+
                 transformation = ReadMatrix3x4(memory, offset + 0xC0);
 
                 float rotX = ReadFloat(memory, offset + 0xF0);
@@ -902,6 +904,7 @@ namespace LibReplanetizer.LevelObjects
             if (memory.IsDead())
             {
                 model = null;
+                modelID = -1;
                 return;
             }
 

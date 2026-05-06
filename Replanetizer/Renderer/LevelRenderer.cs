@@ -43,8 +43,7 @@ namespace Replanetizer.Renderer
         private BillboardRenderer? pointLightRenderer;
         private BillboardRenderer? envSamplesRenderer;
         private BillboardRenderer? envTransitionRenderer;
-        private BillboardRenderer? grindPathRenderer;
-        private WireframeRenderer? grindPathSplineRenderer;
+        private GrindPathRenderer? grindPathRenderer;
         private ToolRenderer toolRenderer;
         private DirectionalLightsBuffer dirLightsBuffer;
 
@@ -156,14 +155,8 @@ namespace Replanetizer.Renderer
             envTransitionRenderer = new BillboardRenderer(shaderTable);
             envTransitionRenderer.Include(level.envTransitions);
 
-            grindPathRenderer = new BillboardRenderer(shaderTable);
+            grindPathRenderer = new GrindPathRenderer(shaderTable);
             grindPathRenderer.Include(level.grindPaths);
-
-            grindPathSplineRenderer = new WireframeRenderer(shaderTable);
-            foreach (GrindPath path in level.grindPaths)
-            {
-                grindPathSplineRenderer.Include(path.spline);
-            }
         }
 
         private void Add(Shrub shrub)
@@ -367,10 +360,7 @@ namespace Replanetizer.Renderer
                 envTransitionRenderer?.Render(payload);
 
             if (payload.visibility.enableGrindPaths)
-            {
                 grindPathRenderer?.Render(payload);
-                grindPathSplineRenderer?.Render(payload);
-            }
 
             toolRenderer.Render(payload);
         }

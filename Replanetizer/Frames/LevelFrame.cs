@@ -974,7 +974,14 @@ namespace Replanetizer.Frames
                 case RenderedObjectType.Moby:
                     return level.mobs.Find(x => x.globalID == hitId);
                 case RenderedObjectType.Spline:
-                    return level.splines.Find(x => x.globalID == hitId);
+                    // Both "Splines" and "GrindPaths" use Spline objects.
+                    // Search for a hit in the Splines first then look
+                    // in the Spline objects of GrindPaths.
+                    Spline? s = level.splines.Find(x => x.globalID == hitId);
+                    if (s != null)
+                        return s;
+
+                    return level.grindPaths.Find(x => x.spline.globalID == hitId);
                 case RenderedObjectType.Cuboid:
                     return level.cuboids.Find(x => x.globalID == hitId);
                 case RenderedObjectType.Sphere:

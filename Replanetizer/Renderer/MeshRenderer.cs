@@ -29,7 +29,7 @@ namespace Replanetizer.Renderer
 
         private static readonly int ALLOCATED_LIGHTS = 20;
 
-        private ModelObject? modelObject;
+        public ModelObject? modelObject;
         private Model? modelStandalone;
 
         private int loadedModelID = -1;

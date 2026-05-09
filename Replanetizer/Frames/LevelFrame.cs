@@ -614,62 +614,61 @@ namespace Replanetizer.Frames
 
         public void DeleteObject(IEnumerable<LevelObject> levelObjects)
         {
-            foreach (var obj in levelObjects)
-                DeleteObject(obj);
+            if (levelObjects == null || !levelObjects.Any()) return;
+
+            // Use ToList() to prevent "collection was modified" exception while iterating
+            foreach (var obj in levelObjects.ToList())
+            {
+                selectedObjects.Remove(obj);
+
+                switch (obj)
+                {
+                    case Moby moby:
+                        level.mobs.Remove(moby);
+                        if (moby.pvarIndex != -1)
+                        {
+                            level.pVars.RemoveAt(moby.pvarIndex);
+                            // Shift pvarIndex for subsequent mobies
+                            foreach (var m in level.mobs)
+                            {
+                                if (m.pvarIndex > moby.pvarIndex)
+                                    m.pvarIndex--;
+                            }
+                        }
+                        break;
+                    case Tie tie:
+                        level.ties.Remove(tie);
+                        break;
+                    case Shrub shrub:
+                        level.shrubs.Remove(shrub);
+                        break;
+                    case TerrainFragment tFrag:
+                        foreach (var chunk in level.terrainChunks)
+                        {
+                            chunk.fragments.Remove(tFrag);
+                        }
+                        if (level.terrainEngine != null && level.terrainEngine.fragments != null)
+                        {
+                            level.terrainEngine.fragments.Remove(tFrag);
+                        }
+                        break;
+                    case Spline spline:
+                        level.splines.Remove(spline);
+                        break;
+                    case Cuboid cuboid:
+                        level.cuboids.Remove(cuboid);
+                        break;
+                    case SoundInstance soundInstance:
+                        level.soundInstances.Remove(soundInstance);
+                        break;
+                }
+                levelRenderer?.Remove(obj, level);
+            }
         }
 
         public void DeleteObject(LevelObject levelObject)
         {
-            /*selectedObjects.Remove(levelObject);
-            switch (levelObject)
-            {
-                case Moby moby:
-                    //objectTree.mobyNode.Nodes[level.mobs.IndexOf(moby)].Remove();
-                    level.mobs.Remove(moby);
-                    if (moby.pvarIndex != -1)
-                    {
-                        level.pVars.RemoveAt(moby.pvarIndex);
-                    }
-
-                    // Reinitializing the buffers is simple but slow
-                    if (mobiesBuffers != null) foreach (MeshRenderer buffer in mobiesBuffers) buffer.Dispose();
-                    mobiesBuffers = GetRenderableBuffer(level.mobs, RenderedObjectType.Moby);
-                    break;
-                case Tie tie:
-                    //objectTree.tieNode.Nodes[level.ties.IndexOf(tie)].Remove();
-                    level.ties.Remove(tie);
-                    //level.ties.RemoveRange(1, level.ties.Count - 1);
-                    //level.tieModels.RemoveRange(1, level.tieModels.Count - 1);
-                    //level.ties.Clear();
-
-                    // Reinitializing the buffers is simple but slow
-                    if (tiesBuffers != null) foreach (MeshRenderer buffer in tiesBuffers) buffer.Dispose();
-                    tiesBuffers = GetRenderableBuffer(level.ties, RenderedObjectType.Tie);
-                    break;
-                case Shrub shrub:
-                    level.shrubs.Remove(shrub);
-                    //level.shrubs.Clear();
-                    //level.shrubModels.RemoveAt(level.shrubModels.Count -1);
-                    //level.shrubModels.RemoveRange(5, level.shrubModels.Count - 5);
-
-                    // Reinitializing the buffers is simple but slow
-                    if (shrubsBuffers != null) foreach (MeshRenderer buffer in shrubsBuffers) buffer.Dispose();
-                    shrubsBuffers = GetRenderableBuffer(level.shrubs, RenderedObjectType.Shrub);
-                    break;
-                case TerrainFragment tFrag:
-                    break;
-                case Spline spline:
-                    level.splines.Remove(spline);
-                    break;
-                case Cuboid cuboid:
-                    level.cuboids.Remove(cuboid);
-                    break;
-                case SoundInstance soundInstance:
-                    level.soundInstances.Remove(soundInstance);
-                    break;
-            }
-
-            InvalidateView();*/
+            DeleteObject(new[] { levelObject });
         }
 
         private void HandleMouseWheelChanges()

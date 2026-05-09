@@ -216,6 +216,52 @@ namespace Replanetizer.Renderer
             throw new NotImplementedException();
         }
         public override void Include<T>(List<T> list) => throw new NotImplementedException();
+
+        public void Remove<T>(T obj, Level level)
+        {
+            switch (obj)
+            {
+                case Moby mob:
+                    var mr = mobyRenderers.Find(x => x.modelObject == mob);
+                    if (mr != null) { mr.Dispose(); mobyRenderers.Remove(mr); }
+                    break;
+                case Tie tie:
+                    var tr = tieRenderers.Find(x => x.modelObject == tie);
+                    if (tr != null) { tr.Dispose(); tieRenderers.Remove(tr); }
+                    break;
+                case Shrub shrub:
+                    var sr = shrubRenderers.Find(x => x.modelObject == shrub);
+                    if (sr != null) { sr.Dispose(); shrubRenderers.Remove(sr); }
+                    break;
+                case TerrainFragment tFrag:
+                    foreach (var chunkRenderers in terrainRenderers)
+                    {
+                        var fr = chunkRenderers.Find(x => x.modelObject == tFrag);
+                        if (fr != null)
+                        {
+                            fr.Dispose();
+                            chunkRenderers.Remove(fr);
+                            break;
+                        }
+                    }
+                    break;
+                case Spline spline:
+                    splineRenderer?.Dispose();
+                    splineRenderer = new WireframeRenderer(shaderTable);
+                    splineRenderer.Include(level.splines);
+                    break;
+                case Cuboid cuboid:
+                    cuboidRenderer?.Dispose();
+                    cuboidRenderer = new WireframeRenderer(shaderTable);
+                    cuboidRenderer.Include(level.cuboids);
+                    break;
+                case SoundInstance soundInstance:
+                    soundInstanceRenderer?.Dispose();
+                    soundInstanceRenderer = new BillboardRenderer(shaderTable);
+                    soundInstanceRenderer.Include(level.soundInstances);
+                    break;
+            }
+        }
         public override void Render(RendererPayload payload)
         {
             if (levelVariables != null)

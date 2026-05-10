@@ -202,7 +202,7 @@ namespace Replanetizer.Utils
         {
             frustum = new Frustum();
 
-            float hfar = MathF.Tan(fovy / 2.0f) * far;
+            float hfar = MathF.Tan(fovy) * far;
             float wfar = hfar * aspect;
 
             Vector3 forward = LegacyTransform(Vector3.UnitY, GetRotationMatrix());

@@ -29,7 +29,7 @@ namespace Replanetizer.Renderer
 
         private static readonly int ALLOCATED_LIGHTS = 20;
 
-        private ModelObject? modelObject;
+        public ModelObject? modelObject;
         private Model? modelStandalone;
 
         private int loadedModelID = -1;
@@ -61,6 +61,7 @@ namespace Replanetizer.Renderer
         private bool renderPrepared = false;
         private bool renderPerform = true;
         private bool renderPerformBillboardOnly = false;
+        private bool renderCameraMesh = true;
 
         private List<Animation>? ratchetAnimations = null;
 
@@ -153,6 +154,8 @@ namespace Replanetizer.Renderer
             }
 
             loadedModelID = -1;
+            modelRender = null;
+            renderPrepared = false;
 
             foreach (int subModelIBO in subModelIBOs)
             {
@@ -264,7 +267,7 @@ namespace Replanetizer.Renderer
 
             // This is a camera object that only exist at runtime and blocks vision in interactive mode.
             // We simply don't draw it.
-            if (loadedModelID == 0x3EF && modelObject != null)
+            if (renderCameraMesh == false && loadedModelID == 0x3EF && modelObject != null)
             {
                 loadedModelID = -1;
                 modelObject = null;
@@ -645,6 +648,8 @@ namespace Replanetizer.Renderer
                 return;
             }
 
+            renderCameraMesh = payload.visibility.hideCameraMoby == false;
+
             UpdateVars();
 
             modelRender = modelObject?.model ?? modelStandalone;
@@ -706,6 +711,12 @@ namespace Replanetizer.Renderer
 
         public override void Render(RendererPayload payload)
         {
+            // Check if payload changes require preparation.
+            if (renderCameraMesh == payload.visibility.hideCameraMoby)
+            {
+                DeleteBuffers();
+            }
+
             if (renderPrepared && !renderPerform)
             {
                 renderPrepared = false;

@@ -60,9 +60,9 @@ namespace LibReplanetizer.LevelObjects
             byte[] block = new byte[ELEMENTSIZE];
 
             WriteFloat(block, 0x00, position.X);
-            WriteFloat(block, 0x04, position.X);
-            WriteFloat(block, 0x08, position.X);
-            WriteFloat(block, 0x0C, position.X);
+            WriteFloat(block, 0x04, position.Y);
+            WriteFloat(block, 0x08, position.Z);
+            WriteFloat(block, 0x0C, radius);
 
             WriteInt(block, 0x10, unk0x10);
             WriteInt(block, 0x14, wrap);

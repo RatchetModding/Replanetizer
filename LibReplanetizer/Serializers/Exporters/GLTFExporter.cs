@@ -373,7 +373,7 @@ namespace LibReplanetizer
 
                     public GLTFMaterialPBRValues(int baseColorTextureIndex, int texID)
                     {
-                        if (texID == 0)
+                        if (texID < 0)
                         {
                             this.baseColorFactor = new float[] { 0.0f, 0.0f, 0.0f, 1.0f };
                         }
@@ -400,7 +400,7 @@ namespace LibReplanetizer
                 public GLTFMaterialEntry(TextureConfig conf, int texOffset)
                 {
                     this.name = "Material_" + texOffset + "_" + conf.id;
-                    this.alphaMode = (conf.IgnoresTransparency() || conf.id == 0) ? GLTFMaterialEntry.OPAQUE : GLTFMaterialEntry.MASK;
+                    this.alphaMode = (conf.IgnoresTransparency() || conf.id < 0) ? GLTFMaterialEntry.OPAQUE : GLTFMaterialEntry.MASK;
                     this.pbrMetallicRoughness = new GLTFMaterialEntry.GLTFMaterialPBRValues(texOffset, conf.id);
                 }
             }

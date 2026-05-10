@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018-2021, The Replanetizer Contributors.
+// Copyright (C) 2018-2021, The Replanetizer Contributors.
 // Replanetizer is free software: you can redistribute it
 // and/or modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation,
@@ -23,7 +23,7 @@ namespace LibReplanetizer.Serializers
         public void Save(Level level, string directory)
         {
             directory = Path.Join(directory, "gameplay_ntsc");
-            FileStream fs = File.Open(directory, FileMode.Create);
+            ReplanetizerFileStream fs = new ReplanetizerFileStream(directory, FileMode.Create);
 
             switch (level.game.num)
             {
@@ -69,8 +69,8 @@ namespace LibReplanetizer.Serializers
                 mobyPointer = SeekWrite(fs, GetMobyBytes(level.mobs, level.game)),
                 pvarSizePointer = SeekWrite(fs, GetPvarSizeBytes(level.pVars)),
                 pvarPointer = SeekWrite(fs, GetPvarBytes(level.pVars)),
-                pvarScratchPadPointer = SeekWrite(fs, GetKeyValueBytes(level.type50s)),
-                pvarRewirePointer = SeekWrite(fs, GetKeyValueBytes(level.type5Cs)),
+                pvarScratchPadPointer = SeekWrite(fs, GetPvarScratchPadBytes(level.pvarScratchPads)),
+                pvarRewirePointer = SeekWrite(fs, GetPvarRewireBytes(level.pvarRewires)),
                 mobyGroupsPointer = SeekWrite(fs, level.unk6),
                 globalPvarPointer = SeekWrite(fs, GetType4CBytes(level.type4Cs)),
                 tieIdPointer = SeekWrite(fs, GetIdBytes(level.tieIds)),
@@ -120,8 +120,8 @@ namespace LibReplanetizer.Serializers
                 mobyPointer = SeekWrite(fs, GetMobyBytes(level.mobs, level.game)),
                 pvarSizePointer = SeekWrite(fs, GetPvarSizeBytes(level.pVars)),
                 pvarPointer = SeekWrite(fs, GetPvarBytes(level.pVars)),
-                pvarScratchPadPointer = SeekWrite(fs, GetKeyValueBytes(level.type50s)),
-                pvarRewirePointer = SeekWrite(fs, GetKeyValueBytes(level.type5Cs)),
+                pvarScratchPadPointer = SeekWrite(fs, GetPvarScratchPadBytes(level.pvarScratchPads)),
+                pvarRewirePointer = SeekWrite(fs, GetPvarRewireBytes(level.pvarRewires)),
                 mobyGroupsPointer = SeekWrite(fs, level.unk6),
                 globalPvarPointer = SeekWrite(fs, level.unk7),
                 tieIdPointer = SeekWrite(fs, GetIdBytes(level.tieIds)),
@@ -173,8 +173,8 @@ namespace LibReplanetizer.Serializers
                 mobyPointer = SeekWrite4(fs, GetMobyBytes(level.mobs, level.game)),
                 pvarSizePointer = SeekWrite4(fs, GetPvarSizeBytes(level.pVars)),
                 pvarPointer = SeekWrite4(fs, GetPvarBytes(level.pVars)),
-                pvarScratchPadPointer = SeekWrite4(fs, GetKeyValueBytes(level.type50s)),
-                pvarRewirePointer = SeekWrite4(fs, GetKeyValueBytes(level.type5Cs)),
+                pvarScratchPadPointer = SeekWrite4(fs, GetPvarScratchPadBytes(level.pvarScratchPads)),
+                pvarRewirePointer = SeekWrite4(fs, GetPvarRewireBytes(level.pvarRewires)),
                 mobyGroupsPointer = SeekWrite4(fs, level.unk6),
                 globalPvarPointer = SeekWrite4(fs, level.unk7),
                 tieIdPointer = SeekWrite4(fs, GetIdBytes(level.tieIds)),
@@ -225,8 +225,8 @@ namespace LibReplanetizer.Serializers
                 mobyPointer = SeekWrite4(fs, GetMobyBytes(level.mobs, level.game)),
                 pvarSizePointer = SeekWrite4(fs, GetPvarSizeBytes(level.pVars)),
                 pvarPointer = SeekWrite4(fs, GetPvarBytes(level.pVars)),
-                pvarScratchPadPointer = SeekWrite4(fs, GetKeyValueBytes(level.type50s)),
-                pvarRewirePointer = SeekWrite4(fs, GetKeyValueBytes(level.type5Cs)),
+                pvarScratchPadPointer = SeekWrite4(fs, GetPvarScratchPadBytes(level.pvarScratchPads)),
+                pvarRewirePointer = SeekWrite4(fs, GetPvarRewireBytes(level.pvarRewires)),
                 mobyGroupsPointer = SeekWrite4(fs, level.unk6),
                 globalPvarPointer = SeekWrite4(fs, level.unk7),
                 tieIdPointer = SeekWrite4(fs, GetIdBytes(level.tieIds)),
@@ -358,7 +358,7 @@ namespace LibReplanetizer.Serializers
             byte[] offsetBytes = new byte[0x04 * grindPaths.Count];
             for (int i = 0; i < grindPaths.Count; i++)
             {
-                WriteInt(bytes, i * 0x04, offsets[i]);
+                WriteInt(offsetBytes, i * 0x04, offsets[i]);
             }
 
             //Header
@@ -371,7 +371,7 @@ namespace LibReplanetizer.Serializers
             block.AddRange(offsetBytes);
             block.AddRange(splineData);
 
-            return bytes;
+            return block.ToArray();
         }
 
         public byte[] GetEnvTransitionBytes(List<EnvTransition> envTransitions)
@@ -410,17 +410,36 @@ namespace LibReplanetizer.Serializers
             return bytes;
         }
 
-        public byte[] GetKeyValueBytes(List<KeyValuePair<int, int>> type50s)
+        public byte[] GetPvarScratchPadBytes(List<PvarScratchPad> scratchPads)
         {
-            if (type50s == null) return new byte[0x10];
+            if (scratchPads == null) return new byte[0x10];
 
-            byte[] bytes = new byte[type50s.Count * 8 + 0x08];
+            byte[] bytes = new byte[scratchPads.Count * 8 + 0x08];
 
             int idx = 0;
-            foreach (KeyValuePair<int, int> pair in type50s)
+            foreach (PvarScratchPad pad in scratchPads)
             {
-                WriteInt(bytes, idx * 8 + 0, pair.Key);
-                WriteInt(bytes, idx * 8 + 4, pair.Value);
+                WriteInt(bytes, idx * 8 + 0, pad.id);
+                WriteInt(bytes, idx * 8 + 4, pad.value);
+                idx++;
+            }
+
+            WriteInt(bytes, bytes.Length - 8, -1);
+            WriteInt(bytes, bytes.Length - 4, -1);
+            return bytes;
+        }
+
+        public byte[] GetPvarRewireBytes(List<PvarRewire> rewires)
+        {
+            if (rewires == null) return new byte[0x10];
+
+            byte[] bytes = new byte[rewires.Count * 8 + 0x08];
+
+            int idx = 0;
+            foreach (PvarRewire rewire in rewires)
+            {
+                WriteInt(bytes, idx * 8 + 0, rewire.id);
+                WriteInt(bytes, idx * 8 + 4, rewire.value);
                 idx++;
             }
 

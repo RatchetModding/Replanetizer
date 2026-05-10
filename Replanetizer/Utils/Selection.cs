@@ -39,7 +39,7 @@ namespace Replanetizer.Utils
         /// <summary>
         /// Whether the selection contains only splines
         /// </summary>
-        public bool isOnlySplines => splinesCount > 1 && nonSplinesCount == 0;
+        public bool isOnlySplines => splinesCount >= 1 && nonSplinesCount == 0;
         private int splinesCount;
         private int nonSplinesCount;
 
@@ -196,7 +196,7 @@ namespace Replanetizer.Utils
 
             foreach (var obj in objects)
             {
-                removedItems.Remove(obj);
+                removedItems.Add(obj);
                 OBJECTS.Remove(obj);
                 if (ReferenceEquals(obj, newestObject))
                     newestObject = null;
@@ -271,7 +271,9 @@ namespace Replanetizer.Utils
                 count++;
             }
 
-            mean /= count;
+            if (count > 0)
+                mean /= count;
+
             return mean;
         }
     }

@@ -25,6 +25,9 @@ namespace Replanetizer.Renderer
             enablePointLights = false, enableEnvSamples = false, enableEnvTransitions = false, enableSoundInstances = false,
             enableGrindPaths = false, enableMeshlessModels = false, enableAnimations = false, enableLighting = true;
 
+            // Misc
+            public bool hideCameraMoby = false;
+
             public VisibilitySettings()
             {
 

@@ -1064,6 +1064,7 @@ namespace Replanetizer.Frames
 
         protected void OnPaint()
         {
+            rendererPayload.visibility.hideCameraMoby = interactiveSession && hookLiveUpdate && hookUpdateCamera;
             rendererPayload.SetWindowSize(width, height);
             levelRenderer?.Render(rendererPayload);
         }

@@ -915,7 +915,7 @@ namespace LibReplanetizer.LevelObjects
                 return;
             }
 
-            if (memory.oClass != modelID)
+            if (memory.oClass != modelID || model == null)
             {
                 Model? mod = models.Find(x => x.id == memory.oClass);
 

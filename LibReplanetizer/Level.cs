@@ -87,8 +87,8 @@ namespace LibReplanetizer
 
         public LightConfig lightConfig;
 
-        public List<KeyValuePair<int, int>> type50s;
-        public List<KeyValuePair<int, int>> type5Cs;
+        public List<PvarScratchPad> pvarScratchPads;
+        public List<PvarRewire> pvarRewires;
 
         public byte[] tieData;
         public byte[] shrubData;
@@ -250,8 +250,8 @@ namespace LibReplanetizer
                 grindPaths = gameplayParser.GetGrindPaths();
 
                 type4Cs = gameplayParser.GetType4Cs();
-                type50s = gameplayParser.GetType50s();
-                type5Cs = gameplayParser.GetType5Cs();
+                pvarScratchPads = gameplayParser.GetPvarScratchPads();
+                pvarRewires = gameplayParser.GetPvarRewires();
 
                 cuboids = gameplayParser.GetCuboids();
                 spheres = gameplayParser.GetSpheres();

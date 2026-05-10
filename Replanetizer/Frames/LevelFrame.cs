@@ -627,12 +627,44 @@ namespace Replanetizer.Frames
                         level.mobs.Remove(moby);
                         if (moby.pvarIndex != -1)
                         {
+                            // TODO: This might not be correct but it is the best we can do for now.
                             level.pVars.RemoveAt(moby.pvarIndex);
+
                             // Shift pvarIndex for subsequent mobies
                             foreach (var m in level.mobs)
                             {
                                 if (m.pvarIndex > moby.pvarIndex)
                                     m.pvarIndex--;
+                            }
+
+                            // Shift pvarIndex for sound instances
+                            foreach (var s in level.soundInstances)
+                            {
+                                if (s.pvarIndex > moby.pvarIndex)
+                                    s.pvarIndex--;
+                            }
+
+                            // Shift pvarIndex for game cameras
+                            foreach (var c in level.gameCameras)
+                            {
+                                if (c.pvarIndex > moby.pvarIndex)
+                                    c.pvarIndex--;
+                            }
+
+                            // Update pvarScratchPads (moby links)
+                            level.pvarScratchPads.RemoveAll(x => x.id == moby.pvarIndex);
+                            foreach (var pad in level.pvarScratchPads)
+                            {
+                                if (pad.id > moby.pvarIndex)
+                                    pad.id--;
+                            }
+
+                            // Update pvarRewires (relative pointers)
+                            level.pvarRewires.RemoveAll(x => x.id == moby.pvarIndex);
+                            foreach (var rewire in level.pvarRewires)
+                            {
+                                if (rewire.id > moby.pvarIndex)
+                                    rewire.id--;
                             }
                         }
                         break;

@@ -286,35 +286,35 @@ namespace LibReplanetizer.Parsers
             return pills;
         }
 
-        public List<KeyValuePair<int, int>> GetType5Cs()
+        public List<PvarRewire> GetPvarRewires()
         {
-            var keyValuePairs = new List<KeyValuePair<int, int>>();
-            if (gameplayHeader.pvarRewirePointer == 0) { return keyValuePairs; }
+            var pvarRewires = new List<PvarRewire>();
+            if (gameplayHeader.pvarRewirePointer == 0) { return pvarRewires; }
 
             byte[] bytes;
             for (int i = 0; (bytes = ReadBlock(fileStream, gameplayHeader.pvarRewirePointer + i * 8, 8))[0] != 0xFF; i++)
             {
                 int id = ReadInt(bytes, 0);
                 int value = ReadInt(bytes, 4);
-                keyValuePairs.Add(new KeyValuePair<int, int>(id, value));
+                pvarRewires.Add(new PvarRewire(id, value));
             }
-            return keyValuePairs;
+            return pvarRewires;
         }
 
 
-        public List<KeyValuePair<int, int>> GetType50s()
+        public List<PvarScratchPad> GetPvarScratchPads()
         {
-            var keyValuePairs = new List<KeyValuePair<int, int>>();
-            if (gameplayHeader.pvarScratchPadPointer == 0) { return keyValuePairs; }
+            var scratchPads = new List<PvarScratchPad>();
+            if (gameplayHeader.pvarScratchPadPointer == 0) { return scratchPads; }
 
             byte[] bytes;
             for (int i = 0; (bytes = ReadBlock(fileStream, gameplayHeader.pvarScratchPadPointer + i * 8, 8))[0] != 0xFF; i++)
             {
                 int id = ReadInt(bytes, 0);
                 int value = ReadInt(bytes, 4);
-                keyValuePairs.Add(new KeyValuePair<int, int>(id, value));
+                scratchPads.Add(new PvarScratchPad(id, value));
             }
-            return keyValuePairs;
+            return scratchPads;
         }
 
 

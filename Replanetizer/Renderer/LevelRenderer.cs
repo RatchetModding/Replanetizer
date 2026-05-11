@@ -183,14 +183,14 @@ namespace Replanetizer.Renderer
             tieRenderers.Add(tieRenderer);
         }
 
-        private void Add(Moby mob)
+        private void Add(Moby mob, List<Texture>? textureOverride = null)
         {
             if (textures == null)
             {
                 throw new NullReferenceException();
             }
 
-            MeshRenderer mobRenderer = new MeshRenderer(shaderTable, textures, textureIDs);
+            MeshRenderer mobRenderer = new MeshRenderer(shaderTable, textureOverride ?? textures, textureIDs);
             mobRenderer.Include(mob);
             mobyRenderers.Add(mobRenderer);
         }
@@ -214,6 +214,10 @@ namespace Replanetizer.Renderer
             }
 
             throw new NotImplementedException();
+        }
+        public void Include(Moby mob, List<Texture>? textureOverride = null)
+        {
+            Add(mob, textureOverride);
         }
         public override void Include<T>(List<T> list) => throw new NotImplementedException();
 

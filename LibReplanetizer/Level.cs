@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using LibReplanetizer.Serializers;
+using System.Linq;
 
 namespace LibReplanetizer
 {
@@ -348,6 +349,7 @@ namespace LibReplanetizer
             }
 
             List<string> missionPaths = MissionHeader.FindMissionFiles(game, enginePath);
+            List<string> missionDataPaths = MissionHeader.FindMissionDataFiles(game, enginePath);
             missions = new List<Mission>();
 
             for (int i = 0; i < missionPaths.Count; i++)
@@ -374,6 +376,15 @@ namespace LibReplanetizer
                 using (VramParser parser = new VramParser(vramPath))
                 {
                     parser.GetTextures(mission.textures);
+                }
+
+                string? datPath = missionDataPaths.FirstOrDefault(p =>
+                    Path.GetFileNameWithoutExtension(p).Contains($"[{i}]"));
+
+                if (datPath != null)
+                {
+                    using var datParser = new MissionDataParser(datPath, game);
+                    mission.mobies = datParser.GetMobies(mission.models);
                 }
 
                 missions.Add(mission);

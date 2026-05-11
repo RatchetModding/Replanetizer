@@ -64,4 +64,53 @@ namespace LibReplanetizer.Parsers
             fileStream.Close();
         }
     }
+
+    public class MissionDataParser : IDisposable
+    {
+        private FileStream fileStream;
+        private GameType game;
+
+        public MissionDataParser(string datFilePath, GameType game)
+        {
+            this.game = game;
+            this.fileStream = File.OpenRead(datFilePath);
+        }
+
+        public List<Moby> GetMobies(List<Model> missionModels)
+        {
+            byte[] fileHeader = ReadBlock(fileStream, 0x00, 0x20);
+            int mobyInstancesOffset = ReadInt(fileHeader, 0x04);
+
+            byte[] mobySecHeader = ReadBlock(fileStream, mobyInstancesOffset, 0x10);
+            int mobyCount = ReadInt(mobySecHeader, 0x00);
+
+            if (mobyCount <= 0 || mobyCount > 10000)
+                return new List<Moby>();
+
+            int mobyDataStart = mobyInstancesOffset + 0x10;
+            byte[] mobyBlock = ReadBlock(fileStream, mobyDataStart, mobyCount * 0x70);
+
+            var mobies = new List<Moby>();
+            for (int i = 0; i < mobyCount; i++)
+            {
+                int offset = i * 0x70;
+
+                // Null so the constructor doesnt try to index into an empty pvar list
+                mobyBlock[offset + 0x50] = 0xFF;
+                mobyBlock[offset + 0x51] = 0xFF;
+                mobyBlock[offset + 0x52] = 0xFF;
+                mobyBlock[offset + 0x53] = 0xFF;
+
+                Moby moby = new Moby(GameType.DL, mobyBlock, i, missionModels, new List<byte[]>());
+                mobies.Add(moby);
+            }
+
+            return mobies;
+        }
+
+        public void Dispose()
+        {
+            fileStream?.Close();
+        }
+    }
 }

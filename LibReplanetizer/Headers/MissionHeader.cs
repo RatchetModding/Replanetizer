@@ -50,6 +50,21 @@ namespace LibReplanetizer.Headers
 
             return files;
         }
+        public static List<string> FindMissionDataFiles(GameType game, string enginePath)
+        {
+            string? dir = Path.GetDirectoryName(enginePath);
+
+            List<string> files = new List<string>();
+
+            if (dir == null) return files;
+
+            if (game == GameType.DL)
+            {
+                files.AddRange(Directory.GetFiles(dir, "gameplay_mission_data*.dat"));
+            }
+
+            return files;
+        }
 
         public byte[] Serialize()
         {

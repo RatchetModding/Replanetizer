@@ -15,7 +15,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace LibReplanetizer
 {
-    public class Texture
+    public class Texture : IDisposable
     {
         public enum CompressionFormat : byte
         {
@@ -378,6 +378,12 @@ namespace LibReplanetizer
             g = (byte) ((temp / 64 + temp) / 64);
             temp = (color & 0x001F) * 255 + 16;
             b = (byte) ((temp / 32 + temp) / 32);
+        }
+
+        public void Dispose()
+        {
+            renderedImage?.Dispose();
+            img?.Dispose();
         }
     }
 }

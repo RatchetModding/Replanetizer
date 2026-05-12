@@ -17,7 +17,7 @@ using LibReplanetizer.Serializers;
 
 namespace LibReplanetizer
 {
-    public class Level
+    public class Level : IDisposable
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
 
@@ -459,6 +459,15 @@ namespace LibReplanetizer
                     mobyModel.animations = playerAnimations;
                 }
             });
+        }
+
+        public void Dispose()
+        {
+            if (textures != null) foreach (var tex in textures) tex?.Dispose();
+            if (armorTextures != null) foreach (var list in armorTextures) { if (list != null) foreach (var tex in list) tex?.Dispose(); }
+            if (gadgetTextures != null) foreach (var tex in gadgetTextures) tex?.Dispose();
+            if (mobyloadTextures != null) foreach (var list in mobyloadTextures) { if (list != null) foreach (var tex in list) tex?.Dispose(); }
+            if (missions != null) foreach (var mission in missions) { if (mission?.textures != null) foreach (var tex in mission.textures) tex?.Dispose(); }
         }
 
         public void Save(string outputFile)

@@ -25,7 +25,9 @@ namespace Replanetizer.Renderer
             this.shaderTable = shaderTable;
         }
 
-        public override void Dispose() => throw new NotImplementedException();
+        public override void Dispose()
+        {
+        }
         public override void Include<T>(T obj) => throw new NotImplementedException();
         public override void Include<T>(List<T> list) => throw new NotImplementedException();
         public override void Render(RendererPayload payload)

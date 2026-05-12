@@ -5,11 +5,12 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using System;
 using ImGuiNET;
 
 namespace Replanetizer.Frames
 {
-    public abstract class Frame
+    public abstract class Frame : IDisposable
     {
         protected Window wnd;
         protected abstract string frameName { get; set; }
@@ -43,6 +44,10 @@ namespace Replanetizer.Frames
                 Render(deltaTime);
                 ImGui.End();
             }
+        }
+
+        public virtual void Dispose()
+        {
         }
     }
 }

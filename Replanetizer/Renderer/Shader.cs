@@ -24,7 +24,7 @@ namespace Replanetizer.Renderer
         public ActiveUniformType type;
     }
 
-    public class Shader
+    public class Shader : IDisposable
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
 

@@ -19,7 +19,7 @@ namespace Replanetizer.Tools
         }
     }
 
-    public class Toolbox
+    public class Toolbox : IDisposable
     {
         public Tool? tool => _tool;
         public ToolType type => _type;
@@ -67,6 +67,14 @@ namespace Replanetizer.Tools
         private void OnToolChanged(ToolChangedEventArgs e)
         {
             ToolChanged?.Invoke(this, e);
+        }
+
+        public void Dispose()
+        {
+            if (TRANSLATION_TOOL is IDisposable td) td.Dispose();
+            if (ROTATION_TOOL is IDisposable rd) rd.Dispose();
+            if (SCALING_TOOL is IDisposable sd) sd.Dispose();
+            if (VERTEX_TRANSLATION_TOOL is IDisposable vd) vd.Dispose();
         }
     }
 }

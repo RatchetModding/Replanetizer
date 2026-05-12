@@ -19,7 +19,7 @@ using static LibReplanetizer.DataFunctions;
 
 namespace Replanetizer.MemoryHook
 {
-    public class MemoryHookHandle
+    public class MemoryHookHandle : IDisposable
     {
         // Read and write acceess
         const int PROCESS_WM_READ = 0x38;
@@ -33,6 +33,10 @@ namespace Replanetizer.MemoryHook
 
         [DllImport("kernel32.dll")]
         private static extern bool WriteProcessMemory(IntPtr hProcess, Int64 lpBaseAddress, byte[] lpBuffer, int nSize, ref int lpNumberOfBytesWritten);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool CloseHandle(IntPtr hObject);
 #endif
 
         private readonly Process? PROCESS;
@@ -210,6 +214,17 @@ namespace Replanetizer.MemoryHook
 
             WriteProcessMemory(processHandle, splinePtr + currentSplineVertex * 0x10, buff, buff.Length, ref bytesRead);
             */
+        }
+
+        public void Dispose()
+        {
+#if _WINDOWS
+            if (PROCESS_HANDLE != IntPtr.Zero)
+            {
+                CloseHandle(PROCESS_HANDLE);
+            }
+#endif
+            PROCESS?.Dispose();
         }
     }
 }

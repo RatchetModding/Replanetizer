@@ -85,6 +85,8 @@ namespace Replanetizer.Frames
 
         private List<Frame> subFrames;
 
+        private void ToolboxOnToolChanged(object? sender, EventArgs e) => InvalidateView();
+
         public LevelFrame(Window wnd, string res) : base(wnd)
         {
             level = new Level(res);
@@ -102,7 +104,7 @@ namespace Replanetizer.Frames
             selectedObjects = new Selection();
             selectedObjects.CollectionChanged += SelectedObjectsOnCollectionChanged;
 
-            toolbox.ToolChanged += (_, _) => InvalidateView();
+            toolbox.ToolChanged += ToolboxOnToolChanged;
 
             rendererPayload = new RendererPayload(camera, selectedObjects, toolbox, showBangles);
 
@@ -524,7 +526,15 @@ namespace Replanetizer.Frames
 
         private void RenderSubFrames(float deltaTime)
         {
+            foreach (Frame levelSubFrame in subFrames)
+            {
+                if (FrameMustClose(levelSubFrame))
+                {
+                    levelSubFrame.Dispose();
+                }
+            }
             subFrames.RemoveAll(FrameMustClose);
+
             foreach (Frame levelSubFrame in subFrames)
             {
                 levelSubFrame.RenderAsWindow(deltaTime);
@@ -1055,14 +1065,12 @@ namespace Replanetizer.Frames
 
         public bool StartMemoryHook(ref string message)
         {
+            hook?.Dispose();
             hook = new MemoryHook.MemoryHookHandle(level);
 
             message = hook.GetLastErrorMessage();
 
-            if (hook.hookWorking)
-            {
-                interactiveSession = true;
-            }
+            interactiveSession = hook.hookWorking;
 
             return hook.hookWorking;
         }
@@ -1104,6 +1112,41 @@ namespace Replanetizer.Frames
         public void AddSubFrame(Frame frame)
         {
             if (!subFrames.Contains(frame)) subFrames.Add(frame);
+        }
+
+        public override void Dispose()
+        {
+            hook?.Dispose();
+
+            selectedObjects.CollectionChanged -= SelectedObjectsOnCollectionChanged;
+            toolbox.ToolChanged -= ToolboxOnToolChanged;
+            toolbox?.Dispose();
+
+            base.Dispose();
+
+            if (subFrames != null)
+            {
+                foreach (var subFrame in subFrames)
+                {
+                    subFrame.Dispose();
+                }
+                subFrames.Clear();
+            }
+
+            renderer?.Dispose();
+            levelRenderer?.Dispose();
+            shaderTable?.Dispose();
+
+            if (textureIds != null)
+            {
+                foreach (var texture in textureIds.Values)
+                {
+                    texture.Dispose();
+                }
+                textureIds.Clear();
+            }
+
+            level?.Dispose();
         }
     }
 

@@ -741,7 +741,7 @@ namespace LibReplanetizer.LevelObjects
 
             public bool IsDead()
             {
-                return (state & 0x80) > 0;
+                return (state & 0x80) > 0 || oClass == 0xFFFF || UID == 0xFFFF;
             }
 
             public void SetDead()

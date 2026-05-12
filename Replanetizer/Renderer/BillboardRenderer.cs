@@ -63,7 +63,7 @@ namespace Replanetizer.Renderer
 
             // Only a single placeholder texture currently.
 
-            Image<Rgba32> image = Image.Load<Rgba32>(Path.Join(iconsFolder, "Placeholder.png"));
+            using Image<Rgba32> image = Image.Load<Rgba32>(Path.Join(iconsFolder, "Placeholder.png"));
             GLTexture placeholderTex = new GLTexture("BillboardTexture", image, true, true);
 
             billboardTextures = new Dictionary<RenderedObjectType, GLTexture>();
@@ -146,6 +146,16 @@ namespace Replanetizer.Renderer
 
         public override void Dispose()
         {
+        }
+
+        public static void CleanupStaticResources()
+        {
+            foreach (var texture in billboardTextures.Values)
+            {
+                texture.Dispose();
+            }
+            billboardTextures.Clear();
+
             GL.DeleteBuffer(ibo);
             GL.DeleteBuffer(vbo);
             GL.DeleteVertexArray(vao);

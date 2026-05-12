@@ -695,6 +695,18 @@ namespace Replanetizer.Frames
 
         private void SelectModel(Model? model)
         {
+            if (model == null)
+                return;
+
+            foreach (var mission in level.missions)
+            {
+                if (mission.models.Contains(model))
+                {
+                    SelectModel(model, mission.textures);
+                    return;
+                }
+            }
+
             SelectModel(model, level.textures);
         }
 

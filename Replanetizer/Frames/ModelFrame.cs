@@ -276,7 +276,7 @@ namespace Replanetizer.Frames
                     {
                         for (int i = 0; i < sortedMissionModels.Count; i++)
                         {
-                            RenderSubTree("Mission " + i, sortedMissionModels[i], level.missions[i].textures);
+                            RenderSubTree("Mission " + level.missions[i].missionID, sortedMissionModels[i], level.missions[i].textures);
                         }
                         ImGui.TreePop();
                     }

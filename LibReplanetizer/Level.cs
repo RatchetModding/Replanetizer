@@ -363,9 +363,8 @@ namespace LibReplanetizer
                     continue;
                 }
 
-                LOGGER.Debug("Looking for mission data in {0}", missionPath);
-
-                Mission mission = new Mission(i);
+                int missionId = MissionHeader.GetMissionId(missionPath);
+                Mission mission = new Mission(missionId);
 
                 using (MissionParser parser = new MissionParser(game, missionPath))
                 {
@@ -379,7 +378,7 @@ namespace LibReplanetizer
                 }
 
                 string? datPath = missionDataPaths.FirstOrDefault(p =>
-                    Path.GetFileNameWithoutExtension(p).Contains($"[{i}]"));
+                    Path.GetFileNameWithoutExtension(p).Contains($"[{missionId}]"));
 
                 if (datPath != null)
                 {

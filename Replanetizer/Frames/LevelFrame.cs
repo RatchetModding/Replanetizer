@@ -36,6 +36,7 @@ namespace Replanetizer.Frames
         private FramebufferRenderer? renderer;
         public LevelRenderer? levelRenderer;
         private RendererPayload rendererPayload;
+        private HashSet<Mission> selectedMissions = new HashSet<Mission>();
         public Level level { get; set; }
         private bool enableCameraInfo = true;
         public ShaderTable shaderTable;
@@ -336,6 +337,24 @@ namespace Replanetizer.Frames
                     ImGui.EndMenu();
                 }
 
+                if (level.game == GameType.DL && level.missions.Count > 0 && ImGui.BeginMenu("Missions"))
+                {
+                    foreach (var mission in level.missions)
+                    {
+                        bool selected = selectedMissions.Contains(mission);
+                        if (ImGui.Checkbox($"Mission {mission.missionID}", ref selected))
+                        {
+                            if (selected)
+                                selectedMissions.Add(mission);
+                            else
+                                selectedMissions.Remove(mission);
+
+                            RefreshMissionMobies();
+                        }
+                    }
+                    ImGui.EndMenu();
+                }
+
                 ImGui.Separator();
 
                 if (interactiveSession)
@@ -611,7 +630,7 @@ namespace Replanetizer.Frames
                 camera.SetRotation(0, 0);
             }
             selectedObjects.Clear();
-
+            activeMobies = level.mobs.ToList();
             InvalidateView();
         }
 
@@ -1012,8 +1031,17 @@ namespace Replanetizer.Frames
                     return level.shrubs.Find(x => x.globalID == hitId);
                 case RenderedObjectType.Tie:
                     return level.ties.Find(x => x.globalID == hitId);
+
                 case RenderedObjectType.Moby:
-                    return level.mobs.Find(x => x.globalID == hitId);
+                    Moby? foundMoby = level.mobs.Find(x => x.globalID == hitId);
+                    if (foundMoby != null) return foundMoby;
+                    foreach (var mission in selectedMissions)
+                    {
+                        Moby? missionMoby = mission.mobies.Find(x => x.globalID == hitId);
+                        if (missionMoby != null) return missionMoby;
+                    }
+                    return null;
+
                 case RenderedObjectType.Spline:
                     // Both "Splines" and "GrindPaths" use Spline objects.
                     // Search for a hit in the Splines first then look
@@ -1100,6 +1128,36 @@ namespace Replanetizer.Frames
                     sw.WriteLine(item);
                 }
             }
+        }
+
+        private List<Moby> activeMobies = new List<Moby>();
+        private void RefreshMissionMobies()
+        {
+            if (levelRenderer == null) return;
+
+            foreach (var moby in activeMobies.ToList())
+                levelRenderer.Remove(moby, level);
+
+            var mobies = new List<Moby>(level.mobs);
+            foreach (var mission in selectedMissions)
+                mobies.AddRange(mission.mobies);
+
+            foreach (var moby in mobies)
+            {
+                Mission? sourceMission = selectedMissions.FirstOrDefault(m => m.mobies.Contains(moby));
+                if (sourceMission != null)
+                {
+                    bool isMissionModel = sourceMission.models.Exists(m => m.id == moby.modelID);
+                    levelRenderer.Include(moby, isMissionModel ? sourceMission.textures : level.textures);
+                }
+                else
+                {
+                    levelRenderer.Include(moby);
+                }
+            }
+
+            activeMobies = mobies;
+            InvalidateView();
         }
 
         protected void OnPaint()

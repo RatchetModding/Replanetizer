@@ -76,6 +76,9 @@ namespace Replanetizer.Renderer
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, 0, buffer);
         }
 
-        public void Dispose() => throw new NotImplementedException();
+        public void Dispose()
+        {
+            GL.DeleteBuffer(buffer);
+        }
     }
 }

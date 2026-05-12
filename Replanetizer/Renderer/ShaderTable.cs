@@ -9,7 +9,7 @@ using System.IO;
 
 namespace Replanetizer.Renderer
 {
-    public class ShaderTable
+    public class ShaderTable : System.IDisposable
     {
         public Shader meshShader;
         public Shader colorShader;
@@ -30,6 +30,18 @@ namespace Replanetizer.Renderer
             animationShader = Shader.GetShaderFromFiles("animationShader", Path.Join(directory, "animationvs.glsl"), Path.Join(directory, "animationfs.glsl"));
             wireframeShader = Shader.GetShaderFromFiles("wireframeShader", Path.Join(directory, "wireframevs.glsl"), Path.Join(directory, "wireframefs.glsl"), Path.Join(directory, "wireframegs.glsl"));
             splineShader = Shader.GetShaderFromFiles("splineShader", Path.Join(directory, "splinevs.glsl"), Path.Join(directory, "splinefs.glsl"), Path.Join(directory, "splinegs.glsl"));
+        }
+
+        public void Dispose()
+        {
+            meshShader?.Dispose();
+            colorShader?.Dispose();
+            skyShader?.Dispose();
+            billboardShader?.Dispose();
+            collisionShader?.Dispose();
+            animationShader?.Dispose();
+            wireframeShader?.Dispose();
+            splineShader?.Dispose();
         }
     }
 }

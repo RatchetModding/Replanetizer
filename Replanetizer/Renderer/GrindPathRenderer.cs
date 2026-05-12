@@ -82,6 +82,8 @@ namespace Replanetizer.Renderer
 
         public override void Dispose()
         {
+            grindPathsRenderer?.Dispose();
+            splinesRenderer?.Dispose();
         }
     }
 }

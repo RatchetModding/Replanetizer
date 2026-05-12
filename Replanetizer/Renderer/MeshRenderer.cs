@@ -800,6 +800,8 @@ namespace Replanetizer.Renderer
         public override void Dispose()
         {
             DeleteBuffers();
+            fallback?.Dispose();
+            animationRenderer?.Dispose();
         }
     }
 }

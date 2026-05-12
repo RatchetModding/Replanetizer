@@ -92,7 +92,7 @@ namespace Replanetizer.Renderer
 
         public override void Dispose()
         {
-
+            container?.Dispose();
         }
     }
 }

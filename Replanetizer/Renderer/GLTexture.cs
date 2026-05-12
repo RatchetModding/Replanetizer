@@ -277,5 +277,10 @@ namespace Replanetizer.Renderer
         {
             GL.DeleteTexture(textureID);
         }
+
+        public static void CleanupStaticResources()
+        {
+            blueNoiseTexture?.Dispose();
+        }
     }
 }

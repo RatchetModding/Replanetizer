@@ -413,7 +413,38 @@ namespace Replanetizer.Renderer
 
         public override void Dispose()
         {
+            skyRenderer?.Dispose();
+            collisionRenderer?.Dispose();
 
+            foreach (var renderer in mobyRenderers) renderer.Dispose();
+            mobyRenderers.Clear();
+
+            foreach (var renderer in tieRenderers) renderer.Dispose();
+            tieRenderers.Clear();
+
+            foreach (var renderer in shrubRenderers) renderer.Dispose();
+            shrubRenderers.Clear();
+
+            foreach (var list in terrainRenderers)
+            {
+                foreach (var renderer in list) renderer.Dispose();
+                list.Clear();
+            }
+            terrainRenderers.Clear();
+
+            cuboidRenderer?.Dispose();
+            sphereRenderer?.Dispose();
+            cylinderRenderer?.Dispose();
+            pillRenderer?.Dispose();
+            gameCameraRenderer?.Dispose();
+            splineRenderer?.Dispose();
+            soundInstanceRenderer?.Dispose();
+            pointLightRenderer?.Dispose();
+            envSamplesRenderer?.Dispose();
+            envTransitionRenderer?.Dispose();
+            grindPathRenderer?.Dispose();
+
+            dirLightsBuffer.Dispose();
         }
     }
 }

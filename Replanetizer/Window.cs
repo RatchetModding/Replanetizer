@@ -186,5 +186,12 @@ namespace Replanetizer
                 frame.RenderAsWindow(deltaTime);
             }
         }
+
+        protected override void OnUnload()
+        {
+            BillboardRenderer.CleanupStaticResources();
+            GLTexture.CleanupStaticResources();
+            base.OnUnload();
+        }
     }
 }

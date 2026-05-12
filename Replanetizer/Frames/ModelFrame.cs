@@ -916,5 +916,12 @@ namespace Replanetizer.Frames
                 TextureIO.ExportTexture(texture, Path.Combine(folder, $"{textureId}.png"), includeTransparency);
             }
         }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            renderer?.Dispose();
+            meshRenderer?.Dispose();
+        }
     }
 }

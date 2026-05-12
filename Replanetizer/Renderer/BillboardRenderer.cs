@@ -146,6 +146,16 @@ namespace Replanetizer.Renderer
 
         public override void Dispose()
         {
+        }
+
+        public static void CleanupStaticResources()
+        {
+            foreach (var texture in billboardTextures.Values)
+            {
+                texture.Dispose();
+            }
+            billboardTextures.Clear();
+
             GL.DeleteBuffer(ibo);
             GL.DeleteBuffer(vbo);
             GL.DeleteVertexArray(vao);

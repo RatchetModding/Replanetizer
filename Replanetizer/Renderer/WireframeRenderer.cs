@@ -170,6 +170,11 @@ namespace Replanetizer.Renderer
 
         public override void Dispose()
         {
+            foreach (var collection in wireframes)
+            {
+                collection.container.Dispose();
+            }
+            wireframes.Clear();
         }
     }
 }

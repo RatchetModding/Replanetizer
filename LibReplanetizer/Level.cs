@@ -348,13 +348,13 @@ namespace LibReplanetizer
                 }
             }
 
-            List<string> missionPaths = MissionHeader.FindMissionFiles(game, enginePath);
             List<string> missionDataPaths = MissionHeader.FindMissionDataFiles(game, enginePath);
             missions = new List<Mission>();
 
-            for (int i = 0; i < missionPaths.Count; i++)
+            foreach (string datPath in missionDataPaths)
             {
-                string missionPath = missionPaths[i];
+                int missionId = MissionHeader.GetMissionId(datPath);
+                string missionPath = Path.Join(Path.GetDirectoryName(enginePath), $"gameplay_mission_classes[{missionId}].ps3");
                 string vramPath = missionPath.Replace(".ps3", ".vram");
 
                 if (!File.Exists(vramPath))
@@ -363,7 +363,6 @@ namespace LibReplanetizer
                     continue;
                 }
 
-                int missionId = MissionHeader.GetMissionId(missionPath);
                 Mission mission = new Mission(missionId);
 
                 using (MissionParser parser = new MissionParser(game, missionPath))
@@ -377,14 +376,8 @@ namespace LibReplanetizer
                     parser.GetTextures(mission.textures);
                 }
 
-                string? datPath = missionDataPaths.FirstOrDefault(p =>
-                    Path.GetFileNameWithoutExtension(p).Contains($"[{missionId}]"));
-
-                if (datPath != null)
-                {
-                    using var datParser = new MissionDataParser(datPath, game);
-                    mission.mobies = datParser.GetMobies(mission.models, mobyModels);
-                }
+                using var datParser = new MissionDataParser(datPath, game);
+                mission.mobies = datParser.GetMobies(mission.models, mobyModels);
 
                 missions.Add(mission);
             }

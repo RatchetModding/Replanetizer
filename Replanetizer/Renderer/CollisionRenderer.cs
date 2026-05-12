@@ -101,7 +101,7 @@ namespace Replanetizer.Renderer
 
             for (int i = 0; i < numCollisions; i++)
             {
-                if (!payload.visibility.chunks[i]) continue;
+                if (i < payload.visibility.chunks.Length && !payload.visibility.chunks[i]) continue;
 
                 GL.BindVertexArray(vaos[i]);
                 GL.DrawElements(PrimitiveType.Triangles, indexCount[i], DrawElementsType.UnsignedInt, 0);
@@ -112,7 +112,7 @@ namespace Replanetizer.Renderer
 
             for (int i = 0; i < numCollisions; i++)
             {
-                if (!payload.visibility.chunks[i]) continue;
+                if (i < payload.visibility.chunks.Length && !payload.visibility.chunks[i]) continue;
 
                 GL.BindVertexArray(vaos[i]);
                 GL.DrawElements(PrimitiveType.Triangles, indexCount[i], DrawElementsType.UnsignedInt, 0);

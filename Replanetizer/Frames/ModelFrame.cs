@@ -179,7 +179,7 @@ namespace Replanetizer.Frames
             {
                 if (!name.ToUpper().Contains(filterUpper)) return;
             }
-            if (ImGui.Selectable(name, selectedModel == mod))
+            if (ImGui.Selectable(name + $"##{mod.GetHashCode()}", selectedModel == mod))
             {
                 SelectModel(mod, textureSet);
                 PrepareForArrowInput();
@@ -312,11 +312,11 @@ namespace Replanetizer.Frames
                     string objName = $"Instance##{obj.globalID}";
                     if (obj is Moby mob)
                     {
-                        objName = $"Instance [{GetStringFromID(mob.mobyID)}]";
+                        objName = $"Instance [{GetStringFromID(mob.mobyID)}]##{obj.globalID}";
 
                         if (mob.missionID != -1 && level.game == GameType.DL)
                         {
-                            objName = $"Instance [Mission {mob.missionID}: {GetStringFromID(mob.mobyID)}]";
+                            objName = $"Instance [Mission {mob.missionID}: {GetStringFromID(mob.mobyID)}]##{obj.globalID}";
                         }
                     }
 

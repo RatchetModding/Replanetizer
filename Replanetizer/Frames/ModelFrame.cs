@@ -289,7 +289,12 @@ namespace Replanetizer.Frames
                     string objName = $"Instance##{obj.globalID}";
                     if (obj is Moby mob)
                     {
-                        objName = $"Instance [{GetStringFromID(mob.mobyID)}]##{mob.globalID}";
+                        objName = $"Instance [{GetStringFromID(mob.mobyID)}]";
+
+                        if (mob.missionID != -1 && level.game == GameType.DL)
+                        {
+                            objName = $"Instance [Mission {mob.missionID}: {GetStringFromID(mob.mobyID)}]";
+                        }
                     }
 
                     if (ImGui.Button(objName))
@@ -571,11 +576,20 @@ namespace Replanetizer.Frames
                 foreach (Moby mob in level.mobs)
                 {
                     if (mob.modelID == selectedModel.id)
-                    {
                         selectedObjectInstances.Add(mob);
+                }
+
+                foreach (var mission in level.missions)
+                {
+                    if (!levelFrame.IsMissionActive(mission)) continue;
+                    foreach (Moby mob in mission.mobies)
+                    {
+                        if (mob.modelID == selectedModel.id)
+                            selectedObjectInstances.Add(mob);
                     }
                 }
             }
+
             else if (selectedModel is TieModel)
             {
                 foreach (Tie tie in level.ties)

@@ -37,6 +37,7 @@ namespace Replanetizer.Frames
         public LevelRenderer? levelRenderer;
         private RendererPayload rendererPayload;
         private HashSet<Mission> selectedMissions = new HashSet<Mission>();
+        public bool IsMissionActive(Mission mission) => selectedMissions.Contains(mission);
         public Level level { get; set; }
         private bool enableCameraInfo = true;
         public ShaderTable shaderTable;
@@ -1157,6 +1158,10 @@ namespace Replanetizer.Frames
             }
 
             activeMobies = mobies;
+
+            foreach (var frame in subFrames.OfType<ModelFrame>())
+                frame.UpdateModel();
+
             InvalidateView();
         }
 

@@ -445,6 +445,7 @@ namespace Replanetizer.Renderer
             grindPathRenderer?.Dispose();
 
             dirLightsBuffer.Dispose();
+            toolRenderer?.Dispose();
         }
     }
 }

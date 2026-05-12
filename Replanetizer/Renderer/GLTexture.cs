@@ -42,7 +42,7 @@ namespace Replanetizer.Renderer
 
             string? applicationFolder = System.AppContext.BaseDirectory;
             string resourcesFolder = Path.Join(applicationFolder, "Resources");
-            Image<L8> image = Image.Load<L8>(Path.Join(resourcesFolder, "blue_noise.png"));
+            using Image<L8> image = Image.Load<L8>(Path.Join(resourcesFolder, "blue_noise.png"));
             blueNoiseTexture = new GLTexture("BlueNoiseTextrue", image);
         }
 

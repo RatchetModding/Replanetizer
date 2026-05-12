@@ -6,6 +6,7 @@
 // Please see the LICENSE.md file for more details.
 
 using System;
+using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using ImGuiNET;
@@ -40,7 +41,7 @@ namespace Replanetizer
             string? applicationFolder = System.AppContext.BaseDirectory;
             string iconsFolder = Path.Join(applicationFolder, "Icons");
 
-            Image<Rgba32> image = Image.Load<Rgba32>(Path.Join(iconsFolder, "Replanetizer.png"));
+            using Image<Rgba32> image = Image.Load<Rgba32>(Path.Join(iconsFolder, "Replanetizer.png"));
             byte[] imageBytes = new byte[image.Width * image.Height * 4];
             image.CopyPixelDataTo(imageBytes);
 
@@ -95,6 +96,10 @@ namespace Replanetizer
         {
             base.OnRenderFrame(e);
 
+            foreach (var frame in openFrames.Where(FrameMustClose))
+            {
+                frame.Dispose();
+            }
             openFrames.RemoveAll(FrameMustClose);
 
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
@@ -147,6 +152,10 @@ namespace Replanetizer
                         var res = CrossFileDialog.OpenFile(filter: ".ps3");
                         if (res.Length > 0)
                         {
+                            foreach (var frame in openFrames.Where(FrameIsLevel))
+                            {
+                                frame.Dispose();
+                            }
                             openFrames.RemoveAll(FrameIsLevel);
                             LevelFrame lf = new LevelFrame(this, res);
                             AddFrame(lf);
@@ -189,6 +198,12 @@ namespace Replanetizer
 
         protected override void OnUnload()
         {
+            foreach (var frame in openFrames)
+            {
+                frame.Dispose();
+            }
+            openFrames.Clear();
+
             BillboardRenderer.CleanupStaticResources();
             GLTexture.CleanupStaticResources();
             base.OnUnload();

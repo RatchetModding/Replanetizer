@@ -63,7 +63,7 @@ namespace Replanetizer.Renderer
 
             // Only a single placeholder texture currently.
 
-            Image<Rgba32> image = Image.Load<Rgba32>(Path.Join(iconsFolder, "Placeholder.png"));
+            using Image<Rgba32> image = Image.Load<Rgba32>(Path.Join(iconsFolder, "Placeholder.png"));
             GLTexture placeholderTex = new GLTexture("BillboardTexture", image, true, true);
 
             billboardTextures = new Dictionary<RenderedObjectType, GLTexture>();

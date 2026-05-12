@@ -1120,6 +1120,7 @@ namespace Replanetizer.Frames
 
             selectedObjects.CollectionChanged -= SelectedObjectsOnCollectionChanged;
             toolbox.ToolChanged -= ToolboxOnToolChanged;
+            toolbox?.Dispose();
 
             base.Dispose();
 
@@ -1134,6 +1135,7 @@ namespace Replanetizer.Frames
 
             renderer?.Dispose();
             levelRenderer?.Dispose();
+            shaderTable?.Dispose();
 
             if (textureIds != null)
             {
@@ -1143,6 +1145,8 @@ namespace Replanetizer.Frames
                 }
                 textureIds.Clear();
             }
+
+            level?.Dispose();
         }
     }
 

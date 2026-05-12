@@ -1065,14 +1065,12 @@ namespace Replanetizer.Frames
 
         public bool StartMemoryHook(ref string message)
         {
+            hook?.Dispose();
             hook = new MemoryHook.MemoryHookHandle(level);
 
             message = hook.GetLastErrorMessage();
 
-            if (hook.hookWorking)
-            {
-                interactiveSession = true;
-            }
+            interactiveSession = hook.hookWorking;
 
             return hook.hookWorking;
         }
@@ -1118,6 +1116,8 @@ namespace Replanetizer.Frames
 
         public override void Dispose()
         {
+            hook?.Dispose();
+
             selectedObjects.CollectionChanged -= SelectedObjectsOnCollectionChanged;
             toolbox.ToolChanged -= ToolboxOnToolChanged;
 

@@ -323,7 +323,12 @@ namespace Replanetizer.Renderer
                 Model? subModel = modelRender.GetSubModel(i);
 
                 if (subModel == null)
+                {
+                    subModelVAOs.Add(-1);
+                    subModelIBOs.Add(-1);
+                    subModelVBOs.Add(-1);
                     continue;
+                }
 
                 int subModelVao;
                 GL.GenVertexArrays(1, out subModelVao);
@@ -391,8 +396,8 @@ namespace Replanetizer.Renderer
                                 fullData[10 * i + 5] = vboData[8 * i + 5];
                                 fullData[10 * i + 6] = vboData[8 * i + 6];
                                 fullData[10 * i + 7] = vboData[8 * i + 7];
-                                fullData[10 * i + 8] = BitConverter.ToSingle(rgbas, i * 4);
-                                fullData[10 * i + 9] = (float) lights[i];
+                                fullData[10 * i + 8] = (i * 4 < rgbas.Length) ? BitConverter.ToSingle(rgbas, i * 4) : 0f;
+                                fullData[10 * i + 9] = (i < lights.Length) ? (float) lights[i] : 0f;
                             }
                             vboData = fullData;
                             break;
@@ -411,7 +416,7 @@ namespace Replanetizer.Renderer
                                 fullData[9 * i + 5] = vboData[8 * i + 5];
                                 fullData[9 * i + 6] = vboData[8 * i + 6];
                                 fullData[9 * i + 7] = vboData[8 * i + 7];
-                                fullData[9 * i + 8] = BitConverter.ToSingle(rgbas, i * 4);
+                                fullData[9 * i + 8] = (i * 4 < rgbas.Length) ? BitConverter.ToSingle(rgbas, i * 4) : 0f;
                             }
                             vboData = fullData;
                             break;
@@ -685,11 +690,15 @@ namespace Replanetizer.Renderer
             //Bind textures one by one, applying it to the relevant vertices based on the index array
             foreach (TextureConfig conf in model.textureConfig)
             {
-                if (conf.id >= 0)
+                if (conf.id >= 0 && conf.id < textures.Count)
                 {
                     GLTexture tex = textureIds[textures[conf.id]];
                     tex.Bind();
                     SetTextureWrapMode(conf, tex);
+                }
+                else
+                {
+                    GLTexture.BindNull();
                 }
 
                 SetTransparencyMode(conf);

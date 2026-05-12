@@ -274,7 +274,12 @@ namespace Replanetizer.Renderer
                 Model? subModel = mobyModel.GetSubModel(i);
 
                 if (subModel == null)
+                {
+                    subModelVAOs.Add(-1);
+                    subModelIBOs.Add(-1);
+                    subModelVBOs.Add(-1);
                     continue;
+                }
 
                 int subModelVao;
                 GL.GenVertexArrays(1, out subModelVao);
@@ -485,11 +490,15 @@ namespace Replanetizer.Renderer
             //Bind textures one by one, applying it to the relevant vertices based on the index array
             foreach (TextureConfig conf in model.textureConfig)
             {
-                if (conf.id >= 0)
+                if (conf.id >= 0 && conf.id < textures.Count)
                 {
                     GLTexture tex = textureIds[textures[conf.id]];
                     tex.Bind();
                     SetTextureWrapMode(conf, tex);
+                }
+                else
+                {
+                    GLTexture.BindNull();
                 }
 
                 SetTransparencyMode(conf);

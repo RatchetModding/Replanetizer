@@ -202,9 +202,25 @@ namespace Replanetizer.Frames
 
             return displayName;
         }
+        private bool HasMatchingModel(List<Model> models)
+        {
+            if (string.IsNullOrEmpty(filter)) return false;
 
+            foreach (Model model in models)
+            {
+                string displayName = GetDisplayName(model);
+                if (displayName.ToUpper().Contains(filterUpper))
+                    return true;
+            }
+            return false;
+        }
         private void RenderSubTree(string name, List<Model> models, List<Texture> textureSet)
         {
+            // uncollapse if we find any matching model names
+            if (!string.IsNullOrEmpty(filter) && HasMatchingModel(models))
+            {
+                ImGui.SetNextItemOpen(true);
+            }
             if (ImGui.TreeNode(name))
             {
                 for (int i = 0; i < models.Count; i++)
@@ -236,24 +252,31 @@ namespace Replanetizer.Frames
                 RenderSubTree("Gadget", sortedGadgetModels, (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures);
                 if (level.armorModels.Count > 0)
                 {
+                    bool hasMatch = !string.IsNullOrEmpty(filter) && level.armorModels.Exists(m =>
+                        ("Armor " + level.armorModels.IndexOf(m)).ToUpper().Contains(filterUpper));
+
+                    if (hasMatch) ImGui.SetNextItemOpen(true);
+
                     if (ImGui.TreeNode("Armor"))
                     {
                         for (int i = 0; i < level.armorModels.Count; i++)
                         {
-                            Model armor = level.armorModels[i];
-                            RenderModelEntry(armor, level.armorTextures[i], "Armor " + i);
+                            RenderModelEntry(level.armorModels[i], level.armorTextures[i], "Armor " + i);
                         }
                         ImGui.TreePop();
                     }
                 }
+
                 if (sortedMissionModels.Count > 0)
                 {
+                    bool hasMatch = !string.IsNullOrEmpty(filter) && sortedMissionModels.Exists(HasMatchingModel);
+                    if (hasMatch) ImGui.SetNextItemOpen(true);
+
                     if (ImGui.TreeNode("Missions"))
                     {
                         for (int i = 0; i < sortedMissionModels.Count; i++)
                         {
-                            Mission mission = level.missions[i];
-                            RenderSubTree("Mission " + i, sortedMissionModels[i], mission.textures);
+                            RenderSubTree("Mission " + i, sortedMissionModels[i], level.missions[i].textures);
                         }
                         ImGui.TreePop();
                     }

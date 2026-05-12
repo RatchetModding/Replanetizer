@@ -76,7 +76,7 @@ namespace LibReplanetizer.Parsers
             this.fileStream = File.OpenRead(datFilePath);
         }
 
-        public List<Moby> GetMobies(List<Model> missionModels)
+        public List<Moby> GetMobies(List<Model> missionModels, List<Model> levelModels)
         {
             byte[] fileHeader = ReadBlock(fileStream, 0x00, 0x20);
             int mobyInstancesOffset = ReadInt(fileHeader, 0x04);
@@ -90,6 +90,11 @@ namespace LibReplanetizer.Parsers
             int mobyDataStart = mobyInstancesOffset + 0x10;
             byte[] mobyBlock = ReadBlock(fileStream, mobyDataStart, mobyCount * 0x70);
 
+            List<Model> allModels = new List<Model>(missionModels);
+            foreach (var m in levelModels)
+                if (!allModels.Exists(x => x.id == m.id))
+                    allModels.Add(m);
+
             var mobies = new List<Moby>();
             for (int i = 0; i < mobyCount; i++)
             {
@@ -100,8 +105,7 @@ namespace LibReplanetizer.Parsers
                 mobyBlock[offset + 0x51] = 0xFF;
                 mobyBlock[offset + 0x52] = 0xFF;
                 mobyBlock[offset + 0x53] = 0xFF;
-
-                Moby moby = new Moby(GameType.DL, mobyBlock, i, missionModels, new List<byte[]>());
+                Moby moby = new Moby(GameType.DL, mobyBlock, i, allModels, new List<byte[]>());
                 mobies.Add(moby);
             }
 

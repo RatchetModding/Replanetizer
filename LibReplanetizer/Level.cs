@@ -384,7 +384,7 @@ namespace LibReplanetizer
                 if (datPath != null)
                 {
                     using var datParser = new MissionDataParser(datPath, game);
-                    mission.mobies = datParser.GetMobies(mission.models);
+                    mission.mobies = datParser.GetMobies(mission.models, mobyModels);
                 }
 
                 missions.Add(mission);

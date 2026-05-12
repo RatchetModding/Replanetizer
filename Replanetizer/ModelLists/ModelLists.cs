@@ -23,7 +23,8 @@ namespace Replanetizer.ModelLists
         private static Dictionary<int, string>? __RC2_TIE_NAMES = null;
         private static Dictionary<int, string>? __RC3_MOB_NAMES = null;
         private static Dictionary<int, string>? __RC3_TIE_NAMES = null;
-
+        private static Dictionary<int, string>? __RC4_MOB_NAMES = null;
+        private static Dictionary<int, string>? __RC4_TIE_NAMES = null;
 
         public static Dictionary<int, string> RC1_MOB_NAMES
         {
@@ -94,6 +95,28 @@ namespace Replanetizer.ModelLists
                     __RC3_TIE_NAMES = GetModelNames("TieModelsRC3.txt");
                 }
                 return __RC3_TIE_NAMES;
+            }
+        }
+        public static Dictionary<int, string> RC4_MOB_NAMES
+        {
+            get
+            {
+                if (__RC4_MOB_NAMES == null)
+                {
+                    __RC4_MOB_NAMES = GetModelNames("MobyModelsRC4.txt");
+                }
+                return __RC4_MOB_NAMES;
+            }
+        }
+        public static Dictionary<int, string> RC4_TIE_NAMES
+        {
+            get
+            {
+                if (__RC4_TIE_NAMES == null)
+                {
+                    __RC4_TIE_NAMES = GetModelNames("TieModelsRC4.txt");
+                }
+                return __RC4_TIE_NAMES;
             }
         }
 
@@ -174,6 +197,21 @@ namespace Replanetizer.ModelLists
                     else if (obj is TieModel)
                     {
                         if (!RC3_TIE_NAMES.TryGetValue(obj.id, out result)) return null;
+                        break;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                case 4:
+                    if (obj is MobyModel)
+                    {
+                        if (!RC4_MOB_NAMES.TryGetValue(obj.id, out result)) return null;
+                        break;
+                    }
+                    else if (obj is TieModel)
+                    {
+                        if (!RC4_TIE_NAMES.TryGetValue(obj.id, out result)) return null;
                         break;
                     }
                     else

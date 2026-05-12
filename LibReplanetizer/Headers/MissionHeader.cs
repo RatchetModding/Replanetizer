@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using static LibReplanetizer.DataFunctions;
 
@@ -64,6 +65,11 @@ namespace LibReplanetizer.Headers
             }
 
             return files;
+        }
+        public static int GetMissionId(string missionPath)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(missionPath);
+            return int.Parse(new string(fileName.Where(char.IsDigit).ToArray()));
         }
 
         public byte[] Serialize()

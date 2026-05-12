@@ -140,7 +140,6 @@ namespace Replanetizer
         {
             return frame.GetType() == typeof(LevelFrame);
         }
-
         private void RenderMenuBar()
         {
             if (ImGui.BeginMainMenuBar())
@@ -161,12 +160,51 @@ namespace Replanetizer
                             AddFrame(lf);
                         }
                     }
+                    if (ImGui.MenuItem("Open ps3data folder"))
+                    {
+                        var res = CrossFileDialog.OpenFolder();
+                        if (res.Length > 0) TryOpenFolder(res);
+                    }
 
                     if (ImGui.MenuItem("Quit"))
                     {
                         Environment.Exit(0);
                     }
                     ImGui.EndMenu();
+                }
+
+                // Put levels dropdown if it can find the game id in the path.
+                // This is probably stupid.
+                // Could probably be better to open the first engine.ps3 files it finds, and then from there maybe work out
+                // what game it is, since there is a way to detect gametype in the engine parser?
+                // Ahhhh.... I don't know.
+                if (activeGameId != null && rootFolder != null)
+                {
+                    var names = LevelLists.GetLevelNames(activeGameId, levelListsFolder);
+                    if (names != null && ImGui.BeginMenu("Levels"))
+                    {
+                        foreach (var (id, name) in names.OrderBy(x => x.Key))
+                        {
+                            string levelPath = Path.Join(rootFolder, $"level{id}", "engine.ps3");
+                            bool exists = File.Exists(levelPath);
+
+                            if (!exists)
+                                ImGui.BeginDisabled();
+
+                            if (ImGui.MenuItem(name))
+                            {
+                                foreach (var frame in openFrames.Where(FrameIsLevel))
+                                    frame.Dispose();
+
+                                openFrames.RemoveAll(FrameIsLevel);
+                                openFrames.Add(new LevelFrame(this, levelPath));
+                            }
+
+                            if (!exists)
+                                ImGui.EndDisabled();
+                        }
+                        ImGui.EndMenu();
+                    }
                 }
 
                 if (ImGui.BeginMenu("About"))
@@ -184,6 +222,19 @@ namespace Replanetizer
 
                 ImGui.EndMainMenuBar();
             }
+        }
+
+        private string? rootFolder = null;
+        private string? activeGameId = null;
+        private string levelListsFolder = Path.Join(AppContext.BaseDirectory, "LevelLists");
+        private void TryOpenFolder(string folder)
+        {
+            string? gameId = LevelLists.DetectGameFile(folder);
+            if (gameId == null)
+                return;
+
+            rootFolder = folder;
+            activeGameId = gameId;
         }
 
         private void RenderUI(float deltaTime)

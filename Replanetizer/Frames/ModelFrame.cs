@@ -286,10 +286,10 @@ namespace Replanetizer.Frames
             {
                 foreach (ModelObject obj in selectedObjectInstances)
                 {
-                    string objName = "Instance";
+                    string objName = $"Instance##{obj.globalID}";
                     if (obj is Moby mob)
                     {
-                        objName = $"Instance [" + GetStringFromID(mob.mobyID) + "]";
+                        objName = $"Instance [{GetStringFromID(mob.mobyID)}]##{mob.globalID}";
                     }
 
                     if (ImGui.Button(objName))

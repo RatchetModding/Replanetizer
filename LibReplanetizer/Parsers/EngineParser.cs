@@ -11,6 +11,7 @@ using LibReplanetizer.Models;
 using LibReplanetizer.Models.Animations;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Parsers
@@ -79,9 +80,18 @@ namespace LibReplanetizer.Parsers
             return GetUiElements(engineHead.uiElementPointer);
         }
 
+        public MobyModel? FindRatchetMoby(List<Model> models)
+        {
+            if (engineHead.game == GameType.DL)
+                return (MobyModel?) models.FirstOrDefault(x => x.id == 9207);
+
+            return (MobyModel?) models.FirstOrDefault();
+        }
+
         public List<Animation> GetPlayerAnimations(MobyModel ratchet)
         {
-            if (engineHead.game == GameType.DL) return new List<Animation>();
+            if (engineHead.game == GameType.DL)
+                return ratchet.animations;
 
             return GetPlayerAnimations(engineHead.game, engineHead.playerAnimationPointer, ratchet);
         }

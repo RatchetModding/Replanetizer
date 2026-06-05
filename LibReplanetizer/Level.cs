@@ -130,6 +130,7 @@ namespace LibReplanetizer
             path = Path.GetDirectoryName(enginePath);
 
             mobyModels = new List<Model>();
+            MobyModel? ratchet = null;
 
             // Engine elements
             using (EngineParser engineParser = new EngineParser(enginePath))
@@ -183,7 +184,8 @@ namespace LibReplanetizer
                 LOGGER.Debug("Added {0} terrain elements", terrainEngine.fragments.Count);
 
                 LOGGER.Debug("Parsing player animations...");
-                playerAnimations = (mobyModels.Count > 0) ? engineParser.GetPlayerAnimations((MobyModel) mobyModels[0]) : new List<Animation>();
+                ratchet = engineParser.FindRatchetMoby(mobyModels);
+                playerAnimations = ratchet != null ? engineParser.GetPlayerAnimations(ratchet) : new List<Animation>();
                 LOGGER.Debug("Added {0} player animations", playerAnimations.Count);
 
                 uiElements = engineParser.GetUiElements();
@@ -293,7 +295,6 @@ namespace LibReplanetizer
                 LOGGER.Debug("Looking for armor data in {0}", armor);
                 List<Texture> tex;
                 MobyModel? model;
-                MobyModel? ratchet = (MobyModel?) mobyModels[0];
                 using (ArmorParser parser = new ArmorParser(game, armor))
                 {
                     tex = parser.GetTextures();

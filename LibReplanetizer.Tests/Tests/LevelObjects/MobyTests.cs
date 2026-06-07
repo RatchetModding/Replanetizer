@@ -21,7 +21,7 @@ namespace LibReplanetizer.Tests.LevelObjects
             // Use the protected-setter via the public property.
             // Moby cannot be constructed without a byte block and model list, so
             // we rely on the object initialiser with default values.
-            var moby = new Moby();
+            var moby = new Moby(GameType.RaC1);
             moby.spawnType = spawnType;
             return moby;
         }

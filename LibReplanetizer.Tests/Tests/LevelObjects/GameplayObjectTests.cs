@@ -37,7 +37,7 @@ namespace LibReplanetizer.Tests.LevelObjects
             float[] w = { 0.25f, 0.75f };
             byte[] block = BuildSplineBlock(pts, w);
 
-            var spline = new Spline(block, 0);
+            var spline = new Spline(block, 0, 0);
 
             Assert.Equal(6, spline.vertexBuffer.Length);
             Assert.Equal(1f, spline.vertexBuffer[0]);
@@ -53,7 +53,7 @@ namespace LibReplanetizer.Tests.LevelObjects
             float[] w = { 0.1f, 0.9f };
             byte[] block = BuildSplineBlock(pts, w);
 
-            var spline = new Spline(block, 0);
+            var spline = new Spline(block, 0, 0);
 
             Assert.Equal(w[0], spline.wVals[0]);
             Assert.Equal(w[1], spline.wVals[1]);
@@ -66,7 +66,7 @@ namespace LibReplanetizer.Tests.LevelObjects
             float[] w = { 0f, 0.5f, 1f };
             byte[] original = BuildSplineBlock(pts, w);
 
-            var spline = new Spline(original, 0);
+            var spline = new Spline(original, 0, 0);
             byte[] serialized = spline.ToByteArray();
 
             Assert.Equal(original, serialized);
@@ -77,7 +77,7 @@ namespace LibReplanetizer.Tests.LevelObjects
         {
             float[][] pts = { new[] { 1f, 2f, 3f }, new[] { 7f, 8f, 9f } };
             float[] w = { 0f, 1f };
-            var spline = new Spline(BuildSplineBlock(pts, w), 0);
+            var spline = new Spline(BuildSplineBlock(pts, w), 0, 0);
 
             var v = spline.GetVertex(1);
 
@@ -89,7 +89,7 @@ namespace LibReplanetizer.Tests.LevelObjects
         {
             float[][] pts = { new[] { 0f, 0f, 0f } };
             float[] w = { 0f };
-            var spline = new Spline(BuildSplineBlock(pts, w), 0);
+            var spline = new Spline(BuildSplineBlock(pts, w), 0, 0);
 
             spline.SetVertex(0, new Vector3(5f, 6f, 7f));
 

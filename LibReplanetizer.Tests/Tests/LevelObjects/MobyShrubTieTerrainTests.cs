@@ -384,7 +384,7 @@ namespace LibReplanetizer.Tests.LevelObjects
         [Fact]
         public void DefaultConstructor_SetsGame_RaC1()
         {
-            var moby = new Moby();
+            var moby = new Moby(GameType.RaC1);
             // We can verify pVars is initialised (not null)
             Assert.NotNull(moby.pVars);
             Assert.Empty(moby.pVars);
@@ -393,7 +393,7 @@ namespace LibReplanetizer.Tests.LevelObjects
         [Fact]
         public void DefaultConstructor_SpawnTypeIsZero()
         {
-            var moby = new Moby();
+            var moby = new Moby(GameType.RaC1);
             Assert.False(moby.spawnBeforeMissionCompletion);
             Assert.False(moby.spawnAfterMissionCompletion);
             Assert.False(moby.isCrate);

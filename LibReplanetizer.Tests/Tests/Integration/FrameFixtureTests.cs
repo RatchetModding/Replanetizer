@@ -67,7 +67,6 @@ namespace LibReplanetizer.Tests.Integration
             Skip.If(frame == null, "No animation frames found in this level.");
             // Bone 0 may or may not have a rotation, but should not throw.
             var mat = frame!.GetRotationMatrix(0);
-            Assert.NotNull(mat);
         }
     }
 }

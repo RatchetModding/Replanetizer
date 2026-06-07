@@ -37,7 +37,7 @@ namespace LibReplanetizer.Tests.LevelObjects
             WriteFloat(splineBlock, 0x14, 0f);
             WriteFloat(splineBlock, 0x18, 0f);
             WriteFloat(splineBlock, 0x1C, 0f);
-            return new Spline(splineBlock, 0);
+            return new Spline(splineBlock, 0, 0);
         }
 
         [Fact]

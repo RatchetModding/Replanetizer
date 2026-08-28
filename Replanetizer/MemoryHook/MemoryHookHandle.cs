@@ -23,6 +23,8 @@ namespace Replanetizer.MemoryHook
     {
         const long GUEST_MEMORY_HOST_BASE = 0x300000000;
         const int CAMERA_DATA_SIZE = 0x20;
+        const int CUTSCENE_CAMERA_FRAME_SIZE = 0x20;
+        const int CUTSCENE_STATE = 2;
         const int MOBY_TABLE_DATA_SIZE = 0x0C;
         const int MOBY_DATA_SIZE = 0x100;
 
@@ -50,6 +52,8 @@ namespace Replanetizer.MemoryHook
         private int PUBLISHED_SNAPSHOT_INDEX = -1;
         private int PREVIOUS_SNAPSHOT_INDEX = -1;
         private readonly byte[] CAMERA_DATA_BUFFER = new byte[CAMERA_DATA_SIZE];
+        private readonly byte[] CUTSCENE_CAMERA_POINTER_BUFFER = new byte[sizeof(uint)];
+        private readonly byte[] CUTSCENE_CAMERA_FRAME_BUFFER = new byte[CUTSCENE_CAMERA_FRAME_SIZE];
         private readonly byte[] MOBY_TABLE_DATA_BUFFER = new byte[MOBY_TABLE_DATA_SIZE];
         private readonly byte[] FRAME_DATA_BUFFER = new byte[sizeof(int)];
         private byte[] MOBY_DATA_BUFFER = Array.Empty<byte>();
@@ -71,6 +75,11 @@ namespace Replanetizer.MemoryHook
                     {
                         moby = 0x300A390A0,
                         camera = 0x300951500,
+                        gameState = 0x300A10708,
+                        cutsceneCamera = 0x30095CDA4,
+                        cutsceneCameraFrame = 0x30095CD88,
+                        skybox = 0x300A1A79C,
+                        planetId = 0x300969C70,
                         levelFrames = 0x300a10710
                     };
                     break;
@@ -402,7 +411,7 @@ namespace Replanetizer.MemoryHook
 
             try
             {
-                if (!ReadProcessBytes(ADDRESSES.camera, CAMERA_DATA_BUFFER)) return false;
+                if (!TryReadCameraTransform(out Vector3 cameraPosition, out Vector3 cameraRotation)) return false;
                 if (!ReadProcessBytes(ADDRESSES.moby, MOBY_TABLE_DATA_BUFFER)) return false;
 
                 uint firstMoby = ReadUint(MOBY_TABLE_DATA_BUFFER, 0x00);
@@ -420,14 +429,8 @@ namespace Replanetizer.MemoryHook
                 long mobyAddress = GUEST_MEMORY_HOST_BASE + firstMoby;
                 if (!ReadProcessBytes(mobyAddress, MOBY_DATA_BUFFER)) return false;
 
-                snapshot.camera.position = new Vector3(
-                    ReadFloat(CAMERA_DATA_BUFFER, 0x00),
-                    ReadFloat(CAMERA_DATA_BUFFER, 0x04),
-                    ReadFloat(CAMERA_DATA_BUFFER, 0x08));
-                snapshot.camera.rotation = new Vector3(
-                    -ReadFloat(CAMERA_DATA_BUFFER, 0x14),
-                    ReadFloat(CAMERA_DATA_BUFFER, 0x10),
-                    ReadFloat(CAMERA_DATA_BUFFER, 0x18) - (float) (Math.PI / 2));
+                snapshot.camera.position = cameraPosition;
+                snapshot.camera.rotation = cameraRotation;
 
                 while (snapshot.mobyMemory.Count < mobyCount)
                 {
@@ -465,6 +468,53 @@ namespace Replanetizer.MemoryHook
         private bool ReadProcessBytes(long address, byte[] buffer)
         {
             return PROCESS_MEMORY?.Read(address, buffer) ?? false;
+        }
+
+        private bool TryReadCameraTransform(out Vector3 position, out Vector3 rotation)
+        {
+            position = Vector3.Zero;
+            rotation = Vector3.Zero;
+            if (ADDRESSES == null) return false;
+
+            if (ADDRESSES.gameState != 0 &&
+                ADDRESSES.cutsceneCamera != 0 &&
+                ADDRESSES.cutsceneCameraFrame != 0 &&
+                ReadProcessInt(ADDRESSES.gameState, out int gameState) &&
+                gameState == CUTSCENE_STATE)
+            {
+                if (!ReadProcessBytes(ADDRESSES.cutsceneCamera, CUTSCENE_CAMERA_POINTER_BUFFER)) return false;
+                if (!ReadProcessInt(ADDRESSES.cutsceneCameraFrame, out int frameIndex)) return false;
+                if (frameIndex < 0) return false;
+
+                uint cameraAddress = ReadUint(CUTSCENE_CAMERA_POINTER_BUFFER, 0);
+                if (cameraAddress == 0) return false;
+
+                long frameAddress = GUEST_MEMORY_HOST_BASE + cameraAddress +
+                    (long) frameIndex * CUTSCENE_CAMERA_FRAME_SIZE;
+                if (!ReadProcessBytes(frameAddress, CUTSCENE_CAMERA_FRAME_BUFFER)) return false;
+
+                position = new Vector3(
+                    ReadFloat(CUTSCENE_CAMERA_FRAME_BUFFER, 0x00),
+                    ReadFloat(CUTSCENE_CAMERA_FRAME_BUFFER, 0x04),
+                    ReadFloat(CUTSCENE_CAMERA_FRAME_BUFFER, 0x08));
+                rotation = new Vector3(
+                    ReadFloat(CUTSCENE_CAMERA_FRAME_BUFFER, 0x10) - (float) (Math.PI / 2),
+                    ReadFloat(CUTSCENE_CAMERA_FRAME_BUFFER, 0x14),
+                    ReadFloat(CUTSCENE_CAMERA_FRAME_BUFFER, 0x18));
+                return true;
+            }
+
+            if (!ReadProcessBytes(ADDRESSES.camera, CAMERA_DATA_BUFFER)) return false;
+
+            position = new Vector3(
+                ReadFloat(CAMERA_DATA_BUFFER, 0x00),
+                ReadFloat(CAMERA_DATA_BUFFER, 0x04),
+                ReadFloat(CAMERA_DATA_BUFFER, 0x08));
+            rotation = new Vector3(
+                -ReadFloat(CAMERA_DATA_BUFFER, 0x14),
+                ReadFloat(CAMERA_DATA_BUFFER, 0x10),
+                ReadFloat(CAMERA_DATA_BUFFER, 0x18) - (float) (Math.PI / 2));
+            return true;
         }
 
         private bool ReadGuestProcessBytes(uint address, byte[] buffer)

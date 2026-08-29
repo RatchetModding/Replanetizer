@@ -1065,20 +1065,21 @@ namespace LibReplanetizer.LevelObjects
                     return null;
                 }
 
-                ushort rotationDataOffset = ReadUshort(runtimeAnimationHeaderBuffer, 0x08);
+                ushort scalingDataOffset = ReadUshort(runtimeAnimationHeaderBuffer, 0x08);
                 ushort scalingCount = ReadUshort(runtimeAnimationHeaderBuffer, 0x0A);
                 ushort translationDataOffset = ReadUshort(runtimeAnimationHeaderBuffer, 0x0C);
                 ushort translationCount = ReadUshort(runtimeAnimationHeaderBuffer, 0x0E);
-                int frameDataSize = 0x10 + ReadUshort(runtimeAnimationHeaderBuffer, 0x06) * 0x10;
-                int rotationCount = rotationDataOffset / 0x08;
+                int declaredDataSize = ReadUshort(runtimeAnimationHeaderBuffer, 0x06) * 0x10;
+                int scalingDataEnd = scalingDataOffset + scalingCount * 0x08;
+                int translationDataEnd = translationDataOffset + translationCount * 0x08;
+                int frameDataSize = Math.Max(declaredDataSize, Math.Max(scalingDataEnd, translationDataEnd));
+                int rotationCount = scalingDataOffset / 0x08;
 
-                if (rotationDataOffset % 0x08 != 0
-                    || frameDataSize < 0x10
+                if (scalingDataOffset % 0x08 != 0
+                    || frameDataSize < 0x00
                     || frameDataSize > 0x10000
-                    || rotationDataOffset > frameDataSize - 0x10
-                    || scalingCount > (frameDataSize - 0x10 - rotationDataOffset) / 0x08
-                    || translationDataOffset > frameDataSize - 0x10
-                    || translationCount > (frameDataSize - 0x10 - translationDataOffset) / 0x08)
+                    || scalingDataEnd > frameDataSize
+                    || translationDataEnd > frameDataSize)
                 {
                     return null;
                 }
@@ -1088,7 +1089,7 @@ namespace LibReplanetizer.LevelObjects
                     runtimeAnimationDataBuffer = new byte[frameDataSize];
                 }
 
-                if (!readMemory(address, runtimeAnimationDataBuffer))
+                if (!readMemory(address + 0x10, runtimeAnimationDataBuffer))
                 {
                     return null;
                 }
@@ -1107,7 +1108,7 @@ namespace LibReplanetizer.LevelObjects
 
                 for (int i = 0; i < rotationCount; i++)
                 {
-                    int offset = 0x10 + i * 0x08;
+                    int offset = i * 0x08;
                     result.rotations[i] = new Quaternion(
                         ReadShort(runtimeAnimationDataBuffer, offset + 0x00) / 32768.0f,
                         ReadShort(runtimeAnimationDataBuffer, offset + 0x02) / 32768.0f,
@@ -1119,7 +1120,7 @@ namespace LibReplanetizer.LevelObjects
                 Array.Clear(result.hasScalings, 0, result.hasScalings.Length);
                 for (int i = 0; i < scalingCount; i++)
                 {
-                    int offset = 0x10 + rotationDataOffset + i * 0x08;
+                    int offset = scalingDataOffset + i * 0x08;
                     int bone = runtimeAnimationDataBuffer[offset + 0x06];
                     if (bone >= result.scalings.Length) continue;
 
@@ -1134,7 +1135,7 @@ namespace LibReplanetizer.LevelObjects
                 Array.Clear(result.hasTranslations, 0, result.hasTranslations.Length);
                 for (int i = 0; i < translationCount; i++)
                 {
-                    int offset = 0x10 + translationDataOffset + i * 0x08;
+                    int offset = translationDataOffset + i * 0x08;
                     int bone = runtimeAnimationDataBuffer[offset + 0x06];
                     if (bone >= result.translations.Length) continue;
 
@@ -1145,7 +1146,7 @@ namespace LibReplanetizer.LevelObjects
                     result.hasTranslations[bone] = true;
                 }
 
-                result.speed = ReadFloat(runtimeAnimationDataBuffer, 0x00);
+                result.speed = ReadFloat(runtimeAnimationHeaderBuffer, 0x00);
                 return result;
             }
 
@@ -1277,6 +1278,9 @@ namespace LibReplanetizer.LevelObjects
                 position = new Vector4(X, Y, Z, W);
                 rotation = new Vector4(rotX, rotY, rotZ, rotW);
                 color = Color.FromRgb((byte) red, (byte) green, (byte) blue).ToPixel<Rgb24>();
+
+                if (updateID == byte.MaxValue)
+                    Utilities.DebugAssert(pPreviousAnimationData == 0x00A2C5C0u + previousAnimationFrame * 0x800, "Pointer should have originated from cache!");
             }
 
             public void UpdateRC23(byte[] memory, int offset)

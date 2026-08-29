@@ -1428,9 +1428,9 @@ namespace LibReplanetizer.LevelObjects
             modelMatrix.M32 = memory.transformation.M32 * memory.scale;
             modelMatrix.M33 = memory.transformation.M33 * memory.scale;
             modelMatrix.M34 = 0.0f;
-            modelMatrix.M41 = memory.transformation.M14 * memory.scale + memory.position.X;
-            modelMatrix.M42 = memory.transformation.M24 * memory.scale + memory.position.Y;
-            modelMatrix.M43 = memory.transformation.M34 * memory.scale + memory.position.Z;
+            modelMatrix.M41 = memory.position.X;
+            modelMatrix.M42 = memory.position.Y;
+            modelMatrix.M43 = memory.position.Z;
             modelMatrix.M44 = 1.0f;
 
             position = modelMatrix.ExtractTranslation();

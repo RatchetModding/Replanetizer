@@ -720,14 +720,13 @@ namespace Replanetizer.Renderer
 
         private void ComputeBoneMatricesWithMemory(
             MobyModel mobyModel,
-            List<Animation> animations,
             Moby.IngameMobyMemory memory)
         {
             if (memory.previousAnimationData == null || memory.currentAnimationData == null)
             {
-                for (int i = 0; i < mobyModel.boneCount; i++)
+                for (int i = 0; i < boneMatrices!.Length; i++)
                 {
-                    runtimeCurrentPose![i] = BuildBoneTransform(mobyModel, null, i);
+                    boneMatrices[i] = Matrix4.Identity;
                 }
                 return;
             }
@@ -863,13 +862,13 @@ namespace Replanetizer.Renderer
 
             GLTexture.blueNoiseTexture.Bind(1);
 
-            List<Animation> animations = (loadedModelID == 0 && ratchetAnimations != null && ratchetAnimations.Count > 0) ? ratchetAnimations : mobyModel.animations;
             if (mob != null && mob.memory != null)
             {
-                ComputeBoneMatricesWithMemory(mobyModel, animations, mob.memory);
+                ComputeBoneMatricesWithMemory(mobyModel, mob.memory);
             }
             else
             {
+                List<Animation> animations = (loadedModelID == 0 && ratchetAnimations != null && ratchetAnimations.Count > 0) ? ratchetAnimations : mobyModel.animations;
                 ComputeBoneMatricesWithoutMemory(mobyModel, animations, payload.forcedAnimationID, payload.deltaTime);
             }
 

@@ -15,6 +15,7 @@
     <RepositoryUrl>https://github.com/RatchetModding/Replanetizer</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
     <VersionPrefix>2.0.0</VersionPrefix>
+    <BuildTimestampTicks>$([System.DateTime]::UtcNow.Ticks)</BuildTimestampTicks>
     <Nullable>enable</Nullable>
     <ApplicationIcon>ReplanetizerIcon48px.ico</ApplicationIcon>
     <PublishSingleFile>true</PublishSingleFile>
@@ -50,6 +51,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LibReplanetizer\LibReplanetizer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="Replanetizer.BuildTimestampTicks" Value="$(BuildTimestampTicks)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -174,13 +179,5 @@
       <Output PropertyName="SourceRevisionId" TaskParameter="ConsoleOutput" />
     </Exec>
   </Target>
-
-  <Target Name="Date" BeforeTargets="BeforeBuild">
-    <WriteLinesToFile File="$(IntermediateOutputPath)BuiltinGen.cs" Lines="static partial class Builtin { public static long CompileTime = $([System.DateTime]::UtcNow.Ticks) %3B }" Overwrite="true" />
-    <ItemGroup>
-        <Compile Include="$(IntermediateOutputPath)BuiltinGen.cs" />
-    </ItemGroup>
-</Target>
-
 
 </Project>

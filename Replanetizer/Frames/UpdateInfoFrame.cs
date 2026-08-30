@@ -9,6 +9,7 @@ using System;
 using System.Diagnostics;
 using ImGuiNET;
 using System.Globalization;
+using System.Linq;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
@@ -168,8 +169,17 @@ Link: ", buildDate.ToString(), currVersionDate.ToString(), diff?.Days, diff?.Hou
 
         public static async void CheckForNewVersion(Window wnd)
         {
-            //Builtin only exists during building, your IDE may complain
-            DateTime compileTime = new DateTime(Builtin.CompileTime, DateTimeKind.Utc);
+            AssemblyMetadataAttribute? buildTimestamp = Assembly.GetExecutingAssembly()
+                .GetCustomAttributes<AssemblyMetadataAttribute>()
+                .FirstOrDefault(attribute => attribute.Key == "Replanetizer.BuildTimestampTicks");
+
+            if (buildTimestamp == null || !long.TryParse(buildTimestamp.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out long ticks))
+            {
+                LOGGER.Warn("Build timestamp metadata is missing or invalid.");
+                return;
+            }
+
+            DateTime compileTime = new DateTime(ticks, DateTimeKind.Utc);
 
             try
             {
@@ -182,7 +192,7 @@ Link: ", buildDate.ToString(), currVersionDate.ToString(), diff?.Days, diff?.Hou
                         HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "https://api.github.com/repos/RatchetModding/Replanetizer/releases/latest");
 
                         //Github wants a user agent, otherwise it returns code 403 Forbidden
-                        requestMessage.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0");
+                        requestMessage.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:154.0) Gecko/20100101 Firefox/154.0");
 
                         HttpResponseMessage response = await client.SendAsync(requestMessage);
                         response.EnsureSuccessStatusCode();

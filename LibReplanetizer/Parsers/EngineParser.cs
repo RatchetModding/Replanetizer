@@ -112,7 +112,7 @@ namespace LibReplanetizer.Parsers
             if (engineHead.precipitationMapPointer == 0)
                 return null;
 
-            return new PrecipitationMap(fileStream, engineHead.precipitationMapPointer);
+            return new PrecipitationMap(fileStream, engineHead.game, engineHead.precipitationMapPointer);
         }
 
         public List<int> GetTextureConfigMenu()

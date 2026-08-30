@@ -205,6 +205,10 @@ namespace Replanetizer.Renderer
                 light = Math.Max(0, Math.Min(ALLOCATED_LIGHTS, mob.light)); ;
                 ambient = mob.color;
                 renderDistance = (mob.drawDistance > 0.0f) ? mob.drawDistance : float.MaxValue;
+                if (mob.memory != null)
+                {
+                    renderDistance = mob.memory.drawDistance;
+                }
                 modelID = mob.modelID;
             }
             else if (mobyModelStandalone != null)
@@ -317,13 +321,24 @@ namespace Replanetizer.Renderer
 
             if (distanceCulling)
             {
-                float dist = (mob.position - camera.position).Length;
+                Vector3 cullingCenter = mob.position;
+                float cullingRadius = 0.0f;
+                if (mob.memory != null)
+                {
+                    cullingCenter = new Vector3(
+                        mob.memory.collPos.X / 1024.0f,
+                        mob.memory.collPos.Y / 1024.0f,
+                        mob.memory.collPos.Z / 1024.0f);
+                    cullingRadius = mob.memory.collPos.W / 1024.0f;
+                }
 
-                float blendScale = 32.0f;
+                float dist = (cullingCenter - camera.position).Length;
 
-                blendDistance = MathF.Max((dist - renderDistance) / blendScale, 0.0f);
+                float blendScale = 8.0f;
 
-                if (dist > renderDistance + blendScale)
+                blendDistance = MathF.Max((dist - cullingRadius - renderDistance + blendScale) / blendScale, 0.0f);
+
+                if (dist > renderDistance + cullingRadius)
                 {
                     return true;
                 }

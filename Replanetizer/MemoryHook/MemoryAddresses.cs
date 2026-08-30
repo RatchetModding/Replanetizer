@@ -11,6 +11,11 @@ namespace Replanetizer.MemoryHook
     {
         public long moby;
         public long camera;
+        internal long gameState;
+        internal long cutsceneCamera;
+        internal long cutsceneCameraFrame;
+        internal long skybox;
+        internal long planetId;
         internal long levelFrames;
     }
 }

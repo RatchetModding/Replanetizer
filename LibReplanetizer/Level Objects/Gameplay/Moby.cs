@@ -140,7 +140,7 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Moby ID")]
         public int mobyID { get; set; }
 
-        [Category("Attributes"), DisplayName("Draw Distance"), Description("The distance at which an object will start fading out. After a distance of 32 or more units, the object will stop being drawn.")]
+        [Category("Attributes"), DisplayName("Draw Distance"), Description("The distance from the collision sphere center at which an object starts fading out. The collision sphere radius extends the visible cutoff.")]
         public int drawDistance { get; set; }
 
         [Category("Attributes"), DisplayName("Update Distance")]
@@ -714,7 +714,8 @@ namespace LibReplanetizer.LevelObjects
             {
                 public Vector4 rotation { get; set; }
                 public Vector4 scale { get; set; }
-                public Vector4 translation { get; set; }
+                public Vector3 translation { get; set; }
+                public uint boneIndex { get; set; }
             }
 
             public struct AnimationManipulator
@@ -723,7 +724,7 @@ namespace LibReplanetizer.LevelObjects
                 public byte state { get; set; }
                 public byte scaleOn { get; set; }
                 public byte absolute { get; set; }
-                public int boneID { get; set; }
+                public ushort boneID { get; set; }
                 public uint pNext { get; set; }
                 public float animationBlend { get; set; }
                 public Vector4 rotation { get; set; }
@@ -1033,7 +1034,8 @@ namespace LibReplanetizer.LevelObjects
                         {
                             rotation = ReadVector4(animationDataBuffer, 0x00),
                             scale = ReadVector4(animationDataBuffer, 0x10),
-                            translation = ReadVector4(animationDataBuffer, 0x20)
+                            translation = ReadVector3(animationDataBuffer, 0x20),
+                            boneIndex = ReadUint(animationDataBuffer, 0x2C)
                         });
                     }
 
@@ -1065,20 +1067,21 @@ namespace LibReplanetizer.LevelObjects
                     return null;
                 }
 
-                ushort rotationDataOffset = ReadUshort(runtimeAnimationHeaderBuffer, 0x08);
+                ushort scalingDataOffset = ReadUshort(runtimeAnimationHeaderBuffer, 0x08);
                 ushort scalingCount = ReadUshort(runtimeAnimationHeaderBuffer, 0x0A);
                 ushort translationDataOffset = ReadUshort(runtimeAnimationHeaderBuffer, 0x0C);
                 ushort translationCount = ReadUshort(runtimeAnimationHeaderBuffer, 0x0E);
-                int frameDataSize = 0x10 + ReadUshort(runtimeAnimationHeaderBuffer, 0x06) * 0x10;
-                int rotationCount = rotationDataOffset / 0x08;
+                int declaredDataSize = ReadUshort(runtimeAnimationHeaderBuffer, 0x06) * 0x10;
+                int scalingDataEnd = scalingDataOffset + scalingCount * 0x08;
+                int translationDataEnd = translationDataOffset + translationCount * 0x08;
+                int frameDataSize = Math.Max(declaredDataSize, Math.Max(scalingDataEnd, translationDataEnd));
+                int rotationCount = scalingDataOffset / 0x08;
 
-                if (rotationDataOffset % 0x08 != 0
-                    || frameDataSize < 0x10
+                if (scalingDataOffset % 0x08 != 0
+                    || frameDataSize < 0x00
                     || frameDataSize > 0x10000
-                    || rotationDataOffset > frameDataSize - 0x10
-                    || scalingCount > (frameDataSize - 0x10 - rotationDataOffset) / 0x08
-                    || translationDataOffset > frameDataSize - 0x10
-                    || translationCount > (frameDataSize - 0x10 - translationDataOffset) / 0x08)
+                    || scalingDataEnd > frameDataSize
+                    || translationDataEnd > frameDataSize)
                 {
                     return null;
                 }
@@ -1088,7 +1091,7 @@ namespace LibReplanetizer.LevelObjects
                     runtimeAnimationDataBuffer = new byte[frameDataSize];
                 }
 
-                if (!readMemory(address, runtimeAnimationDataBuffer))
+                if (!readMemory(address + 0x10, runtimeAnimationDataBuffer))
                 {
                     return null;
                 }
@@ -1107,7 +1110,7 @@ namespace LibReplanetizer.LevelObjects
 
                 for (int i = 0; i < rotationCount; i++)
                 {
-                    int offset = 0x10 + i * 0x08;
+                    int offset = i * 0x08;
                     result.rotations[i] = new Quaternion(
                         ReadShort(runtimeAnimationDataBuffer, offset + 0x00) / 32768.0f,
                         ReadShort(runtimeAnimationDataBuffer, offset + 0x02) / 32768.0f,
@@ -1119,7 +1122,7 @@ namespace LibReplanetizer.LevelObjects
                 Array.Clear(result.hasScalings, 0, result.hasScalings.Length);
                 for (int i = 0; i < scalingCount; i++)
                 {
-                    int offset = 0x10 + rotationDataOffset + i * 0x08;
+                    int offset = scalingDataOffset + i * 0x08;
                     int bone = runtimeAnimationDataBuffer[offset + 0x06];
                     if (bone >= result.scalings.Length) continue;
 
@@ -1134,7 +1137,7 @@ namespace LibReplanetizer.LevelObjects
                 Array.Clear(result.hasTranslations, 0, result.hasTranslations.Length);
                 for (int i = 0; i < translationCount; i++)
                 {
-                    int offset = 0x10 + translationDataOffset + i * 0x08;
+                    int offset = translationDataOffset + i * 0x08;
                     int bone = runtimeAnimationDataBuffer[offset + 0x06];
                     if (bone >= result.translations.Length) continue;
 
@@ -1145,7 +1148,7 @@ namespace LibReplanetizer.LevelObjects
                     result.hasTranslations[bone] = true;
                 }
 
-                result.speed = ReadFloat(runtimeAnimationDataBuffer, 0x00);
+                result.speed = ReadFloat(runtimeAnimationHeaderBuffer, 0x00);
                 return result;
             }
 
@@ -1178,7 +1181,7 @@ namespace LibReplanetizer.LevelObjects
                         state = manipulatorBuffer[0x01],
                         scaleOn = manipulatorBuffer[0x02],
                         absolute = manipulatorBuffer[0x03],
-                        boneID = ReadInt(manipulatorBuffer, 0x04),
+                        boneID = ReadUshort(manipulatorBuffer, 0x06),
                         pNext = ReadUint(manipulatorBuffer, 0x08),
                         animationBlend = ReadFloat(manipulatorBuffer, 0x0C),
                         rotation = ReadVector4(manipulatorBuffer, 0x10),
@@ -1203,6 +1206,14 @@ namespace LibReplanetizer.LevelObjects
                     ReadFloat(memory, offset + 0x04),
                     ReadFloat(memory, offset + 0x08),
                     ReadFloat(memory, offset + 0x0C));
+            }
+
+            private static Vector3 ReadVector3(byte[] memory, int offset)
+            {
+                return new Vector3(
+                    ReadFloat(memory, offset + 0x00),
+                    ReadFloat(memory, offset + 0x04),
+                    ReadFloat(memory, offset + 0x08));
             }
 
             public void UpdateRC1(byte[] memory, int offset)
@@ -1277,6 +1288,9 @@ namespace LibReplanetizer.LevelObjects
                 position = new Vector4(X, Y, Z, W);
                 rotation = new Vector4(rotX, rotY, rotZ, rotW);
                 color = Color.FromRgb((byte) red, (byte) green, (byte) blue).ToPixel<Rgb24>();
+
+                if (updateID == byte.MaxValue)
+                    Utilities.DebugAssert(pPreviousAnimationData == 0x00A2C5C0u + previousAnimationFrame * 0x800, "Pointer should have originated from cache!");
             }
 
             public void UpdateRC23(byte[] memory, int offset)
@@ -1428,9 +1442,9 @@ namespace LibReplanetizer.LevelObjects
             modelMatrix.M32 = memory.transformation.M32 * memory.scale;
             modelMatrix.M33 = memory.transformation.M33 * memory.scale;
             modelMatrix.M34 = 0.0f;
-            modelMatrix.M41 = memory.transformation.M14 * memory.scale + memory.position.X;
-            modelMatrix.M42 = memory.transformation.M24 * memory.scale + memory.position.Y;
-            modelMatrix.M43 = memory.transformation.M34 * memory.scale + memory.position.Z;
+            modelMatrix.M41 = memory.position.X;
+            modelMatrix.M42 = memory.position.Y;
+            modelMatrix.M43 = memory.position.Z;
             modelMatrix.M44 = 1.0f;
 
             position = modelMatrix.ExtractTranslation();

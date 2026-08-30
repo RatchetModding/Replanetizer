@@ -104,6 +104,9 @@ namespace Replanetizer.Frames
             PropertyInfo[] objProps = selectedObject.GetType().GetProperties();
             foreach (var prop in objProps)
             {
+                if (prop.GetIndexParameters().Length != 0)
+                    continue;
+
                 string category =
                     prop.GetCustomAttribute<CategoryAttribute>()?.Category ?? "Unknowns";
 
@@ -421,6 +424,52 @@ namespace Replanetizer.Frames
                     mat.M42 = v4.Y;
                     mat.M43 = v4.Z;
                     mat.M44 = v4.W;
+                }
+
+                if (change)
+                {
+                    propertyInfo.SetValue(selectedObject, mat);
+
+                    if (selectedObject is LevelObject levelObject)
+                        levelObject.UpdateTransformMatrix();
+
+                    UpdateLevelFrame();
+                }
+            }
+            else if (type == typeof(OpenTK.Mathematics.Matrix3x4))
+            {
+                var mat = (OpenTK.Mathematics.Matrix3x4) val;
+                var v1 = new Vector4(mat.M11, mat.M12, mat.M13, mat.M14);
+                var v2 = new Vector4(mat.M21, mat.M22, mat.M23, mat.M24);
+                var v3 = new Vector4(mat.M31, mat.M32, mat.M33, mat.M34);
+
+                bool change = false;
+
+                if (ImGui.InputFloat4($"{propertyName} Row 1", ref v1))
+                {
+                    change = true;
+                    mat.M11 = v1.X;
+                    mat.M12 = v1.Y;
+                    mat.M13 = v1.Z;
+                    mat.M14 = v1.W;
+                }
+
+                if (ImGui.InputFloat4($"{propertyName} Row 2", ref v2))
+                {
+                    change = true;
+                    mat.M21 = v2.X;
+                    mat.M22 = v2.Y;
+                    mat.M23 = v2.Z;
+                    mat.M24 = v2.W;
+                }
+
+                if (ImGui.InputFloat4($"{propertyName} Row 3", ref v3))
+                {
+                    change = true;
+                    mat.M31 = v3.X;
+                    mat.M32 = v3.Y;
+                    mat.M33 = v3.Z;
+                    mat.M34 = v3.W;
                 }
 
                 if (change)

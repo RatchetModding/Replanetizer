@@ -59,15 +59,8 @@ namespace Replanetizer.Renderer
         private int currentAnimationID = 0;
         private Frame? currentFrame = null;
         private Frame? previousFrame = null;
-        private int runtimeTransitionCacheKey = -1;
-        private BoneTransform[]? runtimePose = null;
-        private BoneTransform[]? runtimeTransitionPose = null;
         private Matrix4[]? boneMatrices = null;
-        private BoneTransform[]? localBoneTransforms = null;
-        private BoneTransform[]? runtimePreviousPose = null;
         private BoneTransform[]? runtimeCurrentPose = null;
-        private bool runtimePoseValid = false;
-        private bool runtimeTransitionPoseValid = false;
         private float frameBlend = 0.0f;
         private readonly ModelGPUDataCache gpuDataCache;
         private ModelGPUData? gpuData;
@@ -128,15 +121,8 @@ namespace Replanetizer.Renderer
             currentAnimationID = 0;
             currentFrame = null;
             previousFrame = null;
-            runtimeTransitionCacheKey = -1;
-            runtimePose = null;
-            runtimeTransitionPose = null;
             boneMatrices = null;
-            localBoneTransforms = null;
-            runtimePreviousPose = null;
             runtimeCurrentPose = null;
-            runtimePoseValid = false;
-            runtimeTransitionPoseValid = false;
             frameBlend = 0.0f;
         }
 
@@ -201,11 +187,7 @@ namespace Replanetizer.Renderer
             emptyModel = false;
 
             boneMatrices = new Matrix4[mobyModel.boneCount];
-            localBoneTransforms = new BoneTransform[mobyModel.boneCount];
-            runtimePreviousPose = new BoneTransform[mobyModel.boneCount];
             runtimeCurrentPose = new BoneTransform[mobyModel.boneCount];
-            runtimePose = new BoneTransform[mobyModel.boneCount];
-            runtimeTransitionPose = new BoneTransform[mobyModel.boneCount];
 
             gpuData = gpuDataCache.Acquire(mobyModel, ModelGPULayout.Animated);
         }
@@ -223,6 +205,10 @@ namespace Replanetizer.Renderer
                 light = Math.Max(0, Math.Min(ALLOCATED_LIGHTS, mob.light)); ;
                 ambient = mob.color;
                 renderDistance = (mob.drawDistance > 0.0f) ? mob.drawDistance : float.MaxValue;
+                if (mob.memory != null)
+                {
+                    renderDistance = mob.memory.drawDistance;
+                }
                 modelID = mob.modelID;
             }
             else if (mobyModelStandalone != null)
@@ -335,13 +321,24 @@ namespace Replanetizer.Renderer
 
             if (distanceCulling)
             {
-                float dist = (mob.position - camera.position).Length;
+                Vector3 cullingCenter = mob.position;
+                float cullingRadius = 0.0f;
+                if (mob.memory != null)
+                {
+                    cullingCenter = new Vector3(
+                        mob.memory.collPos.X / 1024.0f,
+                        mob.memory.collPos.Y / 1024.0f,
+                        mob.memory.collPos.Z / 1024.0f);
+                    cullingRadius = mob.memory.collPos.W / 1024.0f;
+                }
 
-                float blendScale = 32.0f;
+                float dist = (cullingCenter - camera.position).Length;
 
-                blendDistance = MathF.Max((dist - renderDistance) / blendScale, 0.0f);
+                float blendScale = 8.0f;
 
-                if (dist > renderDistance + blendScale)
+                blendDistance = MathF.Max((dist - cullingRadius - renderDistance + blendScale) / blendScale, 0.0f);
+
+                if (dist > renderDistance + cullingRadius)
                 {
                     return true;
                 }
@@ -422,7 +419,7 @@ namespace Replanetizer.Renderer
 
             if (lengthSquared <= 0.0f)
             {
-                return Quaternion.Identity;
+                return new Quaternion(0.0f, 0.0f, 0.0f, 0.0f);
             }
 
             return quaternion * (1.0f / MathF.Sqrt(lengthSquared));
@@ -517,47 +514,73 @@ namespace Replanetizer.Renderer
             };
         }
 
-        private static void BuildRuntimeSourcePose(
+        private static BoneTransform BuildBoneTransform(MobyModel model, Frame? frame, int bone)
+        {
+            if (frame == null)
+            {
+                return new BoneTransform
+                {
+                    rotation = Quaternion.Identity,
+                    scale = Vector3.One,
+                    translation = model.boneDatas[bone].translation
+                };
+            }
+
+            Quaternion rotation = frame.GetRotationQuaternion(bone) ?? Quaternion.Identity;
+            Vector3 scaling = frame.GetScaling(bone) ?? Vector3.One;
+            Vector3 translationVector = frame.GetTranslation(bone) ?? model.boneDatas[bone].translation;
+
+            return new BoneTransform
+            {
+                rotation = rotation,
+                scale = scaling,
+                translation = translationVector
+            };
+        }
+
+        private static BoneTransform BuildRuntimeBoneTransform(
             MobyModel model,
             Moby.IngameMobyMemory.RuntimeAnimationData animationData,
+            int bone)
+        {
+            Quaternion rotation = bone < animationData.rotations.Length
+                ? animationData.rotations[bone]
+                : Quaternion.Identity;
+            Vector3 scale = bone < animationData.hasScalings.Length && animationData.hasScalings[bone]
+                ? animationData.scalings[bone]
+                : Vector3.One;
+            Vector3 translation = bone < animationData.hasTranslations.Length && animationData.hasTranslations[bone]
+                ? animationData.translations[bone]
+                : model.boneDatas[bone].translation;
+
+            return new BoneTransform
+            {
+                rotation = rotation,
+                scale = scale,
+                translation = translation
+            };
+        }
+
+        private static void BuildRuntimeSourcePose(
+            MobyModel model,
+            Moby.IngameMobyMemory.RuntimeAnimationData prevData,
+            Moby.IngameMobyMemory.RuntimeAnimationData currData,
+            float blend,
             BoneTransform[] pose)
         {
             for (int bone = 0; bone < model.boneCount; bone++)
             {
-                Quaternion rotation = bone < animationData.rotations.Length
-                    ? animationData.rotations[bone]
-                    : Quaternion.Identity;
-                Vector3 scale = bone < animationData.hasScalings.Length && animationData.hasScalings[bone]
-                    ? animationData.scalings[bone]
-                    : Vector3.One;
-                Vector3 translation = bone < animationData.hasTranslations.Length && animationData.hasTranslations[bone]
-                    ? animationData.translations[bone]
-                    : model.boneDatas[bone].translation;
+                BoneTransform previous = BuildRuntimeBoneTransform(model, prevData, bone);
+                BoneTransform current = BuildRuntimeBoneTransform(model, currData, bone);
 
                 pose[bone] = new BoneTransform
                 {
-                    rotation = rotation,
-                    scale = scale,
-                    translation = translation
+                    rotation = BlendQuaternion(previous.rotation, current.rotation, blend),
+                    scale = (1.0f - blend) * previous.scale + blend * current.scale,
+                    translation = (1.0f - blend) * previous.translation + blend * current.translation
                 };
             }
 
-        }
-
-        private static BoneTransform BlendBoneTransforms(
-            BoneTransform previous,
-            BoneTransform current,
-            float blend)
-        {
-            return new BoneTransform
-            {
-                rotation = BlendQuaternion(
-                    NormalizeQuaternion(previous.rotation),
-                    NormalizeQuaternion(current.rotation),
-                    blend),
-                scale = Vector3.Lerp(previous.scale, current.scale, blend),
-                translation = Vector3.Lerp(previous.translation, current.translation, blend)
-            };
         }
 
         private static Matrix4 CreateTransform(Quaternion rotation, Vector3 scale, Vector3 translation)
@@ -584,19 +607,20 @@ namespace Replanetizer.Renderer
         {
             foreach (Moby.IngameMobyMemory.AnimationLayer layer in memory.animationLayers)
             {
-                float blend = ClampBlend(layer.animationBlend);
+                float blend = layer.animationBlend;
                 float inverseBlend = 1.0f - blend;
 
                 foreach (Moby.IngameMobyMemory.AnimationData animationData in layer.animationData)
                 {
-                    int bone = (int) animationData.translation.W;
-                    if (bone < 0 || bone >= localBoneTransforms.Length)
+                    if (animationData.boneIndex >= (uint) localBoneTransforms.Length)
                     {
                         continue;
                     }
 
+                    int bone = (int) animationData.boneIndex;
+
                     BoneTransform current = localBoneTransforms[bone];
-                    Quaternion currentRotation = ToGameQuaternion(NormalizeQuaternion(current.rotation));
+                    Quaternion currentRotation = ToGameQuaternion(current.rotation);
                     Quaternion layerRotation = new Quaternion(
                         animationData.rotation.X,
                         animationData.rotation.Y,
@@ -665,8 +689,8 @@ namespace Replanetizer.Renderer
                     localBoneTransforms[bone] = new BoneTransform
                     {
                         rotation = ToRendererQuaternion(BlendQuaternion(currentRotation, manipulatorRotation, blend)),
-                        scale = Vector3.Lerp(currentScale, manipulatorScale, blend),
-                        translation = Vector3.Lerp(currentTranslation, manipulatorTranslation, blend)
+                        scale = (1.0f - blend) * currentScale + blend * manipulatorScale,
+                        translation = (1.0f - blend) * currentTranslation + blend * manipulatorTranslation
                     };
                 }
                 else
@@ -707,6 +731,101 @@ namespace Replanetizer.Renderer
             for (int i = 0; i < model.boneCount; i++)
             {
                 boneMatrices[i] = model.boneMatrices[i].GetInvBindMatrix(true) * boneMatrices[i];
+            }
+        }
+
+        private void ComputeBoneMatricesWithMemory(
+            MobyModel mobyModel,
+            Moby.IngameMobyMemory memory)
+        {
+            if (memory.previousAnimationData == null || memory.currentAnimationData == null)
+            {
+                for (int i = 0; i < boneMatrices!.Length; i++)
+                {
+                    boneMatrices[i] = Matrix4.Identity;
+                }
+                return;
+            }
+
+            float blend = ClampBlend(memory.animationBlend);
+
+            BuildRuntimeSourcePose(mobyModel, memory.previousAnimationData, memory.currentAnimationData, blend, runtimeCurrentPose!);
+
+            ApplyAnimationLayers(memory, runtimeCurrentPose!);
+            ApplyManipulators(memory, runtimeCurrentPose!);
+
+            ComposeBoneHierarchy(mobyModel, runtimeCurrentPose!, boneMatrices!);
+            ApplyInverseBindMatrices(mobyModel, boneMatrices!);
+        }
+
+        private void ComputeBoneMatricesWithoutMemory(
+            MobyModel mobyModel,
+            List<Animation> animations,
+            int animationID,
+            float deltaTime)
+        {
+            if (animationID != currentAnimationID)
+            {
+                currentAnimationID = animationID;
+                currentFrameID = 0;
+                frameBlend = 0.0f;
+            }
+
+            Animation? anim = (animationID >= 0 && animationID < animations.Count) ? animations[animationID] : null;
+            Frame? frame = GetAnimationFrame(anim, currentFrameID);
+
+            if (anim != null && frame != null)
+            {
+                float frameSpeed = (anim.speed != 0.0f) ? anim.speed : frame.speed;
+
+                if (frameSpeed == 0.0f || float.IsNaN(frameSpeed) || float.IsInfinity(frameSpeed))
+                {
+                    frameBlend = 1.0f;
+                }
+                else
+                {
+                    frameBlend += deltaTime * frameSpeed * 60.0f;
+                }
+            }
+
+            if (frame != currentFrame)
+            {
+                previousFrame = (currentFrame != null) ? currentFrame : frame;
+                currentFrame = frame;
+            }
+
+            if (previousFrame == null && frame != null)
+            {
+                previousFrame = frame;
+            }
+
+            float blend = ClampBlend(frameBlend);
+            for (int i = 0; i < mobyModel.boneCount; i++)
+            {
+                runtimeCurrentPose![i] = BuildBoneTransform(mobyModel, previousFrame, frame, i, blend);
+            }
+
+            if (frame != null && previousFrame != null)
+            {
+                ComposeBoneHierarchy(mobyModel, runtimeCurrentPose!, boneMatrices!);
+                ApplyInverseBindMatrices(mobyModel, boneMatrices!);
+            }
+            else
+            {
+                for (int i = 0; i < boneMatrices!.Length; i++)
+                {
+                    boneMatrices[i] = Matrix4.Identity;
+                }
+            }
+
+            while (frameBlend >= 1.0f && anim != null)
+            {
+                frameBlend -= 1.0f;
+                currentFrameID++;
+                if (currentFrameID >= anim.frames.Count)
+                {
+                    currentFrameID = 0;
+                }
             }
         }
 
@@ -759,174 +878,14 @@ namespace Replanetizer.Renderer
 
             GLTexture.blueNoiseTexture.Bind(1);
 
-            bool hasRuntimeAnimation = mob != null && mob.memory != null;
-
-            List<Animation> animations = (loadedModelID == 0 && ratchetAnimations != null && ratchetAnimations.Count > 0) ? ratchetAnimations : mobyModel.animations;
-            int animationID = hasRuntimeAnimation
-                ? mob!.memory!.animationID
-                : payload.forcedAnimationID;
-
-            if (animationID != currentAnimationID)
-            {
-                currentAnimationID = animationID;
-                currentFrameID = 0;
-                frameBlend = 0.0f;
-            }
-
-            Animation? anim = (animationID >= 0 && animationID < animations.Count) ? animations[animationID] : null;
-
-            Frame? frame;
-            Frame? runtimePreviousFrame = null;
-            if (hasRuntimeAnimation)
-            {
-                frame = GetAnimationFrame(anim, mob!.memory!.animationFrame);
-
-                if (mob.memory.updateID == byte.MaxValue)
-                {
-                    int previousAnimationID = mob.memory.previousAnimationID;
-                    int transitionCacheKey = (previousAnimationID << 8) | mob.memory.previousAnimationFrame;
-                    if (runtimeTransitionCacheKey != transitionCacheKey)
-                    {
-                        runtimeTransitionCacheKey = transitionCacheKey;
-                        runtimeTransitionPoseValid = runtimePoseValid;
-                        if (runtimePoseValid)
-                        {
-                            Array.Copy(runtimePose!, runtimeTransitionPose!, mobyModel.boneCount);
-                        }
-                    }
-                }
-                else
-                {
-                    runtimeTransitionCacheKey = -1;
-                    runtimeTransitionPoseValid = false;
-                    Animation? previousAnim = (mob.memory.updateID < animations.Count)
-                        ? animations[mob.memory.updateID]
-                        : null;
-                    runtimePreviousFrame = GetAnimationFrame(previousAnim, mob.memory.previousAnimationFrame);
-                }
-            }
-            else
-            {
-                frame = GetAnimationFrame(anim, currentFrameID);
-            }
-
-            if (anim != null && frame != null)
-            {
-                float frameSpeed = (anim.speed != 0.0f) ? anim.speed : frame.speed;
-
-                // If frameSpeed is zero then no interpolation is used and thus always display exactly the current frame.
-                if (frameSpeed == 0.0f || float.IsNaN(frameSpeed) || float.IsInfinity(frameSpeed))
-                {
-                    frameBlend = 1.0f;
-                }
-                else
-                {
-                    frameBlend += payload.deltaTime * frameSpeed * 60.0f;
-                }
-            }
-
-            if (hasRuntimeAnimation)
-            {
-                previousFrame = runtimePreviousFrame ?? frame;
-                currentFrame = frame;
-            }
-            else if (frame != currentFrame)
-            {
-                previousFrame = (currentFrame != null) ? currentFrame : frame;
-                currentFrame = frame;
-            }
-
-            if (previousFrame == null && frame != null)
-            {
-                previousFrame = frame;
-            }
-
-            float blend = (mob != null && mob.memory != null)
-                ? ClampBlend(mob.memory.animationBlend)
-                : ClampBlend(frameBlend);
-
-            bool hasRuntimePreviousPose = false;
-            bool hasRuntimeCurrentPose = false;
-            if (hasRuntimeAnimation)
-            {
-                if (mob!.memory!.previousAnimationData != null)
-                {
-                    BuildRuntimeSourcePose(
-                        mobyModel,
-                        mob.memory.previousAnimationData,
-                        runtimePreviousPose!);
-                    hasRuntimePreviousPose = true;
-                }
-
-                if (mob.memory.currentAnimationData != null)
-                {
-                    BuildRuntimeSourcePose(
-                        mobyModel,
-                        mob.memory.currentAnimationData,
-                        runtimeCurrentPose!);
-                    hasRuntimeCurrentPose = true;
-                }
-            }
-
-            for (int i = 0; i < mobyModel.boneCount; i++)
-            {
-                if (hasRuntimePreviousPose && hasRuntimeCurrentPose)
-                {
-                    localBoneTransforms![i] = BlendBoneTransforms(
-                        runtimePreviousPose![i],
-                        runtimeCurrentPose![i],
-                        blend);
-                }
-                else if (hasRuntimeAnimation
-                    && mob!.memory!.updateID == byte.MaxValue
-                    && runtimeTransitionPoseValid)
-                {
-                    BoneTransform current = BuildBoneTransform(mobyModel, frame, frame, i, 1.0f);
-                    localBoneTransforms![i] = BlendBoneTransforms(runtimeTransitionPose![i], current, blend);
-                }
-                else
-                {
-                    localBoneTransforms![i] = BuildBoneTransform(mobyModel, previousFrame, frame, i, blend);
-                }
-            }
-
-            if (hasRuntimeAnimation)
-            {
-                Array.Copy(localBoneTransforms!, runtimePose!, mobyModel.boneCount);
-                runtimePoseValid = true;
-            }
-
             if (mob != null && mob.memory != null)
             {
-                ApplyAnimationLayers(mob.memory, localBoneTransforms!);
-                ApplyManipulators(mob.memory, localBoneTransforms!);
-            }
-
-            bool hasRuntimeAnimationData = mob != null
-                && mob.memory != null
-                && (mob.memory.animationLayers.Count > 0 || mob.memory.manipulators.Count > 0);
-            if ((frame != null && previousFrame != null) || hasRuntimeAnimationData)
-            {
-                ComposeBoneHierarchy(mobyModel, localBoneTransforms!, boneMatrices!);
-                ApplyInverseBindMatrices(mobyModel, boneMatrices!);
+                ComputeBoneMatricesWithMemory(mobyModel, mob.memory);
             }
             else
             {
-                for (int i = 0; i < boneMatrices!.Length; i++)
-                {
-                    boneMatrices![i] = Matrix4.Identity;
-                }
-            }
-
-            // This causes the animation in the model viewer to loop.
-            while (frameBlend >= 1.0f && mob == null && anim != null)
-            {
-                frameBlend -= 1.0f;
-                currentFrameID++;
-                if (currentFrameID >= anim.frames.Count)
-                {
-                    currentFrameID = 0;
-                }
+                List<Animation> animations = (loadedModelID == 0 && ratchetAnimations != null && ratchetAnimations.Count > 0) ? ratchetAnimations : mobyModel.animations;
+                ComputeBoneMatricesWithoutMemory(mobyModel, animations, payload.forcedAnimationID, payload.deltaTime);
             }
 
             shaderTable.animationShader.SetUniformMatrix4(UniformName.bones, mobyModel.boneCount, ref boneMatrices![0].Row0.X);

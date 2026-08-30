@@ -56,7 +56,7 @@ namespace LibReplanetizer.Serializers
                 mobyOcclusionPointer = WriteMobyOcclusion(fs, level.mobyOcclusion),
                 unk1Pointer = SeekWrite(fs, level.unk1),
                 unk2Pointer = SeekWrite(fs, level.unk2),
-                precipitationMapPointer = SeekWrite(fs, level.precipitationMap?.Serialize()),
+                precipitationMapPointer = WritePrecipicationMap(fs, level.precipitationMap),
                 collisionPointer = SeekWrite(fs, level.collisionEngine.Serialize()),
                 mobyModelPointer = WriteMobies(fs, level.mobyModels),
                 playerAnimationPointer = WritePlayerAnimations(fs, level.playerAnimations),
@@ -100,7 +100,7 @@ namespace LibReplanetizer.Serializers
                 mobyOcclusionPointer = WriteMobyOcclusion(fs, level.mobyOcclusion),
                 unk1Pointer = SeekWrite(fs, level.unk1),
                 unk2Pointer = SeekWrite(fs, level.unk2),
-                precipitationMapPointer = SeekWrite(fs, level.precipitationMap?.Serialize()),
+                precipitationMapPointer = WritePrecipicationMap(fs, level.precipitationMap),
                 collisionPointer = SeekWrite(fs, level.collisionEngine.Serialize()),
                 tieModelPointer = WriteTieModels(fs, level.tieModels),
                 tiePointer = WriteTies(fs, level.ties, 0x10),
@@ -159,7 +159,7 @@ namespace LibReplanetizer.Serializers
                 skyboxPointer = level.skybox.WriteBytes(fs),
                 lightPointer = SeekWrite(fs, WriteLights(level.lights)),
                 lightConfigPointer = SeekWrite(fs, WriteLightConfig(level.lightConfig)),
-                precipitationMapPointer = SeekWrite(fs, level.precipitationMap?.Serialize()),
+                precipitationMapPointer = WritePrecipicationMap(fs, level.precipitationMap),
                 texturePointer = SeekWrite(fs, WriteTextures(level.textures)),
                 // Counts
                 tieModelCount = level.tieModels.Count,
@@ -422,6 +422,14 @@ namespace LibReplanetizer.Serializers
                 return 0;
 
             return mobyOcclusion.WriteBytes(fs);
+        }
+
+        private int WritePrecipicationMap(FileStream fs, PrecipitationMap? map)
+        {
+            if (map == null)
+                return 0;
+
+            return map.WriteBytes(fs);
         }
     }
 }

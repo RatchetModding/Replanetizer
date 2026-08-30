@@ -714,7 +714,8 @@ namespace LibReplanetizer.LevelObjects
             {
                 public Vector4 rotation { get; set; }
                 public Vector4 scale { get; set; }
-                public Vector4 translation { get; set; }
+                public Vector3 translation { get; set; }
+                public uint boneIndex { get; set; }
             }
 
             public struct AnimationManipulator
@@ -723,7 +724,7 @@ namespace LibReplanetizer.LevelObjects
                 public byte state { get; set; }
                 public byte scaleOn { get; set; }
                 public byte absolute { get; set; }
-                public int boneID { get; set; }
+                public ushort boneID { get; set; }
                 public uint pNext { get; set; }
                 public float animationBlend { get; set; }
                 public Vector4 rotation { get; set; }
@@ -1033,7 +1034,8 @@ namespace LibReplanetizer.LevelObjects
                         {
                             rotation = ReadVector4(animationDataBuffer, 0x00),
                             scale = ReadVector4(animationDataBuffer, 0x10),
-                            translation = ReadVector4(animationDataBuffer, 0x20)
+                            translation = ReadVector3(animationDataBuffer, 0x20),
+                            boneIndex = ReadUint(animationDataBuffer, 0x2C)
                         });
                     }
 
@@ -1179,7 +1181,7 @@ namespace LibReplanetizer.LevelObjects
                         state = manipulatorBuffer[0x01],
                         scaleOn = manipulatorBuffer[0x02],
                         absolute = manipulatorBuffer[0x03],
-                        boneID = ReadInt(manipulatorBuffer, 0x04),
+                        boneID = ReadUshort(manipulatorBuffer, 0x06),
                         pNext = ReadUint(manipulatorBuffer, 0x08),
                         animationBlend = ReadFloat(manipulatorBuffer, 0x0C),
                         rotation = ReadVector4(manipulatorBuffer, 0x10),
@@ -1204,6 +1206,14 @@ namespace LibReplanetizer.LevelObjects
                     ReadFloat(memory, offset + 0x04),
                     ReadFloat(memory, offset + 0x08),
                     ReadFloat(memory, offset + 0x0C));
+            }
+
+            private static Vector3 ReadVector3(byte[] memory, int offset)
+            {
+                return new Vector3(
+                    ReadFloat(memory, offset + 0x00),
+                    ReadFloat(memory, offset + 0x04),
+                    ReadFloat(memory, offset + 0x08));
             }
 
             public void UpdateRC1(byte[] memory, int offset)

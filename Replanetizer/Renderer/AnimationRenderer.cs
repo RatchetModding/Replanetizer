@@ -592,16 +592,17 @@ namespace Replanetizer.Renderer
         {
             foreach (Moby.IngameMobyMemory.AnimationLayer layer in memory.animationLayers)
             {
-                float blend = ClampBlend(layer.animationBlend);
+                float blend = layer.animationBlend;
                 float inverseBlend = 1.0f - blend;
 
                 foreach (Moby.IngameMobyMemory.AnimationData animationData in layer.animationData)
                 {
-                    int bone = (int) animationData.translation.W;
-                    if (bone < 0 || bone >= localBoneTransforms.Length)
+                    if (animationData.boneIndex >= (uint) localBoneTransforms.Length)
                     {
                         continue;
                     }
+
+                    int bone = (int) animationData.boneIndex;
 
                     BoneTransform current = localBoneTransforms[bone];
                     Quaternion currentRotation = ToGameQuaternion(current.rotation);

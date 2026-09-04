@@ -322,23 +322,24 @@ namespace Replanetizer.Renderer
             if (distanceCulling)
             {
                 Vector3 cullingCenter = mob.position;
-                float cullingRadius = 0.0f;
+                float cullingRadius = renderDistance;
                 if (mob.memory != null)
                 {
                     cullingCenter = new Vector3(
-                        mob.memory.collPos.X / 1024.0f,
-                        mob.memory.collPos.Y / 1024.0f,
-                        mob.memory.collPos.Z / 1024.0f);
-                    cullingRadius = mob.memory.collPos.W / 1024.0f;
+                        MathF.Abs(mob.memory.collPos.X) / 1024.0f,
+                        MathF.Abs(mob.memory.collPos.Y) / 1024.0f,
+                        MathF.Abs(mob.memory.collPos.Z) / 1024.0f);
+                    cullingRadius = MathF.Abs(mob.memory.collPos.W) / 1024.0f;
+                    cullingRadius = (mob.memory.drawDistance > 0) ? cullingRadius + mob.memory.drawDistance : float.MaxValue;
                 }
 
                 float dist = (cullingCenter - camera.position).Length;
 
                 float blendScale = 8.0f;
 
-                blendDistance = MathF.Max((dist - cullingRadius - renderDistance + blendScale) / blendScale, 0.0f);
+                blendDistance = MathF.Max((dist - cullingRadius + blendScale) / blendScale, 0.0f);
 
-                if (dist > renderDistance + cullingRadius)
+                if (dist > cullingRadius)
                 {
                     return true;
                 }

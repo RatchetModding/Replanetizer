@@ -359,23 +359,24 @@ namespace Replanetizer.Renderer
             if (distanceCulling)
             {
                 Vector3 cullingCenter = modelObject.position;
-                float cullingRadius = 0.0f;
-                if (type == RenderedObjectType.Moby && modelObject is Moby mobyMemory && mobyMemory.memory != null)
+                float cullingRadius = renderDistance;
+                if (type == RenderedObjectType.Moby && modelObject is Moby moby && moby.memory != null)
                 {
                     cullingCenter = new Vector3(
-                        mobyMemory.memory.collPos.X / 1024.0f,
-                        mobyMemory.memory.collPos.Y / 1024.0f,
-                        mobyMemory.memory.collPos.Z / 1024.0f);
-                    cullingRadius = mobyMemory.memory.collPos.W / 1024.0f;
+                        MathF.Abs(moby.memory.collPos.X) / 1024.0f,
+                        MathF.Abs(moby.memory.collPos.Y) / 1024.0f,
+                        MathF.Abs(moby.memory.collPos.Z) / 1024.0f);
+                    cullingRadius = MathF.Abs(moby.memory.collPos.W) / 1024.0f;
+                    cullingRadius = (moby.memory.drawDistance > 0) ? cullingRadius + moby.memory.drawDistance : float.MaxValue;
                 }
 
                 float dist = (cullingCenter - camera.position).Length;
 
                 float blendScale = 8.0f;
 
-                blendDistance = MathF.Max((dist - cullingRadius - renderDistance + blendScale) / blendScale, 0.0f);
+                blendDistance = MathF.Max((dist - cullingRadius + blendScale) / blendScale, 0.0f);
 
-                if (dist > renderDistance + cullingRadius)
+                if (dist > cullingRadius)
                 {
                     return true;
                 }

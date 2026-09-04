@@ -18,7 +18,7 @@ namespace LibReplanetizer.LevelObjects
 {
     public class Moby : ModelObject
     {
-        private GameType game;
+        public GameType game { get; private set; }
 
         private static int MAX_ID = 0;
 

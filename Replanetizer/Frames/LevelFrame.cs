@@ -50,6 +50,7 @@ namespace Replanetizer.Frames
         private float movingAvgFrametime = 1.0f;
 
         public readonly Selection selectedObjects;
+        public event Action<LevelObject>? ObjectSelected;
         private readonly string[] selectionPositioningOptions = { PivotPositioning.Mean.HUMAN_NAME, PivotPositioning.IndividualOrigins.HUMAN_NAME };
         private readonly string[] selectionSpaceOptions = { TransformSpace.Global.HUMAN_NAME, TransformSpace.Local.HUMAN_NAME };
 
@@ -1081,6 +1082,7 @@ namespace Replanetizer.Frames
                 }
             }
 
+            ObjectSelected?.Invoke(obj);
             return true;
         }
 

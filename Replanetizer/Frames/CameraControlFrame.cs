@@ -23,6 +23,7 @@ namespace Replanetizer.Frames
 
         private const float DEGREES_PER_RADIAN = 180.0f / MathF.PI;
         private const float RADIANS_PER_DEGREE = MathF.PI / 180.0f;
+        private const float MAX_TARGET_PITCH = 89.9f * RADIANS_PER_DEGREE;
 
         private ControlMode mode = ControlMode.Manual;
         private RotationRepresentation rotationRepresentation = RotationRepresentation.YawAndPitch;
@@ -30,11 +31,15 @@ namespace Replanetizer.Frames
         private float splineProgress;
         private float playbackSpeed = 1.0f;
         private bool isPlaying;
+        private bool rotateTowardTarget;
+        private bool targetPickerArmed;
+        private LevelObject? targetObject;
 
         protected override string frameName { get; set; } = "Camera Control";
 
         public CameraControlFrame(Window wnd, LevelFrame levelFrame) : base(wnd, levelFrame)
         {
+            levelFrame.ObjectSelected += LevelFrameOnObjectSelected;
         }
 
         public override void RenderAsWindow(float deltaTime)
@@ -50,6 +55,8 @@ namespace Replanetizer.Frames
         public override void Render(float deltaTime)
         {
             RenderModeSelector();
+
+            ImGui.Separator();
 
             if (mode == ControlMode.Manual)
                 RenderManualControls();
@@ -75,6 +82,8 @@ namespace Replanetizer.Frames
             {
                 mode = option;
                 isPlaying = false;
+                if (mode != ControlMode.Spline)
+                    targetPickerArmed = false;
                 if (mode == ControlMode.Spline)
                     ApplySplinePosition(GetSelectedSpline(), splineProgress);
             }
@@ -222,6 +231,7 @@ namespace Replanetizer.Frames
             if (splines.Count == 0)
             {
                 ImGui.Text("This level has no splines.");
+                RenderTargetControls();
                 return;
             }
 
@@ -248,6 +258,10 @@ namespace Replanetizer.Frames
                 ImGui.EndCombo();
             }
 
+            ImGui.Separator();
+
+            RenderTargetControls();
+
             Spline? spline = GetSelectedSpline();
             if (spline == null)
                 return;
@@ -267,9 +281,10 @@ namespace Replanetizer.Frames
             }
 
             ImGui.PushItemWidth(120.0f);
-            ImGui.InputFloat("Speed", ref playbackSpeed, 0.1f, 1.0f);
+            float playbackDuration = 1.0f / playbackSpeed;
+            ImGui.InputFloat("Playback Duration (seconds)", ref playbackDuration, 1.0f, 3600.0f);
             ImGui.PopItemWidth();
-            playbackSpeed = MathF.Max(0.0f, playbackSpeed);
+            playbackSpeed = 1.0f / MathF.Max(1.0f, playbackDuration);
 
             if (ImGui.Button(isPlaying ? "Pause" : "Play"))
                 isPlaying = !isPlaying;
@@ -287,6 +302,40 @@ namespace Replanetizer.Frames
                 splineProgress %= 1.0f;
                 ApplySplinePosition(spline, splineProgress);
             }
+        }
+
+        private void RenderTargetControls()
+        {
+            bool trackingChanged = ImGui.Checkbox("Rotate toward target", ref rotateTowardTarget);
+
+            if (rotateTowardTarget)
+            {
+                if (targetObject == null)
+                    ImGui.Text("Target: None");
+                else
+                    ImGui.Text($"Target: {targetObject.GetType().Name}");
+
+                if (ImGui.Button(targetPickerArmed ? "Picking..." : "Pick target"))
+                    targetPickerArmed = true;
+
+                if (targetPickerArmed)
+                    ImGui.Text("Select an object in the level.");
+
+                if (trackingChanged && GetSelectedSpline() != null)
+                    ApplyTargetRotation();
+            }
+        }
+
+        private void LevelFrameOnObjectSelected(LevelObject obj)
+        {
+            if (!targetPickerArmed)
+                return;
+
+            targetObject = obj;
+            targetPickerArmed = false;
+
+            if (mode == ControlMode.Spline && rotateTowardTarget)
+                ApplyTargetRotation();
         }
 
         private void NormalizeSelectedSplineIndex(IReadOnlyList<Spline> splines)
@@ -318,6 +367,29 @@ namespace Replanetizer.Frames
                 return;
 
             levelFrame.camera.SetPosition(EvaluateSpline(spline, progress));
+            ApplyTargetRotation();
+            levelFrame.InvalidateView();
+        }
+
+        private void ApplyTargetRotation()
+        {
+            if (!rotateTowardTarget || targetObject == null)
+                return;
+
+            Vector3 direction = targetObject.position - levelFrame.camera.position;
+            float horizontalDistance = MathF.Sqrt(direction.X * direction.X + direction.Y * direction.Y);
+            if (direction.LengthSquared <= 0.0001f)
+                return;
+
+            float pitch = MathF.Atan2(direction.Z, horizontalDistance);
+            pitch = MathHelper.Clamp(pitch, -MAX_TARGET_PITCH, MAX_TARGET_PITCH);
+
+            Vector3 cameraRotation = levelFrame.camera.rotation;
+            float yaw = horizontalDistance <= 0.0001f
+                ? cameraRotation.Z
+                : MathF.Atan2(-direction.X, direction.Y);
+
+            levelFrame.camera.SetRotation(pitch, yaw);
             levelFrame.InvalidateView();
         }
 
@@ -338,6 +410,12 @@ namespace Replanetizer.Frames
                 spline.GetVertex(secondVertex),
                 interpolation
             );
+        }
+
+        public override void Dispose()
+        {
+            levelFrame.ObjectSelected -= LevelFrameOnObjectSelected;
+            base.Dispose();
         }
     }
 }

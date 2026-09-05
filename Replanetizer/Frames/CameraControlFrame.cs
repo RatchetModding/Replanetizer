@@ -14,10 +14,18 @@ namespace Replanetizer.Frames
             Spline
         }
 
+        private enum RotationRepresentation
+        {
+            YawAndPitch,
+            EulerAngles,
+            Quaternion
+        }
+
         private const float DEGREES_PER_RADIAN = 180.0f / MathF.PI;
         private const float RADIANS_PER_DEGREE = MathF.PI / 180.0f;
 
         private ControlMode mode = ControlMode.Manual;
+        private RotationRepresentation rotationRepresentation = RotationRepresentation.YawAndPitch;
         private int selectedSplineIndex = -1;
         private float splineProgress;
         private float playbackSpeed = 1.0f;
@@ -86,21 +94,124 @@ namespace Replanetizer.Frames
                 levelFrame.InvalidateView();
             }
 
+            RenderRotationRepresentation();
+        }
+
+        private void RenderRotationRepresentation()
+        {
+            string representationName = GetRotationRepresentationName(rotationRepresentation);
+            if (ImGui.BeginCombo("Rotation", representationName))
+            {
+                RenderRotationRepresentationOption(
+                    RotationRepresentation.YawAndPitch, "yaw and pitch");
+                RenderRotationRepresentationOption(
+                    RotationRepresentation.EulerAngles, "euler angles");
+                RenderRotationRepresentationOption(
+                    RotationRepresentation.Quaternion, "quaternion");
+                ImGui.EndCombo();
+            }
+
             Vector3 cameraRotation = levelFrame.camera.rotation;
+            switch (rotationRepresentation)
+            {
+                case RotationRepresentation.YawAndPitch:
+                    RenderYawAndPitch(cameraRotation);
+                    break;
+                case RotationRepresentation.EulerAngles:
+                    RenderEulerAngles(cameraRotation);
+                    break;
+                case RotationRepresentation.Quaternion:
+                    RenderQuaternion(cameraRotation);
+                    break;
+            }
+        }
+
+        private void RenderRotationRepresentationOption(
+            RotationRepresentation representation, string label)
+        {
+            bool selected = rotationRepresentation == representation;
+            if (ImGui.Selectable(label, selected))
+                rotationRepresentation = representation;
+
+            if (selected)
+                ImGui.SetItemDefaultFocus();
+        }
+
+        private static string GetRotationRepresentationName(RotationRepresentation representation)
+        {
+            return representation switch
+            {
+                RotationRepresentation.YawAndPitch => "yaw and pitch",
+                RotationRepresentation.EulerAngles => "euler angles",
+                RotationRepresentation.Quaternion => "quaternion",
+                _ => "yaw and pitch"
+            };
+        }
+
+        private void RenderYawAndPitch(Vector3 cameraRotation)
+        {
             float pitch = cameraRotation.X * DEGREES_PER_RADIAN;
             float yaw = cameraRotation.Z * DEGREES_PER_RADIAN;
 
-            if (ImGui.InputFloat("Pitch (degrees)", ref pitch))
+            bool pitchChanged = ImGui.InputFloat("Pitch (degrees)", ref pitch);
+            bool yawChanged = ImGui.InputFloat("Yaw (degrees)", ref yaw);
+            if (pitchChanged || yawChanged)
             {
-                levelFrame.camera.SetRotation(pitch * RADIANS_PER_DEGREE, cameraRotation.Z);
+                levelFrame.camera.SetRotation(
+                    pitch * RADIANS_PER_DEGREE,
+                    yaw * RADIANS_PER_DEGREE
+                );
                 levelFrame.InvalidateView();
             }
+        }
 
-            if (ImGui.InputFloat("Yaw (degrees)", ref yaw))
+        private void RenderEulerAngles(Vector3 cameraRotation)
+        {
+            Vector3 eulerAngles = Quaternion.FromEulerAngles(cameraRotation).ToEulerAngles();
+            System.Numerics.Vector3 degrees = new(
+                eulerAngles.X * DEGREES_PER_RADIAN,
+                eulerAngles.Y * DEGREES_PER_RADIAN,
+                eulerAngles.Z * DEGREES_PER_RADIAN
+            );
+
+            if (ImGui.InputFloat3("Euler angles (degrees)", ref degrees))
             {
-                levelFrame.camera.SetRotation(cameraRotation.X, yaw * RADIANS_PER_DEGREE);
+                Quaternion quaternion = Quaternion.FromEulerAngles(
+                    degrees.X * RADIANS_PER_DEGREE,
+                    degrees.Y * RADIANS_PER_DEGREE,
+                    degrees.Z * RADIANS_PER_DEGREE
+                );
+                levelFrame.camera.SetRotation(quaternion.ToEulerAngles());
                 levelFrame.InvalidateView();
             }
+        }
+
+        private void RenderQuaternion(Vector3 cameraRotation)
+        {
+            Quaternion quaternion = Quaternion.FromEulerAngles(cameraRotation);
+            System.Numerics.Vector4 components = new(
+                quaternion.X, quaternion.Y, quaternion.Z, quaternion.W
+            );
+
+            if (!ImGui.InputFloat4("Quaternion (X, Y, Z, W)", ref components))
+                return;
+
+            float lengthSquared = components.X * components.X +
+                components.Y * components.Y +
+                components.Z * components.Z +
+                components.W * components.W;
+            if (lengthSquared <= float.Epsilon)
+                return;
+
+            float inverseLength = 1.0f / MathF.Sqrt(lengthSquared);
+            quaternion = new Quaternion(
+                components.X * inverseLength,
+                components.Y * inverseLength,
+                components.Z * inverseLength,
+                components.W * inverseLength
+            );
+            levelFrame.camera.SetRotation(quaternion.ToEulerAngles());
+            levelFrame.InvalidateView();
         }
 
         private void RenderSplineControls(float deltaTime)

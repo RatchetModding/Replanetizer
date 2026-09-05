@@ -276,6 +276,10 @@ namespace Replanetizer.Frames
                     {
                         subFrames.Add(new MemoryHookFrame(this.wnd, this));
                     }
+                    if (ImGui.MenuItem("Camera Control"))
+                    {
+                        subFrames.Add(new CameraControlFrame(this.wnd, this));
+                    }
                     ImGui.EndMenu();
                 }
 

@@ -33,6 +33,7 @@ namespace Replanetizer.Frames
         private bool isPlaying;
         private bool rotateTowardTarget;
         private bool targetPickerArmed;
+        private bool splinePickerArmed;
         private LevelObject? targetObject;
 
         protected override string frameName { get; set; } = "Camera Control";
@@ -83,7 +84,10 @@ namespace Replanetizer.Frames
                 mode = option;
                 isPlaying = false;
                 if (mode != ControlMode.Spline)
+                {
                     targetPickerArmed = false;
+                    splinePickerArmed = false;
+                }
                 if (mode == ControlMode.Spline)
                     ApplySplinePosition(GetSelectedSpline(), splineProgress);
             }
@@ -245,18 +249,21 @@ namespace Replanetizer.Frames
                 {
                     bool selected = selectedSplineIndex == i;
                     if (ImGui.Selectable(GetSplineLabel(splines[i]), selected))
-                    {
-                        selectedSplineIndex = i;
-                        splineProgress = 0.0f;
-                        isPlaying = false;
-                        ApplySplinePosition(splines[i], splineProgress);
-                    }
+                        SelectSpline(splines[i]);
 
                     if (selected)
                         ImGui.SetItemDefaultFocus();
                 }
                 ImGui.EndCombo();
             }
+
+            if (ImGui.Button(splinePickerArmed ? "Picking spline..." : "Pick spline"))
+            {
+                splinePickerArmed = true;
+                targetPickerArmed = false;
+            }
+            if (splinePickerArmed)
+                ImGui.Text("Select a spline in the level.");
 
             ImGui.Separator();
 
@@ -316,7 +323,10 @@ namespace Replanetizer.Frames
                     ImGui.Text($"Target: {targetObject.GetType().Name}");
 
                 if (ImGui.Button(targetPickerArmed ? "Picking..." : "Pick target"))
+                {
                     targetPickerArmed = true;
+                    splinePickerArmed = false;
+                }
 
                 if (targetPickerArmed)
                     ImGui.Text("Select an object in the level.");
@@ -328,14 +338,49 @@ namespace Replanetizer.Frames
 
         private void LevelFrameOnObjectSelected(LevelObject obj)
         {
-            if (!targetPickerArmed)
+            if (splinePickerArmed)
+            {
+                Spline? spline = GetSplineFromObject(obj);
+                if (spline != null)
+                {
+                    SelectSpline(spline);
+                    splinePickerArmed = false;
+                }
+                return;
+            }
+
+            if (targetPickerArmed)
+            {
+                targetObject = obj;
+                targetPickerArmed = false;
+
+                if (mode == ControlMode.Spline && rotateTowardTarget)
+                    ApplyTargetRotation();
+            }
+        }
+
+        private Spline? GetSplineFromObject(LevelObject obj)
+        {
+            Spline? spline = obj as Spline;
+            if (spline == null && obj is GrindPath grindPath)
+                spline = grindPath.spline;
+
+            if (spline == null || !levelFrame.level.splines.Contains(spline))
+                return null;
+
+            return spline;
+        }
+
+        private void SelectSpline(Spline spline)
+        {
+            int splineIndex = levelFrame.level.splines.IndexOf(spline);
+            if (splineIndex < 0)
                 return;
 
-            targetObject = obj;
-            targetPickerArmed = false;
-
-            if (mode == ControlMode.Spline && rotateTowardTarget)
-                ApplyTargetRotation();
+            selectedSplineIndex = splineIndex;
+            splineProgress = 0.0f;
+            isPlaying = false;
+            ApplySplinePosition(spline, splineProgress);
         }
 
         private void NormalizeSelectedSplineIndex(IReadOnlyList<Spline> splines)

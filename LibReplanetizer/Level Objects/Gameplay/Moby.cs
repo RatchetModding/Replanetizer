@@ -243,6 +243,9 @@ namespace LibReplanetizer.LevelObjects
 
         [Category("Attributes"), DisplayName("Mode Bits")]
         public Bitmask mode { get; set; } = 0;
+        public Matrix4 collisionMatrix;
+        public Matrix4 collisionTriangleMatrix;
+        public Vector3 collisionPosition { get; set; }
 
         // This should probably get removed, not enough information are available to construct a moby like that
         public Moby(GameType game)
@@ -390,6 +393,8 @@ namespace LibReplanetizer.LevelObjects
             rotation = new Quaternion(rotx, roty, rotz);
             scale = new Vector3(scaleHolder, scaleHolder, scaleHolder);
 
+            collisionPosition = position;
+
             model = mobyModels.Find(mobyModel => mobyModel.id == modelID);
             UpdateTransformMatrix();
         }
@@ -449,6 +454,8 @@ namespace LibReplanetizer.LevelObjects
             rotation = new Quaternion(rotx, roty, rotz);
             scale = new Vector3(scaleHolder); //Mobys only use the X axis of scale
 
+            collisionPosition = position;
+
             model = mobyModels.Find(mobyModel => mobyModel.id == modelID);
             UpdateTransformMatrix();
         }
@@ -501,6 +508,8 @@ namespace LibReplanetizer.LevelObjects
             position = new Vector3(x, y, z);
             rotation = new Quaternion(rotx, roty, rotz);
             scale = new Vector3(scaleHolder); //Mobys only use the X axis of scale
+
+            collisionPosition = position;
 
             model = mobyModels.Find(mobyModel => mobyModel.id == modelID);
             UpdateTransformMatrix();
@@ -692,6 +701,11 @@ namespace LibReplanetizer.LevelObjects
             Matrix4 scaleMatrix = Matrix4.CreateScale(s);
             Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
             modelMatrix = scaleMatrix * rotX * rotY * rotZ * translationMatrix;
+
+            Matrix4 collisionTranslationMatrix = Matrix4.CreateTranslation(collisionPosition);
+
+            collisionMatrix = scaleMatrix * rotX * rotY * rotZ * collisionTranslationMatrix;
+            collisionTriangleMatrix = collisionMatrix;
         }
 
         public class IngameMobyMemory
@@ -1450,6 +1464,22 @@ namespace LibReplanetizer.LevelObjects
             position = modelMatrix.ExtractTranslation();
             rotation = modelMatrix.ExtractRotation();
             scale = modelMatrix.ExtractScale();
+
+            float modelSize = (model != null) ? model.size : 1.0f;
+
+            if (model != null)
+                scale /= modelSize;
+
+            Vector3 collisionEuler = new Vector3(memory.rotation.X, memory.rotation.Y, memory.rotation.Z);
+            Matrix4 collisionRotZ = Matrix4.CreateFromAxisAngle(Vector3.UnitZ, collisionEuler.Z);
+            Matrix4 collisionRotY = Matrix4.CreateFromAxisAngle(Vector3.UnitY, collisionEuler.Y);
+            Matrix4 collisionRotX = Matrix4.CreateFromAxisAngle(Vector3.UnitX, collisionEuler.X);
+            Matrix4 collisionScaleMatrix = Matrix4.CreateScale(memory.scale);
+            Matrix4 collisionTranslationMatrix = Matrix4.CreateTranslation(new Vector3(memory.position));
+
+            collisionMatrix = collisionScaleMatrix * collisionRotX * collisionRotY * collisionRotZ * collisionTranslationMatrix;
+            collisionTriangleMatrix = modelMatrix;
+            collisionPosition = new Vector3(memory.position);
         }
     }
 }

@@ -20,7 +20,7 @@ namespace Replanetizer.Renderer
 
             public bool enableMoby = true, enableTie = true, enableShrub = true, enableSpline = false,
             enableCuboid = false, enableSpheres = false, enableCylinders = false, enablePills = false,
-            enableSkybox = true, enableTerrain = true, enableCollision = false, enableTransparency = true,
+            enableSkybox = true, enableTerrain = true, enableCollision = false, enableMobyCollision = false, enableTransparency = true,
             enableDistanceCulling = true, enableFrustumCulling = true, enableFog = true, enableGameCameras = false,
             enablePointLights = false, enableEnvSamples = false, enableEnvTransitions = false, enableSoundInstances = false,
             enableGrindPaths = false, enableMeshlessModels = false, enableAnimations = false, enableLighting = true,

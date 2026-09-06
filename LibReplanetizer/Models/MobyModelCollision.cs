@@ -17,10 +17,11 @@ namespace LibReplanetizer.Models
 {
     public enum MobyModelCollisionShape : byte
     {
-        IndexedCapsule = 0,
-        Sphere = 1,
+        Sphere = 0,
+        SphereVariant = 1,
         IndexedSphere = 2,
-        Capsule = 3
+        Capsule = 3,
+        IndexedCapsule = 4
     }
 
     public class MobyModelCollisionPrimitive
@@ -52,32 +53,32 @@ namespace LibReplanetizer.Models
 
         public float indexedCapsuleRadius
         {
-            get => value2;
-            set => value2 = value;
+            get => value2 / 1024.0f;
+            set => value2 = value * 1024.0f;
         }
 
         public float sphereCenterX
         {
-            get => value3;
-            set => value3 = value;
+            get => value3 / 1024.0f;
+            set => value3 = value * 1024.0f;
         }
 
         public float sphereCenterY
         {
-            get => value4;
-            set => value4 = value;
+            get => value4 / 1024.0f;
+            set => value4 = value * 1024.0f;
         }
 
         public float sphereCenterZ
         {
-            get => value5;
-            set => value5 = value;
+            get => value5 / 1024.0f;
+            set => value5 = value * 1024.0f;
         }
 
         public float sphereRadius
         {
-            get => value6;
-            set => value6 = value;
+            get => value6 / 1024.0f;
+            set => value6 = value * 1024.0f;
         }
 
         public int indexedSphereVertex
@@ -88,56 +89,62 @@ namespace LibReplanetizer.Models
 
         public float indexedSphereOffsetX
         {
-            get => value3;
-            set => value3 = value;
+            get => value3 / 1024.0f;
+            set => value3 = value * 1024.0f;
         }
 
         public float indexedSphereOffsetY
         {
-            get => value4;
-            set => value4 = value;
+            get => value4 / 1024.0f;
+            set => value4 = value * 1024.0f;
         }
 
         public float indexedSphereOffsetZ
         {
-            get => value5;
-            set => value5 = value;
+            get => value5 / 1024.0f;
+            set => value5 = value * 1024.0f;
         }
 
         public float indexedSphereRadius
         {
-            get => value2;
-            set => value2 = value;
+            get => value2 / 1024.0f;
+            set => value2 = value * 1024.0f;
+        }
+
+        public float capsuleLength
+        {
+            get => BitConverter.Int32BitsToSingle(value0) / 1024.0f;
+            set => value0 = BitConverter.SingleToInt32Bits(value * 1024.0f);
         }
 
         public float capsuleHalfLength
         {
-            get => BitConverter.Int32BitsToSingle(value0);
-            set => value0 = BitConverter.SingleToInt32Bits(value);
+            get => capsuleLength * 0.5f;
+            set => capsuleLength = value * 2.0f;
         }
 
         public float capsuleCenterX
         {
-            get => value3;
-            set => value3 = value;
+            get => value3 / 1024.0f;
+            set => value3 = value * 1024.0f;
         }
 
         public float capsuleCenterY
         {
-            get => value4;
-            set => value4 = value;
+            get => value4 / 1024.0f;
+            set => value4 = value * 1024.0f;
         }
 
         public float capsuleCenterZ
         {
-            get => value5;
-            set => value5 = value;
+            get => value5 / 1024.0f;
+            set => value5 = value * 1024.0f;
         }
 
         public float capsuleRadius
         {
-            get => value6;
-            set => value6 = value;
+            get => value6 / 1024.0f;
+            set => value6 = value * 1024.0f;
         }
 
         public MobyModelCollisionPrimitive() { }
@@ -214,19 +221,19 @@ namespace LibReplanetizer.Models
 
         public MobyModelCollisionVertex(byte[] data, int offset)
         {
-            x = ReadFloat(data, offset + 0x00);
-            y = ReadFloat(data, offset + 0x04);
-            z = ReadFloat(data, offset + 0x08);
-            w = ReadFloat(data, offset + 0x0C);
+            x = ReadFloat(data, offset + 0x00) / 1024.0f;
+            y = ReadFloat(data, offset + 0x04) / 1024.0f;
+            z = ReadFloat(data, offset + 0x08) / 1024.0f;
+            w = ReadFloat(data, offset + 0x0C) / 1024.0f;
         }
 
         public byte[] Serialize()
         {
             byte[] outbytes = new byte[16];
-            WriteFloat(outbytes, 0x00, x);
-            WriteFloat(outbytes, 0x04, y);
-            WriteFloat(outbytes, 0x08, z);
-            WriteFloat(outbytes, 0x0C, w);
+            WriteFloat(outbytes, 0x00, x * 1024.0f);
+            WriteFloat(outbytes, 0x04, y * 1024.0f);
+            WriteFloat(outbytes, 0x08, z * 1024.0f);
+            WriteFloat(outbytes, 0x0C, w * 1024.0f);
             return outbytes;
         }
     }

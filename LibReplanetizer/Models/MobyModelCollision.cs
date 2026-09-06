@@ -5,6 +5,7 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using System;
 using System.ComponentModel;
 using LibReplanetizer.Models.Animations;
 using System.Collections.Generic;
@@ -14,10 +15,19 @@ using static LibReplanetizer.Serializers.SerializerFunctions;
 
 namespace LibReplanetizer.Models
 {
+    public enum MobyModelCollisionShape : byte
+    {
+        IndexedCapsule = 0,
+        Sphere = 1,
+        IndexedSphere = 2,
+        Capsule = 3
+    }
+
     public class MobyModelCollisionPrimitive
     {
         public const int SIZE = 0x20;
-        public byte shape { get; set; }
+
+        public MobyModelCollisionShape shape { get; set; }
         public byte unk1 { get; set; }
         public ushort collisionMask { get; set; }
         public int value0 { get; set; }
@@ -28,11 +38,113 @@ namespace LibReplanetizer.Models
         public float value5 { get; set; }
         public float value6 { get; set; }
 
+        public ushort indexedCapsuleVertex0
+        {
+            get => (ushort) (value0 >> 16);
+            set => value0 = (value0 & 0x0000FFFF) | (value << 16);
+        }
+
+        public ushort indexedCapsuleVertex1
+        {
+            get => (ushort) value0;
+            set => value0 = (value0 & unchecked((int) 0xFFFF0000)) | value;
+        }
+
+        public float indexedCapsuleRadius
+        {
+            get => value2;
+            set => value2 = value;
+        }
+
+        public float sphereCenterX
+        {
+            get => value3;
+            set => value3 = value;
+        }
+
+        public float sphereCenterY
+        {
+            get => value4;
+            set => value4 = value;
+        }
+
+        public float sphereCenterZ
+        {
+            get => value5;
+            set => value5 = value;
+        }
+
+        public float sphereRadius
+        {
+            get => value6;
+            set => value6 = value;
+        }
+
+        public int indexedSphereVertex
+        {
+            get => value0;
+            set => value0 = value;
+        }
+
+        public float indexedSphereOffsetX
+        {
+            get => value3;
+            set => value3 = value;
+        }
+
+        public float indexedSphereOffsetY
+        {
+            get => value4;
+            set => value4 = value;
+        }
+
+        public float indexedSphereOffsetZ
+        {
+            get => value5;
+            set => value5 = value;
+        }
+
+        public float indexedSphereRadius
+        {
+            get => value2;
+            set => value2 = value;
+        }
+
+        public float capsuleHalfLength
+        {
+            get => BitConverter.Int32BitsToSingle(value0);
+            set => value0 = BitConverter.SingleToInt32Bits(value);
+        }
+
+        public float capsuleCenterX
+        {
+            get => value3;
+            set => value3 = value;
+        }
+
+        public float capsuleCenterY
+        {
+            get => value4;
+            set => value4 = value;
+        }
+
+        public float capsuleCenterZ
+        {
+            get => value5;
+            set => value5 = value;
+        }
+
+        public float capsuleRadius
+        {
+            get => value6;
+            set => value6 = value;
+        }
+
         public MobyModelCollisionPrimitive() { }
 
         public MobyModelCollisionPrimitive(byte[] data, int offset)
         {
-            shape = data[offset + 0x00];
+            shape = (MobyModelCollisionShape) data[offset + 0x00];
             unk1 = data[offset + 0x01];
             collisionMask = ReadUshort(data, offset + 0x02);
             value0 = ReadInt(data, offset + 0x04);
@@ -47,7 +159,7 @@ namespace LibReplanetizer.Models
         public byte[] Serialize()
         {
             byte[] outbytes = new byte[32];
-            outbytes[0x00] = shape;
+            outbytes[0x00] = (byte) shape;
             outbytes[0x01] = unk1;
             WriteUshort(outbytes, 0x02, collisionMask);
             WriteInt(outbytes, 0x04, value0);

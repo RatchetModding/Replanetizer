@@ -848,8 +848,11 @@ namespace LibReplanetizer.LevelObjects
 
             public bool IsDead()
             {
-                // TODO: moby->collCnt <= worldUpdateTime is also a necessary condition for dead mobies!
-                return state > 0xFD;
+                // 0xFD - Deleted/Inactive static or level moby
+                // 0xFE - Deleted/Inactive dynamic moby, awaiting pool reuse
+                // 0xFF - Unused dynamic-pool terminator
+                // Reusable mobies can be reused after two frames.
+                return state >= 0xFD;
             }
 
             public void SetDead()

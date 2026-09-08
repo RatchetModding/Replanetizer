@@ -29,7 +29,7 @@ namespace Replanetizer.Frames
             itemSizeX = IMAGE_SIZE.X + ImGui.GetStyle().ItemSpacing.X;
         }
 
-        public static void RenderTextureList(List<Texture> textures, float itemSizeX, Dictionary<Texture, GLTexture> textureIds, string prefix = "", int additionalOffset = 0)
+        public static void RenderTextureList(List<Texture> textures, float itemSizeX, Dictionary<Texture, GLTexture> textureIds, string prefix = "", int additionalOffset = 0, bool useLocalIndex = false)
         {
             var width = ImGui.GetContentRegionAvail().X - additionalOffset;
             var itemsPerRow = (int) Math.Floor(width / itemSizeX);
@@ -44,7 +44,7 @@ namespace Replanetizer.Frames
                 if (ImGui.BeginChild("imageChild_" + prefix + i, ITEM_SIZE, ImGuiChildFlags.None))
                 {
                     ImGui.Image((IntPtr) textureIds[t].textureID, IMAGE_SIZE);
-                    string idText = t.id.ToString();
+                    string idText = useLocalIndex ? i.ToString() : t.id.ToString();
                     float idWidth = ImGui.CalcTextSize(idText).X;
                     ImGui.SetCursorPosX(ITEM_SIZE.X - idWidth);
                     ImGui.Text(idText);
@@ -101,6 +101,11 @@ namespace Replanetizer.Frames
             if (ImGui.CollapsingHeader("Level textures"))
             {
                 RenderTextureList(level.textures, itemSizeX, levelFrame.textureIds, "levelTextures");
+            }
+            if (ImGui.CollapsingHeader("Menu textures"))
+            {
+                var menuTextures = level.textures.FindAll(tex => level.textureConfigMenus.Contains(tex.id));
+                RenderTextureList(menuTextures, itemSizeX, levelFrame.textureIds, "menuTextures", 0, true);
             }
             if (ImGui.CollapsingHeader("Spaceship textures"))
             {

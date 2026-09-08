@@ -12,7 +12,6 @@ namespace Replanetizer.Renderer
     {
         private sealed class CollisionMeshHandle
         {
-            public Moby moby = null!;
             public int vao;
             public int vbo;
             public int ibo;
@@ -22,7 +21,9 @@ namespace Replanetizer.Renderer
 
         private readonly ShaderTable shaderTable;
         private readonly List<CollisionMeshHandle> meshes = new List<CollisionMeshHandle>();
-        private readonly Dictionary<Moby, MobyModel?> cachedModels = new Dictionary<Moby, MobyModel?>();
+        public Moby? moby { get; private set; }
+        private MobyModel? cachedModel;
+        private bool modelCached;
 
         public MobyCollisionRenderer(ShaderTable shaderTable)
         {
@@ -34,50 +35,40 @@ namespace Replanetizer.Renderer
             if (obj is not Moby moby)
                 throw new NotImplementedException();
 
-            Update(moby);
-        }
-
-        public override void Include<T>(List<T> list)
-        {
-            if (list is not List<Moby> mobies)
-                throw new NotImplementedException();
-
-            foreach (Moby moby in mobies)
+            if (this.moby != null && !ReferenceEquals(this.moby, moby))
             {
-                Include(moby);
-            }
-        }
-
-        public void Remove(Moby moby)
-        {
-            for (int i = meshes.Count - 1; i >= 0; i--)
-            {
-                if (meshes[i].moby != moby) continue;
-
-                DeleteMesh(meshes[i]);
-                meshes.RemoveAt(i);
+                DeleteMeshes();
+                cachedModel = null;
+                modelCached = false;
             }
 
-            cachedModels.Remove(moby);
+            this.moby = moby;
         }
 
-        public void Update(Moby moby)
+        public override void Include<T>(List<T> list) => throw new NotImplementedException();
+
+        private void Update()
         {
+            if (moby == null)
+                return;
+
             if (moby.memory?.IsDead() == true)
             {
-                Remove(moby);
+                DeleteMeshes();
+                cachedModel = null;
+                modelCached = false;
                 return;
             }
 
             MobyModel? mobyModel = moby.model as MobyModel;
-            if (cachedModels.TryGetValue(moby, out MobyModel? cachedModel)
-                && ReferenceEquals(cachedModel, mobyModel))
+            if (modelCached && ReferenceEquals(cachedModel, mobyModel))
             {
                 return;
             }
 
-            Remove(moby);
-            cachedModels[moby] = mobyModel;
+            DeleteMeshes();
+            cachedModel = mobyModel;
+            modelCached = true;
 
             if (mobyModel?.collisionData == null)
                 return;
@@ -89,6 +80,11 @@ namespace Replanetizer.Renderer
 
         public override void Render(RendererPayload payload)
         {
+            Update();
+
+            if (moby == null || moby.memory?.IsDead() == true)
+                return;
+
             Matrix4 worldToView = payload.camera.GetWorldViewMatrix();
 
             shaderTable.collisionShader.UseShader();
@@ -98,8 +94,8 @@ namespace Replanetizer.Renderer
             foreach (CollisionMeshHandle mesh in meshes)
             {
                 Matrix4 modelToWorld = mesh.triangleTransform
-                    ? mesh.moby.collisionTriangleMatrix
-                    : mesh.moby.collisionMatrix;
+                    ? moby.collisionTriangleMatrix
+                    : moby.collisionMatrix;
                 shaderTable.collisionShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelToWorld);
                 GL.BindVertexArray(mesh.vao);
                 GL.DrawElements(PrimitiveType.Triangles, mesh.indexCount, DrawElementsType.UnsignedInt, 0);
@@ -116,7 +112,18 @@ namespace Replanetizer.Renderer
             }
 
             meshes.Clear();
-            cachedModels.Clear();
+            cachedModel = null;
+            modelCached = false;
+        }
+
+        private void DeleteMeshes()
+        {
+            foreach (CollisionMeshHandle mesh in meshes)
+            {
+                DeleteMesh(mesh);
+            }
+
+            meshes.Clear();
         }
 
         private static void DeleteMesh(CollisionMeshHandle mesh)
@@ -151,7 +158,6 @@ namespace Replanetizer.Renderer
 
             meshes.Add(new CollisionMeshHandle
             {
-                moby = moby,
                 vao = vao,
                 vbo = vbo,
                 ibo = ibo,

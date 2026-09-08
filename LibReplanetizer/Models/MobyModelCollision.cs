@@ -186,7 +186,7 @@ namespace LibReplanetizer.Models
         public byte vertex0 { get; set; }
         public byte vertex1 { get; set; }
         public byte vertex2 { get; set; }
-        public byte flags { get; set; }
+        public byte collisionType { get; set; }
 
         public MobyModelCollisionTriangle() { }
 
@@ -195,7 +195,7 @@ namespace LibReplanetizer.Models
             vertex0 = data[offset + 0x00];
             vertex1 = data[offset + 0x01];
             vertex2 = data[offset + 0x02];
-            flags = data[offset + 0x03];
+            collisionType = data[offset + 0x03];
         }
 
         public byte[] Serialize()
@@ -204,7 +204,7 @@ namespace LibReplanetizer.Models
             outbytes[0x00] = vertex0;
             outbytes[0x01] = vertex1;
             outbytes[0x02] = vertex2;
-            outbytes[0x03] = flags;
+            outbytes[0x03] = collisionType;
             return outbytes;
         }
     }

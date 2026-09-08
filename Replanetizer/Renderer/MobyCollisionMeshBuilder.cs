@@ -35,7 +35,6 @@ namespace Replanetizer.Renderer
         private const int SPHERE_SEGMENTS = 16;
         private const int CAPSULE_STACKS = 8;
 
-        private static readonly uint TriangleColor = PackColor(255, 0, 255, 255);
         private static readonly uint PrimitiveColor = PackColor(0, 255, 255, 255);
 
         public static MobyCollisionMesh Build(MobyModelCollision collision)
@@ -45,14 +44,9 @@ namespace Replanetizer.Renderer
             List<float> primitiveVertices = new List<float>();
             List<uint> primitiveIndices = new List<uint>();
 
-            foreach (MobyModelCollisionVertex vertex in collision.vertices)
-            {
-                AddVertex(triangleVertices, new Vector3(vertex.x, vertex.y, vertex.z), TriangleColor);
-            }
-
             foreach (MobyModelCollisionTriangle triangle in collision.triangles)
             {
-                AddTriangleIfValid(triangleIndices, triangle.vertex0, triangle.vertex1, triangle.vertex2, collision.vertices.Count);
+                AddTriangleIfValid(triangleVertices, triangleIndices, collision, triangle);
             }
 
             foreach (MobyModelCollisionPrimitive primitive in collision.primitives)
@@ -211,15 +205,23 @@ namespace Replanetizer.Renderer
             return false;
         }
 
-        private static void AddTriangleIfValid(List<uint> indices, int vertex0, int vertex1, int vertex2, int vertexCount)
+        private static void AddTriangleIfValid(List<float> vertices, List<uint> indices,
+            MobyModelCollision collision, MobyModelCollisionTriangle triangle)
         {
-            if (vertex0 >= 0 && vertex1 >= 0 && vertex2 >= 0
-                && vertex0 < vertexCount && vertex1 < vertexCount && vertex2 < vertexCount)
-            {
-                indices.Add((uint) vertex0);
-                indices.Add((uint) vertex1);
-                indices.Add((uint) vertex2);
-            }
+            if (!TryGetVertex(collision, triangle.vertex0, out Vector3 vertex0)
+                || !TryGetVertex(collision, triangle.vertex1, out Vector3 vertex1)
+                || !TryGetVertex(collision, triangle.vertex2, out Vector3 vertex2))
+                return;
+
+            uint firstVertex = (uint) (vertices.Count / VERTEX_STRIDE);
+            uint color = PackCollisionTypeColor(triangle.collisionType);
+            AddVertex(vertices, vertex0, color);
+            AddVertex(vertices, vertex1, color);
+            AddVertex(vertices, vertex2, color);
+
+            indices.Add(firstVertex);
+            indices.Add(firstVertex + 1);
+            indices.Add(firstVertex + 2);
         }
 
         private static void AddVertex(List<float> vertices, Vector3 position, uint color)
@@ -233,6 +235,14 @@ namespace Replanetizer.Renderer
         private static uint PackColor(byte red, byte green, byte blue, byte alpha)
         {
             return (uint) (red | (green << 8) | (blue << 16) | (alpha << 24));
+        }
+
+        private static uint PackCollisionTypeColor(byte collisionType)
+        {
+            byte red = (byte) ((collisionType & 0x03) << 6);
+            byte green = (byte) ((collisionType & 0x0C) << 4);
+            byte blue = (byte) (collisionType & 0xF0);
+            return PackColor(red, green, blue, 255);
         }
     }
 }

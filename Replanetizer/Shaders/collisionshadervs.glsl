@@ -12,17 +12,19 @@ out vec3 v_cameraPos;
 
 // Values that stay constant for the whole mesh.
 uniform mat4 worldToView;
+uniform mat4 modelToWorld;
 uniform int useFog;
 uniform vec4 fogParams;
 uniform vec3 cameraPosition;
 
 void main() {
     // Output position of the vertex, in clip space
-    gl_Position = worldToView * vec4(vertexPosition_modelspace, 1.0f);
+    vec4 worldPosition = modelToWorld * vec4(vertexPosition_modelspace, 1.0f);
+    gl_Position = worldToView * worldPosition;
 
     diffuseColors = vertexColors;
 
-    v_worldPos = vertexPosition_modelspace;
+    v_worldPos = worldPosition.xyz;
     v_cameraPos = cameraPosition;
 
     fogBlend = 0.0f;

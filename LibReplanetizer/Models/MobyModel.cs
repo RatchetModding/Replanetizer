@@ -14,145 +14,6 @@ using static LibReplanetizer.Serializers.SerializerFunctions;
 
 namespace LibReplanetizer.Models
 {
-    public class Type10CollisionEntry1
-    {
-        public ushort[] vals = new ushort[16];
-
-        public Type10CollisionEntry1() { }
-
-        public Type10CollisionEntry1(byte[] data, int offset)
-        {
-            for (int i = 0; i < 16; i++)
-                vals[i] = ReadUshort(data, offset + i * 2);
-        }
-
-        public byte[] Serialize()
-        {
-            byte[] outbytes = new byte[32];
-            for (int i = 0; i < 16; i++)
-                WriteUshort(outbytes, i * 2, vals[i]);
-            return outbytes;
-        }
-    }
-
-    public class Type10CollisionEntry2
-    {
-        public ushort[] vals = new ushort[2];
-
-        public Type10CollisionEntry2() { }
-
-        public Type10CollisionEntry2(byte[] data, int offset)
-        {
-            for (int i = 0; i < 2; i++)
-                vals[i] = ReadUshort(data, offset + i * 2);
-        }
-
-        public byte[] Serialize()
-        {
-            byte[] outbytes = new byte[4];
-            for (int i = 0; i < 2; i++)
-                WriteUshort(outbytes, i * 2, vals[i]);
-            return outbytes;
-        }
-    }
-
-    public class Type10CollisionEntry3
-    {
-        public ushort[] vals = new ushort[4];
-
-        public Type10CollisionEntry3() { }
-
-        public Type10CollisionEntry3(byte[] data, int offset)
-        {
-            for (int i = 0; i < 4; i++)
-                vals[i] = ReadUshort(data, offset + i * 2);
-        }
-
-        public byte[] Serialize()
-        {
-            byte[] outbytes = new byte[8];
-            for (int i = 0; i < 4; i++)
-                WriteUshort(outbytes, i * 2, vals[i]);
-            return outbytes;
-        }
-    }
-
-    public class Type10Collision
-    {
-        public int meta { get; set; }
-        public int length1 { get; set; }
-        public int length2 { get; set; }
-        public int length3 { get; set; }
-
-        public List<Type10CollisionEntry1> data1 { get; set; }
-        public List<Type10CollisionEntry2> data2 { get; set; }
-        public List<Type10CollisionEntry3> data3 { get; set; }
-
-        public Type10Collision()
-        {
-            data1 = new List<Type10CollisionEntry1>();
-            data2 = new List<Type10CollisionEntry2>();
-            data3 = new List<Type10CollisionEntry3>();
-        }
-
-        public Type10Collision(byte[] data)
-        {
-            meta = ReadInt(data, 0x00);
-            length1 = ReadInt(data, 0x04);
-            length2 = ReadInt(data, 0x08);
-            length3 = ReadInt(data, 0x0C);
-
-            data1 = new List<Type10CollisionEntry1>();
-            for (int i = 0; i < length1; i += 32)
-                data1.Add(new Type10CollisionEntry1(data, 0x10 + i));
-
-            data2 = new List<Type10CollisionEntry2>();
-            for (int i = 0; i < length2; i += 4)
-                data2.Add(new Type10CollisionEntry2(data, 0x10 + length1 + i));
-
-            data3 = new List<Type10CollisionEntry3>();
-            for (int i = 0; i < length3; i += 8)
-                data3.Add(new Type10CollisionEntry3(data, 0x10 + length1 + length2 + i));
-        }
-
-        public int GetLength()
-        {
-            return 0x10 + length1 + length2 + length3;
-        }
-
-        public byte[] Serialize()
-        {
-            length1 = data1.Count * 32;
-            length2 = data2.Count * 4;
-            length3 = data3.Count * 8;
-
-            byte[] outbytes = new byte[GetLength()];
-            WriteInt(outbytes, 0x00, meta);
-            WriteInt(outbytes, 0x04, length1);
-            WriteInt(outbytes, 0x08, length2);
-            WriteInt(outbytes, 0x0C, length3);
-
-            int offset = 0x10;
-            foreach (var entry in data1)
-            {
-                entry.Serialize().CopyTo(outbytes, offset);
-                offset += 32;
-            }
-            foreach (var entry in data2)
-            {
-                entry.Serialize().CopyTo(outbytes, offset);
-                offset += 4;
-            }
-            foreach (var entry in data3)
-            {
-                entry.Serialize().CopyTo(outbytes, offset);
-                offset += 8;
-            }
-
-            return outbytes;
-        }
-    }
-
     public class MobyModel : MetalModel
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
@@ -213,8 +74,7 @@ namespace LibReplanetizer.Models
         public override int GetSubModelCount() { return bangles.Count; }
         public override Model? GetSubModel(int index) { return (index < bangles.Count) ? (Model?) bangles[index] : null; }
 
-        // Unparsed sections
-        public Type10Collision? collisionData = null;                  // Hitbox
+        public MobyModelCollision? collisionData = null;                  // Hitbox
 
         private void GetMeshData(FileStream fs, int headerSize, int headerPointer, int baseOffset)
         {
@@ -395,17 +255,9 @@ namespace LibReplanetizer.Models
                 }
             }
 
-            // Type 10 ( has something to do with collision )
             if (collisionPointer > 0)
             {
-                byte[] type10Head = ReadBlock(fs, offset + collisionPointer, 0x10);
-                int type10LengthA = ReadInt(type10Head, 0x04);
-                int type10LengthB = ReadInt(type10Head, 0x08);
-                int type10LengthC = ReadInt(type10Head, 0x0C);
-                int type10Length = type10LengthA + type10LengthB + type10LengthC;
-
-                byte[] type10Block = ReadBlock(fs, offset + collisionPointer, 0x10 + type10Length);
-                collisionData = new Type10Collision(type10Block);
+                collisionData = new MobyModelCollision(fs, offset + collisionPointer);
             }
 
             // Bone matrix

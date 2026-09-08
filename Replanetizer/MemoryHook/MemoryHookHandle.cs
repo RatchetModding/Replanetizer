@@ -181,7 +181,8 @@ namespace Replanetizer.MemoryHook
 
             for (int i = 0; i < numMobs; i++)
             {
-                level.mobs[i].ApplyMemory(snapshot.mobyMemory[i], level.mobyModels);
+                Moby moby = level.mobs[i];
+                moby.ApplyMemory(snapshot.mobyMemory[i], level.mobyModels);
             }
         }
 

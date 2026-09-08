@@ -50,6 +50,7 @@ namespace Replanetizer.Frames
         private float movingAvgFrametime = 1.0f;
 
         public readonly Selection selectedObjects;
+        public event Action<LevelObject>? ObjectSelected;
         private readonly string[] selectionPositioningOptions = { PivotPositioning.Mean.HUMAN_NAME, PivotPositioning.IndividualOrigins.HUMAN_NAME };
         private readonly string[] selectionSpaceOptions = { TransformSpace.Global.HUMAN_NAME, TransformSpace.Local.HUMAN_NAME };
 
@@ -276,6 +277,10 @@ namespace Replanetizer.Frames
                     {
                         subFrames.Add(new MemoryHookFrame(this.wnd, this));
                     }
+                    if (ImGui.MenuItem("Camera Control"))
+                    {
+                        subFrames.Add(new CameraControlFrame(this.wnd, this));
+                    }
                     ImGui.EndMenu();
                 }
 
@@ -298,6 +303,7 @@ namespace Replanetizer.Frames
                     if (ImGui.Checkbox("Skybox", ref rendererPayload.visibility.enableSkybox)) InvalidateView();
                     if (ImGui.Checkbox("Terrain", ref rendererPayload.visibility.enableTerrain)) InvalidateView();
                     if (ImGui.Checkbox("Collision", ref rendererPayload.visibility.enableCollision)) InvalidateView();
+                    if (ImGui.Checkbox("Moby Collision", ref rendererPayload.visibility.enableMobyCollision)) InvalidateView();
                     ImGui.Separator();
                     if (ImGui.Checkbox("Transparency", ref rendererPayload.visibility.enableTransparency)) InvalidateView();
                     if (ImGui.Checkbox("Distance Culling", ref rendererPayload.visibility.enableDistanceCulling)) InvalidateView();
@@ -1077,6 +1083,7 @@ namespace Replanetizer.Frames
                 }
             }
 
+            ObjectSelected?.Invoke(obj);
             return true;
         }
 

@@ -92,6 +92,8 @@ namespace Replanetizer.Renderer
 
             shaderTable.collisionShader.UseShader();
             shaderTable.collisionShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
+            Matrix4 modelToWorld = Matrix4.Identity;
+            shaderTable.collisionShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelToWorld);
 
             // Send the camera position to the shader
             shaderTable.collisionShader.SetUniform3(UniformName.cameraPosition, payload.camera.position);

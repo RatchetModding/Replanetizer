@@ -31,6 +31,7 @@ namespace Replanetizer.Renderer
         private SkyRenderer? skyRenderer;
         private CollisionRenderer? collisionRenderer;
         private List<MeshRenderer> mobyRenderers = new List<MeshRenderer>();
+        private List<MobyCollisionRenderer> mobyCollisionRenderers = new List<MobyCollisionRenderer>();
         private List<MeshRenderer> tieRenderers = new List<MeshRenderer>();
         private List<MeshRenderer> shrubRenderers = new List<MeshRenderer>();
         private List<List<MeshRenderer>> terrainRenderers = new List<List<MeshRenderer>>();
@@ -82,6 +83,10 @@ namespace Replanetizer.Renderer
                 MeshRenderer mobRenderer = new MeshRenderer(shaderTable, textures, textureIDs, textureIDs[level.textures[0]], null, gpuDataCache);
                 mobRenderer.Include(mob);
                 mobyRenderers.Add(mobRenderer);
+
+                MobyCollisionRenderer collisionRenderer = new MobyCollisionRenderer(shaderTable);
+                collisionRenderer.Include(mob);
+                mobyCollisionRenderers.Add(collisionRenderer);
             }
 
             foreach (Shrub shrub in level.shrubs)
@@ -195,6 +200,10 @@ namespace Replanetizer.Renderer
             MeshRenderer mobRenderer = new MeshRenderer(shaderTable, textureOverride ?? textures, textureIDs, textureIDs[textures[0]], null, gpuDataCache);
             mobRenderer.Include(mob);
             mobyRenderers.Add(mobRenderer);
+
+            MobyCollisionRenderer collisionRenderer = new MobyCollisionRenderer(shaderTable);
+            collisionRenderer.Include(mob);
+            mobyCollisionRenderers.Add(collisionRenderer);
         }
 
         public override void Include<T>(T obj)
@@ -221,6 +230,7 @@ namespace Replanetizer.Renderer
         {
             Add(mob, textureOverride);
         }
+
         public override void Include<T>(List<T> list) => throw new NotImplementedException();
 
         public void Remove<T>(T obj, Level level)
@@ -230,6 +240,8 @@ namespace Replanetizer.Renderer
                 case Moby mob:
                     var mr = mobyRenderers.Find(x => x.modelObject == mob);
                     if (mr != null) { mr.Dispose(); mobyRenderers.Remove(mr); }
+                    var mcr = mobyCollisionRenderers.Find(x => x.moby == mob);
+                    if (mcr != null) { mcr.Dispose(); mobyCollisionRenderers.Remove(mcr); }
                     break;
                 case Tie tie:
                     var tr = tieRenderers.Find(x => x.modelObject == tie);
@@ -381,6 +393,14 @@ namespace Replanetizer.Renderer
             if (payload.visibility.enableCollision)
                 collisionRenderer?.Render(payload);
 
+            if (payload.visibility.enableMobyCollision)
+            {
+                foreach (MobyCollisionRenderer collisionRenderer in mobyCollisionRenderers)
+                {
+                    collisionRenderer.Render(payload);
+                }
+            }
+
             if (payload.visibility.enableCuboid)
                 cuboidRenderer?.Render(payload);
 
@@ -424,6 +444,9 @@ namespace Replanetizer.Renderer
 
             foreach (var renderer in mobyRenderers) renderer.Dispose();
             mobyRenderers.Clear();
+
+            foreach (var renderer in mobyCollisionRenderers) renderer.Dispose();
+            mobyCollisionRenderers.Clear();
 
             foreach (var renderer in tieRenderers) renderer.Dispose();
             tieRenderers.Clear();

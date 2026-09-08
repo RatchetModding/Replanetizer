@@ -96,12 +96,20 @@ namespace Replanetizer.Frames
 
         private void RecomputeProperties()
         {
-            properties.Clear();
-
             if (selectedObject == null)
+            {
+                properties.Clear();
                 return;
+            }
 
-            PropertyInfo[] objProps = selectedObject.GetType().GetProperties();
+            properties = GetProperties(selectedObject);
+        }
+
+        private static Dictionary<string, Dictionary<string, PropertyInfo>> GetProperties(object target)
+        {
+            Dictionary<string, Dictionary<string, PropertyInfo>> result = new();
+
+            PropertyInfo[] objProps = target.GetType().GetProperties();
             foreach (var prop in objProps)
             {
                 if (prop.GetIndexParameters().Length != 0)
@@ -110,13 +118,15 @@ namespace Replanetizer.Frames
                 string category =
                     prop.GetCustomAttribute<CategoryAttribute>()?.Category ?? "Unknowns";
 
-                if (!properties.ContainsKey(category))
-                    properties[category] = new Dictionary<string, PropertyInfo>();
+                if (!result.ContainsKey(category))
+                    result[category] = new Dictionary<string, PropertyInfo>();
 
                 // Keep the reflected property name as the identity. Display names are
                 // user-facing and are not guaranteed to be unique.
-                properties[category][prop.Name] = prop;
+                result[category][prop.Name] = prop;
             }
+
+            return result;
         }
 
         public override void RenderAsWindow(float deltaTime)
@@ -154,28 +164,108 @@ namespace Replanetizer.Frames
 
             ImGui.PushID(selectedObject.GetType().Name);
 
+            object target = selectedObject;
+            HashSet<object> activeObjects = new(ReferenceEqualityComparer.Instance)
+            {
+                target
+            };
+
             foreach (var (categoryName, categoryItems) in properties)
             {
                 ImGui.PushID(categoryName);
-                RenderCategory(categoryName, categoryItems);
+                RenderCategory(categoryName, categoryItems, target, activeObjects);
                 ImGui.PopID();
             }
 
             ImGui.PopID();
         }
 
-        private void RenderCategory(string categoryName, Dictionary<string, PropertyInfo> categoryItems)
+        private void RenderCategory(
+            string categoryName,
+            Dictionary<string, PropertyInfo> categoryItems,
+            object target,
+            HashSet<object> activeObjects)
         {
             if (ImGui.CollapsingHeader(categoryName, ImGuiTreeNodeFlags.DefaultOpen))
             {
                 foreach (var (key, value) in categoryItems)
-                    RenderCategoryItem(key, value);
+                    RenderCategoryItem(target, key, value, activeObjects);
 
                 ImGui.Separator();
             }
         }
 
-        private void RenderCategoryItem(string propertyIdentifier, PropertyInfo propertyInfo)
+        private static bool IsSimpleListType(Type type)
+        {
+            Type underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+            return underlyingType.IsPrimitive || underlyingType.IsEnum ||
+                   underlyingType == typeof(string) || underlyingType == typeof(decimal) ||
+                   underlyingType.IsArray;
+        }
+
+        private void RenderObjectProperties(string objectName, object target, HashSet<object> activeObjects)
+        {
+            bool referenceType = !target.GetType().IsValueType;
+            if (referenceType && !activeObjects.Add(target))
+            {
+                ImGui.Text(objectName + ": [Circular Reference]");
+                return;
+            }
+
+            try
+            {
+                ImGui.Text(target.GetType().Name);
+                ImGui.Separator();
+
+                foreach (var (categoryName, categoryItems) in GetProperties(target))
+                {
+                    ImGui.PushID(categoryName);
+                    RenderCategory(categoryName, categoryItems, target, activeObjects);
+                    ImGui.PopID();
+                }
+            }
+            finally
+            {
+                if (referenceType)
+                    activeObjects.Remove(target);
+            }
+        }
+
+        private void RenderObjectList(string propertyName, IList list, Type itemType, HashSet<object> activeObjects)
+        {
+            if (!ImGui.CollapsingHeader(propertyName))
+                return;
+
+            for (int index = 0; index < list.Count; index++)
+            {
+                ImGui.PushID(index);
+
+                string itemName = itemType.Name + " [" + index + "]";
+                object? item = list[index];
+                if (item == null)
+                {
+                    ImGui.Text(itemName + ": null");
+                }
+                else if (ImGui.CollapsingHeader(itemName, ImGuiTreeNodeFlags.DefaultOpen))
+                {
+                    object itemTarget = item;
+                    RenderObjectProperties(itemName, itemTarget, activeObjects);
+
+                    if (itemType.IsValueType)
+                        list[index] = itemTarget;
+                }
+
+                ImGui.PopID();
+            }
+
+            ImGui.Separator();
+        }
+
+        private void RenderCategoryItem(
+            object target,
+            string propertyIdentifier,
+            PropertyInfo propertyInfo,
+            HashSet<object> activeObjects)
         {
             // Every property gets its own scope. This is important for nested
             // PropertyFrames and for properties with identical display names.
@@ -183,7 +273,7 @@ namespace Replanetizer.Frames
 
             string propertyName =
                 propertyInfo.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName ?? propertyInfo.Name;
-            object? val = propertyInfo.GetValue(selectedObject);
+            object? val = propertyInfo.GetValue(target);
             Type? type = propertyInfo.GetSetMethod() == null ? null : propertyInfo.PropertyType;
             string? description = propertyInfo.GetCustomAttribute<DescriptionAttribute>()?.Description ?? null;
 
@@ -198,7 +288,7 @@ namespace Replanetizer.Frames
                 byte[] v = Encoding.ASCII.GetBytes(val as string ?? string.Empty);
                 if (ImGui.InputText(propertyName, v, (uint) v.Length))
                 {
-                    propertyInfo.SetValue(selectedObject, Encoding.ASCII.GetString(v));
+                    propertyInfo.SetValue(target, Encoding.ASCII.GetString(v));
                     UpdateLevelFrame();
                 }
             }
@@ -207,8 +297,8 @@ namespace Replanetizer.Frames
                 int v = (int) val;
                 if (ImGui.InputInt(propertyName, ref v))
                 {
-                    propertyInfo.SetValue(selectedObject, v);
-                    if (selectedObject is ModelObject modelObject && levelFrame != null)
+                    propertyInfo.SetValue(target, v);
+                    if (target is ModelObject modelObject && levelFrame != null)
                     {
                         modelObject.TryChangeModel(levelFrame.level);
                     }
@@ -220,7 +310,7 @@ namespace Replanetizer.Frames
                 int v = unchecked((int) (uint) val);
                 if (ImGui.InputInt(propertyName, ref v))
                 {
-                    propertyInfo.SetValue(selectedObject, unchecked((uint) v));
+                    propertyInfo.SetValue(target, unchecked((uint) v));
                     UpdateLevelFrame();
                 }
             }
@@ -229,7 +319,7 @@ namespace Replanetizer.Frames
                 int v = Convert.ToInt16(val);
                 if (ImGui.InputInt(propertyName, ref v))
                 {
-                    propertyInfo.SetValue(selectedObject, (short) (v & 0xffff));
+                    propertyInfo.SetValue(target, (short) (v & 0xffff));
                     UpdateLevelFrame();
                 }
             }
@@ -238,7 +328,7 @@ namespace Replanetizer.Frames
                 int v = (ushort) val;
                 if (ImGui.InputInt(propertyName, ref v))
                 {
-                    propertyInfo.SetValue(selectedObject, unchecked((ushort) (v & 0xffff)));
+                    propertyInfo.SetValue(target, unchecked((ushort) (v & 0xffff)));
                     UpdateLevelFrame();
                 }
             }
@@ -247,7 +337,7 @@ namespace Replanetizer.Frames
                 int v = Convert.ToChar(val);
                 if (ImGui.InputInt(propertyName, ref v))
                 {
-                    propertyInfo.SetValue(selectedObject, (char) (v & 0xff));
+                    propertyInfo.SetValue(target, (char) (v & 0xff));
                     UpdateLevelFrame();
                 }
             }
@@ -256,7 +346,7 @@ namespace Replanetizer.Frames
                 int v = (byte) val;
                 if (ImGui.InputInt(propertyName, ref v))
                 {
-                    propertyInfo.SetValue(selectedObject, unchecked((byte) (v & 0xff)));
+                    propertyInfo.SetValue(target, unchecked((byte) (v & 0xff)));
                     UpdateLevelFrame();
                 }
             }
@@ -265,7 +355,7 @@ namespace Replanetizer.Frames
                 float v = (float) val;
                 if (ImGui.InputFloat(propertyName, ref v))
                 {
-                    propertyInfo.SetValue(selectedObject, v);
+                    propertyInfo.SetValue(target, v);
                     UpdateLevelFrame();
                 }
             }
@@ -274,7 +364,7 @@ namespace Replanetizer.Frames
                 bool v = (bool) val;
                 if (ImGui.Checkbox(propertyName, ref v))
                 {
-                    propertyInfo.SetValue(selectedObject, v);
+                    propertyInfo.SetValue(target, v);
                     UpdateLevelFrame();
                 }
             }
@@ -289,7 +379,7 @@ namespace Replanetizer.Frames
                 {
                     try
                     {
-                        propertyInfo.SetValue(selectedObject, (Bitmask) Convert.ToInt32(binary, 2));
+                        propertyInfo.SetValue(target, (Bitmask) Convert.ToInt32(binary, 2));
                     }
                     catch
                     {
@@ -308,7 +398,7 @@ namespace Replanetizer.Frames
                     Rgba32 newColor = Color.FromRgba(
                         (byte) (v.X * 255.0f), (byte) (v.Y * 255.0f), (byte) (v.Z * 255.0f), (byte) (v.W * 255.0f)
                     );
-                    propertyInfo.SetValue(selectedObject, newColor);
+                    propertyInfo.SetValue(target, newColor);
                     UpdateLevelFrame();
                 }
             }
@@ -321,7 +411,7 @@ namespace Replanetizer.Frames
                     Rgb24 newColor = Color.FromRgb(
                         (byte) (v.X * 255.0f), (byte) (v.Y * 255.0f), (byte) (v.Z * 255.0f)
                     );
-                    propertyInfo.SetValue(selectedObject, newColor);
+                    propertyInfo.SetValue(target, newColor);
                     UpdateLevelFrame();
                 }
             }
@@ -334,9 +424,9 @@ namespace Replanetizer.Frames
                     origV.X = v.X;
                     origV.Y = v.Y;
                     origV.Z = v.Z;
-                    propertyInfo.SetValue(selectedObject, origV);
+                    propertyInfo.SetValue(target, origV);
 
-                    if (selectedObject is LevelObject levelObject)
+                    if (target is LevelObject levelObject)
                         levelObject.UpdateTransformMatrix();
 
                     UpdateLevelFrame();
@@ -352,9 +442,9 @@ namespace Replanetizer.Frames
                     origV.Y = v.Y;
                     origV.Z = v.Z;
                     origV.W = v.W;
-                    propertyInfo.SetValue(selectedObject, origV);
+                    propertyInfo.SetValue(target, origV);
 
-                    if (selectedObject is LevelObject levelObject)
+                    if (target is LevelObject levelObject)
                         levelObject.UpdateTransformMatrix();
 
                     UpdateLevelFrame();
@@ -370,11 +460,11 @@ namespace Replanetizer.Frames
                     origRot.Y = v.Y;
                     origRot.Z = v.Z;
                     propertyInfo.SetValue(
-                        selectedObject,
+                        target,
                         new OpenTK.Mathematics.Quaternion(origRot.X, origRot.Y, origRot.Z)
                     );
 
-                    if (selectedObject is LevelObject levelObject)
+                    if (target is LevelObject levelObject)
                         levelObject.UpdateTransformMatrix();
 
                     UpdateLevelFrame();
@@ -428,9 +518,9 @@ namespace Replanetizer.Frames
 
                 if (change)
                 {
-                    propertyInfo.SetValue(selectedObject, mat);
+                    propertyInfo.SetValue(target, mat);
 
-                    if (selectedObject is LevelObject levelObject)
+                    if (target is LevelObject levelObject)
                         levelObject.UpdateTransformMatrix();
 
                     UpdateLevelFrame();
@@ -474,9 +564,9 @@ namespace Replanetizer.Frames
 
                 if (change)
                 {
-                    propertyInfo.SetValue(selectedObject, mat);
+                    propertyInfo.SetValue(target, mat);
 
-                    if (selectedObject is LevelObject levelObject)
+                    if (target is LevelObject levelObject)
                         levelObject.UpdateTransformMatrix();
 
                     UpdateLevelFrame();
@@ -598,12 +688,12 @@ namespace Replanetizer.Frames
                 for (int i = 0; i < values.Length; i++)
                     strings[i] = Convert.ToString(values.GetValue(i)) ?? string.Empty;
 
-                int index = (int) val;
+                int index = Convert.ToInt32(val);
                 if (index < values.Length)
                 {
                     if (ImGui.Combo(propertyName, ref index, strings, values.Length))
                     {
-                        propertyInfo.SetValue(selectedObject, index);
+                        propertyInfo.SetValue(target, index);
                         UpdateLevelFrame();
                     }
                 }
@@ -694,8 +784,15 @@ namespace Replanetizer.Frames
                 }
                 else
                 {
-                    string genericTypeName = type.GetGenericArguments()[0].Name;
-                    ImGui.LabelText(propertyName, "List<" + genericTypeName + ">[" + list.Count + "]");
+                    if (IsSimpleListType(genericType))
+                    {
+                        string genericTypeName = genericType.Name;
+                        ImGui.LabelText(propertyName, "List<" + genericTypeName + ">[" + list.Count + "]");
+                    }
+                    else
+                    {
+                        RenderObjectList(propertyName, (IList) list, genericType, activeObjects);
+                    }
                 }
             }
             else if (val != null)
@@ -703,9 +800,7 @@ namespace Replanetizer.Frames
                 if (ImGui.CollapsingHeader(propertyName))
                 {
                     nestedProperty = true;
-                    PropertyFrame propertyFrame = new PropertyFrame(wnd, levelFrame, null, true, true);
-                    propertyFrame.selectedObject = val;
-                    propertyFrame.Render(1.0f);
+                    RenderObjectProperties(propertyName, val, activeObjects);
                 }
             }
             else

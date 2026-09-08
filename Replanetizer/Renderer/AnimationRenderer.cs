@@ -60,17 +60,21 @@ namespace Replanetizer.Renderer
         private Frame? currentFrame = null;
         private Frame? previousFrame = null;
         private Matrix4[]? boneMatrices = null;
+        private Vector3[]? bonePositions = null;
+        private bool hasBonePositions = false;
         private BoneTransform[]? runtimeCurrentPose = null;
         private float frameBlend = 0.0f;
         private readonly ModelGPUDataCache gpuDataCache;
         private ModelGPUData? gpuData;
+        private readonly MobyCollisionRenderer collisionRenderer;
 
-        public AnimationRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, GLTexture> textureIds, GLTexture metalTexture, List<Animation>? ratchetAnimations = null, ModelGPUDataCache? gpuDataCache = null)
+        public AnimationRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, GLTexture> textureIds, GLTexture metalTexture, MobyCollisionRenderer collisionRenderer, List<Animation>? ratchetAnimations = null, ModelGPUDataCache? gpuDataCache = null)
         {
             this.shaderTable = shaderTable;
             this.textureIds = textureIds;
             this.textures = textures;
             this.metalTexture = metalTexture;
+            this.collisionRenderer = collisionRenderer;
             this.ratchetAnimations = ratchetAnimations;
             this.gpuDataCache = gpuDataCache ?? new ModelGPUDataCache();
         }
@@ -122,6 +126,8 @@ namespace Replanetizer.Renderer
             currentFrame = null;
             previousFrame = null;
             boneMatrices = null;
+            bonePositions = null;
+            hasBonePositions = false;
             runtimeCurrentPose = null;
             frameBlend = 0.0f;
         }
@@ -169,9 +175,6 @@ namespace Replanetizer.Renderer
             loadedModel = mobyModel;
             loadedModelHasMeshData = HasAnimationMeshData(mobyModel);
 
-            if (!loadedModelHasMeshData)
-                return;
-
             // This is a camera object that only exist at runtime and blocks vision in interactive mode.
             // We simply don't draw it.
             if (loadedModelID == 0x3EF)
@@ -184,10 +187,13 @@ namespace Replanetizer.Renderer
                 return;
             }
 
-            emptyModel = false;
-
             boneMatrices = new Matrix4[mobyModel.boneCount];
+            bonePositions = new Vector3[mobyModel.boneCount];
             runtimeCurrentPose = new BoneTransform[mobyModel.boneCount];
+
+            emptyModel = !loadedModelHasMeshData;
+            if (!loadedModelHasMeshData)
+                return;
 
             gpuData = gpuDataCache.Acquire(mobyModel, ModelGPULayout.Animated);
         }
@@ -309,7 +315,6 @@ namespace Replanetizer.Renderer
         /// </summary>
         private bool ComputeCulling(Camera camera, bool distanceCulling, bool visibleCulling)
         {
-            if (emptyModel) return true;
             if (mobyModelStandalone != null) return false;
             if (mob == null) return true;
 
@@ -735,12 +740,46 @@ namespace Replanetizer.Renderer
             }
         }
 
+        private void CaptureBonePositions(MobyModel model)
+        {
+            if (boneMatrices == null || bonePositions == null)
+                return;
+
+            for (int i = 0; i < model.boneCount; i++)
+            {
+                bonePositions[i] = new Vector3(boneMatrices[i].M41, boneMatrices[i].M42, boneMatrices[i].M43);
+            }
+
+            hasBonePositions = true;
+        }
+
+        public void RenderCollision(RendererPayload payload)
+        {
+            if (!payload.visibility.enableMobyCollision)
+                return;
+
+            if (hasBonePositions && bonePositions != null)
+            {
+                collisionRenderer.Render(payload, bonePositions);
+                return;
+            }
+
+            collisionRenderer.Render(payload);
+        }
+
         private void ComputeBoneMatricesWithMemory(
             MobyModel mobyModel,
             Moby.IngameMobyMemory memory)
         {
             if (memory.previousAnimationData == null || memory.currentAnimationData == null)
             {
+                for (int i = 0; i < mobyModel.boneCount; i++)
+                {
+                    runtimeCurrentPose![i] = BuildBoneTransform(mobyModel, null, i);
+                }
+                ComposeBoneHierarchy(mobyModel, runtimeCurrentPose!, boneMatrices!);
+                CaptureBonePositions(mobyModel);
+
                 for (int i = 0; i < boneMatrices!.Length; i++)
                 {
                     boneMatrices[i] = Matrix4.Identity;
@@ -756,6 +795,7 @@ namespace Replanetizer.Renderer
             ApplyManipulators(memory, runtimeCurrentPose!);
 
             ComposeBoneHierarchy(mobyModel, runtimeCurrentPose!, boneMatrices!);
+            CaptureBonePositions(mobyModel);
             ApplyInverseBindMatrices(mobyModel, boneMatrices!);
         }
 
@@ -809,10 +849,13 @@ namespace Replanetizer.Renderer
             if (frame != null && previousFrame != null)
             {
                 ComposeBoneHierarchy(mobyModel, runtimeCurrentPose!, boneMatrices!);
+                CaptureBonePositions(mobyModel);
                 ApplyInverseBindMatrices(mobyModel, boneMatrices!);
             }
             else
             {
+                ComposeBoneHierarchy(mobyModel, runtimeCurrentPose!, boneMatrices!);
+                CaptureBonePositions(mobyModel);
                 for (int i = 0; i < boneMatrices!.Length; i++)
                 {
                     boneMatrices[i] = Matrix4.Identity;
@@ -841,8 +884,6 @@ namespace Replanetizer.Renderer
             {
                 mobyAlpha = mob.memory.alpha / 128.0f;
             }
-
-            if (emptyModel || gpuData == null) return;
 
             if (ComputeCulling(payload.camera, payload.visibility.enableDistanceCulling, payload.visibility.enableVisibleCulling)) return;
 
@@ -887,6 +928,19 @@ namespace Replanetizer.Renderer
             {
                 List<Animation> animations = (loadedModelID == 0 && ratchetAnimations != null && ratchetAnimations.Count > 0) ? ratchetAnimations : mobyModel.animations;
                 ComputeBoneMatricesWithoutMemory(mobyModel, animations, payload.forcedAnimationID, payload.deltaTime);
+            }
+
+            if (payload.visibility.enableMobyCollision)
+            {
+                collisionRenderer?.Render(payload, bonePositions);
+            }
+
+            if (!payload.visibility.enableMoby
+                || !payload.visibility.enableAnimations
+                || emptyModel
+                || gpuData == null)
+            {
+                return;
             }
 
             shaderTable.animationShader.SetUniformMatrix4(UniformName.bones, mobyModel.boneCount, ref boneMatrices![0].Row0.X);

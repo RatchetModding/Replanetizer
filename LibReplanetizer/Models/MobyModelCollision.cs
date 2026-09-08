@@ -28,15 +28,24 @@ namespace LibReplanetizer.Models
     {
         public const int SIZE = 0x20;
 
+        [Category("Attributes"), DisplayName("Shape")]
         public MobyModelCollisionShape shape { get; set; }
         public byte unk1 { get; set; }
+        [Category("Attributes"), DisplayName("Mask")]
         public ushort collisionMask { get; set; }
+        [Category("Attributes"), DisplayName("Value 0")]
         public int value0 { get; set; }
+        [Category("Attributes"), DisplayName("Value 1")]
         public float value1 { get; set; }
+        [Category("Attributes"), DisplayName("Value 2")]
         public float value2 { get; set; }
+        [Category("Attributes"), DisplayName("Value 3")]
         public float value3 { get; set; }
+        [Category("Attributes"), DisplayName("Value 4")]
         public float value4 { get; set; }
+        [Category("Attributes"), DisplayName("Value 5")]
         public float value5 { get; set; }
+        [Category("Attributes"), DisplayName("Value 6")]
         public float value6 { get; set; }
 
         public ushort indexedCapsuleVertex0
@@ -183,10 +192,14 @@ namespace LibReplanetizer.Models
     public class MobyModelCollisionTriangle
     {
         public const int SIZE = 0x04;
+        [Category("Attributes"), DisplayName("Vertex Index 0")]
         public byte vertex0 { get; set; }
+        [Category("Attributes"), DisplayName("Vertex Index 1")]
         public byte vertex1 { get; set; }
+        [Category("Attributes"), DisplayName("Vertex Index 2")]
         public byte vertex2 { get; set; }
-        public byte flags { get; set; }
+        [Category("Attributes"), DisplayName("Type")]
+        public byte collisionType { get; set; }
 
         public MobyModelCollisionTriangle() { }
 
@@ -195,7 +208,7 @@ namespace LibReplanetizer.Models
             vertex0 = data[offset + 0x00];
             vertex1 = data[offset + 0x01];
             vertex2 = data[offset + 0x02];
-            flags = data[offset + 0x03];
+            collisionType = data[offset + 0x03];
         }
 
         public byte[] Serialize()
@@ -204,7 +217,7 @@ namespace LibReplanetizer.Models
             outbytes[0x00] = vertex0;
             outbytes[0x01] = vertex1;
             outbytes[0x02] = vertex2;
-            outbytes[0x03] = flags;
+            outbytes[0x03] = collisionType;
             return outbytes;
         }
     }
@@ -212,9 +225,13 @@ namespace LibReplanetizer.Models
     public class MobyModelCollisionVertex
     {
         public const int SIZE = 0x10;
+        [Category("Attributes"), DisplayName("X")]
         public float x { get; set; }
+        [Category("Attributes"), DisplayName("Y")]
         public float y { get; set; }
+        [Category("Attributes"), DisplayName("Z")]
         public float z { get; set; }
+        [Category("Attributes"), DisplayName("W")]
         public float w { get; set; }
 
         public MobyModelCollisionVertex() { }
@@ -245,8 +262,11 @@ namespace LibReplanetizer.Models
         public ushort meta0 { get; set; }
         public ushort meta2 { get; set; }
 
+        [Category("Attributes"), DisplayName("Primitives")]
         public List<MobyModelCollisionPrimitive> primitives { get; set; }
+        [Category("Attributes"), DisplayName("Triangles")]
         public List<MobyModelCollisionTriangle> triangles { get; set; }
+        [Category("Attributes"), DisplayName("Vertices")]
         public List<MobyModelCollisionVertex> vertices { get; set; }
 
         public MobyModelCollision()

@@ -74,7 +74,8 @@ namespace LibReplanetizer.Models
         public override int GetSubModelCount() { return bangles.Count; }
         public override Model? GetSubModel(int index) { return (index < bangles.Count) ? (Model?) bangles[index] : null; }
 
-        public MobyModelCollision? collisionData = null;                  // Hitbox
+        [Category("Attributes"), DisplayName("Collision Data")]
+        public MobyModelCollision? collisionData { get; set; } = null;                  // Hitbox
 
         private void GetMeshData(FileStream fs, int headerSize, int headerPointer, int baseOffset)
         {

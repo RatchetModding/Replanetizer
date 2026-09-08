@@ -21,9 +21,12 @@ namespace Replanetizer.Renderer
 
         private readonly ShaderTable shaderTable;
         private readonly List<CollisionMeshHandle> meshes = new List<CollisionMeshHandle>();
+        private CollisionMeshHandle? primitiveMesh;
         public Moby? moby { get; private set; }
+        public MobyModel? mobyModelStandalone { get; private set; }
         private MobyModel? cachedModel;
         private bool modelCached;
+        private bool primitiveUsesBonePositions;
 
         public MobyCollisionRenderer(ShaderTable shaderTable)
         {
@@ -32,27 +35,31 @@ namespace Replanetizer.Renderer
 
         public override void Include<T>(T obj)
         {
-            if (obj is not Moby moby)
+            Moby? includedMoby = obj as Moby;
+            MobyModel? includedModel = obj as MobyModel;
+            if (includedMoby == null && includedModel == null)
                 throw new NotImplementedException();
 
-            if (this.moby != null && !ReferenceEquals(this.moby, moby))
+            if (!ReferenceEquals(this.moby, includedMoby)
+                || !ReferenceEquals(this.mobyModelStandalone, includedModel))
             {
                 DeleteMeshes();
                 cachedModel = null;
                 modelCached = false;
             }
 
-            this.moby = moby;
+            moby = includedMoby;
+            mobyModelStandalone = includedModel;
         }
 
         public override void Include<T>(List<T> list) => throw new NotImplementedException();
 
         private void Update()
         {
-            if (moby == null)
+            if (moby == null && mobyModelStandalone == null)
                 return;
 
-            if (moby.memory?.IsDead() == true)
+            if (moby?.memory?.IsDead() == true)
             {
                 DeleteMeshes();
                 cachedModel = null;
@@ -60,7 +67,7 @@ namespace Replanetizer.Renderer
                 return;
             }
 
-            MobyModel? mobyModel = moby.model as MobyModel;
+            MobyModel? mobyModel = (MobyModel?) moby?.model ?? mobyModelStandalone;
             if (modelCached && ReferenceEquals(cachedModel, mobyModel))
             {
                 return;
@@ -69,39 +76,73 @@ namespace Replanetizer.Renderer
             DeleteMeshes();
             cachedModel = mobyModel;
             modelCached = true;
+            primitiveUsesBonePositions = false;
 
             if (mobyModel?.collisionData == null)
                 return;
 
-            MobyCollisionMesh mesh = MobyCollisionMeshBuilder.Build(mobyModel.collisionData);
-            AddMesh(moby, mesh.triangleMesh, true);
-            AddMesh(moby, mesh.primitiveMesh, false);
+            MobyCollisionMesh mesh = MobyCollisionMeshBuilder.Build(mobyModel);
+            AddMesh(mesh.triangleMesh, true);
+            AddMesh(mesh.primitiveMesh, false);
+        }
+
+        public void UpdateBonePositions(IReadOnlyList<Vector3> bonePositions)
+        {
+            if (cachedModel?.collisionData == null || primitiveMesh == null)
+                return;
+
+            MobyCollisionMeshPart mesh = MobyCollisionMeshBuilder.Build(cachedModel, bonePositions).primitiveMesh;
+            UpdatePrimitiveMesh(mesh);
+            primitiveUsesBonePositions = true;
+        }
+
+        private void RestoreBindPose()
+        {
+            if (!primitiveUsesBonePositions || cachedModel?.collisionData == null || primitiveMesh == null)
+                return;
+
+            MobyCollisionMeshPart mesh = MobyCollisionMeshBuilder.Build(cachedModel).primitiveMesh;
+            UpdatePrimitiveMesh(mesh);
+            primitiveUsesBonePositions = false;
+        }
+
+        private void UpdatePrimitiveMesh(MobyCollisionMeshPart mesh)
+        {
+            if (primitiveMesh == null)
+                return;
+
+            GL.BindVertexArray(primitiveMesh.vao);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, primitiveMesh.vbo);
+            GL.BufferData(BufferTarget.ArrayBuffer, mesh.vertexBuffer.Length * sizeof(float), mesh.vertexBuffer, BufferUsageHint.DynamicDraw);
+
+            if (mesh.indexBuffer.Length != primitiveMesh.indexCount)
+            {
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, primitiveMesh.ibo);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, mesh.indexBuffer.Length * sizeof(uint), mesh.indexBuffer, BufferUsageHint.StaticDraw);
+                primitiveMesh.indexCount = mesh.indexBuffer.Length;
+            }
         }
 
         public override void Render(RendererPayload payload)
         {
             Update();
+            RestoreBindPose();
+            RenderMeshes(payload);
+        }
 
-            if (moby == null || moby.memory?.IsDead() == true)
-                return;
-
-            Matrix4 worldToView = payload.camera.GetWorldViewMatrix();
-
-            shaderTable.collisionShader.UseShader();
-            shaderTable.collisionShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
-            shaderTable.collisionShader.SetUniform3(UniformName.cameraPosition, payload.camera.position);
-
-            foreach (CollisionMeshHandle mesh in meshes)
+        public void Render(RendererPayload payload, IReadOnlyList<Vector3>? bonePositions)
+        {
+            Update();
+            if (bonePositions != null)
             {
-                Matrix4 modelToWorld = mesh.triangleTransform
-                    ? moby.collisionTriangleMatrix
-                    : moby.collisionMatrix;
-                shaderTable.collisionShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelToWorld);
-                GL.BindVertexArray(mesh.vao);
-                GL.DrawElements(PrimitiveType.Triangles, mesh.indexCount, DrawElementsType.UnsignedInt, 0);
+                UpdateBonePositions(bonePositions);
+            }
+            else
+            {
+                RestoreBindPose();
             }
 
-            GLUtil.CheckGlError("MobyCollisionRenderer");
+            RenderMeshes(payload);
         }
 
         public override void Dispose()
@@ -112,6 +153,7 @@ namespace Replanetizer.Renderer
             }
 
             meshes.Clear();
+            primitiveMesh = null;
             cachedModel = null;
             modelCached = false;
         }
@@ -124,6 +166,8 @@ namespace Replanetizer.Renderer
             }
 
             meshes.Clear();
+            primitiveMesh = null;
+            primitiveUsesBonePositions = false;
         }
 
         private static void DeleteMesh(CollisionMeshHandle mesh)
@@ -133,7 +177,17 @@ namespace Replanetizer.Renderer
             GL.DeleteVertexArray(mesh.vao);
         }
 
-        private void AddMesh(Moby moby, MobyCollisionMeshPart mesh, bool triangleTransform)
+        private Matrix4 GetModelToWorld(bool triangleTransform)
+        {
+            if (moby != null)
+            {
+                return triangleTransform ? moby.collisionTriangleMatrix : moby.collisionMatrix;
+            }
+
+            return Matrix4.Identity;
+        }
+
+        private void AddMesh(MobyCollisionMeshPart mesh, bool triangleTransform)
         {
             if (mesh.indexBuffer.Length == 0)
                 return;
@@ -168,14 +222,41 @@ namespace Replanetizer.Renderer
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
             GL.VertexAttribPointer(1, 4, VertexAttribPointerType.UnsignedByte, false, sizeof(float) * 4, sizeof(float) * 3);
 
-            meshes.Add(new CollisionMeshHandle
+            CollisionMeshHandle handle = new CollisionMeshHandle
             {
                 vao = vao,
                 vbo = vbo,
                 ibo = ibo,
                 indexCount = mesh.indexBuffer.Length,
                 triangleTransform = triangleTransform
-            });
+            };
+            meshes.Add(handle);
+            if (!triangleTransform)
+            {
+                primitiveMesh = handle;
+            }
+        }
+
+        private void RenderMeshes(RendererPayload payload)
+        {
+            if ((moby == null && mobyModelStandalone == null) || moby?.memory?.IsDead() == true)
+                return;
+
+            Matrix4 worldToView = payload.camera.GetWorldViewMatrix();
+
+            shaderTable.collisionShader.UseShader();
+            shaderTable.collisionShader.SetUniformMatrix4(UniformName.worldToView, ref worldToView);
+            shaderTable.collisionShader.SetUniform3(UniformName.cameraPosition, payload.camera.position);
+
+            foreach (CollisionMeshHandle mesh in meshes)
+            {
+                Matrix4 modelToWorld = GetModelToWorld(mesh.triangleTransform);
+                shaderTable.collisionShader.SetUniformMatrix4(UniformName.modelToWorld, ref modelToWorld);
+                GL.BindVertexArray(mesh.vao);
+                GL.DrawElements(PrimitiveType.Triangles, mesh.indexCount, DrawElementsType.UnsignedInt, 0);
+            }
+
+            GLUtil.CheckGlError("MobyCollisionRenderer");
         }
     }
 }

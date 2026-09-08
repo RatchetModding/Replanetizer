@@ -44,12 +44,17 @@ namespace Replanetizer.Renderer
 
         public static MobyCollisionMesh Build(MobyModel model)
         {
+            return Build(model, GetBindPoseBonePositions(model));
+        }
+
+        public static MobyCollisionMesh Build(MobyModel model, IReadOnlyList<Vector3> indexedVertices)
+        {
             if (model.collisionData == null)
             {
-                return Build(new MobyModelCollision(), null);
+                return Build(new MobyModelCollision(), indexedVertices);
             }
 
-            return Build(model.collisionData, GetBindPoseBonePositions(model));
+            return Build(model.collisionData, indexedVertices);
         }
 
         private static MobyCollisionMesh Build(MobyModelCollision collision, IReadOnlyList<Vector3>? indexedVertices)

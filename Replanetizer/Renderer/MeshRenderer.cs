@@ -95,6 +95,7 @@ namespace Replanetizer.Renderer
             modelRender = null;
             modelObject = null;
             modelStandalone = null;
+            animationRenderer?.Dispose();
             animationRenderer = null;
 
             if (obj is ModelObject mObj)
@@ -585,6 +586,25 @@ namespace Replanetizer.Renderer
 
             renderPrepared = false;
 
+            if (animationRenderer != null
+                && (payload.visibility.enableAnimations || payload.visibility.enableMobyCollision))
+            {
+                bool animationValid = animationRenderer.IsValid();
+                if (animationValid || payload.visibility.enableMobyCollision)
+                {
+                    animationRenderer.Render(payload);
+                    if (animationValid && payload.visibility.enableAnimations)
+                    {
+                        return;
+                    }
+                }
+            }
+
+            if (!payload.visibility.enableMoby)
+            {
+                return;
+            }
+
             if (renderPerformBillboardOnly)
             {
                 if (payload.visibility.enableMeshlessModels)
@@ -592,15 +612,6 @@ namespace Replanetizer.Renderer
                     fallback.Render(payload);
                 }
                 return;
-            }
-
-            if (payload.visibility.enableAnimations && animationRenderer != null)
-            {
-                if (animationRenderer.IsValid())
-                {
-                    animationRenderer.Render(payload);
-                    return;
-                }
             }
 
             if (modelRender == null || gpuData == null) return;

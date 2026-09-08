@@ -61,18 +61,20 @@ namespace Replanetizer.Renderer
         private Frame? previousFrame = null;
         private Matrix4[]? boneMatrices = null;
         private Vector3[]? bonePositions = null;
+        private bool hasBonePositions = false;
         private BoneTransform[]? runtimeCurrentPose = null;
         private float frameBlend = 0.0f;
         private readonly ModelGPUDataCache gpuDataCache;
         private ModelGPUData? gpuData;
-        private MobyCollisionRenderer? collisionRenderer;
+        private readonly MobyCollisionRenderer collisionRenderer;
 
-        public AnimationRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, GLTexture> textureIds, GLTexture metalTexture, List<Animation>? ratchetAnimations = null, ModelGPUDataCache? gpuDataCache = null)
+        public AnimationRenderer(ShaderTable shaderTable, List<Texture> textures, Dictionary<Texture, GLTexture> textureIds, GLTexture metalTexture, MobyCollisionRenderer collisionRenderer, List<Animation>? ratchetAnimations = null, ModelGPUDataCache? gpuDataCache = null)
         {
             this.shaderTable = shaderTable;
             this.textureIds = textureIds;
             this.textures = textures;
             this.metalTexture = metalTexture;
+            this.collisionRenderer = collisionRenderer;
             this.ratchetAnimations = ratchetAnimations;
             this.gpuDataCache = gpuDataCache ?? new ModelGPUDataCache();
         }
@@ -89,16 +91,12 @@ namespace Replanetizer.Renderer
 
         public override void Include<T>(T obj)
         {
-            collisionRenderer?.Dispose();
-            collisionRenderer = null;
             mob = null;
             mobyModelStandalone = null;
 
             if (obj is Moby moby)
             {
                 mob = moby;
-                collisionRenderer = new MobyCollisionRenderer(shaderTable);
-                collisionRenderer.Include(moby);
                 UpdateVars();
                 return;
             }
@@ -106,8 +104,6 @@ namespace Replanetizer.Renderer
             if (obj is MobyModel mobyModel)
             {
                 mobyModelStandalone = mobyModel;
-                collisionRenderer = new MobyCollisionRenderer(shaderTable);
-                collisionRenderer.Include(mobyModel);
                 UpdateVars();
                 return;
             }
@@ -131,6 +127,7 @@ namespace Replanetizer.Renderer
             previousFrame = null;
             boneMatrices = null;
             bonePositions = null;
+            hasBonePositions = false;
             runtimeCurrentPose = null;
             frameBlend = 0.0f;
         }
@@ -752,6 +749,22 @@ namespace Replanetizer.Renderer
             {
                 bonePositions[i] = new Vector3(boneMatrices[i].M41, boneMatrices[i].M42, boneMatrices[i].M43);
             }
+
+            hasBonePositions = true;
+        }
+
+        public void RenderCollision(RendererPayload payload)
+        {
+            if (!payload.visibility.enableMobyCollision)
+                return;
+
+            if (hasBonePositions && bonePositions != null)
+            {
+                collisionRenderer.Render(payload, bonePositions);
+                return;
+            }
+
+            collisionRenderer.Render(payload);
         }
 
         private void ComputeBoneMatricesWithMemory(
@@ -953,8 +966,6 @@ namespace Replanetizer.Renderer
         public override void Dispose()
         {
             DeleteBuffers();
-            collisionRenderer?.Dispose();
-            collisionRenderer = null;
         }
     }
 }

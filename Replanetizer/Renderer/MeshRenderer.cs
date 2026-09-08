@@ -50,6 +50,7 @@ namespace Replanetizer.Renderer
 
         private bool renderPrepared = false;
         private bool renderPerform = true;
+        private bool renderCulled = false;
         private bool renderPerformBillboardOnly = false;
         private bool renderCameraMesh = true;
 
@@ -61,6 +62,7 @@ namespace Replanetizer.Renderer
         private ShaderTable shaderTable;
         private BillboardRenderer fallback;
         private AnimationRenderer? animationRenderer = null;
+        private MobyCollisionRenderer? collisionRenderer = null;
         private readonly ModelGPUDataCache gpuDataCache;
         private ModelGPUData? gpuData;
 
@@ -97,6 +99,8 @@ namespace Replanetizer.Renderer
             modelStandalone = null;
             animationRenderer?.Dispose();
             animationRenderer = null;
+            collisionRenderer?.Dispose();
+            collisionRenderer = null;
 
             if (obj is ModelObject mObj)
             {
@@ -149,6 +153,10 @@ namespace Replanetizer.Renderer
         private void GenerateBuffers()
         {
             DeleteBuffers();
+            animationRenderer?.Dispose();
+            animationRenderer = null;
+            collisionRenderer?.Dispose();
+            collisionRenderer = null;
 
             modelRender = modelObject?.model ?? modelStandalone;
 
@@ -158,7 +166,9 @@ namespace Replanetizer.Renderer
 
                 if (modelObject is Moby mob)
                 {
-                    animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds, metalTexture, ratchetAnimations, gpuDataCache);
+                    collisionRenderer = new MobyCollisionRenderer(shaderTable);
+                    collisionRenderer.Include(mob);
+                    animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds, metalTexture, collisionRenderer, ratchetAnimations, gpuDataCache);
                     animationRenderer.Include(mob);
                 }
             }
@@ -168,7 +178,9 @@ namespace Replanetizer.Renderer
 
                 if (modelStandalone is MobyModel mobyModel)
                 {
-                    animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds, metalTexture, ratchetAnimations, gpuDataCache);
+                    collisionRenderer = new MobyCollisionRenderer(shaderTable);
+                    collisionRenderer.Include(mobyModel);
+                    animationRenderer = new AnimationRenderer(shaderTable, textures, textureIds, metalTexture, collisionRenderer, ratchetAnimations, gpuDataCache);
                     animationRenderer.Include(mobyModel);
                 }
             }
@@ -183,6 +195,10 @@ namespace Replanetizer.Renderer
             // We simply don't draw it.
             if (renderCameraMesh == false && loadedModelID == 0x3EF && modelObject != null)
             {
+                animationRenderer?.Dispose();
+                animationRenderer = null;
+                collisionRenderer?.Dispose();
+                collisionRenderer = null;
                 loadedModelID = -1;
                 modelHasMeshData = false;
                 modelObject = null;
@@ -447,6 +463,8 @@ namespace Replanetizer.Renderer
          */
         public void PrepareRender(RendererPayload payload)
         {
+            renderCulled = false;
+
             if (modelObject == null && modelStandalone == null)
             {
                 renderPrepared = true;
@@ -477,6 +495,7 @@ namespace Replanetizer.Renderer
             {
                 renderPrepared = true;
                 renderPerform = false;
+                renderCulled = true;
                 return;
             }
 
@@ -494,6 +513,22 @@ namespace Replanetizer.Renderer
             Select(payload.selection);
 
             renderPerformBillboardOnly = false;
+        }
+
+        private void RenderCulledCollision(RendererPayload payload)
+        {
+            if (!renderCulled || !payload.visibility.enableMobyCollision)
+                return;
+
+            if (payload.visibility.enableAnimations
+                && animationRenderer != null
+                && animationRenderer.IsValid())
+            {
+                animationRenderer.RenderCollision(payload);
+                return;
+            }
+
+            collisionRenderer?.Render(payload);
         }
 
         private void RenderModel(Model model, ModelGPUData modelGPUData)
@@ -572,6 +607,7 @@ namespace Replanetizer.Renderer
             if (renderPrepared && !renderPerform)
             {
                 renderPrepared = false;
+                RenderCulledCollision(payload);
                 return;
             }
             else if (!renderPrepared)
@@ -580,24 +616,26 @@ namespace Replanetizer.Renderer
                 renderPrepared = false;
                 if (!renderPerform)
                 {
+                    RenderCulledCollision(payload);
                     return;
                 }
             }
 
             renderPrepared = false;
 
-            if (animationRenderer != null
-                && (payload.visibility.enableAnimations || payload.visibility.enableMobyCollision))
+            if (animationRenderer != null && payload.visibility.enableAnimations)
             {
                 bool animationValid = animationRenderer.IsValid();
-                if (animationValid || payload.visibility.enableMobyCollision)
+                if (animationValid)
                 {
                     animationRenderer.Render(payload);
-                    if (animationValid && payload.visibility.enableAnimations)
-                    {
-                        return;
-                    }
+                    return;
                 }
+            }
+
+            if (payload.visibility.enableMobyCollision)
+            {
+                collisionRenderer?.Render(payload);
             }
 
             if (!payload.visibility.enableMoby)
@@ -670,6 +708,7 @@ namespace Replanetizer.Renderer
             DeleteBuffers();
             fallback?.Dispose();
             animationRenderer?.Dispose();
+            collisionRenderer?.Dispose();
         }
     }
 }

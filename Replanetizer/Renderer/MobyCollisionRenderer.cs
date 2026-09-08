@@ -26,6 +26,7 @@ namespace Replanetizer.Renderer
         public MobyModel? mobyModelStandalone { get; private set; }
         private MobyModel? cachedModel;
         private bool modelCached;
+        private bool primitiveUsesBonePositions;
 
         public MobyCollisionRenderer(ShaderTable shaderTable)
         {
@@ -75,6 +76,7 @@ namespace Replanetizer.Renderer
             DeleteMeshes();
             cachedModel = mobyModel;
             modelCached = true;
+            primitiveUsesBonePositions = false;
 
             if (mobyModel?.collisionData == null)
                 return;
@@ -90,6 +92,25 @@ namespace Replanetizer.Renderer
                 return;
 
             MobyCollisionMeshPart mesh = MobyCollisionMeshBuilder.Build(cachedModel, bonePositions).primitiveMesh;
+            UpdatePrimitiveMesh(mesh);
+            primitiveUsesBonePositions = true;
+        }
+
+        private void RestoreBindPose()
+        {
+            if (!primitiveUsesBonePositions || cachedModel?.collisionData == null || primitiveMesh == null)
+                return;
+
+            MobyCollisionMeshPart mesh = MobyCollisionMeshBuilder.Build(cachedModel).primitiveMesh;
+            UpdatePrimitiveMesh(mesh);
+            primitiveUsesBonePositions = false;
+        }
+
+        private void UpdatePrimitiveMesh(MobyCollisionMeshPart mesh)
+        {
+            if (primitiveMesh == null)
+                return;
+
             GL.BindVertexArray(primitiveMesh.vao);
             GL.BindBuffer(BufferTarget.ArrayBuffer, primitiveMesh.vbo);
             GL.BufferData(BufferTarget.ArrayBuffer, mesh.vertexBuffer.Length * sizeof(float), mesh.vertexBuffer, BufferUsageHint.DynamicDraw);
@@ -105,6 +126,7 @@ namespace Replanetizer.Renderer
         public override void Render(RendererPayload payload)
         {
             Update();
+            RestoreBindPose();
             RenderMeshes(payload);
         }
 
@@ -114,6 +136,10 @@ namespace Replanetizer.Renderer
             if (bonePositions != null)
             {
                 UpdateBonePositions(bonePositions);
+            }
+            else
+            {
+                RestoreBindPose();
             }
 
             RenderMeshes(payload);
@@ -141,6 +167,7 @@ namespace Replanetizer.Renderer
 
             meshes.Clear();
             primitiveMesh = null;
+            primitiveUsesBonePositions = false;
         }
 
         private static void DeleteMesh(CollisionMeshHandle mesh)

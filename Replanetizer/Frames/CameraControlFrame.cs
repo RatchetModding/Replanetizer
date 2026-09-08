@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ImGuiNET;
 using LibReplanetizer.LevelObjects;
 using OpenTK.Mathematics;
+using Replanetizer.Utils;
 
 namespace Replanetizer.Frames
 {
@@ -11,7 +12,8 @@ namespace Replanetizer.Frames
         private enum ControlMode
         {
             Manual,
-            Spline
+            Spline,
+            Keyframe
         }
 
         private enum RotationRepresentation
@@ -19,6 +21,35 @@ namespace Replanetizer.Frames
             YawAndPitch,
             EulerAngles,
             Quaternion
+        }
+
+        public enum EasingType
+        {
+            Linear,
+            SmoothStep,
+            EaseInOut,
+            EaseIn,
+            EaseOut
+        }
+        public class CameraKeyframe
+        {
+            public Vector3 Position { get; set; }
+            public Vector2 Rotation { get; set; }
+            public string Name { get; set; }
+            public float Duration { get; set; }
+
+            public CameraKeyframe(Vector3 position, Vector2 rotation, string name = "", float duration = 2.0f)
+            {
+                Position = position;
+                Rotation = rotation;
+                Name = name;
+                Duration = duration;
+            }
+
+            public CameraKeyframe Clone()
+            {
+                return new CameraKeyframe(Position, Rotation, Name, Duration);
+            }
         }
 
         private const float DEGREES_PER_RADIAN = 180.0f / MathF.PI;
@@ -36,15 +67,42 @@ namespace Replanetizer.Frames
         private bool splinePickerArmed;
         private LevelObject? targetObject;
 
+        private List<CameraKeyframe> cameraKeyframes = new List<CameraKeyframe>();
+        private int currentPlaybackKeyframe = 0;
+        private float keyframeProgress = 0f;
+        private bool isPlayingKeyframes = false;
+        private bool loopKeyframes = false;
+        private float defaultKeyframeDuration = 2.0f;
+        private EasingType keyframeEasingType = EasingType.Linear;
+
+        private static readonly string[] EASING_NAMES = { "Linear", "Smooth Step", "Ease In Out", "Ease In", "Ease Out" };
+
         protected override string frameName { get; set; } = "Camera Control";
 
         public CameraControlFrame(Window wnd, LevelFrame levelFrame) : base(wnd, levelFrame)
         {
             levelFrame.ObjectSelected += LevelFrameOnObjectSelected;
         }
+        public bool visible = true;
+        private void HandleVisibilityToggle()
+        {
+            if (ImGui.GetIO().WantTextInput)
+                return;
+
+            if (ImGui.IsKeyPressed(ImGuiKey.Escape))
+                visible = !visible;
+        }
 
         public override void RenderAsWindow(float deltaTime)
         {
+            HandleVisibilityToggle(); // Pressing Esc toggles rendering of the camera control window.
+
+            if (isPlayingKeyframes)
+                UpdateKeyframePlayback(deltaTime);
+
+            if (!visible)
+                return;
+
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(360, 0), ImGuiCond.FirstUseEver);
             if (ImGui.Begin(frameName, ref isOpen))
             {
@@ -59,19 +117,37 @@ namespace Replanetizer.Frames
 
             ImGui.Separator();
 
-            if (mode == ControlMode.Manual)
-                RenderManualControls();
-            else
-                RenderSplineControls(deltaTime);
+            switch (mode)
+            {
+                case ControlMode.Manual:
+                    RenderManualControls();
+                    break;
+                case ControlMode.Spline:
+                    RenderSplineControls(deltaTime);
+                    break;
+                case ControlMode.Keyframe:
+                    RenderKeyframeControls(deltaTime);
+                    break;
+            }
         }
-
+        private static string GetModeName(ControlMode mode)
+        {
+            return mode switch
+            {
+                ControlMode.Manual => "Manual",
+                ControlMode.Spline => "Spline",
+                ControlMode.Keyframe => "Keyframe",
+                _ => "Manual"
+            };
+        }
         private void RenderModeSelector()
         {
-            string modeName = mode == ControlMode.Manual ? "Manual" : "Spline";
+            string modeName = GetModeName(mode);
             if (ImGui.BeginCombo("Mode", modeName))
             {
                 RenderModeOption(ControlMode.Manual, "Manual");
                 RenderModeOption(ControlMode.Spline, "Spline");
+                RenderModeOption(ControlMode.Keyframe, "Keyframe");
                 ImGui.EndCombo();
             }
         }
@@ -83,6 +159,7 @@ namespace Replanetizer.Frames
             {
                 mode = option;
                 isPlaying = false;
+                isPlayingKeyframes = false;
                 if (mode != ControlMode.Spline)
                 {
                     targetPickerArmed = false;
@@ -101,7 +178,7 @@ namespace Replanetizer.Frames
             Vector3 cameraPosition = levelFrame.camera.position;
             System.Numerics.Vector3 position = new(cameraPosition.X, cameraPosition.Y, cameraPosition.Z);
 
-            if (ImGui.InputFloat3("Position", ref position))
+            if (ImGui.DragFloat3("Position", ref position, 0.01f))
             {
                 levelFrame.camera.SetPosition(position.X, position.Y, position.Z);
                 levelFrame.InvalidateView();
@@ -166,8 +243,8 @@ namespace Replanetizer.Frames
             float pitch = cameraRotation.X * DEGREES_PER_RADIAN;
             float yaw = cameraRotation.Z * DEGREES_PER_RADIAN;
 
-            bool pitchChanged = ImGui.InputFloat("Pitch (degrees)", ref pitch);
-            bool yawChanged = ImGui.InputFloat("Yaw (degrees)", ref yaw);
+            bool pitchChanged = ImGui.DragFloat("Pitch (degrees)", ref pitch, 0.01f, -89.99f, 89.99f);
+            bool yawChanged = ImGui.DragFloat("Yaw (degrees)", ref yaw, 0.01f);
             if (pitchChanged || yawChanged)
             {
                 levelFrame.camera.SetRotation(
@@ -334,6 +411,236 @@ namespace Replanetizer.Frames
                 if (trackingChanged && GetSelectedSpline() != null)
                     ApplyTargetRotation();
             }
+        }
+        private void RenderKeyframeControls(float deltaTime)
+        {
+            ImGui.Text($"Keyframes: {cameraKeyframes.Count}");
+
+            if (ImGui.Button("Add Keyframe"))
+                AddCameraKeyframe();
+
+            ImGui.SameLine();
+            if (ImGui.Button("Clear All"))
+                ClearAllKeyframes();
+
+            ImGui.SliderFloat("Default Duration", ref defaultKeyframeDuration, 0.5f, 50.0f);
+
+            int easingIndex = (int) keyframeEasingType;
+            if (ImGui.Combo("Easing", ref easingIndex, EASING_NAMES, EASING_NAMES.Length))
+                keyframeEasingType = (EasingType) easingIndex;
+
+            ImGui.Separator();
+
+            if (cameraKeyframes.Count >= 2)
+            {
+                if (!isPlayingKeyframes)
+                {
+                    if (ImGui.Button("Play"))
+                        PlayKeyframes(false);
+                    ImGui.SameLine();
+                    if (ImGui.Button("Loop"))
+                        PlayKeyframes(true);
+                }
+                else
+                {
+                    ImGui.Text($"Playing: {currentPlaybackKeyframe + 1}/{cameraKeyframes.Count}");
+                    ImGui.SliderFloat("Progress", ref keyframeProgress, 0.0f, 1.0f);
+
+                    if (ImGui.Button("Stop"))
+                        StopKeyframePlayback();
+                }
+
+                ImGui.Separator();
+            }
+
+            if (cameraKeyframes.Count == 0)
+            {
+                ImGui.TextWrapped("No keyframes.");
+            }
+            else
+            {
+                ImGui.Text("Keyframe List:");
+                ImGui.BeginChild("KeyframeList", new System.Numerics.Vector2(0, -1));
+
+                for (int i = 0; i < cameraKeyframes.Count; i++)
+                {
+                    CameraKeyframe kf = cameraKeyframes[i];
+
+                    ImGui.PushID(i);
+
+                    ImGui.Text($"Pos: ({kf.Position.X:F2}, {kf.Position.Y:F2}, {kf.Position.Z:F2})");
+
+                    if (i != 0)
+                    {
+                        float duration = kf.Duration;
+                        if (ImGui.SliderFloat("Duration", ref duration, 0.1f, 50.0f))
+                            kf.Duration = duration;
+                    }
+
+                    if (ImGui.Button("Jump To"))
+                        JumpToKeyframe(i);
+
+                    ImGui.SameLine();
+                    if (ImGui.Button("Update"))
+                        UpdateKeyframe(i);
+
+                    ImGui.SameLine();
+                    if (ImGui.Button("Delete"))
+                    {
+                        RemoveKeyframe(i);
+                        ImGui.PopID();
+                        break;
+                    }
+
+                    ImGui.Separator();
+                    ImGui.PopID();
+                }
+
+                ImGui.EndChild();
+            }
+
+
+        }
+
+        private void UpdateKeyframePlayback(float deltaTime)
+        {
+            if (!isPlayingKeyframes || cameraKeyframes.Count < 2)
+                return;
+
+            CameraKeyframe fromKeyframe = cameraKeyframes[currentPlaybackKeyframe];
+            CameraKeyframe toKeyframe = cameraKeyframes[(currentPlaybackKeyframe + 1) % cameraKeyframes.Count];
+
+            keyframeProgress += deltaTime / toKeyframe.Duration;
+
+            if (keyframeProgress >= 1.0f)
+            {
+                currentPlaybackKeyframe++;
+                keyframeProgress = 0f;
+
+                if (currentPlaybackKeyframe >= cameraKeyframes.Count - 1)
+                {
+                    if (loopKeyframes)
+                    {
+                        currentPlaybackKeyframe = 0;
+                    }
+                    else
+                    {
+                        levelFrame.camera.SetPosition(toKeyframe.Position.X, toKeyframe.Position.Y, toKeyframe.Position.Z);
+                        levelFrame.camera.SetRotation(toKeyframe.Rotation.X, toKeyframe.Rotation.Y);
+                        isPlayingKeyframes = false;
+                        levelFrame.InvalidateView();
+                        return;
+                    }
+                }
+
+                fromKeyframe = cameraKeyframes[currentPlaybackKeyframe];
+                toKeyframe = cameraKeyframes[(currentPlaybackKeyframe + 1) % cameraKeyframes.Count];
+            }
+
+            float t = ApplyEasing(keyframeProgress, keyframeEasingType);
+
+            Vector3 pos = Vector3.Lerp(fromKeyframe.Position, toKeyframe.Position, t);
+
+            levelFrame.camera.SetPosition(pos.X, pos.Y, pos.Z);
+
+            Vector2 rot = LerpRotation(fromKeyframe.Rotation, toKeyframe.Rotation, t);
+            levelFrame.camera.SetRotation(rot.X, rot.Y);
+
+            levelFrame.InvalidateView();
+        }
+
+        private static Vector2 LerpRotation(Vector2 from, Vector2 to, float t)
+        {
+            Vector2 delta = to - from;
+
+            while (delta.Y > MathF.PI) delta.Y -= MathF.PI * 2;
+            while (delta.Y < -MathF.PI) delta.Y += MathF.PI * 2;
+
+            return from + delta * t;
+        }
+
+        private static float ApplyEasing(float t, EasingType easingType)
+        {
+            return easingType switch
+            {
+                EasingType.Linear => t,
+                EasingType.SmoothStep => t * t * (3f - 2f * t),
+                EasingType.EaseInOut => t < 0.5f
+                    ? 2f * t * t
+                    : 1f - MathF.Pow(-2f * t + 2f, 2f) / 2f,
+                EasingType.EaseIn => t * t,
+                EasingType.EaseOut => 1f - (1f - t) * (1f - t),
+                _ => t
+            };
+        }
+
+        private void AddCameraKeyframe(string name = "")
+        {
+            if (string.IsNullOrEmpty(name))
+                name = $"Keyframe {cameraKeyframes.Count + 1}";
+
+            var keyframe = new CameraKeyframe(
+                levelFrame.camera.position,
+                new Vector2(levelFrame.camera.rotation.X, levelFrame.camera.rotation.Z),
+                name,
+                defaultKeyframeDuration
+            );
+
+            cameraKeyframes.Add(keyframe);
+        }
+
+        private void RemoveKeyframe(int index)
+        {
+            if (index >= 0 && index < cameraKeyframes.Count)
+                cameraKeyframes.RemoveAt(index);
+        }
+
+        private void ClearAllKeyframes()
+        {
+            cameraKeyframes.Clear();
+            StopKeyframePlayback();
+        }
+
+        private void PlayKeyframes(bool loop)
+        {
+            if (cameraKeyframes.Count < 2)
+                return;
+
+            isPlayingKeyframes = true;
+            currentPlaybackKeyframe = 0;
+            keyframeProgress = 0f;
+            loopKeyframes = loop;
+
+            CameraKeyframe firstKeyframe = cameraKeyframes[0];
+            levelFrame.camera.SetPosition(firstKeyframe.Position.X, firstKeyframe.Position.Y, firstKeyframe.Position.Z);
+            levelFrame.camera.SetRotation(firstKeyframe.Rotation.X, firstKeyframe.Rotation.Y);
+        }
+
+        private void StopKeyframePlayback()
+        {
+            isPlayingKeyframes = false;
+            currentPlaybackKeyframe = 0;
+            keyframeProgress = 0f;
+        }
+
+        private void JumpToKeyframe(int index)
+        {
+            if (index < 0 || index >= cameraKeyframes.Count)
+                return;
+
+            CameraKeyframe keyframe = cameraKeyframes[index];
+            levelFrame.camera.SetPosition(keyframe.Position.X, keyframe.Position.Y, keyframe.Position.Z);
+            levelFrame.camera.SetRotation(keyframe.Rotation.X, keyframe.Rotation.Y);
+            levelFrame.InvalidateView();
+        }
+
+        private void UpdateKeyframe(int index)
+        {
+            if (index < 0 || index >= cameraKeyframes.Count)
+                return;
+
+            cameraKeyframes[index].Position = levelFrame.camera.position;
+            cameraKeyframes[index].Rotation = new Vector2(levelFrame.camera.rotation.X, levelFrame.camera.rotation.Z);
         }
 
         private void LevelFrameOnObjectSelected(LevelObject obj)

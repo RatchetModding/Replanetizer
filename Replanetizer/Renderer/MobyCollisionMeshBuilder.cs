@@ -98,9 +98,8 @@ namespace Replanetizer.Renderer
                         float length = axis.Length;
                         if (length > float.Epsilon)
                         {
-                            Vector3 capsuleBase = capsuleStart.Z <= capsuleEnd.Z ? capsuleStart : capsuleEnd;
-                            AddCapsule(vertices, indices, capsuleBase + Vector3.UnitZ * (length * 0.5f),
-                                Vector3.UnitZ, length * 0.5f, primitive.indexedCapsuleRadius, PrimitiveColor);
+                            AddCapsule(vertices, indices, (capsuleStart + capsuleEnd) * 0.5f,
+                                axis / length, length * 0.5f, primitive.indexedCapsuleRadius, PrimitiveColor);
                         }
                         else
                         {
@@ -160,7 +159,7 @@ namespace Replanetizer.Renderer
             for (int stack = 1; stack <= CAPSULE_STACKS; stack++)
             {
                 float theta = MathF.PI * 0.5f * stack / CAPSULE_STACKS;
-                rings.Add((-halfLength - MathF.Cos(theta) * radius, MathF.Sin(theta) * radius));
+                rings.Add((-halfLength - MathF.Sin(theta) * radius, MathF.Cos(theta) * radius));
             }
 
             for (int stack = 0; stack < rings.Count; stack++)

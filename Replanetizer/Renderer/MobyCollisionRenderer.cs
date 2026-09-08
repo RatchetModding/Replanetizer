@@ -150,7 +150,19 @@ namespace Replanetizer.Renderer
             int ibo;
             GL.GenBuffers(1, out ibo);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, mesh.indexBuffer.Length * sizeof(uint), mesh.indexBuffer, BufferUsageHint.StaticDraw);
+            uint[] indexBuffer = mesh.indexBuffer;
+            if (triangleTransform)
+            {
+                indexBuffer = (uint[]) mesh.indexBuffer.Clone();
+                for (int index = 0; index < indexBuffer.Length; index += 3)
+                {
+                    uint second = indexBuffer[index + 1];
+                    indexBuffer[index + 1] = indexBuffer[index + 2];
+                    indexBuffer[index + 2] = second;
+                }
+            }
+
+            GL.BufferData(BufferTarget.ElementArrayBuffer, indexBuffer.Length * sizeof(uint), indexBuffer, BufferUsageHint.StaticDraw);
 
             GLUtil.ActivateNumberOfVertexAttribArrays(2);
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);

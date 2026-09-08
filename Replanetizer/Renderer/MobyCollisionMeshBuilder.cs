@@ -39,6 +39,21 @@ namespace Replanetizer.Renderer
 
         public static MobyCollisionMesh Build(MobyModelCollision collision)
         {
+            return Build(collision, null);
+        }
+
+        public static MobyCollisionMesh Build(MobyModel model)
+        {
+            if (model.collisionData == null)
+            {
+                return Build(new MobyModelCollision(), null);
+            }
+
+            return Build(model.collisionData, GetBindPoseBonePositions(model));
+        }
+
+        private static MobyCollisionMesh Build(MobyModelCollision collision, IReadOnlyList<Vector3>? indexedVertices)
+        {
             List<float> triangleVertices = new List<float>();
             List<uint> triangleIndices = new List<uint>();
             List<float> primitiveVertices = new List<float>();
@@ -51,7 +66,7 @@ namespace Replanetizer.Renderer
 
             foreach (MobyModelCollisionPrimitive primitive in collision.primitives)
             {
-                AddPrimitive(primitiveVertices, primitiveIndices, collision, primitive);
+                AddPrimitive(primitiveVertices, primitiveIndices, collision, indexedVertices, primitive);
             }
 
             return new MobyCollisionMesh(
@@ -59,7 +74,8 @@ namespace Replanetizer.Renderer
                 new MobyCollisionMeshPart(primitiveVertices.ToArray(), primitiveIndices.ToArray()));
         }
 
-        private static void AddPrimitive(List<float> vertices, List<uint> indices, MobyModelCollision collision, MobyModelCollisionPrimitive primitive)
+        private static void AddPrimitive(List<float> vertices, List<uint> indices, MobyModelCollision collision,
+            IReadOnlyList<Vector3>? indexedVertices, MobyModelCollisionPrimitive primitive)
         {
             switch (primitive.shape)
             {
@@ -70,11 +86,9 @@ namespace Replanetizer.Renderer
                         primitive.sphereRadius, PrimitiveColor);
                     break;
                 case MobyModelCollisionShape.IndexedSphere:
-                    if (TryGetVertex(collision, primitive.indexedSphereVertex, out Vector3 indexedSphereCenter))
+                    if (TryGetIndexedVertex(indexedVertices, primitive.indexedSphereVertex, out Vector3 indexedSphereCenter))
                     {
-                        AddSphere(vertices, indices,
-                            indexedSphereCenter + new Vector3(primitive.indexedSphereOffsetX, primitive.indexedSphereOffsetY, primitive.indexedSphereOffsetZ),
-                            primitive.indexedSphereRadius, PrimitiveColor);
+                        AddSphere(vertices, indices, indexedSphereCenter, primitive.indexedSphereRadius, PrimitiveColor);
                     }
                     break;
                 case MobyModelCollisionShape.Capsule:
@@ -85,15 +99,16 @@ namespace Replanetizer.Renderer
                         Vector3.UnitZ, capsuleLength * 0.5f, primitive.capsuleRadius, PrimitiveColor);
                     break;
                 case MobyModelCollisionShape.IndexedCapsule:
-                    if (TryGetVertex(collision, primitive.indexedCapsuleVertex0, out Vector3 capsuleStart)
-                        && TryGetVertex(collision, primitive.indexedCapsuleVertex1, out Vector3 capsuleEnd))
+                    if (TryGetIndexedVertex(indexedVertices, primitive.indexedCapsuleVertex0, out Vector3 capsuleStart)
+                        && TryGetIndexedVertex(indexedVertices, primitive.indexedCapsuleVertex1, out Vector3 capsuleEnd))
                     {
                         Vector3 axis = capsuleEnd - capsuleStart;
                         float length = axis.Length;
                         if (length > float.Epsilon)
                         {
-                            AddCapsule(vertices, indices, (capsuleStart + capsuleEnd) * 0.5f,
-                                axis / length, length * 0.5f, primitive.indexedCapsuleRadius, PrimitiveColor);
+                            Vector3 capsuleOrigin = capsuleStart.Z < capsuleEnd.Z ? capsuleStart : capsuleEnd;
+                            AddCapsule(vertices, indices, capsuleOrigin + Vector3.UnitZ * (length * 0.5f),
+                                Vector3.UnitZ, length * 0.5f, primitive.indexedCapsuleRadius, PrimitiveColor);
                         }
                         else
                         {
@@ -104,6 +119,27 @@ namespace Replanetizer.Renderer
                 default:
                     break;
             }
+        }
+
+        private static IReadOnlyList<Vector3> GetBindPoseBonePositions(MobyModel model)
+        {
+            int boneCount = Math.Min(model.boneCount, model.boneDatas.Count);
+            Matrix4[] boneTransforms = new Matrix4[boneCount];
+            Vector3[] bonePositions = new Vector3[boneCount];
+
+            for (int bone = 0; bone < boneCount; bone++)
+            {
+                Matrix4 localTransform = Matrix4.CreateTranslation(model.boneDatas[bone].translation);
+                int parent = model.boneDatas[bone].parent;
+                Matrix4 parentTransform = parent >= 0 && parent < bone ? boneTransforms[parent] : Matrix4.Identity;
+                boneTransforms[bone] = localTransform * parentTransform;
+                bonePositions[bone] = new Vector3(
+                    boneTransforms[bone].M41,
+                    boneTransforms[bone].M42,
+                    boneTransforms[bone].M43);
+            }
+
+            return bonePositions;
         }
 
         private static void AddSphere(List<float> vertices, List<uint> indices, Vector3 center, float radius, uint color)
@@ -198,6 +234,18 @@ namespace Replanetizer.Renderer
             {
                 MobyModelCollisionVertex source = collision.vertices[index];
                 vertex = new Vector3(source.x, source.y, source.z);
+                return true;
+            }
+
+            vertex = Vector3.Zero;
+            return false;
+        }
+
+        private static bool TryGetIndexedVertex(IReadOnlyList<Vector3>? indexedVertices, int index, out Vector3 vertex)
+        {
+            if (indexedVertices != null && index >= 0 && index < indexedVertices.Count)
+            {
+                vertex = indexedVertices[index];
                 return true;
             }
 

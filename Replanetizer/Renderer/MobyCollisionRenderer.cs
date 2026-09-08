@@ -73,7 +73,7 @@ namespace Replanetizer.Renderer
             if (mobyModel?.collisionData == null)
                 return;
 
-            MobyCollisionMesh mesh = MobyCollisionMeshBuilder.Build(mobyModel.collisionData);
+            MobyCollisionMesh mesh = MobyCollisionMeshBuilder.Build(mobyModel);
             AddMesh(moby, mesh.triangleMesh, true);
             AddMesh(moby, mesh.primitiveMesh, false);
         }

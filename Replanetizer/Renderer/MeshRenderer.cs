@@ -638,7 +638,7 @@ namespace Replanetizer.Renderer
                 collisionRenderer?.Render(payload);
             }
 
-            if (!payload.visibility.enableMoby)
+            if (type == RenderedObjectType.Moby && !payload.visibility.enableMoby)
             {
                 return;
             }

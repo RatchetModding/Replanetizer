@@ -69,18 +69,27 @@ namespace LibReplanetizer.Parsers
             {
                 using (SpaceshipParser parser = new SpaceshipParser(game, path, spaceshipNum))
                 {
-                    models.Add(parser.GetShipModel());
+                    MobyModel shipModel = parser.GetShipModel();
                     if (game == GameType.RaC1)
                     {
+                        MobyModel cockpitModel = parser.GetCockpitModel();
+
+                        foreach (TextureConfig conf in shipModel.textureConfig)
+                            conf.id += textures.Count;
+
+                        foreach (TextureConfig conf in cockpitModel.textureConfig)
+                            conf.id += textures.Count + 1;
+
                         List<Texture> fileTextures = parser.GetTextures();
                         string vramPath = Path.ChangeExtension(path, ".vram");
 
                         using (VramParser vramParser = new VramParser(vramPath))
                             vramParser.GetTextures(fileTextures);
 
-                        models.Add(parser.GetCockpitModel());
+                        models.Add(cockpitModel);
                         textures.AddRange(fileTextures);
                     }
+                    models.Add(shipModel);
                 }
             }
 

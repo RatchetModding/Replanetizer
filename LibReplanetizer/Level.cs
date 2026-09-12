@@ -170,11 +170,6 @@ namespace LibReplanetizer
                 textures = engineParser.GetTextures();
                 LOGGER.Debug("Added {0} textures", textures.Count);
 
-                var spaceshipData = SpaceshipParser.GetAllSpaceshipData(game, enginePath, textures.Count);
-                spaceshipModels = spaceshipData.models;
-                spaceshipTextures = spaceshipData.textures;
-                LOGGER.Debug("Added {0} spaceship models", spaceshipModels.Count);
-
                 LOGGER.Debug("Parsing ties...");
                 ties = engineParser.GetTies(tieModels);
                 LOGGER.Debug("Added {0} ties", ties.Count);
@@ -358,6 +353,9 @@ namespace LibReplanetizer
                 }
             }
 
+            (spaceshipModels, spaceshipTextures) = SpaceshipParser.GetAllSpaceshipData(game, enginePath);
+            LOGGER.Debug("Added {0} spaceship models", spaceshipModels.Count);
+
             List<string> missionDataPaths = MissionHeader.FindMissionDataFiles(game, enginePath);
             missions = new List<Mission>();
 
@@ -473,9 +471,32 @@ namespace LibReplanetizer
                 }
             });
 
+            // Spaceship model handling
+            // The texture IDs are local to their original file, so we need to transform them
+            // to the level's texture ID space.
+
             foreach (MobyModel model in spaceshipModels)
             {
                 mobyModels.RemoveAll(x => x.id == model.id);
+            }
+
+            foreach (MobyModel model in spaceshipModels)
+            {
+                foreach (TextureConfig conf in model.textureConfig)
+                    conf.id += textures.Count;
+            }
+
+            List<short> spaceshipAttachmentModelIDs = SpaceshipParser.GetAllSpaceshipAttachmentModelIDs(game);
+            foreach (short modelID in spaceshipAttachmentModelIDs)
+            {
+                Model? model = mobyModels.Find(x => x.id == modelID);
+
+                if (model != null)
+                {
+                    // The texture IDs are negative. Since we don't know what that means, we just plain override the ID.
+                    foreach (TextureConfig conf in model.textureConfig)
+                        conf.id = textures.Count;
+                }
             }
 
             mobyModels.AddRange(spaceshipModels);

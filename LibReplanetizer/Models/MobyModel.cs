@@ -135,9 +135,14 @@ namespace LibReplanetizer.Models
         public MobyModel() { }
 
         public MobyModel(FileStream fs, GameType game, short modelID, int offset)
+            : this(fs, game, modelID, offset, false)
+        {
+        }
+
+        private MobyModel(FileStream fs, GameType game, short modelID, int offset, bool standaloneModel)
         {
             id = modelID;
-            if (offset == 0x00)
+            if (offset == 0x00 && standaloneModel == false)
             {
                 isModel = false;
                 return;
@@ -335,6 +340,11 @@ namespace LibReplanetizer.Models
                     skeleton.InsertBone(boneMatrices[i], boneDatas[i].parent);
                 }
             }
+        }
+
+        public static MobyModel GetStandaloneMobyModel(FileStream fs, GameType game, short modelID)
+        {
+            return new MobyModel(fs, game, modelID, 0, true);
         }
 
         /*

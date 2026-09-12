@@ -23,6 +23,7 @@ namespace LibReplanetizer
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
 
         public bool valid;
+        public bool emplacedState = false;
 
         public string? path;
 
@@ -418,6 +419,8 @@ namespace LibReplanetizer
         // Copies data like gadget models from gadget files etc into engine data.
         public void EmplaceCommonData()
         {
+            Utilities.DebugAssert(emplacedState == false, "Level already emplaced its common data.");
+
             int gadgetTextureOffset = textures.Count;
 
             textures.AddRange(gadgetTextures);
@@ -502,6 +505,8 @@ namespace LibReplanetizer
             mobyModels.AddRange(spaceshipModels);
 
             textures.AddRange(spaceshipTextures);
+
+            emplacedState = true;
         }
 
         public void Dispose()
@@ -515,6 +520,8 @@ namespace LibReplanetizer
 
         public void Save(string outputFile)
         {
+            Utilities.DebugAssert(emplacedState == false, "Level may not be saved in an emplaced state.");
+
             string? directory;
             if (File.Exists(outputFile) && File.GetAttributes(outputFile).HasFlag(FileAttributes.Directory))
             {

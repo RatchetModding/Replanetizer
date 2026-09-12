@@ -25,6 +25,7 @@ namespace LibReplanetizer.Models
         public float size { get; set; } = 1.0f;
         public float[] vertexBuffer = { };
         public ushort[] indexBuffer = { };
+        public uint meshDataVersion { get; protected set; }
 
         public int vertexStride { get; protected set; } = 8;
 

@@ -14,6 +14,7 @@ namespace LibReplanetizer.Headers
     public class SpaceshipHeader
     {
         private static readonly short[][] SPACESHIP_MODEL_PAIRS = { [530, 534], [531, 535], [532, 536], [533, 537] };
+        private static readonly short[] RAC23_SPACESHIP_MODEL_IDS = { 3412, 3413, 3414 };
 
         public int shipModelPointer;
         public short shipModelID;
@@ -22,8 +23,15 @@ namespace LibReplanetizer.Headers
         public int texturePointer;
         public int textureCount;
 
-        public SpaceshipHeader(FileStream fs, int spaceshipNum)
+        public SpaceshipHeader(GameType game, FileStream fs, int spaceshipNum)
         {
+            if (game == GameType.RaC2 || game == GameType.RaC3)
+            {
+                shipModelID = RAC23_SPACESHIP_MODEL_IDS[spaceshipNum];
+                shipModelPointer = 0;
+                return;
+            }
+
             short[] modelIDs = SPACESHIP_MODEL_PAIRS[spaceshipNum];
             shipModelID = modelIDs[0];
             cockpitModelID = modelIDs[1];
@@ -40,17 +48,28 @@ namespace LibReplanetizer.Headers
         {
             List<(int spaceshipNum, string path)> found = new List<(int, string)>();
 
-            if (game != GameType.RaC1)
-                return found;
-
             string? folder = Path.GetDirectoryName(Path.GetDirectoryName(enginePath));
 
-            for (int i = 0; i < SPACESHIP_MODEL_PAIRS.Length; i++)
+            if (game == GameType.RaC1)
             {
-                string path = Path.Join(folder, "global", $"spaceship{i}.ps3");
-                if (File.Exists(path))
+                for (int i = 0; i < SPACESHIP_MODEL_PAIRS.Length; i++)
                 {
-                    found.Add((i, path));
+                    string path = Path.Join(folder, "global", $"spaceship{i}.ps3");
+                    if (File.Exists(path))
+                    {
+                        found.Add((i, path));
+                    }
+                }
+            }
+            else if (game == GameType.RaC2 || game == GameType.RaC3)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    string path = Path.Join(folder, "global/spaceships", $"ship_bodies{i}.ps3");
+                    if (File.Exists(path))
+                    {
+                        found.Add((i, path));
+                    }
                 }
             }
 

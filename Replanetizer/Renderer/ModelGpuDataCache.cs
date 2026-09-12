@@ -262,7 +262,7 @@ namespace Replanetizer.Renderer
 
         internal ModelGPUData Acquire(Model model, ModelGPULayout layout, string instanceKey = "", byte[]? ambientRgbas = null, List<int>? terrainLights = null)
         {
-            CacheKey key = new CacheKey(model, layout, instanceKey);
+            CacheKey key = new CacheKey(model, model.meshDataVersion, layout, instanceKey);
             if (!data.TryGetValue(key, out ModelGPUData? gpuData))
             {
                 gpuData = ModelGPUData.Create(model, layout, ambientRgbas, terrainLights);
@@ -298,19 +298,24 @@ namespace Replanetizer.Renderer
         private readonly struct CacheKey : IEquatable<CacheKey>
         {
             private readonly Model model;
+            private readonly uint meshDataVersion;
             private readonly ModelGPULayout layout;
             private readonly string instanceKey;
 
-            internal CacheKey(Model model, ModelGPULayout layout, string instanceKey)
+            internal CacheKey(Model model, uint meshDataVersion, ModelGPULayout layout, string instanceKey)
             {
                 this.model = model;
+                this.meshDataVersion = meshDataVersion;
                 this.layout = layout;
                 this.instanceKey = instanceKey;
             }
 
-            public bool Equals(CacheKey other) => ReferenceEquals(model, other.model) && layout == other.layout && instanceKey == other.instanceKey;
+            public bool Equals(CacheKey other) => ReferenceEquals(model, other.model)
+                && meshDataVersion == other.meshDataVersion
+                && layout == other.layout
+                && instanceKey == other.instanceKey;
             public override bool Equals(object? obj) => obj is CacheKey other && Equals(other);
-            public override int GetHashCode() => HashCode.Combine(RuntimeHelpers.GetHashCode(model), layout, instanceKey);
+            public override int GetHashCode() => HashCode.Combine(RuntimeHelpers.GetHashCode(model), meshDataVersion, layout, instanceKey);
         }
     }
 }

@@ -33,6 +33,7 @@ namespace Replanetizer.Renderer
         private Model? modelStandalone;
 
         private int loadedModelID = -1;
+        private uint loadedModelMeshDataVersion;
         private bool modelHasMeshData = false;
 
         private RenderedObjectType type { get; set; }
@@ -132,6 +133,7 @@ namespace Replanetizer.Renderer
             gpuDataCache.Release(gpuData);
             gpuData = null;
             loadedModelID = -1;
+            loadedModelMeshDataVersion = 0;
             modelHasMeshData = false;
             modelRender = null;
             renderPrepared = false;
@@ -159,6 +161,7 @@ namespace Replanetizer.Renderer
             collisionRenderer = null;
 
             modelRender = modelObject?.model ?? modelStandalone;
+            loadedModelMeshDataVersion = modelRender?.meshDataVersion ?? 0;
 
             if (modelObject != null)
             {
@@ -265,6 +268,7 @@ namespace Replanetizer.Renderer
                 bool currentModelHasMeshData = modelObject.model != null && HasMeshData(modelObject.model);
                 if (modelRender != modelObject.model
                     || loadedModelID != modelObject.modelID
+                    || loadedModelMeshDataVersion != (modelObject.model?.meshDataVersion ?? 0)
                     || modelHasMeshData != currentModelHasMeshData)
                 {
                     GenerateBuffers();
@@ -278,6 +282,7 @@ namespace Replanetizer.Renderer
                 bool currentModelHasMeshData = HasMeshData(modelStandalone);
                 if (modelRender != modelStandalone
                     || loadedModelID != modelStandalone.id
+                    || loadedModelMeshDataVersion != modelStandalone.meshDataVersion
                     || modelHasMeshData != currentModelHasMeshData)
                 {
                     GenerateBuffers();

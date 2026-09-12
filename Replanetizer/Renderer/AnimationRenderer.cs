@@ -32,6 +32,7 @@ namespace Replanetizer.Renderer
         private MobyModel? mobyModelStandalone;
 
         private int loadedModelID = -1;
+        private uint loadedModelMeshDataVersion;
         private MobyModel? loadedModel;
         private bool loadedModelHasMeshData = false;
 
@@ -118,6 +119,7 @@ namespace Replanetizer.Renderer
             gpuDataCache.Release(gpuData);
             gpuData = null;
             loadedModelID = -1;
+            loadedModelMeshDataVersion = 0;
             loadedModel = null;
             loadedModelHasMeshData = false;
             emptyModel = true;
@@ -173,6 +175,7 @@ namespace Replanetizer.Renderer
             }
 
             loadedModel = mobyModel;
+            loadedModelMeshDataVersion = mobyModel.meshDataVersion;
             loadedModelHasMeshData = HasAnimationMeshData(mobyModel);
 
             // This is a camera object that only exist at runtime and blocks vision in interactive mode.
@@ -229,6 +232,7 @@ namespace Replanetizer.Renderer
 
             if (loadedModelID != modelID
                 || loadedModel != currentModel
+                || loadedModelMeshDataVersion != (currentModel?.meshDataVersion ?? 0)
                 || loadedModelHasMeshData != currentModelHasMeshData)
             {
                 previousFrame = null;

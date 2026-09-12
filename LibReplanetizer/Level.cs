@@ -23,6 +23,7 @@ namespace LibReplanetizer
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
 
         public bool valid;
+        public bool emplacedState = false;
 
         public string? path;
 
@@ -169,11 +170,6 @@ namespace LibReplanetizer
                 LOGGER.Debug("Parsing textures...");
                 textures = engineParser.GetTextures();
                 LOGGER.Debug("Added {0} textures", textures.Count);
-
-                var spaceshipData = SpaceshipParser.GetAllSpaceshipData(game, enginePath, textures.Count);
-                spaceshipModels = spaceshipData.models;
-                spaceshipTextures = spaceshipData.textures;
-                LOGGER.Debug("Added {0} spaceship models", spaceshipModels.Count);
 
                 LOGGER.Debug("Parsing ties...");
                 ties = engineParser.GetTies(tieModels);
@@ -358,6 +354,9 @@ namespace LibReplanetizer
                 }
             }
 
+            (spaceshipModels, spaceshipTextures) = SpaceshipParser.GetAllSpaceshipData(game, enginePath);
+            LOGGER.Debug("Added {0} spaceship models", spaceshipModels.Count);
+
             List<string> missionDataPaths = MissionHeader.FindMissionDataFiles(game, enginePath);
             missions = new List<Mission>();
 
@@ -420,6 +419,8 @@ namespace LibReplanetizer
         // Copies data like gadget models from gadget files etc into engine data.
         public void EmplaceCommonData()
         {
+            Utilities.DebugAssert(emplacedState == false, "Level already emplaced its common data.");
+
             int gadgetTextureOffset = textures.Count;
 
             textures.AddRange(gadgetTextures);
@@ -443,26 +444,27 @@ namespace LibReplanetizer
             {
                 // Replace the empty ratchet model with the first armor model.
                 // This can be changed once we know where the game stores which armor model to use.
-
-                int armorTextureOffset = textures.Count;
-                textures.AddRange(armorTextures[0]);
-
-                Model defaultRatchetModel = armorModels[0];
+                MobyModel defaultRatchetModel = (MobyModel) armorModels[0];
 
                 foreach (TextureConfig conf in defaultRatchetModel.textureConfig)
                 {
-                    conf.id += armorTextureOffset;
+                    conf.id += textures.Count;
                 }
 
-                mobyModels.RemoveAll(x => x.id == 0);
-                mobyModels.Add(defaultRatchetModel);
-                mobs.ForEach(x =>
+                textures.AddRange(armorTextures[0]);
+
+                MobyModel? ratchetModel = (MobyModel?) mobyModels.Find(x => x.id == 0);
+
+                if (ratchetModel != null)
                 {
-                    if (x.modelID == 0)
-                    {
-                        x.model = defaultRatchetModel;
-                    }
-                });
+                    ratchetModel.ReplaceMeshData(defaultRatchetModel);
+                }
+                else
+                {
+                    // Fallback for when the level has no mobymodel
+                    ratchetModel = defaultRatchetModel;
+                }
+
             }
 
             mobyModels.ForEach(x =>
@@ -473,14 +475,39 @@ namespace LibReplanetizer
                 }
             });
 
+            // Spaceship model handling
+            // The texture IDs are local to their original file, so we need to transform them
+            // to the level's texture ID space.
+
             foreach (MobyModel model in spaceshipModels)
             {
                 mobyModels.RemoveAll(x => x.id == model.id);
             }
 
+            foreach (MobyModel model in spaceshipModels)
+            {
+                foreach (TextureConfig conf in model.textureConfig)
+                    conf.id += textures.Count;
+            }
+
+            List<short> spaceshipAttachmentModelIDs = SpaceshipParser.GetAllSpaceshipAttachmentModelIDs(game);
+            foreach (short modelID in spaceshipAttachmentModelIDs)
+            {
+                Model? model = mobyModels.Find(x => x.id == modelID);
+
+                if (model != null)
+                {
+                    // The texture IDs are negative. Since we don't know what that means, we just plain override the ID.
+                    foreach (TextureConfig conf in model.textureConfig)
+                        conf.id = textures.Count;
+                }
+            }
+
             mobyModels.AddRange(spaceshipModels);
 
             textures.AddRange(spaceshipTextures);
+
+            emplacedState = true;
         }
 
         public void Dispose()
@@ -494,6 +521,8 @@ namespace LibReplanetizer
 
         public void Save(string outputFile)
         {
+            Utilities.DebugAssert(emplacedState == false, "Level may not be saved in an emplaced state.");
+
             string? directory;
             if (File.Exists(outputFile) && File.GetAttributes(outputFile).HasFlag(FileAttributes.Directory))
             {

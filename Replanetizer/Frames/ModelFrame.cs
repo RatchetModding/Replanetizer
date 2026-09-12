@@ -51,6 +51,7 @@ namespace Replanetizer.Frames
         private List<Model> sortedTieModels;
         private List<Model> sortedShrubModels;
         private List<Model> sortedGadgetModels;
+        private List<Model> sortedSpaceshipModels;
         private List<List<Model>> sortedMissionModels;
         private List<List<Model>> sortedMobyloadModels;
 
@@ -123,6 +124,7 @@ namespace Replanetizer.Frames
             sortedTieModels = new List<Model>(level.tieModels);
             sortedShrubModels = new List<Model>(level.shrubModels);
             sortedGadgetModels = new List<Model>(level.gadgetModels);
+            sortedSpaceshipModels = new List<Model>(level.spaceshipModels);
             sortedMissionModels = new List<List<Model>>();
             for (int i = 0; i < level.missions.Count; i++)
             {
@@ -138,6 +140,7 @@ namespace Replanetizer.Frames
             sortedTieModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
             sortedShrubModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
             sortedGadgetModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+            sortedSpaceshipModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
             foreach (List<Model> list in sortedMissionModels)
             {
                 list.Sort((x, y) => (x.id < y.id) ? -1 : 1);
@@ -252,6 +255,7 @@ namespace Replanetizer.Frames
                 RenderSubTree("Tie", sortedTieModels, level.textures);
                 RenderSubTree("Shrub", sortedShrubModels, level.textures);
                 RenderSubTree("Gadget", sortedGadgetModels, (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures);
+                RenderSubTree("Spaceship", sortedSpaceshipModels, level.emplacedState ? level.textures : level.spaceshipTextures);
                 if (level.armorModels.Count > 0)
                 {
                     bool hasMatch = !string.IsNullOrEmpty(filter) && level.armorModels.Exists(m =>
@@ -723,6 +727,7 @@ namespace Replanetizer.Frames
             if (PrepareForArrowInputList(sortedTieModels, level.textures)) return;
             if (PrepareForArrowInputList(sortedShrubModels, level.textures)) return;
             if (PrepareForArrowInputList(sortedGadgetModels, (level.game == GameType.RaC1) ? level.textures : level.gadgetTextures)) return;
+            if (PrepareForArrowInputList(sortedSpaceshipModels, level.emplacedState ? level.textures : level.spaceshipTextures)) return;
             if (PrepareForArrowInputList(level.armorModels, null, level.armorTextures)) return;
 
             for (int i = 0; i < sortedMissionModels.Count; i++)

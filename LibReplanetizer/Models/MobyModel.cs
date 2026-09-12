@@ -9,6 +9,7 @@ using System.ComponentModel;
 using LibReplanetizer.Models.Animations;
 using System.Collections.Generic;
 using System.IO;
+using System;
 using static LibReplanetizer.DataFunctions;
 using static LibReplanetizer.Serializers.SerializerFunctions;
 
@@ -357,6 +358,53 @@ namespace LibReplanetizer.Models
             model.GetMeshData(fs, MESHHEADERSIZE, modelPointer, 0);
 
             return model;
+        }
+
+        public void ReplaceMeshData(MobyModel source)
+        {
+            ArgumentNullException.ThrowIfNull(source);
+
+            vertexBuffer = (float[]) source.vertexBuffer.Clone();
+            indexBuffer = (ushort[]) source.indexBuffer.Clone();
+            vertexBoneWeights = (uint[]) source.vertexBoneWeights.Clone();
+            vertexBoneIds = (uint[]) source.vertexBoneIds.Clone();
+            rgbas = (byte[]) source.rgbas.Clone();
+            textureConfig = CloneTextureConfigs(source.textureConfig);
+
+            metalVertexBuffer = (float[]) source.metalVertexBuffer.Clone();
+            metalIndexBuffer = (ushort[]) source.metalIndexBuffer.Clone();
+            metalVertexBoneWeights = (uint[]) source.metalVertexBoneWeights.Clone();
+            metalVertexBoneIds = (uint[]) source.metalVertexBoneIds.Clone();
+            metalTextureConfig = CloneTextureConfigs(source.metalTextureConfig);
+
+            vertexCount2 = source.vertexCount2;
+            hasMeshData = source.hasMeshData
+                || vertexBuffer.Length > 0
+                || indexBuffer.Length > 0
+                || metalVertexBuffer.Length > 0
+                || metalIndexBuffer.Length > 0
+                || textureConfig.Count > 0
+                || metalTextureConfig.Count > 0;
+            meshDataVersion++;
+        }
+
+        private static List<TextureConfig> CloneTextureConfigs(List<TextureConfig> configs)
+        {
+            List<TextureConfig> result = new List<TextureConfig>(configs.Count);
+            foreach (TextureConfig config in configs)
+            {
+                result.Add(new TextureConfig
+                {
+                    id = config.id,
+                    start = config.start,
+                    size = config.size,
+                    mode = config.mode,
+                    unk1 = config.unk1,
+                    unk2 = config.unk2
+                });
+            }
+
+            return result;
         }
 
         public int WriteBytes(FileStream fs)

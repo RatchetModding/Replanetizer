@@ -89,6 +89,7 @@ namespace LibReplanetizer.Parsers
                         models.Add(cockpitModel);
                         textures.AddRange(fileTextures);
                     }
+                    else shipModel.id = (short) (SpaceshipHeader.RAC23_SPACESHIP_OCLASS + models.Count);
                     models.Add(shipModel);
                 }
             }

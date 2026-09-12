@@ -36,6 +36,12 @@ namespace LibReplanetizer
         public List<Model> gadgetModels;
         public List<Model> armorModels;
         public List<MobyModel> spaceshipModels;
+
+        public int spaceshipTextureBaseIndex = -1;
+        public List<Model> spaceshipAttachmentModels = new List<Model>();
+        public MobyModel? spaceShipRc23Model;
+        public int spaceshipBodyVariant = -1;
+
         public Collision collisionEngine;
         public List<Collision> collisionChunks;
         public List<Texture> textures;
@@ -479,35 +485,145 @@ namespace LibReplanetizer
             // The texture IDs are local to their original file, so we need to transform them
             // to the level's texture ID space.
 
-            foreach (MobyModel model in spaceshipModels)
-            {
-                mobyModels.RemoveAll(x => x.id == model.id);
-            }
+            spaceshipTextureBaseIndex = textures.Count;
 
-            foreach (MobyModel model in spaceshipModels)
+            if (game == GameType.RaC1)
             {
-                foreach (TextureConfig conf in model.textureConfig)
-                    conf.id += textures.Count;
+                foreach (MobyModel model in spaceshipModels)
+                {
+                    mobyModels.RemoveAll(x => x.id == model.id);
+                }
+
+                foreach (MobyModel model in spaceshipModels)
+                {
+                    foreach (TextureConfig conf in model.textureConfig)
+                    {
+                        int variant = conf.id;
+                        if (variant < 0 || variant >= spaceshipTextures.Count)
+                            variant = 0;
+
+                        conf.id = spaceshipTextureBaseIndex + variant;
+                    }
+                }
+
+                mobyModels.AddRange(spaceshipModels);
+            }
+            else if (spaceshipModels.Count > 0)
+            {
+                foreach (MobyModel model in spaceshipModels)
+                {
+                    foreach (TextureConfig conf in model.textureConfig)
+                        conf.id = spaceshipTextureBaseIndex;
+                }
+
+                MobyModel defaultShipModel = spaceshipModels[0];
+
+                spaceShipRc23Model = (MobyModel?) mobyModels.Find(x => x.id == SpaceshipHeader.RAC23_SPACESHIP_OCLASS);
+
+                if (spaceShipRc23Model == null)
+                {
+                    spaceShipRc23Model = new MobyModel { id = SpaceshipHeader.RAC23_SPACESHIP_OCLASS };
+                    mobyModels.Add(spaceShipRc23Model);
+                }
+
+                spaceShipRc23Model.ReplaceMeshData(defaultShipModel);
+                spaceshipBodyVariant = 0;
             }
 
             List<short> spaceshipAttachmentModelIDs = SpaceshipParser.GetAllSpaceshipAttachmentModelIDs(game);
+            spaceshipAttachmentModels.Clear();
+
             foreach (short modelID in spaceshipAttachmentModelIDs)
             {
                 Model? model = mobyModels.Find(x => x.id == modelID);
 
                 if (model != null)
                 {
-                    // The texture IDs are negative. Since we don't know what that means, we just plain override the ID.
                     foreach (TextureConfig conf in model.textureConfig)
-                        conf.id = textures.Count;
+                        conf.id = spaceshipTextureBaseIndex;
+
+                    spaceshipAttachmentModels.Add(model);
                 }
             }
-
-            mobyModels.AddRange(spaceshipModels);
 
             textures.AddRange(spaceshipTextures);
 
             emplacedState = true;
+        }
+
+        public bool SetSpaceshipTextureVariant(Model shipModel, int variant)
+        {
+            if (!emplacedState) return false;
+            if (spaceshipTextureBaseIndex < 0) return false;
+            if (variant < 0 || variant >= spaceshipTextures.Count) return false;
+
+            bool isKnownModel = ReferenceEquals(shipModel, spaceShipRc23Model)
+                || spaceshipModels.Contains(shipModel)
+                || spaceshipAttachmentModels.Contains(shipModel);
+
+            if (!isKnownModel) return false;
+
+            int newId = spaceshipTextureBaseIndex + variant;
+            bool changed = false;
+
+            foreach (TextureConfig conf in shipModel.textureConfig)
+            {
+                if (conf.id != newId)
+                {
+                    conf.id = newId;
+                    changed = true;
+                }
+            }
+
+            return changed;
+        }
+        public bool SetSpaceshipTextureVariantForWholeShip(int variant)
+        {
+            IEnumerable<Model> targets;
+
+            if (spaceShipRc23Model != null)
+                targets = new[] { spaceShipRc23Model };
+            else
+                targets = spaceshipModels;
+
+            bool changed = false;
+            foreach (Model model in targets.Concat(spaceshipAttachmentModels))
+            {
+                changed |= SetSpaceshipTextureVariant(model, variant);
+            }
+
+            return changed;
+        }
+        public int GetSpaceshipTextureVariant(Model shipModel)
+        {
+            if (!emplacedState) return -1;
+            if (spaceshipTextureBaseIndex < 0) return -1;
+            if (shipModel.textureConfig.Count == 0) return -1;
+
+            int variant = shipModel.textureConfig[0].id - spaceshipTextureBaseIndex;
+            if (variant < 0 || variant >= spaceshipTextures.Count) return -1;
+
+            return variant;
+        }
+        public bool SetSpaceshipBodyVariant(int bodyVariant)
+        {
+            bool canApply = emplacedState
+                && spaceShipRc23Model != null
+                && bodyVariant >= 0 && bodyVariant < spaceshipModels.Count
+                && bodyVariant != spaceshipBodyVariant;
+
+            if (!canApply)
+                return false;
+
+            int currentTextureVariant = GetSpaceshipTextureVariant(spaceShipRc23Model!);
+
+            spaceShipRc23Model!.ReplaceMeshData(spaceshipModels[bodyVariant]);
+            spaceshipBodyVariant = bodyVariant;
+
+            if (currentTextureVariant >= 0)
+                SetSpaceshipTextureVariant(spaceShipRc23Model, currentTextureVariant);
+
+            return true;
         }
 
         public void Dispose()

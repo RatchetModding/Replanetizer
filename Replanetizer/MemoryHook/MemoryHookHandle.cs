@@ -40,6 +40,8 @@ namespace Replanetizer.MemoryHook
             public int mobyCount;
             public int frameNumber;
             public int readerCount;
+            public int spaceshipTexId = -1;
+            public int spaceshipBodyId = -1;
         }
 
         private const int SNAPSHOT_COUNT = 3;
@@ -56,6 +58,8 @@ namespace Replanetizer.MemoryHook
         private readonly byte[] CUTSCENE_CAMERA_FRAME_BUFFER = new byte[CUTSCENE_CAMERA_FRAME_SIZE];
         private readonly byte[] MOBY_TABLE_DATA_BUFFER = new byte[MOBY_TABLE_DATA_SIZE];
         private readonly byte[] FRAME_DATA_BUFFER = new byte[sizeof(int)];
+        private readonly byte[] SPACESHIP_TEX_ID_BUFFER = new byte[sizeof(int)];
+        private readonly byte[] SPACESHIP_BODY_ID_BUFFER = new byte[sizeof(int)];
         private byte[] MOBY_DATA_BUFFER = Array.Empty<byte>();
         private Thread? SNAPSHOT_THREAD;
         private volatile bool STOP_SNAPSHOT_THREAD;
@@ -88,7 +92,9 @@ namespace Replanetizer.MemoryHook
                     {
                         moby = 0x3015927B0,
                         camera = 0x30146E3C0,
-                        levelFrames = 0x30156B070
+                        levelFrames = 0x30156B070,
+                        spaceShipTexId = 0x30147a220,
+                        spaceShipBodyId = 0x30147a208
                     };
                     break;
                 case 3:
@@ -96,7 +102,9 @@ namespace Replanetizer.MemoryHook
                     {
                         moby = 0x300F22260,
                         camera = 0x300D6B400,
-                        levelFrames = 0x301A70B30
+                        levelFrames = 0x301A70B30,
+                        spaceShipTexId = 0x300d990e0,
+                        spaceShipBodyId = 0x300d990c8
                     };
                     break;
                 default:
@@ -205,11 +213,37 @@ namespace Replanetizer.MemoryHook
             {
                 UpdateMobys(snapshot, level, renderer);
                 UpdateCamera(snapshot, camera);
+
+                UpdateSpaceShip(snapshot, level); 
             }
             finally
             {
                 ReleaseSnapshot(snapshot);
             }
+        }
+
+        private int lastAppliedSpaceshipTexId = -1;
+        private int lastAppliedSpaceshipBodyId = -1;
+
+        private int ApplyIfChanged(int newId, int lastApplied, int count, Action<int> apply)
+        {
+            if (newId < 0 || newId >= count || newId == lastApplied)
+                return lastApplied;
+
+            apply(newId);
+            return newId;
+        }
+
+        private void UpdateSpaceShip(MemorySnapshot snapshot, Level level)
+        {
+            if (ADDRESSES == null || !level.emplacedState)
+                return;
+
+            lastAppliedSpaceshipBodyId = ApplyIfChanged(snapshot.spaceshipBodyId, lastAppliedSpaceshipBodyId, level.spaceshipModels.Count,
+                id => level.SetSpaceshipBodyVariant(id));
+
+            lastAppliedSpaceshipTexId = ApplyIfChanged(snapshot.spaceshipTexId, lastAppliedSpaceshipTexId, level.spaceshipTextures.Count,
+                id => level.SetSpaceshipTextureVariantForWholeShip(id));
         }
 
         public int GetLevelFrameNumber()
@@ -432,6 +466,16 @@ namespace Replanetizer.MemoryHook
 
                 snapshot.camera.position = cameraPosition;
                 snapshot.camera.rotation = cameraRotation;
+
+                // Read spaceship vals
+                if (ADDRESSES.spaceShipTexId != 0 && ADDRESSES.spaceShipBodyId != 0)
+                {
+                    if (ReadProcessBytes(ADDRESSES.spaceShipTexId, SPACESHIP_TEX_ID_BUFFER))
+                        snapshot.spaceshipTexId = ReadInt(SPACESHIP_TEX_ID_BUFFER, 0);
+
+                    if (ReadProcessBytes(ADDRESSES.spaceShipBodyId, SPACESHIP_BODY_ID_BUFFER))
+                        snapshot.spaceshipBodyId = ReadInt(SPACESHIP_BODY_ID_BUFFER, 0);
+                }
 
                 while (snapshot.mobyMemory.Count < mobyCount)
                 {

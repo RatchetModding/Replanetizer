@@ -17,5 +17,7 @@ namespace Replanetizer.MemoryHook
         internal long skybox;
         internal long planetId;
         internal long levelFrames;
+        internal long spaceShipTexId;
+        internal long spaceShipBodyId;
     }
 }

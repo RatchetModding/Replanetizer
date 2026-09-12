@@ -23,18 +23,18 @@ namespace LibReplanetizer.Parsers
             header = new SpaceshipHeader(game, fileStream, spaceshipNum);
         }
 
-        public MobyModel GetShipModel() => game == GameType.RaC2
+        public MobyModel GetShipModel() => game == GameType.RaC2 || game == GameType.RaC3
             ? MobyModel.GetStandaloneMobyModel(fileStream, game, header.shipModelID)
             : new MobyModel(fileStream, game, header.shipModelID, header.shipModelPointer);
         public MobyModel GetCockpitModel() => new MobyModel(fileStream, game, header.cockpitModelID, header.cockpitModelPointer);
         public List<Texture> GetTextures() => GetTextures(header.texturePointer, header.textureCount);
 
-        private static List<Texture> GetRaC2Textures(string enginePath)
+        private static List<Texture> GetRaC23Textures(GameType game, string enginePath)
         {
             string? folder = Path.GetDirectoryName(Path.GetDirectoryName(enginePath));
 
             List<Texture> textures = new List<Texture>();
-            int numTextures = 18; // RaC3 == 32
+            int numTextures = (game == GameType.RaC2) ? 18 : 32;
 
             for (int textureID = 0; textureID < numTextures; textureID++)
             {
@@ -84,20 +84,20 @@ namespace LibReplanetizer.Parsers
                 }
             }
 
-            if (game == GameType.RaC2)
+            if (game == GameType.RaC2 || game == GameType.RaC3)
             {
-                textures = GetRaC2Textures(enginePath);
+                textures = GetRaC23Textures(game, enginePath);
             }
 
             return (models, textures);
         }
 
-        private static List<short> RAC2_SPACESHIP_ATTACHMENT_MODEL_IDS = new List<short> { 4308, 4309, 4310, 4311, 4312, 4313, 4314, 4315, 4316, 4317, 4318, 4319, 4320, 4321, 4322, 4323, 4324, 4325 };
+        private static List<short> RAC23_SPACESHIP_ATTACHMENT_MODEL_IDS = new List<short> { 4308, 4309, 4310, 4311, 4312, 4313, 4314, 4315, 4316, 4317, 4318, 4319, 4320, 4321, 4322, 4323, 4324, 4325 };
 
         public static List<short> GetAllSpaceshipAttachmentModelIDs(GameType game)
         {
-            if (game == GameType.RaC2)
-                return RAC2_SPACESHIP_ATTACHMENT_MODEL_IDS;
+            if (game == GameType.RaC2 || game == GameType.RaC3)
+                return RAC23_SPACESHIP_ATTACHMENT_MODEL_IDS;
 
             return new List<short>();
         }

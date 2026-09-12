@@ -14,7 +14,7 @@ namespace LibReplanetizer.Headers
     public class SpaceshipHeader
     {
         private static readonly short[][] SPACESHIP_MODEL_PAIRS = { [530, 534], [531, 535], [532, 536], [533, 537] };
-        private static readonly short[] RAC2_SPACESHIP_MODEL_IDS = { 3412, 3413, 3414 };
+        private static readonly short[] RAC23_SPACESHIP_MODEL_IDS = { 3412, 3413, 3414 };
 
         public int shipModelPointer;
         public short shipModelID;
@@ -25,9 +25,9 @@ namespace LibReplanetizer.Headers
 
         public SpaceshipHeader(GameType game, FileStream fs, int spaceshipNum)
         {
-            if (game == GameType.RaC2)
+            if (game == GameType.RaC2 || game == GameType.RaC3)
             {
-                shipModelID = RAC2_SPACESHIP_MODEL_IDS[spaceshipNum];
+                shipModelID = RAC23_SPACESHIP_MODEL_IDS[spaceshipNum];
                 shipModelPointer = 0;
                 return;
             }
@@ -61,7 +61,7 @@ namespace LibReplanetizer.Headers
                     }
                 }
             }
-            else if (game == GameType.RaC2)
+            else if (game == GameType.RaC2 || game == GameType.RaC3)
             {
                 for (int i = 0; i < 3; i++)
                 {

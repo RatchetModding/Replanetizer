@@ -27,6 +27,8 @@ namespace Replanetizer.Renderer
         private MobyModel? cachedModel;
         private bool modelCached;
         private bool primitiveUsesBonePositions;
+        private Vector3 cachedPrimitiveAxis = Vector3.UnitZ;
+        private bool hasCachedPrimitiveAxis;
 
         public MobyCollisionRenderer(ShaderTable shaderTable)
         {
@@ -67,8 +69,13 @@ namespace Replanetizer.Renderer
                 return;
             }
 
-            MobyModel? mobyModel = (MobyModel?) moby?.model ?? mobyModelStandalone;
-            if (modelCached && ReferenceEquals(cachedModel, mobyModel))
+            MobyModel? mobyModel = (MobyModel?)moby?.model ?? mobyModelStandalone;
+            Matrix4 modelToWorld = GetModelToWorld(false);
+            Vector3 primitiveAxis = MobyCollisionMeshBuilder.GetLocalCapsuleAxis(modelToWorld);
+            if (modelCached
+                && ReferenceEquals(cachedModel, mobyModel)
+                && hasCachedPrimitiveAxis
+                && (cachedPrimitiveAxis - primitiveAxis).LengthSquared < 1e-8f)
             {
                 return;
             }
@@ -77,11 +84,13 @@ namespace Replanetizer.Renderer
             cachedModel = mobyModel;
             modelCached = true;
             primitiveUsesBonePositions = false;
+            cachedPrimitiveAxis = primitiveAxis;
+            hasCachedPrimitiveAxis = true;
 
             if (mobyModel?.collisionData == null)
                 return;
 
-            MobyCollisionMesh mesh = MobyCollisionMeshBuilder.Build(mobyModel);
+            MobyCollisionMesh mesh = MobyCollisionMeshBuilder.Build(mobyModel, modelToWorld);
             AddMesh(mesh.triangleMesh, true);
             AddMesh(mesh.primitiveMesh, false);
         }
@@ -91,8 +100,11 @@ namespace Replanetizer.Renderer
             if (cachedModel?.collisionData == null || primitiveMesh == null)
                 return;
 
-            MobyCollisionMeshPart mesh = MobyCollisionMeshBuilder.Build(cachedModel, bonePositions).primitiveMesh;
+            Matrix4 modelToWorld = GetModelToWorld(false);
+            MobyCollisionMeshPart mesh = MobyCollisionMeshBuilder.Build(cachedModel, bonePositions, modelToWorld).primitiveMesh;
             UpdatePrimitiveMesh(mesh);
+            cachedPrimitiveAxis = MobyCollisionMeshBuilder.GetLocalCapsuleAxis(modelToWorld);
+            hasCachedPrimitiveAxis = true;
             primitiveUsesBonePositions = true;
         }
 
@@ -101,8 +113,11 @@ namespace Replanetizer.Renderer
             if (!primitiveUsesBonePositions || cachedModel?.collisionData == null || primitiveMesh == null)
                 return;
 
-            MobyCollisionMeshPart mesh = MobyCollisionMeshBuilder.Build(cachedModel).primitiveMesh;
+            Matrix4 modelToWorld = GetModelToWorld(false);
+            MobyCollisionMeshPart mesh = MobyCollisionMeshBuilder.Build(cachedModel, modelToWorld).primitiveMesh;
             UpdatePrimitiveMesh(mesh);
+            cachedPrimitiveAxis = MobyCollisionMeshBuilder.GetLocalCapsuleAxis(modelToWorld);
+            hasCachedPrimitiveAxis = true;
             primitiveUsesBonePositions = false;
         }
 
@@ -168,6 +183,7 @@ namespace Replanetizer.Renderer
             meshes.Clear();
             primitiveMesh = null;
             primitiveUsesBonePositions = false;
+            hasCachedPrimitiveAxis = false;
         }
 
         private static void DeleteMesh(CollisionMeshHandle mesh)
@@ -207,7 +223,7 @@ namespace Replanetizer.Renderer
             uint[] indexBuffer = mesh.indexBuffer;
             if (triangleTransform)
             {
-                indexBuffer = (uint[]) mesh.indexBuffer.Clone();
+                indexBuffer = (uint[])mesh.indexBuffer.Clone();
                 for (int index = 0; index < indexBuffer.Length; index += 3)
                 {
                     uint second = indexBuffer[index + 1];
@@ -220,7 +236,7 @@ namespace Replanetizer.Renderer
 
             GLUtil.ActivateNumberOfVertexAttribArrays(2);
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
-            GL.VertexAttribPointer(1, 4, VertexAttribPointerType.UnsignedByte, false, sizeof(float) * 4, sizeof(float) * 3);
+            GL.VertexAttribIPointer(1, 4, VertexAttribIntegerType.UnsignedByte, sizeof(float) * 4, sizeof(float) * 3);
 
             CollisionMeshHandle handle = new CollisionMeshHandle
             {

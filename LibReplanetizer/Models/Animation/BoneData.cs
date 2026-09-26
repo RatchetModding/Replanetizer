@@ -17,6 +17,8 @@ namespace LibReplanetizer.Models.Animations
         public Vector3 translation; // This is not the same as the cumulative offset in the bonematrix
         public short unk0x0C;
         public short parent;
+        // BuildAnimationBoneMatrices treats a bone as root when the whole word at +0x0C is zero, regardless of index.
+        public bool isRoot;
 
         // The first 12 bytes are 3 floats which are exactly the translation from the BoneMatrix
         // Last 4 bytes are equal to the last 4 bytes in the corresponding BoneMatrix
@@ -47,6 +49,7 @@ namespace LibReplanetizer.Models.Animations
             //0 for root and some constant else (0b0111000000000000 = 0x7000 = 28672)
             unk0x0C = ReadShort(boneDataBlock, offset + 0x0C);
             parent = (short) (ReadShort(boneDataBlock, offset + 0x0E) / 0x40);
+            isRoot = ReadInt(boneDataBlock, offset + 0x0C) == 0;
         }
 
         private void GetDLVals(byte[] boneDataBlock, int num)
@@ -66,6 +69,7 @@ namespace LibReplanetizer.Models.Animations
             {
                 // The root node is always marked with 0xFF/0x7F.
                 parent = 0;
+                isRoot = true;
             }
             else
             {

@@ -28,6 +28,7 @@ namespace Replanetizer.Renderer
         EnvTransition = 14,
         GrindPath = 15,
         Tool = 16,
+        Collision = 17,
         Skybox = 999
     }
 

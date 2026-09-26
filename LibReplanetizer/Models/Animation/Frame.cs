@@ -55,11 +55,7 @@ namespace LibReplanetizer.Models.Animations
             }
             public Vector3 scale;
             public byte bone;
-            /*
-             * This value is either 0 or 128
-             * Setting this to always 128 seems to work just fine
-             * Setting this to always 0 causes Clanks rotors to not be scaled correctly
-             */
+            // RC1 AnimationInterpolateFrames only applies scale records whose marker is signed-negative.
             public byte unk;
         }
 
@@ -83,12 +79,13 @@ namespace LibReplanetizer.Models.Animations
         private List<FrameBoneRotation> rotations { get; set; }
         private List<FrameBoneScaling> scalings { get; set; }
         private List<FrameBoneTranslation> translations { get; set; }
+        private readonly bool scalingsRequireMarker;
 
-        public Quaternion? GetRotationQuaternion(int bone)
+        public Quaternion GetRotationQuaternion(int bone)
         {
             if (bone >= rotations.Count)
             {
-                return null;
+                return Quaternion.Identity;
             }
 
             return rotations[bone].rotation;
@@ -96,28 +93,21 @@ namespace LibReplanetizer.Models.Animations
 
         public Matrix4 GetRotationMatrix(int bone)
         {
-            Quaternion? rotation = GetRotationQuaternion(bone);
+            if (bone >= rotations.Count)
+            {
+                return Matrix4.Identity;
+            }
 
-            return (rotation != null) ? Matrix4.CreateFromQuaternion((Quaternion) rotation) : Matrix4.Identity;
+            return Matrix4.CreateFromQuaternion(rotations[bone].rotation);
         }
 
-        public Quaternion? GetRotationQuaternion(int bone, Frame nextFrame, float blend)
+        public Quaternion GetRotationQuaternion(int bone, Frame nextFrame, float blend)
         {
-            Quaternion? baseRotation = GetRotationQuaternion(bone);
-            Quaternion? nextRotation = nextFrame.GetRotationQuaternion(bone);
+            Quaternion baseRotation = GetRotationQuaternion(bone);
+            Quaternion nextRotation = nextFrame.GetRotationQuaternion(bone);
 
-            if (baseRotation == null)
-            {
-                return nextRotation;
-            }
-
-            if (nextRotation == null)
-            {
-                return baseRotation;
-            }
-
-            Quaternion rotation = (Quaternion) baseRotation * (1.0f - blend);
-            Quaternion next = (Quaternion) nextRotation * blend;
+            Quaternion rotation = baseRotation * (1.0f - blend);
+            Quaternion next = nextRotation * blend;
             float dotProduct = rotation.X * next.X + rotation.Y * next.Y + rotation.Z * next.Z + rotation.W * next.W;
 
             rotation = dotProduct >= 0.0f ? rotation + next : rotation - next;
@@ -130,75 +120,35 @@ namespace LibReplanetizer.Models.Animations
             return rotation;
         }
 
-        public Vector3? GetScaling(int bone)
+        public Vector3 GetScaling(int bone)
         {
-            bool exists = scalings.Exists(s => s.bone == bone);
+            IEnumerable<FrameBoneScaling> boneScalings = scalings.Where(s => s.bone == bone && (!scalingsRequireMarker || (s.unk & 0x80) != 0));
 
-            if (exists)
-            {
-                // dl can have multiple scalings per bone
-                // doesn't seem to break the other rac games
-                return scalings.Where(s => s.bone == bone).Select(x => x.scale).Aggregate((a, b) => a + b);
-            }
+            if (boneScalings.Any() == false)
+                return Vector3.One;
 
-            return null;
+            // DL can have multiple scalings per bone
+            // doesn't seem to break the other rac games
+            return boneScalings.Select(x => x.scale).Aggregate((a, b) => a * b);
         }
 
-        public bool GetScalingUnk(int bone)
+        public Vector3 GetTranslation(int bone, Vector3 fallbackTranslation)
         {
-            bool exists = scalings.Exists(s => s.bone == bone);
+            IEnumerable<FrameBoneTranslation> boneTranslations = translations.Where(t => t.bone == bone);
 
-            if (exists)
-            {
-                return scalings.First(s => s.bone == bone).unk == 128;
-            }
+            // Translations replace the bone data translation
+            if (boneTranslations.Any() == false)
+                return fallbackTranslation;
 
-            return false;
-        }
-
-        public Vector3? GetTranslation(int bone)
-        {
-            bool exists = translations.Exists(t => t.bone == bone);
-
-            if (exists)
-            {
-                // dl can have multiple translations per bone
-                // doesn't seem to break the other rac games
-                return translations.Where(t => t.bone == bone).Select(x => x.translation).Aggregate((a, b) => a + b);
-            }
-
-            return null;
-        }
-
-        public Matrix4 GetRotationMatrix(int bone, Frame nextFrame, float blend)
-        {
-            Quaternion? rotation = GetRotationQuaternion(bone, nextFrame, blend);
-            return rotation != null ? Matrix4.CreateFromQuaternion((Quaternion) rotation) : Matrix4.Identity;
-        }
-
-        public Vector3? GetScaling(int bone, Frame nextFrame, float blend)
-        {
-            Vector3? baseScale = GetScaling(bone);
-            Vector3? nextScale = nextFrame.GetScaling(bone);
-
-            if (baseScale == null || nextScale == null) return null;
-
-            return (1.0f - blend) * baseScale + blend * nextScale;
-        }
-
-        public Vector3? GetTranslation(int bone, Frame nextFrame, float blend)
-        {
-            Vector3? baseTranslation = GetTranslation(bone);
-            Vector3? nextTranslation = nextFrame.GetTranslation(bone);
-
-            if (baseTranslation == null || nextTranslation == null) return null;
-
-            return (1.0f - blend) * baseTranslation + blend * nextTranslation;
+            // DL can have multiple translations per bone
+            // doesn't seem to break the other rac games
+            return boneTranslations.Select(x => x.translation).Aggregate((a, b) => a + b);
         }
 
         // Constructor for RaC 1, 2 and 3
         public Frame(FileStream fs, GameType game, int offset, int boneCount)
         {
+            scalingsRequireMarker = true;
             byte[] header = ReadBlock(fs, offset, 0x10);
             speed = ReadFloat(header, 0x00);
             frameIndex = ReadUshort(header, 0x04);
@@ -231,9 +181,10 @@ namespace LibReplanetizer.Models.Animations
                     // Custom MP levels may have a too large sec0Count
                     break;
                 }
-                float x = ReadShort(frameBlock, sec0Pointer + i * 8 + 0x00) / 4096.0f;
-                float y = ReadShort(frameBlock, sec0Pointer + i * 8 + 0x02) / 4096.0f;
-                float z = ReadShort(frameBlock, sec0Pointer + i * 8 + 0x04) / 4096.0f;
+                // The game zero-extends scale components (lhz), so they are never negative.
+                float x = ReadUshort(frameBlock, sec0Pointer + i * 8 + 0x00) / 4096.0f;
+                float y = ReadUshort(frameBlock, sec0Pointer + i * 8 + 0x02) / 4096.0f;
+                float z = ReadUshort(frameBlock, sec0Pointer + i * 8 + 0x04) / 4096.0f;
                 byte bone = frameBlock[sec0Pointer + i * 8 + 0x06];
                 byte unk = frameBlock[sec0Pointer + i * 8 + 0x07];
                 scalings.Add(new FrameBoneScaling(x, y, z, bone, unk));
@@ -311,9 +262,9 @@ namespace LibReplanetizer.Models.Animations
             byte[] sec0Bytes = new byte[scalings.Count * 0x08];
             for (int i = 0; i < scalings.Count; i++)
             {
-                WriteShort(sec0Bytes, i * 8 + 0x00, (short) (scalings[i].scale.X * 4096.0f));
-                WriteShort(sec0Bytes, i * 8 + 0x02, (short) (scalings[i].scale.Y * 4096.0f));
-                WriteShort(sec0Bytes, i * 8 + 0x04, (short) (scalings[i].scale.Z * 4096.0f));
+                WriteShort(sec0Bytes, i * 8 + 0x00, (short) (int) (scalings[i].scale.X * 4096.0f));
+                WriteShort(sec0Bytes, i * 8 + 0x02, (short) (int) (scalings[i].scale.Y * 4096.0f));
+                WriteShort(sec0Bytes, i * 8 + 0x04, (short) (int) (scalings[i].scale.Z * 4096.0f));
                 sec0Bytes[i * 8 + 0x06] = scalings[i].bone;
                 sec0Bytes[i * 8 + 0x07] = scalings[i].unk;
             }

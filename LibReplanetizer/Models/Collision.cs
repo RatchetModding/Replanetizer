@@ -11,25 +11,43 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.InteropServices;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Models
 {
-    [StructLayout(LayoutKind.Explicit)]
-    struct FloatColor
+    public struct CollisionType
     {
-        [FieldOffset(0)]
-        public byte r;
-        [FieldOffset(1)]
-        public byte g;
-        [FieldOffset(2)]
-        public byte b;
-        [FieldOffset(3)]
-        public byte a;
+        public byte data { get; private set; }
 
-        [FieldOffset(0)]
-        public float value;
+        public int materialID { get { return data & 0x1F; } }
+        public int groupID { get { return (data >> 5) & 0x3; } }
+        public bool ignoreCameraCollision { get { return (data >> 7) != 0; } }
+
+        public string GetMaterialName()
+        {
+            int id = materialID;
+            switch (id)
+            {
+                case 0x00: return "Water";
+                case 0x01: return "Lava";
+                case 0x02: return "Magnetic Ramp";
+                case 0x03: return "Mud/Quicksand";
+                case 0x04: return "Water Slide";
+                case 0x05: return "Grindrail Jump";
+                case 0x07: return "Ice Sliding";
+                case 0x08: return "Sliding Off";
+                case 0x09: return "Disable Ledge Grab";
+                case 0x0A: return "Disable Wall Jump";
+                case 0x0B: return "Death Mud";
+                case 0x0C: return "Sliding Off (No Wall Jump / Ledge Grab)";
+                case 0x0D: return "Death Ice";
+                case 0x1F: return "Default";
+                default:
+                    return "Unknown";
+            }
+        }
+
+        public CollisionType(byte data) { this.data = data; }
     }
 
     public class Collision : Model, IRenderable
@@ -66,7 +84,7 @@ namespace LibReplanetizer.Models
                 public byte vertexIndex1;
                 public byte vertexIndex2;
                 public byte vertexIndex3;
-                public byte collisionType;
+                public CollisionType collisionType;
             }
 
             CollisionCellEntry[] entries = [];
@@ -98,7 +116,7 @@ namespace LibReplanetizer.Models
                     entry.vertexIndex0 = dataBlock[fOffset];
                     entry.vertexIndex1 = dataBlock[fOffset + 1];
                     entry.vertexIndex2 = dataBlock[fOffset + 2];
-                    entry.collisionType = dataBlock[fOffset + 3];
+                    entry.collisionType = new CollisionType(dataBlock[fOffset + 3]);
                     entry.vertexIndex3 = (f < quadCount) ? dataBlock[vertexCount * 0x0C + faceCount * 0x04 + f] : (byte) 0xFF;
 
                     // Vertices
@@ -133,9 +151,7 @@ namespace LibReplanetizer.Models
 
             public void GetModelData(ushort xShift, ushort yShift, ushort zShift, List<float> vertexList, List<uint> indexList, ref uint totalVertexCount)
             {
-                FloatColor fc = new FloatColor { r = 255, g = 0, b = 255, a = 255 };
-
-                byte[] collisionType = new byte[vertexCount];
+                CollisionType[] collisionType = new CollisionType[vertexCount];
                 for (int f = 0; f < faceCount; f++)
                 {
                     CollisionCellEntry entry = entries[f];
@@ -175,12 +191,7 @@ namespace LibReplanetizer.Models
                         vertexList.Add(yPos);
                         vertexList.Add(zPos);
 
-                        // Colorize different types of collision without knowing what they are
-                        fc.r = (byte) ((collisionType[v] & 0x03) << 6);
-                        fc.g = (byte) ((collisionType[v] & 0x0C) << 4);
-                        fc.b = (byte) (collisionType[v] & 0xF0);
-
-                        vertexList.Add(fc.value);
+                        vertexList.Add(CollisionVertexMetadata.Pack(collisionType[v], CollisionGeometryCategory.Standard));
                         totalVertexCount++;
                     }
                 }
@@ -204,7 +215,7 @@ namespace LibReplanetizer.Models
                     bytes[0x04 + fOffset + 0x00] = entry.vertexIndex0;
                     bytes[0x04 + fOffset + 0x01] = entry.vertexIndex1;
                     bytes[0x04 + fOffset + 0x02] = entry.vertexIndex2;
-                    bytes[0x04 + fOffset + 0x03] = entry.collisionType;
+                    bytes[0x04 + fOffset + 0x03] = entry.collisionType.data;
 
                     if (f < quadCount)
                     {
@@ -281,21 +292,18 @@ namespace LibReplanetizer.Models
                     indices[t * 3 + 0] = dataBlock[tOff + 0x00];
                     indices[t * 3 + 1] = dataBlock[tOff + 0x01];
                     indices[t * 3 + 2] = dataBlock[tOff + 0x02];
-                    //type = dataBlock[tOff + 0x02]; ???
+                    //type = dataBlock[tOff + 0x03]; // Unused by the game
                 }
             }
 
-            public void GetModelData(List<float> vertexList, List<uint> indexList, ref uint totalVertexCount)
+            public void GetModelData(List<float> vertexList, List<uint> indexList, ref uint totalVertexCount, CollisionGeometryCategory category)
             {
-                // Wrench has hero collision as blue, so I figured I'll just... use that color as well...
-                FloatColor fc = new FloatColor { r = 0, g = 0, b = 255, a = 255 };
-
                 for (int v = 0; v < vertCount; v++)
                 {
                     vertexList.Add(vertices[v * 3 + 0] / 64.0f);
                     vertexList.Add(vertices[v * 3 + 1] / 64.0f);
                     vertexList.Add(vertices[v * 3 + 2] / 64.0f);
-                    vertexList.Add(fc.value);
+                    vertexList.Add(CollisionVertexMetadata.Pack(new CollisionType(0x80), category));
                 }
 
                 for (int t = 0; t < triCount; t++)
@@ -489,12 +497,12 @@ namespace LibReplanetizer.Models
 
             for (int i = 0; i < heroCells.Count; i++)
             {
-                heroCells[i].GetModelData(vertexList, indexList, ref totalVertexCount);
+                heroCells[i].GetModelData(vertexList, indexList, ref totalVertexCount, CollisionGeometryCategory.Hero);
             }
 
             for (int i = 0; i < unkCells.Count; i++)
             {
-                unkCells[i].GetModelData(vertexList, indexList, ref totalVertexCount);
+                unkCells[i].GetModelData(vertexList, indexList, ref totalVertexCount, CollisionGeometryCategory.Unknown);
             }
         }
 

@@ -184,11 +184,17 @@ namespace LibReplanetizer
                 var px = coll.vertexBuffer[vertIdx * 0x04 + 0x0] * coll.size;
                 var py = coll.vertexBuffer[vertIdx * 0x04 + 0x1] * coll.size;
                 var pz = coll.vertexBuffer[vertIdx * 0x04 + 0x2] * coll.size;
-                FloatColor fc = new FloatColor { r = 255, g = 0, b = 255, a = 255 }; ;
-                fc.value = coll.vertexBuffer[vertIdx * 0x04 + 0x3];
-                float red = fc.r / 255.0f;
-                float green = fc.g / 255.0f;
-                float blue = fc.b / 255.0f;
+                CollisionGeometryCategory category = CollisionVertexMetadata.GetCategory(coll.vertexBuffer[vertIdx * 0x04 + 0x3]);
+                float red = 1.0f;
+                float green = 1.0f;
+                float blue = 1.0f;
+                if (category == CollisionGeometryCategory.Hero)
+                    blue = 1.0f;
+                else if (category == CollisionGeometryCategory.Unknown)
+                {
+                    green = 1.0f;
+                    blue = 1.0f;
+                }
                 objfs.WriteLine("v " + px.ToString("G", en_US) + " " + py.ToString("G", en_US) + " " + pz.ToString("G", en_US) + " " + red.ToString("G", en_US) + " " + green.ToString("G", en_US) + " " + blue.ToString("G", en_US));
             }
 
@@ -339,7 +345,7 @@ namespace LibReplanetizer
 
                 Matrix4 scale = Matrix4.CreateScale(model.size);
 
-                VertexColorContainer? vColors = (model is SkyboxModel) ? new VertexColorContainer((SkyboxModel)model) : null;
+                VertexColorContainer? vColors = (model is SkyboxModel) ? new VertexColorContainer((SkyboxModel) model) : null;
 
                 WriteData(objfs, model, 0, scale, vColors);
             }

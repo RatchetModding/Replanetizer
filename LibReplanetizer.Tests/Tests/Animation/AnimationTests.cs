@@ -6,12 +6,191 @@
 // Please see the LICENSE.md file for more details.
 
 using OpenTK.Mathematics;
+using LibReplanetizer.LevelObjects;
+using System;
+using System.IO;
 using Xunit;
 using LibReplanetizer.Models.Animations;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.Tests.Animation
 {
+    public class FrameMarkerTests
+    {
+        private static Frame BuildFrame(byte scaleMarker, byte translationMarker)
+        {
+            byte[] frameBytes = new byte[0x20];
+            WriteUshort(frameBytes, 0x06, 1);
+            WriteUshort(frameBytes, 0x08, 0);
+            WriteUshort(frameBytes, 0x0A, 1);
+            WriteUshort(frameBytes, 0x0C, 8);
+            WriteUshort(frameBytes, 0x0E, 1);
+
+            WriteShort(frameBytes, 0x10, 8192);
+            WriteShort(frameBytes, 0x12, 8192);
+            WriteShort(frameBytes, 0x14, 8192);
+            frameBytes[0x16] = 0;
+            frameBytes[0x17] = scaleMarker;
+
+            WriteShort(frameBytes, 0x18, 1024);
+            WriteShort(frameBytes, 0x1A, 1024);
+            WriteShort(frameBytes, 0x1C, 1024);
+            frameBytes[0x1E] = 0;
+            frameBytes[0x1F] = translationMarker;
+
+            string path = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllBytes(path, frameBytes);
+                using FileStream stream = File.OpenRead(path);
+                return new Frame(stream, GameType.RaC1, 0, 1);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        private static Moby.IngameMobyMemory BuildRuntimeMemory(byte marker)
+        {
+            const uint previousAnimationAddress = 0x1000;
+            const uint currentAnimationAddress = 0x2000;
+
+            byte[] mobyBytes = new byte[0x100];
+            WriteInt(mobyBytes, 0x68, (int) previousAnimationAddress);
+            WriteInt(mobyBytes, 0x6C, (int) currentAnimationAddress);
+
+            byte[] animationBytes = new byte[0x30];
+            WriteUshort(animationBytes, 0x06, 2);
+            WriteUshort(animationBytes, 0x08, 8);
+            WriteUshort(animationBytes, 0x0A, 1);
+            WriteUshort(animationBytes, 0x0C, 16);
+            WriteUshort(animationBytes, 0x0E, 1);
+            WriteShort(animationBytes, 0x16, -32768);
+
+            WriteShort(animationBytes, 0x18, 4096);
+            WriteShort(animationBytes, 0x1A, 4096);
+            WriteShort(animationBytes, 0x1C, 4096);
+            animationBytes[0x1E] = 0;
+            animationBytes[0x1F] = marker;
+
+            WriteShort(animationBytes, 0x20, 1024);
+            WriteShort(animationBytes, 0x22, 1024);
+            WriteShort(animationBytes, 0x24, 1024);
+            animationBytes[0x26] = 0;
+            animationBytes[0x27] = marker;
+
+            bool ReadMemory(uint address, byte[] destination)
+            {
+                uint baseAddress;
+                if (address >= previousAnimationAddress && address < previousAnimationAddress + animationBytes.Length)
+                {
+                    baseAddress = previousAnimationAddress;
+                }
+                else if (address >= currentAnimationAddress && address < currentAnimationAddress + animationBytes.Length)
+                {
+                    baseAddress = currentAnimationAddress;
+                }
+                else
+                {
+                    return false;
+                }
+
+                int offset = checked((int) (address - baseAddress));
+                if (offset + destination.Length > animationBytes.Length)
+                {
+                    return false;
+                }
+
+                Array.Copy(animationBytes, offset, destination, 0, destination.Length);
+                return true;
+            }
+
+            var memory = new Moby.IngameMobyMemory();
+            memory.LoadFromMemory(GameType.RaC1, mobyBytes, 0, ReadMemory);
+            return memory;
+        }
+
+        [Theory]
+        [InlineData(0x00, false)]
+        [InlineData(0x7F, false)]
+        [InlineData(0x80, true)]
+        [InlineData(0x81, true)]
+        [InlineData(0xFF, true)]
+        public void OnlySignedNegativeScaleMarkersApplyAndTranslationsIgnoreMarker(byte marker, bool scaleApplies)
+        {
+            Frame frame = BuildFrame(marker, marker);
+            Moby.IngameMobyMemory memory = BuildRuntimeMemory(marker);
+
+            Assert.Equal(scaleApplies ? new Vector3(2.0f) : Vector3.One, frame.GetScaling(0));
+            Assert.Equal(scaleApplies, memory.previousAnimationData!.hasScalings[0]);
+            Assert.Equal(scaleApplies, memory.currentAnimationData!.hasScalings[0]);
+            Assert.Equal(Vector3.One, frame.GetTranslation(0, Vector3.Zero));
+            Assert.True(memory.previousAnimationData.hasTranslations[0]);
+            Assert.True(memory.currentAnimationData.hasTranslations[0]);
+        }
+
+        [Fact]
+        public void ScaleComponentsAreDecodedUnsigned()
+        {
+            byte[] frameBytes = new byte[0x20];
+            WriteUshort(frameBytes, 0x06, 1);
+            WriteUshort(frameBytes, 0x0A, 1);
+            WriteUshort(frameBytes, 0x0C, 8);
+            WriteUshort(frameBytes, 0x10, 0x9000);
+            WriteUshort(frameBytes, 0x12, 0x9000);
+            WriteUshort(frameBytes, 0x14, 0x9000);
+            frameBytes[0x17] = 0x80;
+
+            string path = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllBytes(path, frameBytes);
+                using FileStream stream = File.OpenRead(path);
+                Frame frame = new Frame(stream, GameType.RaC1, 0, 1);
+                Assert.Equal(new Vector3(9.0f), frame.GetScaling(0));
+                Assert.Equal(0x9000, ReadUshort(frame.Serialize(), 0x10));
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+    }
+
+    public class AnimationManipulatorTests
+    {
+        [Fact]
+        public void LoadFromMemory_PreservesFullManipulatorBoneOffset()
+        {
+            const uint manipulatorAddress = 0x3000;
+            const uint boneOffset = 0x00010040;
+
+            byte[] mobyBytes = new byte[0x100];
+            WriteInt(mobyBytes, 0x64, (int) manipulatorAddress);
+
+            byte[] manipulatorBytes = new byte[0x40];
+            WriteInt(manipulatorBytes, 0x04, (int) boneOffset);
+
+            bool ReadMemory(uint address, byte[] destination)
+            {
+                if (address != manipulatorAddress || destination.Length != manipulatorBytes.Length)
+                {
+                    return false;
+                }
+
+                Array.Copy(manipulatorBytes, destination, manipulatorBytes.Length);
+                return true;
+            }
+
+            var memory = new Moby.IngameMobyMemory();
+            memory.LoadFromMemory(GameType.RaC1, mobyBytes, 0, ReadMemory);
+
+            Assert.Single(memory.manipulators);
+            Assert.Equal(boneOffset, memory.manipulators[0].boneID);
+        }
+    }
+
     public class BoneDataTests
     {
         /// <summary>

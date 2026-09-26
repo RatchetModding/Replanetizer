@@ -388,7 +388,7 @@ namespace LibReplanetizer.LevelObjects
             light = ReadInt(mobyBlock, offset + 0x70);
             cutscene = ReadInt(mobyBlock, offset + 0x74);
 
-            color = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
+            color = Color.FromRgb((byte)r, (byte)g, (byte)b).ToPixel<Rgb24>();
             position = new Vector3(x, y, z);
             rotation = new Quaternion(rotx, roty, rotz);
             scale = new Vector3(scaleHolder, scaleHolder, scaleHolder);
@@ -449,7 +449,7 @@ namespace LibReplanetizer.LevelObjects
             light = ReadInt(mobyBlock, offset + 0x80);
             cutscene = ReadInt(mobyBlock, offset + 0x84);
 
-            color = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
+            color = Color.FromRgb((byte)r, (byte)g, (byte)b).ToPixel<Rgb24>();
             position = new Vector3(x, y, z);
             rotation = new Quaternion(rotx, roty, rotz);
             scale = new Vector3(scaleHolder); //Mobys only use the X axis of scale
@@ -504,7 +504,7 @@ namespace LibReplanetizer.LevelObjects
 
             cutscene = 0;
 
-            color = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
+            color = Color.FromRgb((byte)r, (byte)g, (byte)b).ToPixel<Rgb24>();
             position = new Vector3(x, y, z);
             rotation = new Quaternion(rotx, roty, rotz);
             scale = new Vector3(scaleHolder); //Mobys only use the X axis of scale
@@ -738,7 +738,7 @@ namespace LibReplanetizer.LevelObjects
                 public byte state { get; set; }
                 public byte scaleOn { get; set; }
                 public byte absolute { get; set; }
-                public ushort boneID { get; set; }
+                public uint boneID { get; set; }
                 public uint pNext { get; set; }
                 public float animationBlend { get; set; }
                 public Vector4 rotation { get; set; }
@@ -1044,7 +1044,7 @@ namespace LibReplanetizer.LevelObjects
 
                     for (int i = 0; i < layer.boneCount; i++)
                     {
-                        uint animationDataAddress = layer.pAnimation + (uint) (i * ANIMATION_DATA_SIZE);
+                        uint animationDataAddress = layer.pAnimation + (uint)(i * ANIMATION_DATA_SIZE);
                         if (!readMemory(animationDataAddress, animationDataBuffer)) break;
 
                         layer.animationData.Add(new AnimationData
@@ -1135,7 +1135,10 @@ namespace LibReplanetizer.LevelObjects
                         -ReadShort(runtimeAnimationDataBuffer, offset + 0x06) / 32768.0f);
                 }
 
-                Array.Clear(result.scalings, 0, result.scalings.Length);
+                for (int i = 0; i < result.scalings.Length; i++)
+                {
+                    result.scalings[i] = Vector3.One;
+                }
                 Array.Clear(result.hasScalings, 0, result.hasScalings.Length);
                 for (int i = 0; i < scalingCount; i++)
                 {
@@ -1143,10 +1146,13 @@ namespace LibReplanetizer.LevelObjects
                     int bone = runtimeAnimationDataBuffer[offset + 0x06];
                     if (bone >= result.scalings.Length) continue;
 
-                    result.scalings[bone] += new Vector3(
-                        ReadShort(runtimeAnimationDataBuffer, offset + 0x00) / 4096.0f,
-                        ReadShort(runtimeAnimationDataBuffer, offset + 0x02) / 4096.0f,
-                        ReadShort(runtimeAnimationDataBuffer, offset + 0x04) / 4096.0f);
+                    // AnimationInterpolateFrames drops scale records whose marker is not signed-negative.
+                    if ((runtimeAnimationDataBuffer[offset + 0x07] & 0x80) == 0) continue;
+
+                    result.scalings[bone] = new Vector3(
+                        ReadUshort(runtimeAnimationDataBuffer, offset + 0x00) / 4096.0f,
+                        ReadUshort(runtimeAnimationDataBuffer, offset + 0x02) / 4096.0f,
+                        ReadUshort(runtimeAnimationDataBuffer, offset + 0x04) / 4096.0f);
                     result.hasScalings[bone] = true;
                 }
 
@@ -1155,10 +1161,11 @@ namespace LibReplanetizer.LevelObjects
                 for (int i = 0; i < translationCount; i++)
                 {
                     int offset = translationDataOffset + i * 0x08;
-                    int bone = runtimeAnimationDataBuffer[offset + 0x06];
-                    if (bone >= result.translations.Length) continue;
+                    // Translation bone indices are sign-extended (extsb) and the marker byte is ignored.
+                    int bone = (sbyte) runtimeAnimationDataBuffer[offset + 0x06];
+                    if (bone < 0 || bone >= result.translations.Length) continue;
 
-                    result.translations[bone] += new Vector3(
+                    result.translations[bone] = new Vector3(
                         ReadShort(runtimeAnimationDataBuffer, offset + 0x00) / 1024.0f,
                         ReadShort(runtimeAnimationDataBuffer, offset + 0x02) / 1024.0f,
                         ReadShort(runtimeAnimationDataBuffer, offset + 0x04) / 1024.0f);
@@ -1198,7 +1205,7 @@ namespace LibReplanetizer.LevelObjects
                         state = manipulatorBuffer[0x01],
                         scaleOn = manipulatorBuffer[0x02],
                         absolute = manipulatorBuffer[0x03],
-                        boneID = ReadUshort(manipulatorBuffer, 0x06),
+                        boneID = ReadUint(manipulatorBuffer, 0x04),
                         pNext = ReadUint(manipulatorBuffer, 0x08),
                         animationBlend = ReadFloat(manipulatorBuffer, 0x0C),
                         rotation = ReadVector4(manipulatorBuffer, 0x10),
@@ -1304,7 +1311,7 @@ namespace LibReplanetizer.LevelObjects
                 collPos = new Vector4(collX, collY, collZ, collW);
                 position = new Vector4(X, Y, Z, W);
                 rotation = new Vector4(rotX, rotY, rotZ, rotW);
-                color = Color.FromRgb((byte) red, (byte) green, (byte) blue).ToPixel<Rgb24>();
+                color = Color.FromRgb((byte)red, (byte)green, (byte)blue).ToPixel<Rgb24>();
 
                 if (updateID == byte.MaxValue)
                     Utilities.DebugAssert(pPreviousAnimationData == 0x00A2C5C0u + previousAnimationFrame * 0x800, "Pointer should have originated from cache!");
@@ -1368,7 +1375,7 @@ namespace LibReplanetizer.LevelObjects
                 collPos = new Vector4(collX, collY, -collZ, collW);
                 position = new Vector4(X, Y, Z, W);
                 rotation = new Vector4(rotX, rotY, rotZ, rotW);
-                color = Color.FromRgb((byte) red, (byte) green, (byte) blue).ToPixel<Rgb24>();
+                color = Color.FromRgb((byte)red, (byte)green, (byte)blue).ToPixel<Rgb24>();
             }
         }
 
@@ -1473,14 +1480,7 @@ namespace LibReplanetizer.LevelObjects
             if (model != null)
                 scale /= modelSize;
 
-            Vector3 collisionEuler = new Vector3(memory.rotation.X, memory.rotation.Y, memory.rotation.Z);
-            Matrix4 collisionRotZ = Matrix4.CreateFromAxisAngle(Vector3.UnitZ, collisionEuler.Z);
-            Matrix4 collisionRotY = Matrix4.CreateFromAxisAngle(Vector3.UnitY, collisionEuler.Y);
-            Matrix4 collisionRotX = Matrix4.CreateFromAxisAngle(Vector3.UnitX, collisionEuler.X);
-            Matrix4 collisionScaleMatrix = Matrix4.CreateScale(memory.scale);
-            Matrix4 collisionTranslationMatrix = Matrix4.CreateTranslation(new Vector3(memory.position));
-
-            collisionMatrix = collisionScaleMatrix * collisionRotX * collisionRotY * collisionRotZ * collisionTranslationMatrix;
+            collisionMatrix = modelMatrix;
             collisionTriangleMatrix = modelMatrix;
             collisionPosition = new Vector3(memory.position);
         }

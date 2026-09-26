@@ -91,16 +91,14 @@ namespace LibReplanetizer
         {
             Matrix4 animationMatrix = frame.GetRotationMatrix(boneID);
             animationMatrix.Transpose();
-            Vector3? scaling = frame.GetScaling(boneID);
-            Vector3? translation = frame.GetTranslation(boneID);
+            Vector3 scaling = frame.GetScaling(boneID);
+            Vector3 translation = frame.GetTranslation(boneID, model.boneDatas[boneID].translation);
 
-            // Translations replace the bone data translation
-            Vector3 translationVector = (translation != null) ? (Vector3) translation : model.boneDatas[boneID].translation;
-            translationVector *= model.size;
+            translation *= model.size;
 
-            animationMatrix.M14 = translationVector.X;
-            animationMatrix.M24 = translationVector.Y;
-            animationMatrix.M34 = translationVector.Z;
+            animationMatrix.M14 = translation.X;
+            animationMatrix.M24 = translation.Y;
+            animationMatrix.M34 = translation.Z;
 
             if (scaling != null)
             {

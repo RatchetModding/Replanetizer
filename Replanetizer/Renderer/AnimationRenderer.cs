@@ -448,6 +448,19 @@ namespace Replanetizer.Renderer
             return NormalizeQuaternion(current * (1.0f - blend) + target * blend);
         }
 
+        private static Quaternion BlendOverrideQuaternion(Quaternion current, Quaternion target, float blend)
+        {
+            if (current.X * target.X
+                + current.Y * target.Y
+                + current.Z * target.Z
+                + current.W * target.W < 0.0f)
+            {
+                current *= -1.0f;
+            }
+
+            return NormalizeQuaternion(current * (1.0f - blend) + target * blend);
+        }
+
         private static Quaternion ToGameQuaternion(Quaternion rendererQuaternion)
         {
             return new Quaternion(
@@ -506,15 +519,14 @@ namespace Replanetizer.Renderer
                 };
             }
 
-            Quaternion baseRotation = previousFrame.GetRotationQuaternion(bone) ?? Quaternion.Identity;
-            Quaternion nextRotation = frame.GetRotationQuaternion(bone) ?? Quaternion.Identity;
+            Quaternion baseRotation = previousFrame.GetRotationQuaternion(bone);
+            Quaternion nextRotation = frame.GetRotationQuaternion(bone);
             Quaternion rotation = BlendQuaternion(baseRotation, nextRotation, blend);
-            Vector3 baseScale = previousFrame.GetScaling(bone) ?? Vector3.One;
-            Vector3 nextScale = frame.GetScaling(bone) ?? Vector3.One;
-            Vector3 scaling = Vector3.Lerp(baseScale, nextScale, blend);
-            Vector3 baseTranslation = previousFrame.GetTranslation(bone) ?? model.boneDatas[bone].translation;
-            Vector3 nextTranslation = frame.GetTranslation(bone) ?? model.boneDatas[bone].translation;
-            Vector3 translationVector = Vector3.Lerp(baseTranslation, nextTranslation, blend);
+            Vector3 scaling = Vector3.Lerp(previousFrame.GetScaling(bone), frame.GetScaling(bone), blend);
+            Vector3 translationVector = Vector3.Lerp(
+                previousFrame.GetTranslation(bone, model.boneDatas[bone].translation),
+                frame.GetTranslation(bone, model.boneDatas[bone].translation),
+                blend);
 
             return new BoneTransform
             {
@@ -536,9 +548,9 @@ namespace Replanetizer.Renderer
                 };
             }
 
-            Quaternion rotation = frame.GetRotationQuaternion(bone) ?? Quaternion.Identity;
-            Vector3 scaling = frame.GetScaling(bone) ?? Vector3.One;
-            Vector3 translationVector = frame.GetTranslation(bone) ?? model.boneDatas[bone].translation;
+            Quaternion rotation = frame.GetRotationQuaternion(bone);
+            Vector3 scaling = frame.GetScaling(bone);
+            Vector3 translationVector = frame.GetTranslation(bone, model.boneDatas[bone].translation);
 
             return new BoneTransform
             {
@@ -636,7 +648,7 @@ namespace Replanetizer.Renderer
                         animationData.rotation.Y,
                         animationData.rotation.Z,
                         animationData.rotation.W);
-                    Quaternion rotation = ToRendererQuaternion(BlendQuaternion(currentRotation, layerRotation, blend));
+                    Quaternion rotation = ToRendererQuaternion(BlendOverrideQuaternion(currentRotation, layerRotation, blend));
                     Vector3 scale = inverseBlend * current.scale + blend * new Vector3(
                         animationData.scale.X,
                         animationData.scale.Y,
@@ -698,7 +710,7 @@ namespace Replanetizer.Renderer
                 {
                     localBoneTransforms[bone] = new BoneTransform
                     {
-                        rotation = ToRendererQuaternion(BlendQuaternion(currentRotation, manipulatorRotation, blend)),
+                        rotation = ToRendererQuaternion(BlendOverrideQuaternion(currentRotation, manipulatorRotation, blend)),
                         scale = (1.0f - blend) * currentScale + blend * manipulatorScale,
                         translation = (1.0f - blend) * currentTranslation + blend * manipulatorTranslation
                     };
@@ -707,7 +719,7 @@ namespace Replanetizer.Renderer
                 {
                     localBoneTransforms[bone] = new BoneTransform
                     {
-                        rotation = ToRendererQuaternion(currentRotation * manipulatorRotation),
+                        rotation = ToRendererQuaternion(manipulatorRotation * currentRotation),
                         scale = currentScale * manipulatorScale,
                         translation = currentTranslation + manipulatorTranslation
                     };
@@ -723,7 +735,7 @@ namespace Replanetizer.Renderer
             for (int i = 0; i < model.boneCount; i++)
             {
                 int parent = model.boneDatas[i].parent;
-                Matrix4 parentMatrix = (i == 0 || parent < 0 || parent >= i)
+                Matrix4 parentMatrix = (i == 0 || model.boneDatas[i].isRoot || parent < 0 || parent >= i)
                     ? Matrix4.Identity
                     : boneMatrices[parent];
 
@@ -762,13 +774,22 @@ namespace Replanetizer.Renderer
             if (!payload.visibility.enableMobyCollision)
                 return;
 
-            if (hasBonePositions && bonePositions != null)
-            {
-                collisionRenderer.Render(payload, bonePositions);
-                return;
-            }
+            collisionRenderer.Render(payload, hasBonePositions ? bonePositions : null);
+        }
 
-            collisionRenderer.Render(payload);
+        private void UpdateBoneMatrices(RendererPayload payload, MobyModel mobyModel)
+        {
+            hasBonePositions = false;
+
+            if (mob != null && mob.memory != null)
+            {
+                ComputeBoneMatricesWithMemory(mobyModel, mob.memory);
+            }
+            else
+            {
+                List<Animation> animations = (loadedModelID == 0 && ratchetAnimations != null && ratchetAnimations.Count > 0) ? ratchetAnimations : mobyModel.animations;
+                ComputeBoneMatricesWithoutMemory(mobyModel, animations, payload.forcedAnimationID, payload.deltaTime);
+            }
         }
 
         private void ComputeBoneMatricesWithMemory(
@@ -791,7 +812,7 @@ namespace Replanetizer.Renderer
                 return;
             }
 
-            float blend = ClampBlend(memory.animationBlend);
+            float blend = memory.animationBlend;
 
             BuildRuntimeSourcePose(mobyModel, memory.previousAnimationData, memory.currentAnimationData, blend, runtimeCurrentPose!);
 
@@ -819,29 +840,64 @@ namespace Replanetizer.Renderer
             Animation? anim = (animationID >= 0 && animationID < animations.Count) ? animations[animationID] : null;
             Frame? frame = GetAnimationFrame(anim, currentFrameID);
 
-            if (anim != null && frame != null)
+            if (currentFrame == null && frame != null)
             {
-                float frameSpeed = (anim.speed != 0.0f) ? anim.speed : frame.speed;
-
-                if (frameSpeed == 0.0f || float.IsNaN(frameSpeed) || float.IsInfinity(frameSpeed))
+                previousFrame = frame;
+                if (anim != null && anim.frames.Count > 1)
                 {
-                    frameBlend = 1.0f;
+                    currentFrameID = 1;
+                    frame = GetAnimationFrame(anim, currentFrameID);
                 }
-                else
-                {
-                    frameBlend += deltaTime * frameSpeed * 60.0f;
-                }
+                currentFrame = frame;
             }
-
-            if (frame != currentFrame)
+            else if (frame != currentFrame)
             {
-                previousFrame = (currentFrame != null) ? currentFrame : frame;
+                previousFrame = currentFrame ?? frame;
                 currentFrame = frame;
             }
 
             if (previousFrame == null && frame != null)
             {
                 previousFrame = frame;
+            }
+
+            float frameSpeed = (anim != null && anim.speed != 0.0f)
+                ? anim.speed
+                : (previousFrame ?? frame)?.speed ?? 0.0f;
+
+            if (anim != null && frame != null)
+            {
+                if (frameSpeed != 0.0f && !float.IsNaN(frameSpeed) && !float.IsInfinity(frameSpeed))
+                {
+                    frameBlend += deltaTime * frameSpeed * 60.0f;
+                }
+            }
+
+            while (frameBlend >= 1.0f && anim != null && anim.frames.Count > 0)
+            {
+                float previousFrameSpeed = frameSpeed;
+                frameBlend -= 1.0f;
+                previousFrame = frame;
+                currentFrameID++;
+                if (currentFrameID >= anim.frames.Count)
+                {
+                    currentFrameID = 0;
+                }
+
+                frame = GetAnimationFrame(anim, currentFrameID);
+                currentFrame = frame;
+                frameSpeed = (anim.speed != 0.0f) ? anim.speed : (previousFrame ?? frame)?.speed ?? 0.0f;
+
+                if (anim.speed == 0.0f
+                    && previousFrameSpeed != 0.0f
+                    && !float.IsNaN(previousFrameSpeed)
+                    && !float.IsInfinity(previousFrameSpeed)
+                    && frameSpeed != 0.0f
+                    && !float.IsNaN(frameSpeed)
+                    && !float.IsInfinity(frameSpeed))
+                {
+                    frameBlend *= frameSpeed / previousFrameSpeed;
+                }
             }
 
             float blend = ClampBlend(frameBlend);
@@ -866,15 +922,6 @@ namespace Replanetizer.Renderer
                 }
             }
 
-            while (frameBlend >= 1.0f && anim != null)
-            {
-                frameBlend -= 1.0f;
-                currentFrameID++;
-                if (currentFrameID >= anim.frames.Count)
-                {
-                    currentFrameID = 0;
-                }
-            }
         }
 
         public override void Render(RendererPayload payload)
@@ -924,19 +971,11 @@ namespace Replanetizer.Renderer
 
             GLTexture.blueNoiseTexture.Bind(1);
 
-            if (mob != null && mob.memory != null)
-            {
-                ComputeBoneMatricesWithMemory(mobyModel, mob.memory);
-            }
-            else
-            {
-                List<Animation> animations = (loadedModelID == 0 && ratchetAnimations != null && ratchetAnimations.Count > 0) ? ratchetAnimations : mobyModel.animations;
-                ComputeBoneMatricesWithoutMemory(mobyModel, animations, payload.forcedAnimationID, payload.deltaTime);
-            }
+            UpdateBoneMatrices(payload, mobyModel);
 
             if (payload.visibility.enableMobyCollision)
             {
-                collisionRenderer?.Render(payload, bonePositions);
+                collisionRenderer?.Render(payload, hasBonePositions ? bonePositions : null);
             }
 
             if (!payload.visibility.enableMoby

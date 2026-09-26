@@ -528,6 +528,12 @@ namespace Replanetizer.Frames
 
                 ImGui.Separator();
 
+                if (selectedModel is MobyModel collisionModel && collisionModel.collisionData != null)
+                {
+                    ImGui.Checkbox("Moby Collision", ref rendererPayload.visibility.enableMobyCollision);
+                    ImGui.Separator();
+                }
+
                 if (selectedModel is MobyModel mobModel && mobModel.animations.Count > 0)
                 {
                     ImGui.Checkbox("Show Animations", ref rendererPayload.visibility.enableAnimations);

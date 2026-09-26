@@ -1028,38 +1028,31 @@ namespace LibReplanetizer
                             {
                                 Frame frame = anim.frames[i];
 
-                                Vector3? translation = frame.GetTranslation(j);
-                                Quaternion? rotation = frame.GetRotationQuaternion(j);
-                                Vector3? scaling = frame.GetScaling(j);
+                                Vector3 translation = frame.GetTranslation(j, mobModel.boneDatas[j].translation);
+                                Quaternion rotation = frame.GetRotationQuaternion(j);
+                                Vector3 scaling = frame.GetScaling(j);
 
-                                Vector3 t = (translation != null) ? (Vector3) translation : mobModel.boneDatas[j].translation;
-                                t *= model.size;
-                                ChangeOrientation(ref t, ExporterModelSettings.Orientation.Y_UP);
+                                translation *= model.size;
+                                ChangeOrientation(ref translation, ExporterModelSettings.Orientation.Y_UP);
 
-                                gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 0] = t.X;
-                                gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 1] = t.Y;
-                                gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 2] = t.Z;
+                                gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 0] = translation.X;
+                                gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 1] = translation.Y;
+                                gltfAnimOutputBuffer[animTranslationBaseOffset + currTranslationOffset + 2] = translation.Z;
 
-                                Quaternion q = (rotation != null) ? (Quaternion) rotation : Quaternion.Identity;
-                                ChangeOrientation(ref q, ExporterModelSettings.Orientation.Y_UP);
+                                ChangeOrientation(ref rotation, ExporterModelSettings.Orientation.Y_UP);
 
-                                gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 0] = q.X;
-                                gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 1] = q.Y;
-                                gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 2] = q.Z;
-                                gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 3] = q.W;
+                                gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 0] = rotation.X;
+                                gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 1] = rotation.Y;
+                                gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 2] = rotation.Z;
+                                gltfAnimOutputBuffer[animRotationBaseOffset + currRotationOffset + 3] = rotation.W;
 
-                                Vector3 s = Vector3.One;
-                                if (scaling != null)
-                                {
-                                    s = (Vector3) scaling;
-                                    float temp = s.Y;
-                                    s.Y = s.Z;
-                                    s.Z = temp;
-                                }
+                                float temp = scaling.Y;
+                                scaling.Y = scaling.Z;
+                                scaling.Z = temp;
 
-                                gltfAnimOutputBuffer[animScaleBaseOffset + currScaleOffset + 0] = s.X;
-                                gltfAnimOutputBuffer[animScaleBaseOffset + currScaleOffset + 1] = s.Y;
-                                gltfAnimOutputBuffer[animScaleBaseOffset + currScaleOffset + 2] = s.Z;
+                                gltfAnimOutputBuffer[animScaleBaseOffset + currScaleOffset + 0] = scaling.X;
+                                gltfAnimOutputBuffer[animScaleBaseOffset + currScaleOffset + 1] = scaling.Y;
+                                gltfAnimOutputBuffer[animScaleBaseOffset + currScaleOffset + 2] = scaling.Z;
 
                                 currTranslationOffset += 3;
                                 currRotationOffset += 4;

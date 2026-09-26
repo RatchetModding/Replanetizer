@@ -2,10 +2,10 @@
 
 // Input vertex data, different for all executions of this shader.
 layout(location = 0) in vec3 vertexPosition_modelspace;
-layout(location = 1) in vec4 vertexColors;
+layout(location = 1) in uvec4 vertexMetadata;
 
 // Output data ; will be interpolated for each fragment.
-flat out vec4 diffuseColors;
+flat out uvec4 collisionMetadata;
 out float fogBlend;
 out vec3 v_worldPos;
 out vec3 v_cameraPos;
@@ -22,7 +22,7 @@ void main() {
     vec4 worldPosition = modelToWorld * vec4(vertexPosition_modelspace, 1.0f);
     gl_Position = worldToView * worldPosition;
 
-    diffuseColors = vertexColors;
+    collisionMetadata = vertexMetadata;
 
     v_worldPos = worldPosition.xyz;
     v_cameraPos = cameraPosition;

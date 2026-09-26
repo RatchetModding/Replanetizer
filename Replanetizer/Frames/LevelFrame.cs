@@ -132,6 +132,8 @@ namespace Replanetizer.Frames
 
             rendererPayload = new RendererPayload(camera, selectedObjects, toolbox, showBangles);
 
+            AddSubFrame(() => new HoverMetadataFrame(this.wnd, this));
+
             LoadLevel(level);
         }
 
@@ -243,6 +245,13 @@ namespace Replanetizer.Frames
 
                 if (ImGui.BeginMenu("Windows"))
                 {
+                    if (ImGui.MenuItem("Render Settings"))
+                    {
+                        if (!subFrames.Any(f => f is RenderFrame))
+                        {
+                            AddSubFrame(() => new RenderFrame(this.wnd, this));
+                        }
+                    }
                     if (ImGui.MenuItem("Object properties"))
                     {
                         AddSubFrame(() =>
@@ -286,13 +295,6 @@ namespace Replanetizer.Frames
                     if (ImGui.MenuItem("Camera Control"))
                     {
                         AddSubFrame(() => new CameraControlFrame(this.wnd, this));
-                    }
-                    if (ImGui.MenuItem("Render"))
-                    {
-                        if (!subFrames.Any(f => f is RenderFrame))
-                        {
-                            AddSubFrame(() => new RenderFrame(this.wnd, this));
-                        }
                     }
                     ImGui.EndMenu();
                 }
@@ -1089,13 +1091,13 @@ namespace Replanetizer.Frames
             renderer = new FramebufferRenderer(width, height, shaderTable.resolveShader);
         }
 
-        public LevelObject? GetObjectAtScreenPosition(Vector2 pos)
+        public LevelObject? GetObjectAtScreenPosition(Vector2 pos, bool updateToolState = true)
         {
             if (xLock || yLock || zLock) return null;
 
             int hit = 0;
             GL.ReadBuffer(ReadBufferMode.ColorAttachment1);
-            GL.ReadPixels((int) pos.X, height - (int) pos.Y, 1, 1, PixelFormat.RedInteger, PixelType.Int, ref hit);
+            GL.ReadPixels((int) pos.X, height - 1 - (int) pos.Y, 1, 1, PixelFormat.RedInteger, PixelType.Int, ref hit);
 
             if (hit == 0) return null;
 
@@ -1162,19 +1164,60 @@ namespace Replanetizer.Frames
                 case RenderedObjectType.GrindPath:
                     return level.grindPaths.Find(x => x.globalID == hitId);
                 case RenderedObjectType.Tool:
-                    switch (hitId)
+                    if (updateToolState)
                     {
-                        case 0: xLock = true; break;
-                        case 1: yLock = true; break;
-                        case 2: zLock = true; break;
+                        switch (hitId)
+                        {
+                            case 0: xLock = true; break;
+                            case 1: yLock = true; break;
+                            case 2: zLock = true; break;
+                        }
+                        InvalidateView();
                     }
-                    InvalidateView();
                     return null;
                 case RenderedObjectType.Skybox:
+                case RenderedObjectType.Collision:
                     return null;
             }
 
             return null;
+        }
+
+        public bool TryGetHoverData(out int metadata, out Vector2 screenPosition)
+        {
+            metadata = 0;
+            screenPosition = mousePos;
+
+            bool isAltDown = wnd.KeyboardState.IsKeyDown(Keys.LeftAlt) ||
+                wnd.KeyboardState.IsKeyDown(Keys.RightAlt);
+            bool isLeftDown = wnd.MouseState.IsButtonDown(MouseButton.Left);
+            bool isRightDown = wnd.MouseState.IsButtonDown(MouseButton.Right);
+            if (!isAltDown || isLeftDown || isRightDown || renderer == null || !contentRegion.Contains((int) wnd.MousePosition.X, (int) wnd.MousePosition.Y))
+                return false;
+
+            if (mousePos.X < 0 || mousePos.Y < 0 || mousePos.X >= width || mousePos.Y >= height)
+                return false;
+
+            if (xLock || yLock || zLock)
+                return false;
+
+            int hit = 0;
+
+            int readX = (int) screenPosition.X;
+            int readY = height - 1 - (int) screenPosition.Y;
+
+            renderer.ExposeFramebuffer(() =>
+            {
+                GL.ReadBuffer(ReadBufferMode.ColorAttachment1);
+                GL.ReadPixels(readX, readY, 1, 1, PixelFormat.RedInteger, PixelType.Int, ref hit);
+            });
+
+            if (hit == 0)
+                return false;
+
+            metadata = hit;
+
+            return true;
         }
 
 

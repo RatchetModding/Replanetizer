@@ -56,7 +56,7 @@ namespace Replanetizer.Renderer
 
                 GLUtil.ActivateNumberOfVertexAttribArrays(2);
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
-                GL.VertexAttribPointer(1, 4, VertexAttribPointerType.UnsignedByte, false, sizeof(float) * 4, sizeof(float) * 3);
+                GL.VertexAttribIPointer(1, 4, VertexAttribIntegerType.UnsignedByte, sizeof(float) * 4, (IntPtr) (sizeof(float) * 3));
 
                 ibos.Add(ibo);
                 indexCount.Add(indexBuffer.Length);

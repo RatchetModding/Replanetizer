@@ -94,10 +94,13 @@ void main() {
             else if (group == 3u)
                 stripeDirection = vec2(1.0f, 1.0f);
 
-            groupPattern = stripePattern(gl_FragCoord.xy, stripeDirection, 12.0f, 0.12f);
+            vec3 absN = abs(N);
+            vec2 projection = (absN.y >= absN.x && absN.y >= absN.z) ? v_worldPos.xz : (absN.x >= absN.z) ? v_worldPos.yz : v_worldPos.xy;
+
+            groupPattern = stripePattern(projection, stripeDirection, 0.15f, 0.12f);
         }
 
-        metadataColor *= mix(1.0f, 0.55f, groupPattern);
+        metadataColor *= mix(1.0f, 0.85f, groupPattern);
     }
     else if (geometryCategory == 2u) {
         metadataColor = (gl_FrontFacing) ? vec3(0.5f, 0.5f, 1.0f) : vec3(0.5f);

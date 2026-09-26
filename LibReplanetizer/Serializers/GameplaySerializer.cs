@@ -355,7 +355,7 @@ namespace LibReplanetizer.Serializers
                 grindPaths[i].ToByteArray().CopyTo(grindPathBytes, i * GrindPath.ELEMENTSIZE);
             }
 
-            byte[] offsetBytes = new byte[0x04 * grindPaths.Count];
+            byte[] offsetBytes = new byte[0x04 * (grindPaths.Count + 1)];
             for (int i = 0; i < grindPaths.Count; i++)
             {
                 WriteInt(offsetBytes, i * 0x04, offsets[i]);

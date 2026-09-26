@@ -368,7 +368,7 @@ namespace LibReplanetizer.Parsers
             Utilities.DebugAssert(unk0x12 == 0, "Header[0x0C] is not 0!");
 
             byte[] grindPathBlock = ReadBlock(fileStream, gameplayHeader.grindPathsPointer + 0x10, count * GrindPath.ELEMENTSIZE);
-            byte[] splineHeadBlock = ReadBlock(fileStream, gameplayHeader.grindPathsPointer + 0x10 + count * GrindPath.ELEMENTSIZE, count * 0x04);
+            byte[] splineHeadBlock = ReadBlock(fileStream, gameplayHeader.grindPathsPointer + 0x10 + count * GrindPath.ELEMENTSIZE, (count + 1) * 0x04);
             byte[] splineBlock = ReadBlock(fileStream, gameplayHeader.grindPathsPointer + splineOffset, splineSize);
 
             List<Spline> splines = new List<Spline>();

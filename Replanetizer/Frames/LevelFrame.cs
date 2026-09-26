@@ -396,12 +396,9 @@ namespace Replanetizer.Frames
                 | ImGuiWindowFlags.NoNav
                 | ImGuiWindowFlags.NoMove;
 
-            var viewport = ImGui.GetMainViewport();
-            var workPos = viewport.WorkPos;
-            var workSize = viewport.WorkSize;
             SysVector2 windowPos = new(
-                workPos.X + PAD,
-                workPos.Y + workSize.Y - PAD
+                contentRegion.X + PAD,
+                contentRegion.Y + contentRegion.Height - PAD
             );
             SysVector2 windowPosPivot = new(0f, 1f);
             ImGui.SetNextWindowPos(windowPos, ImGuiCond.Always, windowPosPivot);
@@ -486,11 +483,15 @@ namespace Replanetizer.Frames
 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, SysVector2.Zero);
             ImGui.SetNextWindowDockID(wnd.dockspaceId, ImGuiCond.FirstUseEver);
-            ImGui.Begin(frameName, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.MenuBar |
-                                   ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+            bool visible = ImGui.Begin(frameName, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.MenuBar |
+                                                  ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
             ImGui.PopStyleVar();
 
-            Render(deltaTime);
+            if (visible)
+            {
+                Render(deltaTime);
+                RenderTextOverlay(deltaTime);
+            }
             ImGui.End();
 
             RenderSubFrames(deltaTime);
@@ -499,7 +500,6 @@ namespace Replanetizer.Frames
         public override void Render(float deltaTime)
         {
             RenderMenuBar();
-            RenderTextOverlay(deltaTime);
             UpdateWindowSize();
 
             if (renderer == null) return;

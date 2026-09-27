@@ -143,6 +143,9 @@ namespace Replanetizer.Renderer
 
                     foreach (LevelObject obj in wireframe.levelObjects)
                     {
+                        if (payload.selection.Contains(obj))
+                            wireframe.container.UpdateVertexBuffer(((Spline)obj).GetVertices());
+
                         shaderTable.splineShader.SetUniform1(UniformName.levelObjectNumber, obj.globalID);
                         shaderTable.splineShader.SetUniformMatrix4(UniformName.modelToWorld, ref obj.modelMatrix);
                         shaderTable.splineShader.SetUniform4(UniformName.incolor, payload.selection.Contains(obj) ? SELECTED_COLOR : DEFAULT_COLOR);

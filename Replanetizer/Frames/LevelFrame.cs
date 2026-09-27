@@ -233,7 +233,7 @@ namespace Replanetizer.Frames
                             if (res.Length > 0)
                             {
                                 using (FileStream fs = File.Open(res, FileMode.Open, FileAccess.Read))
-                                    level.collisionEngine = new Collision(fs, 0);
+                                    level.collisionEngine = new Collision(fs, 0, import: true);
                             }
                             InvalidateView();
                         }

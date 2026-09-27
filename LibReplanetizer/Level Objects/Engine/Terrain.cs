@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects
@@ -35,6 +36,7 @@ namespace LibReplanetizer.LevelObjects
         public Vector3 cullingCenter { get; set; }
         [Category("Attributes"), DisplayName("Culling Radius")]
         public float cullingSize { get; set; }
+        private float baseCullingSize;
 
         // 0x10 = pointer to TextureConfig
         // 0x14 = TextureConfig count
@@ -54,6 +56,30 @@ namespace LibReplanetizer.LevelObjects
         [Category("Unknowns"), DisplayName("OFF_2C: Always 0")]
         public uint off2C { get; set; }     // Always 0
 
+        public TerrainFragment(TerrainFragment referenceTfrag)
+        {
+            this.position = referenceTfrag.position;
+            this.rotation = referenceTfrag.rotation;
+            this.scale = referenceTfrag.scale;
+            this.reflection = referenceTfrag.reflection;
+            this.modelID = referenceTfrag.modelID;
+
+            this.cullingCenter = referenceTfrag.cullingCenter;
+            this.cullingSize = referenceTfrag.cullingSize;
+            this.baseCullingSize = referenceTfrag.baseCullingSize;
+
+            this.off1C = referenceTfrag.off1C;
+            this.off1E = referenceTfrag.off1E;
+            this.off20 = referenceTfrag.off20;
+            this.off24 = referenceTfrag.off24;
+            this.off28 = referenceTfrag.off28;
+            this.off2C = referenceTfrag.off2C;
+
+            this.model = referenceTfrag.model;
+
+            UpdateTransformMatrix();
+        }
+
 
         public TerrainFragment(FileStream fs, TerrainHead head, byte[] tfragBlock, int num)
         {
@@ -63,6 +89,7 @@ namespace LibReplanetizer.LevelObjects
             float cullingY = ReadFloat(tfragBlock, offset + 0x04);
             float cullingZ = ReadFloat(tfragBlock, offset + 0x08);
             cullingSize = ReadFloat(tfragBlock, offset + 0x0C);
+            baseCullingSize = cullingSize;
 
             off1C = ReadUshort(tfragBlock, offset + 0x1C);
             off1E = ReadUshort(tfragBlock, offset + 0x1E);
@@ -83,7 +110,36 @@ namespace LibReplanetizer.LevelObjects
 
         public override LevelObject Clone()
         {
-            throw new NotImplementedException();
+            return new TerrainFragment(this);
+        }
+
+        public override void SetFromMatrix(Matrix4 mat)
+        {
+            if (modelMatrix != mat)
+            {
+                Matrix4 delta = modelMatrix.Inverted() * mat;
+                cullingCenter = (new Vector4(cullingCenter, 1.0f) * delta).Xyz;
+            }
+            base.SetFromMatrix(mat);
+        }
+
+        public override void UpdateTransformMatrix()
+        {
+            // same as the original method from LevelObject
+            Matrix4 rot = Matrix4.CreateFromQuaternion(rotation);
+            Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
+            Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
+
+            // So that it doesn't yeet to outer space when scaling
+            Matrix4 toPivot = Matrix4.CreateTranslation(-cullingCenter);
+            Matrix4 fromPivot = Matrix4.CreateTranslation(cullingCenter);
+            cullingSize = baseCullingSize * (scale.X + scale.Y + scale.Z) / 3f;
+
+            modelMatrix = toPivot * reflection * scaleMatrix * rot * fromPivot * translationMatrix;
+        }
+        public override Vector3 GetPosition()
+        {
+            return cullingCenter;
         }
 
         // Some variables are not written since they have to be dynamically determined based on the underlying data

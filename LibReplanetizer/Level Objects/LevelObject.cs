@@ -48,6 +48,10 @@ namespace LibReplanetizer.LevelObjects
             scale = mat.ExtractScale();
             modelMatrix = mat;
         }
+        public virtual Vector3 GetPosition()
+        {
+            return position;
+        }
 
         public void Translate(Vector3 vector)
         {

@@ -197,6 +197,21 @@ namespace Replanetizer.Renderer
             mobyRenderers.Add(mobRenderer);
         }
 
+        private void Add(TerrainFragment tfrag)
+        {
+            if (textures == null)
+            {
+                throw new NullReferenceException();
+            }
+
+            if (terrainRenderers.Count == 0)
+                terrainRenderers.Add(new List<MeshRenderer>());
+
+            MeshRenderer tfragRenderer = new MeshRenderer(shaderTable, textures, textureIDs, textureIDs[textures[0]], null, gpuDataCache);
+            tfragRenderer.Include(tfrag);
+            terrainRenderers[^1].Add(tfragRenderer);
+        }
+
         public override void Include<T>(T obj)
         {
             switch (obj)
@@ -212,6 +227,9 @@ namespace Replanetizer.Renderer
                     return;
                 case Moby mob:
                     Add(mob);
+                    return;
+                case TerrainFragment tfrag:
+                    Add(tfrag);
                     return;
             }
 

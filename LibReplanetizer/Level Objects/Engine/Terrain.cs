@@ -56,6 +56,30 @@ namespace LibReplanetizer.LevelObjects
         [Category("Unknowns"), DisplayName("OFF_2C: Always 0")]
         public uint off2C { get; set; }     // Always 0
 
+        public TerrainFragment(TerrainFragment referenceTfrag)
+        {
+            this.position = referenceTfrag.position;
+            this.rotation = referenceTfrag.rotation;
+            this.scale = referenceTfrag.scale;
+            this.reflection = referenceTfrag.reflection;
+            this.modelID = referenceTfrag.modelID;
+
+            this.cullingCenter = referenceTfrag.cullingCenter;
+            this.cullingSize = referenceTfrag.cullingSize;
+            this.baseCullingSize = referenceTfrag.baseCullingSize;
+
+            this.off1C = referenceTfrag.off1C;
+            this.off1E = referenceTfrag.off1E;
+            this.off20 = referenceTfrag.off20;
+            this.off24 = referenceTfrag.off24;
+            this.off28 = referenceTfrag.off28;
+            this.off2C = referenceTfrag.off2C;
+
+            this.model = referenceTfrag.model;
+
+            UpdateTransformMatrix();
+        }
+
 
         public TerrainFragment(FileStream fs, TerrainHead head, byte[] tfragBlock, int num)
         {
@@ -86,7 +110,7 @@ namespace LibReplanetizer.LevelObjects
 
         public override LevelObject Clone()
         {
-            throw new NotImplementedException();
+            return new TerrainFragment(this);
         }
 
         public override void SetFromMatrix(Matrix4 mat)

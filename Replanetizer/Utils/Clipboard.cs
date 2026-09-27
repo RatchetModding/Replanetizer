@@ -38,7 +38,7 @@ namespace Replanetizer.Utils
             foreach (LevelObject o in originalObjects)
             {
                 // Add different types here once they are supported
-                if (o is Moby || o is Shrub || o is Tie)
+                if (o is Moby || o is Shrub || o is Tie || o is TerrainFragment)
                     content.Add(o.Clone());
             }
         }
@@ -77,6 +77,11 @@ namespace Replanetizer.Utils
                 {
                     level.ties.Add(tie);
                     levelFrame.selectedObjects.Add(tie);
+                }
+                else if (o2 is TerrainFragment tfrag)
+                {
+                    level.terrainEngine.fragments.Add(tfrag);
+                    levelFrame.selectedObjects.Add(tfrag);
                 }
 
                 levelFrame.levelRenderer?.Include(o2);

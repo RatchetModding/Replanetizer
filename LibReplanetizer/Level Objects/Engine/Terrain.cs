@@ -36,6 +36,7 @@ namespace LibReplanetizer.LevelObjects
         public Vector3 cullingCenter { get; set; }
         [Category("Attributes"), DisplayName("Culling Radius")]
         public float cullingSize { get; set; }
+        private float baseCullingSize;
 
         // 0x10 = pointer to TextureConfig
         // 0x14 = TextureConfig count
@@ -64,6 +65,7 @@ namespace LibReplanetizer.LevelObjects
             float cullingY = ReadFloat(tfragBlock, offset + 0x04);
             float cullingZ = ReadFloat(tfragBlock, offset + 0x08);
             cullingSize = ReadFloat(tfragBlock, offset + 0x0C);
+            baseCullingSize = cullingSize;
 
             off1C = ReadUshort(tfragBlock, offset + 0x1C);
             off1E = ReadUshort(tfragBlock, offset + 0x1E);
@@ -93,12 +95,23 @@ namespace LibReplanetizer.LevelObjects
             {
                 Matrix4 delta = modelMatrix.Inverted() * mat;
                 cullingCenter = (new Vector4(cullingCenter, 1.0f) * delta).Xyz;
-
-                Vector3 deltaScale = delta.ExtractScale();
-                cullingSize *= new[] { deltaScale.X, deltaScale.Y, deltaScale.Z }.Max(Math.Abs);
             }
-
             base.SetFromMatrix(mat);
+        }
+
+        public override void UpdateTransformMatrix()
+        {
+            // same as the original method from LevelObject
+            Matrix4 rot = Matrix4.CreateFromQuaternion(rotation);
+            Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
+            Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
+
+            // So that it doesn't yeet to outer space when scaling
+            Matrix4 toPivot = Matrix4.CreateTranslation(-cullingCenter);
+            Matrix4 fromPivot = Matrix4.CreateTranslation(cullingCenter);
+            cullingSize = baseCullingSize * (scale.X + scale.Y + scale.Z) / 3f;
+
+            modelMatrix = toPivot * reflection * scaleMatrix * rot * fromPivot * translationMatrix;
         }
         public override Vector3 GetPosition()
         {

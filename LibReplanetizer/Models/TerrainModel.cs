@@ -63,6 +63,8 @@ namespace LibReplanetizer.Models
 
         public byte[] SerializeVerts(Matrix4 mat)
         {
+            bool isIdentity = mat == Matrix4.Identity;
+
             int elemSize = 0x1C;
             byte[] outBytes = new byte[(vertexBuffer.Length / 8) * elemSize];
 
@@ -70,20 +72,20 @@ namespace LibReplanetizer.Models
             {
                 int i8 = i * 8;
 
-                Vector3 pos = (new Vector4(
-                    vertexBuffer[i8],
-                    vertexBuffer[i8 + 1],
-                    vertexBuffer[i8 + 2],
-                    1.0f) * mat).Xyz;
+                Vector3 pos, normal;
+                if(!isIdentity)
+                {
+                    pos = (new Vector4(vertexBuffer[i8],vertexBuffer[i8 + 1],vertexBuffer[i8 + 2], 1.0f) * mat).Xyz;
+                    normal = (new Vector4(vertexBuffer[i8 + 3],vertexBuffer[i8 + 4],vertexBuffer[i8 + 5],0.0f) * mat).Xyz;
 
-                Vector3 normal = (new Vector4(
-                    vertexBuffer[i8 + 3],
-                    vertexBuffer[i8 + 4],
-                    vertexBuffer[i8 + 5],
-                    0.0f) * mat).Xyz;
-
-                if (normal.LengthSquared > 0.0f)
-                    normal.Normalize();
+                    if (normal.LengthSquared > 0.0f)
+                        normal.Normalize();
+                }
+                else
+                {
+                    pos = (new Vector4(vertexBuffer[i8], vertexBuffer[i8 + 1], vertexBuffer[i8 + 2], 0.0f)).Xyz;
+                    normal = (new Vector4(vertexBuffer[i8 + 3], vertexBuffer[i8 + 4], vertexBuffer[i8 + 5], 0.0f)).Xyz;
+                }
 
                 int offset = i * elemSize;
                 WriteFloat(outBytes, offset + 0x00, pos.X);

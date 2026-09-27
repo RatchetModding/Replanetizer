@@ -265,8 +265,6 @@ namespace Replanetizer.Utils
 
             foreach (var obj in OBJECTS)
             {
-                if (obj is TerrainFragment) continue;
-
                 mean += obj.position;
                 count++;
             }

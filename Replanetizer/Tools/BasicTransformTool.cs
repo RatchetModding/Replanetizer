@@ -28,8 +28,6 @@ namespace Replanetizer.Tools
             Vector3 pivot = selection.mean;
             foreach (var obj in selection)
             {
-                if (obj is TerrainFragment) continue;
-
                 if (toolbox.pivotPositioning == PivotPositioning.IndividualOrigins)
                     pivot = obj.position;
                 Transform(obj, pivot, data);

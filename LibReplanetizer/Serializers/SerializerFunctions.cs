@@ -109,7 +109,7 @@ namespace LibReplanetizer.Serializers
                 WriteInt(tfragHeads, offset + 0x10, textureBytesOffset + textureBytesPointer);
                 WriteInt(tfragHeads, offset + 0x14, mod.textureConfig.Count);
 
-                byte[] modelVertBytes = mod.SerializeVerts();
+                byte[] modelVertBytes = mod.SerializeVerts(tFrags[i].modelMatrix);
                 if (((vertBytes[chunk].Count + modelVertBytes.Length) / 0x1c) > 0xffff)
                     chunk++;
 

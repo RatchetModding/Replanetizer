@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using static LibReplanetizer.DataFunctions;
 
 namespace LibReplanetizer.LevelObjects
@@ -84,6 +85,20 @@ namespace LibReplanetizer.LevelObjects
         public override LevelObject Clone()
         {
             throw new NotImplementedException();
+        }
+
+        public override void SetFromMatrix(Matrix4 mat)
+        {
+            if (modelMatrix != mat)
+            {
+                Matrix4 delta = modelMatrix.Inverted() * mat;
+                cullingCenter = (new Vector4(cullingCenter, 1.0f) * delta).Xyz;
+
+                Vector3 deltaScale = delta.ExtractScale();
+                cullingSize *= new[] { deltaScale.X, deltaScale.Y, deltaScale.Z }.Max(Math.Abs);
+            }
+
+            base.SetFromMatrix(mat);
         }
 
         // Some variables are not written since they have to be dynamically determined based on the underlying data

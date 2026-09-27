@@ -265,7 +265,7 @@ namespace Replanetizer.Utils
 
             foreach (var obj in OBJECTS)
             {
-                mean += obj.position;
+                mean += obj.GetPosition();
                 count++;
             }
 

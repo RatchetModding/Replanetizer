@@ -100,6 +100,10 @@ namespace LibReplanetizer.LevelObjects
 
             base.SetFromMatrix(mat);
         }
+        public override Vector3 GetPosition()
+        {
+            return cullingCenter;
+        }
 
         // Some variables are not written since they have to be dynamically determined based on the underlying data
         public override byte[] ToByteArray()

@@ -233,7 +233,7 @@ namespace Replanetizer.Frames
                             if (res.Length > 0)
                             {
                                 using (FileStream fs = File.Open(res, FileMode.Open, FileAccess.Read))
-                                    level.collisionEngine = new Collision(fs, 0);
+                                    level.collisionEngine = new Collision(fs, 0, import: true);
                             }
                             InvalidateView();
                         }
@@ -307,7 +307,7 @@ namespace Replanetizer.Frames
                         toolbox.ChangeTool(ToolType.Rotation);
                     if (ImGui.MenuItem($"Scale            [{KEYMAP.NameOf(Keybinds.ToolScaling)}]"))
                         toolbox.ChangeTool(ToolType.Scaling);
-                    if (ImGui.MenuItem($"Vertex translate [{KEYMAP.NameOf(Keybinds.ToolVertexTranslator)}]"))
+                    if (ImGui.MenuItem($"Spline editor    [{KEYMAP.NameOf(Keybinds.ToolVertexTranslator)}]"))
                         toolbox.ChangeTool(ToolType.VertexTranslation);
                     if (ImGui.MenuItem($"No tool          [{KEYMAP.NameOf(Keybinds.ToolNone)}]"))
                         toolbox.ChangeTool(ToolType.None);

@@ -354,12 +354,12 @@ namespace LibReplanetizer.Models
         private List<HeroCollisionCell> heroCells = new List<HeroCollisionCell>();
         private List<HeroCollisionCell> unkCells = new List<HeroCollisionCell>();
 
-        public Collision(FileStream fs, int collisionPointer)
+        public Collision(FileStream fs, int collisionPointer, bool import = false)
         {
             vertexStride = 4;
 
             // RaC 1 title screen has no collision
-            if (collisionPointer == 0)
+            if (collisionPointer == 0 && !import)
                 return;
 
             byte[] headBlock = ReadBlock(fs, collisionPointer, 0x10);

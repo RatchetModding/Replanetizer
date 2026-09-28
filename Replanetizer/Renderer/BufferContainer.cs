@@ -57,6 +57,16 @@ namespace Replanetizer.Renderer
             action();
         }
 
+        public void UpdateVertexBuffer(float[] vboData)
+        {
+            if (vbo == 0 || vboData.Length == 0) return;
+
+            GL.BindVertexArray(vao);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, vboData.Length * sizeof(float), vboData);
+            vboLength = vboData.Length;
+        }
+
         public void Bind()
         {
             if (vao != 0)

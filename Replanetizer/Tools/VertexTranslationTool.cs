@@ -20,17 +20,64 @@ namespace Replanetizer.Tools
 
         public int currentVertex { get; set; }
 
+
         public VertexTranslationTool(Toolbox toolbox) : base(toolbox)
         {
-            const float length = 0.7f;
+            const float length = 2.0f;
+            const float thickness = length / 2.0f;
+            const float thickness2 = length / 3.0f;
 
             vb = new[]{
-                -length,    0,          0,
-                length,     0,          0,
-                0,          -length,    0,
-                0,          length,     0,
-                0,          0,          -length,
-                0,          0,          length,
+                thickness,     -thickness2,   0,
+                thickness,     thickness2,     0,
+                length,         0,              0,
+
+                -thickness,     - thickness2,   0,
+                -thickness,     thickness2,     0,
+                -length,         0,              0,
+
+
+                thickness,     0,   - thickness2,
+                thickness,     0,     thickness2,
+                length,         0,              0,
+
+                -thickness,     0,   - thickness2,
+                -thickness,     0,     thickness2,
+                -length,         0,              0,
+
+
+                -thickness2,    thickness,     0,
+                thickness2,     thickness,     0,
+                0,              length,         0,
+
+                -thickness2,    -thickness,    0,
+                thickness2,     -thickness,    0,
+                0,              -length,        0,
+
+                0,    thickness,     -thickness2,
+                0,     thickness,     thickness2,
+                0,              length,         0,
+
+                0,    -thickness,    -thickness2,
+                0,     -thickness,    thickness2,
+                0,              -length,        0,
+
+
+                -thickness2,    0,              -thickness,
+                thickness2,     0,              -thickness,
+                0,              0,              -length,
+
+                -thickness2,    0,              thickness,
+                thickness2,     0,              thickness,
+                0,              0,              length,
+
+                0,    -thickness2,              -thickness,
+                0,     thickness2,              -thickness,
+                0,              0,              -length,
+
+                0,    -thickness2,              thickness,
+                0,     thickness2,              thickness,
+                0,              0,              length,
             };
         }
 
@@ -44,15 +91,24 @@ namespace Replanetizer.Tools
 
             table.colorShader.SetUniform1(UniformName.levelObjectNumber, 0);
             table.colorShader.SetUniform4(UniformName.incolor, 1.0f, 0.0f, 0.0f, 1.0f);
-            GL.DrawArrays(PrimitiveType.LineStrip, 0, 2);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
+            GL.DrawArrays(PrimitiveType.Triangles, 3, 3);
+            GL.DrawArrays(PrimitiveType.Triangles, 6, 3);
+            GL.DrawArrays(PrimitiveType.Triangles, 9, 3);
 
             table.colorShader.SetUniform1(UniformName.levelObjectNumber, 1);
             table.colorShader.SetUniform4(UniformName.incolor, 0.0f, 1.0f, 0.0f, 1.0f);
-            GL.DrawArrays(PrimitiveType.LineStrip, 2, 2);
+            GL.DrawArrays(PrimitiveType.Triangles, 12, 3);
+            GL.DrawArrays(PrimitiveType.Triangles, 15, 3);
+            GL.DrawArrays(PrimitiveType.Triangles, 18, 3);
+            GL.DrawArrays(PrimitiveType.Triangles, 21, 3);
 
             table.colorShader.SetUniform1(UniformName.levelObjectNumber, 2);
             table.colorShader.SetUniform4(UniformName.incolor, 0.0f, 0.0f, 1.0f, 1.0f);
-            GL.DrawArrays(PrimitiveType.LineStrip, 4, 2);
+            GL.DrawArrays(PrimitiveType.Triangles, 24, 3);
+            GL.DrawArrays(PrimitiveType.Triangles, 27, 3);
+            GL.DrawArrays(PrimitiveType.Triangles, 30, 3);
+            GL.DrawArrays(PrimitiveType.Triangles, 33, 3);
         }
 
         public void Render(Spline spline, Camera camera, ShaderTable table)

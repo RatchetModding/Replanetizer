@@ -671,7 +671,11 @@ namespace Replanetizer.Frames
                                             tooltipText += $"\nFloat: {f32val}";
                                         }
 
-                                        ImGui.Text(byteText);
+                                        if (element == 0)
+                                            ImGui.TextDisabled(byteText);
+                                        else
+                                            ImGui.Text(byteText);
+
                                         if (ImGui.BeginItemTooltip())
                                         {
                                             ImGui.TextUnformatted(tooltipText);

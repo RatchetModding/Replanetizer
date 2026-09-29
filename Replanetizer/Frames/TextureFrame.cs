@@ -8,7 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using LibReplanetizer;
 using Replanetizer.Renderer;
 using Replanetizer.Utils;
@@ -43,7 +43,10 @@ namespace Replanetizer.Frames
 
                 if (ImGui.BeginChild("imageChild_" + prefix + i, ITEM_SIZE, ImGuiChildFlags.None))
                 {
-                    ImGui.Image((IntPtr) textureIds[t].textureID, IMAGE_SIZE);
+                    unsafe
+                    {
+                        ImGui.Image(new ImTextureRef(default, (ulong) textureIds[t].textureID), IMAGE_SIZE);
+                    }
                     string idText = useLocalIndex ? i.ToString() : t.id.ToString();
                     float idWidth = ImGui.CalcTextSize(idText).X;
                     ImGui.SetCursorPosX(ITEM_SIZE.X - idWidth);
@@ -79,7 +82,10 @@ namespace Replanetizer.Frames
                 {
                     if (ImGui.BeginTooltip())
                     {
-                        ImGui.Image((IntPtr) textureIds[t].textureID, new System.Numerics.Vector2(t.width, t.height));
+                        unsafe
+                        {
+                            ImGui.Image(new ImTextureRef(default, (ulong) textureIds[t].textureID), new System.Numerics.Vector2(t.width, t.height));
+                        }
                         string resolutionText = $"{t.width}x{t.height}";
                         float resolutionWidth = ImGui.CalcTextSize(resolutionText).X;
                         ImGui.SetCursorPosX(t.width - resolutionWidth);

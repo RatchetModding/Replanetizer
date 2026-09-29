@@ -6,7 +6,7 @@
 // Please see the LICENSE.md file for more details.
 
 using System;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using LibReplanetizer;
 using Replanetizer.Utils;
 

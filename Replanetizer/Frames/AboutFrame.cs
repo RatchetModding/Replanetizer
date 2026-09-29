@@ -7,7 +7,7 @@
 
 using System;
 using System.Reflection;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 
 namespace Replanetizer.Frames
 {

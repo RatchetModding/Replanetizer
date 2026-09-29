@@ -13,7 +13,7 @@ using System.ComponentModel;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
 using LibReplanetizer;
@@ -287,11 +287,20 @@ namespace Replanetizer.Frames
             }
             else if (type == typeof(string))
             {
-                byte[] v = Encoding.ASCII.GetBytes(val as string ?? string.Empty);
-                if (ImGui.InputText(propertyName, v, (uint) v.Length))
+                byte[] v = Encoding.ASCII.GetBytes((val as string ?? string.Empty).PadRight(256, '\0'));
+
+                unsafe
                 {
-                    propertyInfo.SetValue(target, Encoding.ASCII.GetString(v));
-                    UpdateLevelFrame();
+                    fixed (byte* vPtr = v)
+                    {
+                        if (ImGui.InputText(propertyName, vPtr, (uint) v.Length))
+                        {
+                            int len = Array.IndexOf(v, (byte) 0);
+                            if (len < 0) len = v.Length;
+                            propertyInfo.SetValue(target, Encoding.ASCII.GetString(v, 0, len));
+                            UpdateLevelFrame();
+                        }
+                    }
                 }
             }
             else if (type == typeof(int))

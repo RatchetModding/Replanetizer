@@ -9,7 +9,7 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;

@@ -7,7 +7,7 @@
 
 using System;
 using System.Numerics;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using Replanetizer.MemoryHook;
 
 namespace Replanetizer.Frames

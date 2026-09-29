@@ -8,7 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using LibReplanetizer;
 using LibReplanetizer.Models;
 using OpenTK.Graphics.OpenGL;
@@ -402,9 +402,11 @@ namespace Replanetizer.Frames
 
                     OnPaint();
                 });
-
-                ImGui.Image((IntPtr) renderer.outputTexture, new System.Numerics.Vector2(width, height),
-                    System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
+                unsafe
+                {
+                    ImGui.Image(new ImTextureRef(default, (ulong) renderer.outputTexture), new System.Numerics.Vector2(width, height),
+                        System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
+                }
 
                 ImGui.NextColumn();
             }

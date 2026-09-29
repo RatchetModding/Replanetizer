@@ -11,7 +11,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using SysVector2 = System.Numerics.Vector2;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using LibReplanetizer;
 using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
@@ -520,8 +520,11 @@ namespace Replanetizer.Frames
                 });
                 invalidate = false;
             }
-            ImGui.Image((IntPtr) renderer.outputTexture, new System.Numerics.Vector2(width, height),
-                    System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
+            unsafe
+            {
+                ImGui.Image(new ImTextureRef(default, (ulong) renderer.outputTexture), new System.Numerics.Vector2(width, height),
+                        System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
+            }
         }
 
         private void RenderSubFrames(float deltaTime)

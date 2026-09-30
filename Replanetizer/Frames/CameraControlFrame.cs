@@ -100,7 +100,10 @@ namespace Replanetizer.Frames
             if (isPlayingKeyframes)
                 UpdateKeyframePlayback(deltaTime);
 
-            if (!visible || !levelFrame.IsLevelFrameFocused)
+            if (!visible)
+                return;
+
+            if (levelFrame.modelFrameVisible || levelFrame.textureFrameVisible)
                 return;
 
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(360, 0), ImGuiCond.FirstUseEver);

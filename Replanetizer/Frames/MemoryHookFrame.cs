@@ -42,7 +42,7 @@ Once the memory hook is engaged you will no longer be able to save the level in 
         public override void RenderAsWindow(float deltaTime)
         {
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(0, 0));
-            if (ImGui.Begin(frameName, ref isOpen))
+            if (ImGui.Begin(frameName, ref isOpen, ImGuiWindowFlags.NoDocking))
             {
                 Render(deltaTime);
             }

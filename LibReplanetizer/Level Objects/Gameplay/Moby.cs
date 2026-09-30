@@ -28,108 +28,13 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Mission ID"), Description("Every planet has a set of missions. If a moby is assigned to a mission, its spawning behaviour can be based on whether the mission is completed.")]
         public int missionID { get; set; }
 
-        [Category("Attributes"), DisplayName("Spawn Type Bitmask"), Description("Each bit corresponds to a spawn related boolean. If this value is zero then the game determines through other means how to spawn this moby.")]
+        [Category("Attributes"), DisplayName("Spawn Type Bitmask")]
+        [BitFlag(0, "Spawn before mission completion", "Moby will still spawn after mission completion if there was no interaction with it yet.")]
+        [BitFlag(1, "Spawn after mission completion", "Moby only spawns after mission completion.")]
+        [BitFlag(2, "Is Crate?")]
+        [BitFlag(3, "Spawn Before Death?", "Moby will still spawn after death if there was no interaction with it yet. This moby will always spawn when the level is loaded.")]
+        [BitFlag(4, "Is Spawner?")]
         public Bitmask spawnType { get; set; } = 0;
-
-        [Category("Attributes"), DisplayName("Spawn Before Mission Completion?"), Description("Moby will still spawn after mission completion if there was no interaction with it yet.")]
-        public bool spawnBeforeMissionCompletion
-        {
-            get
-            {
-                return (spawnType & 0b00001) > 0;
-            }
-            set
-            {
-                if (value)
-                {
-                    spawnType |= 0b00001;
-                }
-                else
-                {
-                    spawnType &= ~0b00001;
-                }
-            }
-        }
-
-        [Category("Attributes"), DisplayName("Spawn After Mission Completion?")]
-        public bool spawnAfterMissionCompletion
-        {
-            get
-            {
-                return (spawnType & 0b00010) > 0;
-            }
-            set
-            {
-                if (value)
-                {
-                    spawnType |= 0b00010;
-                }
-                else
-                {
-                    spawnType &= ~0b00010;
-                }
-            }
-        }
-
-        [Category("Attributes"), DisplayName("Is Crate?")]
-        public bool isCrate
-        {
-            get
-            {
-                return (spawnType & 0b00100) > 0;
-            }
-            set
-            {
-                if (value)
-                {
-                    spawnType |= 0b00100;
-                }
-                else
-                {
-                    spawnType &= ~0b00100;
-                }
-            }
-        }
-
-        [Category("Attributes"), DisplayName("Spawn Before Death?"), Description("Moby will still spawn after death if there was no interaction with it yet. This moby will always spawn when the level is loaded.")]
-        public bool spawnBeforeDeath
-        {
-            get
-            {
-                return (spawnType & 0b01000) > 0;
-            }
-            set
-            {
-                if (value)
-                {
-                    spawnType |= 0b01000;
-                }
-                else
-                {
-                    spawnType &= ~0b01000;
-                }
-            }
-        }
-
-        [Category("Attributes"), DisplayName("Is Spawner?")]
-        public bool isSpawner
-        {
-            get
-            {
-                return (spawnType & 0b10000) > 0;
-            }
-            set
-            {
-                if (value)
-                {
-                    spawnType |= 0b10000;
-                }
-                else
-                {
-                    spawnType &= ~0b10000;
-                }
-            }
-        }
 
         [Category("Attributes"), DisplayName("Data Value"), Description("This value probably defines instance specific behaviour. The exact behaviour any value corresponds to probably depends on the specific moby class.")]
         public int dataval { get; set; }
@@ -137,7 +42,7 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Bolt Drop")]
         public int bolts { get; set; }
 
-        [Category("Attributes"), DisplayName("Moby ID")]
+        [Category("Attributes"), DisplayName("Moby ID"), Description("Instance UID for the moby.")]
         public int mobyID { get; set; }
 
         [Category("Attributes"), DisplayName("Draw Distance"), Description("The distance from the collision sphere center at which an object starts fading out. The collision sphere radius extends the visible cutoff.")]
@@ -241,8 +146,26 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("EXP value")]
         public int exp { get; set; }
 
+        // Taken from enum Dnawrkshp made
         [Category("Attributes"), DisplayName("Mode Bits")]
+        [BitFlag(0, "Disabled", "Moby is disabled and not updated.")]
+        [BitFlag(1, "Don't update", "Will not run the update function for this moby.")]
+        [BitFlag(2, "No Post Update")]
+        [BitFlag(3, "Transparent")]
+        [BitFlag(4, "Has Glow")]
+        [BitFlag(5, "Has Special Vars")]
+        [BitFlag(6, "Unknown")]
+        [BitFlag(7, "Don't draw")]
+        [BitFlag(8, "Lock Rotation")]
+        [BitFlag(9, "Draw Transparent (Unknown)")]
+        [BitFlag(10, "Draw Shadow")]
+        [BitFlag(11, "Disable Z Write")]
+        [BitFlag(12, "Can Be Auto Targeted")]
+        [BitFlag(13, "Hide Backfaces")]
+        [BitFlag(14, "Can Be Damaged")]
+        [BitFlag(15, "Mirrored")]
         public Bitmask mode { get; set; } = 0;
+
         public Matrix4 collisionMatrix;
         public Matrix4 collisionTriangleMatrix;
         public Vector3 collisionPosition { get; set; }

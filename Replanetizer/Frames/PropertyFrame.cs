@@ -398,24 +398,38 @@ namespace Replanetizer.Frames
             }
             else if (type == typeof(Bitmask))
             {
-                int v = (int) ((Bitmask) val);
+                ImGui.Text(propertyName);
+                ImGui.Indent();
 
-                string binary = Convert.ToString(v, 2);
-                binary = binary.PadLeft(8, '0');
-
-                if (ImGui.InputText(propertyName, ref binary, (uint) binary.Length))
+                Bitmask mask = (Bitmask) val;
+                var flags = propertyInfo.GetCustomAttributes<BitFlagAttribute>();
+                foreach (var flag in flags)
                 {
-                    try
+                    bool set = ((int) mask & (1 << flag.Bit)) != 0;
+                    if (ImGui.Checkbox(flag.Label, ref set))
                     {
-                        propertyInfo.SetValue(target, (Bitmask) Convert.ToInt32(binary, 2));
-                    }
-                    catch
-                    {
-                        // Nothing
-                    }
 
-                    UpdateLevelFrame();
+                        if (set)
+                            mask |= (1 << flag.Bit);
+                        else
+                            mask &= ~(1 << flag.Bit);
+
+                        propertyInfo.SetValue(target, mask);
+                        UpdateLevelFrame();
+                    }
+                    if (flag.Description != null)
+                    {
+                        ImGui.SameLine();
+                        ImGui.TextDisabled("(?)");
+                        if(ImGui.IsItemHovered() && ImGui.BeginTooltip())
+                        {
+                            ImGui.Text(flag.Description);
+                            ImGui.EndTooltip();
+                        }
+
+                    }
                 }
+                ImGui.Unindent();
             }
             else if (type == typeof(Rgba32))
             {

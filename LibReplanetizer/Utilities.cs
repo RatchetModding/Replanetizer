@@ -21,6 +21,21 @@ namespace LibReplanetizer
         public static implicit operator int(Bitmask value) => value._v;
     }
 
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
+    public class BitFlagAttribute : Attribute
+    {
+        public int Bit { get; }
+        public string Label { get; }
+        public string? Description { get; }
+
+        public BitFlagAttribute(int bit, string label, string? description = null)
+        {
+            Bit = bit;
+            Label = label;
+            Description = description;
+        }
+    }
+
     public static class Utilities
     {
         [Conditional("DEBUG")]

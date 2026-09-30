@@ -220,7 +220,7 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Cutscene")]
         public int cutscene { get; set; }
 
-        [Category("Attributes"), DisplayName("pVars")]
+        [Category(""), DisplayName("pVars")]
         public byte[] pVars { get; set; }
 
         private long pVarMemoryAddress;

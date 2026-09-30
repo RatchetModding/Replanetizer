@@ -542,6 +542,8 @@ namespace Replanetizer.Frames
             contentRegion = new Rectangle((int) windowZero.X, (int) windowZero.Y, width, height);
         }
         bool addedDefaultFrames = false;
+        public bool IsLevelFrameFocused { get; private set; }
+
         public override void RenderAsWindow(float deltaTime)
         {
             if (!initialized) CustomGLControl_Load();
@@ -561,6 +563,9 @@ namespace Replanetizer.Frames
             ImGui.SetNextWindowDockID(wnd.dockspaceId, ImGuiCond.FirstUseEver);
             bool visible = ImGui.Begin(frameName, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.MenuBar |
                                                   ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+
+            IsLevelFrameFocused = visible;
+
             ImGui.PopStyleVar();
 
             if (visible)

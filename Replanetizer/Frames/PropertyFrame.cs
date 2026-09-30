@@ -20,6 +20,7 @@ using LibReplanetizer;
 using Replanetizer.Utils;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
+using System.Linq;
 
 namespace Replanetizer.Frames
 {
@@ -113,7 +114,15 @@ namespace Replanetizer.Frames
         {
             Dictionary<string, Dictionary<string, PropertyInfo>> result = new();
 
-            PropertyInfo[] objProps = target.GetType().GetProperties();
+            // Reverse the inheritance
+            var chain = new List<Type>();
+            for (var type = target.GetType(); type != null && type != typeof(object); type = type.BaseType)
+                chain.Add(type);
+            chain.Reverse();
+
+            PropertyInfo[] objProps = chain.SelectMany(type => type.GetProperties())
+                .Where(prop => prop.GetIndexParameters().Length == 0).ToArray();
+
             foreach (var prop in objProps)
             {
                 if (prop.GetIndexParameters().Length != 0)

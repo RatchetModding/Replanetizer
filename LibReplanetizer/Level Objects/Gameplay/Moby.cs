@@ -22,11 +22,70 @@ namespace LibReplanetizer.LevelObjects
 
         private static int MAX_ID = 0;
 
-        [Category("Attributes"), DisplayName("Ingame Memory"), Description("This field contains the current variable state if the memory hook is active.")]
-        public IngameMobyMemory? memory { get; set; } = null;
+        [Category("Attributes"), DisplayName("Moby ID"), Description("Instance UID for the moby.")]
+        public int mobyID { get; set; }
 
         [Category("Attributes"), DisplayName("Mission ID"), Description("Every planet has a set of missions. If a moby is assigned to a mission, its spawning behaviour can be based on whether the mission is completed.")]
         public int missionID { get; set; }
+
+        [Category("Attributes"), DisplayName("Draw Distance"), Description("The distance from the collision sphere center at which an object starts fading out. The collision sphere radius extends the visible cutoff.")]
+        public int drawDistance { get; set; }
+
+        [Category("Attributes"), DisplayName("Update Distance")]
+        public int updateDistance { get; set; }
+
+        [Category("Attributes"), DisplayName("Color"), Description("Static diffuse lighting applied to the moby.")]
+        public Rgb24 color { get; set; }
+
+        [Category("Attributes"), DisplayName("Light"), Description("Index of the directional light that is applied to the moby.")]
+        public int light { get; set; }
+
+        [Category("Attributes"), DisplayName("Group Index")]
+        public int groupIndex { get; set; }
+
+        [Category("Attributes"), DisplayName("Is Rooted?")]
+        public int isRooted { get; set; }
+
+        [Category("Attributes"), DisplayName("Rooted Distance")]
+        public float rootedDistance { get; set; }
+
+        [Category("Attributes"), DisplayName("Cutscene")]
+        public int cutscene { get; set; }
+
+        [Category("Attributes"), DisplayName("EXP value")]
+        public int exp { get; set; }
+
+        [Category("Attributes"), DisplayName("Data Value"), Description("This value probably defines instance specific behaviour. The exact behaviour any value corresponds to probably depends on the specific moby class.")]
+        public int dataval { get; set; }
+
+        [Category("Attributes"), DisplayName("Bolt Drop")]
+        public int bolts { get; set; }
+
+        [Category("Attributes"), DisplayName("pVar Index")]
+        public int pvarIndex { get; set; } = -1;
+
+        [Category("Attributes"), DisplayName("pVars")]
+        public byte[] pVars { get; set; }
+
+        // Taken from enum Dnawrkshp made
+        [Category("Attributes"), DisplayName("Mode Bits")]
+        [BitFlag(0, "Disabled", "Moby is disabled and not updated.")]
+        [BitFlag(1, "Don't update", "Will not run the update function for this moby.")]
+        [BitFlag(2, "No Post Update")]
+        [BitFlag(3, "Transparent")]
+        [BitFlag(4, "Has Glow")]
+        [BitFlag(5, "Has Special Vars")]
+        [BitFlag(6, "Unknown")]
+        [BitFlag(7, "Don't draw")]
+        [BitFlag(8, "Lock Rotation")]
+        [BitFlag(9, "Draw Transparent (Unknown)")]
+        [BitFlag(10, "Draw Shadow")]
+        [BitFlag(11, "Disable Z Write")]
+        [BitFlag(12, "Can Be Auto Targeted")]
+        [BitFlag(13, "Hide Backfaces")]
+        [BitFlag(14, "Can Be Damaged")]
+        [BitFlag(15, "Mirrored")]
+        public Bitmask mode { get; set; } = 0;
 
         [Category("Attributes"), DisplayName("Spawn Type Bitmask")]
         [BitFlag(0, "Spawn before mission completion", "Moby will still spawn after mission completion if there was no interaction with it yet.")]
@@ -36,20 +95,9 @@ namespace LibReplanetizer.LevelObjects
         [BitFlag(4, "Is Spawner?")]
         public Bitmask spawnType { get; set; } = 0;
 
-        [Category("Attributes"), DisplayName("Data Value"), Description("This value probably defines instance specific behaviour. The exact behaviour any value corresponds to probably depends on the specific moby class.")]
-        public int dataval { get; set; }
+        [Category("Attributes"), DisplayName("Ingame Memory"), Description("This field contains the current variable state if the memory hook is active.")]
+        public IngameMobyMemory? memory { get; set; } = null;
 
-        [Category("Attributes"), DisplayName("Bolt Drop")]
-        public int bolts { get; set; }
-
-        [Category("Attributes"), DisplayName("Moby ID"), Description("Instance UID for the moby.")]
-        public int mobyID { get; set; }
-
-        [Category("Attributes"), DisplayName("Draw Distance"), Description("The distance from the collision sphere center at which an object starts fading out. The collision sphere radius extends the visible cutoff.")]
-        public int drawDistance { get; set; }
-
-        [Category("Attributes"), DisplayName("Update Distance")]
-        public int updateDistance { get; set; }
 
         /*
          * Unknown3A
@@ -71,16 +119,6 @@ namespace LibReplanetizer.LevelObjects
 
         [Category("Unknowns"), DisplayName("Occlusion")]
         public bool occlusion { get; set; }
-
-        [Category("Attributes"), DisplayName("Group Index")]
-        public int groupIndex { get; set; }
-
-        [Category("Attributes"), DisplayName("Is Rooted?")]
-        public int isRooted { get; set; }
-
-        [Category("Attributes"), DisplayName("Rooted Distance")]
-        public float rootedDistance { get; set; }
-
         [Category("Unknowns"), DisplayName("aUnknown 6")]
         public int unk6 { get; set; }
 
@@ -96,9 +134,6 @@ namespace LibReplanetizer.LevelObjects
 
         [Category("Unknowns"), DisplayName("7B: Always 0")]
         public short unk7B { get; set; }
-
-        [Category("Attributes"), DisplayName("pVar Index")]
-        public int pvarIndex { get; set; } = -1;
 
         /*
          * Unknown8A
@@ -116,17 +151,7 @@ namespace LibReplanetizer.LevelObjects
         [Category("Unknowns"), DisplayName("aUnknown 9")]
         public int unk9 { get; set; }
 
-        [Category("Attributes"), DisplayName("Color"), Description("Static diffuse lighting applied to the moby.")]
-        public Rgb24 color { get; set; }
 
-        [Category("Attributes"), DisplayName("Light"), Description("Index of the directional light that is applied to the moby.")]
-        public int light { get; set; }
-
-        [Category("Attributes"), DisplayName("Cutscene")]
-        public int cutscene { get; set; }
-
-        [Category(""), DisplayName("pVars")]
-        public byte[] pVars { get; set; }
 
         private long pVarMemoryAddress;
 
@@ -142,29 +167,6 @@ namespace LibReplanetizer.LevelObjects
 
         [Category("Unknowns"), DisplayName("12B: Always 0")]
         public short unk12B { get; set; }
-
-        [Category("Attributes"), DisplayName("EXP value")]
-        public int exp { get; set; }
-
-        // Taken from enum Dnawrkshp made
-        [Category("Attributes"), DisplayName("Mode Bits")]
-        [BitFlag(0, "Disabled", "Moby is disabled and not updated.")]
-        [BitFlag(1, "Don't update", "Will not run the update function for this moby.")]
-        [BitFlag(2, "No Post Update")]
-        [BitFlag(3, "Transparent")]
-        [BitFlag(4, "Has Glow")]
-        [BitFlag(5, "Has Special Vars")]
-        [BitFlag(6, "Unknown")]
-        [BitFlag(7, "Don't draw")]
-        [BitFlag(8, "Lock Rotation")]
-        [BitFlag(9, "Draw Transparent (Unknown)")]
-        [BitFlag(10, "Draw Shadow")]
-        [BitFlag(11, "Disable Z Write")]
-        [BitFlag(12, "Can Be Auto Targeted")]
-        [BitFlag(13, "Hide Backfaces")]
-        [BitFlag(14, "Can Be Damaged")]
-        [BitFlag(15, "Mirrored")]
-        public Bitmask mode { get; set; } = 0;
 
         public Matrix4 collisionMatrix;
         public Matrix4 collisionTriangleMatrix;

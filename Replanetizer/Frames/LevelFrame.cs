@@ -161,7 +161,7 @@ namespace Replanetizer.Frames
             uint rightId, leftId;
 
             ImGuiP.DockBuilderSplitNode(mainId, ImGuiDir.Left, 0.12f, &leftId, &mainId);
-            ImGuiP.DockBuilderSplitNode(mainId, ImGuiDir.Right, 0.20f, &rightId, &mainId);
+            ImGuiP.DockBuilderSplitNode(mainId, ImGuiDir.Right, 0.30f, &rightId, &mainId);
 
             ImGuiP.DockBuilderDockWindow(WindowTitle, mainId);
 
@@ -555,12 +555,14 @@ namespace Replanetizer.Frames
             if (!addedDefaultFrames)
             {
                 AddSubFrame(() => new RenderFrame(this.wnd, this));
+                /*
                 AddSubFrame(() =>
                     new PropertyFrame(this.wnd, this, listenToCallbacks: true)
                     {
                         selection = selectedObjects
                     }
                 );
+                */
                 addedDefaultFrames = true;
             }
 

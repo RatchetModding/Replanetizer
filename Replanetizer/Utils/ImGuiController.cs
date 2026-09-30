@@ -8,7 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Desktop;
@@ -33,7 +33,7 @@ namespace Replanetizer.Utils
         private int indexBuffer;
         private int indexBufferSize;
 
-        private GLTexture? fontGlTexture;
+        private readonly Dictionary<int, GLTexture> textures = new Dictionary<int, GLTexture>();
         private Shader? shader;
 
         private int windowWidth;
@@ -49,12 +49,15 @@ namespace Replanetizer.Utils
             windowWidth = width;
             windowHeight = height;
 
-            IntPtr context = ImGui.CreateContext();
+            ImGuiContextPtr context = ImGui.CreateContext();
             ImGui.SetCurrentContext(context);
             var io = ImGui.GetIO();
-            io.Fonts.AddFontDefault();
+            unsafe
+            {
+                io.Fonts.AddFontDefault();
+            }
 
-            io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
+            io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset | ImGuiBackendFlags.RendererHasTextures;
 
             CreateDeviceResources();
 
@@ -62,7 +65,10 @@ namespace Replanetizer.Utils
 
             ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
             // Prevent imgui.ini from being written. Just the mere existence of the file causes issues with docking persistence.
-            unsafe { ImGui.GetIO().NativePtr->IniFilename = null; }
+            unsafe
+            {
+                io.IniFilename = null;
+            }
 
             ImGui.NewFrame();
             frameBegun = true;
@@ -92,8 +98,6 @@ namespace Replanetizer.Utils
             GL.BufferData(BufferTarget.ArrayBuffer, vertexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBuffer);
             GL.BufferData(BufferTarget.ElementArrayBuffer, indexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
-
-            RecreateFontDeviceTexture();
 
             string vertexSource = @"#version 330 core
 
@@ -143,20 +147,68 @@ void main()
             GLUtil.CheckGlError("End of ImGui setup");
         }
 
-        /// <summary>
-        /// Recreates the device texture used to render text.
-        /// </summary>
-        public void RecreateFontDeviceTexture()
+        private void UpdateTextures(ImDrawDataPtr drawData)
         {
-            ImGuiIOPtr io = ImGui.GetIO();
-            io.Fonts.GetTexDataAsRGBA32(out IntPtr pixels, out int width, out int height, out int bytesPerPixel);
+            var textureVector = drawData.Textures;
 
-            fontGlTexture = new GLTexture("ImGui Text Atlas", width, height, pixels);
-            fontGlTexture.SetMagFilter(TextureMagFilter.Linear);
-            fontGlTexture.SetMinFilter(TextureMinFilter.Linear);
+            for (int i = 0; i < textureVector.Size; i++)
+            {
+                ImTextureDataPtr tex = textureVector[i];
 
-            io.Fonts.SetTexID((IntPtr) fontGlTexture.textureID);
-            io.Fonts.ClearTexData();
+                if (tex.Status == ImTextureStatus.WantCreate)
+                {
+                    CreateTexture(tex);
+                }
+                else if (tex.Status == ImTextureStatus.WantUpdates)
+                {
+                    UpdateTexture(tex);
+                }
+                else if (tex.Status == ImTextureStatus.WantDestroy)
+                {
+                    DestroyTexture(tex);
+                }
+            }
+        }
+
+        private unsafe void CreateTexture(ImTextureDataPtr tex)
+        {
+            if (textures.TryGetValue(tex.UniqueID, out GLTexture? existing))
+            {
+                existing.Dispose();
+                textures.Remove(tex.UniqueID);
+            }
+
+            var glTexture = new GLTexture("ImGui Texture", tex.Width, tex.Height, (IntPtr) tex.GetPixels());
+            glTexture.SetMagFilter(TextureMagFilter.Linear);
+            glTexture.SetMinFilter(TextureMinFilter.Linear);
+
+            textures[tex.UniqueID] = glTexture;
+
+            tex.SetTexID((ulong) (uint) glTexture.textureID);
+            tex.SetStatus(ImTextureStatus.Ok);
+        }
+
+        private unsafe void UpdateTexture(ImTextureDataPtr tex)
+        {
+            if (textures.TryGetValue(tex.UniqueID, out GLTexture? existing))
+            {
+                existing.Dispose();
+                textures.Remove(tex.UniqueID);
+            }
+
+            CreateTexture(tex);
+        }
+
+        private void DestroyTexture(ImTextureDataPtr tex)
+        {
+            if (textures.TryGetValue(tex.UniqueID, out GLTexture? glTexture))
+            {
+                glTexture.Dispose();
+                textures.Remove(tex.UniqueID);
+            }
+
+            tex.SetTexID((ulong) 0);
+            tex.SetStatus(ImTextureStatus.Destroyed);
         }
 
         /// <summary>
@@ -337,6 +389,8 @@ void main()
                 return;
             }
 
+            UpdateTextures(drawData);
+
             for (int i = 0; i < drawData.CmdListsCount; i++)
             {
                 ImDrawListPtr cmdList = drawData.CmdLists[i];
@@ -396,47 +450,59 @@ void main()
             {
                 ImDrawListPtr cmdList = drawData.CmdLists[n];
 
-                GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBuffer);
-                GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, cmdList.VtxBuffer.Size * Unsafe.SizeOf<ImDrawVert>(), cmdList.VtxBuffer.Data);
-                GLUtil.CheckGlError($"Data Vert {n}");
+                unsafe
+                {
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBuffer);
+                    GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, cmdList.VtxBuffer.Size * Unsafe.SizeOf<ImDrawVert>(), (IntPtr) cmdList.VtxBuffer.Data);
+                    GLUtil.CheckGlError($"Data Vert {n}");
 
-                GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBuffer);
-                GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, cmdList.IdxBuffer.Size * sizeof(ushort), cmdList.IdxBuffer.Data);
-                GLUtil.CheckGlError($"Data Idx {n}");
+                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBuffer);
+                    GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, cmdList.IdxBuffer.Size * sizeof(ushort), (IntPtr) cmdList.IdxBuffer.Data);
+                    GLUtil.CheckGlError($"Data Idx {n}");
+                }
 
                 int vtxOffset = 0;
                 int idxOffset = 0;
 
                 for (int cmdI = 0; cmdI < cmdList.CmdBuffer.Size; cmdI++)
                 {
-                    ImDrawCmdPtr pcmd = cmdList.CmdBuffer[cmdI];
-                    if (pcmd.UserCallback != IntPtr.Zero)
+                    ImDrawCmd cmd = cmdList.CmdBuffer[cmdI];
+                    bool hasUserCallback;
+                    unsafe
+                    {
+                        hasUserCallback = cmd.UserCallback != null;
+                    }
+
+                    if (hasUserCallback)
                     {
                         throw new NotImplementedException();
                     }
                     else
                     {
+                        ImTextureID texId = cmd.GetTexID();
+                        int glTextureHandle = (int) (ulong) texId;
+
                         GL.ActiveTexture(TextureUnit.Texture0);
-                        GL.BindTexture(TextureTarget.Texture2D, (int) pcmd.TextureId);
+                        GL.BindTexture(TextureTarget.Texture2D, glTextureHandle);
                         GLUtil.CheckGlError("Texture");
 
                         // We do _windowHeight - (int)clip.W instead of (int)clip.Y because gl has flipped Y when it comes to these coordinates
-                        var clip = pcmd.ClipRect;
+                        var clip = cmd.ClipRect;
                         GL.Scissor((int) clip.X, windowHeight - (int) clip.W, (int) (clip.Z - clip.X), (int) (clip.W - clip.Y));
                         GLUtil.CheckGlError("Scissor");
 
                         if ((io.BackendFlags & ImGuiBackendFlags.RendererHasVtxOffset) != 0)
                         {
-                            GL.DrawElementsBaseVertex(PrimitiveType.Triangles, (int) pcmd.ElemCount, DrawElementsType.UnsignedShort, (IntPtr) (idxOffset * sizeof(ushort)), vtxOffset);
+                            GL.DrawElementsBaseVertex(PrimitiveType.Triangles, (int) cmd.ElemCount, DrawElementsType.UnsignedShort, (IntPtr) (idxOffset * sizeof(ushort)), vtxOffset);
                         }
                         else
                         {
-                            GL.DrawElements(BeginMode.Triangles, (int) pcmd.ElemCount, DrawElementsType.UnsignedShort, (int) pcmd.IdxOffset * sizeof(ushort));
+                            GL.DrawElements(BeginMode.Triangles, (int) cmd.ElemCount, DrawElementsType.UnsignedShort, (int) cmd.IdxOffset * sizeof(ushort));
                         }
                         GLUtil.CheckGlError("Draw");
                     }
 
-                    idxOffset += (int) pcmd.ElemCount;
+                    idxOffset += (int) cmd.ElemCount;
                 }
                 vtxOffset += cmdList.VtxBuffer.Size;
             }
@@ -450,8 +516,9 @@ void main()
         /// </summary>
         public void Dispose()
         {
-            if (fontGlTexture != null)
-                fontGlTexture.Dispose();
+            foreach (var texture in textures.Values)
+                texture.Dispose();
+            textures.Clear();
 
             if (shader != null)
                 shader.Dispose();

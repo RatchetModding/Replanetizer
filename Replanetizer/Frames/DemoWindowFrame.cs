@@ -5,7 +5,7 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
-using ImGuiNET;
+using Hexa.NET.ImGui;
 
 namespace Replanetizer.Frames
 {

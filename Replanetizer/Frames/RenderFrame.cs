@@ -5,8 +5,10 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
-using ImGuiNET;
+
+
 using Replanetizer.Renderer;
+using Hexa.NET.ImGui;
 
 namespace Replanetizer.Frames
 {
@@ -23,6 +25,9 @@ namespace Replanetizer.Frames
 
         public override void RenderAsWindow(float deltaTime)
         {
+            if (!levelFrame.IsLevelFrameFocused)
+                return;
+
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(260, 520), ImGuiCond.FirstUseEver);
             if (ImGui.Begin(frameName, ref isOpen))
             {

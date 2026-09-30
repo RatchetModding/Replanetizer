@@ -11,7 +11,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using SysVector2 = System.Numerics.Vector2;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using LibReplanetizer;
 using LibReplanetizer.LevelObjects;
 using OpenTK.Graphics.OpenGL;
@@ -108,7 +108,69 @@ namespace Replanetizer.Frames
             Frame frame = factory();
             subFrames.Add(frame);
             subFrameFactories[frame] = factory;
+            DockNewSubFrame(frame);
             return frame;
+        }
+        private readonly HashSet<uint> nodesWithLiveWindow = new();
+
+        private readonly Dictionary<uint, Frame> nodeOwners = new();
+
+        private unsafe void DockNewSubFrame(Frame frame)
+        {
+            if (wnd.dockspaceId == 0)
+                return;
+
+            uint targetNode = frame switch
+            {
+                // These are probably the most key frames to want to have docked when working in replanetizer.
+                RenderFrame => leftDockId != 0 ? leftDockId : wnd.dockspaceId,
+                PropertyFrame => rightDockId != 0 ? rightDockId : wnd.dockspaceId,
+                // Would be nice to have lights etc. dock below propertyframe on the right, but.. yo
+
+                // We want these to be tabs of the main view.
+                TextureFrame => wnd.dockspaceId,
+                ModelFrame => wnd.dockspaceId,
+                _ => 0,
+            };
+
+            if (targetNode == 0)
+                return;
+
+            if (nodeOwners.TryGetValue(targetNode, out var owner) && owner != this && !FrameMustClose(owner))
+            {
+                targetNode = wnd.dockspaceId;
+            }
+            else
+            {
+                nodeOwners[targetNode] = frame;
+            }
+
+            ImGuiP.DockBuilderDockWindow(frame.WindowTitle, targetNode);
+        }
+
+        private uint rightDockId = 0;
+        private uint leftDockId = 0;
+        private bool didFocusLevelTab = false;
+        private unsafe void SetupDefaultDockingLayout()
+        {
+            if (rightDockId != 0 || didFocusLevelTab)
+                return;
+            
+
+            uint mainId = wnd.dockspaceId;
+            uint rightId, leftId;
+
+            ImGuiP.DockBuilderSplitNode(mainId, ImGuiDir.Left, 0.12f, &leftId, &mainId);
+            ImGuiP.DockBuilderSplitNode(mainId, ImGuiDir.Right, 0.20f, &rightId, &mainId);
+
+            ImGuiP.DockBuilderDockWindow(WindowTitle, mainId);
+
+            leftDockId = leftId;
+            rightDockId = rightId;
+
+            ImGuiP.DockBuilderFinish(wnd.dockspaceId);
+
+            nodeOwners[mainId] = this;
         }
 
         private void ToolboxOnToolChanged(object? sender, EventArgs e) => InvalidateView();
@@ -135,6 +197,9 @@ namespace Replanetizer.Frames
             AddSubFrame(() => new HoverMetadataFrame(this.wnd, this));
 
             LoadLevel(level);
+
+            AddSubFrame(() => new ModelFrame(this.wnd, this, this.shaderTable, null));
+            AddSubFrame(() => new TextureFrame(this.wnd, this));
         }
 
         public static bool FrameMustClose(Frame frame)
@@ -261,6 +326,7 @@ namespace Replanetizer.Frames
                             }
                         );
                     }
+                    /*
                     if (ImGui.MenuItem("Model viewer"))
                     {
                         Model? initialModel = (selectedObjects.newestObject is ModelObject obj) ? obj.model : null;
@@ -275,6 +341,7 @@ namespace Replanetizer.Frames
                     {
                         AddSubFrame(() => new TextureFrame(this.wnd, this));
                     }
+                    */
                     if (ImGui.MenuItem("Lights"))
                     {
                         AddSubFrame(() => new LightsFrame(this.wnd, this, level.lights, level.lightConfig));
@@ -474,6 +541,8 @@ namespace Replanetizer.Frames
             mousePos = wnd.MousePosition - windowZero;
             contentRegion = new Rectangle((int) windowZero.X, (int) windowZero.Y, width, height);
         }
+        bool addedDefaultFrames = false;
+        public bool IsLevelFrameFocused { get; private set; }
 
         public override void RenderAsWindow(float deltaTime)
         {
@@ -481,10 +550,27 @@ namespace Replanetizer.Frames
 
             var viewport = ImGui.GetMainViewport();
 
+            SetupDefaultDockingLayout();
+
+            if (!addedDefaultFrames)
+            {
+                AddSubFrame(() => new RenderFrame(this.wnd, this));
+                AddSubFrame(() =>
+                    new PropertyFrame(this.wnd, this, listenToCallbacks: true)
+                    {
+                        selection = selectedObjects
+                    }
+                );
+                addedDefaultFrames = true;
+            }
+
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, SysVector2.Zero);
             ImGui.SetNextWindowDockID(wnd.dockspaceId, ImGuiCond.FirstUseEver);
             bool visible = ImGui.Begin(frameName, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.MenuBar |
                                                   ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+
+            IsLevelFrameFocused = visible;
+
             ImGui.PopStyleVar();
 
             if (visible)
@@ -495,6 +581,12 @@ namespace Replanetizer.Frames
             ImGui.End();
 
             RenderSubFrames(deltaTime);
+
+            if (!didFocusLevelTab)
+            {
+                ImGui.SetWindowFocus(frameName);
+                didFocusLevelTab = true;
+            }
         }
 
         public override void Render(float deltaTime)
@@ -520,8 +612,11 @@ namespace Replanetizer.Frames
                 });
                 invalidate = false;
             }
-            ImGui.Image((IntPtr) renderer.outputTexture, new System.Numerics.Vector2(width, height),
-                    System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
+            unsafe
+            {
+                ImGui.Image(new ImTextureRef(default, (ulong) renderer.outputTexture), new System.Numerics.Vector2(width, height),
+                        System.Numerics.Vector2.UnitY, System.Numerics.Vector2.UnitX);
+            }
         }
 
         private void RenderSubFrames(float deltaTime)
@@ -1339,56 +1434,6 @@ namespace Replanetizer.Frames
             if (!subFrames.Contains(frame)) subFrames.Add(frame);
         }
 
-        public void LoadNewLevel(string path)
-        {
-            Level newLevel = new Level(path);
-
-            camera.CancelNavigation();
-            mouseGrabHandler.Cancel(wnd);
-            orbitMouseGrabHandler.Cancel(wnd);
-            zoomMouseGrabHandler.Cancel(wnd);
-            hook?.Dispose();
-            hook = null;
-            interactiveSession = false;
-
-            List<Func<Frame>> rebuild = new List<Func<Frame>>();
-            foreach (Frame sub in subFrames)
-            {
-                if (sub.isOpen && subFrameFactories.TryGetValue(sub, out var factory))
-                    rebuild.Add(factory);
-            }
-
-            foreach (Frame sub in subFrames)
-            {
-                sub.Dispose();
-            }
-            subFrames.Clear();
-            subFrameFactories.Clear();
-
-            levelRenderer?.Dispose();
-            levelRenderer = null;
-            DisposeLevelTextures();
-            selectedMissions.Clear();
-            selectedObjects.Clear();
-            level?.Dispose();
-
-            LoadLevel(newLevel);
-
-            foreach (Func<Frame> factory in rebuild)
-            {
-                AddSubFrame(factory);
-            }
-        }
-
-        private void DisposeLevelTextures()
-        {
-            foreach (var texture in textureIds.Values)
-            {
-                texture.Dispose();
-            }
-            textureIds.Clear();
-        }
-
         public override void Dispose()
         {
             camera.CancelNavigation();
@@ -1419,7 +1464,11 @@ namespace Replanetizer.Frames
 
             if (textureIds != null)
             {
-                DisposeLevelTextures();
+                foreach (var texture in textureIds.Values)
+                {
+                    texture.Dispose();
+                }
+                textureIds.Clear();
             }
 
             level?.Dispose();

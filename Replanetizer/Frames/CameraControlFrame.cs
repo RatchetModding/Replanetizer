@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using LibReplanetizer.LevelObjects;
 using OpenTK.Mathematics;
 using Replanetizer.Utils;
@@ -100,15 +100,15 @@ namespace Replanetizer.Frames
             if (isPlayingKeyframes)
                 UpdateKeyframePlayback(deltaTime);
 
-            if (!visible)
+            if (!visible || !levelFrame.IsLevelFrameFocused)
                 return;
 
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(360, 0), ImGuiCond.FirstUseEver);
             if (ImGui.Begin(frameName, ref isOpen))
             {
                 Render(deltaTime);
-                ImGui.End();
             }
+            ImGui.End();
         }
 
         public override void Render(float deltaTime)

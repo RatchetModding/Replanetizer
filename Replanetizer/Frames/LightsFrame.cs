@@ -5,7 +5,7 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using LibReplanetizer.LevelObjects;
 using System;
 using System.Collections.Generic;
@@ -42,12 +42,15 @@ namespace Replanetizer.Frames
 
         public override void RenderAsWindow(float deltaTime)
         {
+            if (!levelFrame.IsLevelFrameFocused)
+                return;
+
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(550, 0));
             if (ImGui.Begin(frameName, ref isOpen))
             {
                 Render(deltaTime);
-                ImGui.End();
             }
+            ImGui.End();
         }
 
         private Dictionary<string, Dictionary<string, PropertyInfo>> RecomputeSinglePropertiesSet(object o)

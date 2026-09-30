@@ -26,6 +26,8 @@ namespace Replanetizer.Frames
     public class PropertyFrame : Frame
     {
         protected sealed override string frameName { get; set; } = "Properties";
+        private const ImGuiTreeNodeFlags highlightedTreeNodeFlags =
+            ImGuiTreeNodeFlags.Framed | ImGuiTreeNodeFlags.SpanAvailWidth;
 
         private Selection? _selection;
 
@@ -174,6 +176,14 @@ namespace Replanetizer.Frames
 
             foreach (var (categoryName, categoryItems) in properties)
             {
+                if (categoryName.Length == 0)
+                {
+                    foreach (var (key, value) in categoryItems)
+                        RenderCategoryItem(target, key, value, activeObjects);
+
+                    continue;
+                }
+
                 ImGui.PushID(categoryName);
                 RenderCategory(categoryName, categoryItems, target, activeObjects);
                 ImGui.PopID();
@@ -188,12 +198,13 @@ namespace Replanetizer.Frames
             object target,
             HashSet<object> activeObjects)
         {
-            if (ImGui.CollapsingHeader(categoryName, ImGuiTreeNodeFlags.DefaultOpen))
+            if (ImGui.TreeNodeEx(categoryName, highlightedTreeNodeFlags | ImGuiTreeNodeFlags.DefaultOpen))
             {
                 foreach (var (key, value) in categoryItems)
                     RenderCategoryItem(target, key, value, activeObjects);
 
                 ImGui.Separator();
+                ImGui.TreePop();
             }
         }
 
@@ -235,7 +246,7 @@ namespace Replanetizer.Frames
 
         private void RenderObjectList(string propertyName, IList list, Type itemType, HashSet<object> activeObjects)
         {
-            if (!ImGui.CollapsingHeader(propertyName))
+            if (!ImGui.TreeNodeEx(propertyName, highlightedTreeNodeFlags))
                 return;
 
             for (int index = 0; index < list.Count; index++)
@@ -248,19 +259,22 @@ namespace Replanetizer.Frames
                 {
                     ImGui.Text(itemName + ": null");
                 }
-                else if (ImGui.CollapsingHeader(itemName, ImGuiTreeNodeFlags.DefaultOpen))
+                else if (ImGui.TreeNodeEx(itemName, highlightedTreeNodeFlags | ImGuiTreeNodeFlags.DefaultOpen))
                 {
                     object itemTarget = item;
                     RenderObjectProperties(itemName, itemTarget, activeObjects);
 
                     if (itemType.IsValueType)
                         list[index] = itemTarget;
+
+                    ImGui.TreePop();
                 }
 
                 ImGui.PopID();
             }
 
             ImGui.Separator();
+            ImGui.TreePop();
         }
 
         private void RenderCategoryItem(
@@ -576,7 +590,7 @@ namespace Replanetizer.Frames
             }
             else if (type is { IsArray: true })
             {
-                if (ImGui.CollapsingHeader(propertyName))
+                if (ImGui.TreeNodeEx(propertyName, highlightedTreeNodeFlags))
                 {
                     Array array = (Array) val;
 
@@ -695,6 +709,7 @@ namespace Replanetizer.Frames
                         }
                     }
                     ImGui.Separator();
+                    ImGui.TreePop();
                 }
             }
             else if (type is { IsEnum: true })
@@ -722,7 +737,7 @@ namespace Replanetizer.Frames
                 Type genericType = type.GetGenericArguments()[0];
                 if (genericType == typeof(TextureConfig))
                 {
-                    if (ImGui.CollapsingHeader(propertyName))
+                    if (ImGui.TreeNodeEx(propertyName, highlightedTreeNodeFlags))
                     {
                         int i = 1;
 
@@ -760,11 +775,12 @@ namespace Replanetizer.Frames
                         }
 
                         ImGui.Separator();
+                        ImGui.TreePop();
                     }
                 }
                 else if (genericType == typeof(Attachment))
                 {
-                    if (ImGui.CollapsingHeader(propertyName))
+                    if (ImGui.TreeNodeEx(propertyName, highlightedTreeNodeFlags))
                     {
                         int i = 1;
 
@@ -772,22 +788,23 @@ namespace Replanetizer.Frames
                         {
                             ImGui.PushID("Attachment" + i);
 
-                            ImGui.Text("Attachment " + i);
-
-                            if (ImGui.CollapsingHeader("Bones A"))
+                            if (ImGui.TreeNodeEx("Attachment " + i, highlightedTreeNodeFlags))
                             {
-                                foreach (byte b in a.aBones)
+                                if (ImGui.TreeNodeEx("Bones A", highlightedTreeNodeFlags))
                                 {
-                                    ImGui.Text(b.ToString());
+                                    foreach (byte b in a.aBones)
+                                        ImGui.Text(b.ToString());
+                                    ImGui.TreePop();
                                 }
-                            }
 
-                            if (ImGui.CollapsingHeader("Bones B"))
-                            {
-                                foreach (byte b in a.bBones)
+                                if (ImGui.TreeNodeEx("Bones B", highlightedTreeNodeFlags))
                                 {
-                                    ImGui.Text(b.ToString());
+                                    foreach (byte b in a.bBones)
+                                        ImGui.Text(b.ToString());
+                                    ImGui.TreePop();
                                 }
+
+                                ImGui.TreePop();
                             }
 
                             ImGui.PopID();
@@ -796,6 +813,7 @@ namespace Replanetizer.Frames
                         }
 
                         ImGui.Separator();
+                        ImGui.TreePop();
                     }
                 }
                 else
@@ -813,10 +831,11 @@ namespace Replanetizer.Frames
             }
             else if (val != null)
             {
-                if (ImGui.CollapsingHeader(propertyName))
+                if (ImGui.TreeNodeEx(propertyName, highlightedTreeNodeFlags))
                 {
                     nestedProperty = true;
                     RenderObjectProperties(propertyName, val, activeObjects);
+                    ImGui.TreePop();
                 }
             }
             else

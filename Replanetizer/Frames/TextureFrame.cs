@@ -105,9 +105,12 @@ namespace Replanetizer.Frames
             ImGui.NewLine();
         }
 
+
         public override void RenderAsWindow(float deltaTime)
         {
-            if (ImGui.Begin(frameName, /*ref isOpen,*/ ImGuiWindowFlags.AlwaysVerticalScrollbar))
+            levelFrame.textureFrameVisible = ImGui.Begin(frameName, ImGuiWindowFlags.AlwaysVerticalScrollbar);
+
+            if (levelFrame.textureFrameVisible)
             {
                 Render(deltaTime);
             }

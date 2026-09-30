@@ -25,7 +25,7 @@ namespace Replanetizer.Frames
 
         public override void RenderAsWindow(float deltaTime)
         {
-            if (!levelFrame.IsLevelFrameFocused)
+            if (levelFrame.modelFrameVisible || levelFrame.textureFrameVisible)
                 return;
 
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(260, 520), ImGuiCond.FirstUseEver);

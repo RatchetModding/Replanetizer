@@ -16,6 +16,8 @@ namespace Replanetizer.Frames
     {
         protected Window wnd;
         protected abstract string frameName { get; set; }
+        public string WindowTitle => frameName;
+
         public bool isOpen = true;
         private string frameID;
         private bool frameIDReleased = false;

@@ -107,7 +107,7 @@ namespace Replanetizer.Frames
 
         public override void RenderAsWindow(float deltaTime)
         {
-            if (ImGui.Begin(frameName, ref isOpen, ImGuiWindowFlags.AlwaysVerticalScrollbar))
+            if (ImGui.Begin(frameName, /*ref isOpen,*/ ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {
                 Render(deltaTime);
             }

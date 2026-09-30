@@ -172,6 +172,7 @@ namespace Replanetizer.Frames
         {
             // Standard window size
             // Is there a better way to do this in ImGui, this is ugly :(
+            /*
             if (firstFrame)
             {
                 System.Numerics.Vector2 startSize = new System.Numerics.Vector2(this.startSize.X, this.startSize.Y);
@@ -181,8 +182,9 @@ namespace Replanetizer.Frames
 
                 ImGui.SetNextWindowSize(startSize);
             }
+            */
 
-            if (ImGui.Begin(frameName, ref isOpen, ImGuiWindowFlags.NoSavedSettings))
+            if (ImGui.Begin(frameName/*, ref isOpen/* , ImGuiWindowFlags.NoSavedSettings */))
             {
                 Render(deltaTime);
 

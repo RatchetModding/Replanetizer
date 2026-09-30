@@ -108,7 +108,78 @@ namespace Replanetizer.Frames
             Frame frame = factory();
             subFrames.Add(frame);
             subFrameFactories[frame] = factory;
+            DockNewSubFrame(frame);
             return frame;
+        }
+        private readonly HashSet<uint> nodesWithLiveWindow = new();
+
+        private readonly Dictionary<uint, Frame> nodeOwners = new();
+
+        private unsafe void DockNewSubFrame(Frame frame)
+        {
+            if (wnd.dockspaceId == 0)
+                return;
+
+            uint targetNode = frame switch
+            {
+                PropertyFrame => rightDockId != 0 ? rightDockId : wnd.dockspaceId,
+                LightsFrame => rightDockId != 0 ? rightDockId : wnd.dockspaceId,
+                RenderFrame => leftDockId != 0 ? leftDockId : wnd.dockspaceId,
+                MemoryHookFrame => bottomLeftDockId != 0 ? bottomLeftDockId : wnd.dockspaceId,
+                CameraControlFrame => bottomRightDockId != 0 ? bottomRightDockId : wnd.dockspaceId,
+
+                TextureFrame => wnd.dockspaceId,
+                ModelFrame => wnd.dockspaceId,
+                _ => 0,
+            };
+
+            if (targetNode == 0)
+                return;
+
+            if (nodeOwners.TryGetValue(targetNode, out var owner) && owner != this && !FrameMustClose(owner))
+            {
+                targetNode = wnd.dockspaceId;
+            }
+            else
+            {
+                nodeOwners[targetNode] = frame;
+            }
+
+            ImGuiP.DockBuilderDockWindow(frame.WindowTitle, targetNode);
+        }
+
+        private uint rightDockId = 0;
+        private uint bottomDockId = 0;
+        private uint leftDockId = 0;
+        private uint bottomLeftDockId = 0;
+        private uint bottomRightDockId = 0;
+        private bool didFocusLevelTab = false;
+        private unsafe void SetupDefaultDockingLayout()
+        {
+            if (rightDockId != 0)
+                return;
+            
+
+            uint mainId = wnd.dockspaceId;
+            uint rightId, leftId, bottomId, bottomLeftId, bottomRightId;
+
+            ImGuiP.DockBuilderSplitNode(mainId, ImGuiDir.Left, 0.15f, &leftId, &mainId);
+            ImGuiP.DockBuilderSplitNode(mainId, ImGuiDir.Right, 0.20f, &rightId, &mainId);
+            ImGuiP.DockBuilderSplitNode(mainId, ImGuiDir.Down, 0.25f, &bottomId, &mainId);
+
+            // split the bottom strip into two halves
+            ImGuiP.DockBuilderSplitNode(bottomId, ImGuiDir.Left, 0.5f, &bottomLeftId, &bottomRightId);
+
+            ImGuiP.DockBuilderDockWindow(WindowTitle, mainId);
+
+            leftDockId = leftId;
+            rightDockId = rightId;
+            bottomLeftDockId = bottomLeftId;
+            bottomRightDockId = bottomRightId;
+
+            ImGuiP.DockBuilderFinish(wnd.dockspaceId);
+
+            nodeOwners[mainId] = this; // main node considered permanently "owned"
         }
 
         private void ToolboxOnToolChanged(object? sender, EventArgs e) => InvalidateView();
@@ -135,6 +206,9 @@ namespace Replanetizer.Frames
             AddSubFrame(() => new HoverMetadataFrame(this.wnd, this));
 
             LoadLevel(level);
+
+            AddSubFrame(() => new ModelFrame(this.wnd, this, this.shaderTable, null));
+            AddSubFrame(() => new TextureFrame(this.wnd, this));
         }
 
         public static bool FrameMustClose(Frame frame)
@@ -261,6 +335,7 @@ namespace Replanetizer.Frames
                             }
                         );
                     }
+                    /*
                     if (ImGui.MenuItem("Model viewer"))
                     {
                         Model? initialModel = (selectedObjects.newestObject is ModelObject obj) ? obj.model : null;
@@ -275,6 +350,7 @@ namespace Replanetizer.Frames
                     {
                         AddSubFrame(() => new TextureFrame(this.wnd, this));
                     }
+                    */
                     if (ImGui.MenuItem("Lights"))
                     {
                         AddSubFrame(() => new LightsFrame(this.wnd, this, level.lights, level.lightConfig));
@@ -474,12 +550,21 @@ namespace Replanetizer.Frames
             mousePos = wnd.MousePosition - windowZero;
             contentRegion = new Rectangle((int) windowZero.X, (int) windowZero.Y, width, height);
         }
-
+        bool addedDefaultFrames = false;
         public override void RenderAsWindow(float deltaTime)
         {
             if (!initialized) CustomGLControl_Load();
 
             var viewport = ImGui.GetMainViewport();
+
+            SetupDefaultDockingLayout();
+
+            if (!addedDefaultFrames)
+            {
+                AddSubFrame(() => new RenderFrame(this.wnd, this));
+                AddSubFrame(() => new PropertyFrame(this.wnd, this));
+                addedDefaultFrames = true;
+            }
 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, SysVector2.Zero);
             ImGui.SetNextWindowDockID(wnd.dockspaceId, ImGuiCond.FirstUseEver);
@@ -495,6 +580,12 @@ namespace Replanetizer.Frames
             ImGui.End();
 
             RenderSubFrames(deltaTime);
+
+            if (!didFocusLevelTab)
+            {
+                ImGui.SetWindowFocus(frameName);
+                didFocusLevelTab = true;
+            }
         }
 
         public override void Render(float deltaTime)
@@ -1342,56 +1433,6 @@ namespace Replanetizer.Frames
             if (!subFrames.Contains(frame)) subFrames.Add(frame);
         }
 
-        public void LoadNewLevel(string path)
-        {
-            Level newLevel = new Level(path);
-
-            camera.CancelNavigation();
-            mouseGrabHandler.Cancel(wnd);
-            orbitMouseGrabHandler.Cancel(wnd);
-            zoomMouseGrabHandler.Cancel(wnd);
-            hook?.Dispose();
-            hook = null;
-            interactiveSession = false;
-
-            List<Func<Frame>> rebuild = new List<Func<Frame>>();
-            foreach (Frame sub in subFrames)
-            {
-                if (sub.isOpen && subFrameFactories.TryGetValue(sub, out var factory))
-                    rebuild.Add(factory);
-            }
-
-            foreach (Frame sub in subFrames)
-            {
-                sub.Dispose();
-            }
-            subFrames.Clear();
-            subFrameFactories.Clear();
-
-            levelRenderer?.Dispose();
-            levelRenderer = null;
-            DisposeLevelTextures();
-            selectedMissions.Clear();
-            selectedObjects.Clear();
-            level?.Dispose();
-
-            LoadLevel(newLevel);
-
-            foreach (Func<Frame> factory in rebuild)
-            {
-                AddSubFrame(factory);
-            }
-        }
-
-        private void DisposeLevelTextures()
-        {
-            foreach (var texture in textureIds.Values)
-            {
-                texture.Dispose();
-            }
-            textureIds.Clear();
-        }
-
         public override void Dispose()
         {
             camera.CancelNavigation();
@@ -1422,7 +1463,11 @@ namespace Replanetizer.Frames
 
             if (textureIds != null)
             {
-                DisposeLevelTextures();
+                foreach (var texture in textureIds.Values)
+                {
+                    texture.Dispose();
+                }
+                textureIds.Clear();
             }
 
             level?.Dispose();

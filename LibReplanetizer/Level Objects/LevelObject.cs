@@ -24,7 +24,7 @@ namespace LibReplanetizer.LevelObjects
         public Vector3 scale { get; set; } = new Vector3(1.0f);
         [Category("Attributes"), DisplayName("Rotation"), TypeConverter(typeof(Level_Objects.QuaternionTypeConverter))]
         public Quaternion rotation { get; set; } = Quaternion.Identity;
-        [Category("Attributes"), DisplayName("Reflection")]
+        [Category("Unknowns"), DisplayName("Reflection")]
         public Matrix4 reflection { get; set; } = Matrix4.Identity;
 
 

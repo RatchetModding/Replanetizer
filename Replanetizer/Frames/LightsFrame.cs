@@ -46,8 +46,8 @@ namespace Replanetizer.Frames
             if (ImGui.Begin(frameName, ref isOpen))
             {
                 Render(deltaTime);
-                ImGui.End();
             }
+            ImGui.End();
         }
 
         private Dictionary<string, Dictionary<string, PropertyInfo>> RecomputeSinglePropertiesSet(object o)

@@ -122,12 +122,12 @@ namespace Replanetizer.Frames
 
             uint targetNode = frame switch
             {
-                PropertyFrame => rightDockId != 0 ? rightDockId : wnd.dockspaceId,
-                LightsFrame => rightDockId != 0 ? rightDockId : wnd.dockspaceId,
+                // These are probably the most key frames to want to have docked when working in replanetizer.
                 RenderFrame => leftDockId != 0 ? leftDockId : wnd.dockspaceId,
-                MemoryHookFrame => bottomLeftDockId != 0 ? bottomLeftDockId : wnd.dockspaceId,
-                CameraControlFrame => bottomRightDockId != 0 ? bottomRightDockId : wnd.dockspaceId,
+                PropertyFrame => rightDockId != 0 ? rightDockId : wnd.dockspaceId,
+                // Would be nice to have lights etc. dock below propertyframe on the right, but.. yo
 
+                // We want these to be tabs of the main view.
                 TextureFrame => wnd.dockspaceId,
                 ModelFrame => wnd.dockspaceId,
                 _ => 0,
@@ -149,37 +149,28 @@ namespace Replanetizer.Frames
         }
 
         private uint rightDockId = 0;
-        private uint bottomDockId = 0;
         private uint leftDockId = 0;
-        private uint bottomLeftDockId = 0;
-        private uint bottomRightDockId = 0;
         private bool didFocusLevelTab = false;
         private unsafe void SetupDefaultDockingLayout()
         {
-            if (rightDockId != 0)
+            if (rightDockId != 0 || didFocusLevelTab)
                 return;
             
 
             uint mainId = wnd.dockspaceId;
-            uint rightId, leftId, bottomId, bottomLeftId, bottomRightId;
+            uint rightId, leftId;
 
-            ImGuiP.DockBuilderSplitNode(mainId, ImGuiDir.Left, 0.15f, &leftId, &mainId);
-            ImGuiP.DockBuilderSplitNode(mainId, ImGuiDir.Right, 0.20f, &rightId, &mainId);
-            ImGuiP.DockBuilderSplitNode(mainId, ImGuiDir.Down, 0.25f, &bottomId, &mainId);
-
-            // split the bottom strip into two halves
-            ImGuiP.DockBuilderSplitNode(bottomId, ImGuiDir.Left, 0.5f, &bottomLeftId, &bottomRightId);
+            ImGuiP.DockBuilderSplitNode(mainId, ImGuiDir.Left, 0.12f, &leftId, &mainId);
+            ImGuiP.DockBuilderSplitNode(mainId, ImGuiDir.Right, 0.15f, &rightId, &mainId);
 
             ImGuiP.DockBuilderDockWindow(WindowTitle, mainId);
 
             leftDockId = leftId;
             rightDockId = rightId;
-            bottomLeftDockId = bottomLeftId;
-            bottomRightDockId = bottomRightId;
 
             ImGuiP.DockBuilderFinish(wnd.dockspaceId);
 
-            nodeOwners[mainId] = this; // main node considered permanently "owned"
+            nodeOwners[mainId] = this;
         }
 
         private void ToolboxOnToolChanged(object? sender, EventArgs e) => InvalidateView();

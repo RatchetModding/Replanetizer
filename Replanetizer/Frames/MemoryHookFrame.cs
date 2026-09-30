@@ -45,8 +45,8 @@ Once the memory hook is engaged you will no longer be able to save the level in 
             if (ImGui.Begin(frameName, ref isOpen))
             {
                 Render(deltaTime);
-                ImGui.End();
             }
+            ImGui.End();
         }
 
         public override void Render(float deltaTime)

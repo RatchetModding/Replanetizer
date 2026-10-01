@@ -122,7 +122,27 @@ namespace Replanetizer.Frames
             if (ImGui.CollapsingHeader("Level textures"))
             {
                 RenderTextureList(level.textures, itemSizeX, levelFrame.textureIds, levelFrame, "levelTextures");
+
+                // We only allow additions to the level textures tab
+                if (ImGui.BeginPopupContextWindow("levelTexturesContextMenu", ImGuiPopupFlags.MouseButtonRight))
+                {
+                    if (ImGui.Button("Add Texture"))
+                    {
+                        var res = CrossFileDialog.OpenFile(filter: ".dds");
+                        if (res.Length > 0)
+                        {
+                            var (height, width, len) = TextureIO.ReadDDSHeader(res);
+                            byte[] data = TextureIO.ImportDDSTexture(res, len);
+
+                            Texture newTexture = new Texture(level.textures[^1].id + 1, width, height, data);
+                            level.textures.Add(newTexture);
+                            levelFrame.textureIds[newTexture] = new GLTexture(newTexture);
+                        }
+                    }
+                    ImGui.EndPopup();
+                }
             }
+
             if (ImGui.CollapsingHeader("Menu textures"))
             {
                 var menuTextures = level.textures.FindAll(tex => level.textureConfigMenus.Contains(tex.id));

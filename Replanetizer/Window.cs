@@ -19,6 +19,8 @@ using Replanetizer.Frames;
 using Replanetizer.Utils;
 using Replanetizer.Renderer;
 using SixLabors.ImageSharp.PixelFormats;
+using LibReplanetizer;
+using System.Diagnostics;
 
 namespace Replanetizer
 {
@@ -168,50 +170,31 @@ namespace Replanetizer
                             AddFrame(lf);
                         }
                     }
-                    if (ImGui.MenuItem("Open ps3data folder"))
+
+                    if (ImGui.MenuItem("Open ps3data / collection folder"))
                     {
                         var res = CrossFileDialog.OpenFolder();
-                        if (res.Length > 0) TryOpenFolder(res);
+                        if (res.Length > 0)
+                            TryOpenFolder(res);
                     }
 
                     if (ImGui.MenuItem("Quit"))
                     {
                         Environment.Exit(0);
                     }
+
                     ImGui.EndMenu();
                 }
 
-                // Put levels dropdown if it can find the game id in the path.
-                // This is probably stupid.
-                // Could probably be better to open the first engine.ps3 files it finds, and then from there maybe work out
-                // what game it is, since there is a way to detect gametype in the engine parser?
-                // Ahhhh.... I don't know.
-                if (activeGameId != null && rootFolder != null)
-                {
-                    var names = LevelLists.GetLevelNames(activeGameId, levelListsFolder);
-                    if (names != null && ImGui.BeginMenu("Levels"))
+                if (levels != null)
+                { 
+                    foreach (var (gameType, levelList) in levels.OrderBy(x => x.Key.num))
                     {
-                        foreach (var (id, name) in names.OrderBy(x => x.Key))
+                        if (ImGui.BeginMenu($"Levels (RC{gameType.num})"))
                         {
-                            string levelPath = Path.Join(rootFolder, $"level{id}", "engine.ps3");
-                            bool exists = File.Exists(levelPath);
-
-                            if (!exists)
-                                ImGui.BeginDisabled();
-
-                            if (ImGui.MenuItem(name))
-                            {
-                                foreach (var frame in openFrames.Where(FrameIsLevel))
-                                    frame.Dispose();
-
-                                openFrames.RemoveAll(FrameIsLevel);
-                                openFrames.Add(new LevelFrame(this, levelPath));
-                            }
-
-                            if (!exists)
-                                ImGui.EndDisabled();
+                            InstantiateGameSubmenu(levelList);
+                            ImGui.EndMenu();
                         }
-                        ImGui.EndMenu();
                     }
                 }
 
@@ -232,17 +215,50 @@ namespace Replanetizer
             }
         }
 
-        private string? rootFolder = null;
-        private string? activeGameId = null;
-        private string levelListsFolder = Path.Join(AppContext.BaseDirectory, "LevelLists");
+        /*
+         * List of levels found in the specified folder when using the
+         * "open ps3data folder" or "open collection root folder" action.
+         */
+        private Dictionary<GameType, List<LevelLists.LevelFileInfo>>? levels;
+
         private void TryOpenFolder(string folder)
         {
-            string? gameId = LevelLists.DetectGameFile(folder);
-            if (gameId == null)
-                return;
+            var gameLevels = LevelLists.ProbeDirectory(folder);
+            if (gameLevels != null)
+            {
+                levels = gameLevels;
+            }
+        }
 
-            rootFolder = folder;
-            activeGameId = gameId;
+        /*
+         * This function must be called while inside an ImGui.BeginMenu() block.
+         * Caller is responsible for the ImGui.EndMenu() call.
+         */
+        private void InstantiateGameSubmenu(List<LevelLists.LevelFileInfo> levels)
+        {
+            foreach (var level in levels.OrderBy(x => x.Id))
+            {
+                if (level.Location == null)
+                    ImGui.BeginDisabled();
+
+                if (ImGui.MenuItem(level.Name))
+                {
+                    /*
+                     * This should be unreachable if the button is disabled,
+                     * which is the case if level.Location is null.
+                     */
+                    Debug.Assert(level.Location != null);
+
+                    foreach (var frame in openFrames.Where(FrameIsLevel))
+                        frame.Dispose();
+
+                    openFrames.RemoveAll(FrameIsLevel);
+                    openFrames.Add(new LevelFrame(this, level.Location));
+                }
+
+                if (level.Location == null)
+                    ImGui.EndDisabled();
+            }
         }
 
         private void RenderUI(float deltaTime)

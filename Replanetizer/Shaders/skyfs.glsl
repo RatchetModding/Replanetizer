@@ -12,11 +12,14 @@ layout(location = 1) out int id;
 uniform sampler2D mainTexture;
 uniform float texAvailable;
 
+/* Must match the value in Replanetizer/Renderer/RendererObjectType.cs */
+const int RenderedObjectType_Skybox = 255;
+
 void main() {
 	vec4 textureColor = texture(mainTexture, UV);
 
 	color.xyz = 1.5f * mix(lightColor.xyz, textureColor.xyz, texAvailable);
 	color.w = textureColor.w * lightColor.w * 2.0f;
 
-	id = (999 << 24);
+	id = (RenderedObjectType_Skybox << 24);
 }

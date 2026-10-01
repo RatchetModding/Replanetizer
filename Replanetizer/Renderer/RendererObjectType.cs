@@ -9,6 +9,7 @@ using LibReplanetizer.LevelObjects;
 
 namespace Replanetizer.Renderer
 {
+    /* Values must fit in one byte! */
     public enum RenderedObjectType
     {
         Null = 0,
@@ -29,7 +30,12 @@ namespace Replanetizer.Renderer
         GrindPath = 15,
         Tool = 16,
         Collision = 17,
-        Skybox = 999
+
+        /*
+         * NOTE: this value must be kept in sync with the value 
+         * hardcoded in shader file Replanetizer/Shaders/skyfs.glsl
+         */
+        Skybox = 255
     }
 
     public static class RenderedObjectTypeUtils

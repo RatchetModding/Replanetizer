@@ -60,6 +60,20 @@ namespace LibReplanetizer.Models
             }
 
         }
+        public TerrainModel(float[] vertexBuffer, ushort[] indexBuffer, byte[] rgbas, List<TextureConfig> textureConfig)
+        {
+            id = GetIDAssigned();
+            size = 1.0f;
+
+            this.vertexBuffer = vertexBuffer;
+            this.indexBuffer = indexBuffer;
+            this.rgbas = rgbas;
+            this.textureConfig = textureConfig;
+            _faceCount = indexBuffer.Length / 3;
+
+            int count = vertexBuffer.Length / 8; // pos xyz, norm xyz, uv xy
+            this.lights = new List<int>(new int[count]);
+        }
 
         public byte[] SerializeVerts(Matrix4 mat)
         {

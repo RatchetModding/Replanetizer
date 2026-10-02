@@ -26,6 +26,7 @@ using static LibReplanetizer.Utilities;
 using Texture = LibReplanetizer.Texture;
 using SixLabors.ImageSharp;
 using LibReplanetizer.Models;
+using LibReplanetizer.Serializers.Importers;
 
 namespace Replanetizer.Frames
 {
@@ -301,6 +302,23 @@ namespace Replanetizer.Frames
                                     level.collisionEngine = new Collision(fs, 0, import: true);
                             }
                             InvalidateView();
+                        }
+                        if (ImGui.MenuItem("Terrain"))
+                        {
+                            var res = CrossFileDialog.OpenFile(filter: ".obj");
+                            if (res.Length > 0)
+                            {
+                                var geometry = new WavefrontImporter().Import(res);
+                                var terrain = TerrainBuilder.Build(geometry, level.terrainEngine.levelNumber);
+
+                                level.terrainEngine = terrain;
+
+                                levelRenderer?.Dispose();
+                                levelRenderer = new LevelRenderer(shaderTable, textureIds);
+                                levelRenderer.Include(level);
+
+                                InvalidateView();
+                            }
                         }
                         ImGui.EndMenu();
                     }

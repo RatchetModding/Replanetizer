@@ -123,5 +123,20 @@ namespace Replanetizer.Utils
 
             return data;
         }
+        public static (short height, short width, int len) ReadDDSHeader(string path)
+        {
+            byte[] ddsHead = new byte[128];
+            long length;
+            using (var fs = File.OpenRead(path))
+            {
+                fs.Read(ddsHead, 0, 128);
+                length = fs.Length - 128;
+            }
+
+            short height = BitConverter.ToInt16(ddsHead, 12);
+            short width = BitConverter.ToInt16(ddsHead, 16);
+
+            return (height, width, (int) length);
+        }
     }
 }

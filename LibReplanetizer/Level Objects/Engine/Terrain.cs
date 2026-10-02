@@ -43,8 +43,8 @@ namespace LibReplanetizer.LevelObjects
         // 0x18 = vertex offset, vertex count
         [Category("Unknowns"), DisplayName("OFF_1C: Always 65535")]
         public ushort off1C { get; set; }   // Always 0xffff
-        [Category("Unknowns"), DisplayName("OFF_1E: Fragment ID")]
-        public ushort off1E { get; set; }   // 0 in rac1, index in rac2/3
+        [Category("Attributes"), DisplayName("Fragment ID")]
+        public ushort fragmentId { get; set; }   // 0 in rac1, index in rac2/3
 
         [Category("Unknowns"), DisplayName("OFF_1C: Always 65280")]
         public ushort off20 { get; set; }   // Always 0xff00
@@ -69,7 +69,7 @@ namespace LibReplanetizer.LevelObjects
             this.baseCullingSize = referenceTfrag.baseCullingSize;
 
             this.off1C = referenceTfrag.off1C;
-            this.off1E = referenceTfrag.off1E;
+            this.fragmentId = referenceTfrag.fragmentId;
             this.off20 = referenceTfrag.off20;
             this.off24 = referenceTfrag.off24;
             this.off28 = referenceTfrag.off28;
@@ -78,6 +78,18 @@ namespace LibReplanetizer.LevelObjects
             this.model = referenceTfrag.model;
 
             UpdateTransformMatrix();
+        }
+        public TerrainFragment(TerrainModel terrainModel, Vector3 cullingCenter, float cullingSize, ushort fragmentId)
+        {
+            this.model = terrainModel;
+            this.modelID = terrainModel.id;
+            this.cullingCenter = cullingCenter;
+            this.cullingSize = cullingSize;
+            this.baseCullingSize = cullingSize;
+
+            off1C = 0xFFFF;
+            this.fragmentId = fragmentId;
+            off20 = 0xFF00;
         }
 
 
@@ -92,7 +104,7 @@ namespace LibReplanetizer.LevelObjects
             baseCullingSize = cullingSize;
 
             off1C = ReadUshort(tfragBlock, offset + 0x1C);
-            off1E = ReadUshort(tfragBlock, offset + 0x1E);
+            fragmentId = ReadUshort(tfragBlock, offset + 0x1E);
 
             off20 = ReadUshort(tfragBlock, offset + 0x20);
             off24 = ReadUint(tfragBlock, offset + 0x24);
@@ -156,7 +168,7 @@ namespace LibReplanetizer.LevelObjects
             WriteInt(head, 0x14, 0);
             WriteInt(head, 0x18, 0);
             WriteUshort(head, 0x1C, off1C);
-            WriteUshort(head, 0x1E, off1E);
+            WriteUshort(head, 0x1E, fragmentId);
 
             WriteUshort(head, 0x20, off20);
             WriteUshort(head, 0x22, 0);

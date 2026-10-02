@@ -39,6 +39,23 @@ namespace Replanetizer.Renderer
         private List<LevelObject> objects = new List<LevelObject>();
         private List<RenderedObjectType> types = new List<RenderedObjectType>();
 
+        /*
+         * Loads PNG from Icons folder as GLTexture.
+         * Returns null if the file does not exist.
+         */
+        private static GLTexture? LoadIconImage(string imageFileName)
+        {
+            string imagePath = Path.Join(System.AppContext.BaseDirectory, "Icons", imageFileName);
+            if (!File.Exists(imagePath))
+            {
+                return null;
+            }
+
+            var image = Image.Load<Rgba32>(imagePath);
+
+            return new GLTexture("BillboardTexture", image, false, false);
+        }
+
         static BillboardRenderer()
         {
             GL.GenVertexArrays(1, out vao);
@@ -58,31 +75,36 @@ namespace Replanetizer.Renderer
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 4, sizeof(float) * 2);
 
-            string? applicationFolder = System.AppContext.BaseDirectory;
-            string iconsFolder = Path.Join(applicationFolder, "Icons");
+            GLTexture? placeholderTex = LoadIconImage("Placeholder.png");
+            if (placeholderTex == null)
+            {
+                throw new FileNotFoundException("Placeholder icon (Placeholder.png) is missing!");
+            }
 
-            // Only a single placeholder texture currently.
-
-            using Image<Rgba32> image = Image.Load<Rgba32>(Path.Join(iconsFolder, "Placeholder.png"));
-            GLTexture placeholderTex = new GLTexture("BillboardTexture", image, false, true);
-
+            /* placeholderTex is used for all object types which we never expect
+             * to render as billboards, and as fallback of types we DO expect to
+             * render as billboards but for which an icon is missing.
+             *
+             * Mobys are usually rendered with a model: the billboad is used only
+             * for meshless mobys (which are usually level logic controllers).
+             */
             billboardTextures = new Dictionary<RenderedObjectType, GLTexture>();
             billboardTextures.Add(RenderedObjectType.Null, placeholderTex);
             billboardTextures.Add(RenderedObjectType.Terrain, placeholderTex);
             billboardTextures.Add(RenderedObjectType.Shrub, placeholderTex);
             billboardTextures.Add(RenderedObjectType.Tie, placeholderTex);
-            billboardTextures.Add(RenderedObjectType.Moby, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.Moby, LoadIconImage("Moby.png") ?? placeholderTex);
             billboardTextures.Add(RenderedObjectType.Spline, placeholderTex);
             billboardTextures.Add(RenderedObjectType.Cuboid, placeholderTex);
             billboardTextures.Add(RenderedObjectType.Sphere, placeholderTex);
             billboardTextures.Add(RenderedObjectType.Cylinder, placeholderTex);
             billboardTextures.Add(RenderedObjectType.Pill, placeholderTex);
-            billboardTextures.Add(RenderedObjectType.SoundInstance, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.SoundInstance, LoadIconImage("SoundInstance.png") ?? placeholderTex);
             billboardTextures.Add(RenderedObjectType.GameCamera, placeholderTex);
-            billboardTextures.Add(RenderedObjectType.PointLight, placeholderTex);
-            billboardTextures.Add(RenderedObjectType.EnvSample, placeholderTex);
-            billboardTextures.Add(RenderedObjectType.EnvTransition, placeholderTex);
-            billboardTextures.Add(RenderedObjectType.GrindPath, placeholderTex);
+            billboardTextures.Add(RenderedObjectType.PointLight, LoadIconImage("PointLight.png") ?? placeholderTex);
+            billboardTextures.Add(RenderedObjectType.EnvSample, LoadIconImage("EnvSample.png") ?? placeholderTex);
+            billboardTextures.Add(RenderedObjectType.EnvTransition, LoadIconImage("EnvTransition.png") ?? placeholderTex);
+            billboardTextures.Add(RenderedObjectType.GrindPath, LoadIconImage("GrindPath.png") ?? placeholderTex);
             billboardTextures.Add(RenderedObjectType.Tool, placeholderTex);
             billboardTextures.Add(RenderedObjectType.Skybox, placeholderTex);
         }

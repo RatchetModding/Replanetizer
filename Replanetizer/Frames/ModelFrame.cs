@@ -136,18 +136,18 @@ namespace Replanetizer.Frames
                 sortedMobyloadModels.Add(new List<Model>(level.mobyloadModels[i]));
             }
 
-            sortedMobyModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
-            sortedTieModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
-            sortedShrubModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
-            sortedGadgetModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
-            sortedSpaceshipModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+            sortedMobyModels.Sort((x, y) => (x.id == y.id) ? 0 : ((x.id < y.id) ? -1 : 1));
+            sortedTieModels.Sort((x, y) => (x.id == y.id) ? 0 : ((x.id < y.id) ? -1 : 1));
+            sortedShrubModels.Sort((x, y) => (x.id == y.id) ? 0 : ((x.id < y.id) ? -1 : 1));
+            sortedGadgetModels.Sort((x, y) => (x.id == y.id) ? 0 : ((x.id < y.id) ? -1 : 1));
+            sortedSpaceshipModels.Sort((x, y) => (x.id == y.id) ? 0 : ((x.id < y.id) ? -1 : 1));
             foreach (List<Model> list in sortedMissionModels)
             {
-                list.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+                list.Sort((x, y) => (x.id == y.id) ? 0 : ((x.id < y.id) ? -1 : 1));
             }
             foreach (List<Model> list in sortedMobyloadModels)
             {
-                list.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+                list.Sort((x, y) => (x.id == y.id) ? 0 : ((x.id < y.id) ? -1 : 1));
             }
 
             UpdateWindowSize();

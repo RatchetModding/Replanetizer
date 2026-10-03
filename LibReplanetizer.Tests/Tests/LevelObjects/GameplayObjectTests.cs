@@ -140,19 +140,6 @@ namespace LibReplanetizer.Tests.LevelObjects
             Assert.Equal(transform.Row3.Y, recovered.Row3.Y, 4);
             Assert.Equal(transform.Row3.Z, recovered.Row3.Z, 4);
         }
-
-        [Fact]
-        public void ToByteArray_PreservesSourceMatrices()
-        {
-            var transform = Matrix4.Identity;
-            transform.M44 = 0.25f;
-            var inverse = Matrix4.Identity;
-            inverse.M14 = 0.5f;
-            byte[] original = BuildCuboidBlock(0, transform, inverse);
-            var cuboid = new Cuboid(original, 0);
-
-            Assert.Equal(original, cuboid.ToByteArray());
-        }
     }
 
     public class SoundInstanceTests

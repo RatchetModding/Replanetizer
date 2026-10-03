@@ -900,8 +900,8 @@ namespace Replanetizer.Frames
                 return false;
             }
 
-            cameraAzimuth += wnd.MouseState.Delta.X * deltaTime;
-            cameraAltitude += wnd.MouseState.Delta.Y * deltaTime;
+            cameraAzimuth += wnd.MouseState.Delta.X * 0.016666f;
+            cameraAltitude += wnd.MouseState.Delta.Y * 0.016666f;
 
             if (cameraAltitude > MathF.PI * 0.5f - 0.01f)
             {

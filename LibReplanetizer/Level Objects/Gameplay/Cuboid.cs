@@ -60,6 +60,7 @@ namespace LibReplanetizer.LevelObjects
             rotation = modelMatrix.ExtractRotation();
             position = modelMatrix.ExtractTranslation();
             scale = modelMatrix.ExtractScale();
+            base.UpdateTransformMatrix();
         }
 
         public override void UpdateTransformMatrix()

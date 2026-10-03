@@ -5,6 +5,9 @@
 // either version 3 of the License, or (at your option) any later version.
 // Please see the LICENSE.md file for more details.
 
+using System.IO;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using Xunit;
 using static LibReplanetizer.DataFunctions;
 
@@ -96,6 +99,98 @@ namespace LibReplanetizer.Tests.Models
             Assert.Equal(64, tex.height);
             Assert.Equal(Texture.CompressionFormat.BC3, tex.compressionFormat);
             Assert.Equal(1, tex.mipMapCount);
+        }
+
+        [Fact]
+        public void DecompressDxt1_UsesTransparentPaletteWhenEndpointsAreOrdered()
+        {
+            byte[] block = BuildDxt1Block(0x0000, 0xFFFF, 0xFFFFFFFE);
+
+            byte[] decoded = Texture.DecompressDxt1(block, 4, 4)!;
+
+            Assert.Equal(4 * 4 * 4, decoded.Length);
+            Assert.InRange(decoded[0], (byte) 1, (byte) 254);
+            Assert.InRange(decoded[1], (byte) 1, (byte) 254);
+            Assert.InRange(decoded[2], (byte) 1, (byte) 254);
+            Assert.Equal(255, decoded[3]);
+            Assert.Equal(new byte[] { 0, 0, 0, 0 }, decoded[4..8]);
+        }
+
+        [Fact]
+        public void DecompressDxt1_KeepsSelectorThreeOpaqueWhenEndpointsAreReversed()
+        {
+            byte[] block = BuildDxt1Block(0xFFFF, 0x0000, 0xFFFFFFFF);
+
+            byte[] decoded = Texture.DecompressDxt1(block, 4, 4)!;
+
+            Assert.Equal(4 * 4 * 4, decoded.Length);
+            for (int i = 0; i < 4 * 4; i++)
+            {
+                Assert.Equal(255, decoded[i * 4 + 3]);
+            }
+        }
+
+        [Fact]
+        public void DecompressDxt3_DecodesExplicitAlphaAndClipsPartialBlocks()
+        {
+            byte[] block = BuildDxt3Block();
+
+            byte[] decoded = Texture.DecompressDxt3(block, 3, 2)!;
+
+            Assert.Equal(3 * 2 * 4, decoded.Length);
+            Assert.Equal(0, decoded[3]);
+            Assert.Equal(255, decoded[7]);
+            Assert.Equal(34, decoded[11]);
+            Assert.Equal(136, decoded[15]);
+        }
+
+        [Fact]
+        public void GetTextureImage_Dxt3FormatDecodesAndCanForceOpaqueAlpha()
+        {
+            using var tex = new Texture(0, 4, 4, BuildDxt3Block(), Texture.CompressionFormat.BC2);
+            using var image = tex.GetTextureImage(false);
+            Assert.NotNull(image);
+
+            using var stream = new MemoryStream();
+            image!.SaveAsPng(stream);
+            stream.Position = 0;
+            using Image<Bgra32> decoded = Image.Load<Bgra32>(stream);
+
+            Assert.Equal(255, decoded[0, 0].A);
+        }
+
+        private static byte[] BuildDxt1Block(ushort color0, ushort color1, uint selectors)
+        {
+            byte[] block = new byte[8];
+            block[0] = (byte) color0;
+            block[1] = (byte) (color0 >> 8);
+            block[2] = (byte) color1;
+            block[3] = (byte) (color1 >> 8);
+            block[4] = (byte) selectors;
+            block[5] = (byte) (selectors >> 8);
+            block[6] = (byte) (selectors >> 16);
+            block[7] = (byte) (selectors >> 24);
+            return block;
+        }
+
+        private static byte[] BuildDxt3Block()
+        {
+            byte[] block = new byte[16];
+            block[0] = 0xF0;
+            block[1] = 0x82;
+            for (int i = 2; i < 8; i++)
+            {
+                block[i] = 0x11;
+            }
+
+            block[10] = 0xFF;
+            block[11] = 0xFF;
+            for (int i = 12; i < 16; i++)
+            {
+                block[i] = 0xFF;
+            }
+
+            return block;
         }
     }
 }

@@ -367,6 +367,24 @@ namespace LibReplanetizer.Tests.LevelObjects
             Assert.Equal(33, ReadInt(serialized, 0x28));
         }
 
+        [Fact]
+        public void RC1_ToByteArray_PreservesUnchangedRotationAngles()
+        {
+            const float rotationX = 0.2f;
+            const float rotationY = -0.4f;
+            const float rotationZ = 0.6f;
+            byte[] block = BuildRC1Block(0, 0, 0, 0, 0, 0, 0, 1f, 0, 0,
+                0f, 0f, 0f, rotationX, rotationY, rotationZ,
+                0, 0, 0f, -1, 0, 0, 0, 0, 0, 0, 0);
+            var moby = new Moby(GameType.RaC1, block, 0, new List<Model>(), new List<byte[]>());
+
+            byte[] serialized = moby.ToByteArray();
+
+            Assert.Equal(rotationX, ReadFloat(serialized, 0x3C));
+            Assert.Equal(rotationY, ReadFloat(serialized, 0x40));
+            Assert.Equal(rotationZ, ReadFloat(serialized, 0x44));
+        }
+
         // ── Parameterless constructor ─────────────────────────────────────────────
 
         [Fact]

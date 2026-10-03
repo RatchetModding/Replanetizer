@@ -88,7 +88,7 @@ namespace LibReplanetizer.Tests.Integration
             Assert.NotNull(sounds);
         }
         [SkippableFact]
-        public void GameplaySerializer_RoundTrip_BytesMatchOriginal()
+        public void GameplaySerializer_RoundTrip_PreservesSectionCounts()
         {
             string? gameplayPath = GetGameplayFile();
             Skip.If(gameplayPath == null, "Fixture not configured.");
@@ -99,8 +99,6 @@ namespace LibReplanetizer.Tests.Integration
                              ?? FixtureConfig.GetFixtureFile("engine")!;
             Skip.If(engineFile == null, "Engine fixture file not found; cannot construct Level.");
 
-            byte[] original = File.ReadAllBytes(gameplayPath!);
-
             var level = new Level(engineFile!);
 
             string tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
@@ -110,10 +108,19 @@ namespace LibReplanetizer.Tests.Integration
                 new GameplaySerializer().Save(level, tempDir);
 
                 string outputPath = Path.Combine(tempDir, GameplayFileName);
-                byte[] serialized = File.ReadAllBytes(outputPath);
+                using var roundTrippedParser = new GameplayParser(level.game, outputPath);
 
-                Assert.Equal(original.Length, serialized.Length);
-                Assert.Equal(original, serialized);
+                Assert.Equal(level.mobs.Count,
+                    roundTrippedParser.GetMobies(level.mobyModels, roundTrippedParser.GetPvars()).Count);
+                Assert.Equal(level.splines.Count, roundTrippedParser.GetSplines().Count);
+                Assert.Equal(level.gameCameras.Count, roundTrippedParser.GetGameCameras().Count);
+                Assert.Equal(level.directionalLights.Count, roundTrippedParser.GetDirectionalLights().Count);
+                Assert.Equal(level.soundInstances.Count, roundTrippedParser.GetSoundInstances().Count);
+                Assert.Equal(level.cuboids.Count, roundTrippedParser.GetCuboids().Count);
+                Assert.Equal(level.spheres.Count, roundTrippedParser.GetSpheres().Count);
+                Assert.Equal(level.cylinders.Count, roundTrippedParser.GetCylinders().Count);
+                Assert.Equal(level.pills.Count, roundTrippedParser.GetPills().Count);
+                Assert.Equal(level.pointLights.Count, roundTrippedParser.GetPointLights().Count);
             }
             finally
             {

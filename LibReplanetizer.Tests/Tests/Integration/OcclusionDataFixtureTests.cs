@@ -51,9 +51,10 @@ namespace LibReplanetizer.Tests.Integration
             var data = parser.GetOcclusionData();
             Skip.If(data == null, "Level has no occlusion data.");
 
-            int expected = 0x10 + data!.mobyData.Count * 0x08
-                                + data.tieData.Count * 0x08
-                                + data.shrubData.Count * 0x08;
+            int unalignedExpected = 0x10 + data!.mobyData.Count * 0x08
+                                          + data.tieData.Count * 0x08
+                                          + data.shrubData.Count * 0x08;
+            int expected = (unalignedExpected + 0x3F) & ~0x3F;
             Assert.Equal(expected, data.ToByteArray().Length);
         }
     }

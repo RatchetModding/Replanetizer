@@ -182,6 +182,7 @@ namespace LibReplanetizer.Tests.Models
             {
                 block[i] = 0x11;
             }
+            block[2] = 0x18;
 
             block[10] = 0xFF;
             block[11] = 0xFF;

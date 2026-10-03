@@ -172,6 +172,9 @@ namespace LibReplanetizer.LevelObjects
         public Matrix4 collisionTriangleMatrix;
         public Vector3 collisionPosition { get; set; }
 
+        private Vector3 originalRotationEulerAngles;
+        private Quaternion originalRotation;
+
         // This should probably get removed, not enough information are available to construct a moby like that
         public Moby(GameType game)
         {
@@ -313,9 +316,9 @@ namespace LibReplanetizer.LevelObjects
             light = ReadInt(mobyBlock, offset + 0x70);
             cutscene = ReadInt(mobyBlock, offset + 0x74);
 
-            color = Color.FromRgb((byte)r, (byte)g, (byte)b).ToPixel<Rgb24>();
+            color = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
             position = new Vector3(x, y, z);
-            rotation = new Quaternion(rotx, roty, rotz);
+            SetRotationFromEulerAngles(rotx, roty, rotz);
             scale = new Vector3(scaleHolder, scaleHolder, scaleHolder);
 
             collisionPosition = position;
@@ -374,9 +377,9 @@ namespace LibReplanetizer.LevelObjects
             light = ReadInt(mobyBlock, offset + 0x80);
             cutscene = ReadInt(mobyBlock, offset + 0x84);
 
-            color = Color.FromRgb((byte)r, (byte)g, (byte)b).ToPixel<Rgb24>();
+            color = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
             position = new Vector3(x, y, z);
-            rotation = new Quaternion(rotx, roty, rotz);
+            SetRotationFromEulerAngles(rotx, roty, rotz);
             scale = new Vector3(scaleHolder); //Mobys only use the X axis of scale
 
             collisionPosition = position;
@@ -429,9 +432,9 @@ namespace LibReplanetizer.LevelObjects
 
             cutscene = 0;
 
-            color = Color.FromRgb((byte)r, (byte)g, (byte)b).ToPixel<Rgb24>();
+            color = Color.FromRgb((byte) r, (byte) g, (byte) b).ToPixel<Rgb24>();
             position = new Vector3(x, y, z);
-            rotation = new Quaternion(rotx, roty, rotz);
+            SetRotationFromEulerAngles(rotx, roty, rotz);
             scale = new Vector3(scaleHolder); //Mobys only use the X axis of scale
 
             collisionPosition = position;
@@ -456,9 +459,23 @@ namespace LibReplanetizer.LevelObjects
             }
         }
 
+        private void SetRotationFromEulerAngles(float x, float y, float z)
+        {
+            rotation = new Quaternion(x, y, z);
+            originalRotationEulerAngles = new Vector3(x, y, z);
+            originalRotation = rotation;
+        }
+
+        private Vector3 GetRotationEulerAngles()
+        {
+            return rotation.Equals(originalRotation)
+                ? originalRotationEulerAngles
+                : rotation.ToEulerAngles();
+        }
+
         private byte[] ToByteArrayRC1()
         {
-            Vector3 eulerAngles = rotation.ToEulerAngles();
+            Vector3 eulerAngles = GetRotationEulerAngles();
 
             byte[] buffer = new byte[game.mobyElemSize];
 
@@ -508,7 +525,7 @@ namespace LibReplanetizer.LevelObjects
 
         private byte[] ToByteArrayRC23()
         {
-            Vector3 eulerAngles = rotation.ToEulerAngles();
+            Vector3 eulerAngles = GetRotationEulerAngles();
 
             byte[] buffer = new byte[game.mobyElemSize];
 
@@ -564,7 +581,7 @@ namespace LibReplanetizer.LevelObjects
 
         private byte[] ToByteArrayDL()
         {
-            Vector3 eulerAngles = rotation.ToEulerAngles();
+            Vector3 eulerAngles = GetRotationEulerAngles();
 
             byte[] buffer = new byte[game.mobyElemSize];
 
@@ -969,7 +986,7 @@ namespace LibReplanetizer.LevelObjects
 
                     for (int i = 0; i < layer.boneCount; i++)
                     {
-                        uint animationDataAddress = layer.pAnimation + (uint)(i * ANIMATION_DATA_SIZE);
+                        uint animationDataAddress = layer.pAnimation + (uint) (i * ANIMATION_DATA_SIZE);
                         if (!readMemory(animationDataAddress, animationDataBuffer)) break;
 
                         layer.animationData.Add(new AnimationData
@@ -1236,7 +1253,7 @@ namespace LibReplanetizer.LevelObjects
                 collPos = new Vector4(collX, collY, collZ, collW);
                 position = new Vector4(X, Y, Z, W);
                 rotation = new Vector4(rotX, rotY, rotZ, rotW);
-                color = Color.FromRgb((byte)red, (byte)green, (byte)blue).ToPixel<Rgb24>();
+                color = Color.FromRgb((byte) red, (byte) green, (byte) blue).ToPixel<Rgb24>();
 
                 if (updateID == byte.MaxValue)
                     Utilities.DebugAssert(pPreviousAnimationData == 0x00A2C5C0u + previousAnimationFrame * 0x800, "Pointer should have originated from cache!");
@@ -1300,7 +1317,7 @@ namespace LibReplanetizer.LevelObjects
                 collPos = new Vector4(collX, collY, -collZ, collW);
                 position = new Vector4(X, Y, Z, W);
                 rotation = new Vector4(rotX, rotY, rotZ, rotW);
-                color = Color.FromRgb((byte)red, (byte)green, (byte)blue).ToPixel<Rgb24>();
+                color = Color.FromRgb((byte) red, (byte) green, (byte) blue).ToPixel<Rgb24>();
             }
         }
 

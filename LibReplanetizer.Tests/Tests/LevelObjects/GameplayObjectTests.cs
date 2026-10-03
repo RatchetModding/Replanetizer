@@ -140,6 +140,19 @@ namespace LibReplanetizer.Tests.LevelObjects
             Assert.Equal(transform.Row3.Y, recovered.Row3.Y, 4);
             Assert.Equal(transform.Row3.Z, recovered.Row3.Z, 4);
         }
+
+        [Fact]
+        public void ToByteArray_PreservesSourceMatrices()
+        {
+            var transform = Matrix4.Identity;
+            transform.M44 = 0.25f;
+            var inverse = Matrix4.Identity;
+            inverse.M14 = 0.5f;
+            byte[] original = BuildCuboidBlock(0, transform, inverse);
+            var cuboid = new Cuboid(original, 0);
+
+            Assert.Equal(original, cuboid.ToByteArray());
+        }
     }
 
     public class SoundInstanceTests
@@ -183,6 +196,23 @@ namespace LibReplanetizer.Tests.LevelObjects
             Assert.Equal(original[0], serialized[0]);
             Assert.Equal(original[1], serialized[1]);
             Assert.Equal(ReadFloat(original, 0x0C), ReadFloat(serialized, 0x0C));
+        }
+
+        [Fact]
+        public void ToByteArray_PreservesNonIdentityMatrices()
+        {
+            byte[] original = BuildBlock(0, 42, 7, 0xDEAD, 3, 15.5f);
+            Quaternion rotation = Quaternion.FromEulerAngles(new Vector3(0.2f, 0.4f, 0.6f));
+            Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(rotation);
+            Matrix4 transform = Matrix4.CreateScale(new Vector3(2f, 3f, 4f))
+                * rotationMatrix
+                * Matrix4.CreateTranslation(new Vector3(5f, 6f, 7f));
+            WriteMatrix4(original, 0x10, transform);
+            WriteMatrix4(original, 0x50, rotationMatrix.Inverted());
+
+            var si = new SoundInstance(original, 0);
+
+            Assert.Equal(original, si.ToByteArray());
         }
     }
 

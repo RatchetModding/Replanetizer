@@ -58,7 +58,6 @@ namespace LibReplanetizer
                 public int gltfIndexAccessorBaseIndex;
 
                 public int gltfTextureSamplerBaseIndex;
-                public int gltfTextureBaseIndex;
                 public int gltfMaterialBaseIndex;
 
                 public MeshContainer(Model model, float size, bool skyboxModel, bool hasNormals, bool hasVertexColors, bool includeSkeleton)
@@ -139,6 +138,11 @@ namespace LibReplanetizer
                             for (int j = 0; j < 4; j++)
                             {
                                 sum += weights[j];
+                            }
+
+                            if (sum == 0)
+                            {
+                                throw new InvalidDataException($"Model {model.id} has all-zero skin weights at vertex {i}.");
                             }
 
                             while (sum > 255)
@@ -397,11 +401,11 @@ namespace LibReplanetizer
                     this.pbrMetallicRoughness = pbrMetallicRoughness;
                 }
 
-                public GLTFMaterialEntry(TextureConfig conf, int texOffset)
+                public GLTFMaterialEntry(TextureConfig conf, int texOffset, bool hasTexture = true)
                 {
                     this.name = "Material_" + texOffset + "_" + conf.id;
-                    this.alphaMode = (conf.IgnoresTransparency() || conf.id < 0) ? GLTFMaterialEntry.OPAQUE : GLTFMaterialEntry.MASK;
-                    this.pbrMetallicRoughness = new GLTFMaterialEntry.GLTFMaterialPBRValues(texOffset, conf.id);
+                    this.alphaMode = (conf.IgnoresTransparency() || conf.id < 0 || !hasTexture) ? GLTFMaterialEntry.OPAQUE : GLTFMaterialEntry.MASK;
+                    this.pbrMetallicRoughness = new GLTFMaterialEntry.GLTFMaterialPBRValues(texOffset, hasTexture ? conf.id : -1);
                 }
             }
 
@@ -842,11 +846,7 @@ namespace LibReplanetizer
                     if (animations.Count == 0) exportAnimations = false;
                 }
 
-                int numMeshes = settings.includeBangles ? 1 + model.GetSubModelCount() : 1;
-
-                GLTFUtils.MeshContainer[] meshContainers = new GLTFUtils.MeshContainer[numMeshes];
-
-                meshContainers[0] = new GLTFUtils.MeshContainer(model, model.size, skyboxModel, hasNormals, hasVertexColors, includeSkeleton);
+                List<Model> models = new List<Model> { model };
 
                 if (settings.includeBangles)
                 {
@@ -856,8 +856,14 @@ namespace LibReplanetizer
 
                         if (subModel == null) continue;
 
-                        meshContainers[1 + i] = new GLTFUtils.MeshContainer(subModel, model.size, skyboxModel, hasNormals, hasVertexColors, includeSkeleton);
+                        models.Add(subModel);
                     }
+                }
+
+                GLTFUtils.MeshContainer[] meshContainers = new GLTFUtils.MeshContainer[models.Count];
+                for (int i = 0; i < models.Count; i++)
+                {
+                    meshContainers[i] = new GLTFUtils.MeshContainer(models[i], model.size, skyboxModel, hasNormals, hasVertexColors, includeSkeleton);
                 }
 
                 // Construct Vertex Buffer for glTF export
@@ -1381,11 +1387,15 @@ namespace LibReplanetizer
                 ////
 
                 List<GLTFTextureEntry> listTextures = new List<GLTFTextureEntry>();
+                int[][] meshTextureIndices = new int[meshContainers.Length][];
+                bool embeddedTexturesAvailable = settings.embedTextures && textures != null;
                 for (int i = 0; i < meshContainers.Length; i++)
                 {
                     GLTFUtils.MeshContainer meshContainer = meshContainers[i];
 
-                    meshContainer.gltfTextureBaseIndex = listTextures.Count;
+                    int[] configTextureIndices = new int[meshContainer.model.textureConfig.Count];
+                    Array.Fill(configTextureIndices, -1);
+                    meshTextureIndices[i] = configTextureIndices;
 
                     int validTextureConfigIndex = 0;
                     for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
@@ -1395,7 +1405,16 @@ namespace LibReplanetizer
                         if (conf.id < 0)
                             continue;
 
-                        listTextures.Add(new GLTFTextureEntry(meshContainer.gltfTextureSamplerBaseIndex + validTextureConfigIndex++, texIDToImageOffset[conf.id]));
+                        if (embeddedTexturesAvailable && !texIDToImageOffset.ContainsKey(conf.id))
+                        {
+                            validTextureConfigIndex++;
+                            continue;
+                        }
+
+                        int source = texIDToImageOffset[conf.id];
+                        configTextureIndices[j] = listTextures.Count;
+                        listTextures.Add(new GLTFTextureEntry(meshContainer.gltfTextureSamplerBaseIndex + validTextureConfigIndex, source));
+                        validTextureConfigIndex++;
                     }
                 }
 
@@ -1412,7 +1431,6 @@ namespace LibReplanetizer
 
                     meshContainer.gltfMaterialBaseIndex = listMaterials.Count;
 
-                    int validTextureConfigIndex = 0;
                     for (int j = 0; j < meshContainer.model.textureConfig.Count; j++)
                     {
                         TextureConfig conf = meshContainer.model.textureConfig[j];
@@ -1420,7 +1438,8 @@ namespace LibReplanetizer
                         if (conf.id < 0)
                             continue;
 
-                        listMaterials.Add(new GLTFMaterialEntry(conf, meshContainer.gltfTextureBaseIndex + validTextureConfigIndex++));
+                        int textureIndex = meshTextureIndices[i][j];
+                        listMaterials.Add(new GLTFMaterialEntry(conf, textureIndex, textureIndex >= 0));
                     }
                 }
 

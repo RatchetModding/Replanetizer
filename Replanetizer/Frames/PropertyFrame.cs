@@ -144,7 +144,7 @@ namespace Replanetizer.Frames
 
         public override void RenderAsWindow(float deltaTime)
         {
-            if (levelFrame.modelFrameVisible || levelFrame.textureFrameVisible)
+            if (levelFrame == null || levelFrame.modelFrameVisible || levelFrame.textureFrameVisible)
                 return;
 
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(550, 0));
@@ -302,7 +302,8 @@ namespace Replanetizer.Frames
             string propertyName =
                 propertyInfo.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName ?? propertyInfo.Name;
             object? val = propertyInfo.GetValue(target);
-            Type? type = propertyInfo.GetSetMethod() == null ? null : propertyInfo.PropertyType;
+            Type type = propertyInfo.PropertyType;
+            bool canWrite = propertyInfo.GetSetMethod() != null;
             string? description = propertyInfo.GetCustomAttribute<DescriptionAttribute>()?.Description ?? null;
 
             bool nestedProperty = false;
@@ -310,6 +311,14 @@ namespace Replanetizer.Frames
             if (val == null)
             {
                 ImGui.LabelText(propertyName, "null");
+            }
+            else if (canWrite == false && (type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(decimal)))
+            {
+                ImGui.LabelText(propertyName, Convert.ToString(val) ?? "null");
+            }
+            else if (canWrite == false)
+            {
+                ImGui.LabelText(propertyName, "Inaccessible const value");
             }
             else if (type == typeof(string))
             {
@@ -430,7 +439,7 @@ namespace Replanetizer.Frames
                     {
                         ImGui.SameLine();
                         ImGui.TextDisabled("(?)");
-                        if(ImGui.IsItemHovered() && ImGui.BeginTooltip())
+                        if (ImGui.IsItemHovered() && ImGui.BeginTooltip())
                         {
                             ImGui.Text(flag.Description);
                             ImGui.EndTooltip();

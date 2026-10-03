@@ -129,6 +129,9 @@ namespace LibReplanetizer
                 case CompressionFormat.BC1:
                     imgData = DecompressDxt1(data, width, height);
                     break;
+                case CompressionFormat.BC2:
+                    imgData = DecompressDxt3(data, width, height);
+                    break;
                 case CompressionFormat.BC3:
                     imgData = DecompressDxt5(data, width, height);
                     break;
@@ -159,6 +162,16 @@ namespace LibReplanetizer
             {
                 using (MemoryStream imageStream = new MemoryStream(imageData))
                     return DecompressDxt5(imageStream, width, height);
+            }
+            return null;
+        }
+
+        public static byte[]? DecompressDxt3(byte[] imageData, int width, int height)
+        {
+            if (imageData != null)
+            {
+                using (MemoryStream imageStream = new MemoryStream(imageData))
+                    return DecompressDxt3(imageStream, width, height);
             }
             return null;
         }
@@ -194,9 +207,9 @@ namespace LibReplanetizer
             return imageData;
         }
 
-        internal static byte[] DecompressDxt1(Stream imageStream, int width, int height)
+        internal static byte[] DecompressDxt3(Stream imageStream, int width, int height)
         {
-            byte[] imageData = new byte[width * height];
+            byte[] imageData = new byte[width * height * 4];
 
             using (BinaryReader imageReader = new BinaryReader(imageStream))
             {
@@ -207,12 +220,39 @@ namespace LibReplanetizer
                 {
                     for (int x = 0; x < blockCountX; x++)
                     {
-                        DecompressDxt1Block(imageReader, x, y, blockCountX, width, height, imageData);
+                        DecompressDxt3Block(imageReader, x, y, blockCountX, width, height, imageData);
                     }
                 }
             }
 
             return imageData;
+        }
+
+        internal static byte[] DecompressDxt1(Stream imageStream, int width, int height)
+        {
+            byte[] imageData = new byte[width * height * 4];
+
+            using (BinaryReader imageReader = new BinaryReader(imageStream))
+            {
+                int blockCountX = (width + 3) / 4;
+                int blockCountY = (height + 3) / 4;
+
+                for (int y = 0; y < blockCountY; y++)
+                {
+                    for (int x = 0; x < blockCountX; x++)
+                    {
+                        DecompressDxt1Block(imageReader, x, y, blockCountX, width, height, imageData, true, null);
+                    }
+                }
+            }
+
+            return imageData;
+        }
+
+        private static void DecompressDxt3Block(BinaryReader imageReader, int x, int y, int blockCountX, int width, int height, byte[] imageData)
+        {
+            ulong alphaMask = imageReader.ReadUInt64();
+            DecompressDxt1Block(imageReader, x, y, blockCountX, width, height, imageData, false, alphaMask);
         }
 
         private static void DecompressDxt5Block(BinaryReader imageReader, int x, int y, int blockCountX, int width, int height, byte[] imageData)
@@ -308,7 +348,7 @@ namespace LibReplanetizer
             }
         }
 
-        private static void DecompressDxt1Block(BinaryReader imageReader, int x, int y, int blockCountX, int width, int height, byte[] imageData)
+        private static void DecompressDxt1Block(BinaryReader imageReader, int x, int y, int blockCountX, int width, int height, byte[] imageData, bool useDxt1Transparency, ulong? explicitAlphaMask)
         {
             ushort c0 = imageReader.ReadUInt16();
             ushort c1 = imageReader.ReadUInt16();
@@ -358,6 +398,19 @@ namespace LibReplanetizer
                     if ((px < width) && (py < height))
                     {
                         int offset = ((py * width) + px) << 2;
+
+                        if (useDxt1Transparency && c0 <= c1 && index == 3)
+                        {
+                            r = 0;
+                            g = 0;
+                            b = 0;
+                            a = 0;
+                        }
+                        else if (explicitAlphaMask is ulong alphaMask)
+                        {
+                            int pixelIndex = 4 * blockY + blockX;
+                            a = (byte) (((alphaMask >> (pixelIndex * 4)) & 0x0F) * 17);
+                        }
 
                         imageData[offset] = r;
                         imageData[offset + 1] = g;

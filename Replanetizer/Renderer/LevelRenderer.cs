@@ -299,6 +299,7 @@ namespace Replanetizer.Renderer
             }
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            GL.ClearBuffer(ClearBuffer.Color, 1, new[] { 0 });
             GL.DepthFunc(DepthFunction.Lequal);
 
             if (payload.visibility.enableSkybox)

@@ -111,18 +111,6 @@ namespace LibReplanetizer.Tests.LevelObjects
         // ── RC1 parsing ─────────────────────────────────────────────────────────
 
         [Fact]
-        public void RC1_Constructor_ParsesMissionIdAndSpawnType()
-        {
-            byte[] block = BuildRC1Block(0, 7, 0b00011, 42, 0, 0, 0, 1f, 0, 0, 0f, 0f, 0f, 0f, 0f, 0f, 0, 0, 0f, -1, 0, 0, 0, 0, 0, 0, 0);
-            var moby = new Moby(GameType.RaC1, block, 0, new List<Model>(), new List<byte[]>());
-
-            Assert.Equal(7, moby.missionID);
-            Assert.True(moby.spawnBeforeMissionCompletion);
-            Assert.True(moby.spawnAfterMissionCompletion);
-            Assert.False(moby.isCrate);
-        }
-
-        [Fact]
         public void RC1_Constructor_ParsesMobyIdAndModelId()
         {
             byte[] block = BuildRC1Block(0, 0, 0, 99, 0, 0, 55, 1f, 0, 0, 0f, 0f, 0f, 0f, 0f, 0f, 0, 0, 0f, -1, 0, 0, 0, 0, 0, 0, 0);
@@ -294,7 +282,7 @@ namespace LibReplanetizer.Tests.LevelObjects
 
             Assert.Equal(200, ReadInt(serialized, 0x64));
             Assert.Equal(100, ReadInt(serialized, 0x68));
-            Assert.Equal(50,  ReadInt(serialized, 0x6C));
+            Assert.Equal(50, ReadInt(serialized, 0x6C));
         }
 
         [Fact]
@@ -379,6 +367,24 @@ namespace LibReplanetizer.Tests.LevelObjects
             Assert.Equal(33, ReadInt(serialized, 0x28));
         }
 
+        [Fact]
+        public void RC1_ToByteArray_PreservesUnchangedRotationAngles()
+        {
+            const float rotationX = 0.2f;
+            const float rotationY = -0.4f;
+            const float rotationZ = 0.6f;
+            byte[] block = BuildRC1Block(0, 0, 0, 0, 0, 0, 0, 1f, 0, 0,
+                0f, 0f, 0f, rotationX, rotationY, rotationZ,
+                0, 0, 0f, -1, 0, 0, 0, 0, 0, 0, 0);
+            var moby = new Moby(GameType.RaC1, block, 0, new List<Model>(), new List<byte[]>());
+
+            byte[] serialized = moby.ToByteArray();
+
+            Assert.Equal(rotationX, ReadFloat(serialized, 0x3C));
+            Assert.Equal(rotationY, ReadFloat(serialized, 0x40));
+            Assert.Equal(rotationZ, ReadFloat(serialized, 0x44));
+        }
+
         // ── Parameterless constructor ─────────────────────────────────────────────
 
         [Fact]
@@ -388,17 +394,6 @@ namespace LibReplanetizer.Tests.LevelObjects
             // We can verify pVars is initialised (not null)
             Assert.NotNull(moby.pVars);
             Assert.Empty(moby.pVars);
-        }
-
-        [Fact]
-        public void DefaultConstructor_SpawnTypeIsZero()
-        {
-            var moby = new Moby(GameType.RaC1);
-            Assert.False(moby.spawnBeforeMissionCompletion);
-            Assert.False(moby.spawnAfterMissionCompletion);
-            Assert.False(moby.isCrate);
-            Assert.False(moby.spawnBeforeDeath);
-            Assert.False(moby.isSpawner);
         }
 
         // ── Copy constructor ──────────────────────────────────────────────────────

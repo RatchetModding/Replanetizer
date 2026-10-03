@@ -136,18 +136,18 @@ namespace Replanetizer.Frames
                 sortedMobyloadModels.Add(new List<Model>(level.mobyloadModels[i]));
             }
 
-            sortedMobyModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
-            sortedTieModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
-            sortedShrubModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
-            sortedGadgetModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
-            sortedSpaceshipModels.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+            sortedMobyModels.Sort((x, y) => (x.id == y.id) ? 0 : ((x.id < y.id) ? -1 : 1));
+            sortedTieModels.Sort((x, y) => (x.id == y.id) ? 0 : ((x.id < y.id) ? -1 : 1));
+            sortedShrubModels.Sort((x, y) => (x.id == y.id) ? 0 : ((x.id < y.id) ? -1 : 1));
+            sortedGadgetModels.Sort((x, y) => (x.id == y.id) ? 0 : ((x.id < y.id) ? -1 : 1));
+            sortedSpaceshipModels.Sort((x, y) => (x.id == y.id) ? 0 : ((x.id < y.id) ? -1 : 1));
             foreach (List<Model> list in sortedMissionModels)
             {
-                list.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+                list.Sort((x, y) => (x.id == y.id) ? 0 : ((x.id < y.id) ? -1 : 1));
             }
             foreach (List<Model> list in sortedMobyloadModels)
             {
-                list.Sort((x, y) => (x.id < y.id) ? -1 : 1);
+                list.Sort((x, y) => (x.id == y.id) ? 0 : ((x.id < y.id) ? -1 : 1));
             }
 
             UpdateWindowSize();
@@ -386,6 +386,7 @@ namespace Replanetizer.Frames
                 {
                     //Setup openGL variables
                     GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+                    GL.ClearBuffer(ClearBuffer.Color, 1, new[] { 0 });
                     GL.Enable(EnableCap.DepthTest);
                     GL.Viewport(0, 0, renderer.RenderWidth, renderer.RenderHeight);
 
@@ -812,6 +813,7 @@ namespace Replanetizer.Frames
         {
             GL.ClearColor(CLEAR_COLOR.R / 255.0f, CLEAR_COLOR.G / 255.0f, CLEAR_COLOR.B / 255.0f, 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            GL.ClearBuffer(ClearBuffer.Color, 1, new[] { 0 });
 
             if (selectedModel != null && selectedTextureSet != null && !(selectedModel is SkyboxModel))
             {
@@ -898,8 +900,8 @@ namespace Replanetizer.Frames
                 return false;
             }
 
-            cameraAzimuth += wnd.MouseState.Delta.X * deltaTime;
-            cameraAltitude += wnd.MouseState.Delta.Y * deltaTime;
+            cameraAzimuth += wnd.MouseState.Delta.X * 0.016666f;
+            cameraAltitude += wnd.MouseState.Delta.Y * 0.016666f;
 
             if (cameraAltitude > MathF.PI * 0.5f - 0.01f)
             {

@@ -31,15 +31,14 @@ namespace LibReplanetizer
             public float value;
         }
 
-        static FloatUnion FLOAT_BYTES;
-
         public static float ReadFloat(byte[] buf, int offset)
         {
-            FLOAT_BYTES.byte0 = buf[offset + 3];
-            FLOAT_BYTES.byte1 = buf[offset + 2];
-            FLOAT_BYTES.byte2 = buf[offset + 1];
-            FLOAT_BYTES.byte3 = buf[offset];
-            return FLOAT_BYTES.value;
+            FloatUnion floatBytes = default;
+            floatBytes.byte0 = buf[offset + 3];
+            floatBytes.byte1 = buf[offset + 2];
+            floatBytes.byte2 = buf[offset + 1];
+            floatBytes.byte3 = buf[offset];
+            return floatBytes.value;
         }
 
         public static int ReadInt(byte[] buf, int offset)

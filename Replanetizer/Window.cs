@@ -126,6 +126,7 @@ namespace Replanetizer
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             GL.ClearColor(new Color4(0, 32, 48, 255));
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+            GL.ClearBuffer(ClearBuffer.Color, 1, new[] { 0 });
 
             if (controller != null)
                 controller.Render();
@@ -187,7 +188,7 @@ namespace Replanetizer
                 }
 
                 if (levels != null)
-                { 
+                {
                     foreach (var (gameType, levelList) in levels.OrderBy(x => x.Key.num))
                     {
                         if (ImGui.BeginMenu($"Levels (RC{gameType.num})"))

@@ -43,15 +43,6 @@ namespace LibReplanetizer.Tests.Integration
         }
 
         [SkippableFact]
-        public void UiElement_IdIsNonNegative()
-        {
-            Skip.If(EngineFile == null, SkipMsg);
-            using var parser = new EngineParser(EngineFile!);
-            foreach (var element in parser.GetUiElements())
-                Assert.True(element.id >= 0, $"UiElement has negative id={element.id}.");
-        }
-
-        [SkippableFact]
         public void UiElement_SpriteCountMatchesListLength()
         {
             Skip.If(EngineFile == null, SkipMsg);

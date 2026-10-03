@@ -28,6 +28,8 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("Update Distance")]
         public float updateDistance { get; set; }
 
+        private Matrix4 inverseRotationMatrix;
+
         public SoundInstance(byte[] block, int num)
         {
             int offset = num * ELEMENTSIZE;
@@ -38,13 +40,24 @@ namespace LibReplanetizer.LevelObjects
             updateDistance = ReadFloat(block, offset + 0x0C);
 
             Matrix4 transformMatrix = ReadMatrix4(block, offset + 0x10);
-            Matrix4 inverseRotationMatrix = ReadMatrix4(block, offset + 0x50);
+            inverseRotationMatrix = ReadMatrix4(block, offset + 0x50);
 
             modelMatrix = transformMatrix;
             rotation = modelMatrix.ExtractRotation();
             position = modelMatrix.ExtractTranslation();
             scale = modelMatrix.ExtractScale();
-            UpdateTransformMatrix();
+        }
+
+        public override void UpdateTransformMatrix()
+        {
+            base.UpdateTransformMatrix();
+            inverseRotationMatrix = Matrix4.CreateFromQuaternion(rotation).Inverted();
+        }
+
+        public override void SetFromMatrix(Matrix4 mat)
+        {
+            base.SetFromMatrix(mat);
+            inverseRotationMatrix = Matrix4.CreateFromQuaternion(rotation).Inverted();
         }
 
         public override byte[] ToByteArray()
@@ -58,7 +71,7 @@ namespace LibReplanetizer.LevelObjects
             WriteFloat(bytes, 0x0C, updateDistance);
 
             WriteMatrix4(bytes, 0x10, modelMatrix);
-            WriteMatrix4(bytes, 0x50, Matrix4.CreateFromQuaternion(rotation).Inverted());
+            WriteMatrix4(bytes, 0x50, inverseRotationMatrix);
 
             return bytes;
         }

@@ -19,6 +19,8 @@ namespace LibReplanetizer.LevelObjects
         [Category("Attributes"), DisplayName("ID")]
         public int id { get; set; }
 
+        private Matrix4 inverseRotationMatrix;
+
         static readonly float[] CUBE = {
             -1.0f, -1.0f,  1.0f,
             1.0f, -1.0f,  1.0f,
@@ -52,14 +54,24 @@ namespace LibReplanetizer.LevelObjects
             int offset = index * ELEMENTSIZE;
 
             Matrix4 transformMatrix = ReadMatrix4(block, offset + 0x00);
-            Matrix4 inverseRotationMatrix = ReadMatrix4(block, offset + 0x40);
+            inverseRotationMatrix = ReadMatrix4(block, offset + 0x40);
 
             modelMatrix = transformMatrix;
             rotation = modelMatrix.ExtractRotation();
             position = modelMatrix.ExtractTranslation();
             scale = modelMatrix.ExtractScale();
+        }
 
-            UpdateTransformMatrix();
+        public override void UpdateTransformMatrix()
+        {
+            base.UpdateTransformMatrix();
+            inverseRotationMatrix = Matrix4.CreateFromQuaternion(rotation).Inverted();
+        }
+
+        public override void SetFromMatrix(Matrix4 mat)
+        {
+            base.SetFromMatrix(mat);
+            inverseRotationMatrix = Matrix4.CreateFromQuaternion(rotation).Inverted();
         }
 
         public override LevelObject Clone()
@@ -72,7 +84,7 @@ namespace LibReplanetizer.LevelObjects
             byte[] bytes = new byte[0x80];
 
             WriteMatrix4(bytes, 0x00, modelMatrix);
-            WriteMatrix4(bytes, 0x40, Matrix4.CreateFromQuaternion(rotation).Inverted());
+            WriteMatrix4(bytes, 0x40, inverseRotationMatrix);
 
             return bytes;
         }

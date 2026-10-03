@@ -1,4 +1,5 @@
 using System.Linq;
+using LibReplanetizer.Headers;
 using LibReplanetizer.Models;
 using LibReplanetizer.Parsers;
 using Xunit;
@@ -14,6 +15,8 @@ namespace LibReplanetizer.Tests.Integration
         public void RaC2Spaceships_LoadBodiesAndTextures()
         {
             Skip.If(EngineFile == null, SkipMsg);
+            Skip.If(SpaceshipHeader.FindSpaceshipFiles(GameType.RaC2, EngineFile!).Count == 0,
+                "Configured fixture does not contain RaC2 spaceship body files.");
 
             var (models, textures) = SpaceshipParser.GetAllSpaceshipData(GameType.RaC2, EngineFile!);
 

@@ -116,6 +116,8 @@ namespace Replanetizer.Utils
             DrawBuffersEnum[] buffers = { DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1 };
             GL.DrawBuffers(2, buffers);
 
+            GL.ClearBuffer(ClearBuffer.Color, 1, new[] { 0 });
+
             GL.Enable(EnableCap.DepthTest);
             GL.DepthFunc(DepthFunction.Less);
 

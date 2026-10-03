@@ -40,6 +40,14 @@ namespace LibReplanetizer.Tests.LevelObjects
         }
 
         [Fact]
+        public void Constructor_ParsesSignedId()
+        {
+            var (head, tex) = BuildBlocks(0, -1234, new int[0]);
+            var ui = new UiElement(head, 0, tex);
+            Assert.Equal((short) -1234, ui.id);
+        }
+
+        [Fact]
         public void Constructor_ParsesSpriteList()
         {
             var (head, tex) = BuildBlocks(0, 0, new[] { 100, 200, 300 });

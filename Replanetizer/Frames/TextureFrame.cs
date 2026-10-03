@@ -58,7 +58,7 @@ namespace Replanetizer.Frames
                 {
                     if (ImGui.Button("Export"))
                     {
-                        var targetFile = CrossFileDialog.SaveFile(filter: ".bmp;.jpg;.jpeg;.png");
+                        var targetFile = CrossFileDialog.SaveFile(filter: ".bmp;.jpg;.jpeg;.png;.dds");
                         if (targetFile.Length > 0)
                         {
                             TextureIO.ExportTexture(t, targetFile, true);

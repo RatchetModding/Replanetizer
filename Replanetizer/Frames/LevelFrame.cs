@@ -263,10 +263,12 @@ namespace Replanetizer.Frames
                         }
                         if (ImGui.MenuItem("All textures"))
                         {
-                            var res = CrossFileDialog.OpenFolder();
+                            var res = CrossFileDialog.SaveFile(filter: ".png|.dds");
                             if (res.Length > 0)
                             {
-                                TextureIO.ExportAllTextures(level, res);
+                                string extension = Path.GetExtension(res).ToLower();
+                                string? folder = Path.GetDirectoryName(res);
+                                TextureIO.ExportAllTextures(level, folder!, extension);
                             }
                         }
                         if (ImGui.BeginMenu("Class IDs lists"))
@@ -300,6 +302,10 @@ namespace Replanetizer.Frames
                             {
                                 using (FileStream fs = File.Open(res, FileMode.Open, FileAccess.Read))
                                     level.collisionEngine = new Collision(fs, 0, import: true);
+
+                                levelRenderer?.Dispose();
+                                levelRenderer = new LevelRenderer(shaderTable, textureIds);
+                                levelRenderer.Include(level);
                             }
                             InvalidateView();
                         }

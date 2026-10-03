@@ -12,6 +12,8 @@ using System.IO;
 using LibReplanetizer;
 using LibReplanetizer.Models;
 using SixLabors.ImageSharp.Formats.Png;
+using System.Linq;
+using System.Text;
 
 namespace Replanetizer.Utils
 {
@@ -34,6 +36,12 @@ namespace Replanetizer.Utils
                 case ".jpeg":
                     image.SaveAsJpeg(path);
                     break;
+                case ".dds":
+                    byte[] dds = ConstructDDS(texture);
+                    using (var fs = new FileStream(path, FileMode.Create))
+                        fs.Write(dds, 0, dds.Length);
+                    break;
+
                 default:
                     PngEncoder pngEncoder = new PngEncoder() {
                         Gamma = 1.0f / 2.2f,                                        // Textures are sRGB encoded
@@ -49,7 +57,7 @@ namespace Replanetizer.Utils
             }
         }
 
-        public static void ExportAllTextures(Level level, string path)
+        public static void ExportAllTextures(Level level, string path, string extension)
         {
             bool[] forcedOpaque = new bool[level.textures.Count];
             if (level.game == GameType.RaC3)
@@ -79,7 +87,7 @@ namespace Replanetizer.Utils
 
             for (int i = 0; i < level.textures.Count; i++)
             {
-                ExportTexture(level.textures[i], Path.Join(path, $"{i}.png"), !forcedOpaque[i]);
+                ExportTexture(level.textures[i], Path.Join(path, $"{i}{extension}"), !forcedOpaque[i]);
             }
 
             for (int i = 0; i < level.armorTextures.Count; i++)
@@ -87,13 +95,13 @@ namespace Replanetizer.Utils
                 List<Texture> textures = level.armorTextures[i];
                 for (int j = 0; j < textures.Count; j++)
                 {
-                    ExportTexture(textures[j], Path.Join(path, $"armor_{i}_{j}.png"), true);
+                    ExportTexture(textures[j], Path.Join(path, $"armor_{i}_{j}{extension}"), true);
                 }
             }
 
             for (int i = 0; i < level.gadgetTextures.Count; i++)
             {
-                ExportTexture(level.gadgetTextures[i], Path.Join(path, $"gadget_{i}.png"), true);
+                ExportTexture(level.gadgetTextures[i], Path.Join(path, $"gadget_{i}{extension}"), true);
             }
 
             for (int i = 0; i < level.missions.Count; i++)
@@ -101,7 +109,7 @@ namespace Replanetizer.Utils
                 List<Texture> textures = level.missions[i].textures;
                 for (int j = 0; j < textures.Count; j++)
                 {
-                    ExportTexture(textures[j], Path.Join(path, $"mission_{i}_{j}.png"), true);
+                    ExportTexture(textures[j], Path.Join(path, $"mission_{i}_{j}{extension}"), true);
                 }
             }
 
@@ -110,16 +118,41 @@ namespace Replanetizer.Utils
                 List<Texture> textures = level.mobyloadTextures[i];
                 for (int j = 0; j < textures.Count; j++)
                 {
-                    ExportTexture(textures[j], Path.Join(path, $"mobyload_{i}_{j}.png"), true);
+                    ExportTexture(textures[j], Path.Join(path, $"mobyload_{i}_{j}{extension}"), true);
                 }
             }
         }
+        public static byte[] ConstructDDS(Texture texture)
+        {
+            byte[] head = new byte[128]
+            {
+                // Copied header from GIMP output
+                // This does not win me the nobel price
+                0x44, 0x44, 0x53, 0x20, 0x7C, 0x00, 0x00, 0x00, 0x07, 0x10, 0x0A, 0x00, 0x00, 0x01, 0x00, 0x00,
+                0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00,
+                0x52, 0x45, 0x50, 0x4c, 0x41, 0x4E, 0x00, 0x00, 0x00, 0x09, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00,
+                0x04, 0x00, 0x00, 0x00, 0x44, 0x58, 0x54, 0x35, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x10, 0x40, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+            };
+
+            BitConverter.GetBytes((int)texture.height).CopyTo(head, 0x0C);
+            BitConverter.GetBytes((int)texture.width).CopyTo(head, 0x10);
+            BitConverter.GetBytes((int)texture.mipMapCount).CopyTo(head, 0x1C);
+
+            return head.Concat(texture.data).ToArray();
+        }
         public static byte[] ImportDDSTexture(string path, int len)
         {
+            byte[] file = File.ReadAllBytes(path);
             byte[] data = new byte[len];
+            Buffer.BlockCopy(file, 128, data, 0, len);
 
-            Buffer.BlockCopy(File.ReadAllBytes(path), 128, data, 0, len);
-            Array.Resize(ref data, data.Length + 16);
+            // Adds trailing zeros if it came from outside of replanetizer
+            if (Encoding.ASCII.GetString(file, 0x20, 6) != "REPLAN") 
+                Array.Resize(ref data, data.Length + 16);
 
             return data;
         }

@@ -386,6 +386,7 @@ namespace Replanetizer.Frames
                 {
                     //Setup openGL variables
                     GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+                    GL.ClearBuffer(ClearBuffer.Color, 1, new[] { 0 });
                     GL.Enable(EnableCap.DepthTest);
                     GL.Viewport(0, 0, renderer.RenderWidth, renderer.RenderHeight);
 
@@ -812,6 +813,7 @@ namespace Replanetizer.Frames
         {
             GL.ClearColor(CLEAR_COLOR.R / 255.0f, CLEAR_COLOR.G / 255.0f, CLEAR_COLOR.B / 255.0f, 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            GL.ClearBuffer(ClearBuffer.Color, 1, new[] { 0 });
 
             if (selectedModel != null && selectedTextureSet != null && !(selectedModel is SkyboxModel))
             {

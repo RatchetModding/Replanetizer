@@ -156,7 +156,7 @@ namespace Replanetizer.Frames
         {
             if (rightDockId != 0 || didFocusLevelTab)
                 return;
-            
+
 
             uint mainId = wnd.dockspaceId;
             uint rightId, leftId;
@@ -323,6 +323,20 @@ namespace Replanetizer.Frames
                                 levelRenderer = new LevelRenderer(shaderTable, textureIds);
                                 levelRenderer.Include(level);
 
+                                InvalidateView();
+                            }
+                        }
+                        if (ImGui.MenuItem("Collision (OBJ)"))
+                        {
+                            var res = CrossFileDialog.OpenFile(filter: ".obj");
+                            if (res.Length > 0)
+                            {
+                                var geometry = new WavefrontImporter().Import(res);
+                                level.collisionEngine = CollisionBuilder.BuildPerFace(geometry);
+
+                                levelRenderer?.Dispose();
+                                levelRenderer = new LevelRenderer(shaderTable, textureIds);
+                                levelRenderer.Include(level);
                                 InvalidateView();
                             }
                         }

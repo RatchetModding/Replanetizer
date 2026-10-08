@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
@@ -16,10 +17,74 @@ namespace LibReplanetizer.Serializers.Importers
 {
     public class TerrainBuilder
     {
+        private const float FragmentCellSize = 32.0f;
+        private const int MaxFacesPerFragment = 83;
+
+        private readonly struct TerrainMaterial
+        {
+            public int textureId { get; }
+            public TextureConfig.WrapMode wrapModeS { get; }
+            public TextureConfig.WrapMode wrapModeT { get; }
+
+            public TerrainMaterial(int textureId, TextureConfig.WrapMode wrapModeS, TextureConfig.WrapMode wrapModeT)
+            {
+                this.textureId = textureId;
+                this.wrapModeS = wrapModeS;
+                this.wrapModeT = wrapModeT;
+            }
+        }
+
+        public static int ParseTextureId(string materialName)
+        {
+            if (materialName.StartsWith("RC_", StringComparison.Ordinal))
+                return ParseStructuredTextureMaterial(materialName).textureId;
+
+            string digits = new string(materialName.Where(char.IsDigit).ToArray());
+            bool parsed = int.TryParse(digits, NumberStyles.Integer, CultureInfo.InvariantCulture, out int textureId);
+            Utilities.DebugAssert(parsed, "Terrain material names must contain a texture ID.");
+            return textureId;
+        }
+
+        private static TerrainMaterial ParseStructuredTextureMaterial(string materialName)
+        {
+            string[] parts = materialName.Split('_');
+            Utilities.DebugAssert(parts.Length == 2 || parts.Length == 4, "Terrain material names must be RC_<textureID> or RC_<textureID>_<wrapModeS>_<wrapModeT>.");
+            bool parsed = int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out int textureId);
+            Utilities.DebugAssert(parsed, "Terrain material texture IDs must be unsigned decimal integers.");
+
+            TextureConfig.WrapMode wrapModeS = TextureConfig.WrapMode.Repeat;
+            TextureConfig.WrapMode wrapModeT = TextureConfig.WrapMode.Repeat;
+            if (parts.Length == 4)
+            {
+                wrapModeS = ParseWrapMode(parts[2]);
+                wrapModeT = ParseWrapMode(parts[3]);
+            }
+
+            return new TerrainMaterial(textureId, wrapModeS, wrapModeT);
+        }
+
+        private static TextureConfig.WrapMode ParseWrapMode(string value)
+        {
+            bool repeat = string.Equals(value, "Repeat", StringComparison.OrdinalIgnoreCase) || value == "0";
+            bool clampEdge = string.Equals(value, "ClampEdge", StringComparison.OrdinalIgnoreCase) || value == "1";
+            Utilities.DebugAssert(repeat || clampEdge, $"Unknown texture wrap mode '{value}'. Expected Repeat, ClampEdge, 0, or 1.");
+            return clampEdge ? TextureConfig.WrapMode.ClampEdge : TextureConfig.WrapMode.Repeat;
+        }
+
+        private static TerrainMaterial GetMaterial(ParsedModelGeometry geometry, Face face)
+        {
+            string? materialName = geometry.GetMaterialName(face.materialIndex);
+            if (materialName == null)
+                return new TerrainMaterial(0, TextureConfig.WrapMode.Repeat, TextureConfig.WrapMode.Repeat);
+
+            if (!materialName.StartsWith("RC_", StringComparison.Ordinal))
+                return new TerrainMaterial(ParseTextureId(materialName), TextureConfig.WrapMode.Repeat, TextureConfig.WrapMode.Repeat);
+
+            return ParseStructuredTextureMaterial(materialName);
+        }
+
         public static Terrain Build(ParsedModelGeometry geometry, ushort levelNumber)
         {
-            float fragmentSize = 32.0f;
-
             var cellFaces = new Dictionary<(int x, int y, int z), List<Face>>();
             foreach (var face in geometry.faces)
             {
@@ -31,9 +96,9 @@ namespace LibReplanetizer.Serializers.Importers
                 Vector3 centroid = (a + b + c) / 3.0f;
 
                 int x, y, z;
-                x = (int)Math.Floor(centroid.X / fragmentSize);
-                y = (int)Math.Floor(centroid.Y / fragmentSize);
-                z = (int)Math.Floor(centroid.Z / fragmentSize);
+                x = (int) Math.Floor(centroid.X / FragmentCellSize);
+                y = (int) Math.Floor(centroid.Y / FragmentCellSize);
+                z = (int) Math.Floor(centroid.Z / FragmentCellSize);
 
                 var cell = (x, y, z);
 
@@ -52,19 +117,25 @@ namespace LibReplanetizer.Serializers.Importers
 
             foreach (var cell in cellFaces)
             {
-                int maxFaces = 250 / 3; // This is totally arbitrary and probably doesn't match up at all with how it works in-game. 
-                for (int i = 0; i < cell.Value.Count; i += maxFaces)
+                for (int i = 0; i < cell.Value.Count; i += MaxFacesPerFragment)
                 {
-                    var part = cell.Value.GetRange(i, Math.Min(maxFaces, cell.Value.Count - i));
+                    var part = cell.Value.GetRange(i, Math.Min(MaxFacesPerFragment, cell.Value.Count - i));
+                    Utilities.DebugAssert(fragments.Count <= ushort.MaxValue, "Terrain fragment count exceeds the limit supported by 16-bit fragment IDs.");
                     fragments.Add(BuildFragment(geometry, part, (ushort) fragments.Count));
                 }
             }
 
             return new Terrain(fragments, levelNumber);
         }
+
         private static TerrainFragment BuildFragment(ParsedModelGeometry geometry, List<Face> faces, ushort idx)
         {
-            var groups = faces.GroupBy(f => f.texture).OrderBy(g => g.Key).ToList();
+            var groups = faces
+                .GroupBy(face => GetMaterial(geometry, face))
+                .OrderBy(group => group.Key.textureId)
+                .ThenBy(group => group.Key.wrapModeS)
+                .ThenBy(group => group.Key.wrapModeT)
+                .ToList();
 
             var vertexBufferList = new List<float>();
             var indexBufferList = new List<ushort>();
@@ -108,9 +179,9 @@ namespace LibReplanetizer.Serializers.Importers
                             vertexBufferList.Add(uv.X);
                             vertexBufferList.Add(1.0f - uv.Y);
 
-                            vertexColorList.Add((byte)(colors.X * 255f));
-                            vertexColorList.Add((byte)(colors.Y * 255f));
-                            vertexColorList.Add((byte)(colors.Z * 255f));
+                            vertexColorList.Add((byte) (colors.X * 255f));
+                            vertexColorList.Add((byte) (colors.Y * 255f));
+                            vertexColorList.Add((byte) (colors.Z * 255f));
                             vertexColorList.Add(128);
 
                             min = Vector3.ComponentMin(min, pos);
@@ -124,14 +195,16 @@ namespace LibReplanetizer.Serializers.Importers
                     }
                 }
 
-                textureConfig.Add(new TextureConfig
+                var config = new TextureConfig
                 {
-                    id = group.Key,
-                    mode = 0x5000000,// hardcoded as Wrapmode.Repeat.
-                                     // I imagine if people wanted to use clamp edge they could just change it manually.
+                    id = group.Key.textureId,
+                    mode = 0x05000000,
                     start = start,
                     size = (ushort) (indCnt - start)
-                });
+                };
+                config.wrapModeS = group.Key.wrapModeS;
+                config.wrapModeT = group.Key.wrapModeT;
+                textureConfig.Add(config);
             }
             float[] vertexBuffer = vertexBufferList.ToArray();
             ushort[] indexBuffer = indexBufferList.ToArray();

@@ -50,8 +50,27 @@ namespace LibReplanetizer.Models
         public CollisionType(byte data) { this.data = data; }
     }
 
+    internal readonly struct CollisionTriangle
+    {
+        public Vector3 A { get; }
+        public Vector3 B { get; }
+        public Vector3 C { get; }
+        public CollisionType Type { get; }
+
+        public CollisionTriangle(Vector3 a, Vector3 b, Vector3 c, CollisionType type)
+        {
+            A = a;
+            B = b;
+            C = c;
+            Type = type;
+        }
+    }
+
     public class Collision : Model, IRenderable
     {
+        private const int MaximumGridEntries = 1_000_000;
+        private const long MaximumCellTriangleReferences = 5_000_000;
+
         private bool hasStandardCollision = false;
         private bool hasHeroCollision = false;
         private bool hasUnkCollision = false;
@@ -89,6 +108,60 @@ namespace LibReplanetizer.Models
 
             CollisionCellEntry[] entries = [];
             Vector3[] vertices = [];
+
+            public CollisionCell(List<CollisionTriangle> triangles, ushort x, ushort y, ushort z, int worldX, int worldY, int worldZ)
+            {
+                xCell = x;
+                yCell = y;
+                zCell = z;
+                faceCount = checked((ushort) triangles.Count);
+                quadCount = 0;
+                entries = new CollisionCellEntry[faceCount];
+
+                var sharedVertices = new List<Vector3>();
+                var vertexIndices = new Dictionary<Vector3, byte>();
+
+                byte GetVertexIndex(Vector3 position)
+                {
+                    float centerX = 4.0f * (worldX + 0.5f);
+                    float centerY = 4.0f * (worldY + 0.5f);
+                    float centerZ = 4.0f * (worldZ + 0.5f);
+                    Vector3 local = new Vector3(
+                        (position.X - centerX) * 1024.0f,
+                        (position.Y - centerY) * 1024.0f,
+                        (position.Z - centerZ) * 1024.0f);
+
+                    if (vertexIndices.TryGetValue(local, out byte index))
+                        return index;
+                    if (sharedVertices.Count == byte.MaxValue)
+                        throw new InvalidOperationException("A collision cell cannot contain more than 255 unique vertices.");
+
+                    index = (byte) sharedVertices.Count;
+                    sharedVertices.Add(local);
+                    vertexIndices.Add(local, index);
+                    return index;
+                }
+
+                for (int i = 0; i < triangles.Count; i++)
+                {
+                    CollisionTriangle triangle = triangles[i];
+                    entries[i] = new CollisionCellEntry
+                    {
+                        vertexIndex0 = GetVertexIndex(triangle.A),
+                        vertexIndex1 = GetVertexIndex(triangle.B),
+                        vertexIndex2 = GetVertexIndex(triangle.C),
+                        vertexIndex3 = 0xFF,
+                        collisionType = triangle.Type
+                    };
+                }
+
+                vertexCount = checked((byte) sharedVertices.Count);
+                if ((long) faceCount * vertexCount > 1_000_000)
+                    throw new InvalidOperationException("A collision cell requires too much serialized vertex data.");
+                vertices = new Vector3[checked(faceCount * vertexCount)];
+                for (int face = 0; face < faceCount; face++)
+                    sharedVertices.CopyTo(0, vertices, face * vertexCount, vertexCount);
+            }
 
             public CollisionCell(FileStream fs, int baseOffset, ushort x, ushort y, ushort z)
             {
@@ -354,6 +427,11 @@ namespace LibReplanetizer.Models
         private List<HeroCollisionCell> heroCells = new List<HeroCollisionCell>();
         private List<HeroCollisionCell> unkCells = new List<HeroCollisionCell>();
 
+        public Collision()
+        {
+            vertexStride = 4;
+        }
+
         public Collision(FileStream fs, int collisionPointer, bool import = false)
         {
             vertexStride = 4;
@@ -387,6 +465,237 @@ namespace LibReplanetizer.Models
 
             GenerateModelData(vertexList, indexList, ref totalVertexCount);
 
+            vertexBuffer = vertexList.ToArray();
+            indBuff = indexList.ToArray();
+        }
+
+        internal static Collision FromTriangles(IEnumerable<CollisionTriangle> triangles)
+        {
+            if (triangles == null)
+                throw new ArgumentNullException(nameof(triangles));
+
+            var cellTriangles = new Dictionary<(int x, int y, int z), List<CollisionTriangle>>();
+            long triangleReferences = 0;
+
+            foreach (CollisionTriangle triangle in triangles)
+            {
+                int minX = GetGridCoordinate(Math.Min(triangle.A.X, Math.Min(triangle.B.X, triangle.C.X)));
+                int maxX = GetGridCoordinate(Math.Max(triangle.A.X, Math.Max(triangle.B.X, triangle.C.X)));
+                int minY = GetGridCoordinate(Math.Min(triangle.A.Y, Math.Min(triangle.B.Y, triangle.C.Y)));
+                int maxY = GetGridCoordinate(Math.Max(triangle.A.Y, Math.Max(triangle.B.Y, triangle.C.Y)));
+                int minZ = GetGridCoordinate(Math.Min(triangle.A.Z, Math.Min(triangle.B.Z, triangle.C.Z)));
+                int maxZ = GetGridCoordinate(Math.Max(triangle.A.Z, Math.Max(triangle.B.Z, triangle.C.Z)));
+
+                long coveredCells = (long) (maxX - minX + 1) * (maxY - minY + 1) * (maxZ - minZ + 1);
+                triangleReferences = checked(triangleReferences + coveredCells);
+                if (triangleReferences > MaximumCellTriangleReferences)
+                    throw new InvalidOperationException("The collision geometry spans too many grid cells.");
+
+                for (int z = minZ; z <= maxZ; z++)
+                    for (int y = minY; y <= maxY; y++)
+                        for (int x = minX; x <= maxX; x++)
+                        {
+                            var key = (x, y, z);
+                            if (!cellTriangles.TryGetValue(key, out List<CollisionTriangle>? cell))
+                            {
+                                cell = new List<CollisionTriangle>();
+                                cellTriangles.Add(key, cell);
+                                if (cellTriangles.Count > MaximumGridEntries)
+                                    throw new InvalidOperationException("The collision geometry requires too many grid cells.");
+                            }
+
+                            if (cell.Count == ushort.MaxValue)
+                                throw new InvalidOperationException("A collision cell cannot contain more than 65535 faces.");
+                            cell.Add(triangle);
+                        }
+            }
+
+            var collision = new Collision();
+            if (cellTriangles.Count == 0)
+                return collision;
+
+            var byZ = new Dictionary<int, Dictionary<int, List<KeyValuePair<int, List<CollisionTriangle>>>>>();
+            foreach (var cell in cellTriangles)
+            {
+                if (!byZ.TryGetValue(cell.Key.z, out Dictionary<int, List<KeyValuePair<int, List<CollisionTriangle>>>>? byY))
+                {
+                    byY = new Dictionary<int, List<KeyValuePair<int, List<CollisionTriangle>>>>();
+                    byZ.Add(cell.Key.z, byY);
+                }
+                if (!byY.TryGetValue(cell.Key.y, out List<KeyValuePair<int, List<CollisionTriangle>>>? byX))
+                {
+                    byX = new List<KeyValuePair<int, List<CollisionTriangle>>>();
+                    byY.Add(cell.Key.y, byX);
+                }
+                byX.Add(new KeyValuePair<int, List<CollisionTriangle>>(cell.Key.x, cell.Value));
+            }
+
+            int minGridZ = byZ.Keys.Min();
+            int maxGridZ = byZ.Keys.Max();
+            int zCount = GetGridCount(minGridZ, maxGridZ);
+            long gridEntries = zCount;
+            var yRanges = new Dictionary<int, (int min, int max)>();
+            var xRanges = new Dictionary<(int z, int y), (int min, int max)>();
+
+            foreach (var zEntry in byZ)
+            {
+                int minY = zEntry.Value.Keys.Min();
+                int maxY = zEntry.Value.Keys.Max();
+                yRanges.Add(zEntry.Key, (minY, maxY));
+                gridEntries += GetGridCount(minY, maxY);
+
+                foreach (var yEntry in zEntry.Value)
+                {
+                    int minX = yEntry.Value.Min(cell => cell.Key);
+                    int maxX = yEntry.Value.Max(cell => cell.Key);
+                    xRanges.Add((zEntry.Key, yEntry.Key), (minX, maxX));
+                    gridEntries += GetGridCount(minX, maxX);
+                }
+            }
+
+            if (gridEntries > MaximumGridEntries)
+                throw new InvalidOperationException("The collision grid is too sparse to serialize safely.");
+
+            collision.zShift = checked((ushort) minGridZ);
+            collision.zCount = checked((ushort) zCount);
+            collision.yShift = new ushort[zCount];
+            collision.yCount = new ushort[zCount];
+            collision.xShift = new List<ushort[]>(zCount);
+            collision.xCount = new List<ushort[]>(zCount);
+
+            for (int zIndex = 0; zIndex < zCount; zIndex++)
+            {
+                int worldZ = minGridZ + zIndex;
+                if (!byZ.TryGetValue(worldZ, out Dictionary<int, List<KeyValuePair<int, List<CollisionTriangle>>>>? byY))
+                {
+                    collision.xShift.Add([]);
+                    collision.xCount.Add([]);
+                    continue;
+                }
+
+                (int minY, int maxY) = yRanges[worldZ];
+                int yCount = GetGridCount(minY, maxY);
+                collision.yShift[zIndex] = checked((ushort) minY);
+                collision.yCount[zIndex] = checked((ushort) yCount);
+                var xShifts = new ushort[yCount];
+                var xCounts = new ushort[yCount];
+
+                foreach (var yEntry in byY)
+                {
+                    int yIndex = yEntry.Key - minY;
+                    (int minX, int maxX) = xRanges[(worldZ, yEntry.Key)];
+                    int xCount = GetGridCount(minX, maxX);
+                    xShifts[yIndex] = checked((ushort) minX);
+                    xCounts[yIndex] = checked((ushort) xCount);
+
+                    foreach (var cell in yEntry.Value)
+                    {
+                        int xIndex = cell.Key - minX;
+                        collision.cells.Add(new CollisionCell(
+                            cell.Value,
+                            checked((ushort) xIndex),
+                            checked((ushort) yIndex),
+                            checked((ushort) zIndex),
+                            cell.Key,
+                            yEntry.Key,
+                            worldZ));
+                    }
+                }
+
+                collision.xShift.Add(xShifts);
+                collision.xCount.Add(xCounts);
+            }
+
+            collision.hasStandardCollision = true;
+            collision.GenerateRenderData();
+            return collision;
+        }
+
+        public static Collision Concatenate(Collision first, Collision second)
+        {
+            if (first == null)
+                throw new ArgumentNullException(nameof(first));
+            if (second == null)
+                throw new ArgumentNullException(nameof(second));
+
+            var triangles = first.GetStandardTriangles();
+            triangles.AddRange(second.GetStandardTriangles());
+            Collision collision = FromTriangles(triangles);
+
+            collision.heroCells.AddRange(first.heroCells);
+            collision.heroCells.AddRange(second.heroCells);
+            collision.unkCells.AddRange(first.unkCells);
+            collision.unkCells.AddRange(second.unkCells);
+            collision.hasHeroCollision = first.hasHeroCollision || second.hasHeroCollision;
+            collision.hasUnkCollision = first.hasUnkCollision || second.hasUnkCollision;
+            collision.GenerateRenderData();
+            return collision;
+        }
+
+        private List<CollisionTriangle> GetStandardTriangles()
+        {
+            if (indBuff.Length % 3 != 0)
+                throw new InvalidOperationException("Collision index data does not contain complete triangles.");
+
+            var triangles = new List<CollisionTriangle>();
+            for (int i = 0; i < indBuff.Length; i += 3)
+            {
+                uint firstIndex = indBuff[i];
+                uint secondIndex = indBuff[i + 1];
+                uint thirdIndex = indBuff[i + 2];
+                if (!IsStandardVertex(firstIndex) || !IsStandardVertex(secondIndex) || !IsStandardVertex(thirdIndex))
+                    continue;
+
+                Vector3 a = GetVertexPosition(secondIndex);
+                Vector3 b = GetVertexPosition(firstIndex);
+                Vector3 c = GetVertexPosition(thirdIndex);
+                CollisionType type = CollisionVertexMetadata.GetCollisionType(vertexBuffer[checked((int) secondIndex) * vertexStride + 3]);
+                triangles.Add(new CollisionTriangle(a, b, c, type));
+            }
+
+            return triangles;
+        }
+
+        private bool IsStandardVertex(uint index)
+        {
+            int vertexIndex = checked((int) index);
+            int offset = checked(vertexIndex * vertexStride);
+            if (offset < 0 || offset + 3 >= vertexBuffer.Length)
+                throw new InvalidOperationException("Collision index is outside the vertex buffer.");
+            return CollisionVertexMetadata.GetCategory(vertexBuffer[offset + 3]) == CollisionGeometryCategory.Standard;
+        }
+
+        private Vector3 GetVertexPosition(uint index)
+        {
+            int offset = checked((int) index * vertexStride);
+            return new Vector3(vertexBuffer[offset], vertexBuffer[offset + 1], vertexBuffer[offset + 2]);
+        }
+
+        private static int GetGridCoordinate(float coordinate)
+        {
+            if (!float.IsFinite(coordinate))
+                throw new ArgumentOutOfRangeException(nameof(coordinate), "Collision coordinates must be finite.");
+
+            double gridCoordinate = Math.Floor(coordinate / 4.0);
+            if (gridCoordinate < 0 || gridCoordinate > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(coordinate), "Collision coordinates must map to a non-negative 16-bit grid cell.");
+            return (int) gridCoordinate;
+        }
+
+        private static int GetGridCount(int min, int max)
+        {
+            long count = (long) max - min + 1;
+            if (count <= 0 || count > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(max), "Collision grid dimensions must fit in an unsigned 16-bit count.");
+            return (int) count;
+        }
+
+        private void GenerateRenderData()
+        {
+            var vertexList = new List<float>();
+            var indexList = new List<uint>();
+            uint totalVertexCount = 0;
+            GenerateModelData(vertexList, indexList, ref totalVertexCount);
             vertexBuffer = vertexList.ToArray();
             indBuff = indexList.ToArray();
         }

@@ -137,6 +137,37 @@ namespace LibReplanetizer.Tests.Models
             Assert.Equal((byte) 0x1F, GetTriangleType(CollisionBuilder.BuildPerFace(geometry), 0));
         }
 
+        [Fact]
+        public void BuildPerFace_SkipsTrianglesWithNegativeCoordinatesOnly()
+        {
+            const string obj =
+                "v 0 0 0\nv 1 0 0\nv 0 1 0\n" +
+                "v -1 0.5 0.5\nv 0.5 0.5 0.5\nv 0.5 1 0.5\n" +
+                "v 0.5 -1 0.5\nv 0.5 0.5 0.5\nv 1 0.5 0.5\n" +
+                "v 0.5 0.5 -1\nv 0.5 0.5 0.5\nv 1 0.5 0.5\n" +
+                "usemtl RC_5\nf 1 2 3\n" +
+                "usemtl RC_11\nf 4 5 6\nf 7 8 9\nf 10 11 12\n";
+
+            Collision collision = CollisionBuilder.BuildPerFace(ImportObj(obj));
+
+            Assert.Equal(3, collision.vertexCount);
+            Assert.Equal(3, collision.indBuff.Length);
+            Assert.Equal((byte) 5, GetTriangleType(collision, 0));
+        }
+
+        [Fact]
+        public void BuildPerFace_AllTrianglesWithNegativeCoordinates_ReturnsEmptyCollision()
+        {
+            ParsedModelGeometry geometry = ImportObj(
+                "v -1 0 0\nv 0 1 0\nv 0 0 1\nf 1 2 3\n");
+
+            Collision collision = CollisionBuilder.BuildPerFace(geometry);
+
+            Assert.Empty(collision.vertexBuffer);
+            Assert.Empty(collision.indBuff);
+            Assert.Empty(collision.Serialize());
+        }
+
         [Theory]
         [InlineData("RC_0", 0)]
         [InlineData("RC_31", 31)]

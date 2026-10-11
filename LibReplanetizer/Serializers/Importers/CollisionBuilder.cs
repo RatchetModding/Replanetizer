@@ -18,7 +18,7 @@ namespace LibReplanetizer.Serializers.Importers
         public static Collision Build(ParsedModelGeometry geometry, byte collisionType = 0x1F)
         {
             CollisionType type = new CollisionType(collisionType);
-            return Build(geometry, _ => type);
+            return Build(geometry, _ => type, false);
         }
 
         public static Collision BuildPerFace(ParsedModelGeometry geometry)
@@ -27,7 +27,7 @@ namespace LibReplanetizer.Serializers.Importers
             {
                 string? materialName = geometry.GetMaterialName(face.materialIndex);
                 return materialName == null ? new CollisionType(0x1F) : ParseCollisionMaterial(materialName);
-            });
+            }, true);
         }
 
         private static CollisionType ParseCollisionMaterial(string materialName)
@@ -63,7 +63,7 @@ namespace LibReplanetizer.Serializers.Importers
             return ignoreCamera;
         }
 
-        private static Collision Build(ParsedModelGeometry geometry, Func<Face, CollisionType> collisionTypeSelector)
+        private static Collision Build(ParsedModelGeometry geometry, Func<Face, CollisionType> collisionTypeSelector, bool skipNegativeCoordinates)
         {
             var triangles = new List<CollisionTriangle>(geometry.faces.Count);
 
@@ -76,6 +76,12 @@ namespace LibReplanetizer.Serializers.Importers
                 ObjVector3 a = GetPosition(geometry, corners[0].pos);
                 ObjVector3 b = GetPosition(geometry, corners[1].pos);
                 ObjVector3 c = GetPosition(geometry, corners[2].pos);
+                if (skipNegativeCoordinates &&
+                    (a.X < 0 || a.Y < 0 || a.Z < 0 ||
+                     b.X < 0 || b.Y < 0 || b.Z < 0 ||
+                     c.X < 0 || c.Y < 0 || c.Z < 0))
+                    continue;
+
                 triangles.Add(new CollisionTriangle(
                     new System.Numerics.Vector3(a.X, a.Y, a.Z),
                     new System.Numerics.Vector3(b.X, b.Y, b.Z),

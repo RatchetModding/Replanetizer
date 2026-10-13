@@ -50,6 +50,10 @@ namespace Replanetizer.Frames
 
         private object? _selectedObject;
 
+        private int selectedIdx = -1;
+        private byte tempHighNibble = 0;
+        private bool lowNibbleEditing = false;
+
         public object? selectedObject
         {
             get => _selectedObject;
@@ -734,11 +738,22 @@ namespace Replanetizer.Frames
                                             tooltipText += $"\nFloat: {f32val}";
                                         }
 
-                                        if (element == 0)
-                                            ImGui.TextDisabled(byteText);
-                                        else
-                                            ImGui.Text(byteText);
+                                        // Highlights the selected byte
+                                        if (index == selectedIdx)
+                                            ImGui.TableSetBgColor(ImGuiTableBgTarget.CellBg, 0x80808080);
 
+                                        string displayText = (index == selectedIdx && lowNibbleEditing) ? tempHighNibble.ToString("X") + " " : byteText;
+
+                                        if (element == 0)
+                                            ImGui.TextDisabled(displayText);
+                                        else
+                                            ImGui.Text(displayText);
+
+                                        if (ImGui.IsItemClicked())
+                                        {
+                                            selectedIdx = index;
+                                            lowNibbleEditing = false;
+                                        }
                                         if (ImGui.BeginItemTooltip())
                                         {
                                             ImGui.TextUnformatted(tooltipText);
@@ -785,6 +800,31 @@ namespace Replanetizer.Frames
                                 }
 
                                 ImGui.EndTable();
+                                // Allows for editing in the hex viewer
+                                if (selectedIdx >= 0 && selectedIdx < array.Length && ImGui.IsWindowFocused())
+                                {
+                                    var queue = ImGui.GetIO().InputQueueCharacters;
+                                    for (int i = 0; i < queue.Size; i++)
+                                    {
+                                        char typed = (char)queue[i];
+                                        if (!Uri.IsHexDigit(typed))
+                                            continue;
+                                        byte nibble = Convert.ToByte(typed.ToString(), 16);
+
+                                        if (lowNibbleEditing)
+                                        {
+                                            array.SetValue((byte)(tempHighNibble << 4 | nibble), selectedIdx);
+                                            lowNibbleEditing = false;
+                                            selectedIdx++;
+
+                                        }
+                                        else
+                                        {
+                                            tempHighNibble = nibble;
+                                            lowNibbleEditing = true;
+                                        }
+                                    }
+                                }
                             }
                         }
                         else

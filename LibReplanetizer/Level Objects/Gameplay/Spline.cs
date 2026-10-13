@@ -6,6 +6,7 @@
 // Please see the LICENSE.md file for more details.
 
 using OpenTK.Mathematics;
+using System.Collections.Generic;
 using System.ComponentModel;
 using static LibReplanetizer.DataFunctions;
 
@@ -17,6 +18,8 @@ namespace LibReplanetizer.LevelObjects
         public int id { get; set; }
         public float[] vertexBuffer = new float[0];
         public float[] wVals = new float[0];
+
+        public List<Vector3> splineVerticesList /*{ get; set; }*/ = new List<Vector3>();
 
         [Category("Attributes"), DisplayName("offset")]
         public long offset { get; set; }
@@ -78,6 +81,8 @@ namespace LibReplanetizer.LevelObjects
                 vertexBuffer[(i * 3) + 1] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x04);
                 vertexBuffer[(i * 3) + 2] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x08);
                 wVals[i] = ReadFloat(splineBlock, offset + 0x10 + (i * 0x10) + 0x0C);
+
+                splineVerticesList.Add(new Vector3(vertexBuffer[(i * 3) + 0], vertexBuffer[(i * 3) + 1], vertexBuffer[(i * 3) + 2]));
             }
 
             if (count > 0)

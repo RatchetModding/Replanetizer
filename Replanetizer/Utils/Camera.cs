@@ -8,6 +8,7 @@
 using System;
 using System.Drawing.Text;
 using LibReplanetizer.LevelObjects;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
 namespace Replanetizer.Utils
@@ -241,6 +242,17 @@ namespace Replanetizer.Utils
                 levelObject.position.Y + ypos * distanceToObject,
                 levelObject.position.Z + distanceToObject / 2
             ));
+
+            // Move camera to first spline vertex if we're selecting a spline via this method
+            if(levelObject is Spline spline)
+            {
+                Vector3 splineFirstVertex = spline.splineVerticesList[0];
+                SetPosition(new Vector3(
+                    splineFirstVertex.X + xpos * distanceToObject,
+                    splineFirstVertex.Y + ypos * distanceToObject,
+                    splineFirstVertex.Z + distanceToObject / 2
+            ));
+            }
         }
 
         public void Translate(Vector3 vector)

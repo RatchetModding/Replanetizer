@@ -21,6 +21,8 @@ using Replanetizer.Utils;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 using System.Linq;
+using System.Net.NetworkInformation;
+using System.Linq.Expressions;
 
 namespace Replanetizer.Frames
 {
@@ -703,12 +705,15 @@ namespace Replanetizer.Frames
                                         string tooltipText = $"Decimal (8 bits): {element}" +
                                                            $"\nHexadecimal (8 bits): {byteText}";
 
+                                        ushort u16val = 0xffff;
+                                        uint u32val = 0xffffffff;
+
                                         /* When hovering the first byte of a u16,
                                          * display additional info in the tooltip
                                          */
                                         if ((col % 2) == 0 && ((index + 1) < array.Length))
                                         {
-                                            ushort u16val = (ushort) ((element << 8) | Convert.ToByte(array.GetValue(index + 1)!));
+                                            u16val = (ushort) ((element << 8) | Convert.ToByte(array.GetValue(index + 1)!));
                                             tooltipText += $"\nDecimal (16 bits): {u16val}";
                                             tooltipText += $"\nHexadecimal (16 bits): 0x" + u16val.ToString("X4");
                                         }
@@ -720,7 +725,7 @@ namespace Replanetizer.Frames
                                             byte n2 = Convert.ToByte(array.GetValue(index + 2)!);
                                             byte n3 = Convert.ToByte(array.GetValue(index + 3)!);
 
-                                            uint u32val = (uint) ((element << 24) | (n1 << 16) | (n2 << 8) | n3);
+                                            u32val = (uint) ((element << 24) | (n1 << 16) | (n2 << 8) | n3);
                                             tooltipText += $"\nDecimal (32 bits): {u32val}";
                                             tooltipText += $"\nHexadecimal (32 bits): 0x" + u32val.ToString("X8");
 
@@ -738,6 +743,43 @@ namespace Replanetizer.Frames
                                         {
                                             ImGui.TextUnformatted(tooltipText);
                                             ImGui.EndTooltip();
+                                        }
+                                        if (ImGui.BeginPopupContextItem($"context-menu for {index}"))
+                                        {
+                                            uint linkIdx;
+                                            if (u32val != 0xffffffff)
+                                                linkIdx = u32val;
+
+                                            else if (u16val != 0xffff)
+                                                linkIdx = u16val;
+
+                                            else linkIdx = element;
+
+                                            ImGui.Text($"Link: {linkIdx}");
+                                            try
+                                            {
+                                                if (ImGui.Button("Cuboid link"))
+                                                {
+                                                    List<Cuboid>? cuboids = levelFrame?.level.cuboids;
+                                                    levelFrame?.HandleSelect(cuboids![(int) linkIdx], true, true);
+                                                    levelFrame!.RenderVisibility.enableCuboid = true;
+                                                }
+                                                if (ImGui.Button("Spline link"))
+                                                {
+                                                    List<Spline>? splines = levelFrame?.level.splines;
+                                                    levelFrame?.HandleSelect(splines![(int) linkIdx], true, true);
+                                                    levelFrame!.RenderVisibility.enableSpline = true;
+                                                }
+                                                if (ImGui.Button("Moby link"))
+                                                {
+                                                    List<Moby>? mobys = levelFrame?.level.mobs;
+                                                    levelFrame?.HandleSelect(mobys![(int) linkIdx], true, true);
+                                                    levelFrame!.RenderVisibility.enableMoby = true;
+                                                }
+                                            }
+                                            catch { } // This is fine
+
+                                            ImGui.EndPopup();
                                         }
                                     }
                                 }

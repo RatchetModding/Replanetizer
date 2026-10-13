@@ -98,5 +98,22 @@ namespace LibReplanetizer.LevelObjects
             return (model == null) ? false : model.IsDynamic();
         }
 
+        private static bool showIDInHex = false;
+        private string GetStringFromID(int id)
+        {
+            return (showIDInHex) ? $"0x{id:X3}" : $"{id}";
+        }
+        public string GetDisplayName(Model model, GameType game)
+        {
+            string? modelName = ModelLists.ModelLists.GetModelName(model, game);
+            string displayName = GetStringFromID(model.id);
+            if (modelName != null)
+            {
+                displayName += " (" + modelName + ")";
+            }
+
+            return displayName;
+        }
+
     }
 }

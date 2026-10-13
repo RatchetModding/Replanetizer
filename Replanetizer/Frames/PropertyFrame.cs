@@ -53,6 +53,7 @@ namespace Replanetizer.Frames
         private int selectedIdx = -1;
         private byte tempHighNibble = 0;
         private bool lowNibbleEditing = false;
+        public ModelFrame? modelFrame { get; set; }
 
         public object? selectedObject
         {
@@ -181,7 +182,14 @@ namespace Replanetizer.Frames
                 ImGui.Separator();
             }
 
-            ImGui.Text(selectedObject.GetType().Name);
+            string modelString = "";
+            if(selectedObject is ModelObject modelObj)
+            {
+                modelString += " - ";
+                modelString += modelObj.GetDisplayName(modelObj.model!, levelFrame!.level.game);
+            } 
+
+            ImGui.Text(selectedObject.GetType().Name + modelString);
             ImGui.Separator();
 
             ImGui.PushID(selectedObject.GetType().Name);

@@ -21,6 +21,7 @@ using SixLabors.ImageSharp;
 using LibReplanetizer.LevelObjects;
 using SixLabors.ImageSharp.PixelFormats;
 using LibReplanetizer.Models.Animations;
+using LibReplanetizer.ModelLists;
 
 namespace Replanetizer.Frames
 {
@@ -198,9 +199,9 @@ namespace Replanetizer.Frames
             return (showIDInHex) ? $"0x{id:X3}" : $"{id}";
         }
 
-        private string GetDisplayName(Model model)
+        public string GetDisplayName(Model model)
         {
-            string? modelName = ModelLists.ModelLists.GetModelName(model, level.game);
+            string? modelName = ModelLists.GetModelName(model, level.game);
             string displayName = GetStringFromID(model.id);
             if (modelName != null)
             {

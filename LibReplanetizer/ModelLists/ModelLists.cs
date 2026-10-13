@@ -13,7 +13,7 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 
-namespace Replanetizer.ModelLists
+namespace LibReplanetizer.ModelLists
 {
     public static class ModelLists
     {

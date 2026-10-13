@@ -67,9 +67,6 @@
     <None Update="LevelLists\RC*.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="ModelLists\*.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Resources\blue_noise.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -177,29 +177,22 @@ namespace LibReplanetizer
         /// <returns>The number of vertices that were written to the stream.</returns>
         private int WriteDataCollision(StreamWriter objfs, Collision coll, int faceOffset)
         {
+            if (coll.vertexStride != 4 || coll.vertexBuffer.Length % coll.vertexStride != 0 || coll.indBuff.Length % 3 != 0)
+                throw new InvalidOperationException("Collision render data has an invalid vertex or index layout.");
+
             // Vertices
-            var vertexCount = coll.vertexBuffer.Length / 4;
+            var vertexCount = coll.vertexBuffer.Length / coll.vertexStride;
             for (int vertIdx = 0; vertIdx < vertexCount; vertIdx++)
             {
-                var px = coll.vertexBuffer[vertIdx * 0x04 + 0x0] * coll.size;
-                var py = coll.vertexBuffer[vertIdx * 0x04 + 0x1] * coll.size;
-                var pz = coll.vertexBuffer[vertIdx * 0x04 + 0x2] * coll.size;
-                CollisionGeometryCategory category = CollisionVertexMetadata.GetCategory(coll.vertexBuffer[vertIdx * 0x04 + 0x3]);
-                float red = 1.0f;
-                float green = 1.0f;
-                float blue = 1.0f;
-                if (category == CollisionGeometryCategory.Hero)
-                    blue = 1.0f;
-                else if (category == CollisionGeometryCategory.Unknown)
-                {
-                    green = 1.0f;
-                    blue = 1.0f;
-                }
-                objfs.WriteLine("v " + px.ToString("G", en_US) + " " + py.ToString("G", en_US) + " " + pz.ToString("G", en_US) + " " + red.ToString("G", en_US) + " " + green.ToString("G", en_US) + " " + blue.ToString("G", en_US));
+                var px = coll.vertexBuffer[vertIdx * coll.vertexStride + 0] * coll.size;
+                var py = coll.vertexBuffer[vertIdx * coll.vertexStride + 1] * coll.size;
+                var pz = coll.vertexBuffer[vertIdx * coll.vertexStride + 2] * coll.size;
+                objfs.WriteLine("v " + px.ToString("G", en_US) + " " + py.ToString("G", en_US) + " " + pz.ToString("G", en_US) + " 1 1 1");
             }
 
             // Faces
             var faceCount = coll.indBuff.Length / 3;
+            string? previousMaterialName = null;
             for (int faceIdx = 0; faceIdx < faceCount; faceIdx++)
             {
                 int vertIdx = faceIdx * 3;
@@ -207,6 +200,32 @@ namespace LibReplanetizer
                 uint v1 = coll.indBuff[vertIdx + 0];
                 uint v2 = coll.indBuff[vertIdx + 1];
                 uint v3 = coll.indBuff[vertIdx + 2];
+
+                CollisionType collisionType = GetCollisionType(coll, v1);
+                CollisionGeometryCategory category = CollisionVertexMetadata.GetCategory(
+                    coll.vertexBuffer[checked((int) v1) * coll.vertexStride + 3]);
+                if (GetCollisionType(coll, v2).data != collisionType.data || GetCollisionType(coll, v3).data != collisionType.data ||
+                    CollisionVertexMetadata.GetCategory(coll.vertexBuffer[checked((int) v2) * coll.vertexStride + 3]) != category ||
+                    CollisionVertexMetadata.GetCategory(coll.vertexBuffer[checked((int) v3) * coll.vertexStride + 3]) != category)
+                    throw new InvalidOperationException($"Collision face {faceIdx} has inconsistent vertex metadata.");
+
+                if (category != CollisionGeometryCategory.Standard && category != CollisionGeometryCategory.Hero && category != CollisionGeometryCategory.Unknown)
+                    throw new InvalidOperationException($"Collision face {faceIdx} has unsupported geometry category {category}.");
+                if (category != CollisionGeometryCategory.Standard && collisionType.data != 0x80)
+                    throw new InvalidOperationException($"Collision face {faceIdx} has unsupported collision type 0x{collisionType.data:X2} for category {category}.");
+
+                string materialName = $"RC_{collisionType.materialID}_{collisionType.groupID}_{(collisionType.ignoreCameraCollision ? "true" : "false")}_{category}";
+                if (!string.Equals(materialName, previousMaterialName, StringComparison.Ordinal))
+                {
+                    objfs.WriteLine("usemtl " + materialName);
+                    previousMaterialName = materialName;
+                }
+
+                if (v1 >= (uint) vertexCount || v2 >= (uint) vertexCount || v3 >= (uint) vertexCount)
+                    throw new InvalidOperationException($"Collision face {faceIdx} references a missing vertex.");
+
+                // Collision render indices reverse the source triangle winding.
+                (v1, v2) = (v2, v1);
 
                 v1 += 1 + (uint) faceOffset;
                 v2 += 1 + (uint) faceOffset;
@@ -216,6 +235,15 @@ namespace LibReplanetizer
             }
 
             return vertexCount;
+        }
+
+        private static CollisionType GetCollisionType(Collision collision, uint vertexIndex)
+        {
+            if (vertexIndex >= (uint) (collision.vertexBuffer.Length / collision.vertexStride))
+                throw new InvalidOperationException($"Collision face references missing vertex {vertexIndex}.");
+
+            return CollisionVertexMetadata.GetCollisionType(
+                collision.vertexBuffer[checked((int) vertexIndex) * collision.vertexStride + 3]);
         }
 
         private int WriteData(StreamWriter objfs, Model? model, int faceOffset, Matrix4 modelMatrix, VertexColorContainer? vColors = null)
@@ -806,25 +834,24 @@ namespace LibReplanetizer
 
         public void ExportCollision(string fileName, Level level)
         {
-            string? pathName = Path.GetDirectoryName(fileName);
-            string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
+            if (level.collisionChunks.Count == 0)
+            {
+                ExportCollision(fileName, level.collisionEngine);
+                return;
+            }
 
             using (StreamWriter objfs = new StreamWriter(fileName))
             {
-                if (level.collisionChunks.Count == 0)
-                {
-                    WriteDataCollision(objfs, (Collision) level.collisionEngine, 0);
-                }
-                else
-                {
-                    int faceOffset = 0;
-
-                    foreach (Collision col in level.collisionChunks)
-                    {
-                        faceOffset += WriteDataCollision(objfs, col, faceOffset);
-                    }
-                }
+                int faceOffset = 0;
+                foreach (Collision col in level.collisionChunks)
+                    faceOffset += WriteDataCollision(objfs, col, faceOffset);
             }
+        }
+
+        public void ExportCollision(string fileName, Collision collision)
+        {
+            using (StreamWriter objfs = new StreamWriter(fileName))
+                WriteDataCollision(objfs, collision, 0);
         }
     }
 }

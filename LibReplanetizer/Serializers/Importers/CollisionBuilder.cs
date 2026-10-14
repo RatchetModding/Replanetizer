@@ -18,7 +18,7 @@ namespace LibReplanetizer.Serializers.Importers
         public static Collision Build(ParsedModelGeometry geometry, byte collisionType = 0x1F)
         {
             CollisionType type = new CollisionType(collisionType);
-            return Build(geometry, _ => type, false);
+            return Build(geometry, _ => (type, CollisionGeometryCategory.Standard), false);
         }
 
         public static Collision BuildPerFace(ParsedModelGeometry geometry)
@@ -33,33 +33,51 @@ namespace LibReplanetizer.Serializers.Importers
             return Build(geometry, face =>
             {
                 string? materialName = geometry.GetMaterialName(face.materialIndex);
-                return materialName == null ? new CollisionType(0x1F) : ParseCollisionMaterial(materialName);
+                return materialName == null
+                    ? (new CollisionType(0x1F), CollisionGeometryCategory.Standard)
+                    : ParseCollisionMaterial(materialName);
             }, true);
         }
 
-        private static CollisionType ParseCollisionMaterial(string materialName)
+        private static (CollisionType type, CollisionGeometryCategory category) ParseCollisionMaterial(string materialName)
         {
             if (!materialName.StartsWith("RC_", StringComparison.Ordinal))
-                return new CollisionType(0x1F);
+                return (new CollisionType(0x1F), CollisionGeometryCategory.Standard);
 
             string[] parts = materialName.Split('_');
-            Utilities.DebugAssert(parts.Length >= 2 && parts.Length <= 4, "Collision material names must be RC_<materialID>, RC_<materialID>_<groupID>, or RC_<materialID>_<groupID>_<IgnoreCamera>.");
+            if (parts.Length < 2 || parts.Length > 5)
+                throw new FormatException("Collision material names must be RC_<materialID>[_<groupID>[_<IgnoreCamera>]][_<category>].");
 
             int materialID = ParseUnsignedPart(parts[1], "material ID");
-            Utilities.DebugAssert(materialID <= 0x1F, "Collision material IDs must be between 0 and 31.");
+            if (materialID > 0x1F)
+                throw new FormatException("Collision material IDs must be between 0 and 31.");
 
             int groupID = parts.Length >= 3 ? ParseUnsignedPart(parts[2], "group ID") : 0;
-            Utilities.DebugAssert(groupID <= 0x03, "Collision group IDs must be between 0 and 3.");
+            if (groupID > 0x03)
+                throw new FormatException("Collision group IDs must be between 0 and 3.");
 
-            bool ignoreCamera = parts.Length == 4 && ParseIgnoreCamera(parts[3]);
+            bool ignoreCamera = parts.Length >= 4 && ParseIgnoreCamera(parts[3]);
+            CollisionGeometryCategory category = parts.Length == 5 ? ParseCategory(parts[4]) : CollisionGeometryCategory.Standard;
             byte data = (byte) (materialID | (groupID << 5) | (ignoreCamera ? 0x80 : 0));
-            return new CollisionType(data);
+            return (new CollisionType(data), category);
+        }
+
+        private static CollisionGeometryCategory ParseCategory(string value)
+        {
+            if (string.Equals(value, nameof(CollisionGeometryCategory.Standard), StringComparison.OrdinalIgnoreCase))
+                return CollisionGeometryCategory.Standard;
+            if (string.Equals(value, nameof(CollisionGeometryCategory.Hero), StringComparison.OrdinalIgnoreCase))
+                return CollisionGeometryCategory.Hero;
+            if (string.Equals(value, nameof(CollisionGeometryCategory.Unknown), StringComparison.OrdinalIgnoreCase))
+                return CollisionGeometryCategory.Unknown;
+            throw new FormatException($"Unsupported collision geometry category '{value}'.");
         }
 
         private static int ParseUnsignedPart(string value, string fieldName)
         {
             bool parsed = int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int result);
-            Utilities.DebugAssert(parsed, $"Collision {fieldName} must be an unsigned decimal integer.");
+            if (!parsed)
+                throw new FormatException($"Collision {fieldName} must be an unsigned decimal integer.");
             return result;
         }
 
@@ -67,13 +85,16 @@ namespace LibReplanetizer.Serializers.Importers
         {
             bool ignoreCamera = string.Equals(value, "true", StringComparison.OrdinalIgnoreCase) || value == "1";
             bool allowCamera = string.Equals(value, "false", StringComparison.OrdinalIgnoreCase) || value == "0";
-            Utilities.DebugAssert(ignoreCamera || allowCamera, "IgnoreCamera must be true, false, 1, or 0.");
+            if (!ignoreCamera && !allowCamera)
+                throw new FormatException("IgnoreCamera must be true, false, 1, or 0.");
             return ignoreCamera;
         }
 
-        private static Collision Build(ParsedModelGeometry geometry, Func<Face, CollisionType> collisionTypeSelector, bool rejectNegativeCoordinates)
+        private static Collision Build(ParsedModelGeometry geometry, Func<Face, (CollisionType type, CollisionGeometryCategory category)> collisionMetadataSelector, bool rejectNegativeCoordinates)
         {
-            var triangles = new List<CollisionTriangle>(geometry.faces.Count);
+            var standardTriangles = new List<CollisionTriangle>(geometry.faces.Count);
+            var heroTriangles = new List<CollisionTriangle>();
+            var unknownTriangles = new List<CollisionTriangle>();
 
             foreach (Face face in geometry.faces)
             {
@@ -90,14 +111,32 @@ namespace LibReplanetizer.Serializers.Importers
                      c.X < 0 || c.Y < 0 || c.Z < 0))
                     throw new InvalidOperationException("OBJ collision geometry contains negative coordinates, which the collision grid cannot represent.");
 
-                triangles.Add(new CollisionTriangle(
+                (CollisionType type, CollisionGeometryCategory category) = collisionMetadataSelector(face);
+                if (category != CollisionGeometryCategory.Standard && type.data != 0x80)
+                    throw new FormatException($"Collision category {category} requires collision type 0x80.");
+
+                CollisionTriangle triangle = new CollisionTriangle(
                     new System.Numerics.Vector3(a.X, a.Y, a.Z),
                     new System.Numerics.Vector3(b.X, b.Y, b.Z),
                     new System.Numerics.Vector3(c.X, c.Y, c.Z),
-                    collisionTypeSelector(face)));
+                    type);
+                switch (category)
+                {
+                    case CollisionGeometryCategory.Standard:
+                        standardTriangles.Add(triangle);
+                        break;
+                    case CollisionGeometryCategory.Hero:
+                        heroTriangles.Add(triangle);
+                        break;
+                    case CollisionGeometryCategory.Unknown:
+                        unknownTriangles.Add(triangle);
+                        break;
+                    default:
+                        throw new FormatException($"Unsupported collision geometry category {category}.");
+                }
             }
 
-            return Collision.FromTriangles(triangles);
+            return Collision.FromTriangles(standardTriangles, heroTriangles, unknownTriangles);
         }
 
         private static ObjVector3 GetPosition(ParsedModelGeometry geometry, int index)

@@ -363,6 +363,46 @@ namespace LibReplanetizer.Models
             private ushort[] vertices = [];
             private byte[] indices = [];
 
+            public HeroCollisionCell(IReadOnlyList<CollisionTriangle> triangles, int start, int count)
+            {
+                // OBJ does not encode these section-specific header values.
+                unk0x00 = 0;
+                unk0x04 = 0;
+                unk0x06 = 0;
+                triCount = checked((ushort) count);
+                vertCount = checked((ushort) (count * 3));
+                vertices = new ushort[vertCount * 3];
+                indices = new byte[triCount * 3];
+
+                for (int triangleIndex = 0; triangleIndex < count; triangleIndex++)
+                {
+                    CollisionTriangle triangle = triangles[start + triangleIndex];
+                    int vertexIndex = triangleIndex * 3;
+                    StorePosition(triangle.A, vertexIndex);
+                    StorePosition(triangle.B, vertexIndex + 1);
+                    StorePosition(triangle.C, vertexIndex + 2);
+                    indices[triangleIndex * 3 + 0] = checked((byte) vertexIndex);
+                    indices[triangleIndex * 3 + 1] = checked((byte) (vertexIndex + 1));
+                    indices[triangleIndex * 3 + 2] = checked((byte) (vertexIndex + 2));
+                }
+            }
+
+            private void StorePosition(System.Numerics.Vector3 position, int vertexIndex)
+            {
+                vertices[vertexIndex * 3 + 0] = ToSpecialCoordinate(position.X);
+                vertices[vertexIndex * 3 + 1] = ToSpecialCoordinate(position.Y);
+                vertices[vertexIndex * 3 + 2] = ToSpecialCoordinate(position.Z);
+            }
+
+            private static ushort ToSpecialCoordinate(float coordinate)
+            {
+                double scaled = coordinate * 64.0;
+                double rounded = Math.Round(scaled);
+                if (!double.IsFinite(scaled) || scaled < 0 || rounded > ushort.MaxValue || Math.Abs(scaled - rounded) > 0.0001)
+                    throw new InvalidOperationException("Hero and unknown collision coordinates must be non-negative multiples of 1/64 within the unsigned 16-bit range.");
+                return checked((ushort) rounded);
+            }
+
             public HeroCollisionCell(FileStream fs, int baseOffset, int num, byte[] headerBlock)
             {
                 int entryOffset = num * 0x10;
@@ -638,6 +678,42 @@ namespace LibReplanetizer.Models
             if (generateRenderData)
                 collision.GenerateRenderData();
             return collision;
+        }
+
+        internal static Collision FromTriangles(
+            IEnumerable<CollisionTriangle> standardTriangles,
+            IEnumerable<CollisionTriangle> heroTriangles,
+            IEnumerable<CollisionTriangle> unknownTriangles)
+        {
+            if (standardTriangles == null)
+                throw new ArgumentNullException(nameof(standardTriangles));
+            if (heroTriangles == null)
+                throw new ArgumentNullException(nameof(heroTriangles));
+            if (unknownTriangles == null)
+                throw new ArgumentNullException(nameof(unknownTriangles));
+
+            List<CollisionTriangle> hero = heroTriangles.ToList();
+            List<CollisionTriangle> unknown = unknownTriangles.ToList();
+            if (hero.Any(triangle => triangle.Type.data != 0x80) || unknown.Any(triangle => triangle.Type.data != 0x80))
+                throw new ArgumentException("Hero and unknown collision triangles must use collision type 0x80.");
+
+            Collision collision = FromTriangles(standardTriangles, generateRenderData: false);
+            AddSpecialCells(collision.heroCells, hero);
+            AddSpecialCells(collision.unkCells, unknown);
+            collision.hasHeroCollision = hero.Count > 0;
+            collision.hasUnkCollision = unknown.Count > 0;
+            collision.GenerateRenderData();
+            return collision;
+        }
+
+        private static void AddSpecialCells(List<HeroCollisionCell> cells, List<CollisionTriangle> triangles)
+        {
+            const int trianglesPerCell = byte.MaxValue / 3;
+            for (int start = 0; start < triangles.Count; start += trianglesPerCell)
+            {
+                int count = Math.Min(trianglesPerCell, triangles.Count - start);
+                cells.Add(new HeroCollisionCell(triangles, start, count));
+            }
         }
 
         public static Collision Concatenate(Collision first, Collision second)

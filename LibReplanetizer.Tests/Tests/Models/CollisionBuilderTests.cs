@@ -373,6 +373,32 @@ namespace LibReplanetizer.Tests.Models
         }
 
         [Fact]
+        public void BuildPerFace_RejectsNonDefaultTypeForSpecialCategory()
+        {
+            ParsedModelGeometry geometry = CreateGeometry(
+                new Vector3(0.5f, 0.5f, 0.5f),
+                new Vector3(1.0f, 0.5f, 0.5f),
+                new Vector3(0.5f, 1.0f, 0.5f));
+            SetMaterialName(geometry, geometry.faces[0], "RC_1_0_false_Hero");
+
+            Assert.Throws<FormatException>(() => CollisionBuilder.BuildPerFace(geometry));
+        }
+
+        [Theory]
+        [InlineData(0.51f)]
+        [InlineData(1024.0f)]
+        public void BuildPerFace_RejectsSpecialCoordinatesNotRepresentableAtOneSixtyFourthUnit(float x)
+        {
+            ParsedModelGeometry geometry = CreateGeometry(
+            new Vector3(x, 0.5f, 0.5f),
+                new Vector3(1.0f, 0.5f, 0.5f),
+                new Vector3(0.5f, 1.0f, 0.5f));
+            SetMaterialName(geometry, geometry.faces[0], "RC_0_0_true_Hero");
+
+            Assert.Throws<InvalidOperationException>(() => CollisionBuilder.BuildPerFace(geometry));
+        }
+
+        [Fact]
         public void BuildPerFace_ImportsObjMaterialTypesAndRoundTrips()
         {
             const string obj =

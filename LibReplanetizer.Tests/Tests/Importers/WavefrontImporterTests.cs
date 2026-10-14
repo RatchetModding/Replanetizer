@@ -40,6 +40,44 @@ namespace LibReplanetizer.Tests.Importers
         }
 
         [Fact]
+        public void Import_QuadTriangulatesAndPreservesCornerAttributesAndMaterial()
+        {
+            ParsedModelGeometry geometry = ImportText(
+                "v 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\n" +
+                "vt 0 0\nvt 1 0\nvt 1 1\nvt 0 1\n" +
+                "vn 0 0 1\nvn 0 1 0\nvn 1 0 0\nvn 0 0 -1\n" +
+                "usemtl RC_42\nf 1/1/1 2/2/2 3/3/3 4/4/4\n");
+
+            Assert.Equal(2, geometry.faces.Count);
+            Assert.Equal(new[] { (0, 0, 0), (1, 1, 1), (2, 2, 2) }, geometry.faces[0].corners);
+            Assert.Equal(new[] { (0, 0, 0), (2, 2, 2), (3, 3, 3) }, geometry.faces[1].corners);
+            Assert.Equal(new[] { 0, 0 }, geometry.faces.ConvertAll(face => face.materialIndex));
+        }
+
+        [Fact]
+        public void Import_FaceWithMoreThanFourCornersKeepsFirstTriangle()
+        {
+            ParsedModelGeometry geometry = ImportText(
+                "v 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\nv 1 2 0\nf 1 2 3 4 5\n");
+
+            Assert.Single(geometry.faces);
+            Assert.Equal(new[] { (0, -1, -1), (1, -1, -1), (2, -1, -1) }, geometry.faces[0].corners);
+        }
+
+        [Fact]
+        public void Import_QuadBuildsVisibleCollisionTriangles()
+        {
+            ParsedModelGeometry geometry = ImportText(
+                "v 0.5 0.5 0.5\nv 1.5 0.5 0.5\nv 1.5 1.5 0.5\nv 0.5 1.5 0.5\n" +
+                "usemtl RC_5\nf 1 2 3 4\n");
+
+            Collision collision = CollisionBuilder.BuildPerFace(geometry);
+
+            Assert.Equal(6, collision.indBuff.Length);
+            Assert.NotEmpty(collision.vertexBuffer);
+        }
+
+        [Fact]
         public void Import_ParsesNumericAttributesInvariantly()
         {
             CultureInfo originalCulture = CultureInfo.CurrentCulture;

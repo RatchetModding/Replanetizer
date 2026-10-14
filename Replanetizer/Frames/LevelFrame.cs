@@ -34,6 +34,9 @@ namespace Replanetizer.Frames
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Level";
+        private string collisionImportWarning = string.Empty;
+        private bool collisionImportWarningPending;
+        private bool showCollisionImportWarning;
 
         private FramebufferRenderer? renderer;
         public LevelRenderer? levelRenderer;
@@ -300,12 +303,11 @@ namespace Replanetizer.Frames
                             var res = CrossFileDialog.OpenFile(filter: ".rcc");
                             if (res.Length > 0)
                             {
+                                Collision importedCollision;
                                 using (FileStream fs = File.Open(res, FileMode.Open, FileAccess.Read))
-                                    level.collisionEngine = new Collision(fs, 0, import: true);
+                                    importedCollision = new Collision(fs, 0, import: true);
 
-                                levelRenderer?.Dispose();
-                                levelRenderer = new LevelRenderer(shaderTable, textureIds);
-                                levelRenderer.Include(level);
+                                MergeImportedCollision(importedCollision);
                             }
                             InvalidateView();
                         }
@@ -332,12 +334,25 @@ namespace Replanetizer.Frames
                             if (res.Length > 0)
                             {
                                 var geometry = new WavefrontImporter().Import(res);
-                                level.collisionEngine = CollisionBuilder.BuildPerFace(geometry);
-
-                                levelRenderer?.Dispose();
-                                levelRenderer = new LevelRenderer(shaderTable, textureIds);
-                                levelRenderer.Include(level);
-                                InvalidateView();
+                                try
+                                {
+                                    Collision importedCollision = CollisionBuilder.BuildPerFace(geometry);
+                                    if (importedCollision.indBuff.Length == 0)
+                                    {
+                                        const string warning = "The OBJ produced no collision triangles. Ensure it contains faces and that all collision vertex coordinates are non-negative.";
+                                        QueueCollisionImportWarning(warning);
+                                    }
+                                    else
+                                    {
+                                        MergeImportedCollision(importedCollision);
+                                        InvalidateView();
+                                    }
+                                }
+                                catch (InvalidOperationException exception)
+                                {
+                                    string warning = $"OBJ collision import failed: {exception.Message}";
+                                    QueueCollisionImportWarning(warning);
+                                }
                             }
                         }
                         ImGui.EndMenu();
@@ -486,6 +501,37 @@ namespace Replanetizer.Frames
 
                 ImGui.EndMenuBar();
             }
+
+            RenderCollisionImportWarning();
+        }
+
+        private void QueueCollisionImportWarning(string warning)
+        {
+            LOGGER.Warn(warning);
+            collisionImportWarning = warning;
+            collisionImportWarningPending = true;
+            showCollisionImportWarning = true;
+        }
+
+        private void RenderCollisionImportWarning()
+        {
+            if (collisionImportWarningPending)
+            {
+                ImGui.OpenPopup("Collision import warning");
+                collisionImportWarningPending = false;
+            }
+
+            if (!ImGui.BeginPopupModal("Collision import warning", ref showCollisionImportWarning, ImGuiWindowFlags.AlwaysAutoResize))
+                return;
+
+            ImGui.TextWrapped(collisionImportWarning);
+            ImGui.Spacing();
+            if (ImGui.Button("OK") || ImGui.IsKeyPressed(ImGuiKey.Escape))
+            {
+                showCollisionImportWarning = false;
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.EndPopup();
         }
 
         private void RenderTextOverlay(float deltaTime)
@@ -723,6 +769,22 @@ namespace Replanetizer.Frames
             {
                 textureIds.Add(t, new GLTexture(t));
             }
+        }
+
+        private void MergeImportedCollision(Collision importedCollision)
+        {
+            Collision mergedEngineCollision = Collision.Concatenate(level.collisionEngine, importedCollision);
+            Collision? mergedFirstChunk = level.collisionChunks.Count > 0
+                ? Collision.Concatenate(level.collisionChunks[0], importedCollision)
+                : null;
+
+            level.collisionEngine = mergedEngineCollision;
+            if (mergedFirstChunk != null)
+                level.collisionChunks[0] = mergedFirstChunk;
+
+            levelRenderer?.Dispose();
+            levelRenderer = new LevelRenderer(shaderTable, textureIds);
+            levelRenderer.Include(level);
         }
 
         private void LoadLevel(Level level)

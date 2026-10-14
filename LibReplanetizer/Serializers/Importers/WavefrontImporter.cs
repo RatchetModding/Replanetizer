@@ -94,10 +94,15 @@ namespace LibReplanetizer.Serializers.Importers
                         break;
 
                     case "f":
-                        Utilities.DebugAssert(split.Length == 4, "Wavefront faces must contain exactly three corners.");
-                        Face face = new Face();
-                        face.materialIndex = currentMaterialIndex;
-                        for (int i = 0; i < 3; i++)
+                        int cornerCount = split.Length - 1;
+                        Utilities.DebugAssert(cornerCount >= 3 && cornerCount <= 4,
+                            "Wavefront faces must contain three or four corners.");
+                        if (cornerCount < 3)
+                            continue;
+
+                        int parsedCornerCount = cornerCount > 4 ? 3 : cornerCount;
+                        var corners = new (int pos, int uv, int norm)[parsedCornerCount];
+                        for (int i = 0; i < parsedCornerCount; i++)
                         {
                             string[] parts = split[i + 1].Split('/');
                             Utilities.DebugAssert(parts.Length > 0 && parts[0].Length > 0,
@@ -106,13 +111,22 @@ namespace LibReplanetizer.Serializers.Importers
                             int uv = parts.Length > 1 && parts[1].Length > 0 ? ParseIndex(parts[1], "UV") : -1;
                             int normal = parts.Length > 2 && parts[2].Length > 0 ? ParseIndex(parts[2], "normal") : -1;
 
-                            face.corners[i] = (
+                            corners[i] = (
                                 ParseIndex(parts[0], "position"),
                                 uv,
                                 normal
                             );
                         }
-                        parsed.faces.Add(face);
+
+                        for (int triangleIndex = 0; triangleIndex < parsedCornerCount - 2; triangleIndex++)
+                        {
+                            Face face = new Face();
+                            face.materialIndex = currentMaterialIndex;
+                            face.corners[0] = corners[0];
+                            face.corners[1] = corners[triangleIndex + 1];
+                            face.corners[2] = corners[triangleIndex + 2];
+                            parsed.faces.Add(face);
+                        }
 
                         break;
 

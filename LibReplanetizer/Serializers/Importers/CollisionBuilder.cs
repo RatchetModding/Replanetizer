@@ -32,7 +32,8 @@ namespace LibReplanetizer.Serializers.Importers
 
         private static CollisionType ParseCollisionMaterial(string materialName)
         {
-            Utilities.DebugAssert(materialName!.StartsWith("RC_", StringComparison.Ordinal), "Collision material names must start with 'RC_'.");
+            if (!materialName.StartsWith("RC_", StringComparison.Ordinal))
+                return new CollisionType(0x1F);
 
             string[] parts = materialName.Split('_');
             Utilities.DebugAssert(parts.Length >= 2 && parts.Length <= 4, "Collision material names must be RC_<materialID>, RC_<materialID>_<groupID>, or RC_<materialID>_<groupID>_<IgnoreCamera>.");
@@ -63,7 +64,7 @@ namespace LibReplanetizer.Serializers.Importers
             return ignoreCamera;
         }
 
-        private static Collision Build(ParsedModelGeometry geometry, Func<Face, CollisionType> collisionTypeSelector, bool skipNegativeCoordinates)
+        private static Collision Build(ParsedModelGeometry geometry, Func<Face, CollisionType> collisionTypeSelector, bool rejectNegativeCoordinates)
         {
             var triangles = new List<CollisionTriangle>(geometry.faces.Count);
 
@@ -76,11 +77,11 @@ namespace LibReplanetizer.Serializers.Importers
                 ObjVector3 a = GetPosition(geometry, corners[0].pos);
                 ObjVector3 b = GetPosition(geometry, corners[1].pos);
                 ObjVector3 c = GetPosition(geometry, corners[2].pos);
-                if (skipNegativeCoordinates &&
+                if (rejectNegativeCoordinates &&
                     (a.X < 0 || a.Y < 0 || a.Z < 0 ||
                      b.X < 0 || b.Y < 0 || b.Z < 0 ||
                      c.X < 0 || c.Y < 0 || c.Z < 0))
-                    continue;
+                    throw new InvalidOperationException("OBJ collision geometry contains negative coordinates, which the collision grid cannot represent.");
 
                 triangles.Add(new CollisionTriangle(
                     new System.Numerics.Vector3(a.X, a.Y, a.Z),

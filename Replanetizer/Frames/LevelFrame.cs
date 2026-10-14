@@ -296,9 +296,9 @@ namespace Replanetizer.Frames
                     }
                     if (ImGui.BeginMenu("Import"))
                     {
-                        if (ImGui.MenuItem("Collision (Internal R&C format only)"))
+                        if (ImGui.MenuItem("Collision"))
                         {
-                            OpenCollisionImportFrame(CollisionImportFormat.Rcc);
+                            OpenCollisionImportFrame();
                         }
                         if (ImGui.MenuItem("Terrain"))
                         {
@@ -314,10 +314,6 @@ namespace Replanetizer.Frames
 
                                 InvalidateView();
                             }
-                        }
-                        if (ImGui.MenuItem("Collision (OBJ)"))
-                        {
-                            OpenCollisionImportFrame(CollisionImportFormat.Obj);
                         }
                         ImGui.EndMenu();
                     }
@@ -475,13 +471,13 @@ namespace Replanetizer.Frames
             collisionImportWarning.Queue(warning);
         }
 
-        private void OpenCollisionImportFrame(CollisionImportFormat format)
+        private void OpenCollisionImportFrame()
         {
             CollisionImportFrame? frame = subFrames.OfType<CollisionImportFrame>().FirstOrDefault();
             if (frame == null)
-                AddSubFrame(() => new CollisionImportFrame(wnd, this, format));
+                AddSubFrame(() => new CollisionImportFrame(wnd, this));
             else
-                frame.SetFormat(format);
+                frame.Open();
         }
 
         private void RenderTextOverlay(float deltaTime)

@@ -24,26 +24,30 @@ namespace Replanetizer.Frames
     {
         protected override string frameName { get; set; } = "Collision Import";
 
-        private CollisionImportFormat format;
+        private static readonly string[] FORMAT_STRINGS = { "R&C Internal (.rcc)", "Wavefront OBJ (.obj)" };
+
+        private CollisionImportFormat format = CollisionImportFormat.Rcc;
         private string path = string.Empty;
 
-        public CollisionImportFrame(Window wnd, LevelFrame levelFrame, CollisionImportFormat format)
+        public CollisionImportFrame(Window wnd, LevelFrame levelFrame)
             : base(wnd, levelFrame)
         {
-            this.format = format;
         }
 
-        public void SetFormat(CollisionImportFormat format)
+        public void Open()
         {
-            if (this.format != format)
-                path = string.Empty;
-
-            this.format = format;
             isOpen = true;
         }
 
         public override void Render(float deltaTime)
         {
+            int formatIndex = (int) format;
+            if (ImGui.Combo("File Type", ref formatIndex, FORMAT_STRINGS, FORMAT_STRINGS.Length))
+            {
+                format = (CollisionImportFormat) formatIndex;
+                path = string.Empty;
+            }
+
             ImGui.InputText("Path", ref path, 4096);
             ImGui.SameLine();
             if (ImGui.Button("Browse..."))

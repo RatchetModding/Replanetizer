@@ -30,6 +30,25 @@ namespace LibReplanetizer.Tests.Importers
         }
 
         [Fact]
+        public void Import_GeneratesBoundsFromAllVertices()
+        {
+            ParsedModelGeometry geometry = ImportText(
+                "v 1 2 3\nv -2 8 0\nv 4 -1 6\nv 10 5 -3\nf 1 2 3\n");
+
+            Assert.True(geometry.HasBounds);
+            Assert.Equal(new Vector3(-2, -1, -3), geometry.BoundsMin);
+            Assert.Equal(new Vector3(10, 8, 6), geometry.BoundsMax);
+        }
+
+        [Fact]
+        public void Import_EmptyGeometryHasNoBounds()
+        {
+            ParsedModelGeometry geometry = ImportText(string.Empty);
+
+            Assert.False(geometry.HasBounds);
+        }
+
+        [Fact]
         public void Import_TriangleWithInlineCommentsParsesOnlyObjTokens()
         {
             ParsedModelGeometry geometry = ImportText(

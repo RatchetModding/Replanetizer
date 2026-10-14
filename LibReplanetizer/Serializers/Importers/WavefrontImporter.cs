@@ -26,6 +26,30 @@ namespace LibReplanetizer.Serializers.Importers
         public List<Vector2> uvs = new List<Vector2>();
         public List<string> materialNames = new List<string>();
         public List<Face> faces = new List<Face>();
+        public Vector3 BoundsMin { get; private set; }
+        public Vector3 BoundsMax { get; private set; }
+        public bool HasBounds { get; private set; }
+
+        internal void AddVertex(Vector3 vertex)
+        {
+            vertices.Add(vertex);
+            if (!HasBounds)
+            {
+                BoundsMin = vertex;
+                BoundsMax = vertex;
+                HasBounds = true;
+                return;
+            }
+
+            BoundsMin = new Vector3(
+                Math.Min(BoundsMin.X, vertex.X),
+                Math.Min(BoundsMin.Y, vertex.Y),
+                Math.Min(BoundsMin.Z, vertex.Z));
+            BoundsMax = new Vector3(
+                Math.Max(BoundsMax.X, vertex.X),
+                Math.Max(BoundsMax.Y, vertex.Y),
+                Math.Max(BoundsMax.Z, vertex.Z));
+        }
 
         internal string? GetMaterialName(int materialIndex)
         {
@@ -59,7 +83,7 @@ namespace LibReplanetizer.Serializers.Importers
                 {
                     case "v":
                         Utilities.DebugAssert(split.Length >= 4, "OBJ positions must contain three coordinates.");
-                        parsed.vertices.Add(new Vector3(ParseFloat(split[1]), ParseFloat(split[2]), ParseFloat(split[3])));
+                        parsed.AddVertex(new Vector3(ParseFloat(split[1]), ParseFloat(split[2]), ParseFloat(split[3])));
 
                         if (split.Length >= 7)
                         {

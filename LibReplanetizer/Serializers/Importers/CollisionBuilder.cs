@@ -23,6 +23,13 @@ namespace LibReplanetizer.Serializers.Importers
 
         public static Collision BuildPerFace(ParsedModelGeometry geometry)
         {
+            if (geometry.HasBounds &&
+                (geometry.BoundsMin.X < 0 || geometry.BoundsMin.Y < 0 || geometry.BoundsMin.Z < 0))
+            {
+                throw new InvalidOperationException(
+                    $"OBJ collision mesh bounds contain negative coordinates (min: {geometry.BoundsMin}, max: {geometry.BoundsMax}); the collision grid cannot represent negative coordinates.");
+            }
+
             return Build(geometry, face =>
             {
                 string? materialName = geometry.GetMaterialName(face.materialIndex);

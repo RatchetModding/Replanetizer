@@ -34,9 +34,7 @@ namespace Replanetizer.Frames
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Level";
-        private string collisionImportWarning = string.Empty;
-        private bool collisionImportWarningPending;
-        private bool showCollisionImportWarning;
+        private readonly ImGuiWarningModal collisionImportWarning = new("Collision import warning");
 
         private FramebufferRenderer? renderer;
         public LevelRenderer? levelRenderer;
@@ -300,16 +298,7 @@ namespace Replanetizer.Frames
                     {
                         if (ImGui.MenuItem("Collision (Internal R&C format only)"))
                         {
-                            var res = CrossFileDialog.OpenFile(filter: ".rcc");
-                            if (res.Length > 0)
-                            {
-                                Collision importedCollision;
-                                using (FileStream fs = File.Open(res, FileMode.Open, FileAccess.Read))
-                                    importedCollision = new Collision(fs, 0, import: true);
-
-                                MergeImportedCollision(importedCollision);
-                            }
-                            InvalidateView();
+                            OpenCollisionImportFrame(CollisionImportFormat.Rcc);
                         }
                         if (ImGui.MenuItem("Terrain"))
                         {
@@ -321,39 +310,14 @@ namespace Replanetizer.Frames
 
                                 level.terrainEngine = terrain;
 
-                                levelRenderer?.Dispose();
-                                levelRenderer = new LevelRenderer(shaderTable, textureIds);
-                                levelRenderer.Include(level);
+                                RebuildLevelRenderer();
 
                                 InvalidateView();
                             }
                         }
                         if (ImGui.MenuItem("Collision (OBJ)"))
                         {
-                            var res = CrossFileDialog.OpenFile(filter: ".obj");
-                            if (res.Length > 0)
-                            {
-                                var geometry = new WavefrontImporter().Import(res);
-                                try
-                                {
-                                    Collision importedCollision = CollisionBuilder.BuildPerFace(geometry);
-                                    if (importedCollision.indBuff.Length == 0)
-                                    {
-                                        const string warning = "The OBJ produced no collision triangles. Ensure it contains faces and that all collision vertex coordinates are non-negative.";
-                                        QueueCollisionImportWarning(warning);
-                                    }
-                                    else
-                                    {
-                                        MergeImportedCollision(importedCollision);
-                                        InvalidateView();
-                                    }
-                                }
-                                catch (InvalidOperationException exception)
-                                {
-                                    string warning = $"OBJ collision import failed: {exception.Message}";
-                                    QueueCollisionImportWarning(warning);
-                                }
-                            }
+                            OpenCollisionImportFrame(CollisionImportFormat.Obj);
                         }
                         ImGui.EndMenu();
                     }
@@ -502,36 +466,22 @@ namespace Replanetizer.Frames
                 ImGui.EndMenuBar();
             }
 
-            RenderCollisionImportWarning();
+            collisionImportWarning.Render();
         }
 
-        private void QueueCollisionImportWarning(string warning)
+        internal void QueueCollisionImportWarning(string warning)
         {
             LOGGER.Warn(warning);
-            collisionImportWarning = warning;
-            collisionImportWarningPending = true;
-            showCollisionImportWarning = true;
+            collisionImportWarning.Queue(warning);
         }
 
-        private void RenderCollisionImportWarning()
+        private void OpenCollisionImportFrame(CollisionImportFormat format)
         {
-            if (collisionImportWarningPending)
-            {
-                ImGui.OpenPopup("Collision import warning");
-                collisionImportWarningPending = false;
-            }
-
-            if (!ImGui.BeginPopupModal("Collision import warning", ref showCollisionImportWarning, ImGuiWindowFlags.AlwaysAutoResize))
-                return;
-
-            ImGui.TextWrapped(collisionImportWarning);
-            ImGui.Spacing();
-            if (ImGui.Button("OK") || ImGui.IsKeyPressed(ImGuiKey.Escape))
-            {
-                showCollisionImportWarning = false;
-                ImGui.CloseCurrentPopup();
-            }
-            ImGui.EndPopup();
+            CollisionImportFrame? frame = subFrames.OfType<CollisionImportFrame>().FirstOrDefault();
+            if (frame == null)
+                AddSubFrame(() => new CollisionImportFrame(wnd, this, format));
+            else
+                frame.SetFormat(format);
         }
 
         private void RenderTextOverlay(float deltaTime)
@@ -771,22 +721,6 @@ namespace Replanetizer.Frames
             }
         }
 
-        private void MergeImportedCollision(Collision importedCollision)
-        {
-            Collision mergedEngineCollision = Collision.Concatenate(level.collisionEngine, importedCollision);
-            Collision? mergedFirstChunk = level.collisionChunks.Count > 0
-                ? Collision.Concatenate(level.collisionChunks[0], importedCollision)
-                : null;
-
-            level.collisionEngine = mergedEngineCollision;
-            if (mergedFirstChunk != null)
-                level.collisionChunks[0] = mergedFirstChunk;
-
-            levelRenderer?.Dispose();
-            levelRenderer = new LevelRenderer(shaderTable, textureIds);
-            levelRenderer.Include(level);
-        }
-
         private void LoadLevel(Level level)
         {
             this.level = level;
@@ -811,6 +745,13 @@ namespace Replanetizer.Frames
             selectedObjects.Clear();
             activeMobies = level.mobs.ToList();
             InvalidateView();
+        }
+
+        internal void RebuildLevelRenderer()
+        {
+            levelRenderer?.Dispose();
+            levelRenderer = new LevelRenderer(shaderTable, textureIds);
+            levelRenderer.Include(level);
         }
 
         public void SelectedObjectsOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)

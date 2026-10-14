@@ -392,6 +392,18 @@ namespace LibReplanetizer.Tests.Models
         }
 
         [Fact]
+        public void BuildPerFace_RejectsNegativeBoundsFromUnusedVertex()
+        {
+            ParsedModelGeometry geometry = ImportObj(
+                "v 0.5 0.5 0.5\nv 1 0.5 0.5\nv 0.5 1 0.5\nv -1 2 3\nf 1 2 3\n");
+
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+                () => CollisionBuilder.BuildPerFace(geometry));
+
+            Assert.Contains("bounds", exception.Message);
+        }
+
+        [Fact]
         public void Concatenate_PreservesHeroAndUnknownSections()
         {
             Collision hero = ParseCollision(CreateSpecialCollisionBytes(hero: true));

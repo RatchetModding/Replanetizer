@@ -183,11 +183,11 @@ namespace Replanetizer.Frames
             }
 
             string modelString = "";
-            if(selectedObject is ModelObject modelObj)
+            if (selectedObject is ModelObject modelObj && modelObj.model != null)
             {
                 modelString += " - ";
-                modelString += modelObj.GetDisplayName(modelObj.model!, levelFrame!.level.game);
-            } 
+                modelString += modelObj.GetDisplayName(modelObj.model, levelFrame!.level.game);
+            }
 
             ImGui.Text(selectedObject.GetType().Name + modelString);
             ImGui.Separator();
@@ -814,14 +814,14 @@ namespace Replanetizer.Frames
                                     var queue = ImGui.GetIO().InputQueueCharacters;
                                     for (int i = 0; i < queue.Size; i++)
                                     {
-                                        char typed = (char)queue[i];
+                                        char typed = (char) queue[i];
                                         if (!Uri.IsHexDigit(typed))
                                             continue;
                                         byte nibble = Convert.ToByte(typed.ToString(), 16);
 
                                         if (lowNibbleEditing)
                                         {
-                                            array.SetValue((byte)(tempHighNibble << 4 | nibble), selectedIdx);
+                                            array.SetValue((byte) (tempHighNibble << 4 | nibble), selectedIdx);
                                             lowNibbleEditing = false;
                                             selectedIdx++;
 

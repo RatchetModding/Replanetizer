@@ -30,6 +30,45 @@ namespace LibReplanetizer.Tests.Importers
         }
 
         [Fact]
+        public void Build_MissingUvAndNormalUsesZeroUvAndGeneratedFaceNormal()
+        {
+            TerrainModel model = BuildModel(CreateGeometryWithoutAttributes());
+
+            Assert.Equal(3, model.vertexBuffer.Length / 8);
+            for (int vertex = 0; vertex < 3; vertex++)
+            {
+                int offset = vertex * 8;
+                Assert.Equal(0.0f, model.vertexBuffer[offset + 3]);
+                Assert.Equal(0.0f, model.vertexBuffer[offset + 4]);
+                Assert.Equal(1.0f, model.vertexBuffer[offset + 5]);
+                Assert.Equal(0.0f, model.vertexBuffer[offset + 6]);
+                Assert.Equal(1.0f, model.vertexBuffer[offset + 7]);
+            }
+        }
+
+        [Fact]
+        public void Build_GeneratedNormalsKeepSharedVerticesSeparateAcrossFaces()
+        {
+            var geometry = CreateGeometryWithoutAttributes();
+            geometry.vertices.Add(new Vector3(0.0f, 0.0f, 1.0f));
+            geometry.colors.Add(new Vector3(0.5f, 0.5f, 0.5f));
+            geometry.faces.Add(CreateFace((0, -1, -1), (1, -1, -1), (3, -1, -1)));
+
+            TerrainModel model = BuildModel(geometry);
+
+            Assert.Equal(6, model.vertexBuffer.Length / 8);
+            for (int vertex = 0; vertex < 3; vertex++)
+            {
+                Assert.Equal(0.0f, model.vertexBuffer[vertex * 8 + 3]);
+                Assert.Equal(0.0f, model.vertexBuffer[vertex * 8 + 4]);
+                Assert.Equal(1.0f, model.vertexBuffer[vertex * 8 + 5]);
+                Assert.Equal(0.0f, model.vertexBuffer[(vertex + 3) * 8 + 3]);
+                Assert.Equal(-1.0f, model.vertexBuffer[(vertex + 3) * 8 + 4]);
+                Assert.Equal(0.0f, model.vertexBuffer[(vertex + 3) * 8 + 5]);
+            }
+        }
+
+        [Fact]
         public void Build_PreservesUvAndNormalSeamsWhenDeduplicatingVertices()
         {
             ParsedModelGeometry geometry = CreateTriangleGeometry();
@@ -121,6 +160,22 @@ namespace LibReplanetizer.Tests.Importers
             geometry.uvs.Add(new Vector2(1.0f, 0.0f));
             geometry.uvs.Add(new Vector2(0.0f, 1.0f));
             geometry.faces.Add(CreateFace((0, 0, 0), (1, 1, 0), (2, 2, 0)));
+            return geometry;
+        }
+
+        private static ParsedModelGeometry CreateGeometryWithoutAttributes()
+        {
+            var geometry = new ParsedModelGeometry();
+            geometry.vertices.Add(new Vector3(0.0f, 0.0f, 0.0f));
+            geometry.vertices.Add(new Vector3(1.0f, 0.0f, 0.0f));
+            geometry.vertices.Add(new Vector3(0.0f, 1.0f, 0.0f));
+            geometry.colors.AddRange(new[]
+            {
+                new Vector3(0.5f, 0.5f, 0.5f),
+                new Vector3(0.5f, 0.5f, 0.5f),
+                new Vector3(0.5f, 0.5f, 0.5f)
+            });
+            geometry.faces.Add(CreateFace((0, -1, -1), (1, -1, -1), (2, -1, -1)));
             return geometry;
         }
 

@@ -35,6 +35,7 @@ namespace Replanetizer.Frames
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Level";
         private readonly ImGuiWarningModal collisionImportWarning = new("Collision import warning");
+        private readonly ImGuiWarningModal terrainImportWarning = new("Terrain import warning");
 
         private FramebufferRenderer? renderer;
         public LevelRenderer? levelRenderer;
@@ -304,16 +305,7 @@ namespace Replanetizer.Frames
                         {
                             var res = CrossFileDialog.OpenFile(filter: ".obj");
                             if (res.Length > 0)
-                            {
-                                var geometry = new WavefrontImporter().Import(res);
-                                var terrain = TerrainBuilder.Build(geometry, level.terrainEngine.levelNumber);
-
-                                level.terrainEngine = terrain;
-
-                                RebuildLevelRenderer();
-
-                                InvalidateView();
-                            }
+                                ImportTerrain(res);
                         }
                         ImGui.EndMenu();
                     }
@@ -463,12 +455,34 @@ namespace Replanetizer.Frames
             }
 
             collisionImportWarning.Render();
+            terrainImportWarning.Render();
         }
 
         internal void QueueCollisionImportWarning(string warning)
         {
             LOGGER.Warn(warning);
             collisionImportWarning.Queue(warning);
+        }
+
+        private void ImportTerrain(string path)
+        {
+            Terrain terrain;
+            try
+            {
+                var geometry = new WavefrontImporter().Import(path);
+                terrain = TerrainBuilder.Build(geometry, level.terrainEngine.levelNumber);
+            }
+            catch (Exception exception)
+            {
+                string warning = $"Terrain import failed: {exception.Message}";
+                LOGGER.Warn(warning);
+                terrainImportWarning.Queue(warning);
+                return;
+            }
+
+            level.terrainEngine = terrain;
+            RebuildLevelRenderer();
+            InvalidateView();
         }
 
         private void OpenCollisionImportFrame()

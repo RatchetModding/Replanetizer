@@ -39,18 +39,23 @@ namespace LibReplanetizer.Serializers.Importers
             if (materialName.StartsWith("RC_", StringComparison.Ordinal))
                 return ParseStructuredTextureMaterial(materialName).textureId;
 
-            string digits = new string(materialName.Where(char.IsDigit).ToArray());
-            bool parsed = int.TryParse(digits, NumberStyles.Integer, CultureInfo.InvariantCulture, out int textureId);
-            Utilities.DebugAssert(parsed, "Terrain material names must contain a texture ID.");
+            string[] parts = materialName.Split('_');
+            int textureId = 0;
+            bool parsed = parts.Length == 2 && string.Equals(parts[0], "mtl", StringComparison.OrdinalIgnoreCase) &&
+                int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out textureId);
+            if (!parsed)
+                throw new FormatException($"Terrain material name '{materialName}' must be mtl_<textureID> or a supported RC_ material name.");
             return textureId;
         }
 
         private static TerrainMaterial ParseStructuredTextureMaterial(string materialName)
         {
             string[] parts = materialName.Split('_');
-            Utilities.DebugAssert(parts.Length == 2 || parts.Length == 4, "Terrain material names must be RC_<textureID> or RC_<textureID>_<wrapModeS>_<wrapModeT>.");
+            if (parts.Length != 2 && parts.Length != 4)
+                throw new FormatException("Terrain material names must be RC_<textureID> or RC_<textureID>_<wrapModeS>_<wrapModeT>.");
             bool parsed = int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out int textureId);
-            Utilities.DebugAssert(parsed, "Terrain material texture IDs must be unsigned decimal integers.");
+            if (!parsed)
+                throw new FormatException("Terrain material texture IDs must be unsigned decimal integers.");
 
             TextureConfig.WrapMode wrapModeS = TextureConfig.WrapMode.Repeat;
             TextureConfig.WrapMode wrapModeT = TextureConfig.WrapMode.Repeat;
@@ -67,7 +72,8 @@ namespace LibReplanetizer.Serializers.Importers
         {
             bool repeat = string.Equals(value, "Repeat", StringComparison.OrdinalIgnoreCase) || value == "0";
             bool clampEdge = string.Equals(value, "ClampEdge", StringComparison.OrdinalIgnoreCase) || value == "1";
-            Utilities.DebugAssert(repeat || clampEdge, $"Unknown texture wrap mode '{value}'. Expected Repeat, ClampEdge, 0, or 1.");
+            if (!repeat && !clampEdge)
+                throw new FormatException($"Unknown texture wrap mode '{value}'. Expected Repeat, ClampEdge, 0, or 1.");
             return clampEdge ? TextureConfig.WrapMode.ClampEdge : TextureConfig.WrapMode.Repeat;
         }
 
@@ -142,9 +148,10 @@ namespace LibReplanetizer.Serializers.Importers
             var textureConfig = new List<TextureConfig>();
             var vertexColorList = new List<byte>();
 
-            var vertexLookup = new Dictionary<(int pos, int uv, int norm), ushort>();
+            var vertexLookup = new Dictionary<(int pos, int uv, int norm, int generatedNormalFace), ushort>();
 
             ushort indCnt = 0;
+            int generatedNormalFace = 0;
 
             Vector3 min = new Vector3(float.MaxValue);
             Vector3 max = new Vector3(float.MinValue);
@@ -155,16 +162,18 @@ namespace LibReplanetizer.Serializers.Importers
 
                 foreach (var face in group)
                 {
+                    Vector3 faceNormal = GetFaceNormal(geometry, face);
+                    int faceNormalId = generatedNormalFace++;
                     foreach (var corner in face.corners)
                     {
-                        var key = (corner.pos, corner.uv, corner.norm);
+                        var key = (corner.pos, corner.uv, corner.norm, corner.norm < 0 ? faceNormalId : -1);
 
                         if (!vertexLookup.TryGetValue(key, out ushort vertIndex))
                         {
                             Vector3 pos = geometry.vertices[corner.pos];
                             Vector3 colors = geometry.colors[corner.pos];
-                            Vector3 normal = geometry.normals[corner.norm];
-                            Vector2 uv = geometry.uvs[corner.uv];
+                            Vector3 normal = corner.norm >= 0 ? geometry.normals[corner.norm] : faceNormal;
+                            Vector2 uv = corner.uv >= 0 ? geometry.uvs[corner.uv] : Vector2.Zero;
 
                             vertIndex = (ushort) (vertexBufferList.Count / 8);
 
@@ -216,6 +225,18 @@ namespace LibReplanetizer.Serializers.Importers
             float cullingSize = (max - cullingCenter).Length;
 
             return new TerrainFragment(terrainModel, cullingCenter, cullingSize, idx);
+        }
+
+        private static Vector3 GetFaceNormal(ParsedModelGeometry geometry, Face face)
+        {
+            Vector3 a = geometry.vertices[face.corners[0].pos];
+            Vector3 b = geometry.vertices[face.corners[1].pos];
+            Vector3 c = geometry.vertices[face.corners[2].pos];
+            Vector3 normal = Vector3.Cross(b - a, c - a);
+            float lengthSquared = normal.LengthSquared;
+            if (!float.IsFinite(lengthSquared) || lengthSquared <= 1e-12f)
+                throw new FormatException("Terrain face is degenerate and does not have a valid normal.");
+            return normal / MathF.Sqrt(lengthSquared);
         }
 
     }

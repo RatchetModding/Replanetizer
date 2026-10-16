@@ -133,18 +133,7 @@ namespace LibReplanetizer.Tests.Models
                 "RC_3");
             AddTriangle(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2], "RC_4");
 
-            Collision collision = CollisionBuilder.BuildPerFace(geometry);
-
-            Assert.Equal(86 * 3, collision.indBuff.Length);
-            Assert.Equal((byte) 2, GetTriangleType(collision, 85));
-            Assert.DoesNotContain((byte) 3, GetTriangleTypes(collision));
-            Assert.DoesNotContain((byte) 4, GetTriangleTypes(collision));
-
-            Collision reparsed = RoundTrip(collision);
-            Assert.Equal(86 * 3, reparsed.indBuff.Length);
-            Assert.Equal((byte) 2, GetTriangleType(reparsed, 85));
-            Assert.DoesNotContain((byte) 3, GetTriangleTypes(reparsed));
-            Assert.DoesNotContain((byte) 4, GetTriangleTypes(reparsed));
+            Assert.Throws<InvalidOperationException>(() => CollisionBuilder.BuildPerFace(geometry));
         }
 
         [Fact]

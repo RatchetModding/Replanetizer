@@ -75,6 +75,34 @@ namespace LibReplanetizer.Tests.Exporters
             }
         }
 
+        [Fact]
+        public void ExportCollision_MultiCellRepeatedQuadWritesOnlyLogicalFaces()
+        {
+            const string input =
+                "v 3.5 0.5 0.5\nv 4.5 0.5 0.5\nv 4.5 1.5 0.5\nv 3.5 1.5 0.5\n" +
+                "usemtl RC_11_2_true_Standard\nf 1 2 3 4\nf 1 2 3 4\n";
+            string firstPath = Path.GetTempFileName();
+            string secondPath = Path.GetTempFileName();
+            try
+            {
+                var exporter = new WavefrontExporter();
+                Collision source = CollisionBuilder.BuildPerFace(Import(input));
+
+                exporter.ExportCollision(firstPath, source);
+
+                string firstExport = File.ReadAllText(firstPath);
+                Assert.Equal(4, File.ReadAllLines(firstPath).Count(line => line.StartsWith("f ", StringComparison.Ordinal)));
+                Collision imported = CollisionBuilder.BuildPerFace(Import(firstExport));
+                exporter.ExportCollision(secondPath, imported);
+                Assert.Equal(firstExport, File.ReadAllText(secondPath));
+            }
+            finally
+            {
+                File.Delete(firstPath);
+                File.Delete(secondPath);
+            }
+        }
+
         private static ParsedModelGeometry Import(string contents)
         {
             string path = Path.GetTempFileName();

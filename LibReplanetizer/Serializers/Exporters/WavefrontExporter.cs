@@ -180,34 +180,38 @@ namespace LibReplanetizer
             if (coll.vertexStride != 4 || coll.vertexBuffer.Length % coll.vertexStride != 0 || coll.indBuff.Length % 3 != 0)
                 throw new InvalidOperationException("Collision render data has an invalid vertex or index layout.");
 
-            // Vertices
-            var vertexCount = coll.vertexBuffer.Length / coll.vertexStride;
-            for (int vertIdx = 0; vertIdx < vertexCount; vertIdx++)
+            int renderVertexCount = coll.vertexBuffer.Length / coll.vertexStride;
+            int renderFaceCount = coll.indBuff.Length / 3;
+            for (int faceIdx = 0; faceIdx < renderFaceCount; faceIdx++)
             {
-                var px = coll.vertexBuffer[vertIdx * coll.vertexStride + 0] * coll.size;
-                var py = coll.vertexBuffer[vertIdx * coll.vertexStride + 1] * coll.size;
-                var pz = coll.vertexBuffer[vertIdx * coll.vertexStride + 2] * coll.size;
-                objfs.WriteLine("v " + px.ToString("G", en_US) + " " + py.ToString("G", en_US) + " " + pz.ToString("G", en_US) + " 1 1 1");
+                int indexOffset = faceIdx * 3;
+                uint firstIndex = coll.indBuff[indexOffset];
+                uint secondIndex = coll.indBuff[indexOffset + 1];
+                uint thirdIndex = coll.indBuff[indexOffset + 2];
+                CollisionType collisionType = GetCollisionType(coll, firstIndex);
+                CollisionGeometryCategory category = CollisionVertexMetadata.GetCategory(
+                    coll.vertexBuffer[checked((int) firstIndex) * coll.vertexStride + 3]);
+
+                if (GetCollisionType(coll, secondIndex).data != collisionType.data || GetCollisionType(coll, thirdIndex).data != collisionType.data ||
+                    CollisionVertexMetadata.GetCategory(coll.vertexBuffer[checked((int) secondIndex) * coll.vertexStride + 3]) != category ||
+                    CollisionVertexMetadata.GetCategory(coll.vertexBuffer[checked((int) thirdIndex) * coll.vertexStride + 3]) != category)
+                    throw new InvalidOperationException($"Collision face {faceIdx} has inconsistent vertex metadata.");
             }
 
-            // Faces
-            var faceCount = coll.indBuff.Length / 3;
-            string? previousMaterialName = null;
-            for (int faceIdx = 0; faceIdx < faceCount; faceIdx++)
+            var faces = coll.GetTrianglesForExport();
+            int vertexCount = checked(faces.Count * 3);
+            foreach ((CollisionTriangle triangle, CollisionGeometryCategory _) in faces)
             {
-                int vertIdx = faceIdx * 3;
+                WriteCollisionVertex(objfs, triangle.A, coll.size);
+                WriteCollisionVertex(objfs, triangle.B, coll.size);
+                WriteCollisionVertex(objfs, triangle.C, coll.size);
+            }
 
-                uint v1 = coll.indBuff[vertIdx + 0];
-                uint v2 = coll.indBuff[vertIdx + 1];
-                uint v3 = coll.indBuff[vertIdx + 2];
-
-                CollisionType collisionType = GetCollisionType(coll, v1);
-                CollisionGeometryCategory category = CollisionVertexMetadata.GetCategory(
-                    coll.vertexBuffer[checked((int) v1) * coll.vertexStride + 3]);
-                if (GetCollisionType(coll, v2).data != collisionType.data || GetCollisionType(coll, v3).data != collisionType.data ||
-                    CollisionVertexMetadata.GetCategory(coll.vertexBuffer[checked((int) v2) * coll.vertexStride + 3]) != category ||
-                    CollisionVertexMetadata.GetCategory(coll.vertexBuffer[checked((int) v3) * coll.vertexStride + 3]) != category)
-                    throw new InvalidOperationException($"Collision face {faceIdx} has inconsistent vertex metadata.");
+            string? previousMaterialName = null;
+            for (int faceIdx = 0; faceIdx < faces.Count; faceIdx++)
+            {
+                (CollisionTriangle triangle, CollisionGeometryCategory category) = faces[faceIdx];
+                CollisionType collisionType = triangle.Type;
 
                 if (category != CollisionGeometryCategory.Standard && category != CollisionGeometryCategory.Hero && category != CollisionGeometryCategory.Unknown)
                     throw new InvalidOperationException($"Collision face {faceIdx} has unsupported geometry category {category}.");
@@ -221,20 +225,19 @@ namespace LibReplanetizer
                     previousMaterialName = materialName;
                 }
 
-                if (v1 >= (uint) vertexCount || v2 >= (uint) vertexCount || v3 >= (uint) vertexCount)
-                    throw new InvalidOperationException($"Collision face {faceIdx} references a missing vertex.");
-
-                // Collision render indices reverse the source triangle winding.
-                (v1, v2) = (v2, v1);
-
-                v1 += 1 + (uint) faceOffset;
-                v2 += 1 + (uint) faceOffset;
-                v3 += 1 + (uint) faceOffset;
-
-                objfs.WriteLine($"f {v1} {v2} {v3}");
+                int firstVertex = faceOffset + faceIdx * 3 + 1;
+                objfs.WriteLine($"f {firstVertex} {firstVertex + 1} {firstVertex + 2}");
             }
 
             return vertexCount;
+        }
+
+        private static void WriteCollisionVertex(StreamWriter objfs, System.Numerics.Vector3 position, float scale)
+        {
+            float x = position.X * scale;
+            float y = position.Y * scale;
+            float z = position.Z * scale;
+            objfs.WriteLine("v " + x.ToString("G", en_US) + " " + y.ToString("G", en_US) + " " + z.ToString("G", en_US) + " 1 1 1");
         }
 
         private static CollisionType GetCollisionType(Collision collision, uint vertexIndex)

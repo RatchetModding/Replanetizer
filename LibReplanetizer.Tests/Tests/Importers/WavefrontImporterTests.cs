@@ -56,6 +56,7 @@ namespace LibReplanetizer.Tests.Importers
 
             Assert.Single(geometry.faces);
             Assert.Equal(3, geometry.faces[0].corners.Length);
+            Assert.Equal(new[] { (0, -1, -1), (1, -1, -1), (2, -1, -1) }, geometry.faces[0].corners);
         }
 
         [Fact]
@@ -70,17 +71,63 @@ namespace LibReplanetizer.Tests.Importers
             Assert.Equal(2, geometry.faces.Count);
             Assert.Equal(new[] { (0, 0, 0), (1, 1, 1), (2, 2, 2) }, geometry.faces[0].corners);
             Assert.Equal(new[] { (0, 0, 0), (2, 2, 2), (3, 3, 3) }, geometry.faces[1].corners);
+            Assert.All(geometry.faces.SelectMany(face => face.corners), corner =>
+            {
+                Assert.Equal(corner.pos, corner.uv);
+                Assert.Equal(corner.pos, corner.norm);
+            });
             Assert.Equal(new[] { 0, 0 }, geometry.faces.ConvertAll(face => face.materialIndex));
         }
 
         [Fact]
-        public void Import_FaceWithMoreThanFourCornersKeepsFirstTriangle()
+        public void Import_RejectsFacesWithMoreThanFourCorners()
+        {
+            Assert.Throws<FormatException>(() => ImportText(
+                "v 0 0 0\nv 2 0 0\nv 3 1 0\nv 1 3 0\nv -1 1 0\nf 1 2 3 4 5\n"));
+        }
+
+        [Fact]
+        public void Import_QuadDoesNotRequireGeometricValidation()
         {
             ParsedModelGeometry geometry = ImportText(
-                "v 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\nv 1 2 0\nf 1 2 3 4 5\n");
+                "v 0 0 0\nv 3 2 0\nv 0 3 0\nv 2 0 0\nf 1 2 3 4\n");
 
-            Assert.Single(geometry.faces);
+            Assert.Equal(2, geometry.faces.Count);
             Assert.Equal(new[] { (0, -1, -1), (1, -1, -1), (2, -1, -1) }, geometry.faces[0].corners);
+            Assert.Equal(new[] { (0, -1, -1), (2, -1, -1), (3, -1, -1) }, geometry.faces[1].corners);
+        }
+
+        [Theory]
+        [InlineData("f 1")]
+        [InlineData("f 1 2")]
+        public void Import_RejectsFacesWithFewerThanThreeCorners(string face)
+        {
+            Assert.Throws<FormatException>(() => ImportText(
+                "v 0 0 0\nv 1 0 0\n" + face + "\n"));
+        }
+
+        [Fact]
+        public void Import_ResolvesNegativeIndicesAgainstCurrentAttributeTables()
+        {
+            ParsedModelGeometry geometry = ImportText(
+                "v 0 0 0\nv 1 0 0\nv 0 1 0\n" +
+                "vt 0 0\nvt 1 0\nvt 0 1\nvn 0 0 1\n" +
+                "f -3/-3/-1 -2/-2/-1 -1/-1/-1\n");
+
+            Assert.Equal(new[] { (0, 0, 0), (1, 1, 0), (2, 2, 0) }, geometry.faces[0].corners);
+        }
+
+        [Theory]
+        [InlineData("f 0 2 3")]
+        [InlineData("f 1 2 4")]
+        [InlineData("f -4 2 3")]
+        [InlineData("f 1/4 2/1 3/1")]
+        [InlineData("f 1//2 2//1 3//1")]
+        public void Import_RejectsInvalidPositionUvAndNormalIndices(string face)
+        {
+            Assert.Throws<FormatException>(() => ImportText(
+                "v 0 0 0\nv 1 0 0\nv 0 1 0\n" +
+                "vt 0 0\nvt 1 0\nvt 0 1\nvn 0 0 1\n" + face + "\n"));
         }
 
         [Fact]
@@ -131,6 +178,18 @@ namespace LibReplanetizer.Tests.Importers
         public void ParseTextureId_ParsesStructuredTerrainName(string materialName, int expected)
         {
             Assert.Equal(expected, TerrainBuilder.ParseTextureId(materialName));
+        }
+
+        [Theory]
+        [InlineData("no_digits")]
+        [InlineData("texture42")]
+        [InlineData("mtl_2147483648")]
+        [InlineData("RC_abc")]
+        [InlineData("RC_42_Repeat")]
+        [InlineData("RC_42_Unknown_Repeat")]
+        public void ParseTextureId_RejectsMalformedMaterialNames(string materialName)
+        {
+            Assert.Throws<FormatException>(() => TerrainBuilder.ParseTextureId(materialName));
         }
 
         [Fact]

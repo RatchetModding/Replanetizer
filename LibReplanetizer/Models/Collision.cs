@@ -178,7 +178,7 @@ namespace LibReplanetizer.Models
                     if (!vertexIndices.ContainsKey(localB) && !localB.Equals(localA)) newVertexCount++;
                     if (!vertexIndices.ContainsKey(localC) && !localC.Equals(localA) && !localC.Equals(localB)) newVertexCount++;
                     if (sharedVertices.Count + newVertexCount > byte.MaxValue)
-                        break;
+                        throw new InvalidOperationException("A collision cell cannot contain more than 255 unique vertices.");
 
                     entries[faceCount] = new CollisionCellEntry
                     {
@@ -455,6 +455,28 @@ namespace LibReplanetizer.Models
                 }
 
                 totalVertexCount += vertCount;
+            }
+
+            public void AddTriangles(List<(CollisionTriangle triangle, CollisionGeometryCategory category)> triangles, CollisionGeometryCategory category)
+            {
+                for (int triangleIndex = 0; triangleIndex < triCount; triangleIndex++)
+                {
+                    int indexOffset = triangleIndex * 3;
+                    var triangle = new CollisionTriangle(
+                        GetStoredPosition(indices[indexOffset + 0]),
+                        GetStoredPosition(indices[indexOffset + 1]),
+                        GetStoredPosition(indices[indexOffset + 2]),
+                        new CollisionType(0x80));
+                    triangles.Add((triangle, category));
+                }
+            }
+
+            private Vector3 GetStoredPosition(byte vertexIndex)
+            {
+                return new Vector3(
+                    vertices[vertexIndex * 3 + 0] / 64.0f,
+                    vertices[vertexIndex * 3 + 1] / 64.0f,
+                    vertices[vertexIndex * 3 + 2] / 64.0f);
             }
 
             public byte[] Serialize(int num, byte[] headerBytes, ref int dataOffset)
@@ -770,6 +792,20 @@ namespace LibReplanetizer.Models
                     maximumMultiplicity[entry.Key] = entry.Value;
                 }
             }
+
+            return triangles;
+        }
+
+        internal List<(CollisionTriangle triangle, CollisionGeometryCategory category)> GetTrianglesForExport()
+        {
+            var triangles = GetStandardTriangles()
+                .Select(triangle => (triangle, CollisionGeometryCategory.Standard))
+                .ToList();
+
+            foreach (HeroCollisionCell cell in heroCells)
+                cell.AddTriangles(triangles, CollisionGeometryCategory.Hero);
+            foreach (HeroCollisionCell cell in unkCells)
+                cell.AddTriangles(triangles, CollisionGeometryCategory.Unknown);
 
             return triangles;
         }

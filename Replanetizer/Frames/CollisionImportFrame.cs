@@ -75,49 +75,55 @@ namespace Replanetizer.Frames
         private bool ImportCollision()
         {
             Collision importedCollision;
-            if (format == CollisionImportFormat.Rcc)
+            try
             {
-                using (FileStream stream = File.Open(path, FileMode.Open, FileAccess.Read))
-                    importedCollision = new Collision(stream, 0, import: true);
-            }
-            else
-            {
-                var geometry = new WavefrontImporter().Import(path);
-                try
+                if (format == CollisionImportFormat.Rcc)
                 {
+                    using (FileStream stream = File.Open(path, FileMode.Open, FileAccess.Read))
+                        importedCollision = new Collision(stream, 0, import: true);
+                }
+                else
+                {
+                    var geometry = new WavefrontImporter().Import(path);
                     importedCollision = CollisionBuilder.BuildPerFace(geometry);
-                }
-                catch (InvalidOperationException exception)
-                {
-                    levelFrame.QueueCollisionImportWarning($"OBJ collision import failed: {exception.Message}");
-                    return false;
-                }
 
-                if (importedCollision.indBuff.Length == 0)
-                {
-                    const string warning = "The OBJ produced no collision triangles. Ensure it contains faces and that all collision vertex coordinates are non-negative.";
-                    levelFrame.QueueCollisionImportWarning(warning);
-                    return false;
+                    if (importedCollision.indBuff.Length == 0)
+                    {
+                        const string warning = "The OBJ produced no collision triangles. Ensure it contains faces and that all collision vertex coordinates are non-negative.";
+                        levelFrame.QueueCollisionImportWarning(warning);
+                        return false;
+                    }
                 }
             }
+            catch (Exception exception)
+            {
+                string formatName = format == CollisionImportFormat.Rcc ? "RCC" : "OBJ";
+                levelFrame.QueueCollisionImportWarning($"{formatName} collision import failed: {exception.Message}");
+                return false;
+            }
 
-            MergeImportedCollision(importedCollision);
-            levelFrame.InvalidateView();
-            return true;
-        }
-
-        private void MergeImportedCollision(Collision importedCollision)
-        {
-            Collision mergedEngineCollision = Collision.Concatenate(levelFrame.level.collisionEngine, importedCollision);
-            Collision? mergedFirstChunk = levelFrame.level.collisionChunks.Count > 0
-                ? Collision.Concatenate(levelFrame.level.collisionChunks[0], importedCollision)
-                : null;
+            Collision mergedEngineCollision;
+            Collision? mergedFirstChunk;
+            try
+            {
+                mergedEngineCollision = Collision.Concatenate(levelFrame.level.collisionEngine, importedCollision);
+                mergedFirstChunk = levelFrame.level.collisionChunks.Count > 0
+                    ? Collision.Concatenate(levelFrame.level.collisionChunks[0], importedCollision)
+                    : null;
+            }
+            catch (Exception exception)
+            {
+                levelFrame.QueueCollisionImportWarning($"Collision import failed: {exception.Message}");
+                return false;
+            }
 
             levelFrame.level.collisionEngine = mergedEngineCollision;
             if (mergedFirstChunk != null)
                 levelFrame.level.collisionChunks[0] = mergedFirstChunk;
 
             levelFrame.RebuildLevelRenderer();
+            levelFrame.InvalidateView();
+            return true;
         }
     }
 }

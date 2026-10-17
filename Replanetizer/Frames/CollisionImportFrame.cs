@@ -16,17 +16,17 @@ namespace Replanetizer.Frames
 {
     public enum CollisionImportFormat
     {
-        Rcc,
-        Obj
+        Obj,
+        Rcc
     }
 
     public class CollisionImportFrame : LevelSubFrame
     {
         protected override string frameName { get; set; } = "Collision Import";
 
-        private static readonly string[] FORMAT_STRINGS = { "R&C Internal (.rcc)", "Wavefront OBJ (.obj)" };
+        private static readonly string[] FORMAT_STRINGS = { "Wavefront OBJ (.obj)", "R&C Internal (.rcc)" };
 
-        private CollisionImportFormat format = CollisionImportFormat.Rcc;
+        private CollisionImportFormat format = CollisionImportFormat.Obj;
         private string path = string.Empty;
 
         public CollisionImportFrame(Window wnd, LevelFrame levelFrame)
@@ -41,10 +41,10 @@ namespace Replanetizer.Frames
 
         public override void Render(float deltaTime)
         {
-            int formatIndex = (int)format;
+            int formatIndex = (int) format;
             if (ImGui.Combo("File Type", ref formatIndex, FORMAT_STRINGS, FORMAT_STRINGS.Length))
             {
-                format = (CollisionImportFormat)formatIndex;
+                format = (CollisionImportFormat) formatIndex;
                 path = string.Empty;
             }
 

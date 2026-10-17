@@ -232,6 +232,55 @@ namespace LibReplanetizer.Tests.Exporters
             }
         }
 
+        [Fact]
+        public void ExportCollision_NonBinaryMultiCellTriangleWritesOneLogicalFaceAfterSerialization()
+        {
+            const string input =
+                "v 0.1234567 0.5 0.5\nv 4.5 0.5 0.5\nv 4.5 1.5 0.5\n" +
+                "usemtl RC_11_0_false_Standard\nf 1 2 3\n";
+            string path = Path.GetTempFileName();
+            string reparsedPath = Path.GetTempFileName();
+
+            try
+            {
+                Collision collision = CollisionBuilder.BuildPerFace(Import(input));
+                Collision reparsed = RoundTrip(collision);
+                var exporter = new WavefrontExporter();
+                exporter.ExportCollision(path, collision);
+                exporter.ExportCollision(reparsedPath, reparsed);
+
+                Assert.Equal(1, File.ReadAllLines(path).Count(line => line.StartsWith("f ", StringComparison.Ordinal)));
+                Assert.Equal(1, File.ReadAllLines(reparsedPath).Count(line => line.StartsWith("f ", StringComparison.Ordinal)));
+            }
+            finally
+            {
+                DeleteCollisionExportFiles(path);
+                DeleteCollisionExportFiles(reparsedPath);
+            }
+        }
+
+        [Fact]
+        public void ExportCollision_NearbyDistinctMultiCellTrianglesRemainDistinct()
+        {
+            const string input =
+                "v 0.1234567 0.5 0.5\nv 4.5 0.5 0.5\nv 4.5 1.5 0.5\n" +
+                "v 0.1334567 0.5 0.5\nv 4.51 0.5 0.5\nv 4.51 1.5 0.5\n" +
+                "usemtl RC_11_0_false_Standard\nf 1 2 3\nf 4 5 6\n";
+            string path = Path.GetTempFileName();
+
+            try
+            {
+                Collision collision = CollisionBuilder.BuildPerFace(Import(input));
+                new WavefrontExporter().ExportCollision(path, collision);
+
+                Assert.Equal(2, File.ReadAllLines(path).Count(line => line.StartsWith("f ", StringComparison.Ordinal)));
+            }
+            finally
+            {
+                DeleteCollisionExportFiles(path);
+            }
+        }
+
         private static ParsedModelGeometry Import(string contents)
         {
             string path = Path.GetTempFileName();
@@ -239,6 +288,21 @@ namespace LibReplanetizer.Tests.Exporters
             {
                 File.WriteAllText(path, contents);
                 return new WavefrontImporter().Import(path);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        private static Collision RoundTrip(Collision collision)
+        {
+            string path = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllBytes(path, collision.Serialize());
+                using var stream = File.OpenRead(path);
+                return new Collision(stream, 0, import: true);
             }
             finally
             {

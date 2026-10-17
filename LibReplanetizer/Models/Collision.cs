@@ -66,6 +66,22 @@ namespace LibReplanetizer.Models
         }
     }
 
+    internal readonly struct CollisionTriangleOccurrence
+    {
+        public CollisionTriangle Triangle { get; }
+        public Vector3 ErrorA { get; }
+        public Vector3 ErrorB { get; }
+        public Vector3 ErrorC { get; }
+
+        public CollisionTriangleOccurrence(CollisionTriangle triangle, Vector3 errorA, Vector3 errorB, Vector3 errorC)
+        {
+            Triangle = triangle;
+            ErrorA = errorA;
+            ErrorB = errorB;
+            ErrorC = errorC;
+        }
+    }
+
     internal readonly struct CollisionFace
     {
         public Vector3 A { get; }
@@ -147,6 +163,22 @@ namespace LibReplanetizer.Models
             }
         }
 
+        private readonly record struct TriangleBucketKey(long X, long Y, long Z, byte Type);
+
+        private sealed class StandardTriangleGroup
+        {
+            public CollisionTriangleOccurrence Occurrence { get; }
+            public int MaximumMultiplicity { get; set; }
+            public int LastCellIndex { get; set; }
+
+            public StandardTriangleGroup(CollisionTriangleOccurrence occurrence, int multiplicity, int cellIndex)
+            {
+                Occurrence = occurrence;
+                MaximumMultiplicity = multiplicity;
+                LastCellIndex = cellIndex;
+            }
+        }
+
         private bool hasStandardCollision = false;
         private bool hasHeroCollision = false;
         private bool hasUnkCollision = false;
@@ -190,11 +222,11 @@ namespace LibReplanetizer.Models
                 xCell = x;
                 yCell = y;
                 zCell = z;
-                int inputFaceCount = checked((ushort)faces.Count);
+                int inputFaceCount = checked((ushort) faces.Count);
                 int inputQuadCount = faces.Count(face => face.IsQuad);
                 if (inputQuadCount > byte.MaxValue)
                     throw new InvalidOperationException("A collision cell cannot contain more than 255 quads.");
-                quadCount = (byte)inputQuadCount;
+                quadCount = (byte) inputQuadCount;
                 entries = new CollisionCellEntry[inputFaceCount];
 
                 var sharedVertices = new List<Vector3>();
@@ -218,7 +250,7 @@ namespace LibReplanetizer.Models
                     if (sharedVertices.Count == byte.MaxValue)
                         throw new InvalidOperationException("A collision cell cannot contain more than 255 unique vertices.");
 
-                    index = (byte)sharedVertices.Count;
+                    index = (byte) sharedVertices.Count;
                     sharedVertices.Add(local);
                     vertexIndices.Add(local, index);
                     return index;
@@ -245,7 +277,7 @@ namespace LibReplanetizer.Models
                         vertexIndex0 = GetVertexIndex(localA),
                         vertexIndex1 = GetVertexIndex(localB),
                         vertexIndex2 = GetVertexIndex(localC),
-                        vertexIndex3 = face.IsQuad ? GetVertexIndex(localD) : (byte)0xFF,
+                        vertexIndex3 = face.IsQuad ? GetVertexIndex(localD) : (byte) 0xFF,
                         collisionType = face.Type
                     };
                     faceCount++;
@@ -253,7 +285,7 @@ namespace LibReplanetizer.Models
 
                 if (faceCount != entries.Length)
                     Array.Resize(ref entries, faceCount);
-                vertexCount = checked((byte)sharedVertices.Count);
+                vertexCount = checked((byte) sharedVertices.Count);
                 vertices = sharedVertices.ToArray();
             }
 
@@ -292,7 +324,7 @@ namespace LibReplanetizer.Models
                     entry.vertexIndex1 = dataBlock[fOffset + 1];
                     entry.vertexIndex2 = dataBlock[fOffset + 2];
                     entry.collisionType = new CollisionType(dataBlock[fOffset + 3]);
-                    entry.vertexIndex3 = (f < quadCount) ? dataBlock[vertexCount * 0x0C + faceCount * 0x04 + f] : (byte)0xFF;
+                    entry.vertexIndex3 = (f < quadCount) ? dataBlock[vertexCount * 0x0C + faceCount * 0x04 + f] : (byte) 0xFF;
 
                     entries[f] = entry;
                 }
@@ -305,6 +337,31 @@ namespace LibReplanetizer.Models
                     local.X / 1024.0f + 4.0f * (xShift + xCell + 0.5f),
                     local.Y / 1024.0f + 4.0f * (yShift + yCell + 0.5f),
                     local.Z / 1024.0f + 4.0f * (zShift + zCell + 0.5f));
+            }
+
+            private (Vector3 position, Vector3 error) GetWorldPositionAndError(byte vertexIndex, ushort xShift, ushort yShift, ushort zShift)
+            {
+                Vector3 local = vertices[vertexIndex];
+                Vector3 position = GetWorldPosition(vertexIndex, xShift, yShift, zShift);
+                Vector3 error = new Vector3(
+                    GetPositionError(local.X, position.X),
+                    GetPositionError(local.Y, position.Y),
+                    GetPositionError(local.Z, position.Z));
+                return (position, error);
+            }
+
+            public float GetMaximumPositionError(ushort xShift, ushort yShift, ushort zShift)
+            {
+                float maximumError = 0.0f;
+                for (int vertexIndex = 0; vertexIndex < vertices.Length; vertexIndex++)
+                {
+                    var worldPosition = GetWorldPositionAndError(
+                        checked((byte) vertexIndex), xShift, yShift, zShift);
+                    Vector3 error = worldPosition.error;
+                    maximumError = Math.Max(maximumError, Math.Max(error.X, Math.Max(error.Y, error.Z)));
+                }
+
+                return maximumError;
             }
 
             public void GetModelData(ushort xShift, ushort yShift, ushort zShift, List<float> vertexList, List<uint> indexList, ref uint totalVertexCount)
@@ -345,20 +402,22 @@ namespace LibReplanetizer.Models
                 }
             }
 
-            public void AddStandardTriangles(List<CollisionTriangle> triangles, ushort xShift, ushort yShift, ushort zShift)
+            public void AddStandardTriangles(List<CollisionTriangleOccurrence> triangles, ushort xShift, ushort yShift, ushort zShift)
             {
                 for (int face = 0; face < faceCount; face++)
                 {
                     CollisionCellEntry entry = entries[face];
-                    Vector3 a = GetWorldPosition(entry.vertexIndex0, xShift, yShift, zShift);
-                    Vector3 b = GetWorldPosition(entry.vertexIndex1, xShift, yShift, zShift);
-                    Vector3 c = GetWorldPosition(entry.vertexIndex2, xShift, yShift, zShift);
-                    triangles.Add(new CollisionTriangle(a, b, c, entry.collisionType));
+                    (Vector3 a, Vector3 errorA) = GetWorldPositionAndError(entry.vertexIndex0, xShift, yShift, zShift);
+                    (Vector3 b, Vector3 errorB) = GetWorldPositionAndError(entry.vertexIndex1, xShift, yShift, zShift);
+                    (Vector3 c, Vector3 errorC) = GetWorldPositionAndError(entry.vertexIndex2, xShift, yShift, zShift);
+                    triangles.Add(new CollisionTriangleOccurrence(
+                        new CollisionTriangle(a, b, c, entry.collisionType), errorA, errorB, errorC));
 
                     if (face < quadCount)
                     {
-                        Vector3 d = GetWorldPosition(entry.vertexIndex3, xShift, yShift, zShift);
-                        triangles.Add(new CollisionTriangle(a, c, d, entry.collisionType));
+                        (Vector3 d, Vector3 errorD) = GetWorldPositionAndError(entry.vertexIndex3, xShift, yShift, zShift);
+                        triangles.Add(new CollisionTriangleOccurrence(
+                            new CollisionTriangle(a, c, d, entry.collisionType), errorA, errorC, errorD));
                     }
                 }
             }
@@ -420,8 +479,8 @@ namespace LibReplanetizer.Models
                 unk0x00 = 0;
                 unk0x04 = 0;
                 unk0x06 = 0;
-                triCount = checked((ushort)count);
-                vertCount = checked((ushort)(count * 3));
+                triCount = checked((ushort) count);
+                vertCount = checked((ushort) (count * 3));
                 vertices = new ushort[vertCount * 3];
                 indices = new byte[triCount * 3];
 
@@ -432,9 +491,9 @@ namespace LibReplanetizer.Models
                     StorePosition(triangle.A, vertexIndex);
                     StorePosition(triangle.B, vertexIndex + 1);
                     StorePosition(triangle.C, vertexIndex + 2);
-                    indices[triangleIndex * 3 + 0] = checked((byte)vertexIndex);
-                    indices[triangleIndex * 3 + 1] = checked((byte)(vertexIndex + 1));
-                    indices[triangleIndex * 3 + 2] = checked((byte)(vertexIndex + 2));
+                    indices[triangleIndex * 3 + 0] = checked((byte) vertexIndex);
+                    indices[triangleIndex * 3 + 1] = checked((byte) (vertexIndex + 1));
+                    indices[triangleIndex * 3 + 2] = checked((byte) (vertexIndex + 2));
                 }
             }
 
@@ -451,7 +510,7 @@ namespace LibReplanetizer.Models
                 double rounded = Math.Round(scaled);
                 if (!double.IsFinite(scaled) || scaled < 0 || rounded > ushort.MaxValue || Math.Abs(scaled - rounded) > 0.0001)
                     throw new InvalidOperationException("Hero and unknown collision coordinates must be non-negative multiples of 1/64 within the unsigned 16-bit range.");
-                return checked((ushort)rounded);
+                return checked((ushort) rounded);
             }
 
             public HeroCollisionCell(FileStream fs, int baseOffset, int num, byte[] headerBlock)
@@ -643,7 +702,7 @@ namespace LibReplanetizer.Models
                 int faceMinGridZ = GetGridCoordinate(minZ);
                 int faceMaxGridZ = GetGridCoordinate(maxZ);
 
-                long coveredCells = (long)(maxGridX - minGridX + 1) * (maxGridY - minGridY + 1) * (faceMaxGridZ - faceMinGridZ + 1);
+                long coveredCells = (long) (maxGridX - minGridX + 1) * (maxGridY - minGridY + 1) * (faceMaxGridZ - faceMinGridZ + 1);
                 faceReferences = checked(faceReferences + coveredCells);
                 if (faceReferences > MaximumCellFaceReferences)
                     throw new InvalidOperationException("The collision geometry spans too many grid cells.");
@@ -713,8 +772,8 @@ namespace LibReplanetizer.Models
             if (gridEntries > MaximumGridEntries)
                 throw new InvalidOperationException("The collision grid is too sparse to serialize safely.");
 
-            collision.zShift = checked((ushort)minGridZ);
-            collision.zCount = checked((ushort)zCount);
+            collision.zShift = checked((ushort) minGridZ);
+            collision.zCount = checked((ushort) zCount);
             collision.yShift = new ushort[zCount];
             collision.yCount = new ushort[zCount];
             collision.xShift = new List<ushort[]>(zCount);
@@ -732,8 +791,8 @@ namespace LibReplanetizer.Models
 
                 (int minY, int maxY) = yRanges[worldZ];
                 int yCount = GetGridCount(minY, maxY);
-                collision.yShift[zIndex] = checked((ushort)minY);
-                collision.yCount[zIndex] = checked((ushort)yCount);
+                collision.yShift[zIndex] = checked((ushort) minY);
+                collision.yCount[zIndex] = checked((ushort) yCount);
                 var xShifts = new ushort[yCount];
                 var xCounts = new ushort[yCount];
 
@@ -742,17 +801,17 @@ namespace LibReplanetizer.Models
                     int yIndex = yEntry.Key - minY;
                     (int minX, int maxX) = xRanges[(worldZ, yEntry.Key)];
                     int xCount = GetGridCount(minX, maxX);
-                    xShifts[yIndex] = checked((ushort)minX);
-                    xCounts[yIndex] = checked((ushort)xCount);
+                    xShifts[yIndex] = checked((ushort) minX);
+                    xCounts[yIndex] = checked((ushort) xCount);
 
                     foreach (var cell in yEntry.Value)
                     {
                         int xIndex = cell.Key - minX;
                         collision.cells.Add(new CollisionCell(
                             cell.Value,
-                            checked((ushort)xIndex),
-                            checked((ushort)yIndex),
-                            checked((ushort)zIndex),
+                            checked((ushort) xIndex),
+                            checked((ushort) yIndex),
+                            checked((ushort) zIndex),
                             cell.Key,
                             yEntry.Key,
                             worldZ));
@@ -807,39 +866,193 @@ namespace LibReplanetizer.Models
 
         private List<CollisionTriangle> GetStandardTriangles()
         {
-            var triangles = new List<CollisionTriangle>();
-            var maximumMultiplicity = new Dictionary<StandardTriangleKey, int>();
-            var representativeTriangles = new Dictionary<StandardTriangleKey, CollisionTriangle>();
-            foreach (CollisionCell cell in cells)
+            var groups = new List<StandardTriangleGroup>();
+            float maximumPositionError = 0.0f;
+            for (int cellIndex = 0; cellIndex < cells.Count; cellIndex++)
             {
-                var cellTriangles = new List<CollisionTriangle>();
-                cell.AddStandardTriangles(cellTriangles,
-                    xShift[cell.zCell][cell.yCell],
-                    yShift[cell.zCell],
-                    zShift);
+                CollisionCell cell = cells[cellIndex];
+                float cellError = cell.GetMaximumPositionError(
+                    xShift[cell.zCell][cell.yCell], yShift[cell.zCell], zShift);
+                maximumPositionError = Math.Max(maximumPositionError, cellError);
+            }
 
-                var cellMultiplicity = new Dictionary<StandardTriangleKey, int>();
-                foreach (CollisionTriangle triangle in cellTriangles)
+            double bucketSize = Math.Max(maximumPositionError * 2.0, double.Epsilon);
+            var buckets = new Dictionary<TriangleBucketKey, List<int>>();
+            var candidateGroups = new List<int>();
+
+            long GetBucketCoordinate(double coordinate)
+            {
+                return checked((long) Math.Floor(coordinate / bucketSize));
+            }
+
+            TriangleBucketKey GetBucket(CollisionTriangle triangle)
+            {
+                double centroidX = ((double) triangle.A.X + triangle.B.X + triangle.C.X) / 3.0;
+                double centroidY = ((double) triangle.A.Y + triangle.B.Y + triangle.C.Y) / 3.0;
+                double centroidZ = ((double) triangle.A.Z + triangle.B.Z + triangle.C.Z) / 3.0;
+                return new TriangleBucketKey(
+                    GetBucketCoordinate(centroidX),
+                    GetBucketCoordinate(centroidY),
+                    GetBucketCoordinate(centroidZ),
+                    triangle.Type.data);
+            }
+
+            void AddNearbyGroups(CollisionTriangle triangle)
+            {
+                TriangleBucketKey bucket = GetBucket(triangle);
+                for (int x = -1; x <= 1; x++)
+                    for (int y = -1; y <= 1; y++)
+                        for (int z = -1; z <= 1; z++)
+                        {
+                            var neighbor = new TriangleBucketKey(bucket.X + x, bucket.Y + y, bucket.Z + z, triangle.Type.data);
+                            if (!buckets.TryGetValue(neighbor, out List<int>? matchingGroups))
+                                continue;
+                            candidateGroups.AddRange(matchingGroups);
+                        }
+            }
+
+            void IndexGroup(int groupIndex)
+            {
+                CollisionTriangleOccurrence occurrence = groups[groupIndex].Occurrence;
+                TriangleBucketKey bucket = GetBucket(occurrence.Triangle);
+                if (!buckets.TryGetValue(bucket, out List<int>? matchingGroups))
                 {
-                    StandardTriangleKey key = StandardTriangleKey.Create(triangle);
-                    cellMultiplicity.TryGetValue(key, out int count);
-                    cellMultiplicity[key] = count + 1;
-                    representativeTriangles.TryAdd(key, triangle);
+                    matchingGroups = new List<int>();
+                    buckets.Add(bucket, matchingGroups);
+                }
+                matchingGroups.Add(groupIndex);
+            }
+
+            for (int cellIndex = 0; cellIndex < cells.Count; cellIndex++)
+            {
+                CollisionCell cell = cells[cellIndex];
+                var cellTriangles = new List<CollisionTriangleOccurrence>();
+                cell.AddStandardTriangles(cellTriangles,
+                    xShift[cell.zCell][cell.yCell], yShift[cell.zCell], zShift);
+
+                var cellMultiplicity = new Dictionary<StandardTriangleKey, (CollisionTriangleOccurrence occurrence, int count)>();
+                foreach (CollisionTriangleOccurrence occurrence in cellTriangles)
+                {
+                    StandardTriangleKey key = StandardTriangleKey.Create(occurrence.Triangle);
+                    if (cellMultiplicity.TryGetValue(key, out var current))
+                        cellMultiplicity[key] = (current.occurrence, current.count + 1);
+                    else
+                        cellMultiplicity.Add(key, (occurrence, 1));
                 }
 
                 foreach (var entry in cellMultiplicity)
                 {
-                    maximumMultiplicity.TryGetValue(entry.Key, out int previousMaximum);
-                    if (entry.Value <= previousMaximum)
-                        continue;
+                    CollisionTriangleOccurrence occurrence = entry.Value.occurrence;
+                    candidateGroups.Clear();
+                    AddNearbyGroups(occurrence.Triangle);
 
-                    for (int copy = previousMaximum; copy < entry.Value; copy++)
-                        triangles.Add(representativeTriangles[entry.Key]);
-                    maximumMultiplicity[entry.Key] = entry.Value;
+                    int bestGroupIndex = -1;
+                    double bestScore = double.PositiveInfinity;
+                    bool ambiguousMatch = false;
+                    foreach (int candidateGroupIndex in candidateGroups)
+                    {
+                        StandardTriangleGroup candidate = groups[candidateGroupIndex];
+                        if (candidate.LastCellIndex == cellIndex)
+                            continue;
+
+                        double score = GetStandardTriangleMatchScore(occurrence, candidate.Occurrence);
+                        if (score < 0.0)
+                            continue;
+                        if (score < bestScore - 1e-9)
+                        {
+                            bestGroupIndex = candidateGroupIndex;
+                            bestScore = score;
+                            ambiguousMatch = false;
+                        }
+                        else if (Math.Abs(score - bestScore) <= 1e-9)
+                        {
+                            ambiguousMatch = true;
+                        }
+                    }
+
+                    if (bestGroupIndex >= 0 && !ambiguousMatch)
+                    {
+                        StandardTriangleGroup group = groups[bestGroupIndex];
+                        group.MaximumMultiplicity = Math.Max(group.MaximumMultiplicity, entry.Value.count);
+                        group.LastCellIndex = cellIndex;
+                        continue;
+                    }
+
+                    int newGroupIndex = groups.Count;
+                    groups.Add(new StandardTriangleGroup(occurrence, entry.Value.count, cellIndex));
+                    IndexGroup(newGroupIndex);
                 }
             }
 
+            var triangles = new List<CollisionTriangle>();
+            foreach (StandardTriangleGroup group in groups)
+                for (int copy = 0; copy < group.MaximumMultiplicity; copy++)
+                    triangles.Add(group.Occurrence.Triangle);
+
             return triangles;
+        }
+
+        private static double GetFloatSpacing(float value)
+        {
+            float increment = MathF.BitIncrement(value);
+            float decrement = MathF.BitDecrement(value);
+            double incrementSpacing = float.IsFinite(increment) ? Math.Abs((double) increment - value) : 0.0;
+            double decrementSpacing = float.IsFinite(decrement) ? Math.Abs((double) value - decrement) : 0.0;
+            return Math.Max(incrementSpacing, decrementSpacing);
+        }
+
+        private static float GetPositionError(float local, float world)
+        {
+            double localError = 2.0 * GetFloatSpacing(local) / 1024.0;
+            double worldRoundingError = GetFloatSpacing(world);
+            return (float) (localError + worldRoundingError);
+        }
+
+        private static double GetVertexMatchScore(Vector3 first, Vector3 second, Vector3 firstError, Vector3 secondError)
+        {
+            double xTolerance = (double) firstError.X + secondError.X;
+            double yTolerance = (double) firstError.Y + secondError.Y;
+            double zTolerance = (double) firstError.Z + secondError.Z;
+            double xDifference = Math.Abs((double) first.X - second.X);
+            double yDifference = Math.Abs((double) first.Y - second.Y);
+            double zDifference = Math.Abs((double) first.Z - second.Z);
+            if (xDifference > xTolerance || yDifference > yTolerance || zDifference > zTolerance)
+                return double.PositiveInfinity;
+
+            double xScore = xTolerance == 0.0 ? 0.0 : xDifference / xTolerance;
+            double yScore = yTolerance == 0.0 ? 0.0 : yDifference / yTolerance;
+            double zScore = zTolerance == 0.0 ? 0.0 : zDifference / zTolerance;
+            return Math.Max(xScore, Math.Max(yScore, zScore));
+        }
+
+        private static double GetStandardTriangleMatchScore(CollisionTriangleOccurrence first, CollisionTriangleOccurrence second)
+        {
+            if (first.Triangle.Type.data != second.Triangle.Type.data)
+                return -1.0;
+
+            double score = double.PositiveInfinity;
+            double rotationScore = Math.Max(
+                GetVertexMatchScore(first.Triangle.A, second.Triangle.A, first.ErrorA, second.ErrorA),
+                Math.Max(
+                    GetVertexMatchScore(first.Triangle.B, second.Triangle.B, first.ErrorB, second.ErrorB),
+                    GetVertexMatchScore(first.Triangle.C, second.Triangle.C, first.ErrorC, second.ErrorC)));
+            score = Math.Min(score, rotationScore);
+
+            rotationScore = Math.Max(
+                GetVertexMatchScore(first.Triangle.A, second.Triangle.B, first.ErrorA, second.ErrorB),
+                Math.Max(
+                    GetVertexMatchScore(first.Triangle.B, second.Triangle.C, first.ErrorB, second.ErrorC),
+                    GetVertexMatchScore(first.Triangle.C, second.Triangle.A, first.ErrorC, second.ErrorA)));
+            score = Math.Min(score, rotationScore);
+
+            rotationScore = Math.Max(
+                GetVertexMatchScore(first.Triangle.A, second.Triangle.C, first.ErrorA, second.ErrorC),
+                Math.Max(
+                    GetVertexMatchScore(first.Triangle.B, second.Triangle.A, first.ErrorB, second.ErrorA),
+                    GetVertexMatchScore(first.Triangle.C, second.Triangle.B, first.ErrorC, second.ErrorB)));
+            score = Math.Min(score, rotationScore);
+
+            return double.IsPositiveInfinity(score) ? -1.0 : score;
         }
 
         internal List<(CollisionTriangle triangle, CollisionGeometryCategory category)> GetTrianglesForExport()
@@ -864,15 +1077,15 @@ namespace LibReplanetizer.Models
             double gridCoordinate = Math.Floor(coordinate / 4.0);
             if (gridCoordinate < 0 || gridCoordinate > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(coordinate), "Collision coordinates must map to a non-negative 16-bit grid cell.");
-            return (int)gridCoordinate;
+            return (int) gridCoordinate;
         }
 
         private static int GetGridCount(int min, int max)
         {
-            long count = (long)max - min + 1;
+            long count = (long) max - min + 1;
             if (count <= 0 || count > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(max), "Collision grid dimensions must fit in an unsigned 16-bit count.");
-            return (int)count;
+            return (int) count;
         }
 
         private void GenerateRenderData()

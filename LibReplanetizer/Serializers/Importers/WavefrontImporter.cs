@@ -62,6 +62,11 @@ namespace LibReplanetizer.Serializers.Importers
     {
         public ParsedModelGeometry Import(string path)
         {
+            return Import(path, preserveQuads: false);
+        }
+
+        public ParsedModelGeometry Import(string path, bool preserveQuads)
+        {
             ParsedModelGeometry parsed = new ParsedModelGeometry();
             var materialIndices = new Dictionary<string, int>(StringComparer.Ordinal);
 
@@ -147,6 +152,16 @@ namespace LibReplanetizer.Serializers.Importers
                                 uv,
                                 normal
                             );
+                        }
+
+                        if (preserveQuads && cornerCount == 4)
+                        {
+                            parsed.faces.Add(new Face
+                            {
+                                corners = corners,
+                                materialIndex = currentMaterialIndex
+                            });
+                            break;
                         }
 
                         Face firstFace = new Face();

@@ -41,10 +41,10 @@ namespace Replanetizer.Frames
 
         public override void Render(float deltaTime)
         {
-            int formatIndex = (int) format;
+            int formatIndex = (int)format;
             if (ImGui.Combo("File Type", ref formatIndex, FORMAT_STRINGS, FORMAT_STRINGS.Length))
             {
-                format = (CollisionImportFormat) formatIndex;
+                format = (CollisionImportFormat)formatIndex;
                 path = string.Empty;
             }
 
@@ -84,7 +84,7 @@ namespace Replanetizer.Frames
                 }
                 else
                 {
-                    var geometry = new WavefrontImporter().Import(path);
+                    var geometry = new WavefrontImporter().Import(path, preserveQuads: true);
                     importedCollision = CollisionBuilder.BuildPerFace(geometry);
 
                     if (importedCollision.indBuff.Length == 0)
@@ -102,24 +102,9 @@ namespace Replanetizer.Frames
                 return false;
             }
 
-            Collision mergedEngineCollision;
-            Collision? mergedFirstChunk;
-            try
-            {
-                mergedEngineCollision = Collision.Concatenate(levelFrame.level.collisionEngine, importedCollision);
-                mergedFirstChunk = levelFrame.level.collisionChunks.Count > 0
-                    ? Collision.Concatenate(levelFrame.level.collisionChunks[0], importedCollision)
-                    : null;
-            }
-            catch (Exception exception)
-            {
-                levelFrame.QueueCollisionImportWarning($"Collision import failed: {exception.Message}");
-                return false;
-            }
-
-            levelFrame.level.collisionEngine = mergedEngineCollision;
-            if (mergedFirstChunk != null)
-                levelFrame.level.collisionChunks[0] = mergedFirstChunk;
+            levelFrame.level.collisionEngine = importedCollision;
+            if (levelFrame.level.collisionChunks.Count > 0)
+                levelFrame.level.collisionChunks[0] = importedCollision;
 
             levelFrame.RebuildLevelRenderer();
             levelFrame.InvalidateView();

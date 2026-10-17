@@ -143,15 +143,15 @@ namespace LibReplanetizer.Tests.Models
 
             Assert.Equal(6, source.indBuff.Length);
             Assert.Equal(4, source.vertexCount);
-            Assert.Equal((byte) 0x0B, GetTriangleType(source, 0));
-            Assert.Equal((byte) 0x0B, GetTriangleType(source, 1));
+            Assert.Equal((byte)0x0B, GetTriangleType(source, 0));
+            Assert.Equal((byte)0x0B, GetTriangleType(source, 1));
 
             Collision reparsed = RoundTrip(source);
 
             Assert.Equal(6, reparsed.indBuff.Length);
             Assert.Equal(4, reparsed.vertexCount);
-            Assert.Equal((byte) 0x0B, GetTriangleType(reparsed, 0));
-            Assert.Equal((byte) 0x0B, GetTriangleType(reparsed, 1));
+            Assert.Equal((byte)0x0B, GetTriangleType(reparsed, 0));
+            Assert.Equal((byte)0x0B, GetTriangleType(reparsed, 1));
         }
 
         [Fact]
@@ -163,88 +163,6 @@ namespace LibReplanetizer.Tests.Models
                 new Vector3(0.5f, 1.5f, 0.5f));
 
             Assert.Throws<ArgumentOutOfRangeException>(() => CollisionBuilder.Build(geometry));
-        }
-
-        [Fact]
-        public void Concatenate_MergesFacesAndKeepsCollisionTypes()
-        {
-            Collision first = CollisionBuilder.Build(CreateGeometry(
-                new Vector3(0.5f, 0.5f, 0.5f),
-                new Vector3(1.0f, 0.5f, 0.5f),
-                new Vector3(0.5f, 1.0f, 0.5f)), 0x03);
-            Collision second = CollisionBuilder.Build(CreateGeometry(
-                new Vector3(1.5f, 0.5f, 0.5f),
-                new Vector3(2.0f, 0.5f, 0.5f),
-                new Vector3(1.5f, 1.0f, 0.5f)), 0x0B);
-
-            Collision merged = Collision.Concatenate(first, second);
-
-            Assert.Equal(6, merged.indBuff.Length);
-            Assert.Equal(6, merged.vertexCount);
-            var types = new System.Collections.Generic.HashSet<byte>();
-            foreach (uint index in merged.indBuff)
-            {
-                float metadata = merged.vertexBuffer[checked((int) index) * merged.vertexStride + 3];
-                types.Add(CollisionVertexMetadata.GetCollisionType(metadata).data);
-            }
-            Assert.Contains((byte) 0x03, types);
-            Assert.Contains((byte) 0x0B, types);
-
-            Collision reparsed = RoundTrip(merged);
-            Assert.Equal(merged.indBuff.Length, reparsed.indBuff.Length);
-            Assert.Equal(6, reparsed.vertexCount);
-        }
-
-        [Fact]
-        public void Concatenate_DoesNotDuplicateFacesAcrossGridCells()
-        {
-            Collision first = CollisionBuilder.Build(CreateGeometry(
-                new Vector3(3.5f, 0.5f, 0.5f),
-                new Vector3(4.5f, 0.5f, 0.5f),
-                new Vector3(3.5f, 1.5f, 0.5f)));
-            Collision empty = CollisionBuilder.Build(new ParsedModelGeometry());
-
-            Collision merged = Collision.Concatenate(first, empty);
-
-            Assert.Equal(first.indBuff.Length, merged.indBuff.Length);
-            Assert.Equal(first.vertexCount, merged.vertexCount);
-        }
-
-        [Fact]
-        public void Concatenate_PreservesFaceStoredOutsideMinimumCell()
-        {
-            Collision source = ParseCollision(CreateStandardCollisionWithFaceInNonMinimumCell());
-            Collision empty = CollisionBuilder.Build(new ParsedModelGeometry());
-            Assert.Equal(3, source.indBuff.Length);
-
-            Collision merged = Collision.Concatenate(source, empty);
-
-            Assert.Equal(3, merged.indBuff.Length);
-            Assert.Equal((byte) 0x0B, GetTriangleType(merged, 0));
-            Collision reparsed = RoundTrip(merged);
-            Assert.Equal(3, reparsed.indBuff.Length);
-            Assert.Equal((byte) 0x0B, GetTriangleType(reparsed, 0));
-        }
-
-        [Fact]
-        public void Concatenate_PreservesRepeatedFacesWithinOneCell()
-        {
-            ParsedModelGeometry geometry = CreateGeometry(
-                new Vector3(0.5f, 0.5f, 0.5f),
-                new Vector3(1.5f, 0.5f, 0.5f),
-                new Vector3(0.5f, 1.5f, 0.5f));
-            geometry.faces.Add(new Face
-            {
-                corners = new (int pos, int uv, int norm)[] { (0, -1, -1), (1, -1, -1), (2, -1, -1) }
-            });
-            Collision source = CollisionBuilder.Build(geometry, 0x0B);
-            Collision empty = CollisionBuilder.Build(new ParsedModelGeometry());
-
-            Collision merged = Collision.Concatenate(source, empty);
-
-            Assert.Equal(6, merged.indBuff.Length);
-            Assert.Equal((byte) 0x0B, GetTriangleType(merged, 0));
-            Assert.Equal((byte) 0x0B, GetTriangleType(merged, 1));
         }
 
         [Fact]
@@ -262,12 +180,12 @@ namespace LibReplanetizer.Tests.Models
             SetMaterialName(geometry, geometry.faces[1], "RC_11");
 
             Collision collision = CollisionBuilder.BuildPerFace(geometry);
-            Assert.Equal((byte) 3, GetTriangleType(collision, 0));
-            Assert.Equal((byte) 11, GetTriangleType(collision, 1));
+            Assert.Equal((byte)3, GetTriangleType(collision, 0));
+            Assert.Equal((byte)11, GetTriangleType(collision, 1));
 
             Collision reparsed = RoundTrip(collision);
-            Assert.Equal((byte) 3, GetTriangleType(reparsed, 0));
-            Assert.Equal((byte) 11, GetTriangleType(reparsed, 1));
+            Assert.Equal((byte)3, GetTriangleType(reparsed, 0));
+            Assert.Equal((byte)11, GetTriangleType(reparsed, 1));
         }
 
         [Fact]
@@ -278,7 +196,7 @@ namespace LibReplanetizer.Tests.Models
                 new Vector3(1.0f, 0.5f, 0.5f),
                 new Vector3(0.5f, 1.0f, 0.5f));
 
-            Assert.Equal((byte) 0x1F, GetTriangleType(CollisionBuilder.BuildPerFace(geometry), 0));
+            Assert.Equal((byte)0x1F, GetTriangleType(CollisionBuilder.BuildPerFace(geometry), 0));
         }
 
         [Theory]
@@ -293,7 +211,7 @@ namespace LibReplanetizer.Tests.Models
                 new Vector3(0.5f, 1.0f, 0.5f));
             SetMaterialName(geometry, geometry.faces[0], materialName);
 
-            Assert.Equal((byte) 0x1F, GetTriangleType(CollisionBuilder.BuildPerFace(geometry), 0));
+            Assert.Equal((byte)0x1F, GetTriangleType(CollisionBuilder.BuildPerFace(geometry), 0));
         }
 
         [Fact]
@@ -330,17 +248,34 @@ namespace LibReplanetizer.Tests.Models
         }
 
         [Fact]
-        public void BuildPerFace_MultiCellQuadKeepsBothTrianglesAfterConcatenate()
+        public void BuildPerFace_MultiCellQuadSurvivesRoundTrip()
         {
             ParsedModelGeometry geometry = ImportObj(
-                "v 0.5 0.5 0.5\nv 4.5 0.5 0.5\nv 4.5 4.5 0.5\nv 0.5 4.5 0.5\nf 1 2 3 4\n");
+                "v 0.5 0.5 0.5\nv 4.5 0.5 0.5\nv 4.5 4.5 0.5\nv 0.5 4.5 0.5\nf 1 2 3 4\n",
+                preserveQuads: true);
             Collision imported = CollisionBuilder.BuildPerFace(geometry);
-            Collision empty = CollisionBuilder.Build(new ParsedModelGeometry());
 
             Assert.Equal(24, imported.indBuff.Length);
-            Collision merged = Collision.Concatenate(empty, imported);
+            Assert.Equal(1, GetFirstStandardQuadCount(imported.Serialize()));
+            Collision reparsed = RoundTrip(imported);
+            Assert.Equal(imported.Serialize(), reparsed.Serialize());
+            Assert.Equal(1, GetFirstStandardQuadCount(reparsed.Serialize()));
+        }
 
-            Assert.Equal(imported.indBuff.Length, merged.indBuff.Length);
+        [Theory]
+        [InlineData("RC_0_0_1_Hero", CollisionGeometryCategory.Hero)]
+        [InlineData("RC_0_0_1_Unknown", CollisionGeometryCategory.Unknown)]
+        public void BuildPerFace_SpecialCategoryQuadRemainsTwoTriangles(string materialName, CollisionGeometryCategory category)
+        {
+            ParsedModelGeometry geometry = ImportObj(
+                "v 0.5 0.5 0.5\nv 1.5 0.5 0.5\nv 1.5 1.5 0.5\nv 0.5 1.5 0.5\n" +
+                $"usemtl {materialName}\nf 1 2 3 4\n",
+                preserveQuads: true);
+
+            Collision collision = CollisionBuilder.BuildPerFace(geometry);
+
+            Assert.Equal(6, collision.indBuff.Length);
+            Assert.Contains(category, GetCategories(collision));
         }
 
         [Theory]
@@ -358,7 +293,7 @@ namespace LibReplanetizer.Tests.Models
                 new Vector3(0.5f, 1.0f, 0.5f));
             SetMaterialName(geometry, geometry.faces[0], materialName);
 
-            Assert.Equal((byte) expected, GetTriangleType(CollisionBuilder.BuildPerFace(geometry), 0));
+            Assert.Equal((byte)expected, GetTriangleType(CollisionBuilder.BuildPerFace(geometry), 0));
         }
 
         [Fact]
@@ -418,24 +353,6 @@ namespace LibReplanetizer.Tests.Models
             Assert.Contains("bounds", exception.Message);
         }
 
-        [Fact]
-        public void Concatenate_PreservesHeroAndUnknownSections()
-        {
-            Collision hero = ParseCollision(CreateSpecialCollisionBytes(hero: true));
-            Collision unknown = ParseCollision(CreateSpecialCollisionBytes(hero: false));
-
-            Collision merged = Collision.Concatenate(hero, unknown);
-
-            Assert.Equal(6, merged.indBuff.Length);
-            Assert.Contains(CollisionGeometryCategory.Hero, GetCategories(merged));
-            Assert.Contains(CollisionGeometryCategory.Unknown, GetCategories(merged));
-
-            Collision reparsed = RoundTrip(merged);
-            Assert.Equal(6, reparsed.indBuff.Length);
-            Assert.Contains(CollisionGeometryCategory.Hero, GetCategories(reparsed));
-            Assert.Contains(CollisionGeometryCategory.Unknown, GetCategories(reparsed));
-        }
-
         private static ParsedModelGeometry CreateGeometry(Vector3 a, Vector3 b, Vector3 c)
         {
             var geometry = new ParsedModelGeometry();
@@ -449,13 +366,13 @@ namespace LibReplanetizer.Tests.Models
             return geometry;
         }
 
-        private static ParsedModelGeometry ImportObj(string contents)
+        private static ParsedModelGeometry ImportObj(string contents, bool preserveQuads = false)
         {
             string path = Path.GetTempFileName();
             try
             {
                 File.WriteAllText(path, contents);
-                return new WavefrontImporter().Import(path);
+                return new WavefrontImporter().Import(path, preserveQuads);
             }
             finally
             {
@@ -487,6 +404,38 @@ namespace LibReplanetizer.Tests.Models
             {
                 File.Delete(path);
             }
+        }
+
+        private static int GetFirstStandardQuadCount(byte[] bytes)
+        {
+            int standardStart = ReadInt(bytes, 0);
+            int zCount = ReadUshort(bytes, standardStart + 0x02);
+            for (int z = 0; z < zCount; z++)
+            {
+                int yOffset = ReadInt(bytes, standardStart + 0x04 + z * 0x04);
+                if (yOffset == 0)
+                    continue;
+
+                int yHeader = standardStart + yOffset;
+                int yCount = ReadUshort(bytes, yHeader + 0x02);
+                for (int y = 0; y < yCount; y++)
+                {
+                    int xOffset = ReadInt(bytes, yHeader + 0x04 + y * 0x04);
+                    if (xOffset == 0)
+                        continue;
+
+                    int xHeader = standardStart + xOffset;
+                    int xCount = ReadUshort(bytes, xHeader + 0x02);
+                    for (int x = 0; x < xCount; x++)
+                    {
+                        int cellOffset = ReadInt(bytes, xHeader + 0x04 + x * 0x04);
+                        if (cellOffset != 0)
+                            return bytes[standardStart + cellOffset + 0x03];
+                    }
+                }
+            }
+
+            throw new InvalidOperationException("The serialized collision has no standard cells.");
         }
 
         private static Collision ParseCollision(byte[] bytes)
@@ -640,7 +589,7 @@ namespace LibReplanetizer.Tests.Models
             for (int i = start; i < start + 3; i++)
             {
                 uint vertexIndex = collision.indBuff[i];
-                float metadata = collision.vertexBuffer[checked((int) vertexIndex) * collision.vertexStride + 3];
+                float metadata = collision.vertexBuffer[checked((int)vertexIndex) * collision.vertexStride + 3];
                 types.Add(CollisionVertexMetadata.GetCollisionType(metadata).data);
             }
             return Assert.Single(types);

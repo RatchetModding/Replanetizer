@@ -36,7 +36,7 @@ namespace LibReplanetizer.Serializers.Importers
                 return materialName == null
                     ? (new CollisionType(0x1F), CollisionGeometryCategory.Standard)
                     : ParseCollisionMaterial(materialName);
-            }, true);
+            }, !geometry.HasBounds);
         }
 
         private static (CollisionType type, CollisionGeometryCategory category) ParseCollisionMaterial(string materialName)
@@ -92,51 +92,58 @@ namespace LibReplanetizer.Serializers.Importers
 
         private static Collision Build(ParsedModelGeometry geometry, Func<Face, (CollisionType type, CollisionGeometryCategory category)> collisionMetadataSelector, bool rejectNegativeCoordinates)
         {
-            var standardTriangles = new List<CollisionTriangle>(geometry.faces.Count);
+            var standardFaces = new List<CollisionFace>(geometry.faces.Count);
             var heroTriangles = new List<CollisionTriangle>();
             var unknownTriangles = new List<CollisionTriangle>();
 
+            System.Numerics.Vector3 ConvertPosition(int index)
+            {
+                ObjVector3 position = GetPosition(geometry, index);
+                if (rejectNegativeCoordinates && (position.X < 0 || position.Y < 0 || position.Z < 0))
+                    throw new InvalidOperationException("OBJ collision geometry contains negative coordinates, which the collision grid cannot represent.");
+                return new System.Numerics.Vector3(position.X, position.Y, position.Z);
+            }
+
             foreach (Face face in geometry.faces)
             {
-                Utilities.DebugAssert(face != null && face.corners != null && face.corners.Length == 3,
-                    "Collision faces must contain exactly three corners.");
+                if (face == null || face.corners == null || face.corners.Length is < 3 or > 4)
+                    throw new InvalidOperationException("Collision faces must contain three or four corners.");
                 (int pos, int uv, int norm)[] corners = face!.corners!;
-
-                ObjVector3 a = GetPosition(geometry, corners[0].pos);
-                ObjVector3 b = GetPosition(geometry, corners[1].pos);
-                ObjVector3 c = GetPosition(geometry, corners[2].pos);
-                if (rejectNegativeCoordinates &&
-                    (a.X < 0 || a.Y < 0 || a.Z < 0 ||
-                     b.X < 0 || b.Y < 0 || b.Z < 0 ||
-                     c.X < 0 || c.Y < 0 || c.Z < 0))
-                    throw new InvalidOperationException("OBJ collision geometry contains negative coordinates, which the collision grid cannot represent.");
 
                 (CollisionType type, CollisionGeometryCategory category) = collisionMetadataSelector(face);
                 if (category != CollisionGeometryCategory.Standard && type.data != 0x80)
                     throw new FormatException($"Collision category {category} requires collision type 0x80.");
 
-                CollisionTriangle triangle = new CollisionTriangle(
-                    new System.Numerics.Vector3(a.X, a.Y, a.Z),
-                    new System.Numerics.Vector3(b.X, b.Y, b.Z),
-                    new System.Numerics.Vector3(c.X, c.Y, c.Z),
-                    type);
+                System.Numerics.Vector3 a = ConvertPosition(corners[0].pos);
+                System.Numerics.Vector3 b = ConvertPosition(corners[1].pos);
+                System.Numerics.Vector3 c = ConvertPosition(corners[2].pos);
+                CollisionFace collisionFace = corners.Length == 4
+                    ? new CollisionFace(a, b, c, ConvertPosition(corners[3].pos), type)
+                    : new CollisionFace(a, b, c, type);
                 switch (category)
                 {
                     case CollisionGeometryCategory.Standard:
-                        standardTriangles.Add(triangle);
+                        standardFaces.Add(collisionFace);
                         break;
                     case CollisionGeometryCategory.Hero:
-                        heroTriangles.Add(triangle);
+                        AddSpecialTriangles(heroTriangles, collisionFace);
                         break;
                     case CollisionGeometryCategory.Unknown:
-                        unknownTriangles.Add(triangle);
+                        AddSpecialTriangles(unknownTriangles, collisionFace);
                         break;
                     default:
                         throw new FormatException($"Unsupported collision geometry category {category}.");
                 }
             }
 
-            return Collision.FromTriangles(standardTriangles, heroTriangles, unknownTriangles);
+            return Collision.FromFaces(standardFaces, heroTriangles, unknownTriangles);
+        }
+
+        private static void AddSpecialTriangles(List<CollisionTriangle> triangles, CollisionFace face)
+        {
+            triangles.Add(new CollisionTriangle(face.A, face.B, face.C, face.Type));
+            if (face.IsQuad)
+                triangles.Add(new CollisionTriangle(face.A, face.C, face.D, face.Type));
         }
 
         private static ObjVector3 GetPosition(ParsedModelGeometry geometry, int index)

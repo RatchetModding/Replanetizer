@@ -116,6 +116,12 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Set3(int count, float[] value)
+        {
+            GL.Uniform3(location, count, value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set3(float v0, float v1, float v2)
         {
             Vector3 value = new Vector3(v0, v1, v2);

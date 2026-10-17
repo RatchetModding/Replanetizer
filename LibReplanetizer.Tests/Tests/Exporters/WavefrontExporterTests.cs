@@ -33,7 +33,18 @@ namespace LibReplanetizer.Tests.Exporters
                 Assert.Contains("usemtl RC_11_2_true_Standard", firstExport);
                 Assert.Contains("usemtl RC_0_0_true_Hero", firstExport);
                 Assert.Contains("usemtl RC_0_0_true_Unknown", firstExport);
-                Assert.DoesNotContain("mtllib", firstExport);
+                Assert.Contains("mtllib " + Path.GetFileName(Path.ChangeExtension(firstPath, ".mtl")), firstExport);
+                AssertPositionOnlyVertices(firstExport);
+                var materials = ReadCollisionMaterials(firstPath);
+                Assert.Equal(
+                    new OpenTK.Mathematics.Vector3(0.75f, 0.25f, 0.25f),
+                    materials["RC_11_2_true_Standard"]);
+                Assert.Equal(
+                    new OpenTK.Mathematics.Vector3(0.5f, 0.5f, 1.0f),
+                    materials["RC_0_0_true_Hero"]);
+                Assert.Equal(
+                    new OpenTK.Mathematics.Vector3(1.0f, 0.25f, 0.75f),
+                    materials["RC_0_0_true_Unknown"]);
 
                 Collision imported = CollisionBuilder.BuildPerFace(importer.Import(firstPath));
                 Assert.Equal(
@@ -46,17 +57,77 @@ namespace LibReplanetizer.Tests.Exporters
                     GetFaceMetadata(imported));
 
                 exporter.ExportCollision(secondPath, imported);
-                Assert.Equal(firstExport, File.ReadAllText(secondPath));
+                Assert.Equal(ReadObjWithoutMtlReference(firstPath), ReadObjWithoutMtlReference(secondPath));
+                Assert.Equal(File.ReadAllText(Path.ChangeExtension(firstPath, ".mtl")), File.ReadAllText(Path.ChangeExtension(secondPath, ".mtl")));
             }
             finally
             {
-                File.Delete(firstPath);
-                File.Delete(secondPath);
+                DeleteCollisionExportFiles(firstPath);
+                DeleteCollisionExportFiles(secondPath);
             }
         }
 
         [Fact]
-        public void ExportCollision_ConcatenatePreservesOppositeWindingCoincidentFaces()
+        public void ExportCollision_UsesBlackForUndefinedAndYellowForDefaultMaterials()
+        {
+            const string input =
+                "v 0.5 0.5 0.5\nv 1.5 0.5 0.5\nv 0.5 1.5 0.5\n" +
+                "v 2.5 0.5 0.5\nv 3.5 0.5 0.5\nv 2.5 1.5 0.5\n" +
+                "v 4.5 0.5 0.5\nv 5.5 0.5 0.5\nv 4.5 1.5 0.5\n" +
+                "usemtl RC_6_0_false_Standard\nf 1 2 3\n" +
+                "usemtl RC_14_0_false_Standard\nf 4 5 6\n" +
+                "usemtl RC_31_0_false_Standard\nf 7 8 9\n";
+            string path = Path.GetTempFileName();
+
+            try
+            {
+                Collision source = CollisionBuilder.BuildPerFace(Import(input));
+                new WavefrontExporter().ExportCollision(path, source);
+
+                var materials = ReadCollisionMaterials(path);
+                Assert.Equal(
+                    new OpenTK.Mathematics.Vector3(0.0f, 0.0f, 0.0f),
+                    materials["RC_6_0_false_Standard"]);
+                Assert.Equal(
+                    new OpenTK.Mathematics.Vector3(0.0f, 0.0f, 0.0f),
+                    materials["RC_14_0_false_Standard"]);
+                Assert.Equal(
+                    new OpenTK.Mathematics.Vector3(1.0f, 1.0f, 0.0f),
+                    materials["RC_31_0_false_Standard"]);
+                AssertPositionOnlyVertices(File.ReadAllText(path));
+            }
+            finally
+            {
+                DeleteCollisionExportFiles(path);
+            }
+        }
+
+        [Fact]
+        public void ExportCollision_DisablesMtlWhenSettingIsOff()
+        {
+            Collision collision = CollisionBuilder.Build(Import(
+                "v 0.5 0.5 0.5\nv 1.5 0.5 0.5\nv 0.5 1.5 0.5\n" +
+                "usemtl RC_11_0_false_Standard\nf 1 2 3\n"));
+            string path = Path.GetTempFileName();
+
+            try
+            {
+                var settings = new ExporterLevelSettings { exportMtlFile = false };
+                new WavefrontExporter(settings).ExportCollision(path, collision);
+
+                string exported = File.ReadAllText(path);
+                Assert.DoesNotContain("mtllib", exported);
+                AssertPositionOnlyVertices(exported);
+                Assert.False(File.Exists(Path.ChangeExtension(path, ".mtl")));
+            }
+            finally
+            {
+                DeleteCollisionExportFiles(path);
+            }
+        }
+
+        [Fact]
+        public void ExportCollision_PreservesOppositeWindingCoincidentFaces()
         {
             const string input =
                 "v 0.5 0.5 0.5\nv 1.5 0.5 0.5\nv 0.5 1.5 0.5\n" +
@@ -66,10 +137,7 @@ namespace LibReplanetizer.Tests.Exporters
             try
             {
                 Collision source = CollisionBuilder.BuildPerFace(Import(input));
-                Collision empty = CollisionBuilder.Build(new ParsedModelGeometry());
-                Collision merged = Collision.Concatenate(source, empty);
-
-                new WavefrontExporter().ExportCollision(path, merged);
+                new WavefrontExporter().ExportCollision(path, source);
                 ParsedModelGeometry exported = Import(File.ReadAllText(path));
 
                 Assert.Equal(2, exported.faces.Count);
@@ -85,12 +153,12 @@ namespace LibReplanetizer.Tests.Exporters
             }
             finally
             {
-                File.Delete(path);
+                DeleteCollisionExportFiles(path);
             }
         }
 
         [Fact]
-        public void ExportCollision_ConcatenateDeduplicatesCyclicRotationsAndPreservesMultiplicity()
+        public void ExportCollision_DeduplicatesCyclicRotationsAndPreservesMultiplicity()
         {
             const string input =
                 "v 0.5 0.5 0.5\nv 1.5 0.5 0.5\nv 0.5 1.5 0.5\n" +
@@ -100,20 +168,18 @@ namespace LibReplanetizer.Tests.Exporters
             try
             {
                 Collision source = CollisionBuilder.BuildPerFace(Import(input));
-                Collision empty = CollisionBuilder.Build(new ParsedModelGeometry());
-                Collision merged = Collision.Concatenate(source, empty);
-
-                new WavefrontExporter().ExportCollision(path, merged);
+                new WavefrontExporter().ExportCollision(path, source);
                 ParsedModelGeometry exported = Import(File.ReadAllText(path));
 
                 Assert.Equal(2, exported.faces.Count);
+                Assert.Equal(1, File.ReadLines(Path.ChangeExtension(path, ".mtl")).Count(line => line.StartsWith("newmtl ", StringComparison.Ordinal)));
                 var firstPositions = exported.faces[0].corners.Select(corner => exported.vertices[corner.pos]).ToArray();
                 var secondPositions = exported.faces[1].corners.Select(corner => exported.vertices[corner.pos]).ToArray();
                 Assert.Equal(firstPositions, secondPositions);
             }
             finally
             {
-                File.Delete(path);
+                DeleteCollisionExportFiles(path);
             }
         }
 
@@ -133,7 +199,7 @@ namespace LibReplanetizer.Tests.Exporters
             }
             finally
             {
-                File.Delete(path);
+                DeleteCollisionExportFiles(path);
             }
         }
 
@@ -156,12 +222,13 @@ namespace LibReplanetizer.Tests.Exporters
                 Assert.Equal(4, File.ReadAllLines(firstPath).Count(line => line.StartsWith("f ", StringComparison.Ordinal)));
                 Collision imported = CollisionBuilder.BuildPerFace(Import(firstExport));
                 exporter.ExportCollision(secondPath, imported);
-                Assert.Equal(firstExport, File.ReadAllText(secondPath));
+                Assert.Equal(ReadObjWithoutMtlReference(firstPath), ReadObjWithoutMtlReference(secondPath));
+                Assert.Equal(File.ReadAllText(Path.ChangeExtension(firstPath, ".mtl")), File.ReadAllText(Path.ChangeExtension(secondPath, ".mtl")));
             }
             finally
             {
-                File.Delete(firstPath);
-                File.Delete(secondPath);
+                DeleteCollisionExportFiles(firstPath);
+                DeleteCollisionExportFiles(secondPath);
             }
         }
 
@@ -191,6 +258,51 @@ namespace LibReplanetizer.Tests.Exporters
                         CollisionVertexMetadata.GetCategory(metadata));
                 })
                 .ToArray();
+        }
+
+        private static System.Collections.Generic.Dictionary<string, OpenTK.Mathematics.Vector3> ReadCollisionMaterials(string objPath)
+        {
+            var materials = new System.Collections.Generic.Dictionary<string, OpenTK.Mathematics.Vector3>(StringComparer.Ordinal);
+            string? currentMaterial = null;
+            foreach (string line in File.ReadLines(Path.ChangeExtension(objPath, ".mtl")))
+            {
+                string[] fields = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (fields.Length == 2 && fields[0] == "newmtl")
+                {
+                    currentMaterial = fields[1];
+                }
+                else if (fields.Length == 4 && fields[0] == "Kd" && currentMaterial != null)
+                {
+                    materials.Add(currentMaterial, new OpenTK.Mathematics.Vector3(
+                        float.Parse(fields[1], System.Globalization.CultureInfo.InvariantCulture),
+                        float.Parse(fields[2], System.Globalization.CultureInfo.InvariantCulture),
+                        float.Parse(fields[3], System.Globalization.CultureInfo.InvariantCulture)));
+                }
+            }
+
+            return materials;
+        }
+
+        private static void AssertPositionOnlyVertices(string objContents)
+        {
+            string[] vertexLines = objContents.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Where(line => line.StartsWith("v ", StringComparison.Ordinal))
+                .ToArray();
+            Assert.NotEmpty(vertexLines);
+            Assert.All(vertexLines, line => Assert.Equal(4, line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length));
+        }
+
+        private static string[] ReadObjWithoutMtlReference(string objPath)
+        {
+            return File.ReadAllLines(objPath)
+                .Where(line => !line.StartsWith("mtllib ", StringComparison.Ordinal))
+                .ToArray();
+        }
+
+        private static void DeleteCollisionExportFiles(string objPath)
+        {
+            File.Delete(objPath);
+            File.Delete(Path.ChangeExtension(objPath, ".mtl"));
         }
     }
 }

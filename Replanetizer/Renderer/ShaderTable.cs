@@ -6,6 +6,7 @@
 // Please see the LICENSE.md file for more details.
 
 using System.IO;
+using LibReplanetizer.Models;
 
 namespace Replanetizer.Renderer
 {
@@ -28,6 +29,7 @@ namespace Replanetizer.Renderer
             skyShader = Shader.GetShaderFromFiles("skyShader", Path.Join(directory, "skyvs.glsl"), Path.Join(directory, "skyfs.glsl"));
             billboardShader = Shader.GetShaderFromFiles("billboardShader", Path.Join(directory, "billboardvs.glsl"), Path.Join(directory, "billboardfs.glsl"));
             collisionShader = Shader.GetShaderFromFiles("collisionShader", Path.Join(directory, "collisionshadervs.glsl"), Path.Join(directory, "collisionshaderfs.glsl"));
+            collisionShader.SetUniform3Array(UniformName.materialColors, CollisionMaterialColors.GetShaderValues());
             animationShader = Shader.GetShaderFromFiles("animationShader", Path.Join(directory, "animationvs.glsl"), Path.Join(directory, "animationfs.glsl"));
             wireframeShader = Shader.GetShaderFromFiles("wireframeShader", Path.Join(directory, "wireframevs.glsl"), Path.Join(directory, "wireframefs.glsl"), Path.Join(directory, "wireframegs.glsl"));
             splineShader = Shader.GetShaderFromFiles("splineShader", Path.Join(directory, "splinevs.glsl"), Path.Join(directory, "splinefs.glsl"), Path.Join(directory, "splinegs.glsl"));

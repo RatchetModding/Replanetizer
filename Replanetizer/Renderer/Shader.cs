@@ -305,6 +305,20 @@ namespace Replanetizer.Renderer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetUniform3Array(UniformName uniformName, float[] values)
+        {
+            if (values.Length % 3 != 0)
+                throw new ArgumentException("A vec3 uniform array requires a multiple of three values.", nameof(values));
+
+            GLUniform? uniform = GetUniformLocation(uniformName);
+            if (uniform != null)
+            {
+                UseShader();
+                uniform.Set3(values.Length / 3, values);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetUniform4(UniformName uniformName, Rgb24 color)
         {
             GLUniform? uniform = GetUniformLocation(uniformName);

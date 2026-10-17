@@ -80,6 +80,21 @@ namespace LibReplanetizer.Tests.Importers
         }
 
         [Fact]
+        public void Import_QuadCanBePreservedForCollisionImport()
+        {
+            ParsedModelGeometry geometry = ImportText(
+                "v 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\n" +
+                "vt 0 0\nvt 1 0\nvt 1 1\nvt 0 1\n" +
+                "vn 0 0 1\nvn 0 1 0\nvn 1 0 0\nvn 0 0 -1\n" +
+                "usemtl RC_5\nf 1/1/1 2/2/2 3/3/3 4/4/4\n",
+                preserveQuads: true);
+
+            Face face = Assert.Single(geometry.faces);
+            Assert.Equal(new[] { (0, 0, 0), (1, 1, 1), (2, 2, 2), (3, 3, 3) }, face.corners);
+            Assert.Equal(0, face.materialIndex);
+        }
+
+        [Fact]
         public void Import_RejectsFacesWithMoreThanFourCorners()
         {
             Assert.Throws<FormatException>(() => ImportText(
@@ -235,14 +250,14 @@ namespace LibReplanetizer.Tests.Importers
                 config.wrapModeS == TextureConfig.WrapMode.ClampEdge && config.wrapModeT == TextureConfig.WrapMode.Repeat);
         }
 
-        private static ParsedModelGeometry ImportText(string contents)
+        private static ParsedModelGeometry ImportText(string contents, bool preserveQuads = false)
         {
             string path = Path.GetTempFileName();
             try
             {
                 File.WriteAllText(path, contents);
                 var importer = new WavefrontImporter();
-                return importer.Import(path);
+                return preserveQuads ? importer.Import(path, true) : importer.Import(path);
             }
             finally
             {

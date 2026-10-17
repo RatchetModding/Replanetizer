@@ -28,6 +28,7 @@ namespace Replanetizer.Frames
 
         private CollisionImportFormat format = CollisionImportFormat.Obj;
         private string path = string.Empty;
+        private int selectedChunkIndex;
 
         public CollisionImportFrame(Window wnd, LevelFrame levelFrame)
             : base(wnd, levelFrame)
@@ -56,6 +57,27 @@ namespace Replanetizer.Frames
                 string selectedPath = CrossFileDialog.OpenFile("Choose a collision file", filter);
                 if (!string.IsNullOrEmpty(selectedPath))
                     path = selectedPath;
+            }
+
+            int chunkCount = levelFrame.level.collisionChunks.Count;
+            if (chunkCount > 0)
+            {
+                if (selectedChunkIndex >= chunkCount)
+                    selectedChunkIndex = 0;
+
+                if (ImGui.BeginCombo("Target Chunk", $"Chunk {selectedChunkIndex}"))
+                {
+                    for (int i = 0; i < chunkCount; i++)
+                    {
+                        bool selected = selectedChunkIndex == i;
+                        if (ImGui.Selectable($"Chunk {i}", selected))
+                            selectedChunkIndex = i;
+
+                        if (selected)
+                            ImGui.SetItemDefaultFocus();
+                    }
+                    ImGui.EndCombo();
+                }
             }
 
             ImGui.Separator();
@@ -102,9 +124,11 @@ namespace Replanetizer.Frames
                 return false;
             }
 
-            levelFrame.level.collisionEngine = importedCollision;
-            if (levelFrame.level.collisionChunks.Count > 0)
-                levelFrame.level.collisionChunks[0] = importedCollision;
+            if (selectedChunkIndex == 0)
+                levelFrame.level.collisionEngine = importedCollision;
+
+            if (levelFrame.level.collisionChunks.Count > 0 && selectedChunkIndex < levelFrame.level.collisionChunks.Count)
+                levelFrame.level.collisionChunks[selectedChunkIndex] = importedCollision;
 
             levelFrame.RebuildLevelRenderer();
             levelFrame.InvalidateView();

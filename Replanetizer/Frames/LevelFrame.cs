@@ -236,29 +236,7 @@ namespace Replanetizer.Frames
                     if (ImGui.BeginMenu("Export"))
                     {
                         if (ImGui.MenuItem("Collision"))
-                        {
-                            var res = CrossFileDialog.SaveFile(filter: ".obj|.rcc");
-                            if (res.Length > 0)
-                            {
-                                var extension = Path.GetExtension(res);
-
-                                switch (extension)
-                                {
-                                    case ".rcc":
-                                        using (FileStream fs = File.Open(res, FileMode.Create))
-                                        {
-                                            byte[] collisionBytes = level.collisionEngine.Serialize();
-                                            fs.Write(collisionBytes, 0, collisionBytes.Length);
-                                        }
-                                        break;
-                                    default:
-                                    case ".obj":
-                                        WavefrontExporter exporter = new WavefrontExporter();
-                                        exporter.ExportCollision(res, level);
-                                        break;
-                                }
-                            }
-                        }
+                            OpenCollisionIOFrame();
                         if (ImGui.MenuItem("Level as Model"))
                         {
                             AddSubFrame(() => new LevelExportFrame(this.wnd, this));
@@ -299,7 +277,7 @@ namespace Replanetizer.Frames
                     {
                         if (ImGui.MenuItem("Collision"))
                         {
-                            OpenCollisionImportFrame();
+                            OpenCollisionIOFrame();
                         }
                         if (ImGui.MenuItem("Terrain"))
                         {
@@ -485,11 +463,11 @@ namespace Replanetizer.Frames
             InvalidateView();
         }
 
-        private void OpenCollisionImportFrame()
+        private void OpenCollisionIOFrame()
         {
-            CollisionImportFrame? frame = subFrames.OfType<CollisionImportFrame>().FirstOrDefault();
+            CollisionIOFrame? frame = subFrames.OfType<CollisionIOFrame>().FirstOrDefault();
             if (frame == null)
-                AddSubFrame(() => new CollisionImportFrame(wnd, this));
+                AddSubFrame(() => new CollisionIOFrame(wnd, this));
             else
                 frame.Open();
         }

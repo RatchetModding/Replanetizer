@@ -8,6 +8,7 @@
 using System;
 using System.IO;
 using Hexa.NET.ImGui;
+using LibReplanetizer;
 using LibReplanetizer.Models;
 using LibReplanetizer.Serializers.Importers;
 using Replanetizer.Utils;
@@ -20,9 +21,9 @@ namespace Replanetizer.Frames
         Rcc
     }
 
-    public class CollisionImportFrame : LevelSubFrame
+    public class CollisionIOFrame : LevelSubFrame
     {
-        protected override string frameName { get; set; } = "Collision Import";
+        protected override string frameName { get; set; } = "Collision Import/Export";
 
         private static readonly string[] FORMAT_STRINGS = { "Wavefront OBJ (.obj)", "R&C Internal (.rcc)" };
 
@@ -30,7 +31,7 @@ namespace Replanetizer.Frames
         private string path = string.Empty;
         private int selectedChunkIndex;
 
-        public CollisionImportFrame(Window wnd, LevelFrame levelFrame)
+        public CollisionIOFrame(Window wnd, LevelFrame levelFrame)
             : base(wnd, levelFrame)
         {
         }
@@ -62,11 +63,18 @@ namespace Replanetizer.Frames
             int chunkCount = levelFrame.level.collisionChunks.Count;
             if (chunkCount > 0)
             {
-                if (selectedChunkIndex >= chunkCount)
+                if (selectedChunkIndex < -1 || selectedChunkIndex >= chunkCount)
                     selectedChunkIndex = 0;
 
-                if (ImGui.BeginCombo("Target Chunk", $"Chunk {selectedChunkIndex}"))
+                string selectedTarget = selectedChunkIndex < 0 ? "Engine" : $"Chunk {selectedChunkIndex}";
+                if (ImGui.BeginCombo("Target Collision", selectedTarget))
                 {
+                    bool engineSelected = selectedChunkIndex < 0;
+                    if (ImGui.Selectable("Engine", engineSelected))
+                        selectedChunkIndex = -1;
+                    if (engineSelected)
+                        ImGui.SetItemDefaultFocus();
+
                     for (int i = 0; i < chunkCount; i++)
                     {
                         bool selected = selectedChunkIndex == i;
@@ -92,6 +100,10 @@ namespace Replanetizer.Frames
 
             if (importClicked && hasPath && ImportCollision())
                 isOpen = false;
+
+            ImGui.SameLine();
+            if (ImGui.Button("Export"))
+                ExportCollision();
         }
 
         private bool ImportCollision()
@@ -124,15 +136,61 @@ namespace Replanetizer.Frames
                 return false;
             }
 
-            if (selectedChunkIndex == 0)
-                levelFrame.level.collisionEngine = importedCollision;
-
-            if (levelFrame.level.collisionChunks.Count > 0 && selectedChunkIndex < levelFrame.level.collisionChunks.Count)
-                levelFrame.level.collisionChunks[selectedChunkIndex] = importedCollision;
+            SetSelectedCollision(importedCollision);
 
             levelFrame.RebuildLevelRenderer();
             levelFrame.InvalidateView();
             return true;
+        }
+
+        private void ExportCollision()
+        {
+            string extension = format == CollisionImportFormat.Rcc ? ".rcc" : ".obj";
+            try
+            {
+                string exportPath = CrossFileDialog.SaveFile("Export collision", extension);
+                if (string.IsNullOrEmpty(exportPath))
+                    return;
+
+                string actualExtension = Path.GetExtension(exportPath);
+                if (!string.Equals(actualExtension, extension, StringComparison.OrdinalIgnoreCase))
+                    exportPath = Path.ChangeExtension(exportPath, extension);
+
+                Collision collision = GetSelectedCollision();
+                if (format == CollisionImportFormat.Rcc)
+                {
+                    File.WriteAllBytes(exportPath, collision.Serialize());
+                }
+                else
+                {
+                    new WavefrontExporter().ExportCollision(exportPath, collision);
+                }
+            }
+            catch (Exception exception)
+            {
+                string formatName = format == CollisionImportFormat.Rcc ? "RCC" : "OBJ";
+                levelFrame.QueueCollisionImportWarning($"{formatName} collision export failed: {exception.Message}");
+            }
+        }
+
+        private Collision GetSelectedCollision()
+        {
+            if (selectedChunkIndex < 0 || levelFrame.level.collisionChunks.Count == 0)
+                return levelFrame.level.collisionEngine;
+
+            if (selectedChunkIndex >= levelFrame.level.collisionChunks.Count)
+                throw new InvalidOperationException("The selected collision chunk no longer exists.");
+
+            return levelFrame.level.collisionChunks[selectedChunkIndex];
+        }
+
+        private void SetSelectedCollision(Collision collision)
+        {
+            if (selectedChunkIndex == 0)
+                levelFrame.level.collisionEngine = collision;
+
+            if (selectedChunkIndex >= 0 && selectedChunkIndex < levelFrame.level.collisionChunks.Count)
+                levelFrame.level.collisionChunks[selectedChunkIndex] = collision;
         }
     }
 }

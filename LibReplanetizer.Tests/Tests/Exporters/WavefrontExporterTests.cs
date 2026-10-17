@@ -211,24 +211,139 @@ namespace LibReplanetizer.Tests.Exporters
                 "usemtl RC_11_2_true_Standard\nf 1 2 3 4\nf 1 2 3 4\n";
             string firstPath = Path.GetTempFileName();
             string secondPath = Path.GetTempFileName();
+            string reparsedPath = Path.GetTempFileName();
             try
             {
                 var exporter = new WavefrontExporter();
-                Collision source = CollisionBuilder.BuildPerFace(Import(input));
+                Collision source = CollisionBuilder.BuildPerFace(Import(input, preserveQuads: true));
 
                 exporter.ExportCollision(firstPath, source);
 
                 string firstExport = File.ReadAllText(firstPath);
-                Assert.Equal(4, File.ReadAllLines(firstPath).Count(line => line.StartsWith("f ", StringComparison.Ordinal)));
-                Collision imported = CollisionBuilder.BuildPerFace(Import(firstExport));
+                string[] faceLines = File.ReadAllLines(firstPath)
+                    .Where(line => line.StartsWith("f ", StringComparison.Ordinal))
+                    .ToArray();
+                Assert.Equal(2, faceLines.Length);
+                Assert.All(faceLines, line => Assert.Equal(5, line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length));
+                Collision imported = CollisionBuilder.BuildPerFace(Import(firstExport, preserveQuads: true));
                 exporter.ExportCollision(secondPath, imported);
                 Assert.Equal(ReadObjWithoutMtlReference(firstPath), ReadObjWithoutMtlReference(secondPath));
                 Assert.Equal(File.ReadAllText(Path.ChangeExtension(firstPath, ".mtl")), File.ReadAllText(Path.ChangeExtension(secondPath, ".mtl")));
+
+                exporter.ExportCollision(reparsedPath, RoundTrip(source));
+                Assert.Equal(ReadObjWithoutMtlReference(firstPath), ReadObjWithoutMtlReference(reparsedPath));
             }
             finally
             {
                 DeleteCollisionExportFiles(firstPath);
                 DeleteCollisionExportFiles(secondPath);
+                DeleteCollisionExportFiles(reparsedPath);
+            }
+        }
+
+        [Fact]
+        public void ExportCollision_PreservesMixedTriangleAndQuadFaces()
+        {
+            const string input =
+                "v 0.5 0.5 0.5\nv 1.5 0.5 0.5\nv 1.5 1.5 0.5\nv 0.5 1.5 0.5\n" +
+                "v 2.5 0.5 0.5\nv 3.5 0.5 0.5\nv 2.5 1.5 0.5\n" +
+                "usemtl RC_11_2_true_Standard\nf 1 2 3 4\nf 5 6 7\n";
+            string path = Path.GetTempFileName();
+
+            try
+            {
+                Collision collision = CollisionBuilder.BuildPerFace(Import(input, preserveQuads: true));
+                new WavefrontExporter().ExportCollision(path, collision);
+
+                ParsedModelGeometry exported = Import(File.ReadAllText(path), preserveQuads: true);
+                Assert.Equal(new[] { 3, 4 }, exported.faces.Select(face => face.corners.Length).OrderBy(count => count));
+                Assert.Single(exported.materialNames);
+                Assert.All(exported.faces, face => Assert.Equal("RC_11_2_true_Standard", exported.GetMaterialName(face.materialIndex)));
+            }
+            finally
+            {
+                DeleteCollisionExportFiles(path);
+            }
+        }
+
+        [Fact]
+        public void ExportCollision_DeduplicatesCyclicQuadRotationsAndPreservesMultiplicity()
+        {
+            const string input =
+                "v 0.5 0.5 0.5\nv 1.5 0.5 0.5\nv 1.5 1.5 0.5\nv 0.5 1.5 0.5\n" +
+                "usemtl RC_11_2_true_Standard\nf 1 2 3 4\nf 2 3 4 1\n";
+            string path = Path.GetTempFileName();
+
+            try
+            {
+                Collision collision = CollisionBuilder.BuildPerFace(Import(input, preserveQuads: true));
+                new WavefrontExporter().ExportCollision(path, collision);
+
+                ParsedModelGeometry exported = Import(File.ReadAllText(path), preserveQuads: true);
+                Assert.Equal(2, exported.faces.Count);
+                Assert.All(exported.faces, face => Assert.Equal(4, face.corners.Length));
+                Assert.Equal(
+                    exported.faces[0].corners.Select(corner => exported.vertices[corner.pos]),
+                    exported.faces[1].corners.Select(corner => exported.vertices[corner.pos]));
+            }
+            finally
+            {
+                DeleteCollisionExportFiles(path);
+            }
+        }
+
+        [Fact]
+        public void ExportCollision_PreservesOppositeWindingCoincidentQuads()
+        {
+            const string input =
+                "v 0.5 0.5 0.5\nv 1.5 0.5 0.5\nv 1.5 1.5 0.5\nv 0.5 1.5 0.5\n" +
+                "usemtl RC_11_0_false_Standard\nf 1 2 3 4\nf 1 4 3 2\n";
+            string path = Path.GetTempFileName();
+
+            try
+            {
+                Collision collision = CollisionBuilder.BuildPerFace(Import(input, preserveQuads: true));
+                new WavefrontExporter().ExportCollision(path, collision);
+
+                ParsedModelGeometry exported = Import(File.ReadAllText(path), preserveQuads: true);
+                Assert.Equal(2, exported.faces.Count);
+                double[] signedAreas = exported.faces.Select(face =>
+                {
+                    var a = exported.vertices[face.corners[0].pos];
+                    var b = exported.vertices[face.corners[1].pos];
+                    var c = exported.vertices[face.corners[2].pos];
+                    return (double) (b.X - a.X) * (c.Y - a.Y) - (double) (b.Y - a.Y) * (c.X - a.X);
+                }).ToArray();
+                Assert.Contains(signedAreas, area => area > 0.0);
+                Assert.Contains(signedAreas, area => area < 0.0);
+            }
+            finally
+            {
+                DeleteCollisionExportFiles(path);
+            }
+        }
+
+        [Fact]
+        public void ExportCollision_NearbyDistinctMultiCellQuadsRemainDistinct()
+        {
+            const string input =
+                "v 0.1234567 0.5 0.5\nv 4.5 0.5 0.5\nv 4.5 1.5 0.5\nv 0.1234567 1.5 0.5\n" +
+                "v 0.1334567 0.5 0.5\nv 4.51 0.5 0.5\nv 4.51 1.5 0.5\nv 0.1334567 1.5 0.5\n" +
+                "usemtl RC_11_0_false_Standard\nf 1 2 3 4\nf 5 6 7 8\n";
+            string path = Path.GetTempFileName();
+
+            try
+            {
+                Collision collision = CollisionBuilder.BuildPerFace(Import(input, preserveQuads: true));
+                new WavefrontExporter().ExportCollision(path, collision);
+
+                ParsedModelGeometry exported = Import(File.ReadAllText(path), preserveQuads: true);
+                Assert.Equal(2, exported.faces.Count);
+                Assert.All(exported.faces, face => Assert.Equal(4, face.corners.Length));
+            }
+            finally
+            {
+                DeleteCollisionExportFiles(path);
             }
         }
 
@@ -281,13 +396,13 @@ namespace LibReplanetizer.Tests.Exporters
             }
         }
 
-        private static ParsedModelGeometry Import(string contents)
+        private static ParsedModelGeometry Import(string contents, bool preserveQuads = false)
         {
             string path = Path.GetTempFileName();
             try
             {
                 File.WriteAllText(path, contents);
-                return new WavefrontImporter().Import(path);
+                return new WavefrontImporter().Import(path, preserveQuads);
             }
             finally
             {

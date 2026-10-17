@@ -66,22 +66,6 @@ namespace LibReplanetizer.Models
         }
     }
 
-    internal readonly struct CollisionTriangleOccurrence
-    {
-        public CollisionTriangle Triangle { get; }
-        public Vector3 ErrorA { get; }
-        public Vector3 ErrorB { get; }
-        public Vector3 ErrorC { get; }
-
-        public CollisionTriangleOccurrence(CollisionTriangle triangle, Vector3 errorA, Vector3 errorB, Vector3 errorC)
-        {
-            Triangle = triangle;
-            ErrorA = errorA;
-            ErrorB = errorB;
-            ErrorC = errorC;
-        }
-    }
-
     internal readonly struct CollisionFace
     {
         public Vector3 A { get; }
@@ -129,29 +113,69 @@ namespace LibReplanetizer.Models
         private const int MaximumGridEntries = 1_000_000;
         private const long MaximumCellFaceReferences = 5_000_000;
 
-        private readonly record struct StandardTriangleKey(Vector3 A, Vector3 B, Vector3 C, byte Type)
+        private readonly struct CollisionFaceOccurrence
         {
-            public static StandardTriangleKey Create(CollisionTriangle triangle)
+            public CollisionFace Face { get; }
+            private Vector3 ErrorA { get; }
+            private Vector3 ErrorB { get; }
+            private Vector3 ErrorC { get; }
+            private Vector3 ErrorD { get; }
+
+            public CollisionFaceOccurrence(CollisionFace face, Vector3 errorA, Vector3 errorB, Vector3 errorC, Vector3 errorD)
             {
-                Vector3 originalA = triangle.A;
-                Vector3 originalB = triangle.B;
-                Vector3 originalC = triangle.C;
-                Vector3 keyA = originalA;
-                Vector3 keyB = originalB;
-                Vector3 keyC = originalC;
-                if (CompareRotation(originalB, originalC, originalA, keyA, keyB, keyC) < 0)
-                    (keyA, keyB, keyC) = (originalB, originalC, originalA);
-                if (CompareRotation(originalC, originalA, originalB, keyA, keyB, keyC) < 0)
-                    (keyA, keyB, keyC) = (originalC, originalA, originalB);
-                return new StandardTriangleKey(keyA, keyB, keyC, triangle.Type.data);
+                Face = face;
+                ErrorA = errorA;
+                ErrorB = errorB;
+                ErrorC = errorC;
+                ErrorD = errorD;
             }
 
-            private static int CompareRotation(Vector3 a, Vector3 b, Vector3 c, Vector3 otherA, Vector3 otherB, Vector3 otherC)
+            public Vector3 GetError(int index)
             {
-                int comparison = Compare(a, otherA);
-                if (comparison != 0) return comparison;
-                comparison = Compare(b, otherB);
-                return comparison != 0 ? comparison : Compare(c, otherC);
+                return index switch
+                {
+                    0 => ErrorA,
+                    1 => ErrorB,
+                    2 => ErrorC,
+                    3 when Face.IsQuad => ErrorD,
+                    _ => throw new ArgumentOutOfRangeException(nameof(index))
+                };
+            }
+        }
+
+        private readonly record struct StandardFaceKey(Vector3 A, Vector3 B, Vector3 C, Vector3 D, bool IsQuad, byte Type)
+        {
+            public static StandardFaceKey Create(CollisionFace face)
+            {
+                int cornerCount = face.IsQuad ? 4 : 3;
+                int bestRotation = 0;
+                for (int rotation = 1; rotation < cornerCount; rotation++)
+                {
+                    if (CompareRotation(face, rotation, bestRotation, cornerCount) < 0)
+                        bestRotation = rotation;
+                }
+
+                return new StandardFaceKey(
+                    face.GetCorner(bestRotation),
+                    face.GetCorner((bestRotation + 1) % cornerCount),
+                    face.GetCorner((bestRotation + 2) % cornerCount),
+                    face.IsQuad ? face.GetCorner((bestRotation + 3) % cornerCount) : default,
+                    face.IsQuad,
+                    face.Type.data);
+            }
+
+            private static int CompareRotation(CollisionFace face, int rotation, int otherRotation, int cornerCount)
+            {
+                for (int corner = 0; corner < cornerCount; corner++)
+                {
+                    int comparison = Compare(
+                        face.GetCorner((rotation + corner) % cornerCount),
+                        face.GetCorner((otherRotation + corner) % cornerCount));
+                    if (comparison != 0)
+                        return comparison;
+                }
+
+                return 0;
             }
 
             private static int Compare(Vector3 first, Vector3 second)
@@ -163,15 +187,15 @@ namespace LibReplanetizer.Models
             }
         }
 
-        private readonly record struct TriangleBucketKey(long X, long Y, long Z, byte Type);
+        private readonly record struct FaceBucketKey(long X, long Y, long Z, byte CornerCount, byte Type);
 
-        private sealed class StandardTriangleGroup
+        private sealed class StandardFaceGroup
         {
-            public CollisionTriangleOccurrence Occurrence { get; }
+            public CollisionFaceOccurrence Occurrence { get; }
             public int MaximumMultiplicity { get; set; }
             public int LastCellIndex { get; set; }
 
-            public StandardTriangleGroup(CollisionTriangleOccurrence occurrence, int multiplicity, int cellIndex)
+            public StandardFaceGroup(CollisionFaceOccurrence occurrence, int multiplicity, int cellIndex)
             {
                 Occurrence = occurrence;
                 MaximumMultiplicity = multiplicity;
@@ -402,7 +426,7 @@ namespace LibReplanetizer.Models
                 }
             }
 
-            public void AddStandardTriangles(List<CollisionTriangleOccurrence> triangles, ushort xShift, ushort yShift, ushort zShift)
+            public void AddStandardFaces(List<CollisionFaceOccurrence> faces, ushort xShift, ushort yShift, ushort zShift)
             {
                 for (int face = 0; face < faceCount; face++)
                 {
@@ -410,14 +434,16 @@ namespace LibReplanetizer.Models
                     (Vector3 a, Vector3 errorA) = GetWorldPositionAndError(entry.vertexIndex0, xShift, yShift, zShift);
                     (Vector3 b, Vector3 errorB) = GetWorldPositionAndError(entry.vertexIndex1, xShift, yShift, zShift);
                     (Vector3 c, Vector3 errorC) = GetWorldPositionAndError(entry.vertexIndex2, xShift, yShift, zShift);
-                    triangles.Add(new CollisionTriangleOccurrence(
-                        new CollisionTriangle(a, b, c, entry.collisionType), errorA, errorB, errorC));
-
                     if (face < quadCount)
                     {
                         (Vector3 d, Vector3 errorD) = GetWorldPositionAndError(entry.vertexIndex3, xShift, yShift, zShift);
-                        triangles.Add(new CollisionTriangleOccurrence(
-                            new CollisionTriangle(a, c, d, entry.collisionType), errorA, errorC, errorD));
+                        faces.Add(new CollisionFaceOccurrence(
+                            new CollisionFace(a, b, c, d, entry.collisionType), errorA, errorB, errorC, errorD));
+                    }
+                    else
+                    {
+                        faces.Add(new CollisionFaceOccurrence(
+                            new CollisionFace(a, b, c, entry.collisionType), errorA, errorB, errorC, default));
                     }
                 }
             }
@@ -567,17 +593,17 @@ namespace LibReplanetizer.Models
                 totalVertexCount += vertCount;
             }
 
-            public void AddTriangles(List<(CollisionTriangle triangle, CollisionGeometryCategory category)> triangles, CollisionGeometryCategory category)
+            public void AddFaces(List<(CollisionFace face, CollisionGeometryCategory category)> faces, CollisionGeometryCategory category)
             {
                 for (int triangleIndex = 0; triangleIndex < triCount; triangleIndex++)
                 {
                     int indexOffset = triangleIndex * 3;
-                    var triangle = new CollisionTriangle(
+                    var face = new CollisionFace(
                         GetStoredPosition(indices[indexOffset + 0]),
                         GetStoredPosition(indices[indexOffset + 1]),
                         GetStoredPosition(indices[indexOffset + 2]),
                         new CollisionType(0x80));
-                    triangles.Add((triangle, category));
+                    faces.Add((face, category));
                 }
             }
 
@@ -864,9 +890,9 @@ namespace LibReplanetizer.Models
             }
         }
 
-        private List<CollisionTriangle> GetStandardTriangles()
+        private List<CollisionFace> GetStandardFaces()
         {
-            var groups = new List<StandardTriangleGroup>();
+            var groups = new List<StandardFaceGroup>();
             float maximumPositionError = 0.0f;
             for (int cellIndex = 0; cellIndex < cells.Count; cellIndex++)
             {
@@ -877,7 +903,7 @@ namespace LibReplanetizer.Models
             }
 
             double bucketSize = Math.Max(maximumPositionError * 2.0, double.Epsilon);
-            var buckets = new Dictionary<TriangleBucketKey, List<int>>();
+            var buckets = new Dictionary<FaceBucketKey, List<int>>();
             var candidateGroups = new List<int>();
 
             long GetBucketCoordinate(double coordinate)
@@ -885,26 +911,36 @@ namespace LibReplanetizer.Models
                 return checked((long) Math.Floor(coordinate / bucketSize));
             }
 
-            TriangleBucketKey GetBucket(CollisionTriangle triangle)
+            FaceBucketKey GetBucket(CollisionFace face)
             {
-                double centroidX = ((double) triangle.A.X + triangle.B.X + triangle.C.X) / 3.0;
-                double centroidY = ((double) triangle.A.Y + triangle.B.Y + triangle.C.Y) / 3.0;
-                double centroidZ = ((double) triangle.A.Z + triangle.B.Z + triangle.C.Z) / 3.0;
-                return new TriangleBucketKey(
-                    GetBucketCoordinate(centroidX),
-                    GetBucketCoordinate(centroidY),
-                    GetBucketCoordinate(centroidZ),
-                    triangle.Type.data);
+                int cornerCount = face.IsQuad ? 4 : 3;
+                double centroidX = 0.0;
+                double centroidY = 0.0;
+                double centroidZ = 0.0;
+                for (int corner = 0; corner < cornerCount; corner++)
+                {
+                    Vector3 position = face.GetCorner(corner);
+                    centroidX += position.X;
+                    centroidY += position.Y;
+                    centroidZ += position.Z;
+                }
+
+                return new FaceBucketKey(
+                    GetBucketCoordinate(centroidX / cornerCount),
+                    GetBucketCoordinate(centroidY / cornerCount),
+                    GetBucketCoordinate(centroidZ / cornerCount),
+                    checked((byte) cornerCount),
+                    face.Type.data);
             }
 
-            void AddNearbyGroups(CollisionTriangle triangle)
+            void AddNearbyGroups(CollisionFace face)
             {
-                TriangleBucketKey bucket = GetBucket(triangle);
+                FaceBucketKey bucket = GetBucket(face);
                 for (int x = -1; x <= 1; x++)
                     for (int y = -1; y <= 1; y++)
                         for (int z = -1; z <= 1; z++)
                         {
-                            var neighbor = new TriangleBucketKey(bucket.X + x, bucket.Y + y, bucket.Z + z, triangle.Type.data);
+                            var neighbor = new FaceBucketKey(bucket.X + x, bucket.Y + y, bucket.Z + z, bucket.CornerCount, bucket.Type);
                             if (!buckets.TryGetValue(neighbor, out List<int>? matchingGroups))
                                 continue;
                             candidateGroups.AddRange(matchingGroups);
@@ -913,8 +949,8 @@ namespace LibReplanetizer.Models
 
             void IndexGroup(int groupIndex)
             {
-                CollisionTriangleOccurrence occurrence = groups[groupIndex].Occurrence;
-                TriangleBucketKey bucket = GetBucket(occurrence.Triangle);
+                CollisionFaceOccurrence occurrence = groups[groupIndex].Occurrence;
+                FaceBucketKey bucket = GetBucket(occurrence.Face);
                 if (!buckets.TryGetValue(bucket, out List<int>? matchingGroups))
                 {
                     matchingGroups = new List<int>();
@@ -926,14 +962,14 @@ namespace LibReplanetizer.Models
             for (int cellIndex = 0; cellIndex < cells.Count; cellIndex++)
             {
                 CollisionCell cell = cells[cellIndex];
-                var cellTriangles = new List<CollisionTriangleOccurrence>();
-                cell.AddStandardTriangles(cellTriangles,
+                var cellFaces = new List<CollisionFaceOccurrence>();
+                cell.AddStandardFaces(cellFaces,
                     xShift[cell.zCell][cell.yCell], yShift[cell.zCell], zShift);
 
-                var cellMultiplicity = new Dictionary<StandardTriangleKey, (CollisionTriangleOccurrence occurrence, int count)>();
-                foreach (CollisionTriangleOccurrence occurrence in cellTriangles)
+                var cellMultiplicity = new Dictionary<StandardFaceKey, (CollisionFaceOccurrence occurrence, int count)>();
+                foreach (CollisionFaceOccurrence occurrence in cellFaces)
                 {
-                    StandardTriangleKey key = StandardTriangleKey.Create(occurrence.Triangle);
+                    StandardFaceKey key = StandardFaceKey.Create(occurrence.Face);
                     if (cellMultiplicity.TryGetValue(key, out var current))
                         cellMultiplicity[key] = (current.occurrence, current.count + 1);
                     else
@@ -942,20 +978,20 @@ namespace LibReplanetizer.Models
 
                 foreach (var entry in cellMultiplicity)
                 {
-                    CollisionTriangleOccurrence occurrence = entry.Value.occurrence;
+                    CollisionFaceOccurrence occurrence = entry.Value.occurrence;
                     candidateGroups.Clear();
-                    AddNearbyGroups(occurrence.Triangle);
+                    AddNearbyGroups(occurrence.Face);
 
                     int bestGroupIndex = -1;
                     double bestScore = double.PositiveInfinity;
                     bool ambiguousMatch = false;
                     foreach (int candidateGroupIndex in candidateGroups)
                     {
-                        StandardTriangleGroup candidate = groups[candidateGroupIndex];
+                        StandardFaceGroup candidate = groups[candidateGroupIndex];
                         if (candidate.LastCellIndex == cellIndex)
                             continue;
 
-                        double score = GetStandardTriangleMatchScore(occurrence, candidate.Occurrence);
+                        double score = GetStandardFaceMatchScore(occurrence, candidate.Occurrence);
                         if (score < 0.0)
                             continue;
                         if (score < bestScore - 1e-9)
@@ -972,24 +1008,24 @@ namespace LibReplanetizer.Models
 
                     if (bestGroupIndex >= 0 && !ambiguousMatch)
                     {
-                        StandardTriangleGroup group = groups[bestGroupIndex];
+                        StandardFaceGroup group = groups[bestGroupIndex];
                         group.MaximumMultiplicity = Math.Max(group.MaximumMultiplicity, entry.Value.count);
                         group.LastCellIndex = cellIndex;
                         continue;
                     }
 
                     int newGroupIndex = groups.Count;
-                    groups.Add(new StandardTriangleGroup(occurrence, entry.Value.count, cellIndex));
+                    groups.Add(new StandardFaceGroup(occurrence, entry.Value.count, cellIndex));
                     IndexGroup(newGroupIndex);
                 }
             }
 
-            var triangles = new List<CollisionTriangle>();
-            foreach (StandardTriangleGroup group in groups)
+            var faces = new List<CollisionFace>();
+            foreach (StandardFaceGroup group in groups)
                 for (int copy = 0; copy < group.MaximumMultiplicity; copy++)
-                    triangles.Add(group.Occurrence.Triangle);
+                    faces.Add(group.Occurrence.Face);
 
-            return triangles;
+            return faces;
         }
 
         private static double GetFloatSpacing(float value)
@@ -1025,48 +1061,45 @@ namespace LibReplanetizer.Models
             return Math.Max(xScore, Math.Max(yScore, zScore));
         }
 
-        private static double GetStandardTriangleMatchScore(CollisionTriangleOccurrence first, CollisionTriangleOccurrence second)
+        private static double GetStandardFaceMatchScore(CollisionFaceOccurrence first, CollisionFaceOccurrence second)
         {
-            if (first.Triangle.Type.data != second.Triangle.Type.data)
+            if (first.Face.Type.data != second.Face.Type.data || first.Face.IsQuad != second.Face.IsQuad)
                 return -1.0;
 
+            int cornerCount = first.Face.IsQuad ? 4 : 3;
             double score = double.PositiveInfinity;
-            double rotationScore = Math.Max(
-                GetVertexMatchScore(first.Triangle.A, second.Triangle.A, first.ErrorA, second.ErrorA),
-                Math.Max(
-                    GetVertexMatchScore(first.Triangle.B, second.Triangle.B, first.ErrorB, second.ErrorB),
-                    GetVertexMatchScore(first.Triangle.C, second.Triangle.C, first.ErrorC, second.ErrorC)));
-            score = Math.Min(score, rotationScore);
+            for (int rotation = 0; rotation < cornerCount; rotation++)
+            {
+                double rotationScore = 0.0;
+                for (int corner = 0; corner < cornerCount; corner++)
+                {
+                    int otherCorner = (corner + rotation) % cornerCount;
+                    double vertexScore = GetVertexMatchScore(
+                        first.Face.GetCorner(corner),
+                        second.Face.GetCorner(otherCorner),
+                        first.GetError(corner),
+                        second.GetError(otherCorner));
+                    rotationScore = Math.Max(rotationScore, vertexScore);
+                }
 
-            rotationScore = Math.Max(
-                GetVertexMatchScore(first.Triangle.A, second.Triangle.B, first.ErrorA, second.ErrorB),
-                Math.Max(
-                    GetVertexMatchScore(first.Triangle.B, second.Triangle.C, first.ErrorB, second.ErrorC),
-                    GetVertexMatchScore(first.Triangle.C, second.Triangle.A, first.ErrorC, second.ErrorA)));
-            score = Math.Min(score, rotationScore);
-
-            rotationScore = Math.Max(
-                GetVertexMatchScore(first.Triangle.A, second.Triangle.C, first.ErrorA, second.ErrorC),
-                Math.Max(
-                    GetVertexMatchScore(first.Triangle.B, second.Triangle.A, first.ErrorB, second.ErrorA),
-                    GetVertexMatchScore(first.Triangle.C, second.Triangle.B, first.ErrorC, second.ErrorB)));
-            score = Math.Min(score, rotationScore);
+                score = Math.Min(score, rotationScore);
+            }
 
             return double.IsPositiveInfinity(score) ? -1.0 : score;
         }
 
-        internal List<(CollisionTriangle triangle, CollisionGeometryCategory category)> GetTrianglesForExport()
+        internal List<(CollisionFace face, CollisionGeometryCategory category)> GetFacesForExport()
         {
-            var triangles = GetStandardTriangles()
-                .Select(triangle => (triangle, CollisionGeometryCategory.Standard))
+            var faces = GetStandardFaces()
+                .Select(face => (face, CollisionGeometryCategory.Standard))
                 .ToList();
 
             foreach (HeroCollisionCell cell in heroCells)
-                cell.AddTriangles(triangles, CollisionGeometryCategory.Hero);
+                cell.AddFaces(faces, CollisionGeometryCategory.Hero);
             foreach (HeroCollisionCell cell in unkCells)
-                cell.AddTriangles(triangles, CollisionGeometryCategory.Unknown);
+                cell.AddFaces(faces, CollisionGeometryCategory.Unknown);
 
-            return triangles;
+            return faces;
         }
 
         private static int GetGridCoordinate(float coordinate)

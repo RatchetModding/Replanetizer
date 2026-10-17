@@ -198,27 +198,30 @@ namespace LibReplanetizer
                     throw new InvalidOperationException($"Collision face {faceIdx} has inconsistent vertex metadata.");
             }
 
-            var faces = coll.GetTrianglesForExport();
-            int vertexCount = checked(faces.Count * 3);
+            var faces = coll.GetFacesForExport();
+            int vertexCount = 0;
+            int[] firstVertexIndices = new int[faces.Count];
             for (int faceIdx = 0; faceIdx < faces.Count; faceIdx++)
             {
-                (CollisionTriangle triangle, CollisionGeometryCategory category) = faces[faceIdx];
-                CollisionType collisionType = triangle.Type;
+                (CollisionFace face, CollisionGeometryCategory category) = faces[faceIdx];
+                CollisionType collisionType = face.Type;
                 if (category != CollisionGeometryCategory.Standard && category != CollisionGeometryCategory.Hero && category != CollisionGeometryCategory.Unknown)
                     throw new InvalidOperationException($"Collision face {faceIdx} has unsupported geometry category {category}.");
                 if (category != CollisionGeometryCategory.Standard && collisionType.data != 0x80)
                     throw new InvalidOperationException($"Collision face {faceIdx} has unsupported collision type 0x{collisionType.data:X2} for category {category}.");
 
-                WriteCollisionVertex(objfs, triangle.A, coll.size);
-                WriteCollisionVertex(objfs, triangle.B, coll.size);
-                WriteCollisionVertex(objfs, triangle.C, coll.size);
+                firstVertexIndices[faceIdx] = checked(faceOffset + vertexCount + 1);
+                int cornerCount = face.IsQuad ? 4 : 3;
+                vertexCount = checked(vertexCount + cornerCount);
+                for (int corner = 0; corner < cornerCount; corner++)
+                    WriteCollisionVertex(objfs, face.GetCorner(corner), coll.size);
             }
 
             string? previousMaterialName = null;
             for (int faceIdx = 0; faceIdx < faces.Count; faceIdx++)
             {
-                (CollisionTriangle triangle, CollisionGeometryCategory category) = faces[faceIdx];
-                CollisionType collisionType = triangle.Type;
+                (CollisionFace face, CollisionGeometryCategory category) = faces[faceIdx];
+                CollisionType collisionType = face.Type;
 
                 string materialName = $"RC_{collisionType.materialID}_{collisionType.groupID}_{(collisionType.ignoreCameraCollision ? "true" : "false")}_{category}";
                 if (!string.Equals(materialName, previousMaterialName, StringComparison.Ordinal))
@@ -230,8 +233,11 @@ namespace LibReplanetizer
                 if (mtlfs != null && writtenMaterials.Add(materialName))
                     WriteCollisionMaterial(mtlfs, materialName, GetCollisionExportColor(collisionType, category));
 
-                int firstVertex = faceOffset + faceIdx * 3 + 1;
-                objfs.WriteLine($"f {firstVertex} {firstVertex + 1} {firstVertex + 2}");
+                int cornerCount = face.IsQuad ? 4 : 3;
+                objfs.Write("f");
+                for (int corner = 0; corner < cornerCount; corner++)
+                    objfs.Write($" {firstVertexIndices[faceIdx] + corner}");
+                objfs.WriteLine();
             }
 
             return vertexCount;

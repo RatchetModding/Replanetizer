@@ -75,13 +75,25 @@ namespace LibReplanetizer.Models
         {
             public static StandardTriangleKey Create(CollisionTriangle triangle)
             {
-                Vector3 a = triangle.A;
-                Vector3 b = triangle.B;
-                Vector3 c = triangle.C;
-                if (Compare(a, b) > 0) (a, b) = (b, a);
-                if (Compare(b, c) > 0) (b, c) = (c, b);
-                if (Compare(a, b) > 0) (a, b) = (b, a);
-                return new StandardTriangleKey(a, b, c, triangle.Type.data);
+                Vector3 originalA = triangle.A;
+                Vector3 originalB = triangle.B;
+                Vector3 originalC = triangle.C;
+                Vector3 keyA = originalA;
+                Vector3 keyB = originalB;
+                Vector3 keyC = originalC;
+                if (CompareRotation(originalB, originalC, originalA, keyA, keyB, keyC) < 0)
+                    (keyA, keyB, keyC) = (originalB, originalC, originalA);
+                if (CompareRotation(originalC, originalA, originalB, keyA, keyB, keyC) < 0)
+                    (keyA, keyB, keyC) = (originalC, originalA, originalB);
+                return new StandardTriangleKey(keyA, keyB, keyC, triangle.Type.data);
+            }
+
+            private static int CompareRotation(Vector3 a, Vector3 b, Vector3 c, Vector3 otherA, Vector3 otherB, Vector3 otherC)
+            {
+                int comparison = Compare(a, otherA);
+                if (comparison != 0) return comparison;
+                comparison = Compare(b, otherB);
+                return comparison != 0 ? comparison : Compare(c, otherC);
             }
 
             private static int Compare(Vector3 first, Vector3 second)

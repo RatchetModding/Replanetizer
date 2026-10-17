@@ -56,6 +56,68 @@ namespace LibReplanetizer.Tests.Exporters
         }
 
         [Fact]
+        public void ExportCollision_ConcatenatePreservesOppositeWindingCoincidentFaces()
+        {
+            const string input =
+                "v 0.5 0.5 0.5\nv 1.5 0.5 0.5\nv 0.5 1.5 0.5\n" +
+                "usemtl RC_11_0_false_Standard\nf 1 2 3\nf 1 3 2\n";
+            string path = Path.GetTempFileName();
+
+            try
+            {
+                Collision source = CollisionBuilder.BuildPerFace(Import(input));
+                Collision empty = CollisionBuilder.Build(new ParsedModelGeometry());
+                Collision merged = Collision.Concatenate(source, empty);
+
+                new WavefrontExporter().ExportCollision(path, merged);
+                ParsedModelGeometry exported = Import(File.ReadAllText(path));
+
+                Assert.Equal(2, exported.faces.Count);
+                double[] signedAreas = exported.faces.Select(face =>
+                {
+                    var a = exported.vertices[face.corners[0].pos];
+                    var b = exported.vertices[face.corners[1].pos];
+                    var c = exported.vertices[face.corners[2].pos];
+                    return (double) (b.X - a.X) * (c.Y - a.Y) - (double) (b.Y - a.Y) * (c.X - a.X);
+                }).ToArray();
+                Assert.Contains(signedAreas, area => area > 0.0);
+                Assert.Contains(signedAreas, area => area < 0.0);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        [Fact]
+        public void ExportCollision_ConcatenateDeduplicatesCyclicRotationsAndPreservesMultiplicity()
+        {
+            const string input =
+                "v 0.5 0.5 0.5\nv 1.5 0.5 0.5\nv 0.5 1.5 0.5\n" +
+                "usemtl RC_11_0_false_Standard\nf 1 2 3\nf 2 3 1\n";
+            string path = Path.GetTempFileName();
+
+            try
+            {
+                Collision source = CollisionBuilder.BuildPerFace(Import(input));
+                Collision empty = CollisionBuilder.Build(new ParsedModelGeometry());
+                Collision merged = Collision.Concatenate(source, empty);
+
+                new WavefrontExporter().ExportCollision(path, merged);
+                ParsedModelGeometry exported = Import(File.ReadAllText(path));
+
+                Assert.Equal(2, exported.faces.Count);
+                var firstPositions = exported.faces[0].corners.Select(corner => exported.vertices[corner.pos]).ToArray();
+                var secondPositions = exported.faces[1].corners.Select(corner => exported.vertices[corner.pos]).ToArray();
+                Assert.Equal(firstPositions, secondPositions);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        [Fact]
         public void ExportCollision_RejectsInconsistentFaceMetadata()
         {
             Collision collision = CollisionBuilder.Build(Import(

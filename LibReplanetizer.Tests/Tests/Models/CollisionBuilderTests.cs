@@ -143,15 +143,15 @@ namespace LibReplanetizer.Tests.Models
 
             Assert.Equal(6, source.indBuff.Length);
             Assert.Equal(4, source.vertexCount);
-            Assert.Equal((byte)0x0B, GetTriangleType(source, 0));
-            Assert.Equal((byte)0x0B, GetTriangleType(source, 1));
+            Assert.Equal((byte) 0x0B, GetTriangleType(source, 0));
+            Assert.Equal((byte) 0x0B, GetTriangleType(source, 1));
 
             Collision reparsed = RoundTrip(source);
 
             Assert.Equal(6, reparsed.indBuff.Length);
             Assert.Equal(4, reparsed.vertexCount);
-            Assert.Equal((byte)0x0B, GetTriangleType(reparsed, 0));
-            Assert.Equal((byte)0x0B, GetTriangleType(reparsed, 1));
+            Assert.Equal((byte) 0x0B, GetTriangleType(reparsed, 0));
+            Assert.Equal((byte) 0x0B, GetTriangleType(reparsed, 1));
         }
 
         [Fact]
@@ -180,12 +180,12 @@ namespace LibReplanetizer.Tests.Models
             SetMaterialName(geometry, geometry.faces[1], "RC_11");
 
             Collision collision = CollisionBuilder.BuildPerFace(geometry);
-            Assert.Equal((byte)3, GetTriangleType(collision, 0));
-            Assert.Equal((byte)11, GetTriangleType(collision, 1));
+            Assert.Equal((byte) 3, GetTriangleType(collision, 0));
+            Assert.Equal((byte) 11, GetTriangleType(collision, 1));
 
             Collision reparsed = RoundTrip(collision);
-            Assert.Equal((byte)3, GetTriangleType(reparsed, 0));
-            Assert.Equal((byte)11, GetTriangleType(reparsed, 1));
+            Assert.Equal((byte) 3, GetTriangleType(reparsed, 0));
+            Assert.Equal((byte) 11, GetTriangleType(reparsed, 1));
         }
 
         [Fact]
@@ -196,7 +196,7 @@ namespace LibReplanetizer.Tests.Models
                 new Vector3(1.0f, 0.5f, 0.5f),
                 new Vector3(0.5f, 1.0f, 0.5f));
 
-            Assert.Equal((byte)0x1F, GetTriangleType(CollisionBuilder.BuildPerFace(geometry), 0));
+            Assert.Equal((byte) 0x1F, GetTriangleType(CollisionBuilder.BuildPerFace(geometry), 0));
         }
 
         [Theory]
@@ -211,7 +211,7 @@ namespace LibReplanetizer.Tests.Models
                 new Vector3(0.5f, 1.0f, 0.5f));
             SetMaterialName(geometry, geometry.faces[0], materialName);
 
-            Assert.Equal((byte)0x1F, GetTriangleType(CollisionBuilder.BuildPerFace(geometry), 0));
+            Assert.Equal((byte) 0x1F, GetTriangleType(CollisionBuilder.BuildPerFace(geometry), 0));
         }
 
         [Fact]
@@ -265,6 +265,8 @@ namespace LibReplanetizer.Tests.Models
         [Theory]
         [InlineData("RC_0_0_1_Hero", CollisionGeometryCategory.Hero)]
         [InlineData("RC_0_0_1_Unknown", CollisionGeometryCategory.Unknown)]
+        [InlineData("RC_HERO", CollisionGeometryCategory.Hero)]
+        [InlineData("RC_UNKNOWN", CollisionGeometryCategory.Unknown)]
         public void BuildPerFace_SpecialCategoryQuadRemainsTwoTriangles(string materialName, CollisionGeometryCategory category)
         {
             ParsedModelGeometry geometry = ImportObj(
@@ -276,6 +278,7 @@ namespace LibReplanetizer.Tests.Models
 
             Assert.Equal(6, collision.indBuff.Length);
             Assert.Contains(category, GetCategories(collision));
+            Assert.Equal((byte) 0x80, GetTriangleType(collision, 0));
         }
 
         [Theory]
@@ -293,7 +296,7 @@ namespace LibReplanetizer.Tests.Models
                 new Vector3(0.5f, 1.0f, 0.5f));
             SetMaterialName(geometry, geometry.faces[0], materialName);
 
-            Assert.Equal((byte)expected, GetTriangleType(CollisionBuilder.BuildPerFace(geometry), 0));
+            Assert.Equal((byte) expected, GetTriangleType(CollisionBuilder.BuildPerFace(geometry), 0));
         }
 
         [Fact]
@@ -589,7 +592,7 @@ namespace LibReplanetizer.Tests.Models
             for (int i = start; i < start + 3; i++)
             {
                 uint vertexIndex = collision.indBuff[i];
-                float metadata = collision.vertexBuffer[checked((int)vertexIndex) * collision.vertexStride + 3];
+                float metadata = collision.vertexBuffer[checked((int) vertexIndex) * collision.vertexStride + 3];
                 types.Add(CollisionVertexMetadata.GetCollisionType(metadata).data);
             }
             return Assert.Single(types);

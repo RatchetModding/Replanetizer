@@ -44,6 +44,11 @@ namespace LibReplanetizer.Serializers.Importers
             if (!materialName.StartsWith("RC_", StringComparison.Ordinal))
                 return (new CollisionType(0x1F), CollisionGeometryCategory.Standard);
 
+            if (string.Equals(materialName, "RC_HERO", StringComparison.Ordinal))
+                return (new CollisionType(0x80), CollisionGeometryCategory.Hero);
+            if (string.Equals(materialName, "RC_UNKNOWN", StringComparison.Ordinal))
+                return (new CollisionType(0x80), CollisionGeometryCategory.Unknown);
+
             string[] parts = materialName.Split('_');
             if (parts.Length < 2 || parts.Length > 5)
                 throw new FormatException("Collision material names must be RC_<materialID>[_<groupID>[_<IgnoreCamera>]][_<category>].");

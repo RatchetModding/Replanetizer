@@ -31,8 +31,8 @@ namespace LibReplanetizer.Tests.Exporters
                 exporter.ExportCollision(firstPath, source);
                 string firstExport = File.ReadAllText(firstPath);
                 Assert.Contains("usemtl RC_11_2_true_Standard", firstExport);
-                Assert.Contains("usemtl RC_0_0_true_Hero", firstExport);
-                Assert.Contains("usemtl RC_0_0_true_Unknown", firstExport);
+                Assert.Contains("usemtl RC_HERO", firstExport);
+                Assert.Contains("usemtl RC_UNKNOWN", firstExport);
                 Assert.Contains("mtllib " + Path.GetFileName(Path.ChangeExtension(firstPath, ".mtl")), firstExport);
                 AssertPositionOnlyVertices(firstExport);
                 var materials = ReadCollisionMaterials(firstPath);
@@ -41,10 +41,10 @@ namespace LibReplanetizer.Tests.Exporters
                     materials["RC_11_2_true_Standard"]);
                 Assert.Equal(
                     new OpenTK.Mathematics.Vector3(0.5f, 0.5f, 1.0f),
-                    materials["RC_0_0_true_Hero"]);
+                    materials["RC_HERO"]);
                 Assert.Equal(
                     new OpenTK.Mathematics.Vector3(1.0f, 0.25f, 0.75f),
-                    materials["RC_0_0_true_Unknown"]);
+                    materials["RC_UNKNOWN"]);
 
                 Collision imported = CollisionBuilder.BuildPerFace(importer.Import(firstPath));
                 Assert.Equal(

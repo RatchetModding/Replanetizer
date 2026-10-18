@@ -223,7 +223,12 @@ namespace LibReplanetizer
                 (CollisionFace face, CollisionGeometryCategory category) = faces[faceIdx];
                 CollisionType collisionType = face.Type;
 
-                string materialName = $"RC_{collisionType.materialID}_{collisionType.groupID}_{(collisionType.ignoreCameraCollision ? "true" : "false")}_{category}";
+                string materialName = category switch
+                {
+                    CollisionGeometryCategory.Hero => "RC_HERO",
+                    CollisionGeometryCategory.Unknown => "RC_UNKNOWN",
+                    _ => $"RC_{collisionType.materialID}_{collisionType.groupID}_{(collisionType.ignoreCameraCollision ? "true" : "false")}_{category}"
+                };
                 if (!string.Equals(materialName, previousMaterialName, StringComparison.Ordinal))
                 {
                     objfs.WriteLine("usemtl " + materialName);

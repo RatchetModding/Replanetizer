@@ -55,6 +55,7 @@
 
   <ItemGroup>
     <AssemblyMetadata Include="Replanetizer.BuildTimestampTicks" Value="$(BuildTimestampTicks)" />
+    <InternalsVisibleTo Include="Replanetizer.Tests" />
   </ItemGroup>
 
   <ItemGroup>

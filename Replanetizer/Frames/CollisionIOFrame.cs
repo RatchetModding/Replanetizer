@@ -7,6 +7,7 @@
 
 using System;
 using System.IO;
+using System.Collections.Generic;
 using Hexa.NET.ImGui;
 using LibReplanetizer;
 using LibReplanetizer.Models;
@@ -63,18 +64,12 @@ namespace Replanetizer.Frames
             int chunkCount = levelFrame.level.collisionChunks.Count;
             if (chunkCount > 0)
             {
-                if (selectedChunkIndex < -1 || selectedChunkIndex >= chunkCount)
+                if (selectedChunkIndex < 0 || selectedChunkIndex >= chunkCount)
                     selectedChunkIndex = 0;
 
-                string selectedTarget = selectedChunkIndex < 0 ? "Engine" : $"Chunk {selectedChunkIndex}";
+                string selectedTarget = $"Chunk {selectedChunkIndex}";
                 if (ImGui.BeginCombo("Target Collision", selectedTarget))
                 {
-                    bool engineSelected = selectedChunkIndex < 0;
-                    if (ImGui.Selectable("Engine", engineSelected))
-                        selectedChunkIndex = -1;
-                    if (engineSelected)
-                        ImGui.SetItemDefaultFocus();
-
                     for (int i = 0; i < chunkCount; i++)
                     {
                         bool selected = selectedChunkIndex == i;
@@ -156,7 +151,10 @@ namespace Replanetizer.Frames
                 if (!string.Equals(actualExtension, extension, StringComparison.OrdinalIgnoreCase))
                     exportPath = Path.ChangeExtension(exportPath, extension);
 
-                Collision collision = GetSelectedCollision();
+                Collision collision = ResolveCollisionTarget(
+                    levelFrame.level.collisionEngine,
+                    levelFrame.level.collisionChunks,
+                    selectedChunkIndex);
                 if (format == CollisionImportFormat.Rcc)
                 {
                     File.WriteAllBytes(exportPath, collision.Serialize());
@@ -173,24 +171,43 @@ namespace Replanetizer.Frames
             }
         }
 
-        private Collision GetSelectedCollision()
+        internal static Collision ResolveCollisionTarget(
+            Collision engineCollision,
+            IList<Collision> collisionChunks,
+            int selectedChunkIndex)
         {
-            if (selectedChunkIndex < 0 || levelFrame.level.collisionChunks.Count == 0)
-                return levelFrame.level.collisionEngine;
+            if (collisionChunks.Count == 0)
+                return engineCollision;
 
-            if (selectedChunkIndex >= levelFrame.level.collisionChunks.Count)
+            if (selectedChunkIndex < 0 || selectedChunkIndex >= collisionChunks.Count)
                 throw new InvalidOperationException("The selected collision chunk no longer exists.");
 
-            return levelFrame.level.collisionChunks[selectedChunkIndex];
+            return collisionChunks[selectedChunkIndex];
+        }
+
+        internal static Collision SetCollisionTarget(
+            Collision engineCollision,
+            IList<Collision> collisionChunks,
+            int selectedChunkIndex,
+            Collision importedCollision)
+        {
+            if (collisionChunks.Count == 0)
+                return importedCollision;
+
+            if (selectedChunkIndex < 0 || selectedChunkIndex >= collisionChunks.Count)
+                throw new InvalidOperationException("The selected collision chunk no longer exists.");
+
+            collisionChunks[selectedChunkIndex] = importedCollision;
+            return selectedChunkIndex == 0 ? importedCollision : engineCollision;
         }
 
         private void SetSelectedCollision(Collision collision)
         {
-            if (selectedChunkIndex == 0)
-                levelFrame.level.collisionEngine = collision;
-
-            if (selectedChunkIndex >= 0 && selectedChunkIndex < levelFrame.level.collisionChunks.Count)
-                levelFrame.level.collisionChunks[selectedChunkIndex] = collision;
+            levelFrame.level.collisionEngine = SetCollisionTarget(
+                levelFrame.level.collisionEngine,
+                levelFrame.level.collisionChunks,
+                selectedChunkIndex,
+                collision);
         }
     }
 }

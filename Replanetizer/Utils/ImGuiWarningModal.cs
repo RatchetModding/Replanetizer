@@ -1,3 +1,5 @@
+using System;
+using System.Numerics;
 using Hexa.NET.ImGui;
 
 namespace Replanetizer.Utils
@@ -29,7 +31,10 @@ namespace Replanetizer.Utils
                 isPending = false;
             }
 
-            if (!ImGui.BeginPopupModal(popupId, ref isOpen, ImGuiWindowFlags.AlwaysAutoResize))
+            var viewport = ImGui.GetMainViewport();
+            ImGui.SetNextWindowSize(new Vector2(MathF.Min(560f, viewport.Size.X * 0.8f), 0f), ImGuiCond.Appearing);
+
+            if (!ImGui.BeginPopupModal(popupId, ref isOpen, ImGuiWindowFlags.None | ImGuiWindowFlags.NoDocking))
                 return;
 
             ImGui.TextWrapped(message);

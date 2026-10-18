@@ -171,51 +171,124 @@ namespace LibReplanetizer
 
         /// <summary>
         /// Writes a collision model into a stream using the .obj file format.
-        /// Every vertex contains 6 floats specifying position and color.
+        /// Every vertex contains 3 floats specifying position.
         /// No normals or uvs are written.
         /// </summary>
         /// <returns>The number of vertices that were written to the stream.</returns>
-        private int WriteDataCollision(StreamWriter objfs, Collision coll, int faceOffset)
+        private int WriteDataCollision(StreamWriter objfs, StreamWriter? mtlfs, HashSet<string> writtenMaterials, Collision coll, int faceOffset)
         {
-            // Vertices
-            var vertexCount = coll.vertexBuffer.Length / 4;
-            for (int vertIdx = 0; vertIdx < vertexCount; vertIdx++)
+            if (coll.vertexStride != 4 || coll.vertexBuffer.Length % coll.vertexStride != 0 || coll.indBuff.Length % 3 != 0)
+                throw new InvalidOperationException("Collision render data has an invalid vertex or index layout.");
+
+            int renderVertexCount = coll.vertexBuffer.Length / coll.vertexStride;
+            int renderFaceCount = coll.indBuff.Length / 3;
+            for (int faceIdx = 0; faceIdx < renderFaceCount; faceIdx++)
             {
-                var px = coll.vertexBuffer[vertIdx * 0x04 + 0x0] * coll.size;
-                var py = coll.vertexBuffer[vertIdx * 0x04 + 0x1] * coll.size;
-                var pz = coll.vertexBuffer[vertIdx * 0x04 + 0x2] * coll.size;
-                CollisionGeometryCategory category = CollisionVertexMetadata.GetCategory(coll.vertexBuffer[vertIdx * 0x04 + 0x3]);
-                float red = 1.0f;
-                float green = 1.0f;
-                float blue = 1.0f;
-                if (category == CollisionGeometryCategory.Hero)
-                    blue = 1.0f;
-                else if (category == CollisionGeometryCategory.Unknown)
-                {
-                    green = 1.0f;
-                    blue = 1.0f;
-                }
-                objfs.WriteLine("v " + px.ToString("G", en_US) + " " + py.ToString("G", en_US) + " " + pz.ToString("G", en_US) + " " + red.ToString("G", en_US) + " " + green.ToString("G", en_US) + " " + blue.ToString("G", en_US));
+                int indexOffset = faceIdx * 3;
+                uint firstIndex = coll.indBuff[indexOffset];
+                uint secondIndex = coll.indBuff[indexOffset + 1];
+                uint thirdIndex = coll.indBuff[indexOffset + 2];
+                CollisionType collisionType = GetCollisionType(coll, firstIndex);
+                CollisionGeometryCategory category = CollisionVertexMetadata.GetCategory(
+                    coll.vertexBuffer[checked((int) firstIndex) * coll.vertexStride + 3]);
+
+                if (GetCollisionType(coll, secondIndex).data != collisionType.data || GetCollisionType(coll, thirdIndex).data != collisionType.data ||
+                    CollisionVertexMetadata.GetCategory(coll.vertexBuffer[checked((int) secondIndex) * coll.vertexStride + 3]) != category ||
+                    CollisionVertexMetadata.GetCategory(coll.vertexBuffer[checked((int) thirdIndex) * coll.vertexStride + 3]) != category)
+                    throw new InvalidOperationException($"Collision face {faceIdx} has inconsistent vertex metadata.");
             }
 
-            // Faces
-            var faceCount = coll.indBuff.Length / 3;
-            for (int faceIdx = 0; faceIdx < faceCount; faceIdx++)
+            var faces = coll.GetFacesForExport();
+            int vertexCount = 0;
+            int[] firstVertexIndices = new int[faces.Count];
+            for (int faceIdx = 0; faceIdx < faces.Count; faceIdx++)
             {
-                int vertIdx = faceIdx * 3;
+                (CollisionFace face, CollisionGeometryCategory category) = faces[faceIdx];
+                CollisionType collisionType = face.Type;
+                if (category != CollisionGeometryCategory.Standard && category != CollisionGeometryCategory.Hero && category != CollisionGeometryCategory.Unknown)
+                    throw new InvalidOperationException($"Collision face {faceIdx} has unsupported geometry category {category}.");
+                if (category != CollisionGeometryCategory.Standard && collisionType.data != 0x80)
+                    throw new InvalidOperationException($"Collision face {faceIdx} has unsupported collision type 0x{collisionType.data:X2} for category {category}.");
 
-                uint v1 = coll.indBuff[vertIdx + 0];
-                uint v2 = coll.indBuff[vertIdx + 1];
-                uint v3 = coll.indBuff[vertIdx + 2];
+                firstVertexIndices[faceIdx] = checked(faceOffset + vertexCount + 1);
+                int cornerCount = face.IsQuad ? 4 : 3;
+                vertexCount = checked(vertexCount + cornerCount);
+                for (int corner = 0; corner < cornerCount; corner++)
+                    WriteCollisionVertex(objfs, face.GetCorner(corner), coll.size);
+            }
 
-                v1 += 1 + (uint) faceOffset;
-                v2 += 1 + (uint) faceOffset;
-                v3 += 1 + (uint) faceOffset;
+            string? previousMaterialName = null;
+            for (int faceIdx = 0; faceIdx < faces.Count; faceIdx++)
+            {
+                (CollisionFace face, CollisionGeometryCategory category) = faces[faceIdx];
+                CollisionType collisionType = face.Type;
 
-                objfs.WriteLine($"f {v1} {v2} {v3}");
+                string materialName = category switch
+                {
+                    CollisionGeometryCategory.Hero => "RC_HERO",
+                    CollisionGeometryCategory.Unknown => "RC_UNKNOWN",
+                    _ => $"RC_{collisionType.materialID}_{collisionType.groupID}_{(collisionType.ignoreCameraCollision ? "true" : "false")}_{category}"
+                };
+                if (!string.Equals(materialName, previousMaterialName, StringComparison.Ordinal))
+                {
+                    objfs.WriteLine("usemtl " + materialName);
+                    previousMaterialName = materialName;
+                }
+
+                if (mtlfs != null && writtenMaterials.Add(materialName))
+                    WriteCollisionMaterial(mtlfs, materialName, GetCollisionExportColor(collisionType, category));
+
+                int cornerCount = face.IsQuad ? 4 : 3;
+                objfs.Write("f");
+                for (int corner = 0; corner < cornerCount; corner++)
+                    objfs.Write($" {firstVertexIndices[faceIdx] + corner}");
+                objfs.WriteLine();
             }
 
             return vertexCount;
+        }
+
+        private static System.Numerics.Vector3 GetCollisionExportColor(CollisionType collisionType, CollisionGeometryCategory category)
+        {
+            switch (category)
+            {
+                case CollisionGeometryCategory.Standard:
+                    return CollisionMaterialColors.GetColor(collisionType.materialID);
+                case CollisionGeometryCategory.Hero:
+                    return new System.Numerics.Vector3(0.5f, 0.5f, 1.0f);
+                case CollisionGeometryCategory.Unknown:
+                    return new System.Numerics.Vector3(1.0f, 0.25f, 0.75f);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(category));
+            }
+        }
+
+        private static void WriteCollisionMaterial(StreamWriter mtlfs, string materialName, System.Numerics.Vector3 color)
+        {
+            mtlfs.WriteLine("newmtl " + materialName);
+            mtlfs.WriteLine("Ns 1000");
+            mtlfs.WriteLine("Ka 1.000000 1.000000 1.000000");
+            mtlfs.WriteLine("Kd " + color.X.ToString("F6", en_US) + " " + color.Y.ToString("F6", en_US) + " " + color.Z.ToString("F6", en_US));
+            mtlfs.WriteLine("Ni 1.000000");
+            mtlfs.WriteLine("d 1.000000");
+            mtlfs.WriteLine("illum 1");
+        }
+
+        private static void WriteCollisionVertex(StreamWriter objfs, System.Numerics.Vector3 position, float scale)
+        {
+            float x = position.X * scale;
+            float y = position.Y * scale;
+            float z = position.Z * scale;
+            objfs.WriteLine("v " + x.ToString("G", en_US) + " " + y.ToString("G", en_US) + " " + z.ToString("G", en_US));
+        }
+
+        private static CollisionType GetCollisionType(Collision collision, uint vertexIndex)
+        {
+            if (vertexIndex >= (uint) (collision.vertexBuffer.Length / collision.vertexStride))
+                throw new InvalidOperationException($"Collision face references missing vertex {vertexIndex}.");
+
+            return CollisionVertexMetadata.GetCollisionType(
+                collision.vertexBuffer[checked((int) vertexIndex) * collision.vertexStride + 3]);
         }
 
         private int WriteData(StreamWriter objfs, Model? model, int faceOffset, Matrix4 modelMatrix, VertexColorContainer? vColors = null)
@@ -804,27 +877,37 @@ namespace LibReplanetizer
         }
 
 
-        public void ExportCollision(string fileName, Level level)
+        private void ExportCollisions(string fileName, IEnumerable<Collision> collisions)
         {
-            string? pathName = Path.GetDirectoryName(fileName);
-            string fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
+            string mtlFileName = Path.ChangeExtension(fileName, ".mtl")!;
 
+            using (StreamWriter? mtlfs = levelSettings.exportMtlFile ? new StreamWriter(mtlFileName) : null)
             using (StreamWriter objfs = new StreamWriter(fileName))
             {
-                if (level.collisionChunks.Count == 0)
-                {
-                    WriteDataCollision(objfs, (Collision) level.collisionEngine, 0);
-                }
-                else
-                {
-                    int faceOffset = 0;
+                if (mtlfs != null)
+                    objfs.WriteLine("mtllib " + Path.GetFileName(mtlFileName));
 
-                    foreach (Collision col in level.collisionChunks)
-                    {
-                        faceOffset += WriteDataCollision(objfs, col, faceOffset);
-                    }
-                }
+                HashSet<string> writtenMaterials = new HashSet<string>(StringComparer.Ordinal);
+                int faceOffset = 0;
+                foreach (Collision collision in collisions)
+                    faceOffset += WriteDataCollision(objfs, mtlfs, writtenMaterials, collision, faceOffset);
             }
+        }
+
+        public void ExportCollision(string fileName, Level level)
+        {
+            if (level.collisionChunks.Count == 0)
+            {
+                ExportCollision(fileName, level.collisionEngine);
+                return;
+            }
+
+            ExportCollisions(fileName, level.collisionChunks);
+        }
+
+        public void ExportCollision(string fileName, Collision collision)
+        {
+            ExportCollisions(fileName, new[] { collision });
         }
     }
 }

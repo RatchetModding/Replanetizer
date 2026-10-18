@@ -34,6 +34,8 @@ namespace Replanetizer.Frames
     {
         private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
         protected override string frameName { get; set; } = "Level";
+        private readonly ImGuiWarningModal collisionImportWarning = new("Collision import warning");
+        private readonly ImGuiWarningModal terrainImportWarning = new("Terrain import warning");
 
         private FramebufferRenderer? renderer;
         public LevelRenderer? levelRenderer;
@@ -156,7 +158,7 @@ namespace Replanetizer.Frames
         {
             if (rightDockId != 0 || didFocusLevelTab)
                 return;
-            
+
 
             uint mainId = wnd.dockspaceId;
             uint rightId, leftId;
@@ -234,29 +236,7 @@ namespace Replanetizer.Frames
                     if (ImGui.BeginMenu("Export"))
                     {
                         if (ImGui.MenuItem("Collision"))
-                        {
-                            var res = CrossFileDialog.SaveFile(filter: ".obj|.rcc");
-                            if (res.Length > 0)
-                            {
-                                var extension = Path.GetExtension(res);
-
-                                switch (extension)
-                                {
-                                    case ".rcc":
-                                        using (FileStream fs = File.Open(res, FileMode.Create))
-                                        {
-                                            byte[] collisionBytes = level.collisionEngine.Serialize();
-                                            fs.Write(collisionBytes, 0, collisionBytes.Length);
-                                        }
-                                        break;
-                                    default:
-                                    case ".obj":
-                                        WavefrontExporter exporter = new WavefrontExporter();
-                                        exporter.ExportCollision(res, level);
-                                        break;
-                                }
-                            }
-                        }
+                            OpenCollisionIOFrame();
                         if (ImGui.MenuItem("Level as Model"))
                         {
                             AddSubFrame(() => new LevelExportFrame(this.wnd, this));
@@ -295,36 +275,15 @@ namespace Replanetizer.Frames
                     }
                     if (ImGui.BeginMenu("Import"))
                     {
-                        if (ImGui.MenuItem("Collision (Internal R&C format only)"))
+                        if (ImGui.MenuItem("Collision"))
                         {
-                            var res = CrossFileDialog.OpenFile(filter: ".rcc");
-                            if (res.Length > 0)
-                            {
-                                using (FileStream fs = File.Open(res, FileMode.Open, FileAccess.Read))
-                                    level.collisionEngine = new Collision(fs, 0, import: true);
-
-                                levelRenderer?.Dispose();
-                                levelRenderer = new LevelRenderer(shaderTable, textureIds);
-                                levelRenderer.Include(level);
-                            }
-                            InvalidateView();
+                            OpenCollisionIOFrame();
                         }
                         if (ImGui.MenuItem("Terrain"))
                         {
                             var res = CrossFileDialog.OpenFile(filter: ".obj");
                             if (res.Length > 0)
-                            {
-                                var geometry = new WavefrontImporter().Import(res);
-                                var terrain = TerrainBuilder.Build(geometry, level.terrainEngine.levelNumber);
-
-                                level.terrainEngine = terrain;
-
-                                levelRenderer?.Dispose();
-                                levelRenderer = new LevelRenderer(shaderTable, textureIds);
-                                levelRenderer.Include(level);
-
-                                InvalidateView();
-                            }
+                                ImportTerrain(res);
                         }
                         ImGui.EndMenu();
                     }
@@ -472,6 +431,45 @@ namespace Replanetizer.Frames
 
                 ImGui.EndMenuBar();
             }
+
+            collisionImportWarning.Render();
+            terrainImportWarning.Render();
+        }
+
+        internal void QueueCollisionImportWarning(string warning)
+        {
+            LOGGER.Warn(warning);
+            collisionImportWarning.Queue(warning);
+        }
+
+        private void ImportTerrain(string path)
+        {
+            Terrain terrain;
+            try
+            {
+                var geometry = new WavefrontImporter().Import(path);
+                terrain = TerrainBuilder.Build(geometry, level.terrainEngine.levelNumber);
+            }
+            catch (Exception exception)
+            {
+                string warning = $"Terrain import failed: {exception.Message}";
+                LOGGER.Warn(warning);
+                terrainImportWarning.Queue(warning);
+                return;
+            }
+
+            level.terrainEngine = terrain;
+            RebuildLevelRenderer();
+            InvalidateView();
+        }
+
+        private void OpenCollisionIOFrame()
+        {
+            CollisionIOFrame? frame = subFrames.OfType<CollisionIOFrame>().FirstOrDefault();
+            if (frame == null)
+                AddSubFrame(() => new CollisionIOFrame(wnd, this));
+            else
+                frame.Open();
         }
 
         private void RenderTextOverlay(float deltaTime)
@@ -735,6 +733,13 @@ namespace Replanetizer.Frames
             selectedObjects.Clear();
             activeMobies = level.mobs.ToList();
             InvalidateView();
+        }
+
+        internal void RebuildLevelRenderer()
+        {
+            levelRenderer?.Dispose();
+            levelRenderer = new LevelRenderer(shaderTable, textureIds);
+            levelRenderer.Include(level);
         }
 
         public void SelectedObjectsOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)

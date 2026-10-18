@@ -243,10 +243,9 @@ namespace Replanetizer.Utils
                 levelObject.position.Z + distanceToObject / 2
             ));
 
-            // Move camera to first spline vertex if we're selecting a spline via this method
-            if(levelObject is Spline spline)
+            if (levelObject is Spline spline && spline.GetVertexCount() > 0)
             {
-                Vector3 splineFirstVertex = spline.splineVerticesList[0];
+                Vector3 splineFirstVertex = spline.GetVertex(0);
                 SetPosition(new Vector3(
                     splineFirstVertex.X + xpos * distanceToObject,
                     splineFirstVertex.Y + ypos * distanceToObject,

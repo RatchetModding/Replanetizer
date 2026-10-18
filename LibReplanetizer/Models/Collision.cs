@@ -50,8 +50,159 @@ namespace LibReplanetizer.Models
         public CollisionType(byte data) { this.data = data; }
     }
 
+    internal readonly struct CollisionTriangle
+    {
+        public Vector3 A { get; }
+        public Vector3 B { get; }
+        public Vector3 C { get; }
+        public CollisionType Type { get; }
+
+        public CollisionTriangle(Vector3 a, Vector3 b, Vector3 c, CollisionType type)
+        {
+            A = a;
+            B = b;
+            C = c;
+            Type = type;
+        }
+    }
+
+    internal readonly struct CollisionFace
+    {
+        public Vector3 A { get; }
+        public Vector3 B { get; }
+        public Vector3 C { get; }
+        public Vector3 D { get; }
+        public CollisionType Type { get; }
+        public bool IsQuad { get; }
+
+        public CollisionFace(Vector3 a, Vector3 b, Vector3 c, CollisionType type)
+        {
+            A = a;
+            B = b;
+            C = c;
+            D = default;
+            Type = type;
+            IsQuad = false;
+        }
+
+        public CollisionFace(Vector3 a, Vector3 b, Vector3 c, Vector3 d, CollisionType type)
+        {
+            A = a;
+            B = b;
+            C = c;
+            D = d;
+            Type = type;
+            IsQuad = true;
+        }
+
+        public Vector3 GetCorner(int index)
+        {
+            return index switch
+            {
+                0 => A,
+                1 => B,
+                2 => C,
+                3 when IsQuad => D,
+                _ => throw new ArgumentOutOfRangeException(nameof(index))
+            };
+        }
+    }
+
     public class Collision : Model, IRenderable
     {
+        private const int MaximumGridEntries = 1_000_000;
+        private const long MaximumCellFaceReferences = 5_000_000;
+
+        private readonly struct CollisionFaceOccurrence
+        {
+            public CollisionFace Face { get; }
+            private Vector3 ErrorA { get; }
+            private Vector3 ErrorB { get; }
+            private Vector3 ErrorC { get; }
+            private Vector3 ErrorD { get; }
+
+            public CollisionFaceOccurrence(CollisionFace face, Vector3 errorA, Vector3 errorB, Vector3 errorC, Vector3 errorD)
+            {
+                Face = face;
+                ErrorA = errorA;
+                ErrorB = errorB;
+                ErrorC = errorC;
+                ErrorD = errorD;
+            }
+
+            public Vector3 GetError(int index)
+            {
+                return index switch
+                {
+                    0 => ErrorA,
+                    1 => ErrorB,
+                    2 => ErrorC,
+                    3 when Face.IsQuad => ErrorD,
+                    _ => throw new ArgumentOutOfRangeException(nameof(index))
+                };
+            }
+        }
+
+        private readonly record struct StandardFaceKey(Vector3 A, Vector3 B, Vector3 C, Vector3 D, bool IsQuad, byte Type)
+        {
+            public static StandardFaceKey Create(CollisionFace face)
+            {
+                int cornerCount = face.IsQuad ? 4 : 3;
+                int bestRotation = 0;
+                for (int rotation = 1; rotation < cornerCount; rotation++)
+                {
+                    if (CompareRotation(face, rotation, bestRotation, cornerCount) < 0)
+                        bestRotation = rotation;
+                }
+
+                return new StandardFaceKey(
+                    face.GetCorner(bestRotation),
+                    face.GetCorner((bestRotation + 1) % cornerCount),
+                    face.GetCorner((bestRotation + 2) % cornerCount),
+                    face.IsQuad ? face.GetCorner((bestRotation + 3) % cornerCount) : default,
+                    face.IsQuad,
+                    face.Type.data);
+            }
+
+            private static int CompareRotation(CollisionFace face, int rotation, int otherRotation, int cornerCount)
+            {
+                for (int corner = 0; corner < cornerCount; corner++)
+                {
+                    int comparison = Compare(
+                        face.GetCorner((rotation + corner) % cornerCount),
+                        face.GetCorner((otherRotation + corner) % cornerCount));
+                    if (comparison != 0)
+                        return comparison;
+                }
+
+                return 0;
+            }
+
+            private static int Compare(Vector3 first, Vector3 second)
+            {
+                int comparison = first.X.CompareTo(second.X);
+                if (comparison != 0) return comparison;
+                comparison = first.Y.CompareTo(second.Y);
+                return comparison != 0 ? comparison : first.Z.CompareTo(second.Z);
+            }
+        }
+
+        private readonly record struct FaceBucketKey(long X, long Y, long Z, byte CornerCount, byte Type);
+
+        private sealed class StandardFaceGroup
+        {
+            public CollisionFaceOccurrence Occurrence { get; }
+            public int MaximumMultiplicity { get; set; }
+            public int LastCellIndex { get; set; }
+
+            public StandardFaceGroup(CollisionFaceOccurrence occurrence, int multiplicity, int cellIndex)
+            {
+                Occurrence = occurrence;
+                MaximumMultiplicity = multiplicity;
+                LastCellIndex = cellIndex;
+            }
+        }
+
         private bool hasStandardCollision = false;
         private bool hasHeroCollision = false;
         private bool hasUnkCollision = false;
@@ -90,6 +241,78 @@ namespace LibReplanetizer.Models
             CollisionCellEntry[] entries = [];
             Vector3[] vertices = [];
 
+            public CollisionCell(List<CollisionFace> faces, ushort x, ushort y, ushort z, int worldX, int worldY, int worldZ)
+            {
+                xCell = x;
+                yCell = y;
+                zCell = z;
+                int inputFaceCount = checked((ushort) faces.Count);
+                int inputQuadCount = faces.Count(face => face.IsQuad);
+                if (inputQuadCount > byte.MaxValue)
+                    throw new InvalidOperationException("A collision cell cannot contain more than 255 quads.");
+                quadCount = (byte) inputQuadCount;
+                entries = new CollisionCellEntry[inputFaceCount];
+
+                var sharedVertices = new List<Vector3>();
+                var vertexIndices = new Dictionary<Vector3, byte>();
+                float centerX = 4.0f * (worldX + 0.5f);
+                float centerY = 4.0f * (worldY + 0.5f);
+                float centerZ = 4.0f * (worldZ + 0.5f);
+
+                Vector3 GetLocalPosition(Vector3 position)
+                {
+                    return new Vector3(
+                        (position.X - centerX) * 1024.0f,
+                        (position.Y - centerY) * 1024.0f,
+                        (position.Z - centerZ) * 1024.0f);
+                }
+
+                byte GetVertexIndex(Vector3 local)
+                {
+                    if (vertexIndices.TryGetValue(local, out byte index))
+                        return index;
+                    if (sharedVertices.Count == byte.MaxValue)
+                        throw new InvalidOperationException("A collision cell cannot contain more than 255 unique vertices.");
+
+                    index = (byte) sharedVertices.Count;
+                    sharedVertices.Add(local);
+                    vertexIndices.Add(local, index);
+                    return index;
+                }
+
+                foreach (CollisionFace face in faces.Where(face => face.IsQuad).Concat(faces.Where(face => !face.IsQuad)))
+                {
+                    Vector3 localA = GetLocalPosition(face.A);
+                    Vector3 localB = GetLocalPosition(face.B);
+                    Vector3 localC = GetLocalPosition(face.C);
+                    Vector3 localD = face.IsQuad ? GetLocalPosition(face.D) : default;
+                    int newVertexCount = 0;
+                    if (!vertexIndices.ContainsKey(localA)) newVertexCount++;
+                    if (!vertexIndices.ContainsKey(localB) && !localB.Equals(localA)) newVertexCount++;
+                    if (!vertexIndices.ContainsKey(localC) && !localC.Equals(localA) && !localC.Equals(localB)) newVertexCount++;
+                    if (face.IsQuad && !vertexIndices.ContainsKey(localD) &&
+                        !localD.Equals(localA) && !localD.Equals(localB) && !localD.Equals(localC))
+                        newVertexCount++;
+                    if (sharedVertices.Count + newVertexCount > byte.MaxValue)
+                        throw new InvalidOperationException("A collision cell cannot contain more than 255 unique vertices.");
+
+                    entries[faceCount] = new CollisionCellEntry
+                    {
+                        vertexIndex0 = GetVertexIndex(localA),
+                        vertexIndex1 = GetVertexIndex(localB),
+                        vertexIndex2 = GetVertexIndex(localC),
+                        vertexIndex3 = face.IsQuad ? GetVertexIndex(localD) : (byte) 0xFF,
+                        collisionType = face.Type
+                    };
+                    faceCount++;
+                }
+
+                if (faceCount != entries.Length)
+                    Array.Resize(ref entries, faceCount);
+                vertexCount = checked((byte) sharedVertices.Count);
+                vertices = sharedVertices.ToArray();
+            }
+
             public CollisionCell(FileStream fs, int baseOffset, ushort x, ushort y, ushort z)
             {
                 xCell = x;
@@ -103,9 +326,17 @@ namespace LibReplanetizer.Models
                 quadCount = headBlock[0x03];
 
                 entries = new CollisionCellEntry[faceCount];
-                vertices = new Vector3[faceCount * vertexCount];
+                vertices = new Vector3[vertexCount];
 
                 byte[] dataBlock = ReadBlock(fs, baseOffset + 0x04, faceCount * 0x04 + vertexCount * 0x0C + quadCount);
+                for (int vertex = 0; vertex < vertexCount; vertex++)
+                {
+                    float xPos = ReadFloat(dataBlock, vertex * 0x0C + 0x00);
+                    float yPos = ReadFloat(dataBlock, vertex * 0x0C + 0x04);
+                    float zPos = ReadFloat(dataBlock, vertex * 0x0C + 0x08);
+                    vertices[vertex] = new Vector3(xPos, yPos, zPos);
+                }
+
                 for (int f = 0; f < faceCount; f++)
                 {
                     CollisionCellEntry entry = new CollisionCellEntry();
@@ -119,80 +350,100 @@ namespace LibReplanetizer.Models
                     entry.collisionType = new CollisionType(dataBlock[fOffset + 3]);
                     entry.vertexIndex3 = (f < quadCount) ? dataBlock[vertexCount * 0x0C + faceCount * 0x04 + f] : (byte) 0xFF;
 
-                    // Vertices
-                    for (int v = 0; v < vertexCount; v++)
-                    {
-                        float xPos = ReadFloat(dataBlock, v * 0x0C + 0x00);
-                        float yPos = ReadFloat(dataBlock, v * 0x0C + 0x04);
-                        float zPos = ReadFloat(dataBlock, v * 0x0C + 0x08);
-
-                        vertices[f * vertexCount + v] = new Vector3(xPos, yPos, zPos);
-                    }
-
                     entries[f] = entry;
                 }
+            }
 
-                // The game sometimes stores just one vertex in a cell, no idea what that is useful for.
-                if (faceCount == 0 && vertexCount > 0)
+            private Vector3 GetWorldPosition(byte vertexIndex, ushort xShift, ushort yShift, ushort zShift)
+            {
+                Vector3 local = vertices[vertexIndex];
+                return new Vector3(
+                    local.X / 1024.0f + 4.0f * (xShift + xCell + 0.5f),
+                    local.Y / 1024.0f + 4.0f * (yShift + yCell + 0.5f),
+                    local.Z / 1024.0f + 4.0f * (zShift + zCell + 0.5f));
+            }
+
+            private (Vector3 position, Vector3 error) GetWorldPositionAndError(byte vertexIndex, ushort xShift, ushort yShift, ushort zShift)
+            {
+                Vector3 local = vertices[vertexIndex];
+                Vector3 position = GetWorldPosition(vertexIndex, xShift, yShift, zShift);
+                Vector3 error = new Vector3(
+                    GetPositionError(local.X, position.X),
+                    GetPositionError(local.Y, position.Y),
+                    GetPositionError(local.Z, position.Z));
+                return (position, error);
+            }
+
+            public float GetMaximumPositionError(ushort xShift, ushort yShift, ushort zShift)
+            {
+                float maximumError = 0.0f;
+                for (int vertexIndex = 0; vertexIndex < vertices.Length; vertexIndex++)
                 {
-                    vertices = new Vector3[vertexCount];
-
-                    // Vertices
-                    for (int v = 0; v < vertexCount; v++)
-                    {
-                        float xPos = ReadFloat(dataBlock, v * 0x0C + 0x00);
-                        float yPos = ReadFloat(dataBlock, v * 0x0C + 0x04);
-                        float zPos = ReadFloat(dataBlock, v * 0x0C + 0x08);
-
-                        vertices[v] = new Vector3(xPos, yPos, zPos);
-                    }
+                    var worldPosition = GetWorldPositionAndError(
+                        checked((byte) vertexIndex), xShift, yShift, zShift);
+                    Vector3 error = worldPosition.error;
+                    maximumError = Math.Max(maximumError, Math.Max(error.X, Math.Max(error.Y, error.Z)));
                 }
+
+                return maximumError;
             }
 
             public void GetModelData(ushort xShift, ushort yShift, ushort zShift, List<float> vertexList, List<uint> indexList, ref uint totalVertexCount)
             {
-                CollisionType[] collisionType = new CollisionType[vertexCount];
-                for (int f = 0; f < faceCount; f++)
+                void AddRenderVertex(Vector3 position, CollisionType collisionType)
                 {
-                    CollisionCellEntry entry = entries[f];
+                    vertexList.Add(position.X);
+                    vertexList.Add(position.Y);
+                    vertexList.Add(position.Z);
+                    vertexList.Add(CollisionVertexMetadata.Pack(collisionType, CollisionGeometryCategory.Standard));
+                }
 
-                    collisionType[entry.vertexIndex0] = entry.collisionType;
-                    collisionType[entry.vertexIndex1] = entry.collisionType;
-                    collisionType[entry.vertexIndex2] = entry.collisionType;
+                for (int face = 0; face < faceCount; face++)
+                {
+                    CollisionCellEntry entry = entries[face];
+                    Vector3 position0 = GetWorldPosition(entry.vertexIndex0, xShift, yShift, zShift);
+                    Vector3 position1 = GetWorldPosition(entry.vertexIndex1, xShift, yShift, zShift);
+                    Vector3 position2 = GetWorldPosition(entry.vertexIndex2, xShift, yShift, zShift);
+                    uint faceVertexStart = totalVertexCount;
 
-                    uint f1 = totalVertexCount + entry.vertexIndex0;
-                    uint f2 = totalVertexCount + entry.vertexIndex1;
-                    uint f3 = totalVertexCount + entry.vertexIndex2;
-                    indexList.Add(f2);
-                    indexList.Add(f1);
-                    indexList.Add(f3);
+                    AddRenderVertex(position0, entry.collisionType);
+                    AddRenderVertex(position1, entry.collisionType);
+                    AddRenderVertex(position2, entry.collisionType);
+                    indexList.Add(faceVertexStart + 1);
+                    indexList.Add(faceVertexStart);
+                    indexList.Add(faceVertexStart + 2);
+                    totalVertexCount += 3;
 
-                    if (f < quadCount)
+                    if (face < quadCount)
                     {
-                        uint f4 = totalVertexCount + entry.vertexIndex3;
-                        indexList.Add(f3);
-                        indexList.Add(f1);
-                        indexList.Add(f4);
-                        collisionType[entry.vertexIndex3] = entry.collisionType;
-                    }
-
-                    // Vertices
-                    for (int v = 0; v < vertexCount; v++)
-                    {
-                        float xPos = vertices[f * vertexCount + v].X / 1024.0f;
-                        float yPos = vertices[f * vertexCount + v].Y / 1024.0f;
-                        float zPos = vertices[f * vertexCount + v].Z / 1024.0f;
-
-                        xPos += 4 * (xShift + xCell + 0.5f);
-                        yPos += 4 * (yShift + yCell + 0.5f);
-                        zPos += 4 * (zShift + zCell + 0.5f);
-
-                        vertexList.Add(xPos);
-                        vertexList.Add(yPos);
-                        vertexList.Add(zPos);
-
-                        vertexList.Add(CollisionVertexMetadata.Pack(collisionType[v], CollisionGeometryCategory.Standard));
+                        Vector3 position3 = GetWorldPosition(entry.vertexIndex3, xShift, yShift, zShift);
+                        AddRenderVertex(position3, entry.collisionType);
+                        indexList.Add(faceVertexStart + 2);
+                        indexList.Add(faceVertexStart);
+                        indexList.Add(faceVertexStart + 3);
                         totalVertexCount++;
+                    }
+                }
+            }
+
+            public void AddStandardFaces(List<CollisionFaceOccurrence> faces, ushort xShift, ushort yShift, ushort zShift)
+            {
+                for (int face = 0; face < faceCount; face++)
+                {
+                    CollisionCellEntry entry = entries[face];
+                    (Vector3 a, Vector3 errorA) = GetWorldPositionAndError(entry.vertexIndex0, xShift, yShift, zShift);
+                    (Vector3 b, Vector3 errorB) = GetWorldPositionAndError(entry.vertexIndex1, xShift, yShift, zShift);
+                    (Vector3 c, Vector3 errorC) = GetWorldPositionAndError(entry.vertexIndex2, xShift, yShift, zShift);
+                    if (face < quadCount)
+                    {
+                        (Vector3 d, Vector3 errorD) = GetWorldPositionAndError(entry.vertexIndex3, xShift, yShift, zShift);
+                        faces.Add(new CollisionFaceOccurrence(
+                            new CollisionFace(a, b, c, d, entry.collisionType), errorA, errorB, errorC, errorD));
+                    }
+                    else
+                    {
+                        faces.Add(new CollisionFaceOccurrence(
+                            new CollisionFace(a, b, c, entry.collisionType), errorA, errorB, errorC, default));
                     }
                 }
             }
@@ -204,6 +455,13 @@ namespace LibReplanetizer.Models
                 WriteUshort(bytes, 0x00, faceCount);
                 bytes[0x02] = vertexCount;
                 bytes[0x03] = quadCount;
+
+                for (int vertex = 0; vertex < vertexCount; vertex++)
+                {
+                    WriteFloat(bytes, 0x04 + vertex * 0x0C + 0x00, vertices[vertex].X);
+                    WriteFloat(bytes, 0x04 + vertex * 0x0C + 0x04, vertices[vertex].Y);
+                    WriteFloat(bytes, 0x04 + vertex * 0x0C + 0x08, vertices[vertex].Z);
+                }
 
                 for (int f = 0; f < faceCount; f++)
                 {
@@ -220,27 +478,6 @@ namespace LibReplanetizer.Models
                     if (f < quadCount)
                     {
                         bytes[0x04 + vertexCount * 0x0C + faceCount * 0x04 + f] = entry.vertexIndex3;
-                    }
-
-                    // Vertices
-                    for (int v = 0; v < vertexCount; v++)
-                    {
-                        WriteFloat(bytes, 0x04 + v * 0x0C + 0x00, vertices[f * vertexCount + v].X);
-                        WriteFloat(bytes, 0x04 + v * 0x0C + 0x04, vertices[f * vertexCount + v].Y);
-                        WriteFloat(bytes, 0x04 + v * 0x0C + 0x08, vertices[f * vertexCount + v].Z);
-                    }
-
-                    entries[f] = entry;
-                }
-
-                if (faceCount == 0 && vertexCount > 0)
-                {
-                    // Vertices
-                    for (int v = 0; v < vertexCount; v++)
-                    {
-                        WriteFloat(bytes, 0x04 + v * 0x0C + 0x00, vertices[v].X);
-                        WriteFloat(bytes, 0x04 + v * 0x0C + 0x04, vertices[v].Y);
-                        WriteFloat(bytes, 0x04 + v * 0x0C + 0x08, vertices[v].Z);
                     }
                 }
 
@@ -261,6 +498,46 @@ namespace LibReplanetizer.Models
             private ushort vertCount;
             private ushort[] vertices = [];
             private byte[] indices = [];
+
+            public HeroCollisionCell(IReadOnlyList<CollisionTriangle> triangles, int start, int count)
+            {
+                // OBJ does not encode these section-specific header values.
+                unk0x00 = 0;
+                unk0x04 = 0;
+                unk0x06 = 0;
+                triCount = checked((ushort) count);
+                vertCount = checked((ushort) (count * 3));
+                vertices = new ushort[vertCount * 3];
+                indices = new byte[triCount * 3];
+
+                for (int triangleIndex = 0; triangleIndex < count; triangleIndex++)
+                {
+                    CollisionTriangle triangle = triangles[start + triangleIndex];
+                    int vertexIndex = triangleIndex * 3;
+                    StorePosition(triangle.A, vertexIndex);
+                    StorePosition(triangle.B, vertexIndex + 1);
+                    StorePosition(triangle.C, vertexIndex + 2);
+                    indices[triangleIndex * 3 + 0] = checked((byte) vertexIndex);
+                    indices[triangleIndex * 3 + 1] = checked((byte) (vertexIndex + 1));
+                    indices[triangleIndex * 3 + 2] = checked((byte) (vertexIndex + 2));
+                }
+            }
+
+            private void StorePosition(System.Numerics.Vector3 position, int vertexIndex)
+            {
+                vertices[vertexIndex * 3 + 0] = ToSpecialCoordinate(position.X);
+                vertices[vertexIndex * 3 + 1] = ToSpecialCoordinate(position.Y);
+                vertices[vertexIndex * 3 + 2] = ToSpecialCoordinate(position.Z);
+            }
+
+            private static ushort ToSpecialCoordinate(float coordinate)
+            {
+                double scaled = coordinate * 64.0;
+                double rounded = Math.Round(scaled);
+                if (!double.IsFinite(scaled) || scaled < 0 || rounded > ushort.MaxValue || Math.Abs(scaled - rounded) > 0.0001)
+                    throw new InvalidOperationException("Hero and unknown collision coordinates must be non-negative multiples of 1/64 within the unsigned 16-bit range.");
+                return checked((ushort) rounded);
+            }
 
             public HeroCollisionCell(FileStream fs, int baseOffset, int num, byte[] headerBlock)
             {
@@ -316,6 +593,28 @@ namespace LibReplanetizer.Models
                 totalVertexCount += vertCount;
             }
 
+            public void AddFaces(List<(CollisionFace face, CollisionGeometryCategory category)> faces, CollisionGeometryCategory category)
+            {
+                for (int triangleIndex = 0; triangleIndex < triCount; triangleIndex++)
+                {
+                    int indexOffset = triangleIndex * 3;
+                    var face = new CollisionFace(
+                        GetStoredPosition(indices[indexOffset + 0]),
+                        GetStoredPosition(indices[indexOffset + 1]),
+                        GetStoredPosition(indices[indexOffset + 2]),
+                        new CollisionType(0x80));
+                    faces.Add((face, category));
+                }
+            }
+
+            private Vector3 GetStoredPosition(byte vertexIndex)
+            {
+                return new Vector3(
+                    vertices[vertexIndex * 3 + 0] / 64.0f,
+                    vertices[vertexIndex * 3 + 1] / 64.0f,
+                    vertices[vertexIndex * 3 + 2] / 64.0f);
+            }
+
             public byte[] Serialize(int num, byte[] headerBytes, ref int dataOffset)
             {
                 int entryOffset = num * 0x10;
@@ -354,6 +653,11 @@ namespace LibReplanetizer.Models
         private List<HeroCollisionCell> heroCells = new List<HeroCollisionCell>();
         private List<HeroCollisionCell> unkCells = new List<HeroCollisionCell>();
 
+        public Collision()
+        {
+            vertexStride = 4;
+        }
+
         public Collision(FileStream fs, int collisionPointer, bool import = false)
         {
             vertexStride = 4;
@@ -376,10 +680,10 @@ namespace LibReplanetizer.Models
                 ParseStandardCollision(fs, collisionPointer + standardCollisionStart);
 
             if (hasHeroCollision)
-                ParseHeroCollision(fs, collisionPointer + heroCollisionStart);
+                heroCells = ParseSpecialCollision(fs, collisionPointer + heroCollisionStart);
 
             if (hasUnkCollision)
-                ParseUnkCollision(fs, collisionPointer + unkCollisionStart);
+                unkCells = ParseSpecialCollision(fs, collisionPointer + unkCollisionStart);
 
             var vertexList = new List<float>();
             var indexList = new List<uint>();
@@ -387,6 +691,442 @@ namespace LibReplanetizer.Models
 
             GenerateModelData(vertexList, indexList, ref totalVertexCount);
 
+            vertexBuffer = vertexList.ToArray();
+            indBuff = indexList.ToArray();
+        }
+
+        private static Collision FromFaces(IEnumerable<CollisionFace> faces, bool generateRenderData = true)
+        {
+            if (faces == null)
+                throw new ArgumentNullException(nameof(faces));
+
+            var cellFaces = new Dictionary<(int x, int y, int z), List<CollisionFace>>();
+            long faceReferences = 0;
+
+            foreach (CollisionFace face in faces)
+            {
+                int cornerCount = face.IsQuad ? 4 : 3;
+                Vector3 first = face.GetCorner(0);
+                float minX = first.X, maxX = first.X;
+                float minY = first.Y, maxY = first.Y;
+                float minZ = first.Z, maxZ = first.Z;
+                for (int corner = 1; corner < cornerCount; corner++)
+                {
+                    Vector3 position = face.GetCorner(corner);
+                    minX = Math.Min(minX, position.X);
+                    maxX = Math.Max(maxX, position.X);
+                    minY = Math.Min(minY, position.Y);
+                    maxY = Math.Max(maxY, position.Y);
+                    minZ = Math.Min(minZ, position.Z);
+                    maxZ = Math.Max(maxZ, position.Z);
+                }
+
+                int minGridX = GetGridCoordinate(minX);
+                int maxGridX = GetGridCoordinate(maxX);
+                int minGridY = GetGridCoordinate(minY);
+                int maxGridY = GetGridCoordinate(maxY);
+                int faceMinGridZ = GetGridCoordinate(minZ);
+                int faceMaxGridZ = GetGridCoordinate(maxZ);
+
+                long coveredCells = (long) (maxGridX - minGridX + 1) * (maxGridY - minGridY + 1) * (faceMaxGridZ - faceMinGridZ + 1);
+                faceReferences = checked(faceReferences + coveredCells);
+                if (faceReferences > MaximumCellFaceReferences)
+                    throw new InvalidOperationException("The collision geometry spans too many grid cells.");
+
+                for (int z = faceMinGridZ; z <= faceMaxGridZ; z++)
+                    for (int y = minGridY; y <= maxGridY; y++)
+                        for (int x = minGridX; x <= maxGridX; x++)
+                        {
+                            var key = (x, y, z);
+                            if (!cellFaces.TryGetValue(key, out List<CollisionFace>? cell))
+                            {
+                                cell = new List<CollisionFace>();
+                                cellFaces.Add(key, cell);
+                                if (cellFaces.Count > MaximumGridEntries)
+                                    throw new InvalidOperationException("The collision geometry requires too many grid cells.");
+                            }
+
+                            if (cell.Count == ushort.MaxValue)
+                                throw new InvalidOperationException("A collision cell cannot contain more than 65535 faces.");
+                            cell.Add(face);
+                        }
+            }
+
+            var collision = new Collision();
+            if (cellFaces.Count == 0)
+                return collision;
+
+            var byZ = new Dictionary<int, Dictionary<int, List<KeyValuePair<int, List<CollisionFace>>>>>();
+            foreach (var cell in cellFaces)
+            {
+                if (!byZ.TryGetValue(cell.Key.z, out Dictionary<int, List<KeyValuePair<int, List<CollisionFace>>>>? byY))
+                {
+                    byY = new Dictionary<int, List<KeyValuePair<int, List<CollisionFace>>>>();
+                    byZ.Add(cell.Key.z, byY);
+                }
+                if (!byY.TryGetValue(cell.Key.y, out List<KeyValuePair<int, List<CollisionFace>>>? byX))
+                {
+                    byX = new List<KeyValuePair<int, List<CollisionFace>>>();
+                    byY.Add(cell.Key.y, byX);
+                }
+                byX.Add(new KeyValuePair<int, List<CollisionFace>>(cell.Key.x, cell.Value));
+            }
+
+            int minGridZ = byZ.Keys.Min();
+            int maxGridZ = byZ.Keys.Max();
+            int zCount = GetGridCount(minGridZ, maxGridZ);
+            long gridEntries = zCount;
+            var yRanges = new Dictionary<int, (int min, int max)>();
+            var xRanges = new Dictionary<(int z, int y), (int min, int max)>();
+
+            foreach (var zEntry in byZ)
+            {
+                int minY = zEntry.Value.Keys.Min();
+                int maxY = zEntry.Value.Keys.Max();
+                yRanges.Add(zEntry.Key, (minY, maxY));
+                gridEntries += GetGridCount(minY, maxY);
+
+                foreach (var yEntry in zEntry.Value)
+                {
+                    int minX = yEntry.Value.Min(cell => cell.Key);
+                    int maxX = yEntry.Value.Max(cell => cell.Key);
+                    xRanges.Add((zEntry.Key, yEntry.Key), (minX, maxX));
+                    gridEntries += GetGridCount(minX, maxX);
+                }
+            }
+
+            if (gridEntries > MaximumGridEntries)
+                throw new InvalidOperationException("The collision grid is too sparse to serialize safely.");
+
+            collision.zShift = checked((ushort) minGridZ);
+            collision.zCount = checked((ushort) zCount);
+            collision.yShift = new ushort[zCount];
+            collision.yCount = new ushort[zCount];
+            collision.xShift = new List<ushort[]>(zCount);
+            collision.xCount = new List<ushort[]>(zCount);
+
+            for (int zIndex = 0; zIndex < zCount; zIndex++)
+            {
+                int worldZ = minGridZ + zIndex;
+                if (!byZ.TryGetValue(worldZ, out Dictionary<int, List<KeyValuePair<int, List<CollisionFace>>>>? byY))
+                {
+                    collision.xShift.Add([]);
+                    collision.xCount.Add([]);
+                    continue;
+                }
+
+                (int minY, int maxY) = yRanges[worldZ];
+                int yCount = GetGridCount(minY, maxY);
+                collision.yShift[zIndex] = checked((ushort) minY);
+                collision.yCount[zIndex] = checked((ushort) yCount);
+                var xShifts = new ushort[yCount];
+                var xCounts = new ushort[yCount];
+
+                foreach (var yEntry in byY)
+                {
+                    int yIndex = yEntry.Key - minY;
+                    (int minX, int maxX) = xRanges[(worldZ, yEntry.Key)];
+                    int xCount = GetGridCount(minX, maxX);
+                    xShifts[yIndex] = checked((ushort) minX);
+                    xCounts[yIndex] = checked((ushort) xCount);
+
+                    foreach (var cell in yEntry.Value)
+                    {
+                        int xIndex = cell.Key - minX;
+                        collision.cells.Add(new CollisionCell(
+                            cell.Value,
+                            checked((ushort) xIndex),
+                            checked((ushort) yIndex),
+                            checked((ushort) zIndex),
+                            cell.Key,
+                            yEntry.Key,
+                            worldZ));
+                    }
+                }
+
+                collision.xShift.Add(xShifts);
+                collision.xCount.Add(xCounts);
+            }
+
+            collision.hasStandardCollision = true;
+            if (generateRenderData)
+                collision.GenerateRenderData();
+            return collision;
+        }
+
+        internal static Collision FromFaces(
+            IEnumerable<CollisionFace> standardFaces,
+            IEnumerable<CollisionTriangle> heroTriangles,
+            IEnumerable<CollisionTriangle> unknownTriangles)
+        {
+            if (standardFaces == null)
+                throw new ArgumentNullException(nameof(standardFaces));
+            if (heroTriangles == null)
+                throw new ArgumentNullException(nameof(heroTriangles));
+            if (unknownTriangles == null)
+                throw new ArgumentNullException(nameof(unknownTriangles));
+
+            List<CollisionTriangle> hero = heroTriangles.ToList();
+            List<CollisionTriangle> unknown = unknownTriangles.ToList();
+            if (hero.Any(triangle => triangle.Type.data != 0x80) || unknown.Any(triangle => triangle.Type.data != 0x80))
+                throw new ArgumentException("Hero and unknown collision triangles must use collision type 0x80.");
+
+            Collision collision = FromFaces(standardFaces, generateRenderData: false);
+            AddSpecialCells(collision.heroCells, hero);
+            AddSpecialCells(collision.unkCells, unknown);
+            collision.hasHeroCollision = hero.Count > 0;
+            collision.hasUnkCollision = unknown.Count > 0;
+            collision.GenerateRenderData();
+            return collision;
+        }
+
+        private static void AddSpecialCells(List<HeroCollisionCell> cells, List<CollisionTriangle> triangles)
+        {
+            const int trianglesPerCell = byte.MaxValue / 3;
+            for (int start = 0; start < triangles.Count; start += trianglesPerCell)
+            {
+                int count = Math.Min(trianglesPerCell, triangles.Count - start);
+                cells.Add(new HeroCollisionCell(triangles, start, count));
+            }
+        }
+
+        private List<CollisionFace> GetStandardFaces()
+        {
+            var groups = new List<StandardFaceGroup>();
+            float maximumPositionError = 0.0f;
+            for (int cellIndex = 0; cellIndex < cells.Count; cellIndex++)
+            {
+                CollisionCell cell = cells[cellIndex];
+                float cellError = cell.GetMaximumPositionError(
+                    xShift[cell.zCell][cell.yCell], yShift[cell.zCell], zShift);
+                maximumPositionError = Math.Max(maximumPositionError, cellError);
+            }
+
+            double bucketSize = Math.Max(maximumPositionError * 2.0, double.Epsilon);
+            var buckets = new Dictionary<FaceBucketKey, List<int>>();
+            var candidateGroups = new List<int>();
+
+            long GetBucketCoordinate(double coordinate)
+            {
+                return checked((long) Math.Floor(coordinate / bucketSize));
+            }
+
+            FaceBucketKey GetBucket(CollisionFace face)
+            {
+                int cornerCount = face.IsQuad ? 4 : 3;
+                double centroidX = 0.0;
+                double centroidY = 0.0;
+                double centroidZ = 0.0;
+                for (int corner = 0; corner < cornerCount; corner++)
+                {
+                    Vector3 position = face.GetCorner(corner);
+                    centroidX += position.X;
+                    centroidY += position.Y;
+                    centroidZ += position.Z;
+                }
+
+                return new FaceBucketKey(
+                    GetBucketCoordinate(centroidX / cornerCount),
+                    GetBucketCoordinate(centroidY / cornerCount),
+                    GetBucketCoordinate(centroidZ / cornerCount),
+                    checked((byte) cornerCount),
+                    face.Type.data);
+            }
+
+            void AddNearbyGroups(CollisionFace face)
+            {
+                FaceBucketKey bucket = GetBucket(face);
+                for (int x = -1; x <= 1; x++)
+                    for (int y = -1; y <= 1; y++)
+                        for (int z = -1; z <= 1; z++)
+                        {
+                            var neighbor = new FaceBucketKey(bucket.X + x, bucket.Y + y, bucket.Z + z, bucket.CornerCount, bucket.Type);
+                            if (!buckets.TryGetValue(neighbor, out List<int>? matchingGroups))
+                                continue;
+                            candidateGroups.AddRange(matchingGroups);
+                        }
+            }
+
+            void IndexGroup(int groupIndex)
+            {
+                CollisionFaceOccurrence occurrence = groups[groupIndex].Occurrence;
+                FaceBucketKey bucket = GetBucket(occurrence.Face);
+                if (!buckets.TryGetValue(bucket, out List<int>? matchingGroups))
+                {
+                    matchingGroups = new List<int>();
+                    buckets.Add(bucket, matchingGroups);
+                }
+                matchingGroups.Add(groupIndex);
+            }
+
+            for (int cellIndex = 0; cellIndex < cells.Count; cellIndex++)
+            {
+                CollisionCell cell = cells[cellIndex];
+                var cellFaces = new List<CollisionFaceOccurrence>();
+                cell.AddStandardFaces(cellFaces,
+                    xShift[cell.zCell][cell.yCell], yShift[cell.zCell], zShift);
+
+                var cellMultiplicity = new Dictionary<StandardFaceKey, (CollisionFaceOccurrence occurrence, int count)>();
+                foreach (CollisionFaceOccurrence occurrence in cellFaces)
+                {
+                    StandardFaceKey key = StandardFaceKey.Create(occurrence.Face);
+                    if (cellMultiplicity.TryGetValue(key, out var current))
+                        cellMultiplicity[key] = (current.occurrence, current.count + 1);
+                    else
+                        cellMultiplicity.Add(key, (occurrence, 1));
+                }
+
+                foreach (var entry in cellMultiplicity)
+                {
+                    CollisionFaceOccurrence occurrence = entry.Value.occurrence;
+                    candidateGroups.Clear();
+                    AddNearbyGroups(occurrence.Face);
+
+                    int bestGroupIndex = -1;
+                    double bestScore = double.PositiveInfinity;
+                    bool ambiguousMatch = false;
+                    foreach (int candidateGroupIndex in candidateGroups)
+                    {
+                        StandardFaceGroup candidate = groups[candidateGroupIndex];
+                        if (candidate.LastCellIndex == cellIndex)
+                            continue;
+
+                        double score = GetStandardFaceMatchScore(occurrence, candidate.Occurrence);
+                        if (score < 0.0)
+                            continue;
+                        if (score < bestScore - 1e-9)
+                        {
+                            bestGroupIndex = candidateGroupIndex;
+                            bestScore = score;
+                            ambiguousMatch = false;
+                        }
+                        else if (Math.Abs(score - bestScore) <= 1e-9)
+                        {
+                            ambiguousMatch = true;
+                        }
+                    }
+
+                    if (bestGroupIndex >= 0 && !ambiguousMatch)
+                    {
+                        StandardFaceGroup group = groups[bestGroupIndex];
+                        group.MaximumMultiplicity = Math.Max(group.MaximumMultiplicity, entry.Value.count);
+                        group.LastCellIndex = cellIndex;
+                        continue;
+                    }
+
+                    int newGroupIndex = groups.Count;
+                    groups.Add(new StandardFaceGroup(occurrence, entry.Value.count, cellIndex));
+                    IndexGroup(newGroupIndex);
+                }
+            }
+
+            var faces = new List<CollisionFace>();
+            foreach (StandardFaceGroup group in groups)
+                for (int copy = 0; copy < group.MaximumMultiplicity; copy++)
+                    faces.Add(group.Occurrence.Face);
+
+            return faces;
+        }
+
+        private static double GetFloatSpacing(float value)
+        {
+            float increment = MathF.BitIncrement(value);
+            float decrement = MathF.BitDecrement(value);
+            double incrementSpacing = float.IsFinite(increment) ? Math.Abs((double) increment - value) : 0.0;
+            double decrementSpacing = float.IsFinite(decrement) ? Math.Abs((double) value - decrement) : 0.0;
+            return Math.Max(incrementSpacing, decrementSpacing);
+        }
+
+        private static float GetPositionError(float local, float world)
+        {
+            double localError = 2.0 * GetFloatSpacing(local) / 1024.0;
+            double worldRoundingError = GetFloatSpacing(world);
+            return (float) (localError + worldRoundingError);
+        }
+
+        private static double GetVertexMatchScore(Vector3 first, Vector3 second, Vector3 firstError, Vector3 secondError)
+        {
+            double xTolerance = (double) firstError.X + secondError.X;
+            double yTolerance = (double) firstError.Y + secondError.Y;
+            double zTolerance = (double) firstError.Z + secondError.Z;
+            double xDifference = Math.Abs((double) first.X - second.X);
+            double yDifference = Math.Abs((double) first.Y - second.Y);
+            double zDifference = Math.Abs((double) first.Z - second.Z);
+            if (xDifference > xTolerance || yDifference > yTolerance || zDifference > zTolerance)
+                return double.PositiveInfinity;
+
+            double xScore = xTolerance == 0.0 ? 0.0 : xDifference / xTolerance;
+            double yScore = yTolerance == 0.0 ? 0.0 : yDifference / yTolerance;
+            double zScore = zTolerance == 0.0 ? 0.0 : zDifference / zTolerance;
+            return Math.Max(xScore, Math.Max(yScore, zScore));
+        }
+
+        private static double GetStandardFaceMatchScore(CollisionFaceOccurrence first, CollisionFaceOccurrence second)
+        {
+            if (first.Face.Type.data != second.Face.Type.data || first.Face.IsQuad != second.Face.IsQuad)
+                return -1.0;
+
+            int cornerCount = first.Face.IsQuad ? 4 : 3;
+            double score = double.PositiveInfinity;
+            for (int rotation = 0; rotation < cornerCount; rotation++)
+            {
+                double rotationScore = 0.0;
+                for (int corner = 0; corner < cornerCount; corner++)
+                {
+                    int otherCorner = (corner + rotation) % cornerCount;
+                    double vertexScore = GetVertexMatchScore(
+                        first.Face.GetCorner(corner),
+                        second.Face.GetCorner(otherCorner),
+                        first.GetError(corner),
+                        second.GetError(otherCorner));
+                    rotationScore = Math.Max(rotationScore, vertexScore);
+                }
+
+                score = Math.Min(score, rotationScore);
+            }
+
+            return double.IsPositiveInfinity(score) ? -1.0 : score;
+        }
+
+        internal List<(CollisionFace face, CollisionGeometryCategory category)> GetFacesForExport()
+        {
+            var faces = GetStandardFaces()
+                .Select(face => (face, CollisionGeometryCategory.Standard))
+                .ToList();
+
+            foreach (HeroCollisionCell cell in heroCells)
+                cell.AddFaces(faces, CollisionGeometryCategory.Hero);
+            foreach (HeroCollisionCell cell in unkCells)
+                cell.AddFaces(faces, CollisionGeometryCategory.Unknown);
+
+            return faces;
+        }
+
+        private static int GetGridCoordinate(float coordinate)
+        {
+            if (!float.IsFinite(coordinate))
+                throw new ArgumentOutOfRangeException(nameof(coordinate), "Collision coordinates must be finite.");
+
+            double gridCoordinate = Math.Floor(coordinate / 4.0);
+            if (gridCoordinate < 0 || gridCoordinate > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(coordinate), "Collision coordinates must map to a non-negative 16-bit grid cell.");
+            return (int) gridCoordinate;
+        }
+
+        private static int GetGridCount(int min, int max)
+        {
+            long count = (long) max - min + 1;
+            if (count <= 0 || count > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(max), "Collision grid dimensions must fit in an unsigned 16-bit count.");
+            return (int) count;
+        }
+
+        private void GenerateRenderData()
+        {
+            var vertexList = new List<float>();
+            var indexList = new List<uint>();
+            uint totalVertexCount = 0;
+            GenerateModelData(vertexList, indexList, ref totalVertexCount);
             vertexBuffer = vertexList.ToArray();
             indBuff = indexList.ToArray();
         }
@@ -451,40 +1191,22 @@ namespace LibReplanetizer.Models
             }
         }
 
-        private void ParseHeroCollision(FileStream fs, int baseOffset)
+        private static List<HeroCollisionCell> ParseSpecialCollision(FileStream fs, int baseOffset)
         {
             byte[] headBlock = ReadBlock(fs, baseOffset, 0x10);
 
-            int heroCellCount = ReadInt(headBlock, 0x00);
+            int cellCount = ReadInt(headBlock, 0x00);
             Utilities.DebugAssert(ReadInt(headBlock, 0x04) == 0, "Header[0x04] is not 0!");
             Utilities.DebugAssert(ReadInt(headBlock, 0x08) == 0, "Header[0x08] is not 0!");
             Utilities.DebugAssert(ReadInt(headBlock, 0x0C) == 0, "Header[0x0C] is not 0!");
 
-            heroCells = new List<HeroCollisionCell>(heroCellCount);
+            var cells = new List<HeroCollisionCell>(cellCount);
+            byte[] cellHeaderBlock = ReadBlock(fs, baseOffset + 0x10, cellCount * 0x10);
 
-            byte[] cellHeaderBlock = ReadBlock(fs, baseOffset + 0x10, heroCellCount * 0x10);
+            for (int i = 0; i < cellCount; i++)
+                cells.Add(new HeroCollisionCell(fs, baseOffset, i, cellHeaderBlock));
 
-            for (int i = 0; i < heroCellCount; i++)
-                heroCells.Add(new HeroCollisionCell(fs, baseOffset, i, cellHeaderBlock));
-        }
-
-        private void ParseUnkCollision(FileStream fs, int baseOffset)
-        {
-            byte[] headBlock = ReadBlock(fs, baseOffset, 0x10);
-
-            int unkCount = ReadInt(headBlock, 0x00);
-            Utilities.DebugAssert(ReadInt(headBlock, 0x04) == 0, "Header[0x04] is not 0!");
-            Utilities.DebugAssert(ReadInt(headBlock, 0x08) == 0, "Header[0x08] is not 0!");
-            Utilities.DebugAssert(ReadInt(headBlock, 0x0C) == 0, "Header[0x0C] is not 0!");
-
-            unkCells = new List<HeroCollisionCell>(unkCount);
-
-            byte[] cellHeaderBlock = ReadBlock(fs, baseOffset + 0x10, unkCount * 0x10);
-
-            for (int i = 0; i < unkCount; i++)
-            {
-                unkCells.Add(new HeroCollisionCell(fs, baseOffset, i, cellHeaderBlock));
-            }
+            return cells;
         }
 
         private void GenerateModelData(List<float> vertexList, List<uint> indexList, ref uint totalVertexCount)
@@ -510,9 +1232,9 @@ namespace LibReplanetizer.Models
         {
             if (hasStandardCollision == false && hasHeroCollision == false && hasUnkCollision == false) return [];
 
-            byte[] standardCollisionBlock = SerializeStandardCollision();
-            byte[] heroCollisionBlock = SerializeHeroCollision();
-            byte[] unkCollisionBlock = SerializeUnkCollision();
+            byte[] standardCollisionBlock = hasStandardCollision ? SerializeStandardCollision() : [];
+            byte[] heroCollisionBlock = hasHeroCollision ? SerializeSpecialCollision(heroCells) : [];
+            byte[] unkCollisionBlock = hasUnkCollision ? SerializeSpecialCollision(unkCells) : [];
 
             int offset = 0x10;
 
@@ -656,63 +1378,30 @@ namespace LibReplanetizer.Models
             return bytes;
         }
 
-        private byte[] SerializeHeroCollision()
+        private byte[] SerializeSpecialCollision(List<HeroCollisionCell> cells)
         {
-            byte[] headerBytes = new byte[heroCells.Count * 0x10];
+            byte[] headerBytes = new byte[cells.Count * 0x10];
 
-            List<byte[]> cellBytes = new List<byte[]>(heroCells.Count);
+            List<byte[]> cellBytes = new List<byte[]>(cells.Count);
 
             int dataOffset = 0x10 + headerBytes.Length;
 
-            for (int i = 0; i < heroCells.Count; i++)
+            for (int i = 0; i < cells.Count; i++)
             {
                 dataOffset = AlignAddressUp(dataOffset);
-                cellBytes.Add(heroCells[i].Serialize(i, headerBytes, ref dataOffset));
+                cellBytes.Add(cells[i].Serialize(i, headerBytes, ref dataOffset));
             }
 
             byte[] bytes = new byte[dataOffset];
 
-            WriteInt(bytes, 0x00, heroCells.Count);
+            WriteInt(bytes, 0x00, cells.Count);
 
             int offset = 0x10;
             headerBytes.CopyTo(bytes, offset);
 
             offset += headerBytes.Length;
 
-            for (int i = 0; i < heroCells.Count; i++)
-            {
-                offset = AlignAddressUp(offset);
-                cellBytes[i].CopyTo(bytes, offset);
-                offset += cellBytes[i].Length;
-            }
-
-            return bytes;
-        }
-
-        private byte[] SerializeUnkCollision()
-        {
-            byte[] headerBytes = new byte[unkCells.Count * 0x10];
-
-            List<byte[]> cellBytes = new List<byte[]>(unkCells.Count);
-
-            int dataOffset = 0x10 + headerBytes.Length;
-
-            for (int i = 0; i < unkCells.Count; i++)
-            {
-                dataOffset = AlignAddressUp(dataOffset);
-                cellBytes.Add(unkCells[i].Serialize(i, headerBytes, ref dataOffset));
-            }
-
-            byte[] bytes = new byte[dataOffset];
-
-            WriteInt(bytes, 0x00, unkCells.Count);
-
-            int offset = 0x10;
-            headerBytes.CopyTo(bytes, offset);
-
-            offset += headerBytes.Length;
-
-            for (int i = 0; i < unkCells.Count; i++)
+            for (int i = 0; i < cells.Count; i++)
             {
                 offset = AlignAddressUp(offset);
                 cellBytes[i].CopyTo(bytes, offset);

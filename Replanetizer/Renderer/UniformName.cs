@@ -50,7 +50,8 @@ namespace Replanetizer.Renderer
         ssaaLevelLog,
         resolveTexture,
         resolveSsaaLevel,
-        mobyAlpha
+        mobyAlpha,
+        materialColors
     }
 
 }

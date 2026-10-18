@@ -29,7 +29,6 @@ namespace Replanetizer.Frames
         private static readonly string[] FORMAT_STRINGS = { "Wavefront OBJ (.obj)", "R&C Internal (.rcc)" };
 
         private CollisionImportFormat format = CollisionImportFormat.Obj;
-        private string path = string.Empty;
         private int selectedChunkIndex;
 
         public CollisionIOFrame(Window wnd, LevelFrame levelFrame)
@@ -48,17 +47,6 @@ namespace Replanetizer.Frames
             if (ImGui.Combo("File Type", ref formatIndex, FORMAT_STRINGS, FORMAT_STRINGS.Length))
             {
                 format = (CollisionImportFormat) formatIndex;
-                path = string.Empty;
-            }
-
-            ImGui.InputText("Path", ref path, 4096);
-            ImGui.SameLine();
-            if (ImGui.Button("Browse..."))
-            {
-                string filter = format == CollisionImportFormat.Rcc ? ".rcc" : ".obj";
-                string selectedPath = CrossFileDialog.OpenFile("Choose a collision file", filter);
-                if (!string.IsNullOrEmpty(selectedPath))
-                    path = selectedPath;
             }
 
             int chunkCount = levelFrame.level.collisionChunks.Count;
@@ -84,16 +72,8 @@ namespace Replanetizer.Frames
             }
 
             ImGui.Separator();
-            bool hasPath = !string.IsNullOrWhiteSpace(path);
-            if (!hasPath)
-                ImGui.BeginDisabled();
-
             bool importClicked = ImGui.Button("Import");
-
-            if (!hasPath)
-                ImGui.EndDisabled();
-
-            if (importClicked && hasPath && ImportCollision())
+            if (importClicked && ImportCollision())
                 isOpen = false;
 
             ImGui.SameLine();
@@ -106,14 +86,19 @@ namespace Replanetizer.Frames
             Collision importedCollision;
             try
             {
+                string extension = format == CollisionImportFormat.Rcc ? ".rcc" : ".obj";
+                string importPath = CrossFileDialog.OpenFile("Choose a collision file", extension);
+                if (string.IsNullOrEmpty(importPath))
+                    return false;
+
                 if (format == CollisionImportFormat.Rcc)
                 {
-                    using (FileStream stream = File.Open(path, FileMode.Open, FileAccess.Read))
+                    using (FileStream stream = File.Open(importPath, FileMode.Open, FileAccess.Read))
                         importedCollision = new Collision(stream, 0, import: true);
                 }
                 else
                 {
-                    var geometry = new WavefrontImporter().Import(path, preserveQuads: true);
+                    var geometry = new WavefrontImporter().Import(importPath, preserveQuads: true);
                     importedCollision = CollisionBuilder.BuildPerFace(geometry);
 
                     if (importedCollision.indBuff.Length == 0)

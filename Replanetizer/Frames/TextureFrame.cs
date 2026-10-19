@@ -143,10 +143,28 @@ namespace Replanetizer.Frames
                 }
             }
 
-            if (ImGui.CollapsingHeader("Menu textures"))
+            if (ImGui.CollapsingHeader("FX textures"))
             {
                 var menuTextures = level.textures.FindAll(tex => level.textureConfigMenus.Contains(tex.id));
-                RenderTextureList(menuTextures, itemSizeX, levelFrame.textureIds, levelFrame, "menuTextures", 0, true);
+                RenderTextureList(menuTextures, itemSizeX, levelFrame.textureIds, levelFrame, "fxTextures", 0, true);
+            }
+            if (ImGui.CollapsingHeader("UI textures"))
+            {
+                for(int i = 0; i < level.uiElements.Count; i++)
+                {
+                    var uiElement = level.uiElements[i];
+                    if (uiElement.id == -1) continue;
+
+                    string label = uiElement.id.ToString("X");
+                    ImGui.Text(label);
+
+                    List<Texture> elements = new List<Texture>();
+
+                    foreach(int spritenum in uiElement.sprites)
+                        elements.Add(level.textures[spritenum]);
+
+                    RenderTextureList(elements, itemSizeX, levelFrame.textureIds, levelFrame, $"uiTexture ### {label}", 0, true);
+                }
             }
             if (ImGui.CollapsingHeader("Spaceship textures"))
             {

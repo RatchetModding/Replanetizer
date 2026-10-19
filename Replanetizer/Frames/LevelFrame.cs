@@ -349,7 +349,14 @@ namespace Replanetizer.Frames
                     ImGui.EndMenu();
                 }
 
-                if (ImGui.BeginMenu("Tools"))
+                string toolType = string.Empty;
+                if (toolbox.tool == null)
+                    toolType = string.Empty;
+                else
+                    toolType += ": " + toolbox.GetToolTypeName();
+
+
+                if (ImGui.BeginMenu($"Tool{toolType}"))
                 {
                     if (ImGui.MenuItem($"Translate        [{KEYMAP.NameOf(Keybinds.ToolTranslate)}]"))
                         toolbox.ChangeTool(ToolType.Translation);

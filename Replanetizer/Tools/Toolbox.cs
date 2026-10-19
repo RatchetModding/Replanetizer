@@ -63,7 +63,18 @@ namespace Replanetizer.Tools
             _tool?.Reset();
             OnToolChanged(new ToolChangedEventArgs(toolType));
         }
-
+        public string GetToolTypeName()
+        {
+            return _type switch
+            {
+                ToolType.None => "None",
+                ToolType.Translation => "Translate",
+                ToolType.Rotation => "Rotate",
+                ToolType.Scaling => "Scale",
+                ToolType.VertexTranslation => "Spline editor",
+                _ => string.Empty
+            };
+        }
         private void OnToolChanged(ToolChangedEventArgs e)
         {
             ToolChanged?.Invoke(this, e);

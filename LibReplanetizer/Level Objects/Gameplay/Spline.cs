@@ -117,6 +117,34 @@ namespace LibReplanetizer.LevelObjects
 
             return new Vector3(x, y, z);
         }
+        public int GetVertexFromMouseRay(Vector3 camPos, Vector3 mouseRay)
+        {
+            int ret = 0;
+            float bestCandidate = float.MaxValue;
+
+            for (int i = 0; i < splineVerticesList.Count; i++)
+            {
+                Vector3 toVertex = splineVerticesList[i] - camPos;
+
+                Vector3 mouseUnit = mouseRay.Normalized();
+                float dot = Vector3.Dot(toVertex, mouseUnit);
+
+                // Multiplies the unit vector with the dot to get the dist+point in world, and adds it to the camera
+                Vector3 closestPoint = camPos + mouseUnit * dot;
+
+                // Gets the distance between the spline vertex and the computed closest point
+                Vector3 gap = splineVerticesList[i] - closestPoint;
+                float distance = (float)System.Math.Sqrt((gap.X * gap.X) + (gap.Y * gap.Y) + (gap.Z * gap.Z));
+
+                if (distance < bestCandidate)
+                {
+                    bestCandidate = distance;
+                    ret = i;
+                }
+            }
+
+            return ret;
+        }
 
         public void SetVertex(int index, Vector3 value)
         {

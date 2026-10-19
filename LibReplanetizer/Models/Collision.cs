@@ -491,9 +491,10 @@ namespace LibReplanetizer.Models
 
         private struct HeroCollisionCell
         {
-            private float unk0x00;
-            private ushort unk0x04;
-            private ushort unk0x06;
+            private ushort bsphereX;
+            private ushort bsphereY;
+            private ushort bsphereZ;
+            private ushort bsphereRad;
             private ushort triCount;
             private ushort vertCount;
             private ushort[] vertices = [];
@@ -501,10 +502,6 @@ namespace LibReplanetizer.Models
 
             public HeroCollisionCell(IReadOnlyList<CollisionTriangle> triangles, int start, int count)
             {
-                // OBJ does not encode these section-specific header values.
-                unk0x00 = 0;
-                unk0x04 = 0;
-                unk0x06 = 0;
                 triCount = checked((ushort) count);
                 vertCount = checked((ushort) (count * 3));
                 vertices = new ushort[vertCount * 3];
@@ -521,6 +518,53 @@ namespace LibReplanetizer.Models
                     indices[triangleIndex * 3 + 1] = checked((byte) (vertexIndex + 1));
                     indices[triangleIndex * 3 + 2] = checked((byte) (vertexIndex + 2));
                 }
+
+                ApproxBsphere();
+            }
+
+            // Referenced from wrench
+            // https://github.com/chaoticgd/wrench/blob/master/src/core/mesh.cpp#L295
+            private void ApproxBsphere()
+            {
+                if (vertCount == 0)
+                {
+                    bsphereX = 0;
+                    bsphereY = 0;
+                    bsphereZ = 0;
+                    bsphereRad = 0;
+                    return;
+                }
+
+                Vector3 min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+                for (int v = 0; v < vertCount; v++)
+                {
+                    min.X = Math.Min(vertices[v * 3 + 0], min.X);
+                    min.Y = Math.Min(vertices[v * 3 + 1], min.Y);
+                    min.Z = Math.Min(vertices[v * 3 + 2], min.Z);
+                }
+
+                Vector3 max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+                for (int v = 0; v < vertCount; v++)
+                {
+                    max.X = Math.Max(vertices[v * 3 + 0], max.X);
+                    max.Y = Math.Max(vertices[v * 3 + 1], max.Y);
+                    max.Z = Math.Max(vertices[v * 3 + 2], max.Z);
+                }
+
+                Vector3 centre = (min + max) / 2f;
+
+                float radius = 0f;
+                for (int v = 0; v < vertCount; v++)
+                {
+                    Vector3 pos = new Vector3(vertices[v * 3 + 0], vertices[v * 3 + 1], vertices[v * 3 + 2]);
+                    Vector3 delta = pos - centre;
+                    radius = Math.Max((float)Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y + delta.Z * delta.Z), radius);
+                }
+
+                bsphereX = (ushort)centre.X;
+                bsphereY = (ushort)centre.Y;
+                bsphereZ = (ushort)centre.Z;
+                bsphereRad = (ushort)radius;
             }
 
             private void StorePosition(System.Numerics.Vector3 position, int vertexIndex)
@@ -534,7 +578,7 @@ namespace LibReplanetizer.Models
             {
                 double scaled = coordinate * 64.0;
                 double rounded = Math.Round(scaled);
-                if (!double.IsFinite(scaled) || scaled < 0 || rounded > ushort.MaxValue || Math.Abs(scaled - rounded) > 0.0001)
+                if (!double.IsFinite(scaled) || rounded < 0 || rounded > ushort.MaxValue)
                     throw new InvalidOperationException("Hero and unknown collision coordinates must be non-negative multiples of 1/64 within the unsigned 16-bit range.");
                 return checked((ushort) rounded);
             }
@@ -543,9 +587,10 @@ namespace LibReplanetizer.Models
             {
                 int entryOffset = num * 0x10;
 
-                unk0x00 = ReadFloat(headerBlock, entryOffset + 0x00);
-                unk0x04 = ReadUshort(headerBlock, entryOffset + 0x04);
-                unk0x06 = ReadUshort(headerBlock, entryOffset + 0x06);
+                bsphereX = ReadUshort(headerBlock, entryOffset + 0x00);
+                bsphereY = ReadUshort(headerBlock, entryOffset + 0x02);
+                bsphereZ = ReadUshort(headerBlock, entryOffset + 0x04);
+                bsphereRad = ReadUshort(headerBlock, entryOffset + 0x06);
                 triCount = ReadUshort(headerBlock, entryOffset + 0x08);
                 vertCount = ReadUshort(headerBlock, entryOffset + 0x0A);
                 int dataOffset = ReadInt(headerBlock, entryOffset + 0x0C);
@@ -619,9 +664,10 @@ namespace LibReplanetizer.Models
             {
                 int entryOffset = num * 0x10;
 
-                WriteFloat(headerBytes, entryOffset + 0x00, unk0x00);
-                WriteUshort(headerBytes, entryOffset + 0x04, unk0x04);
-                WriteUshort(headerBytes, entryOffset + 0x06, unk0x06);
+                WriteUshort(headerBytes, entryOffset + 0x00, bsphereX);
+                WriteUshort(headerBytes, entryOffset + 0x02, bsphereY);
+                WriteUshort(headerBytes, entryOffset + 0x04, bsphereZ);
+                WriteUshort(headerBytes, entryOffset + 0x06, bsphereRad);
                 WriteUshort(headerBytes, entryOffset + 0x08, triCount);
                 WriteUshort(headerBytes, entryOffset + 0x0A, vertCount);
                 WriteInt(headerBytes, entryOffset + 0x0C, dataOffset);
@@ -695,6 +741,71 @@ namespace LibReplanetizer.Models
             indBuff = indexList.ToArray();
         }
 
+        private static bool GetsFaceForCell(CollisionFace face, int x, int y, int z, out CollisionFace cellFace)
+        {
+            cellFace = face;
+            var center = new Vector3(4 * x + 2, 4 * y + 2, 4 * z + 2);
+
+            bool first = TestTriCellIntersection(center, face.A, face.B, face.C);
+            if (!face.IsQuad)
+                return first;
+
+            bool second = TestTriCellIntersection(center, face.C, face.D, face.A);
+            if (first && !second)
+            {
+                cellFace = new CollisionFace(face.A, face.B, face.C, face.Type);
+                return true;
+            }
+            if (second && !first)
+            {
+                cellFace = new CollisionFace(face.C, face.D, face.A, face.Type);
+                return true;
+            }
+            return first || second;
+        }
+
+        // Referenced from wrench
+        // https://github.com/chaoticgd/wrench/blob/master/src/engine/collision.cpp#L680
+        private static bool TestTriCellIntersection(Vector3 center, Vector3 a, Vector3 b, Vector3 c)
+        {
+            Vector3 v0 = a - center, v1 = b - center, v2 = c - center;
+
+            Vector3 f0 = v1 - v0;
+            Vector3 f1 = v2 - v1;
+            Vector3 f2 = v0 - v2;
+
+            Vector3 u0 = new Vector3(1.0f, 0.0f, 0.0f);
+            Vector3 u1 = new Vector3(0.0f, 1.0f, 0.0f);
+            Vector3 u2 = new Vector3(0.0f, 0.0f, 1.0f);
+
+            Vector3[] axes = new[]
+            {
+                Vector3.Cross(u0, f0), Vector3.Cross(u0, f1), Vector3.Cross(u0, f2),
+                Vector3.Cross(u1, f0), Vector3.Cross(u1, f1), Vector3.Cross(u1, f2),
+                Vector3.Cross(u2, f0), Vector3.Cross(u2, f1), Vector3.Cross(u2, f2),
+                u0, u1, u2, Vector3.Cross(f0, f1)
+            };
+
+            foreach (Vector3 axis in axes)
+            {
+                float p0 = Vector3.Dot(v0, axis);
+                float p1 = Vector3.Dot(v1, axis);
+                float p2 = Vector3.Dot(v2, axis);
+
+                float r = 0.0f;
+
+                r += MathF.Abs(Vector3.Dot(u0, axis));
+                r += MathF.Abs(Vector3.Dot(u1, axis));
+                r += MathF.Abs(Vector3.Dot(u2, axis));
+                r *= 2.0f;
+
+                if (MathF.Max(-MathF.Max(p0, MathF.Max(p1, p2)), MathF.Min(p0, MathF.Min(p1, p2))) > r)
+                    return false;
+            }
+
+            return true;
+        }
+
         private static Collision FromFaces(IEnumerable<CollisionFace> faces, bool generateRenderData = true)
         {
             if (faces == null)
@@ -737,6 +848,9 @@ namespace LibReplanetizer.Models
                     for (int y = minGridY; y <= maxGridY; y++)
                         for (int x = minGridX; x <= maxGridX; x++)
                         {
+                            if (!GetsFaceForCell(face, x, y, z, out CollisionFace cellFace))
+                                continue;
+
                             var key = (x, y, z);
                             if (!cellFaces.TryGetValue(key, out List<CollisionFace>? cell))
                             {
@@ -748,7 +862,7 @@ namespace LibReplanetizer.Models
 
                             if (cell.Count == ushort.MaxValue)
                                 throw new InvalidOperationException("A collision cell cannot contain more than 65535 faces.");
-                            cell.Add(face);
+                            cell.Add(cellFace);
                         }
             }
 

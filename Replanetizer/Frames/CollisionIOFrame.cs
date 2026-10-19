@@ -40,6 +40,15 @@ namespace Replanetizer.Frames
         {
             isOpen = true;
         }
+        public override void RenderAsWindow(float deltaTime)
+        {
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(360, 0), ImGuiCond.FirstUseEver);
+            if (ImGui.Begin(frameName, ref isOpen, ImGuiWindowFlags.NoDocking))
+            {
+                Render(deltaTime);
+            }
+            ImGui.End();
+        }
 
         public override void Render(float deltaTime)
         {

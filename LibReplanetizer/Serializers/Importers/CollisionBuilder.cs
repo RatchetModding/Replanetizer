@@ -69,6 +69,10 @@ namespace LibReplanetizer.Serializers.Importers
 
         private static CollisionGeometryCategory ParseCategory(string value)
         {
+            int dot = value.IndexOf('.');
+            if (dot >= 0)
+                value = value[..dot];
+
             if (string.Equals(value, nameof(CollisionGeometryCategory.Standard), StringComparison.OrdinalIgnoreCase))
                 return CollisionGeometryCategory.Standard;
             if (string.Equals(value, nameof(CollisionGeometryCategory.Hero), StringComparison.OrdinalIgnoreCase))

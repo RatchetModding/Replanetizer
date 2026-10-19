@@ -744,8 +744,6 @@ namespace Replanetizer.Frames
 
         public void SelectedObjectsOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            if (!selectedObjects.isOnlySplines && toolbox.type == ToolType.VertexTranslation)
-                toolbox.ChangeTool(ToolType.None);
             InvalidateView();
         }
 
@@ -1134,9 +1132,19 @@ namespace Replanetizer.Frames
             if (xLock || yLock || zLock)
                 HandleToolUpdates(mouseRay, direction);
             else
-                HandleSelect(obj);
-
+            {
+                HandleSelect(obj, mouseRay);
+            }
             return true;
+        }
+        public void HandleSelect(LevelObject? obj, Vector3 mouseRay)
+        {
+            HandleSelect(obj);
+
+            if (obj is Spline spline && toolbox.tool is VertexTranslationTool vertexTool)
+            {
+                vertexTool.currentVertex = spline.GetVertexFromMouseRay(camera.position, mouseRay);
+            }
         }
 
         public bool HandleSelect(LevelObject? obj, bool externalCaller = false, bool pointCameraAtObject = false)
@@ -1159,7 +1167,12 @@ namespace Replanetizer.Frames
             }
             else
             {
-                selectedObjects.ToggleOne(obj);
+                if (obj is not Spline)
+                    selectedObjects.ToggleOne(obj);
+                else
+                {
+                    selectedObjects.Set(obj);
+                }
                 if (pointCameraAtObject)
                 {
                     camera.MoveBehind(obj);

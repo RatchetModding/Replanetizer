@@ -234,8 +234,6 @@ namespace LibReplanetizer.Serializers.Importers
             Vector3 c = geometry.vertices[face.corners[2].pos];
             Vector3 normal = Vector3.Cross(b - a, c - a);
             float lengthSquared = normal.LengthSquared;
-            if (!float.IsFinite(lengthSquared) || lengthSquared <= 1e-12f)
-                throw new FormatException("Terrain face is degenerate and does not have a valid normal.");
             return normal / MathF.Sqrt(lengthSquared);
         }
 

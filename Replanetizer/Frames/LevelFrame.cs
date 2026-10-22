@@ -581,19 +581,22 @@ namespace Replanetizer.Frames
 
             SetupDefaultDockingLayout();
 
+            // TODO: Figure out what to actually do with the UI.
+            /*
             if (!addedDefaultFrames)
             {
                 AddSubFrame(() => new RenderFrame(this.wnd, this));
-                /*
+                
                 AddSubFrame(() =>
                     new PropertyFrame(this.wnd, this, listenToCallbacks: true)
                     {
                         selection = selectedObjects
                     }
                 );
-                */
+                
                 addedDefaultFrames = true;
             }
+            */
 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, SysVector2.Zero);
             ImGui.SetNextWindowDockID(wnd.dockspaceId, ImGuiCond.FirstUseEver);

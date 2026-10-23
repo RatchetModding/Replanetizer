@@ -33,7 +33,7 @@ namespace LibReplanetizer.Models
                 case 0x02: return "Magnetic Ramp";
                 case 0x03: return "Mud/Quicksand";
                 case 0x04: return "Water Slide";
-                case 0x05: return "Grindrail Jump";
+                case 0x05: return "Grindrail/Hoverboard Ramp";
                 case 0x07: return "Ice Sliding";
                 case 0x08: return "Sliding Off";
                 case 0x09: return "Disable Ledge Grab";
@@ -41,6 +41,7 @@ namespace LibReplanetizer.Models
                 case 0x0B: return "Death Mud";
                 case 0x0C: return "Sliding Off (No Wall Jump / Ledge Grab)";
                 case 0x0D: return "Death Ice";
+                case 0x0E: return "Water Ripples Effect"
                 case 0x1F: return "Default";
                 default:
                     return "Unknown";

@@ -34,6 +34,7 @@ namespace LibReplanetizer.Models
                 case 0x03: return "Mud/Quicksand";
                 case 0x04: return "Water Slide";
                 case 0x05: return "Grindrail/Hoverboard Ramp";
+                case 0x06: return "Spiderbot Tunnel Entry/Exit";
                 case 0x07: return "Ice Sliding";
                 case 0x08: return "Sliding Off";
                 case 0x09: return "Disable Ledge Grab";
@@ -41,7 +42,10 @@ namespace LibReplanetizer.Models
                 case 0x0B: return "Death Mud";
                 case 0x0C: return "Sliding Off (No Wall Jump / Ledge Grab)";
                 case 0x0D: return "Death Ice";
-                case 0x0E: return "Water Ripples Effect"
+                case 0x0E: return "Water Ripples Effect";
+                case 0x0F: return "Wall Jump";
+                case 0x11: return "Magnetic Electric Ramp";
+                case 0x12: return "Unknown Crashsite Ramp";
                 case 0x1F: return "Default";
                 default:
                     return "Unknown";
@@ -559,13 +563,13 @@ namespace LibReplanetizer.Models
                 {
                     Vector3 pos = new Vector3(vertices[v * 3 + 0], vertices[v * 3 + 1], vertices[v * 3 + 2]);
                     Vector3 delta = pos - centre;
-                    radius = Math.Max((float)Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y + delta.Z * delta.Z), radius);
+                    radius = Math.Max((float) Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y + delta.Z * delta.Z), radius);
                 }
 
-                bsphereX = (ushort)centre.X;
-                bsphereY = (ushort)centre.Y;
-                bsphereZ = (ushort)centre.Z;
-                bsphereRad = (ushort)radius;
+                bsphereX = (ushort) centre.X;
+                bsphereY = (ushort) centre.Y;
+                bsphereZ = (ushort) centre.Z;
+                bsphereRad = (ushort) radius;
             }
 
             private void StorePosition(System.Numerics.Vector3 position, int vertexIndex)

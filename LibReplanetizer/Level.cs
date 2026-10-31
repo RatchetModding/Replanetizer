@@ -131,6 +131,9 @@ namespace LibReplanetizer
 
         public int pvarBlocksHeaderPadding = 0x10;
 
+        public SoundConfig soundConfig;
+        public List<List<(byte[] sample, int sampleRate)>> soundBank = new List<List<(byte[] sample, int sampleRate)>>();
+
         ~Level()
         {
             LOGGER.Trace("Level destroyed");
@@ -288,6 +291,14 @@ namespace LibReplanetizer
 
             terrainChunks = new List<Terrain>();
             collisionChunks = new List<Collision>();
+
+            soundConfig = new SoundConfig(soundConfigBytes, mobyModels);
+            string bnkPath = SoundBankHeader.FindSoundBankFile(enginePath);
+            if (File.Exists(bnkPath))
+            {
+                using (var parser = new SoundBankParser(bnkPath))
+                    soundBank = parser.GetSounds();
+            }
 
             for (int i = 0; i < 5; i++)
             {

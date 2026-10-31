@@ -270,6 +270,19 @@ namespace Replanetizer.Frames
                             }
                             ImGui.EndMenu();
                         }
+                        if (ImGui.MenuItem("Sound banks"))
+                        {
+                            var res = CrossFileDialog.OpenFolder();
+                            if (res.Length > 0 && level.soundConfig != null)
+                            {
+                                foreach (int bank in level.soundConfig.levelSounds)
+                                    ExportSound(bank, Path.Join(res, "level"));
+
+                                foreach (var (oClass, bankIds) in level.soundConfig.mobySounds)
+                                    foreach (int bank in bankIds)
+                                        ExportSound(bank, Path.Join(res, $"{oClass}"));
+                            }
+                        }
 
                         ImGui.EndMenu();
                     }
@@ -1437,6 +1450,28 @@ namespace Replanetizer.Frames
                 {
                     sw.WriteLine(item);
                 }
+            }
+        }
+        private void ExportSound(int bank, string dir)
+        {
+            if (bank < 0 || bank >= level.soundBank.Count)
+                return;
+
+            var samples = level.soundBank[bank];
+            for (int index = 0; index < samples.Count; index++)
+            {
+                Directory.CreateDirectory(dir);
+
+                var (sample, sampleRate) = samples[index];
+
+                byte[] header = new byte[0x30];
+                WriteInt(header, 0x00, 0x56414770); // VAGp
+                WriteInt(header, 0x04, 0x20);
+                WriteInt(header, 0x0C, sample.Length);
+                WriteInt(header, 0x10, sampleRate);
+
+                string soundPath = Path.Join(dir, $"bank{bank}_{index}.vag");
+                File.WriteAllBytes(soundPath, header.Concat(sample).ToArray());
             }
         }
 

@@ -27,6 +27,7 @@ using Texture = LibReplanetizer.Texture;
 using SixLabors.ImageSharp;
 using LibReplanetizer.Models;
 using LibReplanetizer.Serializers.Importers;
+using LibReplanetizer.ModelLists;
 
 namespace Replanetizer.Frames
 {
@@ -279,8 +280,17 @@ namespace Replanetizer.Frames
                                     ExportSound(bank, Path.Join(res, "level"));
 
                                 foreach (var (oClass, bankIds) in level.soundConfig.mobySounds)
+                                {
+                                    string? modelName = ModelLists.GetMobyNameFromOClass(oClass, level.game);
+
+                                    string path = $"{oClass}";
+
+                                    if (modelName != null)
+                                        path += $"_{modelName}";
+                                    
                                     foreach (int bank in bankIds)
-                                        ExportSound(bank, Path.Join(res, $"{oClass}"));
+                                        ExportSound(bank, Path.Join(res, path));
+                                }
                             }
                         }
 

@@ -151,7 +151,28 @@ namespace LibReplanetizer.ModelLists
 
             return modelNames;
         }
-
+        public static string? GetMobyNameFromOClass(int oClass, GameType game)
+        {
+            string? result = "";
+            switch (game.num)
+            {
+                case 1:
+                    if (!RC1_MOB_NAMES.TryGetValue(oClass, out result)) return null;
+                    break;
+                case 2:
+                    if (!RC2_MOB_NAMES.TryGetValue(oClass, out result)) return null;
+                    break;
+                case 3:
+                    if (!RC3_MOB_NAMES.TryGetValue(oClass, out result)) return null;
+                    break;
+                case 4:
+                    if (!RC4_MOB_NAMES.TryGetValue(oClass, out result)) return null;
+                    break;
+                default:
+                    return null;
+            }
+            return result;
+        }
         public static string? GetModelName(Model obj, GameType game)
         {
             string? result = "Unknown";

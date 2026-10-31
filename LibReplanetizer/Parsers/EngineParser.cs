@@ -172,6 +172,14 @@ namespace LibReplanetizer.Parsers
 
             return ReadArbBytes(engineHead.soundConfigPointer, endPointer - engineHead.soundConfigPointer);
         }
+        public SoundConfig GetSoundConfig(List<Model> mobyModels)
+        {
+            // RC1 boot level has no sound config.
+            if (engineHead.soundConfigPointer == 0)
+                return new SoundConfig();
+
+            return new SoundConfig(GetSoundConfigBytes(), mobyModels);
+        }
 
         public byte[] GetUnk1Bytes()
         {

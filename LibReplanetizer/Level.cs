@@ -211,6 +211,7 @@ namespace LibReplanetizer
                 lightConfig = engineParser.GetLightConfig();
                 precipitationMap = engineParser.GetPrecipitationMap();
                 textureConfigMenus = engineParser.GetTextureConfigMenu();
+                soundConfig = engineParser.GetSoundConfig(mobyModels);
 
                 mobyOcclusion = engineParser.GetMobyOcclusion();
 
@@ -292,7 +293,6 @@ namespace LibReplanetizer
             terrainChunks = new List<Terrain>();
             collisionChunks = new List<Collision>();
 
-            soundConfig = new SoundConfig(soundConfigBytes, mobyModels);
             string bnkPath = SoundBankHeader.FindSoundBankFile(enginePath);
             if (File.Exists(bnkPath))
             {

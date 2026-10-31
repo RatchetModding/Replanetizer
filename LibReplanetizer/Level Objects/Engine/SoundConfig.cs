@@ -15,6 +15,10 @@ namespace LibReplanetizer.LevelObjects
     {
         public List<int> levelSounds = new List<int>();
         public Dictionary<short, List<int>> mobySounds = new Dictionary<short, List<int>>();
+        public SoundConfig()
+        {
+
+        }
 
         public SoundConfig(byte[] block, List<Model> mobyModels)
         {

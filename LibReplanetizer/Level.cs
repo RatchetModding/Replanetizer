@@ -57,6 +57,7 @@ namespace LibReplanetizer
 
         public List<Animation> playerAnimations;
         public List<UiElement> uiElements;
+        public List<Part> particles;
 
 
         //Level objects
@@ -200,6 +201,9 @@ namespace LibReplanetizer
 
                 uiElements = engineParser.GetUiElements();
                 LOGGER.Debug("Added {0} ui elements", uiElements.Count);
+
+                particles = engineParser.GetParticles();
+                LOGGER.Debug("Added {0} particles", particles.Count);
 
                 lightConfig = engineParser.GetLightConfig();
                 precipitationMap = engineParser.GetPrecipitationMap();

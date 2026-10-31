@@ -166,6 +166,24 @@ namespace Replanetizer.Frames
                     RenderTextureList(elements, itemSizeX, levelFrame.textureIds, levelFrame, $"uiTexture ### {label}", 0, true);
                 }
             }
+            if (ImGui.CollapsingHeader("Particle textures"))
+            {
+                foreach (var part in level.particles)
+                {
+                    if (part.sprites.Count == 0) continue;
+
+                    string label = part.id.ToString();
+                    ImGui.Text(label);
+
+                    List<Texture> textures = new List<Texture>();
+
+                    foreach (int spritenum in part.sprites)
+                        if (spritenum < level.textures.Count)
+                            textures.Add(level.textures[spritenum]);
+
+                    RenderTextureList(textures, itemSizeX, levelFrame.textureIds, levelFrame, $"partTexture ### {label}", 0, true);
+                }
+            }
             if (ImGui.CollapsingHeader("Spaceship textures"))
             {
                 RenderTextureList(level.spaceshipTextures, itemSizeX, levelFrame.textureIds, levelFrame, "spaceshipTextures");

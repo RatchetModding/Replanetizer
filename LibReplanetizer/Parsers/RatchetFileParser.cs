@@ -202,6 +202,24 @@ namespace LibReplanetizer.Parsers
             return list;
         }
 
+        protected List<Part> GetParticles(int offset)
+        {
+            byte[] headBlock = ReadBlock(fileStream, offset, 0x10);
+            int partCount = ReadInt(headBlock, 0x00);
+            int baseTextureIndex = ReadInt(headBlock, 0x04);
+            int dataOffset = ReadInt(headBlock, 0x08);
+            int dataSize = ReadInt(headBlock, 0x0C);
+
+            byte[] partBlock = ReadBlock(fileStream, offset + 0x10, partCount * 4);
+            byte[] spriteBlock = ReadBlock(fileStream, offset + dataOffset, dataSize);
+
+            var list = new List<Part>(partCount);
+
+            for (int i = 0; i < partCount; i++)
+                list.Add(new Part(partBlock, i, spriteBlock, baseTextureIndex));
+
+            return list;
+        }
         protected List<Animation> GetPlayerAnimations(GameType game, int offset, MobyModel ratchet)
         {
             int count = ratchet.animations.Count;

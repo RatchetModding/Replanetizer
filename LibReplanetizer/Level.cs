@@ -57,6 +57,7 @@ namespace LibReplanetizer
 
         public List<Animation> playerAnimations;
         public List<UiElement> uiElements;
+        public List<Part> particles;
 
 
         //Level objects
@@ -130,6 +131,9 @@ namespace LibReplanetizer
 
         public int pvarBlocksHeaderPadding = 0x10;
 
+        public SoundConfig soundConfig;
+        public List<List<(byte[] sample, int sampleRate)>> soundBank = new List<List<(byte[] sample, int sampleRate)>>();
+
         ~Level()
         {
             LOGGER.Trace("Level destroyed");
@@ -201,9 +205,13 @@ namespace LibReplanetizer
                 uiElements = engineParser.GetUiElements();
                 LOGGER.Debug("Added {0} ui elements", uiElements.Count);
 
+                particles = engineParser.GetParticles();
+                LOGGER.Debug("Added {0} particles", particles.Count);
+
                 lightConfig = engineParser.GetLightConfig();
                 precipitationMap = engineParser.GetPrecipitationMap();
                 textureConfigMenus = engineParser.GetTextureConfigMenu();
+                soundConfig = engineParser.GetSoundConfig(mobyModels);
 
                 mobyOcclusion = engineParser.GetMobyOcclusion();
 
@@ -284,6 +292,13 @@ namespace LibReplanetizer
 
             terrainChunks = new List<Terrain>();
             collisionChunks = new List<Collision>();
+
+            string bnkPath = SoundBankHeader.FindSoundBankFile(enginePath);
+            if (File.Exists(bnkPath))
+            {
+                using (var parser = new SoundBankParser(bnkPath))
+                    soundBank = parser.GetSounds();
+            }
 
             for (int i = 0; i < 5; i++)
             {

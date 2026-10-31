@@ -52,7 +52,7 @@ namespace LibReplanetizer.Headers
         public int textureConfigMenuPointer;
         public int textureConfigMenuCount;
 
-        public int texture2dPointer;            // TODO
+        public int particlePointer;
         public int uiElementPointer;
 
         public int unk5Pointer;
@@ -140,7 +140,7 @@ namespace LibReplanetizer.Headers
             textureConfigMenuPointer = ReadInt(engineHeadBlock, 0x68);
             textureConfigMenuCount = ReadInt(engineHeadBlock, 0x6C);
 
-            texture2dPointer = ReadInt(engineHeadBlock, 0x70);
+            particlePointer = ReadInt(engineHeadBlock, 0x70);
             uiElementPointer = ReadInt(engineHeadBlock, 0x74);
         }
 
@@ -186,7 +186,7 @@ namespace LibReplanetizer.Headers
             lightConfigPointer = ReadInt(engineHeadBlock, 0x70);
             textureConfigMenuPointer = ReadInt(engineHeadBlock, 0x74);
             textureConfigMenuCount = ReadInt(engineHeadBlock, 0x78);
-            texture2dPointer = ReadInt(engineHeadBlock, 0x7C);
+            particlePointer = ReadInt(engineHeadBlock, 0x7C);
 
             uiElementPointer = ReadInt(engineHeadBlock, 0x80);
             unk8Pointer = ReadInt(engineHeadBlock, 0x84);
@@ -247,7 +247,7 @@ namespace LibReplanetizer.Headers
             WriteInt(bytes, 0x68, textureConfigMenuPointer);
             WriteInt(bytes, 0x6C, textureConfigMenuCount);
 
-            WriteInt(bytes, 0x70, texture2dPointer);
+            WriteInt(bytes, 0x70, particlePointer);
             WriteInt(bytes, 0x74, uiElementPointer);
             WriteInt(bytes, 0x78, 0);
             WriteInt(bytes, 0x7C, 1);
@@ -299,7 +299,7 @@ namespace LibReplanetizer.Headers
             WriteInt(bytes, 0x70, lightConfigPointer);
             WriteInt(bytes, 0x74, textureConfigMenuPointer);
             WriteInt(bytes, 0x78, textureConfigMenuCount);
-            WriteInt(bytes, 0x7C, texture2dPointer);
+            WriteInt(bytes, 0x7C, particlePointer);
 
             WriteInt(bytes, 0x80, uiElementPointer);
             WriteInt(bytes, 0x84, unk8Pointer);

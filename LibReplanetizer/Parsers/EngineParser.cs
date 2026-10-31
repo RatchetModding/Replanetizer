@@ -81,6 +81,11 @@ namespace LibReplanetizer.Parsers
             return GetUiElements(engineHead.uiElementPointer);
         }
 
+        public List<Part> GetParticles()
+        {
+            return GetParticles(engineHead.particlePointer);
+        }
+
         public MobyModel? FindRatchetMoby(List<Model> models)
         {
             if (engineHead.game == GameType.DL)
@@ -143,14 +148,14 @@ namespace LibReplanetizer.Parsers
                 if (engineHead.soundConfigPointer > 0)
                     endPointer = engineHead.soundConfigPointer;
 
-                return ReadArbBytes(engineHead.texture2dPointer, endPointer - engineHead.texture2dPointer);
+                return ReadArbBytes(engineHead.particlePointer, endPointer - engineHead.particlePointer);
             }
 
 
             if (engineHead.game == GameType.RaC2 || engineHead.game == GameType.RaC3)
-                return ReadArbBytes(engineHead.texture2dPointer, engineHead.mobyModelPointer - engineHead.texture2dPointer);
+                return ReadArbBytes(engineHead.particlePointer, engineHead.mobyModelPointer - engineHead.particlePointer);
 
-            return ReadArbBytes(engineHead.texture2dPointer, engineHead.skyboxPointer - engineHead.texture2dPointer);
+            return ReadArbBytes(engineHead.particlePointer, engineHead.skyboxPointer - engineHead.particlePointer);
         }
 
         public byte[] GetSoundConfigBytes()
@@ -166,6 +171,14 @@ namespace LibReplanetizer.Parsers
             Utilities.DebugAssert(endPointer != 0, "Failed to determine proper end pointer!");
 
             return ReadArbBytes(engineHead.soundConfigPointer, endPointer - engineHead.soundConfigPointer);
+        }
+        public SoundConfig GetSoundConfig(List<Model> mobyModels)
+        {
+            // RC1 boot level has no sound config.
+            if (engineHead.soundConfigPointer == 0)
+                return new SoundConfig();
+
+            return new SoundConfig(GetSoundConfigBytes(), mobyModels);
         }
 
         public byte[] GetUnk1Bytes()

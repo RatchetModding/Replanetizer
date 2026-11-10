@@ -67,7 +67,7 @@ namespace Replanetizer.Frames
         {
         }
 
-        private static void RenderMetadata(uint metadata)
+        private void RenderMetadata(uint metadata)
         {
             RenderedObjectType hitType = (RenderedObjectType) (metadata >> 24);
             uint hitId = metadata & 0xFFFFFF;
@@ -90,6 +90,11 @@ namespace Replanetizer.Frames
                         }
 
                         ImGui.TextUnformatted("Ignore Camera: " + type.ignoreCameraCollision.ToString());
+
+                        if (levelFrame.TryGetWorldAngle(out float angle))
+                        {
+                            ImGui.TextUnformatted($"Slope: {angle:0.0}°");
+                        }
                     }
                     break;
                 default:

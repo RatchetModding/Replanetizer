@@ -124,6 +124,7 @@
 0119=Bomb
 011A=Miner
 011F=Drill
+0125=Ice Manager (Hoven)
 0126=Blarg Trooper
 0127=Rocket
 0128=Conveyor Belt
@@ -134,7 +135,9 @@
 0135=Platform
 0136=Fan Shroud
 013E=Teleporter
+013D=Ocean Manager (Gaspar)
 0146=Blarg Helicopter
+0147=Ocean Manager (Batalia)
 0148=Edwina
 014B=Trackdrive Left
 014C=Trackdrive Right
@@ -197,6 +200,7 @@
 01C9=Rocket
 01CA=Rocket
 01CB=Birdbot
+01CC=Ocean Manager (Umbris Lava)
 01CD=Qwark's Starfighter
 01CE=Shrub
 01D2=Snow Plow
@@ -389,6 +393,7 @@
 0353=Qwark
 0354=Bridge Part
 0355=Bridge Pile
+0356=Ocean Manager (Aridia)
 0357=Sewer Pipe With Sludge
 0359=Gadgebot
 035F=Test Dummy Bomb Glove
@@ -398,6 +403,7 @@
 0367=Boltcrate (Possibly for Metal Detector)
 036C=Test Dummy Pyrocitor
 036D=Elevator with Button
+036F=Ocean Manager (Rilgar)
 0372=Bomb
 0373=Train Carriage
 0374=Test Dummy Walloper
@@ -443,6 +449,7 @@
 03D8=Television
 03E0=Swingshot
 03E1=R.Y.N.O.
+03E2=Ocean Manager (Kerwan)
 03E5=Garage Door
 03E6=Taxi
 03EA=Platinum Zoomerator
@@ -452,6 +459,7 @@
 03F4=Taxi
 03F7=Door
 03F8=Hydrodisplacer
+03FA=Ocean Manager (Umbris)
 03FD=Circular Door Part
 03FF=Blarg Paratrooper
 0401=Blarg Gun
@@ -497,6 +505,7 @@
 0452=Blargian Snagglebeast
 0455=Shuttle
 0456=Mine
+0457=Ocean Manager (Pokitaru)
 0458=Mine
 045D=Platform
 045E=Red Button
@@ -565,6 +574,7 @@
 04E2=Conveyor Belt
 04E3=Hydrodisplacer
 04E9=Poison Vessel
+04EC=Ocean Manager (Oltanis)
 04ED=Poison Vessel
 04EE=Blarg Space Commando
 04F0=Oil Tanker Front
@@ -629,6 +639,7 @@
 0584=Asteroid
 0588=Button
 0589=Blarg Heavy Interceptor
+058A=Ice Manager (Oltanis)
 058D=Gate
 058E=Drek Final Boss Robot
 0590=Gate
@@ -730,6 +741,7 @@
 0763=Gadgetron Sign
 076B=Giant Clank Pad
 076C=Gold Decoy
+076D=Ocean Manager (Hoven)
 0772=Gadgebot
 078D=Robot Arm
 078E=Robot Arm

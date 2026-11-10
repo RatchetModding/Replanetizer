@@ -67,6 +67,7 @@
 0907=Spiderbot Glove
 0908=Water
 090D=Seesaw Beam
+093E=Ocean Manager (Snivelak, Boldan, Notak, Joba)
 0940=Bridgebot
 094C=Explosive Crate
 0950=Hypnomatic
@@ -85,6 +86,7 @@
 09C1=Ratchet (Hoverbike)
 09C6=Spitting Dune Crawler
 09F8=Chainblade
+0A17=Ocean Manager (Oozla)
 0A44=B2 Brawler Legs
 0A49=Mutant Firefly
 0A4B=B2 Brawler Head
@@ -220,6 +222,7 @@
 1265=Biker Glasses
 126E=Arena Crowd
 1278=Magnet Boots
+12B5=Ocean Manager (Dobbo)
 12DF=Desert Riders Helmet
 12E9=Wrench Upgrade
 12FA=Lamp

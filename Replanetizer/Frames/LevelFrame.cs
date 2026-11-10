@@ -1056,6 +1056,30 @@ namespace Replanetizer.Frames
             return true;
         }
 
+        public bool TryGetWorldAngle(out float angle)
+        {
+            angle = 0.0f;
+            int offset = 5;
+
+            if (renderer == null || !renderer.TryReadDepth((int) mousePos.X, (int) mousePos.Y, out float depth)
+                                 || !renderer.TryReadDepth((int) mousePos.X + offset, (int) mousePos.Y, out float depthB)
+                                 || !renderer.TryReadDepth((int) mousePos.X, (int) mousePos.Y + offset, out float depthC) )
+                return false;
+
+            Matrix4 projection = camera.GetProjectionMatrix();
+            // This is not ideal
+            Vector3 a = UnProject(ref projection, camera.GetViewMatrix(), new Size(width, height), new Vector3(mousePos.X, mousePos.Y, depth * 2.0f - 1.0f));
+            Vector3 b = UnProject(ref projection, camera.GetViewMatrix(), new Size(width, height), new Vector3(mousePos.X + offset, mousePos.Y, depthB * 2.0f - 1.0f));
+            Vector3 c = UnProject(ref projection, camera.GetViewMatrix(), new Size(width, height), new Vector3(mousePos.X, mousePos.Y + offset, depthC * 2.0f - 1.0f));
+
+            Vector3 normal = Vector3.Cross(b - a, c - a);
+            normal.Normalize();
+
+            angle = Vector3.CalculateAngle(normal, -Vector3.UnitZ);
+            angle = MathHelper.RadiansToDegrees(angle);
+            return true;
+        }
+
         private void CheckForMovementInput(float deltaTime)
         {
             float moveSpeed = KEYMAP.IsDown(Keybinds.MoveFastModifier) ? 40 : 10;
